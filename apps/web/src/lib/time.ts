@@ -1,5 +1,5 @@
-import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { addMinutes, isBefore, max as maxDate, min as minDate } from 'date-fns';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 export const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 

@@ -1,7 +1,8 @@
 // apps/web/src/app/dashboard/bookings/page.tsx
-import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+
 import BookingsClient from './view';
 
 export default async function Page() {

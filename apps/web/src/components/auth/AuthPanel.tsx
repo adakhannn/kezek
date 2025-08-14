@@ -1,6 +1,7 @@
 'use client';
-import { supabase } from '@/lib/supabaseClient';
 import { useState } from 'react';
+
+import { supabase } from '@/lib/supabaseClient';
 
 export default function AuthPanel() {
     const [email, setEmail] = useState('');

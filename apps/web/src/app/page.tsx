@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import Link from 'next/link';
 import { formatInTimeZone } from 'date-fns-tz';
+import { cookies } from 'next/headers';
+import Link from 'next/link';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 const PAGE_SIZE = 6;
@@ -157,8 +157,9 @@ export default async function Home({
 }
 
 /* ---------- клиентская кнопка слота ---------- */
-import SlotButton from '@/components/SlotButton';
-function Slot({ label, payload }: any) {
+import SlotButton, {QuickPayload} from '@/components/SlotButton';
+type SlotProps = { label: string; payload: QuickPayload };
+function Slot({ label, payload }: SlotProps) {
     return <SlotButton label={label} payload={payload} />;
 }
 

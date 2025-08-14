@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+    eslint: { ignoreDuringBuilds: false },     // теперь пусть билд падает при ошибках линта
+    typescript: { ignoreBuildErrors: false },  // и при ошибках типов
 };
 
 export default nextConfig;

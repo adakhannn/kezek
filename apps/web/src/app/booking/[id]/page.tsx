@@ -1,6 +1,7 @@
-import {cookies} from 'next/headers';
 import {createServerClient} from '@supabase/ssr';
 import {formatInTimeZone} from 'date-fns-tz';
+import {cookies} from 'next/headers';
+import Link from "next/link";
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
@@ -27,7 +28,7 @@ export default async function BookingPage({
     });
 
     // Пытаемся читать по RLS (клиент своей брони, сотрудник бизнеса, или супер-админ)
-    const {data, error} = await supabase
+    const {data} = await supabase
         .from('bookings')
         .select(`
       id,status,start_at,end_at,
@@ -56,7 +57,7 @@ export default async function BookingPage({
                 <div>Начало: <b>{formatInTimeZone(new Date(data.start_at), TZ, 'dd.MM.yyyy HH:mm')}</b></div>
                 <div>Статус: <b>{data.status}</b></div>
             </div>
-            <a href="/" className="underline">На главную</a>
+            <Link href="/" className="underline">На главную</Link>
         </main>
     );
 }
