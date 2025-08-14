@@ -76,7 +76,7 @@ async function FallbackBooking({ id }: { id: string }) {
             <main className="mx-auto max-w-xl p-6">
                 <div className="text-red-500">Бронь не найдена</div>
                 <div className="text-sm text-gray-500">ID: {id}</div>
-                <a href="/" className="underline">На главную</a>
+                <Link href="/" className="underline">На главную</Link>
             </main>
         );
     }
@@ -91,7 +91,7 @@ async function FallbackBooking({ id }: { id: string }) {
                 <div>Начало: <b>{formatInTimeZone(new Date(row.start_at), TZ, 'dd.MM.yyyy HH:mm')}</b></div>
                 <div>Статус: <b>{row.status}</b></div>
             </div>
-            <a href="/" className="underline">На главную</a>
+            <Link href="/" className="underline">На главную</Link>
         </main>
     );
 }

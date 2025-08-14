@@ -1,6 +1,7 @@
 // apps/web/src/app/dev/super/page.tsx
 'use client';
 import { useState } from 'react';
+
 import { supabase } from '@/lib/supabaseClient';
 
 export default function DevSuper() {

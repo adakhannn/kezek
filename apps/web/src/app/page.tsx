@@ -3,13 +3,36 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
+import SlotButton, { type QuickPayload } from '@/components/SlotButton';
+
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 const PAGE_SIZE = 6;
 
-interface SearchParams {
-    q?: string;
-    cat?: string;
-    page?: string;
+type SearchParams = { q?: string; cat?: string; page?: string };
+
+type Business = {
+    id: string;
+    slug: string;
+    name: string;
+    address: string;
+    phones: string[] | null;
+    categories: string[] | null;
+};
+
+type ServiceShort = { id: string; name_ru: string; duration_min: number };
+
+type SlotItem = { staff_id: string; start_at: string; end_at: string };
+
+type Card = {
+    b: Business;
+    svc: ServiceShort | null;
+    todaySlots: SlotItem[];
+    tomorrowSlots: SlotItem[];
+};
+
+type SlotProps = { label: string; payload: QuickPayload };
+function Slot({ label, payload }: SlotProps) {
+    return <SlotButton label={label} payload={payload} />;
 }
 
 export default async function Home({
@@ -17,29 +40,29 @@ export default async function Home({
                                    }: {
     searchParams?: Promise<SearchParams>;
 }) {
-    const { q = '', cat = '', page = '1' } =
-    (await searchParams) ?? {};
-    const pageNum = Math.max(1, parseInt(page || '1', 10));
+    const { q = '', cat = '', page = '1' } = (await searchParams) ?? {};
+    const pageNum = Math.max(1, Number.parseInt(page || '1', 10));
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const cookieStore = await cookies();
+
     const supabase = createServerClient(url, anon, {
         cookies: { get: (n) => cookieStore.get(n)?.value },
     });
 
-    // базовый запрос
+    // базовый запрос по бизнесам
     let query = supabase
         .from('businesses')
         .select('id,slug,name,address,phones,categories', { count: 'exact' })
         .eq('is_approved', true);
 
     if (q) {
-        // поиск по имени/адресу (trgm + ilike)
+        // поиск по имени/адресу
         query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
     }
     if (cat) {
-        // категории в массиве
+        // фильтр по категории
         query = query.contains('categories', [cat]);
     }
 
@@ -48,43 +71,54 @@ export default async function Home({
     const to = from + PAGE_SIZE - 1;
     query = query.range(from, to).order('name');
 
-    const { data: businesses, count, error } = await query;
-    if (error) throw error;
+    const { data: businesses, count } = await query;
 
-    // для бейджа категорий и быстрых слотов
-    const cards = await Promise.all((businesses || []).map(async (b) => {
-        const { data: svc } = await supabase
-            .from('services')
-            .select('id,name_ru,duration_min')
-            .eq('biz_id', b.id)
-            .eq('active', true)
-            .order('duration_min', { ascending: true })
-            .limit(1)
-            .maybeSingle();
+    // собираем карточки с короткой услугой и быстрыми слотами
+    const cards: Card[] = await Promise.all(
+        (businesses as Business[] | null ?? []).map(async (b) => {
+            const { data: svc } = await supabase
+                .from('services')
+                .select('id,name_ru,duration_min')
+                .eq('biz_id', b.id)
+                .eq('active', true)
+                .order('duration_min', { ascending: true })
+                .limit(1)
+                .maybeSingle<ServiceShort>();
 
-        let todaySlots: { staff_id: string; start_at: string; end_at: string }[] = [];
-        let tomorrowSlots: { staff_id: string; start_at: string; end_at: string }[] = [];
+            let todaySlots: SlotItem[] = [];
+            let tomorrowSlots: SlotItem[] = [];
 
-        if (svc?.id) {
-            const today = new Date();
-            const tomorrow = new Date(Date.now() + 86400000);
-            const dayStr = (d: Date) => formatInTimeZone(d, TZ, 'yyyy-MM-dd');
+            if (svc?.id) {
+                const today = new Date();
+                const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const dayStr = (d: Date) => formatInTimeZone(d, TZ, 'yyyy-MM-dd');
 
-            const [{ data: s1 }, { data: s2 }] = await Promise.all([
-                supabase.rpc('get_free_slots_service_day', {
-                    p_biz_id: b.id, p_service_id: svc.id, p_day: dayStr(today),
-                    p_per_staff: 2, p_step_min: 15, p_tz: TZ,
-                }),
-                supabase.rpc('get_free_slots_service_day', {
-                    p_biz_id: b.id, p_service_id: svc.id, p_day: dayStr(tomorrow),
-                    p_per_staff: 2, p_step_min: 15, p_tz: TZ,
-                }),
-            ]);
-            todaySlots = s1 || []; tomorrowSlots = s2 || [];
-        }
+                const [{ data: s1 }, { data: s2 }] = await Promise.all([
+                    supabase.rpc('get_free_slots_service_day', {
+                        p_biz_id: b.id,
+                        p_service_id: svc.id,
+                        p_day: dayStr(today),
+                        p_per_staff: 2,
+                        p_step_min: 15,
+                        p_tz: TZ,
+                    }),
+                    supabase.rpc('get_free_slots_service_day', {
+                        p_biz_id: b.id,
+                        p_service_id: svc.id,
+                        p_day: dayStr(tomorrow),
+                        p_per_staff: 2,
+                        p_step_min: 15,
+                        p_tz: TZ,
+                    }),
+                ]);
 
-        return { b, svc, todaySlots, tomorrowSlots };
-    }));
+                todaySlots = (s1 as SlotItem[] | null) ?? [];
+                tomorrowSlots = (s2 as SlotItem[] | null) ?? [];
+            }
+
+            return { b, svc: svc ?? null, todaySlots, tomorrowSlots };
+        })
+    );
 
     const total = count ?? 0;
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -102,10 +136,12 @@ export default async function Home({
                             </h2>
                             <div className="text-sm text-gray-600">{b.address}</div>
                             <div className="mt-1 text-xs flex gap-2 flex-wrap">
-                                {(b.categories || []).map((c: string) => (
-                                    <Link key={c}
-                                          href={`/?cat=${encodeURIComponent(c)}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
-                                          className={`px-2 py-0.5 border rounded ${cat===c?'bg-gray-100':''}`}>
+                                {(b.categories ?? []).map((c) => (
+                                    <Link
+                                        key={c}
+                                        href={`/?cat=${encodeURIComponent(c)}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+                                        className={`px-2 py-0.5 border rounded ${cat === c ? 'bg-gray-100' : ''}`}
+                                    >
                                         {c}
                                     </Link>
                                 ))}
@@ -123,11 +159,18 @@ export default async function Home({
                                             <Slot
                                                 key={`t${i}`}
                                                 label={formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}
-                                                payload={{ biz_id: b.id, service_id: svc.id, staff_id: s.staff_id, start_at: s.start_at, slug: b.slug }}
+                                                payload={{
+                                                    biz_id: b.id,
+                                                    service_id: svc.id,
+                                                    staff_id: s.staff_id,
+                                                    start_at: s.start_at,
+                                                    slug: b.slug,
+                                                }}
                                             />
                                         ))}
                                     </div>
                                 </div>
+
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">Завтра</div>
                                     <div className="flex flex-wrap gap-2">
@@ -136,7 +179,13 @@ export default async function Home({
                                             <Slot
                                                 key={`z${i}`}
                                                 label={formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}
-                                                payload={{ biz_id: b.id, service_id: svc.id, staff_id: s.staff_id, start_at: s.start_at, slug: b.slug }}
+                                                payload={{
+                                                    biz_id: b.id,
+                                                    service_id: svc.id,
+                                                    staff_id: s.staff_id,
+                                                    start_at: s.start_at,
+                                                    slug: b.slug,
+                                                }}
                                             />
                                         ))}
                                     </div>
@@ -146,7 +195,11 @@ export default async function Home({
                             <div className="text-sm text-gray-500">Нет активных услуг</div>
                         )}
 
-                        <div><Link href={`/b/${b.slug}`} className="border px-3 py-1 rounded inline-block">Открыть</Link></div>
+                        <div>
+                            <Link href={`/b/${b.slug}`} className="border px-3 py-1 rounded inline-block">
+                                Открыть
+                            </Link>
+                        </div>
                     </article>
                 ))}
             </section>
@@ -156,35 +209,59 @@ export default async function Home({
     );
 }
 
-/* ---------- клиентская кнопка слота ---------- */
-import SlotButton, {QuickPayload} from '@/components/SlotButton';
-type SlotProps = { label: string; payload: QuickPayload };
-function Slot({ label, payload }: SlotProps) {
-    return <SlotButton label={label} payload={payload} />;
-}
-
 /* ---------- поиск/фильтры в шапке ---------- */
 function Header({ q, cat }: { q: string; cat: string }) {
     return (
         <form className="flex items-center gap-2">
-            <input name="q" defaultValue={q} placeholder="Поиск: имя или адрес" className="border px-3 py-1 rounded w-full" />
+            <input
+                name="q"
+                defaultValue={q}
+                placeholder="Поиск: имя или адрес"
+                className="border px-3 py-1 rounded w-full"
+            />
             {cat && <input type="hidden" name="cat" value={cat} />}
             <button className="border px-3 py-1 rounded">Искать</button>
-            <Link href="/" className="px-3 py-1 border rounded">Сброс</Link>
+            <Link href="/" className="px-3 py-1 border rounded">
+                Сброс
+            </Link>
         </form>
     );
 }
 
 /* ---------- пагинация ---------- */
-function Pagination({ q, cat, page, pages }: { q: string; cat: string; page: number; pages: number }) {
+function Pagination({
+                        q,
+                        cat,
+                        page,
+                        pages,
+                    }: {
+    q: string;
+    cat: string;
+    page: number;
+    pages: number;
+}) {
     if (pages <= 1) return null;
-    const mk = (p: number) => `/?page=${p}${q ? `&q=${encodeURIComponent(q)}` : ''}${cat ? `&cat=${encodeURIComponent(cat)}` : ''}`;
+    const mk = (p: number) =>
+        `/?page=${p}${q ? `&q=${encodeURIComponent(q)}` : ''}${cat ? `&cat=${encodeURIComponent(cat)}` : ''}`;
     return (
         <nav className="flex items-center gap-2 justify-center">
-            <Link className="border px-2 py-1 rounded disabled:opacity-50" aria-disabled={page<=1} href={page<=1 ? '#' : mk(page-1)}>Назад</Link>
-            <span className="text-sm">{page} / {pages}</span>
-            <Link className="border px-2 py-1 rounded disabled:opacity-50" aria-disabled={page>=pages} href={page>=pages ? '#' : mk(page+1)}>Вперёд</Link>
+            <Link
+                className="border px-2 py-1 rounded disabled:opacity-50"
+                aria-disabled={page <= 1}
+                href={page <= 1 ? '#' : mk(page - 1)}
+            >
+                Назад
+            </Link>
+            <span className="text-sm">
+        {page} / {pages}
+      </span>
+            <Link
+                className="border px-2 py-1 rounded disabled:opacity-50"
+                aria-disabled={page >= pages}
+                href={page >= pages ? '#' : mk(page + 1)}
+            >
+                Вперёд
+            </Link>
         </nav>
     );
 }
-

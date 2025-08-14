@@ -1,3 +1,5 @@
+import {JSX} from "react";
+
 import BizClient from './view';
 
 async function getData(slug: string) {
@@ -25,8 +27,13 @@ async function getData(slug: string) {
     return { biz, branch, services, staff };
 }
 
-export default async function Page({ params }: { params: { slug: string } }) {
-    const data = await getData(params.slug);
+export default async function Page({
+                                       params,
+                                   }: {
+    params: Promise<{ slug: string }>;
+}): Promise<JSX.Element> {
+    const { slug } = await params;              // ⬅️ обязательно await
+    const data = await getData(slug);
     if (!data) return <main className="p-6">Бизнес не найден</main>;
     return <BizClient data={data} />;
 }

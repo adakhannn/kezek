@@ -36,7 +36,7 @@ export default function SlotButton({
             const data: { ok: boolean; booking_id?: string; error?: string; message?: string } = await res.json();
             if (!data.ok || !data.booking_id) throw new Error(data.message || data.error || 'Ошибка');
             window.location.href = `${redirectBase}/${data.booking_id}`;
-        } catch (e: unknown) {
+        } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             alert(msg);
         } finally {

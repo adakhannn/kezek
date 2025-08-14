@@ -8,15 +8,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, enumerateSlots, toLabel, TZ } from '@/lib/time';
 
-// -------- типы данных ----------
 type Biz = { id: string; name: string; address: string; phones: string[] };
 type Branch = { id: string; name: string } | null;
-type Service = { id: string; name_ru: string; duration_min: number; price_from?: number; price_to?: number };
+type Service = { id: string; name_ru: string; duration_min: number; price_from?: number | null; price_to?: number | null };
 type Staff = { id: string; full_name: string };
 
 type Data = {
     biz: Biz;
-    branch: Branch;               // один активный филиал (по текущей логике)
+    branch: Branch;
     services: Service[];
     staff: Staff[];
 };
@@ -28,7 +27,6 @@ type BookingRow = {
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
 };
 
-// -------- AuthPanel динамически, без any ----------
 const AuthPanelLazy = dynamic(() => import('@/components/auth/AuthPanel'), { ssr: false });
 
 export default function BizClient({ data }: { data: Data }) {
@@ -36,14 +34,14 @@ export default function BizClient({ data }: { data: Data }) {
 
     const [serviceId, setServiceId] = useState<string>(services[0]?.id ?? '');
     const [staffId, setStaffId] = useState<string>(staff[0]?.id ?? '');
-    const [day, setDay] = useState<Date>(todayTz()); // 00:00 в TZ
+    const [day, setDay] = useState<Date>(todayTz());
 
     const dayStr = formatInTimeZone(day, TZ, 'yyyy-MM-dd');
 
     const [intervals, setIntervals] = useState<{ start: string; end: string }[]>([]);
-    const [busy, setBusy] = useState<Set<number>>(new Set()); // минуты от полуночи (TZ), занятые
+    const [busy, setBusy] = useState<Set<number>>(new Set());
 
-    // --- рабочие окна мастера на выбранный день недели
+    // рабочие интервалы на день недели
     useEffect(() => {
         let ignore = false;
         (async () => {
@@ -59,13 +57,14 @@ export default function BizClient({ data }: { data: Data }) {
 
             if (error) { console.error(error); return; }
             if (ignore) return;
+
             const merged = (wh?.[0]?.intervals ?? []) as { start: string; end: string }[];
             setIntervals(merged);
         })();
         return () => { ignore = true; };
     }, [biz.id, staffId, day]);
 
-    // --- занятые брони на выбранный день
+    // занятые брони в этот день
     useEffect(() => {
         let ignore = false;
         (async () => {
@@ -85,7 +84,6 @@ export default function BizClient({ data }: { data: Data }) {
             if (error) { console.error(error); return; }
             if (ignore) return;
 
-            // посчитаем занятость в минутах от полуночи TZ
             const set = new Set<number>();
             for (const b of (data ?? []) as BookingRow[]) {
                 const s = new Date(b.start_at);
@@ -100,26 +98,22 @@ export default function BizClient({ data }: { data: Data }) {
         return () => { ignore = true; };
     }, [biz.id, staffId, day]);
 
-    // --- выбранная услуга и расчёт слотов
     const service = services.find((s) => s.id === serviceId);
     const slots: Date[] = useMemo(() => {
         if (!service || intervals.length === 0) return [];
         const res: Date[] = [];
+        const base = new Date(formatInTimeZone(day, TZ, "yyyy-MM-dd'T'00:00:00XXX"));
 
         for (const win of intervals) {
             const winStart = dateAtTz(dayStr, win.start);
             const winEnd   = dateAtTz(dayStr, win.end);
             const enumed = enumerateSlots(winStart, winEnd, service.duration_min, 15);
 
-            // фильтр по занятости
-            const base = new Date(formatInTimeZone(day, TZ, "yyyy-MM-dd'T'00:00:00XXX"));
             for (const t of enumed) {
                 const startM = Math.floor((t.getTime() - base.getTime()) / 60000);
                 const endM = startM + service.duration_min;
                 let ok = true;
-                for (let m = startM; m < endM; m++) {
-                    if (busy.has(m)) { ok = false; break; }
-                }
+                for (let m = startM; m < endM; m++) { if (busy.has(m)) { ok = false; break; } }
                 if (ok) res.push(t);
             }
         }
@@ -160,14 +154,14 @@ export default function BizClient({ data }: { data: Data }) {
         location.href = `/booking/${holding.bookingId}`;
     }
 
-    // --- таймер для обратного отсчёта
+    // таймер обратного отсчёта
     const [tick, setTick] = useState(0);
     useEffect(() => {
-        const id = setInterval(() => setTick((t) => t + 1), 500);
+        const id = setInterval(() => setTick((t0) => t0 + 1), 500);
         return () => clearInterval(id);
     }, []);
     const leftSec = Math.max(0, holding ? Math.ceil((holding.until - Date.now()) / 1000) : 0);
-    void tick; // помечаем как используемый для ESLint
+    void tick;
 
     return (
         <main className="mx-auto max-w-4xl p-6 space-y-4">
@@ -189,7 +183,8 @@ export default function BizClient({ data }: { data: Data }) {
                     >
                         {services.map((s) => (
                             <option key={s.id} value={s.id}>
-                                {s.name_ru} — {s.duration_min} мин{(s.price_from ?? 0) > 0 ? ` (${s.price_from}-${s.price_to} сом)` : ''}
+                                {s.name_ru} — {s.duration_min} мин
+                                {s.price_from ? ` (${s.price_from}-${s.price_to ?? s.price_from} сом)` : ''}
                             </option>
                         ))}
                     </select>
@@ -234,9 +229,7 @@ export default function BizClient({ data }: { data: Data }) {
                         <div className="space-y-2">
                             <div className="text-sm">Слот удержан на <b>{leftSec}</b> сек.</div>
                             <button className="border px-3 py-1 rounded w-full" onClick={confirm}>Подтвердить бронь</button>
-                            <div className="text-xs text-gray-500">
-                                Без оплаты (MVP). После оплаты будет авто-подтверждение.
-                            </div>
+                            <div className="text-xs text-gray-500">Без оплаты (MVP). После оплаты будет авто-подтверждение.</div>
                         </div>
                     )}
                 </div>
