@@ -29,6 +29,12 @@ export async function POST(
         return NextResponse.json({ok: false, error: error.message}, {status: 400});
     }
 
+    await fetch(new URL('/api/notify', req.url), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ type: 'cancel', booking_id: id }),
+    });
+
     // вернём редирект обратно на карточку брони
     return NextResponse.redirect(new URL(`/booking/${id}`, req.url));
 }

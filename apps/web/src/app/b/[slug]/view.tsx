@@ -139,6 +139,11 @@ export default function BizClient({ data }: { data: Data }) {
             if (error) throw error;
             const bookingId = String(data);
             setHolding({ bookingId, until: Date.now() + 120_000 });
+            fetch('/api/notify', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ type: 'hold', booking_id: bookingId }),
+            }).catch(()=>{});
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             alert(msg);
@@ -151,6 +156,13 @@ export default function BizClient({ data }: { data: Data }) {
         if (!holding) return;
         const { error } = await supabase.rpc('confirm_booking', { p_booking_id: holding.bookingId });
         if (error) { alert(error.message); return; }
+
+        await fetch('/api/notify', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ type: 'confirm', booking_id: holding.bookingId }),
+        });
+
         location.href = `/booking/${holding.bookingId}`;
     }
 
