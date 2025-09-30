@@ -5,6 +5,18 @@ import {useState} from 'react';
 import {supabase} from '@/lib/supabaseClient';
 import {TZ} from '@/lib/time';
 
+async function notify(type: 'hold' | 'confirm' | 'cancel', bookingId: string) {
+    try {
+        await fetch('/api/notify', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ type, booking_id: bookingId }),
+        });
+    } catch (e) {
+        console.error('notify failed', type, bookingId, e);
+    }
+}
+
 type Item = {
     id: string; status: string; start_at: string; end_at: string;
     services?: { name_ru: string }[]; staff?: { full_name: string }[];
@@ -37,33 +49,48 @@ export default function BookingsClient({
     }
 
     async function confirm(id: string) {
-        const {error} = await supabase.rpc('confirm_booking', {p_booking_id: id});
+        const { error } = await supabase.rpc('confirm_booking', { p_booking_id: id });
         if (error) return alert(error.message);
+
+        // уведомления
+        await notify('confirm', id);
+
         await refresh();
     }
 
     async function cancel(id: string) {
-        const {error} = await supabase.rpc('cancel_booking', {p_booking_id: id});
+        const { error } = await supabase.rpc('cancel_booking', { p_booking_id: id });
         if (error) return alert(error.message);
+
+        // уведомления
+        await notify('cancel', id);
+
         await refresh();
     }
 
     async function quickCreate() {
         const svc = services.find(s => s.id === serviceId);
         if (!svc) return alert('Выбери услугу');
+
         const startISO = `${date}T${time}:00+06:00`;
-        const {data, error} = await supabase.rpc('create_internal_booking', {
+        const { data, error } = await supabase.rpc('create_internal_booking', {
             p_biz_id: bizId,
             p_branch_id: branchId,
             p_service_id: serviceId,
             p_staff_id: staffId,
             p_start: startISO,
             p_minutes: svc.duration_min,
-            p_client_id: null, // можно потом выбрать клиента из списка
+            p_client_id: null, // позже подцепим конкретного клиента
         });
         if (error) return alert(error.message);
+
+        const bookingId = String(data);
+
+        // уведомления о подтверждении
+        await notify('confirm', bookingId);
+
         await refresh();
-        alert(`Создана запись #${String(data).slice(0, 8)}`);
+        alert(`Создана запись #${bookingId.slice(0, 8)}`);
     }
 
     return (
