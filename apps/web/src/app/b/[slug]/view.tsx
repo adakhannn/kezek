@@ -154,16 +154,30 @@ export default function BizClient({ data }: { data: Data }) {
 
     async function confirm() {
         if (!holding) return;
-        const { error } = await supabase.rpc('confirm_booking', { p_booking_id: holding.bookingId });
-        if (error) { alert(error.message); return; }
+        setLoading(true);
+        try {
+            // 1) подтверждаем в БД
+            const { error } = await supabase.rpc('confirm_booking', { p_booking_id: holding.bookingId });
+            if (error) {
+                alert(error.message);
+                return;
+            }
 
-        await fetch('/api/notify', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ type: 'confirm', booking_id: holding.bookingId }),
-        });
+            // 2) триггерим уведомления
+            await fetch('/api/notify', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ type: 'confirm', booking_id: holding.bookingId }),
+            });
 
-        location.href = `/booking/${holding.bookingId}`;
+            // 3) редирект на карточку брони
+            location.href = `/booking/${holding.bookingId}`;
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            alert(msg);
+        } finally {
+            setLoading(false);
+        }
     }
 
     // таймер обратного отсчёта
