@@ -8,31 +8,52 @@ import { NextResponse } from 'next/server';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
+// утилита: если массив — берём первый элемент
 function first<T>(v: T | T[] | null | undefined): T | null {
     if (!v) return null;
     return Array.isArray(v) ? (v[0] ?? null) : v;
 }
 
-type SvcRow = { name_ru: string; duration_min: number } | null;
-type StaffRow = { full_name: string; email: string | null } | null;
-type BizRow = {
+/* ---------- Типы ---------- */
+interface ServiceRow {
+    name_ru: string;
+    duration_min: number;
+}
+interface StaffRow {
+    full_name: string;
+    email: string | null;
+}
+interface BizRow {
     name: string;
     email_notify_to: string[] | null;
     slug: string;
     address: string | null;
     phones: string[] | null;
     owner_id?: string | null;
-} | null;
+}
+interface BookingRow {
+    id: string;
+    status: string;
+    start_at: string;
+    end_at: string;
+    created_at: string;
+    client_id: string | null;
+    services: ServiceRow[] | ServiceRow | null;
+    staff: StaffRow[] | StaffRow | null;
+    biz: BizRow[] | BizRow | null;
+}
+type NotifyType = 'hold' | 'confirm' | 'cancel';
 
-type NotifyBody = {
-    type: 'hold' | 'confirm' | 'cancel';
+interface NotifyBody {
+    type: NotifyType;
     booking_id: string;
-};
+}
 
+/* ---------- Отправка письма ---------- */
 async function sendEmail(to: string, subject: string, html: string) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) throw new Error('RESEND_API_KEY is not set');
-    const from = process.env.EMAIL_FROM || 'Kezek <onboarding@resend.dev>';
+    const from = process.env.EMAIL_FROM || 'Kezek <noreply@mail.kezek.kg>';
 
     const resp = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -48,9 +69,10 @@ async function sendEmail(to: string, subject: string, html: string) {
     }
 }
 
+/* ---------- Основной обработчик ---------- */
 export async function POST(req: Request) {
     try {
-        const body = (await req.json()) as NotifyBody;
+        const body: NotifyBody = await req.json();
         if (!body?.type || !body?.booking_id) {
             return NextResponse.json({ ok: false, error: 'bad_request' }, { status: 400 });
         }
@@ -71,17 +93,17 @@ export async function POST(req: Request) {
         biz:businesses!bookings_biz_id_fkey ( name, email_notify_to, slug, address, phones, owner_id )
       `)
             .eq('id', body.booking_id)
-            .maybeSingle();
+            .maybeSingle<BookingRow>();
 
         if (error || !raw) {
             return NextResponse.json({ ok: false, error: error?.message || 'not_found' }, { status: 404 });
         }
 
-        const svc: SvcRow = first(raw.services as SvcRow | SvcRow[] | null);
-        const staff: StaffRow = first(raw.staff as StaffRow | StaffRow[] | null);
-        const biz: BizRow = first(raw.biz as BizRow | BizRow[] | null);
+        const svc = first(raw.services);
+        const staff = first(raw.staff);
+        const biz = first(raw.biz);
 
-        // emails
+        // E-mail клиента
         let clientEmail: string | null = null;
         if (raw.client_id) {
             const { data: au } = await supabase
@@ -92,13 +114,13 @@ export async function POST(req: Request) {
             clientEmail = au?.email ?? null;
         }
 
+        // E-mail владельца
         let ownerEmail: string | null = null;
-        const ownerId = biz?.owner_id ?? null;
-        if (ownerId) {
+        if (biz?.owner_id) {
             const { data: ou } = await supabase
                 .from('auth_users_view')
                 .select('email')
-                .eq('id', ownerId)
+                .eq('id', biz.owner_id)
                 .maybeSingle<{ email: string | null }>();
             ownerEmail = ou?.email ?? null;
         }
@@ -107,9 +129,9 @@ export async function POST(req: Request) {
         const adminEmails = biz?.email_notify_to ?? [];
 
         const title =
-            body.type === 'hold' ? 'Удержание слота' :
-                body.type === 'confirm' ? 'Бронь подтверждена' :
-                    'Бронь отменена';
+            body.type === 'hold' ? 'Удержание слота'
+                : body.type === 'confirm' ? 'Бронь подтверждена'
+                    : 'Бронь отменена';
 
         const when = formatInTimeZone(new Date(raw.start_at), TZ, 'dd.MM.yyyy HH:mm');
         const svcName = svc?.name_ru ?? 'Услуга';
@@ -131,6 +153,7 @@ export async function POST(req: Request) {
       </div>
     `;
 
+        // Список получателей
         const recipients = new Set<string>();
         if (clientEmail) recipients.add(clientEmail);
         if (staffEmail) recipients.add(staffEmail);
@@ -157,3 +180,4 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, error: 'internal' }, { status: 500 });
     }
 }
+
