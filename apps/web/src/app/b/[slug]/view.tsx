@@ -10,7 +10,13 @@ import { todayTz, dateAtTz, enumerateSlots, toLabel, TZ } from '@/lib/time';
 
 type Biz = { id: string; name: string; address: string; phones: string[] };
 type Branch = { id: string; name: string } | null;
-type Service = { id: string; name_ru: string; duration_min: number; price_from?: number | null; price_to?: number | null };
+type Service = {
+    id: string;
+    name_ru: string;
+    duration_min: number;
+    price_from?: number | null;
+    price_to?: number | null;
+};
 type Staff = { id: string; full_name: string };
 
 type Data = {
@@ -31,6 +37,28 @@ const AuthPanelLazy = dynamic(() => import('@/components/auth/AuthPanel'), { ssr
 
 export default function BizClient({ data }: { data: Data }) {
     const { biz, branch, services, staff } = data;
+
+    // ---- auth state ----
+    const [isAuthed, setIsAuthed] = useState<boolean>(false);
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            const { data: auth } = await supabase.auth.getUser();
+            if (!ignore) setIsAuthed(!!auth.user);
+        })();
+        const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+            setIsAuthed(!!s?.user);
+        });
+        return () => {
+            ignore = true;
+            sub.subscription.unsubscribe();
+        };
+    }, []);
+
+    const redirectToAuth = () => {
+        const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/auth/sign-in?mode=phone&redirect=${redirect}`;
+    };
 
     const [serviceId, setServiceId] = useState<string>(services[0]?.id ?? '');
     const [staffId, setStaffId] = useState<string>(staff[0]?.id ?? '');
@@ -55,13 +83,18 @@ export default function BizClient({ data }: { data: Data }) {
                 .eq('staff_id', staffId)
                 .eq('day_of_week', dowDb);
 
-            if (error) { console.error(error); return; }
+            if (error) {
+                console.error(error);
+                return;
+            }
             if (ignore) return;
 
             const merged = (wh?.[0]?.intervals ?? []) as { start: string; end: string }[];
             setIntervals(merged);
         })();
-        return () => { ignore = true; };
+        return () => {
+            ignore = true;
+        };
     }, [biz.id, staffId, day]);
 
     // занятые брони в этот день
@@ -70,7 +103,7 @@ export default function BizClient({ data }: { data: Data }) {
         (async () => {
             if (!staffId) return;
             const startDay = formatInTimeZone(day, TZ, "yyyy-MM-dd'T'00:00:00XXX");
-            const endDay   = formatInTimeZone(addDays(day, 1), TZ, "yyyy-MM-dd'T'00:00:00XXX");
+            const endDay = formatInTimeZone(addDays(day, 1), TZ, "yyyy-MM-dd'T'00:00:00XXX");
 
             const { data, error } = await supabase
                 .from('bookings')
@@ -81,7 +114,10 @@ export default function BizClient({ data }: { data: Data }) {
                 .gte('start_at', startDay)
                 .lt('start_at', endDay);
 
-            if (error) { console.error(error); return; }
+            if (error) {
+                console.error(error);
+                return;
+            }
             if (ignore) return;
 
             const set = new Set<number>();
@@ -95,7 +131,9 @@ export default function BizClient({ data }: { data: Data }) {
             }
             setBusy(set);
         })();
-        return () => { ignore = true; };
+        return () => {
+            ignore = true;
+        };
     }, [biz.id, staffId, day]);
 
     const service = services.find((s) => s.id === serviceId);
@@ -106,14 +144,19 @@ export default function BizClient({ data }: { data: Data }) {
 
         for (const win of intervals) {
             const winStart = dateAtTz(dayStr, win.start);
-            const winEnd   = dateAtTz(dayStr, win.end);
+            const winEnd = dateAtTz(dayStr, win.end);
             const enumed = enumerateSlots(winStart, winEnd, service.duration_min, 15);
 
             for (const t of enumed) {
                 const startM = Math.floor((t.getTime() - base.getTime()) / 60000);
                 const endM = startM + service.duration_min;
                 let ok = true;
-                for (let m = startM; m < endM; m++) { if (busy.has(m)) { ok = false; break; } }
+                for (let m = startM; m < endM; m++) {
+                    if (busy.has(m)) {
+                        ok = false;
+                        break;
+                    }
+                }
                 if (ok) res.push(t);
             }
         }
@@ -124,8 +167,18 @@ export default function BizClient({ data }: { data: Data }) {
     const [loading, setLoading] = useState(false);
 
     async function hold(t: Date) {
-        if (!branch) { alert('Нет филиала'); return; }
-        if (!service) { alert('Выбери услугу'); return; }
+        if (!isAuthed) {
+            redirectToAuth();
+            return;
+        }
+        if (!branch) {
+            alert('Нет филиала');
+            return;
+        }
+        if (!service) {
+            alert('Выбери услугу');
+            return;
+        }
         setLoading(true);
         try {
             const startISO = formatInTimeZone(t, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
@@ -143,7 +196,7 @@ export default function BizClient({ data }: { data: Data }) {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ type: 'hold', booking_id: bookingId }),
-            }).catch(()=>{});
+            }).catch(() => {});
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             alert(msg);
@@ -153,24 +206,24 @@ export default function BizClient({ data }: { data: Data }) {
     }
 
     async function confirm() {
+        if (!isAuthed) {
+            redirectToAuth();
+            return;
+        }
         if (!holding) return;
         setLoading(true);
         try {
-            // 1) подтверждаем в БД
             const { error } = await supabase.rpc('confirm_booking', { p_booking_id: holding.bookingId });
             if (error) {
                 alert(error.message);
                 return;
             }
-
-            // 2) триггерим уведомления
             await fetch('/api/notify', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ type: 'confirm', booking_id: holding.bookingId }),
             });
 
-            // 3) редирект на карточку брони
             location.href = `/booking/${holding.bookingId}`;
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -199,6 +252,16 @@ export default function BizClient({ data }: { data: Data }) {
                 <AuthPanelLazy />
             </div>
 
+            {/* Баннер входа для неавторизованных */}
+            {!isAuthed && (
+                <div className="border rounded p-3 bg-yellow-50 text-sm flex items-center justify-between">
+                    <div>Чтобы забронировать время, войдите по номеру телефона.</div>
+                    <button className="border px-3 py-1 rounded" onClick={redirectToAuth}>
+                        Войти по SMS
+                    </button>
+                </div>
+            )}
+
             <div className="grid sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2 border p-3 rounded">
                     <h2 className="font-medium mb-2">Услуга</h2>
@@ -222,14 +285,20 @@ export default function BizClient({ data }: { data: Data }) {
                         onChange={(e) => setStaffId(e.target.value)}
                     >
                         {staff.map((m) => (
-                            <option key={m.id} value={m.id}>{m.full_name}</option>
+                            <option key={m.id} value={m.id}>
+                                {m.full_name}
+                            </option>
                         ))}
                     </select>
 
                     <h2 className="font-medium mb-2">День</h2>
                     <div className="flex gap-2 mb-3">
-                        <button className="border px-3 py-1 rounded" onClick={() => setDay(todayTz())}>Сегодня</button>
-                        <button className="border px-3 py-1 rounded" onClick={() => setDay(addDays(todayTz(), 1))}>Завтра</button>
+                        <button className="border px-3 py-1 rounded" onClick={() => setDay(todayTz())}>
+                            Сегодня
+                        </button>
+                        <button className="border px-3 py-1 rounded" onClick={() => setDay(addDays(todayTz(), 1))}>
+                            Завтра
+                        </button>
                     </div>
 
                     <h2 className="font-medium mb-2">Свободные слоты</h2>
@@ -240,7 +309,8 @@ export default function BizClient({ data }: { data: Data }) {
                                 key={t.toISOString()}
                                 disabled={loading || !!holding}
                                 className="border px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
-                                onClick={() => hold(t)}
+                                onClick={() => (isAuthed ? hold(t) : redirectToAuth())}
+                                title={isAuthed ? '' : 'Войдите, чтобы забронировать'}
                             >
                                 {toLabel(t)}
                             </button>
@@ -253,8 +323,18 @@ export default function BizClient({ data }: { data: Data }) {
                     {!holding && <div className="text-gray-500 text-sm">Выберите слот, чтобы забронировать.</div>}
                     {holding && (
                         <div className="space-y-2">
-                            <div className="text-sm">Слот удержан на <b>{leftSec}</b> сек.</div>
-                            <button className="border px-3 py-1 rounded w-full" onClick={confirm}>Подтвердить бронь</button>
+                            <div className="text-sm">
+                                Слот удержан на <b>{leftSec}</b> сек.
+                            </div>
+                            {isAuthed ? (
+                                <button className="border px-3 py-1 rounded w-full" onClick={confirm}>
+                                    Подтвердить бронь
+                                </button>
+                            ) : (
+                                <button className="border px-3 py-1 rounded w-full" onClick={redirectToAuth}>
+                                    Войти, чтобы подтвердить
+                                </button>
+                            )}
                             <div className="text-xs text-gray-500">Без оплаты (MVP). После оплаты будет авто-подтверждение.</div>
                         </div>
                     )}
