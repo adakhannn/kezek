@@ -1,76 +1,68 @@
 'use client';
-import Link from 'next/link';
-import {useState} from 'react';
 
-import {supabase} from '@/lib/supabaseClient';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { supabase } from '@/lib/supabaseClient';
 
 export default function SignInPage() {
-    const [mode, setMode] = useState<'email' | 'phone'>('email');
+    const sp = useSearchParams();
+    const router = useRouter();
+    const redirect = sp.get('redirect') || '/';
 
-    // email/pass
-    const [email, setEmail] = useState('');
-    const [pass, setPass] = useState('');
+    const [phone, setPhone] = useState('');
+    const [sending, setSending] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // phone
-    const [phone, setPhone] = useState(''); // в формате +996XXXXXXXXX
-
-    async function signInEmail() {
-        const {error} = await supabase.auth.signInWithPassword({email, password: pass});
-        if (error) return alert(error.message);
-        location.href = '/';
-    }
-
-    async function signInPhone() {
-        // отправляем OTP по SMS
-        const {error} = await supabase.auth.signInWithOtp({
-            phone,
-            options: {channel: 'sms'},
+    // если уже вошёл — сразу редиректим
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data }) => {
+            if (data.user) router.replace(redirect);
         });
-        if (error) return alert(error.message);
-        location.href = `/auth/verify-otp?phone=${encodeURIComponent(phone)}`;
+    }, [redirect, router]);
+
+    async function sendCode(e: React.FormEvent) {
+        e.preventDefault();
+        setSending(true);
+        setError(null);
+        try {
+            // ВАЖНО: телефон в E.164, например +996555123456
+            const { error } = await supabase.auth.signInWithOtp({
+                phone,
+                options: { channel: 'sms' },
+            });
+            if (error) throw error;
+            // на страницу ввода кода
+            router.push(`/auth/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(redirect)}`);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : String(err));
+        } finally {
+            setSending(false);
+        }
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex gap-2 text-sm">
-                <button
-                    className={`border px-3 py-1 rounded ${mode === 'email' ? 'bg-white/10' : ''}`}
-                    onClick={() => setMode('email')}
-                >
-                    По e-mail
-                </button>
-                <button
-                    className={`border px-3 py-1 rounded ${mode === 'phone' ? 'bg-white/10' : ''}`}
-                    onClick={() => setMode('phone')}
-                >
-                    По телефону (SMS)
-                </button>
-            </div>
+        <form onSubmit={sendCode} className="space-y-3">
+            <label className="block text-sm">Телефон (в формате +996…)</label>
+            <input
+                className="border rounded px-3 py-2 w-full"
+                placeholder="+996555123456"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+            />
+            <button
+                className="border rounded px-3 py-2 w-full disabled:opacity-50"
+                disabled={sending}
+                type="submit"
+            >
+                Отправить код по SMS
+            </button>
 
-            {mode === 'email' ? (
-                <div className="space-y-2">
-                    <input className="w-full border rounded px-2 py-1" placeholder="email"
-                           value={email} onChange={e => setEmail(e.target.value)}/>
-                    <input className="w-full border rounded px-2 py-1" placeholder="пароль" type="password"
-                           value={pass} onChange={e => setPass(e.target.value)}/>
-                    <button className="border px-3 py-1 rounded w-full" onClick={signInEmail}>Войти</button>
-                    <div className="text-sm text-gray-400">
-                        Нет аккаунта? <Link className="underline" href="/auth/sign-up">Регистрация</Link><br/>
-                        Забыли пароль? <Link className="underline" href="/auth/reset-password">Сбросить</Link>
-                    </div>
-                </div>
-            ) : (
-                <div className="space-y-2">
-                    <input className="w-full border rounded px-2 py-1" placeholder="+996XXXXXXXXX"
-                           value={phone} onChange={e => setPhone(e.target.value)}/>
-                    <button className="border px-3 py-1 rounded w-full" onClick={signInPhone}>
-                        Получить код в SMS
-                    </button>
-                    <div className="text-sm text-gray-400">
-                        Нет аккаунта? <Link className="underline" href="/auth/sign-up">Регистрация</Link>
-                    </div>
-                </div>
-            )}
-        </div>
+            <div className="text-xs text-gray-500">
+                Ввод телефона означает согласие с обработкой персональных данных.
+            </div>
+            {error && <div className="text-red-600 text-sm">{error}</div>}
+        </form>
     );
 }
