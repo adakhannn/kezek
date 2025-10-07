@@ -29,7 +29,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <header className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Админка</h1>
                 <nav className="flex gap-3 text-sm">
+                    <Link className="border px-3 py-1 rounded" href="/admin">Главная</Link>
                     <Link className="border px-3 py-1 rounded" href="/admin/businesses">Бизнесы</Link>
+                    <Link className="border px-3 py-1 rounded" href="/admin/categories">Категории</Link>
+                    <Link className="border px-3 py-1 rounded" href="/admin/users">Пользователи</Link>
                     <Link className="border px-3 py-1 rounded" href="/">На сайт</Link>
                 </nav>
             </header>
