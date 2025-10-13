@@ -14,10 +14,9 @@ const norm = (s?: string | null) => {
     return v.length ? v : null;
 };
 
-export async function POST(req: Request, ctx: { params: { id: string } }) {
-    const {
-        params: {id},
-    } = ctx;
+export async function POST(req: Request, ctx: { params: Record<string, string | string[]> }) {
+    const raw = ctx.params.id;
+    const id = Array.isArray(raw) ? raw[0] : raw; // гарантируем string
 
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -26,50 +25,39 @@ export async function POST(req: Request, ctx: { params: { id: string } }) {
         const cookieStore = await cookies();
 
         const supa = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
-            },
+            cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
-        const {
-            data: {user},
-        } = await supa.auth.getUser();
-        if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
+        const { data: { user } } = await supa.auth.getUser();
+        if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
-        const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
-        if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
+        const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
+        if (eSuper) return NextResponse.json({ ok: false, error: eSuper.message }, { status: 400 });
+        if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
-        // админ-клиент для записи
         const admin = createClient(URL, SERVICE);
         const body = (await req.json()) as Body;
 
         const name = norm(body.name);
-        if (!name) return NextResponse.json({ok: false, error: 'Название обязательно'}, {status: 400});
+        if (!name) return NextResponse.json({ ok: false, error: 'Название обязательно' }, { status: 400 });
 
-        const {data, error} = await admin
+        const { data, error } = await admin
             .from('branches')
-            .insert({
-                biz_id: id, // <— используем id из контекста
-                name,
-                address: norm(body.address),
-                is_active: body.is_active ?? true,
-            })
+            .insert({ biz_id: id, name, address: norm(body.address), is_active: body.is_active ?? true })
             .select('id')
             .maybeSingle();
 
         if (error) {
-            const msg = (error).code ? `${error.message} (code ${(error).code})` : error.message;
-            return NextResponse.json({ok: false, error: msg}, {status: 400});
+            const msg = (error as { code?: string; message: string }).code
+                ? `${error.message} (code ${(error).code})`
+                : error.message;
+            return NextResponse.json({ ok: false, error: msg }, { status: 400 });
         }
 
-        return NextResponse.json({ok: true, id: data?.id});
-    } catch (e: unknown) {
+        return NextResponse.json({ ok: true, id: data?.id });
+    } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-         
         console.error('branch create error', e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
+        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }
