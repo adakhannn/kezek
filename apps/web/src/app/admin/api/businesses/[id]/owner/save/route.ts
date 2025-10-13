@@ -104,7 +104,13 @@ async function createUser(admin: AdminClient, payload: Body): Promise<string> {
     return data.user.id;
 }
 
-export async function POST(req: Request, {params}: { params: { id: string } }) {
+export async function POST(req: Request, context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string | string[]> }).params
+            : {};
     try {
         // env & auth
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
