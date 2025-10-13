@@ -14,14 +14,17 @@ const norm = (s?: string | null) => {
     return v.length ? v : null;
 };
 
-export async function POST(req: Request, {params}: { params: { id: string } }) {
+export async function POST(req: Request, ctx: { params: { id: string } }) {
+    const {
+        params: {id},
+    } = ctx;
+
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const cookieStore = await cookies();
 
-        // проверка прав (как пользователь)
         const supa = createServerClient(URL, ANON, {
             cookies: {
                 get: (n) => cookieStore.get(n)?.value, set: () => {
@@ -49,7 +52,7 @@ export async function POST(req: Request, {params}: { params: { id: string } }) {
         const {data, error} = await admin
             .from('branches')
             .insert({
-                biz_id: params.id, // важное место: используем params.id
+                biz_id: id, // <— используем id из контекста
                 name,
                 address: norm(body.address),
                 is_active: body.is_active ?? true,
@@ -58,7 +61,7 @@ export async function POST(req: Request, {params}: { params: { id: string } }) {
             .maybeSingle();
 
         if (error) {
-            const msg = error.code ? `${error.message} (code ${error.code})` : error.message;
+            const msg = (error).code ? `${error.message} (code ${(error).code})` : error.message;
             return NextResponse.json({ok: false, error: msg}, {status: 400});
         }
 
