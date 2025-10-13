@@ -7,7 +7,13 @@ import { BranchForm } from '@/components/admin/branches/BranchForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function BranchEditPage({ params }: { params: { id: string; branchId: string } }) {
+type RouteParams = { id: string; branchId: string };
+
+export default async function BranchEditPage(
+    { params }: { params: Promise<RouteParams> }
+) {
+    const { id, branchId } = await params;
+
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -18,15 +24,15 @@ export default async function BranchEditPage({ params }: { params: { id: string;
     });
     const { data: { user } } = await supa.auth.getUser();
     if (!user) return <div className="p-4">Не авторизован</div>;
-    const { data:isSuper } = await supa.rpc('is_super_admin');
+    const { data: isSuper } = await supa.rpc('is_super_admin');
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
 
     const admin = createClient(URL, SERVICE);
     const { data: branch, error } = await admin
         .from('branches')
         .select('id,biz_id,name,address,is_active')
-        .eq('biz_id', params.id)
-        .eq('id', params.branchId)
+        .eq('biz_id', id)
+        .eq('id', branchId)
         .maybeSingle();
 
     if (error) return <div className="p-4">Ошибка: {error.message}</div>;
