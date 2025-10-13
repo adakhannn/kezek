@@ -2,10 +2,10 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {createClient} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
-import {NextResponse} from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 type Body = { name: string; address?: string | null; is_active?: boolean };
 
@@ -14,9 +14,20 @@ const norm = (s?: string | null) => {
     return v.length ? v : null;
 };
 
-export async function POST(req: Request, ctx: { params: Record<string, string | string[]> }) {
-    const raw = ctx.params.id;
-    const id = Array.isArray(raw) ? raw[0] : raw; // гарантируем string
+export async function POST(req: Request, context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string | string[]> }).params
+            : {};
+    const rawId = (params as Record<string, string | string[]>).id;
+    const bizId = Array.isArray(rawId) ? rawId[0] : rawId;
+
+    if (!bizId) {
+        return NextResponse.json({ ok: false, error: 'missing id' }, { status: 400 });
+    }
 
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -43,14 +54,18 @@ export async function POST(req: Request, ctx: { params: Record<string, string | 
 
         const { data, error } = await admin
             .from('branches')
-            .insert({ biz_id: id, name, address: norm(body.address), is_active: body.is_active ?? true })
+            .insert({
+                biz_id: bizId,
+                name,
+                address: norm(body.address),
+                is_active: body.is_active ?? true,
+            })
             .select('id')
             .maybeSingle();
 
         if (error) {
-            const msg = (error as { code?: string; message: string }).code
-                ? `${error.message} (code ${(error).code})`
-                : error.message;
+            const code = (error as { code?: string }).code;
+            const msg = code ? `${error.message} (code ${code})` : error.message;
             return NextResponse.json({ ok: false, error: msg }, { status: 400 });
         }
 
@@ -61,3 +76,4 @@ export async function POST(req: Request, ctx: { params: Record<string, string | 
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }
+
