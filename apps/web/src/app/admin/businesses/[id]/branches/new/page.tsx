@@ -6,8 +6,11 @@ import { cookies } from 'next/headers';
 import { BranchForm } from '@/components/admin/branches/BranchForm';
 
 export const dynamic = 'force-dynamic';
-
-export default async function BranchNewPage({ params }: { params: { id: string } }) {
+type RouteParams = { id: string; branchId: string };
+export default async function BranchNewPage(
+    { params }: { params: Promise<RouteParams> }
+) {
+    const { id} = await params;
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -22,7 +25,7 @@ export default async function BranchNewPage({ params }: { params: { id: string }
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
 
     const admin = createClient(URL, SERVICE);
-    const { data: biz } = await admin.from('businesses').select('id,name').eq('id', params.id).maybeSingle();
+    const { data: biz } = await admin.from('businesses').select('id,name').eq('id', id).maybeSingle();
 
     if (!biz) return <div className="p-4">Бизнес не найден</div>;
 

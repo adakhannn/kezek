@@ -5,8 +5,10 @@ import {cookies} from 'next/headers';
 import {CategoryForm} from '@/components/admin/categories/CategoryForm';
 
 export const dynamic = 'force-dynamic';
-
-export default async function CategoryEditPage({params}: { params: { id: string } }) {
+type RouteParams = { id: string };
+export default async function CategoryEditPage({params}: { params: Promise<RouteParams> }
+) {
+    const {id} = await params;
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -29,7 +31,7 @@ export default async function CategoryEditPage({params}: { params: { id: string 
     const {data: cat, error} = await admin
         .from('categories')
         .select('id,slug,name_ru,name_ky,is_active')
-        .eq('id', params.id)
+        .eq('id', id)
         .maybeSingle();
 
     if (error) return <div className="p-4">Ошибка: {error.message}</div>;

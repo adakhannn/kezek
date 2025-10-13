@@ -14,8 +14,11 @@ type BizRow = {
 };
 
 type OwnerInitial = { fullName: string; email: string; phone: string };
-
-export default async function OwnerPage({params}: { params: { id: string } }) {
+type RouteParams = { id: string };
+export default async function OwnerPage(
+    {params}: { params: Promise<RouteParams> }
+) {
+    const {id} = await params;
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -43,7 +46,7 @@ export default async function OwnerPage({params}: { params: { id: string } }) {
     const {data: biz, error: eBiz} = await admin
         .from('businesses')
         .select('id,name,owner_id')
-        .eq('id', params.id)
+        .eq('id', id)
         .maybeSingle<BizRow>();
 
     if (eBiz) return <div className="p-4">Ошибка: {eBiz.message}</div>;
