@@ -51,7 +51,13 @@ function isSlugValid(s: string) {
     return /^[a-z0-9-]{2,}$/.test(s);
 }
 
-export async function POST(req: Request, {params}: { params: { id: string } }) {
+export async function POST(req: Request, context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

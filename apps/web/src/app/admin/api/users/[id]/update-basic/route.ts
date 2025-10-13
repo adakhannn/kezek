@@ -15,7 +15,13 @@ type Body = {
 
 type ProfilesRow = { id: string; full_name: string | null };
 
-export async function POST(req: Request, {params}: { params: { id: string } }) {
+export async function POST(req: Request, context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

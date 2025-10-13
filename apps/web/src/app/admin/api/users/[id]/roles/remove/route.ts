@@ -10,7 +10,13 @@ import {NextResponse} from 'next/server';
 type Role = 'owner' | 'manager' | 'staff' | 'admin' | 'client';
 type Body = { biz_id: string; role: Role };
 
-export async function POST(req: Request, {params}: { params: { id: string } }) {
+export async function POST(req: Request, context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

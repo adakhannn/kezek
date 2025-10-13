@@ -113,7 +113,13 @@ async function upsertOwnerUser(admin: AdminClient, payload: Body): Promise<strin
     throw error ?? new Error('createUser failed');
 }
 
-export async function POST(req: Request, {params}: { params: { id: string } }) {
+export async function POST(req: Request, context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     try {
         // ---- ENV guard ----
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;

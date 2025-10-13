@@ -7,7 +7,13 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
-export async function POST(_req: Request, {params}: { params: { id: string } }) {
+export async function POST(_req: Request, context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';

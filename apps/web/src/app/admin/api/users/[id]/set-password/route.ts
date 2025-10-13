@@ -9,7 +9,13 @@ import {NextResponse} from 'next/server';
 
 type Body = { password: string };
 
-export async function POST(req: Request, {params}: { params: { id: string } }) {
+export async function POST(req: Request, context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     // базовая валидация тела
     const body = (await req.json()) as Body;
     if (!body?.password || typeof body.password !== 'string' || body.password.trim().length < 8) {
