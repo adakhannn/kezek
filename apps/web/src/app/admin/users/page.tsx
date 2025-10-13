@@ -68,38 +68,28 @@ async function fetchList(search: string, page: number, perPage: number): Promise
     return json;
 }
 
-export default async function UsersListPage({
-                                                searchParams,
-                                            }: {
-    searchParams: { q?: string; page?: string; perPage?: string };
-}) {
+export default async function UsersListPage(
+    { searchParams }: { searchParams: Promise<{ q?: string; page?: string; perPage?: string }> }
+) {
+    const sp = await searchParams;
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const cookieStore = await cookies();
 
     const supa = createServerClient(url, anon, {
-        cookies: {
-            get: (n) => cookieStore.get(n)?.value,
-            set: () => {
-            },
-            remove: () => {
-            },
-        },
+        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
-    // Сессия и доступ
-    const {
-        data: {user},
-    } = await supa.auth.getUser();
+    const { data: { user } } = await supa.auth.getUser();
     if (!user) redirect('/auth/sign-in?redirect=/admin/users');
 
-    const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
+    const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
     if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
 
-    const q = (searchParams.q ?? '').trim();
-    const page = Number(searchParams.page ?? '1');
-    const perPage = Number(searchParams.perPage ?? '50');
+    const q = (sp.q ?? '').trim();
+    const page = Number(sp.page ?? '1');
+    const perPage = Number(sp.perPage ?? '50');
 
     const data = await fetchList(q, page, perPage);
 
