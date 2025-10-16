@@ -1,7 +1,8 @@
+// apps/web/src/components/admin/users/UserSecurityActions.tsx
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import {useRouter} from 'next/navigation';
+import {useState} from 'react';
 
 type OkResp = { ok: true };
 type ErrResp = { ok: false; error?: string };
@@ -10,7 +11,7 @@ type ToggleSuperResp = OkResp | ErrResp;
 type DeleteUserResp = OkResp | ErrResp;
 type SendMagicResp = ({ ok: true; link?: string } | ErrResp);
 
-export function UserSecurityActions({ userId, isSuper }: { userId: string; isSuper: boolean }) {
+export function UserSecurityActions({userId, isSuper}: { userId: string; isSuper: boolean }) {
     const [pwd, setPwd] = useState('');
     const [loading, setLoading] = useState(false);
     const [msg, setMsg] = useState<string | null>(null);
@@ -19,23 +20,23 @@ export function UserSecurityActions({ userId, isSuper }: { userId: string; isSup
     const [magic, setMagic] = useState<string | null>(null);
     const router = useRouter();
 
-    function extractError(e: unknown): string {
-        return e instanceof Error ? e.message : String(e);
-    }
+    const extractError = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
     async function setPassword() {
-        setLoading(true); setErr(null); setMsg(null);
+        setLoading(true);
+        setErr(null);
+        setMsg(null);
         try {
             const resp = await fetch(`/admin/api/users/${userId}/set-password`, {
                 method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ password: pwd }),
+                headers: {'content-type': 'application/json'},
+                body: JSON.stringify({password: pwd}),
             });
             const j = (await resp.json()) as SetPasswordResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${resp.status}`);
             setMsg('Пароль обновлён');
             setPwd('');
-        } catch (e: unknown) {
+        } catch (e) {
             setErr(extractError(e));
         } finally {
             setLoading(false);
@@ -43,14 +44,17 @@ export function UserSecurityActions({ userId, isSuper }: { userId: string; isSup
     }
 
     async function sendMagic() {
-        setLoading(true); setErr(null); setMsg(null); setMagic(null);
+        setLoading(true);
+        setErr(null);
+        setMsg(null);
+        setMagic(null);
         try {
-            const resp = await fetch(`/admin/api/users/${userId}/send-magic-link`, { method: 'POST' });
+            const resp = await fetch(`/admin/api/users/${userId}/send-magic-link`, {method: 'POST'});
             const j = (await resp.json()) as SendMagicResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${resp.status}`);
             setMsg('Magic-link отправлен на email (если настроена почта)');
             if ('link' in j && j.link) setMagic(j.link);
-        } catch (e: unknown) {
+        } catch (e) {
             setErr(extractError(e));
         } finally {
             setLoading(false);
@@ -58,18 +62,20 @@ export function UserSecurityActions({ userId, isSuper }: { userId: string; isSup
     }
 
     async function toggleSuper(next: boolean) {
-        setLoading(true); setErr(null); setMsg(null);
+        setLoading(true);
+        setErr(null);
+        setMsg(null);
         try {
             const resp = await fetch(`/admin/api/users/${userId}/toggle-super`, {
                 method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ makeSuper: next }),
+                headers: {'content-type': 'application/json'},
+                body: JSON.stringify({makeSuper: next}),
             });
             const j = (await resp.json()) as ToggleSuperResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${resp.status}`);
             setSuperVal(next);
             setMsg(next ? 'Назначен супер-админом' : 'Супер-админ снят');
-        } catch (e: unknown) {
+        } catch (e) {
             setErr(extractError(e));
         } finally {
             setLoading(false);
@@ -78,14 +84,16 @@ export function UserSecurityActions({ userId, isSuper }: { userId: string; isSup
 
     async function deleteUser() {
         if (!confirm('Удалить пользователя? Это действие необратимо.')) return;
-        setLoading(true); setErr(null); setMsg(null);
+        setLoading(true);
+        setErr(null);
+        setMsg(null);
         try {
-            const resp = await fetch(`/admin/api/users/${userId}/delete`, { method: 'POST' });
+            const resp = await fetch(`/admin/api/users/${userId}/delete`, {method: 'POST'});
             const j = (await resp.json()) as DeleteUserResp;
             if (!resp.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${resp.status}`);
             router.push('/admin/users');
             router.refresh();
-        } catch (e: unknown) {
+        } catch (e) {
             setErr(extractError(e));
         } finally {
             setLoading(false);
@@ -103,7 +111,7 @@ export function UserSecurityActions({ userId, isSuper }: { userId: string; isSup
                         type="password"
                         className="border rounded px-3 py-2 w-full"
                         value={pwd}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPwd(e.target.value)}
+                        onChange={(e) => setPwd(e.target.value)}
                     />
                     <button
                         className="border rounded px-3 py-2"
@@ -133,7 +141,7 @@ export function UserSecurityActions({ userId, isSuper }: { userId: string; isSup
                         <input
                             type="checkbox"
                             checked={superVal}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => toggleSuper(e.target.checked)}
+                            onChange={(e) => toggleSuper(e.target.checked)}
                         />
                         <span className="text-sm">{superVal ? 'Да' : 'Нет'}</span>
                     </div>
@@ -143,7 +151,6 @@ export function UserSecurityActions({ userId, isSuper }: { userId: string; isSup
                 {err && <div className="text-red-600 text-sm">{err}</div>}
             </div>
 
-            {/* Опасная зона */}
             <div className="space-y-2 rounded border border-red-300 p-4">
                 <h3 className="font-semibold text-red-700">Опасная зона</h3>
                 <p className="text-sm text-red-700/80">
@@ -161,4 +168,3 @@ export function UserSecurityActions({ userId, isSuper }: { userId: string; isSup
         </div>
     );
 }
-

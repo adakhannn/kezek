@@ -7,30 +7,16 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
-type Body = { makeSuper: boolean };
-type SuperAdminRow = { user_id: string };
+type Body = { makeSuper?: boolean };
 
-export async function POST(req: Request, context: unknown) {
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
+export async function POST(req: Request, {params}: { params: { id: string } }) {
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-        // Парсим и валидируем тело
-        const body = (await req.json()) as Body;
-        if (typeof body?.makeSuper !== 'boolean') {
-            return NextResponse.json({ok: false, error: 'Bad request: makeSuper boolean required'}, {status: 400});
-        }
-        const {makeSuper} = body;
-
-        // Проверяем, что вызывающий — супер-админ
         const cookieStore = await cookies();
+
+        // Проверяем, что вызывающий — глобальный супер-админ
         const supa = createServerClient(URL, ANON, {
             cookies: {
                 get: (n) => cookieStore.get(n)?.value, set: () => {
@@ -44,40 +30,53 @@ export async function POST(req: Request, context: unknown) {
         } = await supa.auth.getUser();
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
-        const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
-        if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
+        const {data: superRow, error: superErr} = await supa
+            .from('user_roles_with_user')
+            .select('role_key,biz_id')
+            .eq('role_key', 'super_admin')
+            .is('biz_id', null)
+            .limit(1)
+            .maybeSingle();
 
-        // Админ-клиент (service role)
+        if (superErr) return NextResponse.json({ok: false, error: superErr.message}, {status: 400});
+        if (!superRow) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
+
+        // Работаем админ-клиентом
         const admin = createClient(URL, SERVICE);
+        const body = (await req.json()) as Body;
+        const makeSuper = !!body.makeSuper;
+
+        // Найдём role_id для super_admin
+        const {data: roleRow, error: roleErr} = await admin
+            .from('roles')
+            .select('id')
+            .eq('key', 'super_admin')
+            .maybeSingle();
+
+        if (roleErr || !roleRow) {
+            return NextResponse.json({ok: false, error: 'Роль super_admin не найдена'}, {status: 400});
+        }
+
+        const role_id = roleRow.id;
 
         if (makeSuper) {
-            // Назначить супер-админа (idempotent)
             const {error} = await admin
-                .from('super_admins')
-                .upsert({user_id: params.id} satisfies SuperAdminRow, {onConflict: 'user_id'});
+                .from('user_roles')
+                .upsert({user_id: params.id, biz_id: null, role_id}, {onConflict: 'user_id,biz_id,role_id'});
             if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
         } else {
-            // Защита: не позволяем удалить последнего супер-админа
-            const {count, error: cntErr} = await admin
-                .from('super_admins')
-                .select('user_id', {count: 'exact', head: true});
-            if (cntErr) return NextResponse.json({ok: false, error: cntErr.message}, {status: 400});
-            if ((count ?? 0) <= 1) {
-                return NextResponse.json(
-                    {ok: false, error: 'Нельзя удалить последнего супер-админа'},
-                    {status: 400},
-                );
-            }
-
-            const {error} = await admin.from('super_admins').delete().eq('user_id', params.id);
+            const {error} = await admin
+                .from('user_roles')
+                .delete()
+                .eq('user_id', params.id)
+                .is('biz_id', null)
+                .eq('role_id', role_id);
             if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
         }
 
         return NextResponse.json({ok: true});
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('toggle-super error', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

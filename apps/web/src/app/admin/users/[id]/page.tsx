@@ -10,25 +10,26 @@ import {UserSecurityActions} from '@/components/admin/users/UserSecurityActions'
 
 export const dynamic = 'force-dynamic';
 
-type RoleRowJoin = {
-    biz_id: string;
-    role: string;
+type Biz = { id: string; name: string; slug: string };
+
+type RoleJoinRow = {
+    biz_id: string | null;
+    roles: { key: string } | null; // join на roles
     businesses:
         | { name: string | null; slug: string | null }
         | { name: string | null; slug: string | null }[]
         | null;
 };
+
 type RoleRow = {
-    biz_id: string;
-    role: string;
+    biz_id: string | null;
+    role: string; // role_key
     businesses?: { name: string | null; slug: string | null } | null;
 };
-type Biz = { id: string; name: string; slug: string };
-type RouteParams = { id: string };
-export default async function UserPage(
-    {params}: { params: Promise<RouteParams> }
-) {
-    const {id} = await params;
+
+export default async function UserPage({params}: { params: { id: string } }) {
+    const id = params.id;
+
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -47,9 +48,18 @@ export default async function UserPage(
         data: {user},
     } = await supa.auth.getUser();
     if (!user) return <div className="p-4">Не авторизован</div>;
-    const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-    if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
-    if (!isSuper) return <div className="p-4">Нет доступа</div>;
+
+    // Проверка прав: глобальная роль super_admin из представления user_roles_with_user
+    const {data: superRow, error: superErr} = await supa
+        .from('user_roles_with_user')
+        .select('role_key,biz_id')
+        .eq('role_key', 'super_admin')
+        .is('biz_id', null)
+        .limit(1)
+        .maybeSingle();
+
+    if (superErr) return <div className="p-4">Ошибка: {superErr.message}</div>;
+    if (!superRow) return <div className="p-4">Нет доступа</div>;
 
     // Админ-клиент
     const admin = createClient(URL, SERVICE);
@@ -60,33 +70,44 @@ export default async function UserPage(
     const u = got?.user;
     if (!u) return <div className="p-4">Пользователь не найден</div>;
 
-    // Имя из profiles — ключевое: тип через maybeSingle<...>(), иначе TS может вывести never
+    // Профиль (поле full_name)
     const {data: prof} = await admin
         .from('profiles')
         .select('full_name')
         .eq('id', id)
         .maybeSingle<{ full_name: string | null }>();
 
-    // Супер-админ?
-    const {data: su} = await admin
-        .from('super_admins')
+    // Супер-админ? — проверяем через view user_roles_with_user
+    const {data: suRow} = await admin
+        .from('user_roles_with_user')
         .select('user_id')
         .eq('user_id', id)
-        .maybeSingle<{ user_id: string }>();
-    const isSuperUser = !!su;
+        .eq('role_key', 'super_admin')
+        .is('biz_id', null)
+        .limit(1)
+        .maybeSingle();
+    const isSuperUser = !!suRow;
 
-    // Роли
     const {data: rawRoles} = await admin
         .from('user_roles')
-        .select('biz_id,role,businesses(name,slug)')
+        .select('biz_id, roles!inner(key), businesses(name,slug)')
         .eq('user_id', id)
-        .returns<RoleRowJoin[]>();
+        .returns<RoleJoinRow[]>();
 
     const roles: RoleRow[] = (rawRoles ?? []).map((r) => ({
-        biz_id: r.biz_id,
-        role: r.role,
+        biz_id: r.biz_id, // может быть null у глобальных ролей
+        role: r.roles?.key ?? '',
         businesses: Array.isArray(r.businesses) ? (r.businesses[0] ?? null) : r.businesses ?? null,
     }));
+
+    // 👉 Роли для редактора: только «по бизнесам» (biz_id не null) и с biz_id как string
+    const rolesForEditor = roles
+        .filter((r) => r.biz_id) // убираем глобальные (super_admin и т.п.)
+        .map((r) => ({
+            biz_id: r.biz_id!,                 // теперь точно string
+            role: r.role,
+            businesses: r.businesses ?? null,
+        }));
 
     // Все бизнесы
     const {data: allBiz} = await admin
@@ -95,7 +116,7 @@ export default async function UserPage(
         .order('name')
         .returns<Biz[]>();
 
-    // Аккуратно типизируем метаданные пользователя
+    // Метаданные пользователя
     const userMeta = (u.user_metadata ?? {}) as Partial<{ full_name: string }>;
 
     return (
@@ -114,10 +135,10 @@ export default async function UserPage(
                         initial={{
                             full_name: prof?.full_name ?? userMeta.full_name ?? '',
                             email: u.email ?? '',
-                            phone: u.phone ?? '',
+                            phone: (u as { phone?: string | null }).phone ?? '',
                         }}
                     />
-                    <UserRolesEditor userId={id} roles={roles} allBusinesses={allBiz ?? []}/>
+                    <UserRolesEditor userId={id} roles={rolesForEditor} allBusinesses={allBiz ?? []}/>
                 </div>
 
                 <aside className="space-y-4">
@@ -127,4 +148,3 @@ export default async function UserPage(
         </main>
     );
 }
-

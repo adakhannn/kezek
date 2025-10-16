@@ -1,6 +1,8 @@
+// apps/web/src/app/admin/businesses/page.tsx
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 type Biz = {
     id: string;
@@ -20,32 +22,58 @@ export default async function Page() {
         cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
-    // Проверка супер-админа (дублируем внутри страницы на всякий случай)
-    const { data: isSuper } = await supabase.rpc('is_super_admin');
-    if (!isSuper) return <main className="p-6">403</main>;
+    // 1) авторизация
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect('/auth/sign-in?redirect=/admin/businesses');
 
-    // Бизнесы + получим email владельца через view
-    const { data: list } = await supabase
+    // 2) новая проверка супер-админа через view user_roles_with_user
+    const { data: superRow, error: roleErr } = await supabase
+        .from('user_roles_with_user')
+        .select('role_key,biz_id')
+        .eq('role_key', 'super_admin')
+        .is('biz_id', null)
+        .limit(1)
+        .maybeSingle();
+
+    if (roleErr || !superRow) {
+        return <main className="p-6">403</main>;
+    }
+
+    // 3) список бизнесов
+    const { data: list, error: listErr } = await supabase
         .from('businesses')
         .select('id,slug,name,address,phones,owner_id,created_at')
         .order('created_at', { ascending: false });
 
-    // Соберём email владельцев одним запросом
+    if (listErr) {
+        return (
+            <main className="p-6">
+                <div className="text-red-600">Ошибка загрузки бизнесов: {listErr.message}</div>
+            </main>
+        );
+    }
+
+    // 4) e-mail владельцев (через view с auth.users)
     const ownerIds = Array.from(new Set((list ?? []).map(b => b.owner_id).filter(Boolean))) as string[];
     let ownersMap = new Map<string, string>();
     if (ownerIds.length) {
-        const { data: owners } = await supabase
-            .from('auth_users_view') // у нас есть такая view
+        const { data: owners, error: ownersErr } = await supabase
+            .from('auth_users_view') // твоя вьюха
             .select('id,email')
             .in('id', ownerIds);
-        ownersMap = new Map((owners ?? []).map(r => [r.id as string, (r.email as string) ?? '']));
+
+        if (!ownersErr) {
+            ownersMap = new Map((owners ?? []).map(r => [r.id as string, (r.email as string) ?? '']));
+        }
     }
 
     return (
         <main className="space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Бизнесы</h2>
-                <Link href="/admin/businesses/new" className="border px-3 py-1 rounded">+ Создать бизнес</Link>
+                <Link href="/admin/businesses/new" className="border px-3 py-1 rounded">
+                    + Создать бизнес
+                </Link>
             </div>
 
             <div className="overflow-x-auto">
@@ -73,9 +101,15 @@ export default async function Page() {
                             </td>
                         </tr>
                     ))}
+                    {(!list || list.length === 0) && (
+                        <tr>
+                            <td className="p-4 text-gray-500" colSpan={6}>Пока нет бизнесов.</td>
+                        </tr>
+                    )}
                     </tbody>
                 </table>
             </div>
         </main>
     );
 }
+

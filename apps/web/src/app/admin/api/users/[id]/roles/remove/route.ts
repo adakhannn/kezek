@@ -1,4 +1,4 @@
-// apps/web/src/app/admin/api/users/[id]/roles/remove/route.ts
+// apps/web/src/app/admin/api/users/[id]/roles/delete/route.ts
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -92,7 +92,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ok: true});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('role remove error', e);
+        console.error('role delete error', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

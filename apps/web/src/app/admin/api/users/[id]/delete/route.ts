@@ -7,21 +7,15 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
-export async function POST(_req: Request, context: unknown) {
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
+export async function POST(_req: Request, {params}: { params: { id: string } }) {
     try {
-        const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-        // проверяем, что запрос от залогиненного супер-админа
+        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const cookieStore = await cookies();
-        const supa = createServerClient(SUPABASE_URL, ANON_KEY, {
+
+        // Проверяем, что вызывающий — глобальный супер-админ
+        const supa = createServerClient(URL, ANON, {
             cookies: {
                 get: (n) => cookieStore.get(n)?.value, set: () => {
                 }, remove: () => {
@@ -30,81 +24,50 @@ export async function POST(_req: Request, context: unknown) {
         });
 
         const {
-            data: {user: me},
+            data: {user},
         } = await supa.auth.getUser();
-        if (!me) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
+        if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
-        const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
-        if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
+        const {data: superRow, error: superErr} = await supa
+            .from('user_roles_with_user')
+            .select('role_key,biz_id')
+            .eq('role_key', 'super_admin')
+            .is('biz_id', null)
+            .limit(1)
+            .maybeSingle();
 
-        // нельзя удалить самого себя
-        if (params.id === me.id) {
-            return NextResponse.json({ok: false, error: 'Нельзя удалить самого себя'}, {status: 400});
+        if (superErr) return NextResponse.json({ok: false, error: superErr.message}, {status: 400});
+        if (!superRow) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
+
+        const admin = createClient(URL, SERVICE);
+
+        // Нельзя удалить пользователя, который сам является глобальным супер-админом
+        const {data: victimSuper} = await admin
+            .from('user_roles_with_user')
+            .select('user_id')
+            .eq('user_id', params.id)
+            .eq('role_key', 'super_admin')
+            .is('biz_id', null)
+            .limit(1)
+            .maybeSingle();
+
+        if (victimSuper) {
+            return NextResponse.json(
+                {ok: false, error: 'Нельзя удалить глобального супер-админа'},
+                {status: 400},
+            );
         }
 
-        const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+        // Чистим роли (необязательно, но аккуратно)
+        await admin.from('user_roles').delete().eq('user_id', params.id);
 
-        // защита: если удаляется супер-админ — убедимся, что он не последний
-        const {count: isTargetSuper, error: eChk1} = await admin
-            .from('super_admins')
-            .select('user_id', {head: true, count: 'exact'})
-            .eq('user_id', params.id);
-        if (eChk1) return NextResponse.json({ok: false, error: eChk1.message}, {status: 400});
-
-        if ((isTargetSuper ?? 0) > 0) {
-            const {count: totalSupers, error: eChk2} = await admin
-                .from('super_admins')
-                .select('user_id', {head: true, count: 'exact'});
-            if (eChk2) return NextResponse.json({ok: false, error: eChk2.message}, {status: 400});
-            if ((totalSupers ?? 0) <= 1) {
-                return NextResponse.json(
-                    {ok: false, error: 'Нельзя удалить последнего супер-админа'},
-                    {status: 400},
-                );
-            }
-        }
-
-        // 1) снять владельца у бизнесов, где он указан в owner_id
-        {
-            const {error} = await admin.from('businesses').update({owner_id: null}).eq('owner_id', params.id);
-            if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
-        }
-
-        // 2) обнулить client_id в бронированиях (FK)
-        {
-            const {error} = await admin.from('bookings').update({client_id: null}).eq('client_id', params.id);
-            if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
-        }
-
-        // 3) убрать все роли
-        {
-            const {error} = await admin.from('user_roles').delete().eq('user_id', params.id);
-            if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
-        }
-
-        // 4) убрать супер-админа (если был)
-        {
-            const {error} = await admin.from('super_admins').delete().eq('user_id', params.id);
-            if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
-        }
-
-        // 5) (опционально) удалить профиль, если нет ON DELETE CASCADE
-        // await admin.from('profiles').delete().eq('id', params.id);
-
-        // 6) удалить из auth.users
-        {
-            const {error} = await admin.auth.admin.deleteUser(params.id);
-            if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
-        }
+        // Удаляем пользователя через Admin API
+        const {error: delErr} = await admin.auth.admin.deleteUser(params.id);
+        if (delErr) return NextResponse.json({ok: false, error: delErr.message}, {status: 400});
 
         return NextResponse.json({ok: true});
-    } catch (e) {
+    } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('user delete error', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }
-
-// поддержим HTTP DELETE
-export const DELETE = POST;
