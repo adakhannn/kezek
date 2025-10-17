@@ -6,7 +6,13 @@ import EditRoleClient from './EditRoleClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function RoleEditPage({params}: { params: { id: string } }) {
+export default async function RoleEditPage(context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const cookieStore = await cookies();
