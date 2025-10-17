@@ -27,7 +27,13 @@ type RoleRow = {
     businesses?: { name: string | null; slug: string | null } | null;
 };
 
-export default async function UserPage({params}: { params: { id: string } }) {
+export default async function UserPage(context: unknown) {
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     const id = params.id;
 
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
