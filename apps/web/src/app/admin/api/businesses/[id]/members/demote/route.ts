@@ -9,13 +9,18 @@ import {NextResponse} from 'next/server';
 type Body = { user_id?: string };
 
 function isUuid(v?: string | null): v is string {
-    return !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+    return (
+        !!v &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
+    );
 }
 
-export async function POST(req: Request, context: { params?: { id?: string } }) {
+export async function POST(req: Request, {params}: { params: { id: string } }) {
     try {
-        const biz_id = context?.params?.id ?? '';
-        if (!isUuid(biz_id)) return NextResponse.json({ok: false, error: 'bad biz_id'}, {status: 400});
+        const biz_id = params?.id;
+        if (!isUuid(biz_id)) {
+            return NextResponse.json({ok: false, error: 'bad biz_id'}, {status: 400});
+        }
 
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -30,6 +35,7 @@ export async function POST(req: Request, context: { params?: { id?: string } }) 
             },
         });
 
+        // auth
         const {data: {user}} = await supa.auth.getUser();
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
@@ -51,27 +57,57 @@ export async function POST(req: Request, context: { params?: { id?: string } }) 
         if (!allowed) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         const body = (await req.json()) as Body;
-        const user_id = body.user_id ?? '';
-        if (!isUuid(user_id)) return NextResponse.json({ok: false, error: 'bad user_id'}, {status: 400});
+        const user_id = body?.user_id ?? '';
+        if (!isUuid(user_id)) {
+            return NextResponse.json({ok: false, error: 'bad user_id'}, {status: 400});
+        }
 
         const admin = createClient(URL, SERVICE);
 
         // найдём role_id для client
-        const {data: clientRole} = await admin.from('roles').select('id').eq('key', 'client').maybeSingle();
-        if (!clientRole?.id) return NextResponse.json({ok: false, error: 'client role not found'}, {status: 400});
+        const {data: clientRole, error: roleErr} = await admin
+            .from('roles')
+            .select('id')
+            .eq('key', 'client')
+            .maybeSingle();
 
-        // удаляем все роли для этого бизнеса КРОМЕ client
-        await admin.from('user_roles')
+        if (roleErr) {
+            return NextResponse.json({ok: false, error: roleErr.message}, {status: 400});
+        }
+        if (!clientRole?.id) {
+            return NextResponse.json({ok: false, error: 'client role not found'}, {status: 400});
+        }
+
+        // удаляем все роли по этому бизнесу, КРОМЕ client
+        const {error: delErr} = await admin
+            .from('user_roles')
             .delete()
             .eq('user_id', user_id)
             .eq('biz_id', biz_id)
             .neq('role_id', clientRole.id);
 
-        // гарантируем, что client присутствует
-        await admin.from('user_roles').upsert(
-            {user_id, biz_id, role_id: clientRole.id},
-            {onConflict: 'user_id,biz_id,role_id'}
-        );
+        if (delErr) {
+            return NextResponse.json({ok: false, error: delErr.message}, {status: 400});
+        }
+
+        // гарантируем наличие client (idемпотентно)
+        const {error: upsertErr} = await admin
+            .from('user_roles')
+            .upsert(
+                {user_id, biz_id, role_id: clientRole.id},
+                {onConflict: 'user_id,role_id,biz_id'} // порядок колонок должен соответствовать уникальному индексу/констрейну
+            );
+
+        if (upsertErr) {
+            // дружелюбный хинт, если не хватает индекса
+            const hint =
+                /ON CONFLICT|unique|constraint/i.test(upsertErr.message)
+                    ? `${upsertErr.message}. Убедись, что созданы индексы:
+• CREATE UNIQUE INDEX IF NOT EXISTS user_roles_global_uniq ON public.user_roles (user_id, role_id) WHERE biz_id IS NULL;
+• CREATE UNIQUE INDEX IF NOT EXISTS user_roles_per_biz_uniq ON public.user_roles (user_id, role_id, biz_id) WHERE biz_id IS NOT NULL;`
+                    : upsertErr.message;
+            return NextResponse.json({ok: false, error: hint}, {status: 400});
+        }
 
         return NextResponse.json({ok: true});
     } catch (e: unknown) {
