@@ -99,6 +99,9 @@ export default async function BizPage(
                             Редактировать владельца
                         </Link>
                     )}
+                    <Link href={`/admin/businesses/${biz.id}/members`} className="underline">
+                        Участники
+                    </Link>
                 </div>
             </div>
 

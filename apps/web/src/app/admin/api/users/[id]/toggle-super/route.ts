@@ -1,4 +1,3 @@
-// apps/web/src/app/admin/api/users/[id]/toggle-super/route.ts
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -9,31 +8,21 @@ import { NextResponse } from 'next/server';
 
 type Body = { makeSuper?: boolean };
 
-export async function POST(req: Request, context: unknown) {
+export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
     try {
-        // извлекаем id из context безопасно
-        const params =
-            typeof context === 'object' && context !== null && 'params' in context
-                ? (context as { params?: Record<string, string | string[]> }).params ?? {}
-                : {};
-        const id = Array.isArray(params.id) ? params.id[0] : params.id;
-        if (!id) {
-            return NextResponse.json({ ok: false, error: 'missing id' }, { status: 400 });
-        }
+        const { id } = await ctx.params;
 
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const cookieStore = await cookies();
 
-        // Проверяем, что вызывающий — глобальный super_admin
+        // Проверяем, что вызвавший — глобальный супер-админ
         const supa = createServerClient(URL, ANON, {
-            cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+            cookies: { get: n => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
-        const {
-            data: { user },
-        } = await supa.auth.getUser();
+        const { data: { user } } = await supa.auth.getUser();
         if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
         const { data: superRow, error: superErr } = await supa
@@ -47,20 +36,11 @@ export async function POST(req: Request, context: unknown) {
         if (superErr) return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
         if (!superRow) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
-        // Нельзя снять роль super_admin у самого себя (опциональная безопасная проверка)
+        const admin = createClient(URL, SERVICE);
         const body = (await req.json()) as Body;
         const makeSuper = !!body.makeSuper;
-        if (!makeSuper && user.id === id) {
-            return NextResponse.json(
-                { ok: false, error: 'Нельзя снять роль super_admin у самого себя' },
-                { status: 400 },
-            );
-        }
 
-        // Работаем админ-клиентом
-        const admin = createClient(URL, SERVICE);
-
-        // Находим role_id для super_admin
+        // находим role_id супер-админа
         const { data: roleRow, error: roleErr } = await admin
             .from('roles')
             .select('id')
@@ -71,24 +51,36 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ ok: false, error: 'Роль super_admin не найдена' }, { status: 400 });
         }
 
-        const role_id = roleRow.id as string;
+        const role_id = roleRow.id;
 
         if (makeSuper) {
-            const { error } = await admin
+            // проверка существования
+            const { data: existing, error: exErr } = await admin
                 .from('user_roles')
-                .upsert(
-                    { user_id: id, biz_id: null, role_id },
-                    { onConflict: 'user_id,biz_id,role_id' },
-                );
-            if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+                .select('user_id')
+                .eq('user_id', id)
+                .eq('role_id', role_id)
+                .is('biz_id', null)
+                .limit(1)
+                .maybeSingle();
+            if (exErr) return NextResponse.json({ ok: false, error: exErr.message }, { status: 400 });
+
+            if (!existing) {
+                const { error: insErr } = await admin
+                    .from('user_roles')
+                    .insert({ user_id: id, role_id, biz_id: null });
+                if (insErr && (insErr).code !== '23505') {
+                    return NextResponse.json({ ok: false, error: insErr.message }, { status: 400 });
+                }
+            }
         } else {
-            const { error } = await admin
+            const { error: delErr } = await admin
                 .from('user_roles')
                 .delete()
                 .eq('user_id', id)
-                .is('biz_id', null)
-                .eq('role_id', role_id);
-            if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+                .eq('role_id', role_id)
+                .is('biz_id', null);
+            if (delErr) return NextResponse.json({ ok: false, error: delErr.message }, { status: 400 });
         }
 
         return NextResponse.json({ ok: true });
@@ -97,4 +89,3 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }
-
