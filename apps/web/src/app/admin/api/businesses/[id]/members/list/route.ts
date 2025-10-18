@@ -18,9 +18,16 @@ type Item = {
     roles: string[]; // на клиенте скастится к RoleKey[]
 };
 
-export async function GET(_req: Request, ctx: { params: { id?: string } }) {
+export async function GET(_req: Request, context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     try {
-        const id = ctx?.params?.id ?? '';
+        const id = params?.id ?? '';
         if (!isUuid(id)) {
             return NextResponse.json({ok: false, error: 'bad biz_id'}, {status: 400});
         }

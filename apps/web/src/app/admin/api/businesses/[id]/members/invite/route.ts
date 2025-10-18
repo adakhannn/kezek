@@ -30,9 +30,16 @@ function isUuid(v: string) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[
 function isEmail(s: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
 function isE164(s: string) { return /^\+[1-9]\d{1,14}$/.test(s); }
 
-export async function POST(req: Request, ctx: { params: { id?: string } }) {
+export async function POST(req: Request, context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     try {
-        const biz_id = ctx?.params?.id ?? '';
+        const biz_id = params?.id ?? '';
         if (!isUuid(biz_id)) {
             return NextResponse.json({ ok: false, error: 'bad biz_id' }, { status: 400 });
         }
