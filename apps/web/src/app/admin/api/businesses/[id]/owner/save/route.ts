@@ -14,9 +14,16 @@ type Body = { full_name?: string | null; email?: string | null; phone?: string |
 function norm(v?: string | null) { const s = (v ?? '').trim(); return s || null; }
 function isE164(s: string) { return /^\+[1-9]\d{1,14}$/.test(s); }
 
-export async function POST(req: Request, ctx: { params: { id: string } }) {
+export async function POST(req: Request, context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string | string[]> }).params
+            : {};
     try {
-        const biz_id = ctx?.params?.id ?? '';
+        const biz_id = params?.id ?? '';
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
