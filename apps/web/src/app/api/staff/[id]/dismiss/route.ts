@@ -6,7 +6,14 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(_: Request, { params }: { params: { id: string } }) {
+export async function POST(_: Request, context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string | string[]> }).params
+            : {};
     const { supabase, bizId } = await getBizContextForManagers();
     const staffId = params.id;
 

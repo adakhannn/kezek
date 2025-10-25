@@ -1,13 +1,19 @@
 import {formatInTimeZone} from 'date-fns-tz';
 
-import Client from './Client';
-
+import Client from "@/app/dashboard/staff/[id]/slots/Client";
 import {getBizContextForManagers} from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export default async function StaffSlotsPage({params}: { params: { id: string } }) {
+export default async function StaffSlotsPage(context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string | string[]> }).params
+            : {};
     const {supabase, bizId} = await getBizContextForManagers();
 
     // загружаем сотрудника, услуги и филиалы бизнеса

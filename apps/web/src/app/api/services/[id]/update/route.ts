@@ -15,7 +15,14 @@ type Body = {
     branch_id: string;
 };
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string | string[]> }).params
+            : {};
     try {
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();

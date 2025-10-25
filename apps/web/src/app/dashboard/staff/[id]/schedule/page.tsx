@@ -7,7 +7,14 @@ import {getBizContextForManagers} from '@/lib/authBiz';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export default async function StaffSchedulePage({params}: { params: { id: string } }) {
+export default async function StaffSchedulePage(context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string | string[]> }).params
+            : {};
     const {supabase, bizId} = await getBizContextForManagers();
 
     const [{data: staff}, {data: branches}] = await Promise.all([
