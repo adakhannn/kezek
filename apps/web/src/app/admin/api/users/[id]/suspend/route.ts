@@ -81,7 +81,6 @@ export async function POST(req: Request, context: unknown) {
             });
 
             // 4) инвалидируем все сессии
-            // @ts-ignore SDK совместимость
             await (admin).auth.admin.signOut?.(targetId).catch(() => {
             });
             // старый метод:

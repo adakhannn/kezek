@@ -86,7 +86,7 @@ export async function GET(req: Request) {
 
         // 4) Подтягиваем profile.full_name
         const ids = users.map((u) => u.id) as string[];
-        let profiles: Record<string, { full_name: string | null }> = {};
+        const profiles: Record<string, { full_name: string | null }> = {};
         if (ids.length > 0) {
             const { data: profRows } = await admin
                 .from('profiles')
@@ -98,7 +98,7 @@ export async function GET(req: Request) {
         }
 
         // 5) Флаг супера
-        let superIds = new Set<string>();
+        const superIds = new Set<string>();
         if (ids.length > 0) {
             const { data: supers } = await admin
                 .from('user_roles_with_user')
@@ -110,7 +110,7 @@ export async function GET(req: Request) {
         }
 
         // 6) Флаг "заблокирован" (+ причина)
-        let blockedMap = new Map<string, { reason: string | null }>();
+        const blockedMap = new Map<string, { reason: string | null }>();
         if (ids.length > 0) {
             const { data: blocks } = await admin
                 .from('user_suspensions')
