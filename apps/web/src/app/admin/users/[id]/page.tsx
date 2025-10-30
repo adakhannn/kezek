@@ -89,7 +89,7 @@ export default async function UserPage(ctx: unknown) {
     const bizIds = Array.from(
         new Set((viewRoles ?? []).map(r => r.biz_id).filter(Boolean) as string[])
     );
-    let bizMap = new Map<string, { name: string; slug: string | null }>();
+    const bizMap = new Map<string, { name: string; slug: string | null }>();
     if (bizIds.length) {
         const { data: relBiz } = await admin
             .from('businesses')
