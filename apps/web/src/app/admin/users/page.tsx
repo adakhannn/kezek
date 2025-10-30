@@ -13,6 +13,8 @@ type UserListItem = {
     phone: string | null;
     last_sign_in_at: string | null;
     is_super: boolean;
+    is_blocked: boolean;
+    block_reason?: string | null;
 };
 
 type ListOk = {
@@ -25,21 +27,20 @@ type ListOk = {
 
 type ListErr = { ok: false; error?: string };
 
-async function fetchList(search: string, page: number, perPage: number): Promise<ListOk> {
+async function fetchList(search: string, page: number, perPage: number, status: string): Promise<ListOk> {
     const sp = new URLSearchParams({
         q: search,
         page: String(page),
         perPage: String(perPage),
+        status,
     }).toString();
 
-    // Абсолютный базовый URL из текущих заголовков
     const h = await headers();
     const proto = h.get('x-forwarded-proto') ?? 'http';
     const host = h.get('x-forwarded-host') ?? h.get('host');
     if (!host) throw new Error('Host header is missing');
     const base = `${proto}://${host}`;
 
-    // Пробрасываем cookie вручную (для SSR-запроса к API-роуту)
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join('; ');
 
@@ -56,7 +57,6 @@ async function fetchList(search: string, page: number, perPage: number): Promise
     if (ct.includes('application/json')) {
         json = (await res.json()) as ListOk | ListErr;
     } else {
-        // Если не JSON — считаем ошибкой и покажем тело
         const text = await res.text();
         throw new Error(text.slice(0, 1500));
     }
@@ -69,7 +69,7 @@ async function fetchList(search: string, page: number, perPage: number): Promise
 }
 
 export default async function UsersListPage(
-    { searchParams }: { searchParams: Promise<{ q?: string; page?: string; perPage?: string }> }
+    {searchParams}: { searchParams: Promise<{ q?: string; page?: string; perPage?: string; status?: string }> }
 ) {
     const sp = await searchParams;
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -77,21 +77,26 @@ export default async function UsersListPage(
     const cookieStore = await cookies();
 
     const supa = createServerClient(url, anon, {
-        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+        cookies: {
+            get: (n) => cookieStore.get(n)?.value, set: () => {
+            }, remove: () => {
+            }
+        },
     });
 
-    const { data: { user } } = await supa.auth.getUser();
+    const {data: {user}} = await supa.auth.getUser();
     if (!user) redirect('/auth/sign-in?redirect=/admin/users');
 
-    const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
+    const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
     if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
 
     const q = (sp.q ?? '').trim();
     const page = Number(sp.page ?? '1');
     const perPage = Number(sp.perPage ?? '50');
+    const status = (sp.status ?? 'all');
 
-    const data = await fetchList(q, page, perPage);
+    const data = await fetchList(q, page, perPage, status);
 
     return (
         <main className="space-y-6 p-4">
@@ -107,18 +112,28 @@ export default async function UsersListPage(
                 </div>
             </div>
 
-            <form action="/admin/users" className="flex gap-2">
+            <form action="/admin/users" className="flex flex-wrap gap-2 items-center">
                 <input
                     name="q"
                     defaultValue={q}
                     className="border rounded px-3 py-2 w-full max-w-md"
                     placeholder="Поиск: email, телефон, имя, id"
                 />
+                <select
+                    name="status"
+                    defaultValue={status}
+                    className="border rounded px-3 py-2"
+                    title="Статус"
+                >
+                    <option value="all">Все</option>
+                    <option value="active">Активные</option>
+                    <option value="blocked">Заблокированные</option>
+                </select>
                 <button className="border rounded px-3 py-2">Искать</button>
             </form>
 
             <div className="overflow-x-auto">
-                <table className="min-w-[800px] w-full border-collapse">
+                <table className="min-w-[900px] w-full border-collapse">
                     <thead className="text-left text-sm text-gray-500">
                     <tr>
                         <th className="border-b p-2">Имя</th>
@@ -130,11 +145,24 @@ export default async function UsersListPage(
                     </thead>
                     <tbody className="text-sm">
                     {data.items.map((u) => (
-                        <tr key={u.id}>
+                        <tr key={u.id} className={u.is_blocked ? 'opacity-60' : ''}>
                             <td className="border-b p-2">
-                                {u.full_name || '—'}{' '}
-                                {u.is_super && (
-                                    <span className="ml-2 text-[10px] px-1.5 py-0.5 border rounded">super</span>
+                                <div className="flex items-center gap-2">
+                                    <span>{u.full_name || '—'}</span>
+                                    {u.is_super && (
+                                        <span className="text-[10px] px-1.5 py-0.5 border rounded">super</span>
+                                    )}
+                                    {u.is_blocked && (
+                                        <span
+                                            className="text-[10px] px-1.5 py-0.5 border rounded border-red-400 text-red-600">
+                        blocked
+                      </span>
+                                    )}
+                                </div>
+                                {u.is_blocked && u.block_reason && (
+                                    <div className="text-[11px] text-red-600 mt-0.5">
+                                        Причина: {u.block_reason}
+                                    </div>
                                 )}
                             </td>
                             <td className="border-b p-2">{u.email || '—'}</td>

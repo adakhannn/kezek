@@ -15,7 +15,7 @@ type Biz = {
 };
 
 export default async function Page() {
-    const url  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const cookieStore = await cookies();
     const supabase = createServerClient(url, anon, {
@@ -23,10 +23,12 @@ export default async function Page() {
     });
 
     // 1) авторизация
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
     if (!user) redirect('/auth/sign-in?redirect=/admin/businesses');
 
-    // 2) новая проверка супер-админа через view user_roles_with_user
+    // 2) проверка супер-админа
     const { data: superRow, error: roleErr } = await supabase
         .from('user_roles_with_user')
         .select('role_key,biz_id')
@@ -53,22 +55,26 @@ export default async function Page() {
         );
     }
 
-    // 4) e-mail владельцев (через view с auth.users)
-    const ownerIds = Array.from(new Set((list ?? []).map(b => b.owner_id).filter(Boolean))) as string[];
+    // 4) e-mail владельцев (через твою вьюху)
+    const ownerIds = Array.from(
+        new Set((list ?? []).map((b) => b.owner_id).filter(Boolean)),
+    ) as string[];
+
     let ownersMap = new Map<string, string>();
     if (ownerIds.length) {
         const { data: owners, error: ownersErr } = await supabase
-            .from('auth_users_view') // твоя вьюха
+            .from('auth_users_view')
+            // ВАЖНО: только те поля, что реально есть во вьюхе
             .select('id,email')
             .in('id', ownerIds);
 
         if (!ownersErr) {
-            ownersMap = new Map((owners ?? []).map(r => [r.id as string, (r.email as string) ?? '']));
+            ownersMap = new Map((owners ?? []).map((r) => [r.id as string, (r.email as string) ?? '']));
         }
     }
 
     return (
-        <main className="space-y-4">
+        <main className="space-y-4 p-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Бизнесы</h2>
                 <Link href="/admin/businesses/new" className="border px-3 py-1 rounded">
@@ -93,17 +99,21 @@ export default async function Page() {
                         <tr key={b.id} className="border-t">
                             <td className="p-2">{b.name}</td>
                             <td className="p-2">{b.slug}</td>
-                            <td className="p-2">{b.owner_id ? ownersMap.get(b.owner_id) : '—'}</td>
+                            <td className="p-2">{b.owner_id ? ownersMap.get(b.owner_id) ?? '—' : '—'}</td>
                             <td className="p-2">{b.address ?? '—'}</td>
                             <td className="p-2">{(b.phones ?? []).join(', ')}</td>
                             <td className="p-2">
-                                <Link className="underline" href={`/admin/businesses/${b.id}`}>Открыть</Link>
+                                <Link className="underline" href={`/admin/businesses/${b.id}`}>
+                                    Открыть
+                                </Link>
                             </td>
                         </tr>
                     ))}
                     {(!list || list.length === 0) && (
                         <tr>
-                            <td className="p-4 text-gray-500" colSpan={6}>Пока нет бизнесов.</td>
+                            <td className="p-4 text-gray-500" colSpan={6}>
+                                Пока нет бизнесов.
+                            </td>
                         </tr>
                     )}
                     </tbody>
@@ -112,4 +122,3 @@ export default async function Page() {
         </main>
     );
 }
-

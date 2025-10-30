@@ -1,4 +1,3 @@
-// apps/web/src/app/admin/users/new/page.tsx
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -20,17 +19,11 @@ export default function UserNewPage() {
 async function createUserAction(formData: FormData) {
     'use server';
 
-    // 1) База для абсолютного URL
-    const base =
-        process.env.NEXT_PUBLIC_APP_URL  // напр. https://app.example.com
-        ?? 'http://localhost:3000';      // dev-фоллбек
-
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
     const url = new URL('/admin/api/users/create', base).toString();
 
-    // 2) Сбор Cookie, чтобы API увидело сессию
     const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ');
 
-    // 3) Нормализация формы
     const norm = (v: FormDataEntryValue | null) => {
         const s = typeof v === 'string' ? v.trim() : '';
         return s || null;
@@ -38,16 +31,22 @@ async function createUserAction(formData: FormData) {
 
     const payload = {
         full_name: norm(formData.get('full_name')),
-        email:     norm(formData.get('email')),
-        phone:     norm(formData.get('phone')),
-        password:  norm(formData.get('password')),
+        email: norm(formData.get('email')),
+        phone: norm(formData.get('phone')),
+        password: norm(formData.get('password')),
     };
 
+    // Валидация по нашим правилам
     if (!payload.email && !payload.phone) {
         throw new Error('Нужен email или телефон');
     }
+    if (payload.email && (!payload.password || payload.password.length < 8)) {
+        throw new Error('Для email требуется пароль (минимум 8 символов)');
+    }
+    if (!payload.email && payload.phone && payload.password) {
+        throw new Error('Для телефона пароль не нужен — вход через OTP');
+    }
 
-    // 4) Вызов API с абсолютным URL + Cookie
     const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -69,12 +68,26 @@ async function createUserAction(formData: FormData) {
 
 function UserCreateForm() {
     return (
-        <form className="space-y-3 max-w-xl" action={createUserAction}>
+        <form className="space-y-4 max-w-xl" action={createUserAction}>
             <input name="full_name" className="border rounded px-3 py-2 w-full" placeholder="Имя" />
-            <input name="email" type="email" className="border rounded px-3 py-2 w-full" placeholder="Email" />
-            <input name="phone" className="border rounded px-3 py-2 w-full" placeholder="Телефон (+996…)" />
-            <input name="password" type="password" className="border rounded px-3 py-2 w-full" placeholder="Пароль (опционально)" />
-            <p className="text-xs text-gray-500">Если пароль не указать — сгенерируется автоматически.</p>
+
+            <div className="grid md:grid-cols-2 gap-2">
+                <input name="email" type="email" className="border rounded px-3 py-2 w-full" placeholder="Email" />
+                <input name="phone" className="border rounded px-3 py-2 w-full" placeholder="Телефон (+996…)" />
+            </div>
+
+            <input
+                name="password"
+                type="password"
+                className="border rounded px-3 py-2 w-full"
+                placeholder="Пароль (обязателен, если указан email)"
+            />
+
+            <ul className="text-xs text-gray-600 space-y-1">
+                <li>• Если указан <b>email</b> — нужно задать <b>пароль</b> (минимум 8 символов). Вход: email + пароль.</li>
+                <li>• Если указан <b>только телефон</b> — пароль <b>не нужен</b>. Вход по <b>OTP</b>-коду (SMS).</li>
+            </ul>
+
             <button className="border rounded px-3 py-2" type="submit">Создать</button>
         </form>
     );

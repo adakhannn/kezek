@@ -1,7 +1,8 @@
+// apps/web/src/app/auth/sign-in/SignInPage.tsx
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
 
@@ -10,28 +11,73 @@ type Mode = 'phone' | 'email';
 export default function SignInPage() {
     const sp = useSearchParams();
     const router = useRouter();
-    const redirect = sp.get('redirect') || '/';
 
+    const redirectParam = sp.get('redirect') || '/';
     const initialMode = (sp.get('mode') as Mode) ?? 'phone';
-    const [mode, setMode] = useState<Mode>(initialMode);
 
-    // phone (OTP)
+    const [mode, setMode] = useState<Mode>(initialMode);
     const [phone, setPhone] = useState('');
     const [sending, setSending] = useState(false);
-
-    // email+password
     const [email, setEmail] = useState('');
     const [pass, setPass] = useState('');
     const [loadingEmail, setLoadingEmail] = useState(false);
-
     const [error, setError] = useState<string | null>(null);
 
-    // если уже вошёл — сразу редиректим
+    // --- отдельная проверка супер-админа (во избежание ложных положительных)
+    const fetchIsSuper = useCallback(async (): Promise<boolean> => {
+        const { data, error } = await supabase.rpc('is_super_admin');
+        if (error) {
+            console.warn('is_super_admin error:', error.message);
+            return false;
+        }
+        return !!data;
+    }, []);
+
+    // --- роли пользователя (ключи), чтобы понять "owner"
+    const fetchMyRoles = useCallback(async (): Promise<string[]> => {
+        const { data, error } = await supabase.rpc('my_role_keys');
+        if (error) {
+            console.warn('my_role_keys error:', error.message);
+            return [];
+        }
+        return Array.isArray(data) ? (data as string[]) : [];
+    }, []);
+
+    const decideRedirect = useCallback(
+        async (fallback: string) => {
+            // 1) сначала чётко проверяем super_admin
+            if (await fetchIsSuper()) return '/admin';
+
+            // 2) затем проверяем, есть ли роль owner
+            const roles = await fetchMyRoles();
+            if (roles.includes('owner')) return '/dashboard';
+
+            // 3) все остальные — по заданному редиректу (или на '/')
+            return fallback || '/';
+        },
+        [fetchIsSuper, fetchMyRoles]
+    );
+
+    const decideAndGo = useCallback(
+        async (fallback: string) => {
+            const target = await decideRedirect(fallback);
+            router.replace(target);
+        },
+        [decideRedirect, router]
+    );
+
+    // Уже авторизован? — уводим сразу по новой схеме
     useEffect(() => {
         supabase.auth.getUser().then(({ data }) => {
-            if (data.user) router.replace(redirect);
+            if (data.user) decideAndGo(redirectParam);
         });
-    }, [redirect, router]);
+        const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
+            if (session?.user) decideAndGo(redirectParam);
+        });
+        return () => {
+            sub.subscription.unsubscribe();
+        };
+    }, [decideAndGo, redirectParam]);
 
     async function sendCode(e: React.FormEvent) {
         e.preventDefault();
@@ -43,10 +89,9 @@ export default function SignInPage() {
                 options: { channel: 'sms' },
             });
             if (error) throw error;
+            // На /auth/verify после успешной верификации также вызвать decideAndGo(redirectParam)
             router.push(
-                `/auth/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(
-                    redirect,
-                )}`,
+                `/auth/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(redirectParam)}`
             );
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
@@ -60,12 +105,9 @@ export default function SignInPage() {
         setLoadingEmail(true);
         setError(null);
         try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password: pass,
-            });
+            const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
             if (error) throw error;
-            router.replace(redirect);
+            await decideAndGo(redirectParam);
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
         } finally {
@@ -77,7 +119,6 @@ export default function SignInPage() {
         <main className="mx-auto max-w-sm p-6 space-y-4">
             <h1 className="text-2xl font-semibold">Вход</h1>
 
-            {/* tabs */}
             <div className="flex gap-2 text-sm">
                 <button
                     type="button"

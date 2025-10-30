@@ -75,9 +75,8 @@ export async function POST(req: Request, context: unknown) {
         if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });
 
         return NextResponse.json({ ok: true });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-        // Гарантированно JSON, даже при непойманных исключениях
-        return NextResponse.json({ ok: false, error: String(e?.message ?? e) }, { status: 500 });
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

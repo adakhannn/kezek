@@ -1,34 +1,32 @@
+// apps/web/src/components/admin/users/UserRolesEditor.tsx
 'use client';
 
-import {useState} from 'react';
+import { useMemo, useState } from 'react';
 
 type RoleLiteral = 'owner' | 'manager' | 'staff' | 'admin' | 'client';
 const ROLES = ['owner', 'manager', 'staff', 'admin', 'client'] as const;
 
 type RoleRow = {
     biz_id: string;
-    role: string; // приходит с сервера как string; добавляем роль локально из RoleLiteral
+    role: string;
     businesses?: { name: string | null; slug: string | null } | null;
 };
 type Biz = { id: string; name: string; slug: string };
 
-// API response helpers
 type ApiOk = { ok: true };
 
 function isRole(v: string): v is RoleLiteral {
     return (ROLES as readonly string[]).includes(v);
 }
-
 function isApiOk(v: unknown): v is ApiOk {
-    if (typeof v !== 'object' || v === null) return false;
-    const rec = v as Record<string, unknown>;
-    return rec['ok'] === true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return typeof v === 'object' && v !== null && (v as any).ok === true;
 }
-
 function getApiError(v: unknown): string | undefined {
     if (typeof v !== 'object' || v === null) return undefined;
-    const rec = v as Record<string, unknown>;
-    return typeof rec['error'] === 'string' ? (rec['error'] as string) : undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = (v as any).error;
+    return typeof raw === 'string' && raw.trim().length ? raw.trim() : undefined;
 }
 
 export function UserRolesEditor({
@@ -41,45 +39,46 @@ export function UserRolesEditor({
     allBusinesses: Biz[];
 }) {
     const [items, setItems] = useState<RoleRow[]>(roles ?? []);
-    const [biz, setBiz] = useState<string>(allBusinesses[0]?.id ?? '');
     const [role, setRole] = useState<RoleLiteral>('client');
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
+
+    const currentBizId = useMemo(() => items[0]?.biz_id ?? null, [items]);
+    const [biz, setBiz] = useState<string>(currentBizId ?? allBusinesses[0]?.id ?? '');
 
     async function add() {
         setLoading(true);
         setErr(null);
         try {
-            if (!biz) throw new Error('Выберите бизнес');
-            // защита от дублей
-            const exists = items.some((it) => it.biz_id === biz && it.role === role);
+            const targetBiz = currentBizId ?? biz;
+            if (!targetBiz) throw new Error('Выберите бизнес');
+
+            if (currentBizId && currentBizId !== targetBiz) {
+                throw new Error('У пользователя уже есть роли по другому бизнесу');
+            }
+
+            const exists = items.some((it) => it.biz_id === targetBiz && it.role === role);
             if (exists) {
                 throw new Error('Такая роль уже есть у этого пользователя');
             }
 
             const resp = await fetch(`/admin/api/users/${userId}/roles/add`, {
                 method: 'POST',
-                headers: {'content-type': 'application/json'},
-                body: JSON.stringify({biz_id: biz, role}),
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ biz_id: targetBiz, role }),
             });
+
             let json: unknown = null;
-            try {
-                json = await resp.json();
-            } catch {
-                /* ignore */
-            }
+            try { json = await resp.json(); } catch {}
+
             if (!resp.ok || !isApiOk(json)) {
                 throw new Error(getApiError(json) ?? `HTTP ${resp.status}`);
             }
 
-            const bizObj = allBusinesses.find((x) => x.id === biz);
+            const bizObj = allBusinesses.find((x) => x.id === targetBiz);
             setItems((prev) => [
                 ...prev,
-                {
-                    biz_id: biz,
-                    role, // RoleLiteral совместим со string в RoleRow
-                    businesses: {name: bizObj?.name ?? null, slug: bizObj?.slug ?? null},
-                },
+                { biz_id: targetBiz, role, businesses: { name: bizObj?.name ?? null, slug: bizObj?.slug ?? null } },
             ]);
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : String(e));
@@ -94,15 +93,11 @@ export function UserRolesEditor({
         try {
             const resp = await fetch(`/admin/api/users/${userId}/roles/remove`, {
                 method: 'POST',
-                headers: {'content-type': 'application/json'},
-                body: JSON.stringify({biz_id, role: r}),
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ biz_id, role: r }),
             });
             let json: unknown = null;
-            try {
-                json = await resp.json();
-            } catch {
-                /* ignore */
-            }
+            try { json = await resp.json(); } catch {}
             if (!resp.ok || !isApiOk(json)) {
                 throw new Error(getApiError(json) ?? `HTTP ${resp.status}`);
             }
@@ -143,10 +138,11 @@ export function UserRolesEditor({
             <div className="flex flex-wrap items-center gap-2">
                 <select
                     className="border rounded px-3 py-2"
-                    value={biz}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setBiz(e.target.value)}
+                    value={currentBizId ?? biz}
+                    onChange={(e) => setBiz(e.target.value)}
+                    disabled={!!currentBizId}
                 >
-                    {allBusinesses.map((b) => (
+                    {(currentBizId ? allBusinesses.filter((b) => b.id === currentBizId) : allBusinesses).map((b) => (
                         <option key={b.id} value={b.id}>
                             {b.name} ({b.slug})
                         </option>
@@ -156,7 +152,7 @@ export function UserRolesEditor({
                 <select
                     className="border rounded px-3 py-2"
                     value={role}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                    onChange={(e) => {
                         const v = e.target.value;
                         if (isRole(v)) setRole(v);
                     }}
@@ -168,7 +164,7 @@ export function UserRolesEditor({
                     ))}
                 </select>
 
-                <button className="border rounded px-3 py-2" disabled={loading || !biz} type="button" onClick={add}>
+                <button className="border rounded px-3 py-2" disabled={loading} type="button" onClick={add}>
                     Добавить роль
                 </button>
             </div>
