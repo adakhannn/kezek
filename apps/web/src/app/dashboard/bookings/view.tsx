@@ -259,7 +259,7 @@ function QuickDesk({
     // выбранный филиал
     const [branchId, setBranchId] = useState<string>(branches[0]?.id || '');
 
-    // отфильтрованные по филиалу списки
+    // фильтры по филиалу
     const servicesByBranch = useMemo(
         () => services.filter(s => s.branch_id === branchId),
         [services, branchId],
@@ -269,12 +269,50 @@ function QuickDesk({
         [staff, branchId],
     );
 
-    // выбранные значения (всегда из отфильтрованных списков)
-    const [serviceId, setServiceId] = useState<string>(servicesByBranch[0]?.id || '');
+    // выбранные значения
+    const [serviceId, setServiceId]   = useState<string>(servicesByBranch[0]?.id || '');
     const [staffId, setStaffId]       = useState<string>(staffByBranch[0]?.id || '');
     const [date, setDate]             = useState<string>(() => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
 
-    // когда меняется филиал — сбрасываем выбранные услугу/мастера и очищаем слоты
+    // слоты
+    const [slots, setSlots] = useState<RpcSlot[]>([]);
+    const [slotStartISO, setSlotStartISO] = useState<string>('');
+
+    // ====== Клиент ======
+    type ClientMode = 'none' | 'existing' | 'new';
+    const [clientMode, setClientMode] = useState<ClientMode>('none');
+
+    // существующий клиент (поиск)
+    const [searchQ, setSearchQ] = useState('');
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [searchErr, setSearchErr] = useState<string | null>(null);
+    const [foundUsers, setFoundUsers] = useState<{id:string; full_name:string; email:string|null; phone:string|null}[]>([]);
+    const [selectedClientId, setSelectedClientId] = useState<string>('');
+
+    async function searchUsers(q: string) {
+        setSearchLoading(true); setSearchErr(null);
+        try {
+            const res = await fetch('/api/users/search', {
+                method: 'POST',
+                headers: {'content-type': 'application/json'},
+                body: JSON.stringify({ q }),
+            });
+            const j = await res.json();
+            if (!j.ok) throw new Error(j.error || 'SEARCH_FAILED');
+            setFoundUsers(j.items ?? []);
+        } catch (e: unknown) {
+            setSearchErr(e instanceof Error ? e.message : String(e));
+            setFoundUsers([]);
+        } finally {
+            setSearchLoading(false);
+        }
+    }
+
+    // новый клиент (быстрая запись без аккаунта)
+    const [newClientName, setNewClientName]   = useState('');
+    const [newClientPhone, setNewClientPhone] = useState('');
+
+    // при смене филиала — сбрасываем выбор и слоты
     useEffect(() => {
         setServiceId(servicesByBranch[0]?.id || '');
         setStaffId(staffByBranch[0]?.id || '');
@@ -282,40 +320,57 @@ function QuickDesk({
         setSlotStartISO('');
     }, [branchId, servicesByBranch, staffByBranch]);
 
-    const [slots, setSlots] = useState<RpcSlot[]>([]);
-    const [slotStartISO, setSlotStartISO] = useState<string>('');
-
+    // загрузка слотов
     useEffect(() => {
         let ignore = false;
         (async () => {
             if (!serviceId || !date) { setSlots([]); setSlotStartISO(''); return; }
             const { data, error } = await supabase.rpc('get_free_slots_service_day', {
                 p_biz_id: bizId,
-                p_service_id: serviceId, // услуга уже «принадлежит» филиалу
+                p_service_id: serviceId,
                 p_day: date,
                 p_per_staff: 200,
                 p_step_min: 15,
                 p_tz: TZ,
             });
             if (ignore) return;
-            if (error) { console.error(error); setSlots([]); setSlotStartISO(''); return; }
-
+            if (error) {
+                console.error('[QuickDesk] get_free_slots_service_day error:', error.message || error);
+                setSlots([]); setSlotStartISO('');
+                return;
+            }
             const raw = (data || []) as RpcSlot[];
             const filtered = staffId ? raw.filter(s => s.staff_id === staffId) : raw;
 
-            // dedupe по start_at (на всякий случай при нескольких мастерах)
+            // dedupe по start_at
             const uniq = Array.from(new Map(filtered.map(s => [s.start_at, s])).values());
             setSlots(uniq);
-            setSlotStartISO(uniq[0]?.start_at || '');
+            setSlotStartISO(prev => (prev && uniq.some(u => u.start_at === prev)) ? prev : (uniq[0]?.start_at || ''));
         })();
-        // ВАЖНО: пересчитываем при смене branchId тоже (мы сбрасываем serviceId/staffId выше)
         return () => { ignore = true; };
-    }, [bizId, serviceId, staffId, date, branchId]);
+    }, [bizId, serviceId, staffId, date]);
 
     async function quickCreate() {
         const svc = servicesByBranch.find(s => s.id === serviceId);
         if (!svc) return alert('Выбери услугу');
         if (!slotStartISO) return alert('Нет свободных слотов на выбранные параметры');
+        if (!staffId) return alert('Выбери мастера');
+
+        // валидация клиента
+        let p_client_id: string | null = null;
+        let p_client_name: string | null = null;
+        let p_client_phone: string | null = null;
+
+        if (clientMode === 'existing') {
+            if (!selectedClientId) return alert('Выбери клиента из поиска');
+            p_client_id = selectedClientId;
+        } else if (clientMode === 'new') {
+            if (!newClientName.trim() && !newClientPhone.trim()) {
+                return alert('Укажи имя или телефон нового клиента');
+            }
+            p_client_name  = newClientName.trim() || null;
+            p_client_phone = newClientPhone.trim() || null;
+        }
 
         const { data, error } = await supabase.rpc('create_internal_booking', {
             p_biz_id: bizId,
@@ -324,7 +379,9 @@ function QuickDesk({
             p_staff_id: staffId,
             p_start: slotStartISO,
             p_minutes: svc.duration_min,
-            p_client_id: null,
+            p_client_id,
+            p_client_name,
+            p_client_phone,
         });
         if (error) return alert(error.message);
 
@@ -336,13 +393,15 @@ function QuickDesk({
     return (
         <section className="border rounded p-4">
             <h2 className="font-medium mb-3">Быстрая запись (стойка)</h2>
+
+            {/* Параметры записи */}
             <div className="grid sm:grid-cols-5 gap-2">
                 {/* Филиал */}
                 <select className="border rounded px-2 py-1" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
                     {branches.map(b => (<option key={b.id} value={b.id}>{b.name}</option>))}
                 </select>
 
-                {/* Услуга (по филиалу) */}
+                {/* Услуга */}
                 <select className="border rounded px-2 py-1" value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
                     {servicesByBranch.map(s => (
                         <option key={s.id} value={s.id}>{s.name_ru} ({s.duration_min}м)</option>
@@ -350,7 +409,7 @@ function QuickDesk({
                     {servicesByBranch.length === 0 && <option value="">Нет услуг в филиале</option>}
                 </select>
 
-                {/* Мастер (по филиалу) */}
+                {/* Мастер */}
                 <select className="border rounded px-2 py-1" value={staffId} onChange={(e) => setStaffId(e.target.value)}>
                     {staffByBranch.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
                     {staffByBranch.length === 0 && <option value="">Нет мастеров в филиале</option>}
@@ -370,6 +429,85 @@ function QuickDesk({
                 </select>
             </div>
 
+            {/* Блок клиента */}
+            <div className="mt-4 border rounded p-3 space-y-3">
+                <div className="font-medium">Клиент</div>
+
+                <div className="flex flex-wrap gap-3 text-sm">
+                    <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="clientMode" checked={clientMode==='none'} onChange={()=>setClientMode('none')} />
+                        Без клиента (walk-in)
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="clientMode" checked={clientMode==='existing'} onChange={()=>setClientMode('existing')} />
+                        Существующий
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="clientMode" checked={clientMode==='new'} onChange={()=>setClientMode('new')} />
+                        Новый (быстрый)
+                    </label>
+                </div>
+
+                {clientMode === 'existing' && (
+                    <div className="space-y-2">
+                        <div className="flex gap-2">
+                            <input className="border rounded px-3 py-2 w-full" placeholder="Поиск: +996..., email, ФИО"
+                                   value={searchQ} onChange={e => setSearchQ(e.target.value)} />
+                            <button className="border rounded px-3 py-2" onClick={()=>searchUsers(searchQ)} disabled={searchLoading}>
+                                {searchLoading ? 'Ищем…' : 'Найти'}
+                            </button>
+                        </div>
+                        {searchErr && <div className="text-red-600 text-sm">{searchErr}</div>}
+                        <div className="max-h-48 overflow-auto border rounded">
+                            <table className="min-w-full text-sm">
+                                <thead>
+                                <tr className="text-left">
+                                    <th className="p-2 w-10">#</th>
+                                    <th className="p-2">Имя</th>
+                                    <th className="p-2">Email</th>
+                                    <th className="p-2">Телефон</th>
+                                    <th className="p-2 w-24">Выбрать</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {foundUsers.map((u, i) => (
+                                    <tr key={u.id} className="border-t">
+                                        <td className="p-2">{i+1}</td>
+                                        <td className="p-2">{u.full_name}</td>
+                                        <td className="p-2">{u.email ?? '—'}</td>
+                                        <td className="p-2">{u.phone ?? '—'}</td>
+                                        <td className="p-2">
+                                            <input
+                                                type="radio"
+                                                name="pickClient"
+                                                checked={selectedClientId === u.id}
+                                                onChange={()=>setSelectedClientId(u.id)}
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                                {foundUsers.length === 0 && (
+                                    <tr><td className="p-2 text-gray-500" colSpan={5}>Ничего не найдено</td></tr>
+                                )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {clientMode === 'new' && (
+                    <div className="grid sm:grid-cols-2 gap-2">
+                        <input className="border rounded px-3 py-2 w-full" placeholder="Имя (необязательно)"
+                               value={newClientName} onChange={e=>setNewClientName(e.target.value)} />
+                        <input className="border rounded px-3 py-2 w-full" placeholder="Телефон (желательно)"
+                               value={newClientPhone} onChange={e=>setNewClientPhone(e.target.value)} />
+                        <div className="sm:col-span-2 text-xs text-gray-500">
+                            Эти данные сохранятся только в брони (без создания аккаунта).
+                        </div>
+                    </div>
+                )}
+            </div>
+
             <div className="mt-3">
                 <button className="border px-3 py-1 rounded" onClick={quickCreate}>Создать запись</button>
             </div>
@@ -379,6 +517,7 @@ function QuickDesk({
         </section>
     );
 }
+
 
 // ---------------- Root ----------------
 export default function AdminBookingsView({

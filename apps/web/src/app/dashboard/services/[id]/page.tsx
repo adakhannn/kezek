@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import ServiceForm from '../ServiceForm';
 
+import ServiceMastersEditor from "@/app/dashboard/services/[id]/ServiceMastersEditor";
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -49,6 +50,13 @@ export default async function EditServicePage(context: unknown) {
                 branches={branches || []}
                 apiBase="/api/services"
             />
+            {/* ↓↓↓ Блок назначения мастеров на услугу */}
+            <div className="border rounded p-4">
+                <ServiceMastersEditor
+                    serviceId={String(svc.id)}
+                    serviceBranchId={String(svc.branch_id)}
+                />
+            </div>
         </main>
     );
 }

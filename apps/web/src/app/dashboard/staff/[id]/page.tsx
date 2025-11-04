@@ -4,6 +4,8 @@ import {notFound} from 'next/navigation';
 import StaffForm from '../StaffForm';
 
 import DangerActions from "@/app/dashboard/staff/[id]/DangerActions";
+import StaffServicesEditor from "@/app/dashboard/staff/[id]/StaffServicesEditor";
+import TransferStaffDialog from "@/app/dashboard/staff/[id]/TransferStaffDialog";
 import {getBizContextForManagers} from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -52,6 +54,13 @@ export default async function Page(context: unknown) {
                 <div className="flex items-center gap-3 text-sm">
                     <Link className="underline" href={`/dashboard/staff/${staff.id}/schedule`}>Расписание</Link>
                     <Link className="underline" href={`/dashboard/staff/${staff.id}/slots`}>Свободные слоты</Link>
+                    {activeBranches.length > 1 && (
+                        <TransferStaffDialog
+                            staffId={String(staff.id)}
+                            currentBranchId={String(staff.branch_id)}
+                            branches={activeBranches.map(b => ({id: String(b.id), name: String(b.name)}))}
+                        />
+                    )}
                 </div>
             </div>
 
@@ -73,6 +82,13 @@ export default async function Page(context: unknown) {
                 branches={activeBranches.map(b => ({id: b.id, name: b.name}))} // передаём только активные
                 apiBase="/api/staff"
             />
+
+            <div className="border rounded p-4">
+                <StaffServicesEditor
+                    staffId={String(staff.id)}
+                    staffBranchId={String(staff.branch_id)}
+                />
+            </div>
 
             <div className="pt-2 text-xs text-gray-500">
                 Временные переводы между филиалами задаются в разделе <Link

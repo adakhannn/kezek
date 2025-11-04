@@ -1,24 +1,32 @@
 'use client';
 
-import {useEffect, useMemo, useState} from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import DatePicker from '@/components/pickers/DatePicker';
 import DateRangePicker from '@/components/pickers/DateRangePicker';
-import TimeRangeList, {TimeRange} from '@/components/pickers/TimeRangeList';
-import {supabase} from '@/lib/supabaseClient';
+import TimeRangeList, { TimeRange } from '@/components/pickers/TimeRangeList';
+import { supabase } from '@/lib/supabaseClient';
 
 type Branch = { id: string; name: string };
 type WH = { id: string; day_of_week: number; intervals: TimeRange[]; breaks: TimeRange[] };
 type Rule = {
-    id: string; kind: 'weekly' | 'date' | 'range';
-    day_of_week: number | null; date_on: string | null; date_from: string | null; date_to: string | null;
-    branch_id: string; tz: string; intervals: TimeRange[]; breaks: TimeRange[]; is_active: boolean; priority: number;
+    id: string;
+    kind: 'weekly' | 'date' | 'range';
+    day_of_week: number | null;
+    date_on: string | null;
+    date_from: string | null;
+    date_to: string | null;
+    branch_id: string;
+    tz: string;
+    intervals: TimeRange[];
+    breaks: TimeRange[];
+    is_active: boolean;
+    priority: number;
 };
 type TimeOff = { id: string; date_from: string; date_to: string; reason: string | null };
 
 const DOW = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
-/* ===== helpers ===== */
 function intervalsToStr(j: TimeRange[]): string {
     try {
         const arr = Array.isArray(j) ? j : [];
@@ -28,7 +36,7 @@ function intervalsToStr(j: TimeRange[]): string {
     }
 }
 
-/* child to avoid hooks-in-loop */
+/* child row (hooks вне циклов) */
 function WeekRow({
                      dow, row, saving, onSave,
                  }: {
@@ -39,18 +47,14 @@ function WeekRow({
 }) {
     const [iv, setIv] = useState<TimeRange[]>(row?.intervals ?? []);
     const [br, setBr] = useState<TimeRange[]>(row?.breaks ?? []);
-    useEffect(() => {
-        setIv(row?.intervals ?? []);
-    }, [row?.intervals]);
-    useEffect(() => {
-        setBr(row?.breaks ?? []);
-    }, [row?.breaks]);
+    useEffect(() => { setIv(row?.intervals ?? []); }, [row?.intervals]);
+    useEffect(() => { setBr(row?.breaks ?? []); }, [row?.breaks]);
 
     return (
         <div className="border rounded p-3 space-y-3">
             <div className="font-medium">{DOW[dow]}</div>
-            <TimeRangeList label="Интервалы рабочего времени" items={iv} onChange={setIv}/>
-            <TimeRangeList label="Перерывы (опционально)" items={br} onChange={setBr}/>
+            <TimeRangeList label="Интервалы рабочего времени" items={iv} onChange={setIv} />
+            <TimeRangeList label="Перерывы (опционально)" items={br} onChange={setBr} />
             <button className="border rounded px-3 py-1" disabled={saving}
                     onClick={() => onSave(dow, iv, br)}>
                 {saving ? 'Сохраняем…' : 'Сохранить'}
@@ -59,16 +63,21 @@ function WeekRow({
     );
 }
 
-/* ===== main component ===== */
 export default function Client({
-                                   bizId, staffId, defaultBranchId, branches,
+                                   bizId, staffId, branches, homeBranchId,
                                }: {
     bizId: string;
     staffId: string;
-    defaultBranchId: string;
     branches: Branch[];
+    homeBranchId: string; // ← родной филиал сотрудника
 }) {
     const [tab, setTab] = useState<'weekly' | 'rules' | 'timeoff'>('weekly');
+
+    // Только чужие филиалы доступны для «правил-исключений»
+    const otherBranches = useMemo(
+        () => branches.filter((b) => b.id !== homeBranchId),
+        [branches, homeBranchId]
+    );
 
     // WEEKLY
     const [wh, setWh] = useState<WH[]>([]);
@@ -85,9 +94,20 @@ export default function Client({
     const [formRule, setFormRule] = useState<Partial<Rule>>({
         kind: 'date',
         day_of_week: null, date_on: null, date_from: null, date_to: null,
-        branch_id: defaultBranchId, tz: 'Asia/Bishkek',
+        branch_id: otherBranches[0]?.id ?? '', // по умолчанию — первый «чужой»
+        tz: 'Asia/Bishkek',
         intervals: [], breaks: [], is_active: true, priority: 0,
     });
+
+    // если список филиалов/родной филиал меняются — не позволяем держать родной в состоянии
+    useEffect(() => {
+        setFormRule((r) => {
+            if (!r.branch_id || r.branch_id === homeBranchId) {
+                return { ...r, branch_id: otherBranches[0]?.id ?? '' };
+            }
+            return r;
+        });
+    }, [otherBranches, homeBranchId]);
 
     // TIME OFF
     const [timeoff, setTimeoff] = useState<TimeOff[]>([]);
@@ -108,20 +128,18 @@ export default function Client({
                 supabase.from('staff_schedule_rules')
                     .select('id, kind, day_of_week, date_on, date_from, date_to, branch_id, tz, intervals, breaks, is_active, priority')
                     .eq('biz_id', bizId).eq('staff_id', staffId)
-                    .order('created_at', {ascending: false}),
+                    .order('created_at', { ascending: false }),
                 supabase.from('staff_time_off')
                     .select('id, date_from, date_to, reason')
                     .eq('biz_id', bizId).eq('staff_id', staffId)
-                    .order('date_from', {ascending: false}),
+                    .order('date_from', { ascending: false }),
             ]);
             if (ignore) return;
-            setWh((whRes.data) ?? []);
-            setRules((rulesRes.data) ?? []);
+            setWh(whRes.data ?? []);
+            setRules(rulesRes.data ?? []);
             setTimeoff(toRes.data ?? []);
         })();
-        return () => {
-            ignore = true;
-        };
+        return () => { ignore = true; };
     }, [bizId, staffId]);
 
     /* WEEKLY save */
@@ -144,11 +162,11 @@ export default function Client({
                     biz_id: bizId, staff_id: staffId, day_of_week: dow, intervals, breaks: breaks ?? [],
                 });
             }
-            const {data} = await supabase.from('working_hours')
+            const { data } = await supabase.from('working_hours')
                 .select('id, day_of_week, intervals, breaks')
                 .eq('biz_id', bizId).eq('staff_id', staffId)
                 .order('day_of_week');
-            setWh((data) ?? []);
+            setWh(data ?? []);
         } finally {
             setSavingWH(false);
         }
@@ -158,6 +176,15 @@ export default function Client({
     async function addRule() {
         setSavingRule(true);
         try {
+            if (!formRule.branch_id) {
+                alert('Выберите филиал (не родной)');
+                return;
+            }
+            if (formRule.branch_id === homeBranchId) {
+                alert('Исключение можно создавать только для другого филиала');
+                return;
+            }
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const payload: any = {
                 biz_id: bizId, staff_id: staffId,
@@ -180,66 +207,66 @@ export default function Client({
                 payload.date_to = formRule.date_to;
             }
 
-            const {error} = await supabase.from('staff_schedule_rules').insert(payload);
+            const { error } = await supabase.from('staff_schedule_rules').insert(payload);
             if (error) return alert(error.message);
 
-            const {data} = await supabase.from('staff_schedule_rules')
+            const { data } = await supabase.from('staff_schedule_rules')
                 .select('id, kind, day_of_week, date_on, date_from, date_to, branch_id, tz, intervals, breaks, is_active, priority')
                 .eq('biz_id', bizId).eq('staff_id', staffId)
-                .order('created_at', {ascending: false});
-            setRules((data) ?? []);
-            setFormRule(r => ({...r, intervals: [], breaks: []}));
+                .order('created_at', { ascending: false });
+            setRules(data ?? []);
+            setFormRule((r) => ({ ...r, intervals: [], breaks: [] }));
         } finally {
             setSavingRule(false);
         }
     }
 
     async function toggleRule(id: string, isActive: boolean) {
-        const {error} = await supabase.from('staff_schedule_rules')
-            .update({is_active: isActive}).eq('id', id).eq('biz_id', bizId).eq('staff_id', staffId);
+        const { error } = await supabase.from('staff_schedule_rules')
+            .update({ is_active: isActive }).eq('id', id).eq('biz_id', bizId).eq('staff_id', staffId);
         if (error) return alert(error.message);
-        setRules(rs => rs.map(r => r.id === id ? {...r, is_active: isActive} : r));
+        setRules((rs) => rs.map((r) => (r.id === id ? { ...r, is_active: isActive } : r)));
     }
 
     async function deleteRule(id: string) {
-        const {error} = await supabase.from('staff_schedule_rules')
+        const { error } = await supabase.from('staff_schedule_rules')
             .delete().eq('id', id).eq('biz_id', bizId).eq('staff_id', staffId);
         if (error) return alert(error.message);
-        setRules(rs => rs.filter(r => r.id !== id));
+        setRules((rs) => rs.filter((r) => r.id !== id));
     }
 
     /* TIME OFF */
     async function addTO() {
         setSavingTO(true);
         try {
-            const {error} = await supabase.from('staff_time_off').insert({
+            const { error } = await supabase.from('staff_time_off').insert({
                 biz_id: bizId, staff_id: staffId,
                 date_from: formTO.date_from, date_to: formTO.date_to, reason: formTO.reason || null,
             });
             if (error) return alert(error.message);
-            const {data} = await supabase.from('staff_time_off')
+            const { data } = await supabase.from('staff_time_off')
                 .select('id, date_from, date_to, reason')
                 .eq('biz_id', bizId).eq('staff_id', staffId)
-                .order('date_from', {ascending: false});
+                .order('date_from', { ascending: false });
             setTimeoff(data ?? []);
-            setFormTO({date_from: '', date_to: '', reason: ''});
+            setFormTO({ date_from: '', date_to: '', reason: '' });
         } finally {
             setSavingTO(false);
         }
     }
 
     async function deleteTO(id: string) {
-        const {error} = await supabase.from('staff_time_off')
+        const { error } = await supabase.from('staff_time_off')
             .delete().eq('id', id).eq('biz_id', bizId).eq('staff_id', staffId);
         if (error) return alert(error.message);
-        setTimeoff(t => t.filter(x => x.id !== id));
+        setTimeoff((t) => t.filter((x) => x.id !== id));
     }
 
     /* UI */
     return (
         <section className="border rounded p-4 space-y-4">
             <div className="flex gap-2">
-                {(['weekly', 'rules', 'timeoff'] as const).map(k => (
+                {(['weekly', 'rules', 'timeoff'] as const).map((k) => (
                     <button key={k}
                             className={`px-3 py-1 border rounded ${tab === k ? 'bg-gray-100 font-medium' : ''}`}
                             onClick={() => setTab(k)}>
@@ -251,18 +278,11 @@ export default function Client({
             {tab === 'weekly' && (
                 <div className="space-y-3">
                     <p className="text-sm text-gray-600">
-                        Добавляй интервалы/перерывы через удобные time-пикеры. Пустой список интервалов = день
-                        нерабочий.
+                        Пустой список интервалов = день нерабочий.
                     </p>
                     <div className="grid sm:grid-cols-2 gap-3">
-                        {Array.from({length: 7}, (_, i) => i).map(dow => (
-                            <WeekRow
-                                key={dow}
-                                dow={dow}
-                                row={whByDow[dow]}
-                                saving={savingWH}
-                                onSave={saveWH}
-                            />
+                        {Array.from({ length: 7 }, (_, i) => i).map((dow) => (
+                            <WeekRow key={dow} dow={dow} row={whByDow[dow]} saving={savingWH} onSave={saveWH} />
                         ))}
                     </div>
                 </div>
@@ -273,7 +293,6 @@ export default function Client({
                     <div className="border rounded p-3 space-y-3">
                         <div className="font-medium">Новое правило</div>
 
-                        {/* сетка шире: календарь занимает 2 колонки */}
                         <div className="grid sm:grid-cols-3 gap-3 items-start">
                             <select
                                 className="border rounded px-2 py-1"
@@ -299,10 +318,12 @@ export default function Client({
                                 <select
                                     className="border rounded px-2 py-1"
                                     value={formRule.day_of_week ?? ''}
-                                    onChange={(e) => setFormRule((r) => ({...r, day_of_week: Number(e.target.value)}))}
+                                    onChange={(e) =>
+                                        setFormRule((r) => ({ ...r, day_of_week: Number(e.target.value) }))
+                                    }
                                 >
                                     <option value="">День недели…</option>
-                                    {Array.from({length: 7}, (_, i) => i).map((i) => (
+                                    {Array.from({ length: 7 }, (_, i) => i).map((i) => (
                                         <option key={i} value={i}>
                                             {DOW[i]}
                                         </option>
@@ -314,7 +335,7 @@ export default function Client({
                                 <DatePicker
                                     className="sm:col-span-2 w-full"
                                     value={formRule.date_on ?? null}
-                                    onChange={(v) => setFormRule((r) => ({...r, date_on: v}))}
+                                    onChange={(v) => setFormRule((r) => ({ ...r, date_on: v }))}
                                 />
                             )}
 
@@ -323,16 +344,21 @@ export default function Client({
                                     className="sm:col-span-2 w-full"
                                     from={formRule.date_from ?? null}
                                     to={formRule.date_to ?? null}
-                                    onChange={(v) => setFormRule((r) => ({...r, date_from: v.from, date_to: v.to}))}
+                                    onChange={(v) =>
+                                        setFormRule((r) => ({ ...r, date_from: v.from, date_to: v.to }))
+                                    }
                                 />
                             )}
 
+                            {/* ВЫБОР ТОЛЬКО ИЗ "ЧУЖИХ" ФИЛИАЛОВ */}
                             <select
                                 className="border rounded px-2 py-1"
                                 value={formRule.branch_id || ''}
-                                onChange={(e) => setFormRule((r) => ({...r, branch_id: e.target.value}))}
+                                onChange={(e) => setFormRule((r) => ({ ...r, branch_id: e.target.value }))}
+                                disabled={otherBranches.length === 0}
+                                title={otherBranches.length === 0 ? 'Нет других филиалов' : undefined}
                             >
-                                {branches.map((b) => (
+                                {otherBranches.map((b) => (
                                     <option key={b.id} value={b.id}>
                                         {b.name}
                                     </option>
@@ -343,19 +369,19 @@ export default function Client({
                                 className="border rounded px-2 py-1"
                                 placeholder="TZ"
                                 value={formRule.tz || 'Asia/Bishkek'}
-                                onChange={(e) => setFormRule((r) => ({...r, tz: e.target.value}))}
+                                onChange={(e) => setFormRule((r) => ({ ...r, tz: e.target.value }))}
                             />
                         </div>
 
                         <TimeRangeList
                             label="Интервалы рабочего времени"
-                            items={(formRule.intervals) ?? []}
-                            onChange={(arr) => setFormRule((r) => ({...r, intervals: arr}))}
+                            items={formRule.intervals ?? []}
+                            onChange={(arr) => setFormRule((r) => ({ ...r, intervals: arr }))}
                         />
                         <TimeRangeList
                             label="Перерывы (опционально)"
-                            items={(formRule.breaks) ?? []}
-                            onChange={(arr) => setFormRule((r) => ({...r, breaks: arr}))}
+                            items={formRule.breaks ?? []}
+                            onChange={(arr) => setFormRule((r) => ({ ...r, breaks: arr }))}
                         />
 
                         <div className="flex items-center gap-3">
@@ -364,17 +390,18 @@ export default function Client({
                                 type="number"
                                 className="border rounded px-2 py-1 w-24"
                                 value={formRule.priority ?? 0}
-                                onChange={(e) => setFormRule((r) => ({...r, priority: Number(e.target.value)}))}
+                                onChange={(e) => setFormRule((r) => ({ ...r, priority: Number(e.target.value) }))}
                             />
                             <label className="flex items-center gap-2 text-sm">
                                 <input
                                     type="checkbox"
                                     checked={formRule.is_active ?? true}
-                                    onChange={(e) => setFormRule((r) => ({...r, is_active: e.target.checked}))}
+                                    onChange={(e) => setFormRule((r) => ({ ...r, is_active: e.target.checked }))}
                                 />
                                 Активно
                             </label>
-                            <button className="border rounded px-3 py-1" disabled={savingRule} onClick={addRule}>
+                            <button className="border rounded px-3 py-1" disabled={savingRule || otherBranches.length === 0}
+                                    onClick={addRule} title={otherBranches.length === 0 ? 'Нет других филиалов' : undefined}>
                                 {savingRule ? 'Сохраняем…' : 'Добавить правило'}
                             </button>
                         </div>
@@ -383,7 +410,7 @@ export default function Client({
                     <div>
                         <div className="font-medium mb-2">Существующие правила</div>
                         <div className="space-y-2">
-                            {rules.map(r => (
+                            {rules.map((r) => (
                                 <div key={r.id} className="border rounded p-2 flex items-center justify-between">
                                     <div className="text-sm">
                                         <div>
@@ -392,11 +419,16 @@ export default function Client({
                                             {r.kind === 'date' && `(${r.date_on})`}
                                             {r.kind === 'range' && `(${r.date_from} → ${r.date_to})`}
                                         </div>
-                                        <div>Филиал: {branches.find(b => b.id === r.branch_id)?.name ?? r.branch_id}</div>
-                                        <div>Интервалы: {intervalsToStr(r.intervals)};
-                                            Перерывы: {intervalsToStr(r.breaks)}</div>
-                                        <div>TZ: {r.tz};
-                                            Приоритет: {r.priority}; {r.is_active ? 'Активно' : 'Отключено'}</div>
+                                        <div>
+                                            Филиал:&nbsp;
+                                            {branches.find((b) => b.id === r.branch_id)?.name ?? r.branch_id}
+                                        </div>
+                                        <div>
+                                            Интервалы: {intervalsToStr(r.intervals)}; Перерывы: {intervalsToStr(r.breaks)}
+                                        </div>
+                                        <div>
+                                            TZ: {r.tz}; Приоритет: {r.priority}; {r.is_active ? 'Активно' : 'Отключено'}
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button className="border rounded px-2 py-1 text-xs"
@@ -423,15 +455,18 @@ export default function Client({
                         <div className="grid sm:grid-cols-3 gap-2 items-start">
                             <DatePicker
                                 value={formTO.date_from || null}
-                                onChange={(v) => setFormTO(f => ({...f, date_from: v || ''}))}
+                                onChange={(v) => setFormTO((f) => ({ ...f, date_from: v || '' }))}
                             />
                             <DatePicker
                                 value={formTO.date_to || null}
-                                onChange={(v) => setFormTO(f => ({...f, date_to: v || ''}))}
+                                onChange={(v) => setFormTO((f) => ({ ...f, date_to: v || '' }))}
                             />
-                            <input className="border rounded px-2 py-1" placeholder="Причина"
-                                   value={formTO.reason || ''}
-                                   onChange={e => setFormTO(f => ({...f, reason: e.target.value}))}/>
+                            <input
+                                className="border rounded px-2 py-1"
+                                placeholder="Причина"
+                                value={formTO.reason || ''}
+                                onChange={(e) => setFormTO((f) => ({ ...f, reason: e.target.value }))}
+                            />
                         </div>
                         <button className="border rounded px-3 py-1" disabled={savingTO} onClick={addTO}>
                             {savingTO ? 'Сохраняем…' : 'Добавить'}
@@ -441,12 +476,14 @@ export default function Client({
                     <div>
                         <div className="font-medium mb-2">Список отсутствий</div>
                         <div className="space-y-2">
-                            {timeoff.map(t => (
+                            {timeoff.map((t) => (
                                 <div key={t.id} className="border rounded p-2 flex items-center justify-between">
-                                    <div
-                                        className="text-sm">{t.date_from} → {t.date_to} {t.reason ? `— ${t.reason}` : ''}</div>
+                                    <div className="text-sm">
+                                        {t.date_from} → {t.date_to} {t.reason ? `— ${t.reason}` : ''}
+                                    </div>
                                     <button className="border rounded px-2 py-1 text-xs"
-                                            onClick={() => deleteTO(t.id)}>Удалить
+                                            onClick={() => deleteTO(t.id)}>
+                                        Удалить
                                     </button>
                                 </div>
                             ))}

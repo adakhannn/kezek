@@ -1,6 +1,9 @@
+// apps/web/src/app/admin/users/new/page.tsx
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+
+import UserCreateFormClient from '@/components/admin/users/UserCreateFormClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +14,7 @@ export default function UserNewPage() {
                 <h1 className="text-2xl font-semibold">Новый пользователь</h1>
                 <Link href="/admin/users" className="underline">← К списку</Link>
             </div>
-            <UserCreateForm />
+            <UserCreateFormClient action={createUserAction} />
         </main>
     );
 }
@@ -36,7 +39,7 @@ async function createUserAction(formData: FormData) {
         password: norm(formData.get('password')),
     };
 
-    // Валидация по нашим правилам
+    // Серверная валидация (осталась как была)
     if (!payload.email && !payload.phone) {
         throw new Error('Нужен email или телефон');
     }
@@ -64,31 +67,4 @@ async function createUserAction(formData: FormData) {
     }
 
     redirect('/admin/users?created=1');
-}
-
-function UserCreateForm() {
-    return (
-        <form className="space-y-4 max-w-xl" action={createUserAction}>
-            <input name="full_name" className="border rounded px-3 py-2 w-full" placeholder="Имя" />
-
-            <div className="grid md:grid-cols-2 gap-2">
-                <input name="email" type="email" className="border rounded px-3 py-2 w-full" placeholder="Email" />
-                <input name="phone" className="border rounded px-3 py-2 w-full" placeholder="Телефон (+996…)" />
-            </div>
-
-            <input
-                name="password"
-                type="password"
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Пароль (обязателен, если указан email)"
-            />
-
-            <ul className="text-xs text-gray-600 space-y-1">
-                <li>• Если указан <b>email</b> — нужно задать <b>пароль</b> (минимум 8 символов). Вход: email + пароль.</li>
-                <li>• Если указан <b>только телефон</b> — пароль <b>не нужен</b>. Вход по <b>OTP</b>-коду (SMS).</li>
-            </ul>
-
-            <button className="border rounded px-3 py-2" type="submit">Создать</button>
-        </form>
-    );
 }

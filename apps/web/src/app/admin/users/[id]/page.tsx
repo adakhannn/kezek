@@ -54,11 +54,7 @@ export default async function UserPage(ctx: unknown) {
     if (!u) return <div className="p-4">Пользователь не найден</div>;
 
     // профиль
-    const { data: prof } = await admin
-        .from('profiles')
-        .select('full_name')
-        .eq('id', id)
-        .maybeSingle<{ full_name: string | null }>();
+    const userMeta = (u.user_metadata ?? {}) as Partial<{ full_name: string }>;
 
     // сам пользователь — супер?
     const { data: suRow } = await admin
@@ -124,8 +120,6 @@ export default async function UserPage(ctx: unknown) {
         .maybeSingle();
     const isBlocked = !!susp;
 
-    const userMeta = (u.user_metadata ?? {}) as Partial<{ full_name: string }>;
-
     return (
         <main className="space-y-6 p-4">
             <div className="flex items-center justify-between">
@@ -139,7 +133,7 @@ export default async function UserPage(ctx: unknown) {
                     <UserBasicForm
                         userId={id}
                         initial={{
-                            full_name: prof?.full_name ?? userMeta.full_name ?? '',
+                            full_name: userMeta.full_name ?? '',
                             email: u.email ?? '',
                             phone: (u as { phone?: string | null }).phone ?? '',
                         }}

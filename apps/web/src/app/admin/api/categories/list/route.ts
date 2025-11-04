@@ -26,7 +26,7 @@ export async function GET() {
     if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
     // берём из RPC с usage_count
-    const {data, error} = await supa.rpc('categories_with_usage');
+    const {data, error} = await supa.rpc('categories_with_usage_v2');
     if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
     return NextResponse.json({ok: true, items: data ?? []});
 }

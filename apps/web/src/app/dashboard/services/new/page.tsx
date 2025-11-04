@@ -1,3 +1,4 @@
+// apps/web/src/app/dashboard/services/new/page.tsx  (или твой путь)
 import ServiceForm from '../ServiceForm';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -7,14 +8,13 @@ export const runtime = 'nodejs';
 
 export default async function NewServicePage() {
     const { supabase, bizId } = await getBizContextForManagers();
+
     const { data: branches } = await supabase
         .from('branches')
         .select('id,name')
         .eq('biz_id', bizId)
         .eq('is_active', true)
         .order('name');
-
-    const defaultBranch = branches?.[0]?.id ?? '';
 
     return (
         <main className="mx-auto max-w-3xl p-6 space-y-4">
@@ -26,7 +26,8 @@ export default async function NewServicePage() {
                     price_from: 0,
                     price_to: 0,
                     active: true,
-                    branch_id: defaultBranch,
+                    branch_id: '',          // для edit-режима (игнорится в create)
+                    branch_ids: [],         // ← мультивыбор при создании
                 }}
                 branches={branches || []}
                 apiBase="/api/services"

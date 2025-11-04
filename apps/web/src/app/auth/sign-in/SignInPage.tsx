@@ -23,7 +23,7 @@ export default function SignInPage() {
     const [loadingEmail, setLoadingEmail] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // --- отдельная проверка супер-админа (во избежание ложных положительных)
+    // --- чёткая проверка супер-админа
     const fetchIsSuper = useCallback(async (): Promise<boolean> => {
         const { data, error } = await supabase.rpc('is_super_admin');
         if (error) {
@@ -33,7 +33,27 @@ export default function SignInPage() {
         return !!data;
     }, []);
 
-    // --- роли пользователя (ключи), чтобы понять "owner"
+    // --- есть ли бизнес, где я владелец (источник правды — businesses.owner_id)
+    const fetchOwnsBusiness = useCallback(
+        async (userId: string | undefined): Promise<boolean> => {
+            if (!userId) return false;
+            const { data, error } = await supabase
+                .from('businesses')
+                .select('id', { count: 'exact', head: true })
+                .eq('owner_id', userId)
+                .limit(1);
+            if (error) {
+                console.warn('owner check error:', error.message);
+                return false;
+            }
+            // при head:true data=null, используем count
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return (data) === null ? (/* @ts-ignore */ (error as any)?.count ?? 0) > 0 : true;
+        },
+        []
+    );
+
+    // --- роли пользователя (на будущее; тут уже не критично)
     const fetchMyRoles = useCallback(async (): Promise<string[]> => {
         const { data, error } = await supabase.rpc('my_role_keys');
         if (error) {
@@ -44,23 +64,26 @@ export default function SignInPage() {
     }, []);
 
     const decideRedirect = useCallback(
-        async (fallback: string) => {
-            // 1) сначала чётко проверяем super_admin
+        async (fallback: string, userId?: string) => {
             if (await fetchIsSuper()) return '/admin';
+            // сначала смотрим фактическое владение бизнесом
+            if (await fetchOwnsBusiness(userId)) return '/dashboard';
 
-            // 2) затем проверяем, есть ли роль owner
+            // дополнительная подстраховка: роль owner (если вдруг понадобится)
             const roles = await fetchMyRoles();
             if (roles.includes('owner')) return '/dashboard';
 
-            // 3) все остальные — по заданному редиректу (или на '/')
             return fallback || '/';
         },
-        [fetchIsSuper, fetchMyRoles]
+        [fetchIsSuper, fetchMyRoles, fetchOwnsBusiness]
     );
 
     const decideAndGo = useCallback(
         async (fallback: string) => {
-            const target = await decideRedirect(fallback);
+            // достаём свежего пользователя (после OTP/пароля)
+            const { data } = await supabase.auth.getUser();
+            const uid = data.user?.id;
+            const target = await decideRedirect(fallback, uid);
             router.replace(target);
         },
         [decideRedirect, router]
@@ -69,10 +92,10 @@ export default function SignInPage() {
     // Уже авторизован? — уводим сразу по новой схеме
     useEffect(() => {
         supabase.auth.getUser().then(({ data }) => {
-            if (data.user) decideAndGo(redirectParam);
+            if (data.user) void decideAndGo(redirectParam);
         });
         const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
-            if (session?.user) decideAndGo(redirectParam);
+            if (session?.user) void decideAndGo(redirectParam);
         });
         return () => {
             sub.subscription.unsubscribe();
@@ -89,7 +112,7 @@ export default function SignInPage() {
                 options: { channel: 'sms' },
             });
             if (error) throw error;
-            // На /auth/verify после успешной верификации также вызвать decideAndGo(redirectParam)
+            // На /auth/verify после ввода кода тоже вызываем decideAndGo(redirectParam)
             router.push(
                 `/auth/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(redirectParam)}`
             );
@@ -146,11 +169,7 @@ export default function SignInPage() {
                         onChange={(e) => setPhone(e.target.value)}
                         required
                     />
-                    <button
-                        className="border rounded px-3 py-2 w-full disabled:opacity-50"
-                        disabled={sending}
-                        type="submit"
-                    >
+                    <button className="border rounded px-3 py-2 w-full disabled:opacity-50" disabled={sending} type="submit">
                         {sending ? 'Отправляю…' : 'Отправить код по SMS'}
                     </button>
                 </form>
@@ -172,11 +191,7 @@ export default function SignInPage() {
                         onChange={(e) => setPass(e.target.value)}
                         required
                     />
-                    <button
-                        className="border rounded px-3 py-2 w-full disabled:opacity-50"
-                        disabled={loadingEmail}
-                        type="submit"
-                    >
+                    <button className="border rounded px-3 py-2 w-full disabled:opacity-50" disabled={loadingEmail} type="submit">
                         {loadingEmail ? 'Вхожу…' : 'Войти'}
                     </button>
                 </form>

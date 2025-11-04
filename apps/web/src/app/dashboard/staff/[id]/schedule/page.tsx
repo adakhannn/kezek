@@ -1,11 +1,13 @@
-import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
-import Client from './Client';
+import Client from './Client'; // см. пункт 2
 
-import {getBizContextForManagers} from '@/lib/authBiz';
+import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+type Branch = { id: string; name: string; is_active: boolean };
 
 export default async function StaffSchedulePage(context: unknown) {
     // безопасно достаём params.id без any
@@ -15,40 +17,46 @@ export default async function StaffSchedulePage(context: unknown) {
         'params' in context
             ? (context as { params: Record<string, string | string[]> }).params
             : {};
-    const {supabase, bizId} = await getBizContextForManagers();
 
-    const [{data: staff}, {data: branches}] = await Promise.all([
-        supabase.from('staff')
-            .select('id, full_name, biz_id, branch_id, is_active')
-            .eq('id', params.id)
-            .maybeSingle(),
-        supabase.from('branches')
-            .select('id, name, is_active')
-            .eq('biz_id', bizId)
-            .order('name'),
-    ]);
+    const staffId = String(params.id ?? '');
+    const { supabase, bizId } = await getBizContextForManagers();
 
-    if (!staff || String(staff.biz_id) !== String(bizId)) {
-        return <main className="p-6 text-red-600">Сотрудник не найден или нет доступа</main>;
+    // сотрудник
+    const { data: staff, error: eStaff } = await supabase
+        .from('staff')
+        .select('id, full_name, branch_id, biz_id')
+        .eq('id', staffId)
+        .maybeSingle();
+
+    if (eStaff) {
+        return <main className="p-6 text-red-600">Ошибка: {eStaff.message}</main>;
+    }
+    if (!staff || String(staff.biz_id) !== String(bizId)) return notFound();
+
+    // филиалы бизнеса
+    const { data: branches, error: eBranches } = await supabase
+        .from('branches')
+        .select('id,name,is_active')
+        .eq('biz_id', bizId)
+        .order('name');
+
+    if (eBranches) {
+        return <main className="p-6 text-red-600">Ошибка филиалов: {eBranches.message}</main>;
     }
 
-    const activeBranches = (branches ?? []).filter(b => b.is_active);
+    const activeBranches: Branch[] = (branches ?? []).filter((b) => b.is_active);
 
     return (
-        <main className="mx-auto max-w-5xl p-6 space-y-5">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">График — {staff.full_name}</h1>
-                <div className="flex items-center gap-4 text-sm">
-                    <Link className="underline" href={`/dashboard/staff/${staff.id}`}>Карточка</Link>
-                    <Link className="underline" href={`/dashboard/staff/${staff.id}/slots`}>Свободные слоты</Link>
-                </div>
-            </div>
+        <main className="mx-auto max-w-5xl p-6 space-y-4">
+            <h1 className="text-2xl font-semibold">
+                Расписание — {staff.full_name}
+            </h1>
 
             <Client
-                bizId={bizId}
-                staffId={staff.id}
-                defaultBranchId={staff.branch_id}
-                branches={activeBranches.map(b => ({id: b.id, name: b.name}))}
+                bizId={String(bizId)}
+                staffId={String(staff.id)}
+                branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
+                homeBranchId={String(staff.branch_id)}  // ← ВАЖНО: родной филиал
             />
         </main>
     );

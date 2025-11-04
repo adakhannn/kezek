@@ -1,5 +1,6 @@
-import {createServerClient} from '@supabase/ssr';
-import {cookies, headers} from 'next/headers';
+// apps/web/src/app/admin/businesses/[id]/members/page.tsx
+import { createServerClient } from '@supabase/ssr';
+import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 
 import MembersClient from './MembersClient';
@@ -11,14 +12,11 @@ function isUuid(v: string): boolean {
 }
 
 export default async function MembersPage(context: unknown) {
-    // безопасно достаём params.id без any
     const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
+        typeof context === 'object' && context !== null && 'params' in context
             ? (context as { params: Record<string, string> }).params
             : {};
-    const {id} = params;
+    const { id } = params;
 
     if (!id || !isUuid(id)) {
         return (
@@ -33,23 +31,23 @@ export default async function MembersPage(context: unknown) {
     const cookieStore = await cookies();
 
     const supa = createServerClient(URL, ANON, {
-        cookies: {
-            get: (n) => cookieStore.get(n)?.value, set: () => {
-            }, remove: () => {
-            }
-        },
+        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
     // 1) auth
-    const {data: {user}} = await supa.auth.getUser();
+    const {
+        data: { user },
+    } = await supa.auth.getUser();
     if (!user) {
-        return <main className="p-4">
-            <div>Не авторизован</div>
-        </main>;
+        return (
+            <main className="p-4">
+                <div>Не авторизован</div>
+            </main>
+        );
     }
 
-    // 2) доступ: super_admin (глобально) ИЛИ owner/admin этого бизнеса
-    const {data: superRow} = await supa
+    // 2) Права: разделяем на просмотр и управление
+    const { data: superRow } = await supa
         .from('user_roles_with_user')
         .select('user_id')
         .eq('role_key', 'super_admin')
@@ -57,17 +55,21 @@ export default async function MembersPage(context: unknown) {
         .limit(1)
         .maybeSingle();
 
-    let allowed = !!superRow;
-    if (!allowed) {
-        const {data: isOwner} = await supa.rpc('has_role', {p_role: 'owner', p_biz_id: id});
-        const {data: isAdmin} = await supa.rpc('has_role', {p_role: 'admin', p_biz_id: id});
-        allowed = !!isOwner || !!isAdmin;
+    // право на просмотр: супер или владелец/админ
+    const { data: isOwner } = await supa.rpc('has_role', { p_role: 'owner', p_biz_id: id });
+    const { data: isAdmin } = await supa.rpc('has_role', { p_role: 'admin', p_biz_id: id });
+
+    const canView = !!superRow || !!isOwner || !!isAdmin;
+    if (!canView) {
+        return (
+            <main className="p-4">
+                <div>Нет доступа</div>
+            </main>
+        );
     }
-    if (!allowed) {
-        return <main className="p-4">
-            <div>Нет доступа</div>
-        </main>;
-    }
+
+    // право на управление: только владелец/админ (без супера)
+    const canManage = !!isOwner || !!isAdmin;
 
     const h = await headers();
     const proto = h.get('x-forwarded-proto') ?? 'http';
@@ -79,17 +81,22 @@ export default async function MembersPage(context: unknown) {
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Участники бизнеса</h1>
                 <div className="flex gap-3 text-sm">
-                    <Link href={`/admin/businesses/${id}`} className="underline">← К бизнесу</Link>
-                    <Link
-                        href={`/admin/businesses/${id}/members/new`}
-                        className="inline-flex items-center rounded border px-3 py-1.5 hover:bg-gray-50"
-                    >
-                        + Добавить участника
+                    <Link href={`/admin/businesses/${id}`} className="underline">
+                        ← К бизнесу
                     </Link>
+                    {canManage && (
+                        <Link
+                            href={`/admin/businesses/${id}/members/new`}
+                            className="inline-flex items-center rounded border px-3 py-1.5 hover:bg-gray-50"
+                        >
+                            + Добавить участника
+                        </Link>
+                    )}
                 </div>
             </div>
 
-            <MembersClient baseURL={baseURL} bizId={id}/>
+            {/* MembersClient должен уважать canManage (прятать кнопки/действия) */}
+            <MembersClient baseURL={baseURL} bizId={id} canManage={canManage} />
         </main>
     );
 }

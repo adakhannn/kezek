@@ -10,7 +10,6 @@ export const dynamic = 'force-dynamic';
 type CategoryUsageRow = {
     id: string;
     name_ru: string;
-    name_ky: string | null;
     slug: string;
     is_active: boolean;
     usage_count: number;
@@ -42,7 +41,7 @@ export default async function CategoriesPage() {
     if (!superRow) return <div className="p-4">Нет доступа</div>;
 
     // 3) Данные категорий
-    const { data: rpcData, error } = await supa.rpc('categories_with_usage');
+    const { data: rpcData, error } = await supa.rpc('categories_with_usage_v2');
     if (error) return <div className="p-4">Ошибка: {error.message}</div>;
 
     const list: CategoryUsageRow[] = Array.isArray(rpcData) ? (rpcData as CategoryUsageRow[]) : [];
@@ -73,7 +72,7 @@ export default async function CategoriesPage() {
                     <tbody className="text-sm">
                     {list.map((c) => (
                         <tr key={c.id} className="align-top">
-                            <td className="border-b p-2">{c.name_ru}{c.name_ky ? ` / ${c.name_ky}` : ''}</td>
+                            <td className="border-b p-2">{c.name_ru}</td>
                             <td className="border-b p-2">{c.slug}</td>
                             <td className="border-b p-2">{c.is_active ? 'Активна' : 'Выключена'}</td>
                             <td className="border-b p-2">{c.usage_count}</td>

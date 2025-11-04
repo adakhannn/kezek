@@ -7,7 +7,7 @@ import {createClient, PostgrestError} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
-type Body = { name_ru: string; slug?: string | null; name_ky?: string | null; is_active?: boolean };
+type Body = { name_ru: string; slug?: string | null; is_active?: boolean };
 type InsertedId = { id: string };
 
 const norm = (s?: string | null) => {
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
         const {data, error} = await admin
             .from('categories')
-            .insert({name_ru, name_ky: norm(b.name_ky), slug, is_active: b.is_active ?? true})
+            .insert({name_ru, slug, is_active: b.is_active ?? true})
             .select('id')
             .maybeSingle<InsertedId>();
 

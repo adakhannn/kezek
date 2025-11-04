@@ -30,7 +30,7 @@ export default async function CategoryEditPage({params}: { params: Promise<Route
     const admin = createClient(URL, SERVICE);
     const {data: cat, error} = await admin
         .from('categories')
-        .select('id,slug,name_ru,name_ky,is_active')
+        .select('id,slug,name_ru,is_active')
         .eq('id', id)
         .maybeSingle();
 
@@ -45,7 +45,6 @@ export default async function CategoryEditPage({params}: { params: Promise<Route
                 categoryId={cat.id}
                 initial={{
                     name_ru: cat.name_ru ?? '',
-                    name_ky: cat.name_ky ?? '',
                     slug: cat.slug,
                     is_active: !!cat.is_active
                 }}

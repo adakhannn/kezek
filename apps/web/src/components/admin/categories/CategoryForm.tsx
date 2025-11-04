@@ -1,12 +1,12 @@
 'use client';
 
-import {useRouter} from 'next/navigation';
-import React, {useEffect, useMemo, useState} from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 type Props = {
     mode: 'create' | 'edit';
     categoryId?: string;
-    initial?: { name_ru: string; name_ky: string; slug: string; is_active: boolean };
+    initial?: { name_ru: string; slug: string; is_active: boolean };
 };
 
 type ApiOk = { ok: true; id?: string };
@@ -15,92 +15,80 @@ type ApiResp = ApiOk | ApiErr;
 
 type CreateBody = {
     name_ru: string;
-    name_ky: string | null;
     slug: string | null;
     is_active: boolean;
-};
-type UpdateBody = {
-    name_ru: string | null;
-    name_ky: string | null;
-    slug: string | null;
-    is_active: boolean;
-    propagateSlug: boolean;
 };
 
-function translitCyrToLat(s: string): string {
-    // Простая транслитерация для ru/ky, затем нормализация в slug
-    return s
-        .toLowerCase()
-        .replace(/а/g, 'a')
-        .replace(/б/g, 'b')
-        .replace(/в/g, 'v')
-        .replace(/г/g, 'g')
-        .replace(/д/g, 'd')
-        .replace(/е|ё/g, 'e')
-        .replace(/ж/g, 'zh')
-        .replace(/з/g, 'z')
-        .replace(/и/g, 'i')
-        .replace(/й/g, 'y')
-        .replace(/к/g, 'k')
-        .replace(/л/g, 'l')
-        .replace(/м/g, 'm')
-        .replace(/н/g, 'n')
-        .replace(/о/g, 'o')
-        .replace(/п/g, 'p')
-        .replace(/р/g, 'r')
-        .replace(/с/g, 's')
-        .replace(/т/g, 't')
-        .replace(/у/g, 'u')
-        .replace(/ф/g, 'f')
-        .replace(/х/g, 'h')
-        .replace(/ц/g, 'c')
-        .replace(/ч/g, 'ch')
-        .replace(/ш/g, 'sh')
-        .replace(/щ/g, 'sch')
-        .replace(/ъ|ь/g, '')
-        .replace(/ы/g, 'y')
-        .replace(/э/g, 'e')
-        .replace(/ю/g, 'yu')
-        .replace(/я/g, 'ya')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .replace(/--+/g, '-');
+/** Транслитерация ru/ky + нормализация в slug */
+function makeSlug(input: string): string {
+    const map: Record<string, string> = {
+        // ru
+        а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
+        к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f',
+        х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'shch', ы: 'y', э: 'e', ю: 'yu', я: 'ya', ъ: '', ь: '',
+        // ky (базово)
+        ӊ: 'ng', ү: 'u', ө: 'o', Ң: 'ng', Ү: 'u', Ө: 'o',
+    };
+
+    const lower = input.toLowerCase().trim();
+    let out = '';
+    for (const ch of lower) out += map[ch] ?? ch;
+
+    return out
+        .replace(/[^a-z0-9]+/g, '-') // всё кроме латиницы/цифр → дефис
+        .replace(/^-+|-+$/g, '')     // крайние дефисы
+        .replace(/-+/g, '-');        // подряд дефисы → один
 }
 
 function isValidSlug(s: string): boolean {
-    // Разрешаем пустой (бэкенд может сам сгенерить), иначе латиница/цифры/дефис
+    // Разрешаем пустой (бэкенд может сам сгенерить), иначе латиница/цифры/дефис, длина ≥2
     if (!s.trim()) return true;
     return /^[a-z0-9-]{2,}$/.test(s);
 }
 
-export function CategoryForm({mode, categoryId, initial}: Props) {
+export function CategoryForm({ mode, categoryId, initial }: Props) {
     const router = useRouter();
+
     const [nameRu, setNameRu] = useState<string>(initial?.name_ru ?? '');
-    const [nameKy, setNameKy] = useState<string>(initial?.name_ky ?? '');
     const [slug, setSlug] = useState<string>(initial?.slug ?? '');
     const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
-    const [propagateSlug, setPropagateSlug] = useState<boolean>(true);
-    const [err, setErr] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
 
-    // авто-slug при создании
+    // если пользователь трогал slug руками — авто-генерацию выключаем
+    const [slugDirty, setSlugDirty] = useState<boolean>(false);
+
+    // защита от двойного эффекта в dev
+    const initRef = useRef(false);
+
+    // Авто-slug из nameRu (и при create, и при edit), пока slug не редактировали вручную
     useEffect(() => {
-        if (mode !== 'create') return;
-        if (!nameRu || slug) return;
-        setSlug(translitCyrToLat(nameRu));
-    }, [nameRu, slug, mode]);
+        // при первом рендере, если есть initial.slug, считаем, что slug уже задан вручную
+        if (!initRef.current) {
+            initRef.current = true;
+            if (mode === 'edit' && initial?.slug) setSlugDirty(true);
+        }
+
+        if (slugDirty) return;
+
+        if (!nameRu.trim()) {
+            setSlug('');
+        } else {
+            setSlug((prev) => {
+                const next = makeSlug(nameRu);
+                return prev === next ? prev : next;
+            });
+        }
+    }, [nameRu, slugDirty, mode, initial?.slug]);
 
     const changed = useMemo(() => {
         if (mode === 'create') {
-            return !!(nameRu || nameKy || slug || !isActive); // грубо: что-то ввели/поменяли
+            return !!(nameRu || slug || !isActive);
         }
         return (
             nameRu !== (initial?.name_ru ?? '') ||
-            nameKy !== (initial?.name_ky ?? '') ||
             slug !== (initial?.slug ?? '') ||
             isActive !== (initial?.is_active ?? true)
         );
-    }, [mode, nameRu, nameKy, slug, isActive, initial]);
+    }, [mode, nameRu, slug, isActive, initial]);
 
     function extractError(e: unknown): string {
         return e instanceof Error ? e.message : String(e);
@@ -108,40 +96,34 @@ export function CategoryForm({mode, categoryId, initial}: Props) {
 
     async function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        setErr(null);
-        setLoading(true);
+        const url =
+            mode === 'create'
+                ? '/admin/api/categories/create'
+                : `/admin/api/categories/${categoryId}/update`;
+
         try {
-            if (!nameRu.trim()) {
-                throw new Error('Название (ru) обязательно');
-            }
+            if (!nameRu.trim()) throw new Error('Название (ru) обязательно');
             if (!isValidSlug(slug)) {
                 throw new Error('Slug должен быть латиницей/цифрами и дефисом (минимум 2 символа), либо пустым');
             }
 
-            const url =
+            const body =
                 mode === 'create'
-                    ? '/admin/api/categories/create'
-                    : `/admin/api/categories/${categoryId}/update`;
-
-            const body: CreateBody | UpdateBody =
-                mode === 'create'
-                    ? {
+                    ? ({
                         name_ru: nameRu.trim(),
-                        name_ky: nameKy.trim() || null,
-                        slug: slug.trim() || null,
+                        slug: slug.trim() ? makeSlug(slug) : null, // нормализуем перед отправкой
                         is_active: isActive,
-                    }
+                    } satisfies CreateBody)
                     : {
                         name_ru: nameRu.trim() || null,
-                        name_ky: nameKy.trim() || null,
-                        slug: slug.trim() || null,
+                        slug: slug.trim() ? makeSlug(slug) : null,
                         is_active: isActive,
-                        propagateSlug,
+                        propagateSlug: true, // как раньше по умолчанию
                     };
 
             const resp = await fetch(url, {
                 method: 'POST',
-                headers: {'content-type': 'application/json'},
+                headers: { 'content-type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify(body),
             });
@@ -154,7 +136,7 @@ export function CategoryForm({mode, categoryId, initial}: Props) {
             } else {
                 const text = await resp.text();
                 if (!resp.ok) throw new Error(text.slice(0, 1500));
-                data = {ok: true};
+                data = { ok: true };
             }
 
             if (!resp.ok || !('ok' in data) || !data.ok) {
@@ -164,12 +146,13 @@ export function CategoryForm({mode, categoryId, initial}: Props) {
 
             router.push('/admin/categories');
             router.refresh();
-        } catch (e: unknown) {
-            setErr(extractError(e));
-        } finally {
-            setLoading(false);
+        } catch (e) {
+            // мягко показываем ошибку
+            setError(extractError(e));
         }
     }
+
+    const [error, setError] = useState<string | null>(null);
 
     return (
         <form onSubmit={submit} className="space-y-3 max-w-xl">
@@ -180,17 +163,25 @@ export function CategoryForm({mode, categoryId, initial}: Props) {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameRu(e.target.value)}
                 required
             />
-            <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Название (ky)"
-                value={nameKy}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameKy(e.target.value)}
-            />
+
             <input
                 className="border rounded px-3 py-2 w-full"
                 placeholder="Slug (латиница)"
                 value={slug}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSlug(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setSlug(e.target.value);
+                    setSlugDirty(true); // пользователь начал править — отключаем авто
+                }}
+                onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                    const v = e.target.value.trim();
+                    if (!v) {
+                        // очищено — снова включаем автогенерацию
+                        setSlugDirty(false);
+                        setSlug(makeSlug(nameRu));
+                    } else {
+                        setSlug(makeSlug(v)); // нормализуем вручную введённый slug
+                    }
+                }}
             />
 
             <label className="inline-flex items-center gap-2 text-sm">
@@ -203,25 +194,19 @@ export function CategoryForm({mode, categoryId, initial}: Props) {
             </label>
 
             {mode === 'edit' && (
-                <label className="flex items-center gap-2 text-sm">
-                    <input
-                        type="checkbox"
-                        checked={propagateSlug}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPropagateSlug(e.target.checked)}
-                    />
-                    При смене slug заменить его во всех бизнесах
-                </label>
+                <p className="text-xs text-gray-500">
+                    Изменение slug (при отмеченной опции в API) может быть распространено на связанные бизнесы.
+                </p>
             )}
 
-            {err && <div className="text-red-600 text-sm">{err}</div>}
+            {error && <div className="text-red-600 text-sm">{error}</div>}
 
             <button
                 className="border rounded px-3 py-2"
-                disabled={loading || (mode === 'edit' && !changed)}
+                disabled={mode === 'edit' ? !changed : false}
                 type="submit"
-                aria-busy={loading}
             >
-                {loading ? 'Сохраняю…' : mode === 'create' ? 'Создать' : 'Сохранить'}
+                {mode === 'create' ? 'Создать' : 'Сохранить'}
             </button>
             {mode === 'edit' && !changed && (
                 <span className="ml-2 text-xs text-gray-500">Нет изменений</span>

@@ -1,6 +1,5 @@
+// apps/web/src/app/dashboard/branches/page.tsx  (или ваш путь)
 import Link from 'next/link';
-
-import DeleteBranchButton from './DeleteBranchButton'; // ← добавили
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 
@@ -31,7 +30,7 @@ export default async function BranchesListPage() {
         <main className="mx-auto max-w-5xl space-y-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Филиалы</h1>
-                <Link href="/dashboard/branches/new" className="border rounded px-3 py-1">+ Добавить</Link>
+                {/* Кнопку добавления убрали для владельцев/менеджеров */}
             </div>
 
             <div className="border rounded overflow-x-auto">
@@ -52,14 +51,19 @@ export default async function BranchesListPage() {
                             <td className="p-2">{b.is_active ? 'активен' : 'скрыт'}</td>
                             <td className="p-2">
                                 <div className="flex gap-2">
-                                    <Link href={`/dashboard/branches/${b.id}`} className="border rounded px-2 py-1">Редакт.</Link>
-                                    <DeleteBranchButton id={b.id} /> {/* ← больше никакого onSubmit на серверной странице */}
+                                    <Link href={`/dashboard/branches/${b.id}`} className="border rounded px-2 py-1">
+                                        Редакт.
+                                    </Link>
                                 </div>
                             </td>
                         </tr>
                     ))}
                     {(branches ?? []).length === 0 && (
-                        <tr><td className="p-3 text-gray-500" colSpan={4}>Пока нет филиалов</td></tr>
+                        <tr>
+                            <td className="p-3 text-gray-500" colSpan={4}>
+                                Пока нет филиалов
+                            </td>
+                        </tr>
                     )}
                     </tbody>
                 </table>

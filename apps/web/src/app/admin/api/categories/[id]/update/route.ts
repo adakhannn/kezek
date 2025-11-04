@@ -9,7 +9,6 @@ import {NextResponse} from 'next/server';
 
 type Body = {
     name_ru?: string | null;
-    name_ky?: string | null;
     slug?: string | null;         // null => сгенерировать из name_ru/текущего имени
     is_active?: boolean;
     propagateSlug?: boolean;
@@ -19,11 +18,10 @@ type CategoryRow = {
     id: string;
     slug: string;
     name_ru: string | null;
-    name_ky: string | null;
     is_active: boolean;
 };
 
-type Patch = Partial<Pick<CategoryRow, 'name_ru' | 'name_ky' | 'slug' | 'is_active'>>;
+type Patch = Partial<Pick<CategoryRow, 'name_ru' | 'slug' | 'is_active'>>;
 
 const norm = (s?: string | null) => {
     const v = (s ?? '').trim();
@@ -85,7 +83,7 @@ export async function POST(req: Request, context: unknown) {
         // текущая категория
         const {data: cur, error: eCur} = await admin
             .from('categories')
-            .select('id,slug,name_ru,name_ky,is_active')
+            .select('id,slug,name_ru,is_active')
             .eq('id', params.id)
             .maybeSingle<CategoryRow>();
 
@@ -99,10 +97,6 @@ export async function POST(req: Request, context: unknown) {
             const v = norm(body.name_ru);
             if (!v) return NextResponse.json({ok: false, error: 'Название обязательно'}, {status: 400});
             patch.name_ru = v;
-        }
-
-        if (body.name_ky !== undefined) {
-            patch.name_ky = norm(body.name_ky); // может быть null
         }
 
         if (body.is_active !== undefined) {

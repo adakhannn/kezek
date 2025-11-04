@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import BranchForm from '../BranchForm';
 
+import BranchAdminsPanel from "@/app/dashboard/branches/[id]/BranchAdminsPanel";
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -40,6 +41,7 @@ export default async function EditBranchPage(context: unknown) {
                 }}
                 apiBase="/api/branches"
             />
+            <BranchAdminsPanel branchId={String(branch.id)} />
         </main>
     );
 }

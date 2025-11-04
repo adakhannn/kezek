@@ -1,11 +1,10 @@
-// apps/web/src/app/admin/api/users/[id]/update-basic/route.ts
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {AdminUserAttributes, createClient} from '@supabase/supabase-js';
-import {cookies} from 'next/headers';
-import {NextResponse} from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 type Body = {
     full_name?: string | null;
@@ -13,76 +12,74 @@ type Body = {
     phone?: string | null;
 };
 
-type ProfilesRow = { id: string; full_name: string | null };
-
-export async function POST(req: Request, context: unknown) {
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
+export async function POST(req: Request, ctx: unknown) {
     try {
+        const params =
+            typeof ctx === 'object' && ctx !== null && 'params' in ctx
+                ? (ctx as { params: Record<string, string> }).params
+                : {};
+        const userId = params.id;
+        if (!userId) {
+            return NextResponse.json({ ok: false, error: 'missing user id' }, { status: 400 });
+        }
+
+        const body = (await req.json()) as Body;
+        const full_name = (body.full_name ?? '').trim();
+        const email = body.email?.trim() || null;
+        const phone = body.phone?.trim() || null;
+
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
         const cookieStore = await cookies();
+
+        // 1) Проверка авторизации и что вызывающий — global super_admin
         const supa = createServerClient(URL, ANON, {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value, set: () => {
-                }, remove: () => {
-                }
+                get: (n) => cookieStore.get(n)?.value,
+                set: () => {},
+                remove: () => {},
             },
         });
 
-        const {
-            data: {user},
-        } = await supa.auth.getUser();
-        if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
+        const { data: { user } } = await supa.auth.getUser();
+        if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
-        const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
-        if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
+        const { data: superRow, error: superErr } = await supa
+            .from('user_roles_with_user')
+            .select('role_key,biz_id')
+            .eq('role_key', 'super_admin')
+            .is('biz_id', null)
+            .limit(1)
+            .maybeSingle();
+        if (superErr) return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
+        if (!superRow) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
+        // 2) Обновляем auth.users через service role
         const admin = createClient(URL, SERVICE);
-        const raw = (await req.json()) as Body;
 
-        // Нормализация и отсечение пустых строк
-        const full_name = (raw.full_name ?? '').trim();
-        const email = (raw.email ?? '').trim();
-        const phone = (raw.phone ?? '').trim();
+        // Сначала читаем текущие метаданные, чтобы не потерять другие поля
+        const { data: got, error: getErr } = await admin.auth.admin.getUserById(userId);
+        if (getErr || !got?.user) {
+            return NextResponse.json({ ok: false, error: 'user_not_found' }, { status: 404 });
+        }
+        const prevMeta = (got.user.user_metadata ?? {}) as Record<string, unknown>;
 
-        // Обновление email / phone через Admin API (если поля присутствуют в теле запроса)
-        if ('email' in raw || 'phone' in raw) {
-            const updatePayload: { email?: string | null; phone?: string | null } = {};
-            if ('email' in raw) updatePayload.email = email || null;
-            if ('phone' in raw) updatePayload.phone = phone || null;
+        const { error: updErr } = await admin.auth.admin.updateUserById(userId, {
+            email: email ?? undefined,           // не передаём поле, если null
+            phone: phone ?? undefined,
+            user_metadata: { ...prevMeta, full_name: full_name || null },
+        });
 
-            const {error: eUpdAuth} = await admin.auth.admin.updateUserById(params.id, <AdminUserAttributes>updatePayload);
-            if (eUpdAuth) {
-                return NextResponse.json({ok: false, error: eUpdAuth.message}, {status: 400});
-            }
+        if (updErr) {
+            return NextResponse.json({ ok: false, error: updErr.message }, { status: 400 });
         }
 
-        // Обновление имени в profiles (idempotent upsert по id)
-        if ('full_name' in raw) {
-            const {error: eProf} = await admin
-                .from('profiles')
-                .upsert(
-                    {id: params.id, full_name: full_name || null} satisfies ProfilesRow,
-                    {onConflict: 'id'},
-                );
-            if (eProf) {
-                return NextResponse.json({ok: false, error: eProf.message}, {status: 400});
-            }
-        }
-
-        return NextResponse.json({ok: true});
+        return NextResponse.json({ ok: true });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('update-basic error', e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
+        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }
 
+export const PUT = POST;

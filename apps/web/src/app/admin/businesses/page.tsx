@@ -1,5 +1,6 @@
 // apps/web/src/app/admin/businesses/page.tsx
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -8,8 +9,6 @@ type Biz = {
     id: string;
     slug: string;
     name: string;
-    address: string | null;
-    phones: string[] | null;
     owner_id: string | null;
     created_at: string;
 };
@@ -17,7 +16,9 @@ type Biz = {
 export default async function Page() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const service = process.env.SUPABASE_SERVICE_ROLE_KEY!; // ⟵ добавили
     const cookieStore = await cookies();
+
     const supabase = createServerClient(url, anon, {
         cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
@@ -41,10 +42,10 @@ export default async function Page() {
         return <main className="p-6">403</main>;
     }
 
-    // 3) список бизнесов
+    // 3) список бизнесов (без address/phones)
     const { data: list, error: listErr } = await supabase
         .from('businesses')
-        .select('id,slug,name,address,phones,owner_id,created_at')
+        .select('id,slug,name,owner_id,created_at')
         .order('created_at', { ascending: false });
 
     if (listErr) {
@@ -55,22 +56,35 @@ export default async function Page() {
         );
     }
 
-    // 4) e-mail владельцев (через твою вьюху)
-    const ownerIds = Array.from(
-        new Set((list ?? []).map((b) => b.owner_id).filter(Boolean)),
-    ) as string[];
+    // 4) имена владельцев из auth (user_metadata.full_name) с запасным вариантом email
+    const ownerIds = Array.from(new Set((list ?? []).map((b) => b.owner_id).filter(Boolean))) as string[];
 
-    let ownersMap = new Map<string, string>();
+    type OwnerInfo = { id: string; name?: string | null; email?: string | null };
+
+    let ownersMap = new Map<string, string>(); // id -> display name
     if (ownerIds.length) {
-        const { data: owners, error: ownersErr } = await supabase
-            .from('auth_users_view')
-            // ВАЖНО: только те поля, что реально есть во вьюхе
-            .select('id,email')
-            .in('id', ownerIds);
+        const admin = createClient(url, service);
 
-        if (!ownersErr) {
-            ownersMap = new Map((owners ?? []).map((r) => [r.id as string, (r.email as string) ?? '']));
-        }
+        // Параллельно тянем пользователей по id
+        const results = await Promise.all(
+            ownerIds.map(async (oid) => {
+                try {
+                    const { data, error } = await admin.auth.admin.getUserById(oid);
+                    if (error || !data?.user) return { id: oid } as OwnerInfo;
+                    const meta = (data.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
+                    const display =
+                        meta.full_name?.trim() ||
+                        data.user.email?.trim() ||
+                        (data.user as { phone?: string | null }).phone?.trim() ||
+                        oid; // на крайний случай — id
+                    return { id: oid, name: display, email: data.user.email ?? null } as OwnerInfo;
+                } catch {
+                    return { id: oid } as OwnerInfo;
+                }
+            })
+        );
+
+        ownersMap = new Map(results.map((r) => [r.id, (r.name ?? r.email ?? r.id)!]));
     }
 
     return (
@@ -89,8 +103,6 @@ export default async function Page() {
                         <th className="p-2">Название</th>
                         <th className="p-2">Slug</th>
                         <th className="p-2">Владелец</th>
-                        <th className="p-2">Адрес</th>
-                        <th className="p-2">Телефоны</th>
                         <th className="p-2">Действия</th>
                     </tr>
                     </thead>
@@ -100,8 +112,6 @@ export default async function Page() {
                             <td className="p-2">{b.name}</td>
                             <td className="p-2">{b.slug}</td>
                             <td className="p-2">{b.owner_id ? ownersMap.get(b.owner_id) ?? '—' : '—'}</td>
-                            <td className="p-2">{b.address ?? '—'}</td>
-                            <td className="p-2">{(b.phones ?? []).join(', ')}</td>
                             <td className="p-2">
                                 <Link className="underline" href={`/admin/businesses/${b.id}`}>
                                     Открыть
@@ -111,7 +121,7 @@ export default async function Page() {
                     ))}
                     {(!list || list.length === 0) && (
                         <tr>
-                            <td className="p-4 text-gray-500" colSpan={6}>
+                            <td className="p-4 text-gray-500" colSpan={4}>
                                 Пока нет бизнесов.
                             </td>
                         </tr>

@@ -1,17 +1,38 @@
 'use client';
 
 import Link from 'next/link';
-import {useEffect, useMemo, useState} from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import {supabase} from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 type CatRow = { id: string; slug: string; name_ru: string; is_active: boolean };
+
+/** Транслитерация + нормализация в slug */
+function makeSlug(input: string): string {
+    const map: Record<string, string> = {
+        // ru
+        а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
+        к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f',
+        х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'shch', ы: 'y', э: 'e', ю: 'yu', я: 'ya', ъ: '', ь: '',
+        // ky (базово)
+        ӊ: 'ng', ү: 'u', ө: 'o', Ң: 'ng', Ү: 'u', Ө: 'o',
+    };
+
+    const lower = input.toLowerCase().trim();
+    let out = '';
+    for (const ch of lower) out += map[ch] ?? ch;
+
+    return out
+        .replace(/[^a-z0-9]+/g, '-') // всё кроме латиницы/цифр → дефис
+        .replace(/^-+|-+$/g, '')     // крайние дефисы
+        .replace(/-+/g, '-');        // подряд дефисы → один
+}
 
 export default function NewBizPage() {
     // Бизнес
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
-    const [address, setAddress] = useState('');
+    const [slugDirty, setSlugDirty] = useState(false); // пользователь редактировал slug вручную
 
     // Категории из справочника
     const [allCats, setAllCats] = useState<CatRow[]>([]);
@@ -22,14 +43,21 @@ export default function NewBizPage() {
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
 
+    // защита от двойного эффекта в dev
+    const initRef = useRef(false);
+
     // Подтягиваем категории из public.categories (только активные)
     useEffect(() => {
+        if (initRef.current) return;
+        initRef.current = true;
+
         let ignore = false;
         (async () => {
-            const {data, error} = await supabase
+            const { data, error } = await supabase
                 .from('categories')
                 .select('id,slug,name_ru,is_active')
-                .order('name_ru', {ascending: true});
+                .order('name_ru', { ascending: true });
+
             if (error) {
                 console.error(error);
                 setErr(error.message);
@@ -38,6 +66,7 @@ export default function NewBizPage() {
             if (!ignore) {
                 const rows = (data || []).filter((c) => c.is_active !== false);
                 setAllCats(rows);
+
                 // если есть barbershop — выберем по умолчанию
                 if (rows.length && selected.length === 0) {
                     const def = rows.find((c) => c.slug === 'barbershop');
@@ -45,25 +74,28 @@ export default function NewBizPage() {
                 }
             }
         })();
+
         return () => {
             ignore = true;
         };
     }, []);
 
-    // Автогенерация slug из имени (можно править вручную)
+    // Автогенерация slug из имени, пока пользователь не правил slug вручную
     useEffect(() => {
-        if (!name || slug) return;
-        const s = name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-        setSlug(s);
-    }, [name, slug]);
+        if (!slugDirty) {
+            if (!name.trim()) {
+                setSlug('');
+            } else {
+                setSlug((prev) => {
+                    const next = makeSlug(name);
+                    return prev === next ? prev : next;
+                });
+            }
+        }
+    }, [name, slugDirty]);
 
     function toggle(sl: string) {
-        setSelected((prev) =>
-            prev.includes(sl) ? prev.filter((x) => x !== sl) : [...prev, sl]
-        );
+        setSelected((prev) => (prev.includes(sl) ? prev.filter((x) => x !== sl) : [...prev, sl]));
     }
 
     const visibleCats = useMemo(() => {
@@ -81,22 +113,26 @@ export default function NewBizPage() {
 
         try {
             if (!selected.length) throw new Error('Выберите хотя бы одну категорию');
+            if (!name.trim()) throw new Error('Заполните название');
+            if (!slug.trim()) throw new Error('Заполните slug');
 
             const payload = {
                 name: name.trim(),
-                slug: slug.trim(),
-                address: address.trim() || null,
-                categories: selected, // важно: массив SLUG'ов из справочника
-                // владельца не создаём здесь — отдельной страницей
+                slug: makeSlug(slug), // на всякий, нормализуем перед отправкой
+                categories: selected, // массив SLUG'ов из справочника
             };
 
             const resp = await fetch('/admin/api/businesses/create', {
                 method: 'POST',
-                headers: {'content-type': 'application/json'},
+                headers: { 'content-type': 'application/json' },
                 body: JSON.stringify(payload),
             });
+
             const ct = resp.headers.get('content-type') || '';
-            const j = ct.includes('json') ? await resp.json() : {error: (await resp.text()).slice(0, 1000)};
+            const j = ct.includes('json')
+                ? await resp.json()
+                : { error: (await resp.text()).slice(0, 1000) };
+
             if (!resp.ok || !j?.ok) throw new Error(j?.error || `HTTP ${resp.status}`);
 
             // после создания ведём на страницу бизнеса
@@ -113,8 +149,12 @@ export default function NewBizPage() {
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Админка — Создать бизнес</h1>
                 <div className="flex gap-3 text-sm">
-                    <Link href="/admin/businesses" className="underline">← К бизнесам</Link>
-                    <Link href="/admin/categories" className="underline">Справочник категорий</Link>
+                    <Link href="/admin/businesses" className="underline">
+                        ← К бизнесам
+                    </Link>
+                    <Link href="/admin/categories" className="underline">
+                        Справочник категорий
+                    </Link>
                 </div>
             </div>
 
@@ -127,18 +167,26 @@ export default function NewBizPage() {
                         onChange={(e) => setName(e.target.value)}
                         required
                     />
+
                     <input
                         className="border rounded px-3 py-2"
                         placeholder="Slug * (латиница)"
                         value={slug}
-                        onChange={(e) => setSlug(e.target.value)}
+                        onChange={(e) => {
+                            setSlug(e.target.value);
+                            setSlugDirty(true); // пользователь начал править — отключаем автогенерацию
+                        }}
+                        onBlur={(e) => {
+                            const v = e.target.value.trim();
+                            if (!v) {
+                                // очищено — снова включаем автогенерацию
+                                setSlugDirty(false);
+                                setSlug(makeSlug(name));
+                            } else {
+                                setSlug(makeSlug(v)); // нормализуем вручную введённый slug
+                            }
+                        }}
                         required
-                    />
-                    <input
-                        className="border rounded px-3 py-2"
-                        placeholder='Адрес (например, "Пушкина 4")'
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
                     />
                 </div>
 
@@ -175,18 +223,26 @@ export default function NewBizPage() {
                             </label>
                         ))}
                         {visibleCats.length === 0 && (
-                            <div className="text-sm text-gray-500">Нет категорий. Создайте в «Справочнике
-                                категорий».</div>
+                            <div className="text-sm text-gray-500">
+                                Нет категорий. Создайте в «Справочнике категорий».
+                            </div>
                         )}
                     </div>
 
                     <div className="flex flex-wrap gap-2">
                         {selected.map((sl) => (
-                            <span key={sl}
-                                  className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-sm">
+                            <span
+                                key={sl}
+                                className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-sm"
+                            >
                 {sl}
-                                <button type="button" className="opacity-60 hover:opacity-100"
-                                        onClick={() => toggle(sl)}>×</button>
+                                <button
+                                    type="button"
+                                    className="opacity-60 hover:opacity-100"
+                                    onClick={() => toggle(sl)}
+                                >
+                  ×
+                </button>
               </span>
                         ))}
                     </div>

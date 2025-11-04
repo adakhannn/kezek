@@ -13,8 +13,10 @@ export default async function CategoryNewPage() {
     const supa = createServerClient(URL, ANON, {
         cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
+
     const { data: { user } } = await supa.auth.getUser();
     if (!user) return <div className="p-4">Не авторизован</div>;
+
     const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
     if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
@@ -26,4 +28,3 @@ export default async function CategoryNewPage() {
         </div>
     );
 }
-
