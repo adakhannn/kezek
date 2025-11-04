@@ -48,7 +48,7 @@ export default function SignInPage() {
             }
             // при head:true data=null, используем count
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (data) === null ? (/* @ts-ignore */ (error as any)?.count ?? 0) > 0 : true;
+            return (data) === null ? ((error as any)?.count ?? 0) > 0 : true;
         },
         []
     );

@@ -32,7 +32,7 @@ interface IGeoObject {
     events: IEventManager;
 }
 
-interface IPlacemark extends IGeoObject {}
+type IPlacemark = IGeoObject;
 
 interface IGeoObjectCollection {
     add(obj: IGeoObject): void;
