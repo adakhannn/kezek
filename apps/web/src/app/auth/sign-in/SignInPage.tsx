@@ -1,10 +1,10 @@
 // apps/web/src/app/auth/sign-in/SignInPage.tsx
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useCallback, useState } from 'react';
+import {useSearchParams, useRouter} from 'next/navigation';
+import {useEffect, useCallback, useState} from 'react';
 
-import { supabase } from '@/lib/supabaseClient';
+import {supabase} from '@/lib/supabaseClient';
 
 type Mode = 'phone' | 'email';
 
@@ -17,15 +17,13 @@ export default function SignInPage() {
 
     const [mode, setMode] = useState<Mode>(initialMode);
     const [phone, setPhone] = useState('');
-    const [sending, setSending] = useState(false);
     const [email, setEmail] = useState('');
-    const [pass, setPass] = useState('');
-    const [loadingEmail, setLoadingEmail] = useState(false);
+    const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // --- чёткая проверка супер-админа
     const fetchIsSuper = useCallback(async (): Promise<boolean> => {
-        const { data, error } = await supabase.rpc('is_super_admin');
+        const {data, error} = await supabase.rpc('is_super_admin');
         if (error) {
             console.warn('is_super_admin error:', error.message);
             return false;
@@ -37,25 +35,22 @@ export default function SignInPage() {
     const fetchOwnsBusiness = useCallback(
         async (userId: string | undefined): Promise<boolean> => {
             if (!userId) return false;
-            const { data, error } = await supabase
+            const {count, error} = await supabase
                 .from('businesses')
-                .select('id', { count: 'exact', head: true })
-                .eq('owner_id', userId)
-                .limit(1);
+                .select('id', {count: 'exact', head: true})
+                .eq('owner_id', userId);
             if (error) {
                 console.warn('owner check error:', error.message);
                 return false;
             }
-            // при head:true data=null, используем count
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (data) === null ? ((error as any)?.count ?? 0) > 0 : true;
+            return (count ?? 0) > 0;
         },
         []
     );
 
-    // --- роли пользователя (на будущее; тут уже не критично)
+    // --- роли пользователя (подстраховка)
     const fetchMyRoles = useCallback(async (): Promise<string[]> => {
-        const { data, error } = await supabase.rpc('my_role_keys');
+        const {data, error} = await supabase.rpc('my_role_keys');
         if (error) {
             console.warn('my_role_keys error:', error.message);
             return [];
@@ -66,13 +61,9 @@ export default function SignInPage() {
     const decideRedirect = useCallback(
         async (fallback: string, userId?: string) => {
             if (await fetchIsSuper()) return '/admin';
-            // сначала смотрим фактическое владение бизнесом
             if (await fetchOwnsBusiness(userId)) return '/dashboard';
-
-            // дополнительная подстраховка: роль owner (если вдруг понадобится)
             const roles = await fetchMyRoles();
             if (roles.includes('owner')) return '/dashboard';
-
             return fallback || '/';
         },
         [fetchIsSuper, fetchMyRoles, fetchOwnsBusiness]
@@ -80,8 +71,7 @@ export default function SignInPage() {
 
     const decideAndGo = useCallback(
         async (fallback: string) => {
-            // достаём свежего пользователя (после OTP/пароля)
-            const { data } = await supabase.auth.getUser();
+            const {data} = await supabase.auth.getUser();
             const uid = data.user?.id;
             const target = await decideRedirect(fallback, uid);
             router.replace(target);
@@ -91,10 +81,10 @@ export default function SignInPage() {
 
     // Уже авторизован? — уводим сразу по новой схеме
     useEffect(() => {
-        supabase.auth.getUser().then(({ data }) => {
+        supabase.auth.getUser().then(({data}) => {
             if (data.user) void decideAndGo(redirectParam);
         });
-        const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
+        const {data: sub} = supabase.auth.onAuthStateChange((_ev, session) => {
             if (session?.user) void decideAndGo(redirectParam);
         });
         return () => {
@@ -102,39 +92,46 @@ export default function SignInPage() {
         };
     }, [decideAndGo, redirectParam]);
 
-    async function sendCode(e: React.FormEvent) {
+    async function sendOtp(e: React.FormEvent) {
         e.preventDefault();
         setSending(true);
         setError(null);
         try {
-            const { error } = await supabase.auth.signInWithOtp({
-                phone,
-                options: { channel: 'sms' },
-            });
-            if (error) throw error;
-            // На /auth/verify после ввода кода тоже вызываем decideAndGo(redirectParam)
-            router.push(
-                `/auth/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(redirectParam)}`
-            );
+            if (mode === 'phone') {
+                const {error} = await supabase.auth.signInWithOtp({
+                    phone,
+                    options: {channel: 'sms'}, // shouldCreateUser: true|false по желанию
+                });
+                if (error) throw error;
+                // На /auth/verify после ввода кода тоже вызываем decideAndGo(redirectParam)
+                router.push(
+                    `/auth/verify?mode=phone&phone=${encodeURIComponent(
+                        phone
+                    )}&redirect=${encodeURIComponent(redirectParam)}`
+                );
+            } else {
+                // E-mail OTP (без пароля). Можно отправлять код
+                const {error} = await supabase.auth.signInWithOtp({
+                    email,
+                    options: {
+                        // Если хочешь magic-link вместо ручного ввода кода:
+                        // emailRedirectTo: `${location.origin}/auth/callback`,
+                        // shouldCreateUser: true
+                    },
+                });
+                if (error) throw error;
+                // Идём на общую страницу Verify — там пользователь вводит код из письма,
+                // и после verifyOtp делаем decideAndGo.
+                router.push(
+                    `/auth/verify?mode=email&email=${encodeURIComponent(
+                        email
+                    )}&redirect=${encodeURIComponent(redirectParam)}`
+                );
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
         } finally {
             setSending(false);
-        }
-    }
-
-    async function signInEmail(e: React.FormEvent) {
-        e.preventDefault();
-        setLoadingEmail(true);
-        setError(null);
-        try {
-            const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-            if (error) throw error;
-            await decideAndGo(redirectParam);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : String(err));
-        } finally {
-            setLoadingEmail(false);
         }
     }
 
@@ -155,47 +152,44 @@ export default function SignInPage() {
                     className={`border px-3 py-1 rounded ${mode === 'email' ? 'bg-white/10' : ''}`}
                     onClick={() => setMode('email')}
                 >
-                    По e-mail + пароль
+                    По e-mail (код)
                 </button>
             </div>
 
-            {mode === 'phone' ? (
-                <form onSubmit={sendCode} className="space-y-3">
-                    <label className="block text-sm">Телефон (в формате +996…)</label>
-                    <input
-                        className="border rounded px-3 py-2 w-full"
-                        placeholder="+996555123456"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                    />
-                    <button className="border rounded px-3 py-2 w-full disabled:opacity-50" disabled={sending} type="submit">
-                        {sending ? 'Отправляю…' : 'Отправить код по SMS'}
-                    </button>
-                </form>
-            ) : (
-                <form onSubmit={signInEmail} className="space-y-3">
-                    <input
-                        className="border rounded px-3 py-2 w-full"
-                        placeholder="E-mail"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                    <input
-                        className="border rounded px-3 py-2 w-full"
-                        placeholder="Пароль"
-                        type="password"
-                        value={pass}
-                        onChange={(e) => setPass(e.target.value)}
-                        required
-                    />
-                    <button className="border rounded px-3 py-2 w-full disabled:opacity-50" disabled={loadingEmail} type="submit">
-                        {loadingEmail ? 'Вхожу…' : 'Войти'}
-                    </button>
-                </form>
-            )}
+            <form onSubmit={sendOtp} className="space-y-3">
+                {mode === 'phone' ? (
+                    <>
+                        <label className="block text-sm">Телефон (в формате +996…)</label>
+                        <input
+                            className="border rounded px-3 py-2 w-full"
+                            placeholder="+996555123456"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            required
+                        />
+                    </>
+                ) : (
+                    <>
+                        <label className="block text-sm">E-mail</label>
+                        <input
+                            className="border rounded px-3 py-2 w-full"
+                            placeholder="you@example.com"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </>
+                )}
+
+                <button
+                    className="border rounded px-3 py-2 w-full disabled:opacity-50"
+                    disabled={sending}
+                    type="submit"
+                >
+                    {sending ? 'Отправляю…' : 'Отправить код'}
+                </button>
+            </form>
 
             {error && <div className="text-red-600 text-sm">{error}</div>}
 
