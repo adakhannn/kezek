@@ -2,16 +2,23 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import {createServerClient} from '@supabase/ssr';
+import {createClient} from '@supabase/supabase-js';
+import {cookies} from 'next/headers';
+import {NextResponse} from 'next/server';
 
-export async function POST(_req: Request, ctx: { params: { id: string } }) {
+export async function POST(_req: Request, context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string | string[]> }).params
+            : {};
     try {
-        const bizId = ctx?.params?.id;
+        const bizId = params?.id;
         if (!bizId) {
-            return NextResponse.json({ ok: false, error: 'missing business id' }, { status: 400 });
+            return NextResponse.json({ok: false, error: 'missing business id'}, {status: 400});
         }
 
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -21,28 +28,32 @@ export async function POST(_req: Request, ctx: { params: { id: string } }) {
 
         // проверяем, что вызывает супер-админ
         const supa = createServerClient(URL, ANON, {
-            cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+            cookies: {
+                get: (n) => cookieStore.get(n)?.value, set: () => {
+                }, remove: () => {
+                }
+            },
         });
-        const { data: { user } } = await supa.auth.getUser();
-        if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
+        const {data: {user}} = await supa.auth.getUser();
+        if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
-        const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-        if (eSuper) return NextResponse.json({ ok: false, error: eSuper.message }, { status: 400 });
-        if (!isSuper) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
+        const {data: isSuper, error: eSuper} = await supa.rpc('is_super_admin');
+        if (eSuper) return NextResponse.json({ok: false, error: eSuper.message}, {status: 400});
+        if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         // сервис-клиент и RPC
         const admin = createClient(URL, SERVICE);
-        const { error: delErr } = await admin.rpc('force_delete_business_and_downgrade_owner', {
+        const {error: delErr} = await admin.rpc('force_delete_business_and_downgrade_owner', {
             p_biz_id: bizId,
         });
         if (delErr) {
-            return NextResponse.json({ ok: false, error: delErr.message }, { status: 400 });
+            return NextResponse.json({ok: false, error: delErr.message}, {status: 400});
         }
 
-        return NextResponse.json({ ok: true });
+        return NextResponse.json({ok: true});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+        return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }
 
