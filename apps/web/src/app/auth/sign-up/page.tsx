@@ -28,7 +28,13 @@ export default function SignUpPage() {
                 localStorage.setItem('signup_full_name', fullName);
                 router.push(`/auth/verify?mode=phone&phone=${encodeURIComponent(phone)}&redirect=/auth/post-signup`);
             } else {
-                const {error} = await supabase.auth.signInWithOtp({email});
+                const { error } = await supabase.auth.signInWithOtp({
+                    email,
+                    options: {
+                        shouldCreateUser: true,
+                        emailRedirectTo: `${location.origin}/auth/callback`,
+                    },
+                });
                 if (error) throw error;
                 localStorage.setItem('signup_full_name', fullName);
                 router.push(`/auth/verify?mode=email&email=${encodeURIComponent(email)}&redirect=/auth/post-signup`);
