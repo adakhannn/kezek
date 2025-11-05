@@ -37,7 +37,7 @@ export default function SignUpPage() {
                 });
                 if (error) throw error;
                 localStorage.setItem('signup_full_name', fullName);
-                router.push(`/auth/verify?mode=email&email=${encodeURIComponent(email)}&redirect=/auth/post-signup`);
+                router.push('/auth/verify-email');
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));

@@ -111,12 +111,15 @@ export default function SignInPage() {
                 );
             } else {
                 // E-mail OTP (без пароля). Можно отправлять код
-                const {error} = await supabase.auth.signInWithOtp({
+                const url = typeof window !== 'undefined'
+                    ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectParam)}`
+                    : undefined;
+
+                const { error } = await supabase.auth.signInWithOtp({
                     email,
                     options: {
-                        // Если хочешь magic-link вместо ручного ввода кода:
-                        // emailRedirectTo: `${location.origin}/auth/callback`,
-                        // shouldCreateUser: true
+                        emailRedirectTo: url, // <— сюда Supabase вернёт пользователя из письма
+                        // shouldCreateUser: true, // по желанию
                     },
                 });
                 if (error) throw error;

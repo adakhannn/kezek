@@ -1,3 +1,4 @@
+// apps/web/src/app/api/notify/route.ts
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +64,31 @@ function normalizeEmails(list: (string | null | undefined)[]): string[] {
     );
 }
 
+function greet(name?: string | null) {
+    return name?.trim() ? `Здравствуйте, ${name}!` : `Здравствуйте!`;
+}
+
+type RoleKey = 'client' | 'staff' | 'owner' | 'admin';
+function roleRu(role: RoleKey) {
+    switch (role) {
+        case 'client': return 'Клиент';
+        case 'staff':  return 'Мастер';
+        case 'owner':  return 'Владелец';
+        default:       return 'Администратор';
+    }
+}
+
+function buildHtmlPersonal(
+    baseHtml: string,
+    name: string | null | undefined,
+    role: RoleKey
+) {
+    const header =
+        `<p style="margin:0 0 12px 0">${greet(name)} <i>(${roleRu(role)})</i></p>`;
+    // безопасно вставляем приветствие в начало корневого контейнера
+    return baseHtml.replace('<div', `<div>${header}`);
+}
+
 /* ---------- route ---------- */
 
 export async function POST(req: Request) {
@@ -80,7 +106,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: 'no RESEND_API_KEY' }, { status: 500 });
         }
 
-        // Supabase client
+        // Supabase client (SSR)
         const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const cookieStore = await cookies();
@@ -108,26 +134,30 @@ export async function POST(req: Request) {
         const staf = first<StaffRow>(raw.staff);
         const biz  = first<BizRow>(raw.biz);
 
-        // E-mail клиента
+        // E-mail + имя клиента
         let clientEmail: string | null = null;
+        let clientName: string | null = null;
         if (raw.client_id) {
             const { data: au } = await supabase
                 .from('auth_users_view')
-                .select('email')
+                .select('email, full_name')
                 .eq('id', raw.client_id)
-                .maybeSingle<{ email: string | null }>();
+                .maybeSingle<{ email: string | null; full_name: string | null }>();
             clientEmail = au?.email ?? null;
+            clientName  = au?.full_name ?? null;
         }
 
-        // E-mail владельца
+        // E-mail + имя владельца
         let ownerEmail: string | null = null;
+        let ownerName: string | null = null;
         if (biz?.owner_id) {
             const { data: ou } = await supabase
                 .from('auth_users_view')
-                .select('email')
+                .select('email, full_name')
                 .eq('id', biz.owner_id)
-                .maybeSingle<{ email: string | null }>();
+                .maybeSingle<{ email: string | null; full_name: string | null }>();
             ownerEmail = ou?.email ?? null;
+            ownerName  = ou?.full_name ?? null;
         }
 
         const staffEmail = staf?.email ?? null;
@@ -144,8 +174,8 @@ export async function POST(req: Request) {
         const bizName = biz?.name ?? 'Бизнес';
         const link    = `${origin}/booking/${raw.id}`;
 
-        // HTML + текстовая версия (для доставляемости)
-        const html = `
+        // HTML + текстовая версия (базовая, без персонализации)
+        const baseHtml = `
       <div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5">
         <h2>${title}: ${bizName}</h2>
         <p><b>Услуга:</b> ${svcName}</p>
@@ -167,10 +197,41 @@ export async function POST(req: Request) {
             `Ссылка: ${link}`;
 
         // --- формируем получателей
-        const toClient = normalizeEmails([clientEmail]); // только клиент
-        const toOthers = normalizeEmails([staffEmail, ownerEmail, ...(adminEmails || [])]);
+        type Recipient = {
+            email: string;
+            name: string | null;
+            role: RoleKey;
+            withIcs?: boolean;
+        };
 
-        // --- готовим .ics для клиента
+        const recipients: Recipient[] = [];
+
+        // клиент — отдельное письмо с .ics
+        if (clientEmail) {
+            recipients.push({ email: clientEmail, name: clientName, role: 'client', withIcs: true });
+        }
+
+        // мастер
+        if (staffEmail) {
+            recipients.push({ email: staffEmail, name: staf?.full_name ?? null, role: 'staff' });
+        }
+
+        // владелец
+        if (ownerEmail) {
+            recipients.push({ email: ownerEmail, name: ownerName, role: 'owner' });
+        }
+
+        // администраторы из списка
+        for (const em of normalizeEmails(adminEmails ?? [])) {
+            recipients.push({ email: em, name: null, role: 'admin' });
+        }
+
+        // дедуп по email (оставляем первый встретившийся вариант)
+        const uniqMap = new Map<string, Recipient>();
+        for (const r of recipients) if (!uniqMap.has(r.email)) uniqMap.set(r.email, r);
+        const uniqRecipients = Array.from(uniqMap.values());
+
+        // --- готовим .ics для клиента (один раз)
         const icsText = buildIcs({
             id: raw.id,
             summary: `${svcName} — ${bizName}`,
@@ -183,49 +244,35 @@ export async function POST(req: Request) {
         });
         const icsBase64 = Buffer.from(icsText, 'utf8').toString('base64');
 
-        // --- отправляем письма через Resend
+        // --- отправляем письма через Resend (персонально)
         const headers = {
             'content-type': 'application/json',
             Authorization: `Bearer ${apiKey}`,
         } as const;
 
-        // 1) Клиенту — с ICS
-        if (toClient.length) {
+        let sent = 0;
+        for (const rcp of uniqRecipients) {
+            const htmlPersonal = buildHtmlPersonal(baseHtml, rcp.name, rcp.role);
+            const payload: Record<string, unknown> = {
+                from,
+                to: [rcp.email],
+                subject: `Kezek: ${title}`,
+                html: htmlPersonal,
+                text,
+                reply_to: ownerEmail || undefined,
+            };
+            if (rcp.withIcs) {
+                payload.attachments = [{ filename: 'booking.ics', content: icsBase64 }];
+            }
             await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({
-                    from,
-                    to: toClient,
-                    subject: `Kezek: ${title}`,
-                    html,
-                    text,
-                    attachments: [{ filename: 'booking.ics', content: icsBase64 }],
-                    reply_to: ownerEmail || undefined,
-                }),
+                body: JSON.stringify(payload),
             });
+            sent += 1;
         }
 
-        // 2) Остальным — без ICS (чтобы не спамить вложениями мастера/владельца)
-        if (toOthers.length) {
-            await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    from,
-                    to: toOthers,
-                    subject: `Kezek: ${title}`,
-                    html,
-                    text,
-                    reply_to: ownerEmail || undefined,
-                }),
-            });
-        }
-
-        return NextResponse.json({
-            ok: true,
-            sent: (toClient.length ? toClient.length : 0) + (toOthers.length ? toOthers.length : 0),
-        });
+        return NextResponse.json({ ok: true, sent });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[notify] error:', msg);
