@@ -56,9 +56,11 @@ export async function AuthStatusServer() {
 
     if (!user) {
         return (
-            <div className="flex items-center gap-3 text-sm">
-                <span className="text-gray-600">Вы не авторизованы</span>
-                <Link href="/auth/sign-in" className="border rounded px-3 py-1">
+            <div className="flex items-center gap-3">
+                <Link 
+                    href="/auth/sign-in" 
+                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
+                >
                     Войти
                 </Link>
             </div>
@@ -69,11 +71,17 @@ export async function AuthStatusServer() {
     const target = await getTargetPath(supabase, user.id);
 
     return (
-        <div className="flex items-center gap-3 text-sm">
-      <span className="text-gray-600">
-        Вы вошли как <b>{label}</b>
-      </span>
-            <Link href={target.href} className="border rounded px-3 py-1">
+        <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-gray-700 dark:text-gray-300">
+                    <span className="font-medium">{label}</span>
+                </span>
+            </div>
+            <Link 
+                href={target.href} 
+                className="px-4 py-2 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm hover:shadow-md transition-all duration-200 text-sm"
+            >
                 {target.label}
             </Link>
             <SignOutButton />
