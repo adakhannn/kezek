@@ -27,7 +27,11 @@ export async function middleware(req: NextRequest) {
     if (!userRes.user) return res;
 
     const { data: roles, error } = await supabase.rpc('my_role_keys');
-    if (error) return res;
+    if (error) {
+        // Логируем ошибку, но не прерываем запрос - пользователь останется на главной
+        console.warn('[middleware] Failed to get user roles:', error.message);
+        return res;
+    }
 
     const keys = Array.isArray(roles) ? (roles as string[]) : [];
     if (keys.includes('super_admin')) {
