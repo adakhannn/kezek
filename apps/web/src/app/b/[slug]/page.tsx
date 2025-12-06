@@ -3,40 +3,76 @@ import { JSX } from 'react';
 
 import BizClient from './view';
 
+import { getSupabaseServer } from '@/lib/authBiz';
+
+
+type Biz = { id: string; slug: string; name: string; address: string; phones: string[] };
+type Branch = { id: string; name: string };
+type Service = {
+    id: string;
+    name_ru: string;
+    duration_min: number;
+    price_from: number | null;
+    price_to: number | null;
+    active: boolean;
+    branch_id: string;
+};
+type Staff = { id: string; full_name: string; branch_id: string };
+
 async function getData(slug: string) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const supabase = await getSupabaseServer();
 
-    async function q(path: string, init?: RequestInit) {
-        const r = await fetch(`${url}/rest/v1/${path}`, {
-            ...init,
-            headers: { apikey: anon, Authorization: `Bearer ${anon}`, ...(init?.headers || {}) },
-            cache: 'no-store',
-        });
-        if (!r.ok) throw new Error(await r.text());
-        return r.json();
-    }
+    // Получаем бизнес по slug
+    const { data: bizRaw, error: bizError } = await supabase
+        .from('businesses')
+        .select('id,slug,name,address,phones')
+        .eq('slug', slug)
+        .eq('is_approved', true)
+        .maybeSingle<{ id: string; slug: string; name: string; address: string | null; phones: string[] | null }>();
 
-    const [biz] = await q(
-        `businesses?select=id,slug,name,address,phones&slug=eq.${slug}&is_approved=eq.true&limit=1`
-    );
-    if (!biz) return null;
+    if (bizError || !bizRaw) return null;
 
-    const branches = await q(
-        `branches?select=id,name&biz_id=eq.${biz.id}&is_active=eq.true&order=name.asc`
-    );
+    // Приводим к типу Biz (address и phones не могут быть null в типе)
+    const biz: Biz = {
+        ...bizRaw,
+        address: bizRaw.address ?? '',
+        phones: bizRaw.phones ?? [],
+    };
 
-    // все активные услуги бизнеса (дальше фильтруем по филиалу)
-    const services = await q(
-        `services?select=id,name_ru,duration_min,price_from,price_to,active,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`
-    );
+    // Получаем филиалы
+    const { data: branches, error: branchesError } = await supabase
+        .from('branches')
+        .select('id,name')
+        .eq('biz_id', biz.id)
+        .eq('is_active', true)
+        .order('name', { ascending: true })
+        .returns<Branch[]>();
 
-    // активные мастера с их "родным" филиалом
-    const staff = await q(
-        `staff?select=id,full_name,branch_id&biz_id=eq.${biz.id}&is_active=eq.true&order=full_name.asc`
-    );
+    if (branchesError) throw new Error(`Failed to fetch branches: ${branchesError.message}`);
 
-    return { biz, branches, services, staff };
+    // Все активные услуги бизнеса (дальше фильтруем по филиалу)
+    const { data: services, error: servicesError } = await supabase
+        .from('services')
+        .select('id,name_ru,duration_min,price_from,price_to,active,branch_id')
+        .eq('biz_id', biz.id)
+        .eq('active', true)
+        .order('name_ru', { ascending: true })
+        .returns<Service[]>();
+
+    if (servicesError) throw new Error(`Failed to fetch services: ${servicesError.message}`);
+
+    // Активные мастера с их "родным" филиалом
+    const { data: staff, error: staffError } = await supabase
+        .from('staff')
+        .select('id,full_name,branch_id')
+        .eq('biz_id', biz.id)
+        .eq('is_active', true)
+        .order('full_name', { ascending: true })
+        .returns<Staff[]>();
+
+    if (staffError) throw new Error(`Failed to fetch staff: ${staffError.message}`);
+
+    return { biz, branches: branches ?? [], services: services ?? [], staff: staff ?? [] };
 }
 
 export default async function Page({
