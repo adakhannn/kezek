@@ -33,10 +33,17 @@ export default function RootLayout({
     return (
         <html lang="ru">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <header className="border-b">
-            <div className="mx-auto max-w-6xl p-4 flex items-center justify-between">
-                <Link href="/" className="font-semibold">Kezek</Link>
-                <AuthStatusServer/>
+        <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex h-16 items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2 group">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-pink-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                            <span className="relative text-2xl font-bold gradient-text">Kezek</span>
+                        </div>
+                    </Link>
+                    <AuthStatusServer/>
+                </div>
             </div>
         </header>
 
