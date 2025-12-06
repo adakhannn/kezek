@@ -1,7 +1,7 @@
-import {createServerClient} from '@supabase/ssr';
 import {formatInTimeZone} from 'date-fns-tz';
-import {cookies} from 'next/headers';
 import Link from "next/link";
+
+import { getSupabaseServer } from '@/lib/authBiz';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
@@ -11,21 +11,7 @@ export default async function BookingPage({
     params: Promise<{ id: string }>;
 }) {
     const {id} = await params;
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(url, anon, {
-        cookies: {
-            get: (n) => cookieStore.get(n)?.value,
-            // no-op’ы нужны, чтобы supabase/ssr не падал в RSC
-            set: () => {
-            },
-            remove: () => {
-            },
-        },
-    });
+    const supabase = await getSupabaseServer();
 
     // Пытаемся читать по RLS (клиент своей брони, сотрудник бизнеса, или супер-админ)
     const {data} = await supabase
@@ -63,12 +49,7 @@ export default async function BookingPage({
 }
 
 async function FallbackBooking({ id }: { id: string }) {
-    const url  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-    const supabase = createServerClient(url, anon, {
-        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+    const supabase = await getSupabaseServer();
 
     const { data, error } = await supabase.rpc('booking_view_public', { p_id: id });
     if (error || !data || data.length === 0) {
