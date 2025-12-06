@@ -30,10 +30,7 @@ type CreateUserPayload = {
     user_metadata?: { full_name?: string };
 };
 
-function norm(v?: string | null) { const s = (v ?? '').trim(); return s || null; }
-function isUuid(v: string) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v); }
-function isEmail(s: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
-function isE164(s: string) { return /^\+[1-9]\d{1,14}$/.test(s); }
+import { isEmail, isE164, isUuid, normalizeString } from '@/lib/validation';
 
 export async function POST(req: Request, context: unknown) {
     try {
@@ -73,9 +70,9 @@ export async function POST(req: Request, context: unknown) {
         if (!allowed) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         const body = (await req.json()) as Body;
-        const full_name = norm(body.full_name);
-        const email = norm(body.email);
-        const phone = norm(body.phone);
+        const full_name = normalizeString(body.full_name);
+        const email = normalizeString(body.email);
+        const phone = normalizeString(body.phone);
         const roles = Array.isArray(body.roles) ? body.roles.filter(Boolean) : [];
 
         if (!email && !phone) {

@@ -4,11 +4,10 @@ import Link from 'next/link';
 
 import NewMemberExisting from './NewMemberExisting';
 
-export const dynamic = 'force-dynamic';
+import { isUuid } from '@/lib/validation';
 
-function isUuid(v: string): boolean {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-}
+
+export const dynamic = 'force-dynamic';
 
 export default async function NewMemberPage(context: unknown) {
     // безопасно достаём params.id без any
