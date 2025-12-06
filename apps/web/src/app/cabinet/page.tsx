@@ -1,9 +1,10 @@
 // apps/web/src/app/cabinet/page.tsx
-import { createServerClient } from '@supabase/ssr';
 import { formatInTimeZone } from 'date-fns-tz';
-import { cookies } from 'next/headers';
 
 import ClientCabinet from './ClientCabinet';
+
+import { getSupabaseServer } from '@/lib/authBiz';
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -11,17 +12,7 @@ export const runtime = 'nodejs';
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 export default async function Page() {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get: (n) => cookieStore.get(n)?.value,
-                // set/remove в RSC не используем
-            },
-        }
-    );
+    const supabase = await getSupabaseServer();
 
     const { data: auth } = await supabase.auth.getUser();
     const userId = auth.user?.id;

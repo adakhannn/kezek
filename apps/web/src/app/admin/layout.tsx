@@ -1,16 +1,10 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-    const url  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
+import { getSupabaseServer } from '@/lib/authBiz';
 
-    const supabase = createServerClient(url, anon, {
-        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-    });
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+    const supabase = await getSupabaseServer();
 
     // 1) авторизация
     const { data: { user } } = await supabase.auth.getUser();

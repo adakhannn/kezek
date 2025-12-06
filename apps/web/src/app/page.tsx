@@ -1,6 +1,6 @@
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
 import Link from 'next/link';
+
+import { getSupabaseServer } from '@/lib/authBiz';
 
 const PAGE_SIZE = 9;
 
@@ -23,13 +23,7 @@ export default async function Home({
     const {q = '', cat = '', page = '1'} = (await searchParams) ?? {};
     const pageNum = Math.max(1, Number.parseInt(page || '1', 10));
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(url, anon, {
-        cookies: {get: (n) => cookieStore.get(n)?.value},
-    });
+    const supabase = await getSupabaseServer();
 
     // базовый запрос по бизнесам
     let query = supabase
