@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import Link from 'next/link';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -26,14 +27,23 @@ async function count(
 export default async function DashboardHome() {
     const { supabase, bizId } = await getBizContextForManagers();
 
-    // диапазон «сегодня» в TZ бизнеса можно будет брать из businesses.tz.
-    // Пока используем локальный день (UTC+06 можно подставить при желании).
-    const today = new Date();
-    const y = today.getUTCFullYear();
-    const m = String(today.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(today.getUTCDate()).padStart(2, '0');
-    const start = `${y}-${m}-${d}T00:00:00Z`;
-    const end   = `${y}-${m}-${d}T23:59:59Z`;
+    // Получаем таймзону бизнеса
+    const { data: biz } = await supabase
+        .from('businesses')
+        .select('tz')
+        .eq('id', bizId)
+        .maybeSingle<{ tz: string }>();
+
+    const bizTz = biz?.tz || process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
+
+    // Диапазон «сегодня» в TZ бизнеса
+    const now = new Date();
+    const todayStr = formatInTimeZone(now, bizTz, 'yyyy-MM-dd');
+    // Создаём начало и конец дня в таймзоне бизнеса, затем конвертируем в UTC для запроса
+    const startLocal = fromZonedTime(`${todayStr}T00:00:00`, bizTz);
+    const endLocal = fromZonedTime(`${todayStr}T23:59:59.999`, bizTz);
+    const start = startLocal.toISOString();
+    const end = endLocal.toISOString();
 
     const [bookingsToday, staffActive, servicesActive, branchesCount] = await Promise.all([
         count(supabase, 'bookings', [{ col: 'biz_id', eq: bizId }, { col: 'start_at', gte: start }, { col: 'start_at', lte: end }]),
