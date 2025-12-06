@@ -26,7 +26,10 @@ export default function FlashBanner({
             url.searchParams.delete(clearQueryKey);
             const qs = url.searchParams.toString();
             r.replace(pathname + (qs ? `?${qs}` : ''));
-        } catch {}
+        } catch (e) {
+            // Не критично, если не удалось обновить URL - это только UX улучшение
+            console.warn('[FlashBanner] Failed to update URL:', e instanceof Error ? e.message : String(e));
+        }
         const t = setTimeout(() => setShow(false), ms);
         return () => clearTimeout(t);
     }, [showInitially, clearQueryKey, ms, pathname, r]);

@@ -79,9 +79,15 @@ export async function POST(_req: Request, context: unknown) {
                 // Соберём бизнесы для подсказки (если получится)
                 let owned: Biz[] = [];
                 try {
-                    const { data } = await admin.from('businesses').select('id,name,slug').eq('owner_id', id);
+                    const { data, error } = await admin.from('businesses').select('id,name,slug').eq('owner_id', id);
+                    if (error) {
+                        console.warn('[delete user] Failed to fetch owned businesses:', error.message);
+                    }
                     owned = data ?? [];
-                } catch {}
+                } catch (e) {
+                    // Не критично, если не удалось получить список бизнесов - просто не показываем их
+                    console.warn('[delete user] Error fetching owned businesses:', e instanceof Error ? e.message : String(e));
+                }
 
                 return NextResponse.json(
                     {

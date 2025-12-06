@@ -69,7 +69,12 @@ export function UserRolesEditor({
             });
 
             let json: unknown = null;
-            try { json = await resp.json(); } catch {}
+            try {
+                json = await resp.json();
+            } catch (parseErr) {
+                // Если ответ не JSON, json останется null, ошибка будет обработана ниже
+                console.warn('[UserRolesEditor] Failed to parse JSON response:', parseErr);
+            }
 
             if (!resp.ok || !isApiOk(json)) {
                 throw new Error(getApiError(json) ?? `HTTP ${resp.status}`);
@@ -97,7 +102,12 @@ export function UserRolesEditor({
                 body: JSON.stringify({ biz_id, role: r }),
             });
             let json: unknown = null;
-            try { json = await resp.json(); } catch {}
+            try {
+                json = await resp.json();
+            } catch (parseErr) {
+                // Если ответ не JSON, json останется null, ошибка будет обработана ниже
+                console.warn('[UserRolesEditor] Failed to parse JSON response:', parseErr);
+            }
             if (!resp.ok || !isApiOk(json)) {
                 throw new Error(getApiError(json) ?? `HTTP ${resp.status}`);
             }
