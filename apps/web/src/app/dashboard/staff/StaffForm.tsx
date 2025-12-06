@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-type Branch = { id: string; name: string };
 type Staff = {
     id?: string;
     full_name: string;
@@ -15,11 +14,9 @@ type Staff = {
 
 export default function StaffForm({
                                       initial,
-                                      branches,
                                       apiBase,
                                   }: {
     initial: Staff;
-    branches: Branch[];
     apiBase: string; // '/api/staff'
 }) {
     const r = useRouter();
@@ -99,17 +96,6 @@ export default function StaffForm({
             </div>
 
             <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                    <label className="block text-sm text-gray-600 mb-1">Филиал</label>
-                    <select
-                        className="border rounded px-3 py-2 w-full"
-                        value={form.branch_id}
-                        onChange={e => set('branch_id', e.target.value)}
-                        required
-                    >
-                        {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    </select>
-                </div>
 
                 <div className="flex items-center gap-2 mt-6 sm:mt-0">
                     <input

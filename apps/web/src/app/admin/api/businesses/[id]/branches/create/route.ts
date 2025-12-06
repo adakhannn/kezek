@@ -7,27 +7,35 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-type Body = { name: string; address?: string | null; is_active?: boolean };
+type Body = {
+    name: string;
+    address?: string | null;
+    is_active?: boolean;
+    lat?: number | null;
+    lon?: number | null;
+};
 
 const norm = (s?: string | null) => {
     const v = (s ?? '').trim();
     return v.length ? v : null;
 };
 
+function validateLatLon(lat: unknown, lon: unknown) {
+    if (lat == null || lon == null) return { ok: false as const };
+    const la = Number(lat), lo = Number(lon);
+    if (!Number.isFinite(la) || !Number.isFinite(lo)) return { ok: false as const };
+    if (la < -90 || la > 90 || lo < -180 || lo > 180) return { ok: false as const };
+    return { ok: true as const, lat: la, lon: lo };
+}
+
 export async function POST(req: Request, context: unknown) {
-    // безопасно достаём params.id без any
     const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
+        typeof context === 'object' && context !== null && 'params' in context
             ? (context as { params: Record<string, string | string[]> }).params
             : {};
     const rawId = (params as Record<string, string | string[]>).id;
     const bizId = Array.isArray(rawId) ? rawId[0] : rawId;
-
-    if (!bizId) {
-        return NextResponse.json({ ok: false, error: 'missing id' }, { status: 400 });
-    }
+    if (!bizId) return NextResponse.json({ ok: false, error: 'missing id' }, { status: 400 });
 
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -52,6 +60,14 @@ export async function POST(req: Request, context: unknown) {
         const name = norm(body.name);
         if (!name) return NextResponse.json({ ok: false, error: 'Название обязательно' }, { status: 400 });
 
+        // ТОЛЬКО coords (EWKT). lat/lon НЕ отправляем — их заполнит БД.
+        let coordsWkt: string | null = null;
+        if (body.lat != null || body.lon != null) {
+            const v = validateLatLon(body.lat, body.lon);
+            if (!v.ok) return NextResponse.json({ ok: false, error: 'Некорректные координаты' }, { status: 400 });
+            coordsWkt = `SRID=4326;POINT(${v.lon} ${v.lat})`;
+        }
+
         const { data, error } = await admin
             .from('branches')
             .insert({
@@ -59,14 +75,14 @@ export async function POST(req: Request, context: unknown) {
                 name,
                 address: norm(body.address),
                 is_active: body.is_active ?? true,
+                coords: coordsWkt, // ← только это поле
             })
             .select('id')
             .maybeSingle();
 
         if (error) {
             const code = (error as { code?: string }).code;
-            const msg = code ? `${error.message} (code ${code})` : error.message;
-            return NextResponse.json({ ok: false, error: msg }, { status: 400 });
+            return NextResponse.json({ ok: false, error: `${error.message}${code ? ` (code ${code})` : ''}` }, { status: 400 });
         }
 
         return NextResponse.json({ ok: true, id: data?.id });
@@ -77,3 +93,4 @@ export async function POST(req: Request, context: unknown) {
     }
 }
 
+export function OPTIONS() { return new Response(null, { status: 204 }); }

@@ -40,6 +40,27 @@ type ServiceStaffRow = { service_id: string; staff_id: string; is_active: boolea
 
 const AuthPanelLazy = dynamic(() => import('@/components/auth/AuthPanel'), { ssr: false });
 
+function fmtErr(e: unknown): string {
+    if (e && typeof e === 'object') {
+        const any = e as { message?: string; details?: string; hint?: string; code?: string };
+        if (any.message) {
+            const parts = [
+                any.message,
+                any.details && `Details: ${any.details}`,
+                any.hint && `Hint: ${any.hint}`,
+                any.code && `Code: ${any.code}`,
+            ].filter(Boolean);
+            return parts.join('\n');
+        }
+    }
+    if (e instanceof Error) return e.message;
+    try {
+        return JSON.stringify(e);
+    } catch {
+        return String(e);
+    }
+}
+
 export default function BizClient({ data }: { data: Data }) {
     const { biz, branches, services, staff } = data;
 
@@ -84,7 +105,6 @@ export default function BizClient({ data }: { data: Data }) {
     useEffect(() => {
         setServiceId(servicesByBranch[0]?.id ?? '');
         setStaffId(staffByBranch[0]?.id ?? '');
-        // слоты сами обнулит завязка на зависимостях ниже
     }, [branchId, servicesByBranch, staffByBranch]);
 
     /* ---------- сервисные навыки мастеров (service_staff) ---------- */
@@ -92,7 +112,6 @@ export default function BizClient({ data }: { data: Data }) {
     useEffect(() => {
         let ignore = false;
         (async () => {
-            // не фильтруем по biz_id — этой колонки может не быть
             const { data, error } = await supabase
                 .from('service_staff')
                 .select('service_id,staff_id,is_active')
@@ -110,7 +129,7 @@ export default function BizClient({ data }: { data: Data }) {
         };
     }, []);
 
-    // строим мапку service_id -> Set(staff_id) для быстрых проверок
+    // мапка service_id -> Set(staff_id)
     const serviceToStaffMap = useMemo(() => {
         if (!serviceStaff || serviceStaff.length === 0) return null;
         const map = new Map<string, Set<string>>();
@@ -137,13 +156,13 @@ export default function BizClient({ data }: { data: Data }) {
         if (!staffFiltered.find((m) => m.id === staffId)) {
             setStaffId(staffFiltered[0]?.id ?? '');
         }
-    }, [serviceId, staffFiltered]);
+    }, [serviceId, staffFiltered, staffId]);
 
     /* ---------- дата ---------- */
     const [day, setDay] = useState<Date>(todayTz());
     const dayStr = formatInTimeZone(day, TZ, 'yyyy-MM-dd');
     const todayStr = formatInTimeZone(todayTz(), TZ, 'yyyy-MM-dd');
-    const maxStr   = formatInTimeZone(addDays(todayTz(), 60), TZ, 'yyyy-MM-dd');
+    const maxStr = formatInTimeZone(addDays(todayTz(), 60), TZ, 'yyyy-MM-dd');
 
     /* ---------- интервалы и занятость ---------- */
     const [intervals, setIntervals] = useState<{ start: string; end: string }[]>([]);
@@ -273,17 +292,24 @@ export default function BizClient({ data }: { data: Data }) {
                 p_staff_id: staffId,
                 p_start: startISO,
             });
-            if (error) throw error;
+
+            if (error) {
+                console.error('[hold_slot] error:', error);
+                alert(fmtErr(error));
+                return;
+            }
+
             const bookingId = String(data);
             setHolding({ bookingId, until: Date.now() + 120_000 });
-            // уведомление — как было
+
             fetch('/api/notify', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ type: 'hold', booking_id: bookingId }),
             }).catch(() => {});
         } catch (e) {
-            alert(e instanceof Error ? e.message : String(e));
+            console.error('[hold_slot] catch:', e);
+            alert(fmtErr(e));
         } finally {
             setLoading(false);
         }
@@ -295,9 +321,11 @@ export default function BizClient({ data }: { data: Data }) {
         try {
             const { error } = await supabase.rpc('confirm_booking', { p_booking_id: holding.bookingId });
             if (error) {
-                alert(error.message);
+                console.error('[confirm_booking] error:', error);
+                alert(fmtErr(error));
                 return;
             }
+
             await fetch('/api/notify', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
@@ -306,7 +334,8 @@ export default function BizClient({ data }: { data: Data }) {
 
             location.href = `/booking/${holding.bookingId}`;
         } catch (e) {
-            alert(e instanceof Error ? e.message : String(e));
+            console.error('[confirm_booking] catch:', e);
+            alert(fmtErr(e));
         } finally {
             setLoading(false);
         }
@@ -401,7 +430,6 @@ export default function BizClient({ data }: { data: Data }) {
                             onChange={(e) => {
                                 const v = e.target.value; // 'yyyy-MM-dd'
                                 if (!v) return;
-                                // приводим к дате в нашем TZ на 00:00
                                 setDay(dateAtTz(v, '00:00'));
                             }}
                         />

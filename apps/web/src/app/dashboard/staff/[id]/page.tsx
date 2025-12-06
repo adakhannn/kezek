@@ -79,7 +79,6 @@ export default async function Page(context: unknown) {
                     branch_id: String(staff.branch_id), // родной филиал обязателен
                     is_active: Boolean(staff.is_active),
                 }}
-                branches={activeBranches.map(b => ({id: b.id, name: b.name}))} // передаём только активные
                 apiBase="/api/staff"
             />
 

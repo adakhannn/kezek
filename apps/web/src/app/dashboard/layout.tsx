@@ -2,8 +2,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import AuthStatus from './partials/AuthStatus'; // <— вот это
-
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -26,9 +24,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
                     </nav>
 
                     <div className="text-xs text-gray-400 pt-4">biz: {bizId}</div>
-
-                    {/* статус авторизации */}
-                    <AuthStatus />
                 </aside>
 
                 <section>{children}</section>

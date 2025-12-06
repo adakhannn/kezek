@@ -96,39 +96,45 @@ export default function SignInPage() {
         e.preventDefault();
         setSending(true);
         setError(null);
+
         try {
             if (mode === 'phone') {
-                const {error} = await supabase.auth.signInWithOtp({
-                    phone,
-                    options: {channel: 'sms'}, // shouldCreateUser: true|false по желанию
+                // нормализуем телефон (желательно в E.164, если у тебя уже есть хелпер — используй его)
+                const phoneNormalized = phone.trim();
+
+                const { error } = await supabase.auth.signInWithOtp({
+                    phone: phoneNormalized,
+                    options: { channel: 'sms' }, // optionally: shouldCreateUser: true
                 });
                 if (error) throw error;
-                // На /auth/verify после ввода кода тоже вызываем decideAndGo(redirectParam)
+
+                // страница ввода кода из SMS
                 router.push(
-                    `/auth/verify?mode=phone&phone=${encodeURIComponent(
-                        phone
-                    )}&redirect=${encodeURIComponent(redirectParam)}`
+                    `/auth/verify-otp?phone=${encodeURIComponent(phoneNormalized)}&redirect=${encodeURIComponent(redirectParam)}`
                 );
             } else {
-                // E-mail OTP (без пароля). Можно отправлять код
-                const url = typeof window !== 'undefined'
-                    ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectParam)}`
-                    : undefined;
+                // e-mail magic link (или код из письма, если используешь verifyOtp на странице)
+                const origin =
+                    typeof window !== 'undefined'
+                        ? window.location.origin
+                        : (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg');
+
+                // сюда Supabase вернёт пользователя ПОСЛЕ клика по magic link
+                const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(redirectParam)}`;
 
                 const { error } = await supabase.auth.signInWithOtp({
                     email,
                     options: {
-                        emailRedirectTo: url, // <— сюда Supabase вернёт пользователя из письма
-                        // shouldCreateUser: true, // по желанию
+                        emailRedirectTo,
+                        // shouldCreateUser: true, // по необходимости
                     },
                 });
                 if (error) throw error;
-                // Идём на общую страницу Verify — там пользователь вводит код из письма,
-                // и после verifyOtp делаем decideAndGo.
+
+                // страница, где просто показываем "Проверьте почту".
+                // Она может периодически вызывать getUser() и, увидев сессию, редиректить на next.
                 router.push(
-                    `/auth/verify?mode=email&email=${encodeURIComponent(
-                        email
-                    )}&redirect=${encodeURIComponent(redirectParam)}`
+                    `/auth/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectParam)}`
                 );
             }
         } catch (err) {
