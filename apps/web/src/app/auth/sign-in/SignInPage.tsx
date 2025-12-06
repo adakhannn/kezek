@@ -145,65 +145,145 @@ export default function SignInPage() {
     }
 
     return (
-        <main className="mx-auto max-w-sm p-6 space-y-4">
-            <h1 className="text-2xl font-semibold">Вход</h1>
+        <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30 flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-800 space-y-6">
+                    {/* Заголовок */}
+                    <div className="text-center space-y-2">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-600 to-pink-600 rounded-2xl mb-4 shadow-lg">
+                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Вход в Kezek</h1>
+                        <p className="text-gray-600 dark:text-gray-400">Выберите способ входа</p>
+                    </div>
 
-            <div className="flex gap-2 text-sm">
-                <button
-                    type="button"
-                    className={`border px-3 py-1 rounded ${mode === 'phone' ? 'bg-white/10' : ''}`}
-                    onClick={() => setMode('phone')}
-                >
-                    По телефону (SMS)
-                </button>
-                <button
-                    type="button"
-                    className={`border px-3 py-1 rounded ${mode === 'email' ? 'bg-white/10' : ''}`}
-                    onClick={() => setMode('email')}
-                >
-                    По e-mail (код)
-                </button>
-            </div>
+                    {/* Переключатель режима */}
+                    <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                        <button
+                            type="button"
+                            className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                                mode === 'phone'
+                                    ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                            }`}
+                            onClick={() => setMode('phone')}
+                        >
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                SMS
+                            </span>
+                        </button>
+                        <button
+                            type="button"
+                            className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                                mode === 'email'
+                                    ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                            }`}
+                            onClick={() => setMode('email')}
+                        >
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                E-mail
+                            </span>
+                        </button>
+                    </div>
 
-            <form onSubmit={sendOtp} className="space-y-3">
-                {mode === 'phone' ? (
-                    <>
-                        <label className="block text-sm">Телефон (в формате +996…)</label>
-                        <input
-                            className="border rounded px-3 py-2 w-full"
-                            placeholder="+996555123456"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            required
-                        />
-                    </>
-                ) : (
-                    <>
-                        <label className="block text-sm">E-mail</label>
-                        <input
-                            className="border rounded px-3 py-2 w-full"
-                            placeholder="you@example.com"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </>
-                )}
+                    {/* Форма */}
+                    <form onSubmit={sendOtp} className="space-y-4">
+                        {mode === 'phone' ? (
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    Номер телефона
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                        placeholder="+996555123456"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Мы отправим код подтверждения на этот номер</p>
+                            </div>
+                        ) : (
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    E-mail адрес
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                        placeholder="you@example.com"
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Мы отправим код подтверждения на этот адрес</p>
+                            </div>
+                        )}
 
-                <button
-                    className="border rounded px-3 py-2 w-full disabled:opacity-50"
-                    disabled={sending}
-                    type="submit"
-                >
-                    {sending ? 'Отправляю…' : 'Отправить код'}
-                </button>
-            </form>
+                        {error && (
+                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                                <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
+                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{error}</span>
+                                </div>
+                            </div>
+                        )}
 
-            {error && <div className="text-red-600 text-sm">{error}</div>}
+                        <button
+                            className="w-full px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-bold rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            disabled={sending}
+                            type="submit"
+                        >
+                            {sending ? (
+                                <>
+                                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Отправляю...
+                                </>
+                            ) : (
+                                <>
+                                    Отправить код
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </>
+                            )}
+                        </button>
+                    </form>
 
-            <div className="text-xs text-gray-500">
-                Нет аккаунта? <a className="underline" href="/auth/sign-up">Зарегистрируйтесь</a>
+                    <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                        Нет аккаунта?{' '}
+                        <a className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline" href="/auth/sign-up">
+                            Зарегистрируйтесь
+                        </a>
+                    </div>
+                </div>
             </div>
         </main>
     );
