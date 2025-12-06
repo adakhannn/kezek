@@ -32,8 +32,10 @@ export default async function Home({
         .eq('is_approved', true);
 
     if (q) {
-        // поиск по имени/адресу
-        query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
+        // Безопасный поиск: экранируем специальные символы и ограничиваем длину
+        const safeQ = q.trim().slice(0, 100).replace(/[%_\\]/g, (char) => `\\${char}`);
+        const searchPattern = `%${safeQ}%`;
+        query = query.or(`name.ilike.${searchPattern},address.ilike.${searchPattern}`);
     }
     if (cat) {
         // фильтр по категории
