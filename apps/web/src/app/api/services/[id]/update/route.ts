@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 type Body = {
@@ -16,14 +17,8 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
     try {
+        const serviceId = await getRouteParamRequired(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
@@ -36,7 +31,7 @@ export async function POST(req: Request, context: unknown) {
         const { data: svc } = await admin
             .from('services')
             .select('id,biz_id')
-            .eq('id', params.id)
+            .eq('id', serviceId)
             .maybeSingle();
         if (!svc || String(svc.biz_id) !== String(bizId)) {
             return NextResponse.json({ ok: false, error: 'SERVICE_NOT_IN_THIS_BUSINESS' }, { status: 400 });
@@ -62,7 +57,7 @@ export async function POST(req: Request, context: unknown) {
                 active: !!body.active,
                 branch_id: body.branch_id,
             })
-            .eq('id', params.id)
+            .eq('id', serviceId)
             .eq('biz_id', bizId);
 
         if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });

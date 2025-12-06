@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 type Body = {
@@ -13,14 +14,8 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
     try {
+        const branchId = await getRouteParamRequired(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
@@ -31,7 +26,7 @@ export async function POST(req: Request, context: unknown) {
         const { data: br } = await admin
             .from('branches')
             .select('id,biz_id')
-            .eq('id', params.id)
+            .eq('id', branchId)
             .maybeSingle();
 
         if (!br || String(br.biz_id) !== String(bizId)) {
@@ -45,7 +40,7 @@ export async function POST(req: Request, context: unknown) {
                 address: body.address ?? null,
                 is_active: !!body.is_active,
             })
-            .eq('id', params.id)
+            .eq('id', branchId)
             .eq('biz_id', bizId);
 
         if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });

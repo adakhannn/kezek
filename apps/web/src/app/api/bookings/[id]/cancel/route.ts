@@ -7,11 +7,11 @@ import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
 import { formatErrorSimple } from '@/lib/errors';
+import { getRouteParamRequired } from '@/lib/routeParams';
 
-export async function POST(_: Request, context: { params: Promise<{ id: string }> }) {
+export async function POST(_: Request, context: unknown) {
     try {
-        const params = await context.params;
-        const bookingId = params.id;
+        const bookingId = await getRouteParamRequired(context, 'id');
 
         const cookieStore = await cookies();
         const supabase = createServerClient(
