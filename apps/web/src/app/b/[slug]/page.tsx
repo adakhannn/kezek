@@ -39,38 +39,38 @@ async function getData(slug: string) {
         phones: bizRaw.phones ?? [],
     };
 
-    // Получаем филиалы
-    const { data: branches, error: branchesError } = await supabase
-        .from('branches')
-        .select('id,name')
-        .eq('biz_id', biz.id)
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-        .returns<Branch[]>();
+    // Параллельные запросы для филиалов, услуг и сотрудников
+    const [branchesResult, servicesResult, staffResult] = await Promise.all([
+        supabase
+            .from('branches')
+            .select('id,name')
+            .eq('biz_id', biz.id)
+            .eq('is_active', true)
+            .order('name', { ascending: true })
+            .returns<Branch[]>(),
+        supabase
+            .from('services')
+            .select('id,name_ru,duration_min,price_from,price_to,active,branch_id')
+            .eq('biz_id', biz.id)
+            .eq('active', true)
+            .order('name_ru', { ascending: true })
+            .returns<Service[]>(),
+        supabase
+            .from('staff')
+            .select('id,full_name,branch_id')
+            .eq('biz_id', biz.id)
+            .eq('is_active', true)
+            .order('full_name', { ascending: true })
+            .returns<Staff[]>(),
+    ]);
 
-    if (branchesError) throw new Error(`Failed to fetch branches: ${branchesError.message}`);
+    if (branchesResult.error) throw new Error(`Failed to fetch branches: ${branchesResult.error.message}`);
+    if (servicesResult.error) throw new Error(`Failed to fetch services: ${servicesResult.error.message}`);
+    if (staffResult.error) throw new Error(`Failed to fetch staff: ${staffResult.error.message}`);
 
-    // Все активные услуги бизнеса (дальше фильтруем по филиалу)
-    const { data: services, error: servicesError } = await supabase
-        .from('services')
-        .select('id,name_ru,duration_min,price_from,price_to,active,branch_id')
-        .eq('biz_id', biz.id)
-        .eq('active', true)
-        .order('name_ru', { ascending: true })
-        .returns<Service[]>();
-
-    if (servicesError) throw new Error(`Failed to fetch services: ${servicesError.message}`);
-
-    // Активные мастера с их "родным" филиалом
-    const { data: staff, error: staffError } = await supabase
-        .from('staff')
-        .select('id,full_name,branch_id')
-        .eq('biz_id', biz.id)
-        .eq('is_active', true)
-        .order('full_name', { ascending: true })
-        .returns<Staff[]>();
-
-    if (staffError) throw new Error(`Failed to fetch staff: ${staffError.message}`);
+    const branches = branchesResult.data ?? [];
+    const services = servicesResult.data ?? [];
+    const staff = staffResult.data ?? [];
 
     return { biz, branches: branches ?? [], services: services ?? [], staff: staff ?? [] };
 }

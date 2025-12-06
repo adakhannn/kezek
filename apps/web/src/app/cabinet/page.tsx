@@ -27,36 +27,37 @@ export default async function Page() {
     // Текущее время в нужной TZ как ISO (с оффсетом)
     const nowISO = formatInTimeZone(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
 
-    // Берём только свои брони (client_id = текущий пользователь)
-    // Исключаем отменённые из предстоящих
-    const { data: upcoming } = await supabase
-        .from('bookings')
-        .select(`
+    // Общий select для броней
+    const bookingsSelect = `
       id, status, start_at, end_at,
       services:services!bookings_service_id_fkey ( name_ru, duration_min ),
       staff:staff!bookings_staff_id_fkey ( full_name ),
       branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
       businesses:businesses!bookings_biz_id_fkey ( name, slug ),
       reviews:reviews ( id, rating, comment )
-    `)
-        .eq('client_id', userId)
-        .neq('status', 'cancelled')
-        .gte('start_at', nowISO)
-        .order('start_at', { ascending: true });
+    `;
 
-    const { data: past } = await supabase
-        .from('bookings')
-        .select(`
-      id, status, start_at, end_at,
-      services:services!bookings_service_id_fkey ( name_ru, duration_min ),
-      staff:staff!bookings_staff_id_fkey ( full_name ),
-      branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
-      businesses:businesses!bookings_biz_id_fkey ( name, slug ),
-      reviews:reviews ( id, rating, comment )
-    `)
-        .eq('client_id', userId)
-        .lt('start_at', nowISO)
-        .order('start_at', { ascending: false });
+    // Параллельные запросы для предстоящих и прошедших броней
+    const [upcomingResult, pastResult] = await Promise.all([
+        // Предстоящие брони (исключаем отменённые)
+        supabase
+            .from('bookings')
+            .select(bookingsSelect)
+            .eq('client_id', userId)
+            .neq('status', 'cancelled')
+            .gte('start_at', nowISO)
+            .order('start_at', { ascending: true }),
+        // Прошедшие брони
+        supabase
+            .from('bookings')
+            .select(bookingsSelect)
+            .eq('client_id', userId)
+            .lt('start_at', nowISO)
+            .order('start_at', { ascending: false }),
+    ]);
+
+    const upcoming = upcomingResult.data ?? [];
+    const past = pastResult.data ?? [];
 
     return (
         <ClientCabinet
