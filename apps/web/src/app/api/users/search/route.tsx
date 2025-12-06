@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { formatErrorSimple } from '@/lib/errors';
 import { getServiceClient } from '@/lib/supabaseService';
 
 /**
@@ -53,7 +54,6 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ ok: true, items, page, perPage });
     } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'UNKNOWN';
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+        return NextResponse.json({ ok: false, error: formatErrorSimple(e) || 'UNKNOWN' }, { status: 500 });
     }
 }

@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import {NextResponse} from 'next/server';
 
 import {getBizContextForManagers} from '@/lib/authBiz';
+import { formatErrorSimple } from '@/lib/errors';
 
 type Body = {
     full_name: string;
@@ -55,7 +56,6 @@ export async function POST(req: Request, context: unknown) {
 
         return NextResponse.json({ok: true});
     } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'UNKNOWN';
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
+        return NextResponse.json({ok: false, error: formatErrorSimple(e) || 'UNKNOWN'}, {status: 500});
     }
 }

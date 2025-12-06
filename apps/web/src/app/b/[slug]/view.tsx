@@ -6,6 +6,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
 
+import { formatError } from '@/lib/errors';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, enumerateSlots, toLabel, TZ } from '@/lib/time';
 
@@ -38,28 +39,8 @@ type BookingRow = {
 // связь услуга ↔ мастер
 type ServiceStaffRow = { service_id: string; staff_id: string; is_active: boolean };
 
-const AuthPanelLazy = dynamic(() => import('@/components/auth/AuthPanel'), { ssr: false });
 
-function fmtErr(e: unknown): string {
-    if (e && typeof e === 'object') {
-        const any = e as { message?: string; details?: string; hint?: string; code?: string };
-        if (any.message) {
-            const parts = [
-                any.message,
-                any.details && `Details: ${any.details}`,
-                any.hint && `Hint: ${any.hint}`,
-                any.code && `Code: ${any.code}`,
-            ].filter(Boolean);
-            return parts.join('\n');
-        }
-    }
-    if (e instanceof Error) return e.message;
-    try {
-        return JSON.stringify(e);
-    } catch {
-        return String(e);
-    }
-}
+const AuthPanelLazy = dynamic(() => import('@/components/auth/AuthPanel'), { ssr: false });
 
 export default function BizClient({ data }: { data: Data }) {
     const { biz, branches, services, staff } = data;
@@ -295,7 +276,7 @@ export default function BizClient({ data }: { data: Data }) {
 
             if (error) {
                 console.error('[hold_slot] error:', error);
-                alert(fmtErr(error));
+                alert(formatError(error));
                 return;
             }
 
@@ -309,7 +290,7 @@ export default function BizClient({ data }: { data: Data }) {
             }).catch(() => {});
         } catch (e) {
             console.error('[hold_slot] catch:', e);
-            alert(fmtErr(e));
+            alert(formatError(e));
         } finally {
             setLoading(false);
         }
@@ -322,7 +303,7 @@ export default function BizClient({ data }: { data: Data }) {
             const { error } = await supabase.rpc('confirm_booking', { p_booking_id: holding.bookingId });
             if (error) {
                 console.error('[confirm_booking] error:', error);
-                alert(fmtErr(error));
+                alert(formatError(error));
                 return;
             }
 
@@ -335,7 +316,7 @@ export default function BizClient({ data }: { data: Data }) {
             location.href = `/booking/${holding.bookingId}`;
         } catch (e) {
             console.error('[confirm_booking] catch:', e);
-            alert(fmtErr(e));
+            alert(formatError(e));
         } finally {
             setLoading(false);
         }
