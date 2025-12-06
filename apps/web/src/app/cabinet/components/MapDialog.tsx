@@ -19,8 +19,8 @@ export default function MapDialog({
         let destroyed = false;
 
         (async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const ymaps: any = await loadYandexMaps();
+            // Yandex Maps API загружается динамически, типы доступны через @types/yandex-maps
+            const ymaps = await loadYandexMaps();
             if (destroyed || !boxRef.current) return;
 
             const center = (lat && lon) ? [lat, lon] : [42.8746, 74.5698]; // Бишкек как дефолт

@@ -83,9 +83,9 @@ export async function POST(req: Request, context: unknown) {
             // 4) инвалидируем все сессии
             await (admin).auth.admin.signOut?.(targetId).catch(() => {
             });
-            // старый метод:
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (admin as any).auth.admin.invalidateRefreshTokens?.(targetId).catch(() => {
+            // Старый метод (может отсутствовать в типах, но существует в рантайме)
+            // @ts-expect-error - invalidateRefreshTokens может отсутствовать в типах
+            await admin.auth.admin.invalidateRefreshTokens?.(targetId).catch(() => {
             });
 
             return NextResponse.json({ok: true, blocked: true});

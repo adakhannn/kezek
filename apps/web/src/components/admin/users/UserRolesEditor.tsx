@@ -19,13 +19,11 @@ function isRole(v: string): v is RoleLiteral {
     return (ROLES as readonly string[]).includes(v);
 }
 function isApiOk(v: unknown): v is ApiOk {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return typeof v === 'object' && v !== null && (v as any).ok === true;
+    return typeof v === 'object' && v !== null && 'ok' in v && (v as { ok?: unknown }).ok === true;
 }
 function getApiError(v: unknown): string | undefined {
     if (typeof v !== 'object' || v === null) return undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw = (v as any).error;
+    const raw = 'error' in v ? (v as { error?: unknown }).error : undefined;
     return typeof raw === 'string' && raw.trim().length ? raw.trim() : undefined;
 }
 
