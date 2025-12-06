@@ -52,8 +52,8 @@ export async function POST(req: Request) {
             : mapped;
 
         return NextResponse.json({ ok: true, items, page, perPage });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-        return NextResponse.json({ ok: false, error: e?.message ?? 'UNKNOWN' }, { status: 500 });
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'UNKNOWN';
+        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

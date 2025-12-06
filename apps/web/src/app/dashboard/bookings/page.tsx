@@ -52,10 +52,9 @@ export default async function Page() {
                 initial={bookings || []}
             />
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
         // нет сессии → уводим на публичную
-        if (e?.message === 'UNAUTHORIZED') {
+        if (e instanceof Error && e.message === 'UNAUTHORIZED') {
             redirect('/b/kezek');
         }
         // нет подходящего бизнеса → мягкое сообщение

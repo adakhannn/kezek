@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -5,12 +6,12 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+type FilterValue = string | number | boolean | null;
+
 async function count(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    supabase: any,
+    supabase: SupabaseClient,
     table: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    filters: { col: string; eq?: any; gte?: any; lte?: any }[] = []
+    filters: { col: string; eq?: FilterValue; gte?: FilterValue; lte?: FilterValue }[] = []
 ): Promise<number> {
     let q = supabase.from(table).select('id', { count: 'exact', head: true });
     for (const f of filters) {

@@ -29,9 +29,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 <section>{children}</section>
             </div>
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-        if (e?.message === 'UNAUTHORIZED') {
+    } catch (e: unknown) {
+        if (e instanceof Error && e.message === 'UNAUTHORIZED') {
             redirect('/b/kezek');
         }
         return (
