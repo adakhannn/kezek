@@ -43,9 +43,10 @@ function escape(s: string) {
         .replace(/;/g, '\\;');
 }
 
-function formatICS(dateISO: string, tz: string) {
+function formatICS(dateISO: string, _tz: string) {
     // Переведём время в локаль TZ и запишем в формат UTC (Z)
     // ICS допускает локальное время, но надёжнее Zulu
+    // _tz пока не используется, но может понадобиться для будущих улучшений
     const d = new Date(dateISO);
     // формат YYYYMMDDTHHmmssZ
     const yyyy = d.getUTCFullYear();
