@@ -9,6 +9,11 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { formatErrorSimple } from '@/lib/errors';
+import { getRouteParamRequired } from '@/lib/routeParams';
+import { sendEmailPassword } from '@/lib/senders/email';
+import { sendSMS } from '@/lib/senders/sms';
+
 type Body = {
     full_name?: string | null;
     email?: string | null;
@@ -31,15 +36,8 @@ function isEmail(s: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
 function isE164(s: string) { return /^\+[1-9]\d{1,14}$/.test(s); }
 
 export async function POST(req: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
     try {
-        const biz_id = params?.id ?? '';
+        const biz_id = await getRouteParamRequired(context, 'id');
         if (!isUuid(biz_id)) {
             return NextResponse.json({ ok: false, error: 'bad biz_id' }, { status: 400 });
         }
@@ -141,9 +139,18 @@ export async function POST(req: Request, context: unknown) {
                 await admin.from('profiles').upsert({ id: userId, full_name }, { onConflict: 'id' });
             }
 
-            // TODO: отправка SMS/email с временным паролем
-            // if (phone) await sendSms(phone, `Ваш временный пароль: ${tempPassword}`);
-            // if (email) await sendEmail(email, `Временный пароль: ${tempPassword}`);
+            // Отправка SMS/email с временным паролем
+            try {
+                if (phone) {
+                    await sendSMS({ to: phone, text: `Ваш временный пароль для Kezek: ${tempPassword}. Рекомендуем сменить после первого входа.` });
+                }
+                if (email) {
+                    await sendEmailPassword({ to: email, tempPassword, subject: 'Приглашение в Kezek — временный пароль' });
+                }
+            } catch (sendErr) {
+                // Логируем ошибку отправки, но не прерываем процесс создания пользователя
+                console.error('[invite] Failed to send temp password:', sendErr);
+            }
         } else {
             // обновим имя, если прислали
             if (full_name) {
@@ -162,8 +169,7 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return NextResponse.json({ ok: true });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    } catch (e: unknown) {
+        return NextResponse.json({ ok: false, error: formatErrorSimple(e) }, { status: 500 });
     }
 }
