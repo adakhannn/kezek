@@ -69,23 +69,56 @@ export function AuthStatusClient() {
         // Функция для обновления статуса
         const updateStatus = async () => {
             try {
-                const { data: { user: currentUser } } = await supabase.auth.getUser();
+                // Сначала проверяем сессию (читает из localStorage/cookies)
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
                 
                 if (!mounted) return;
 
-                if (currentUser) {
-                    setUser(currentUser);
+                if (sessionError) {
+                    console.warn('AuthStatusClient: session error', sessionError);
+                }
+
+                // Логируем для отладки
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('AuthStatusClient: session check', { 
+                        hasSession: !!session, 
+                        hasUser: !!session?.user,
+                        userId: session?.user?.id 
+                    });
+                }
+
+                if (session?.user) {
+                    setUser(session.user);
                     // Определяем путь для редиректа
-                    const path = await getTargetPath(currentUser.id);
+                    const path = await getTargetPath(session.user.id);
                     if (mounted) {
                         setTarget(path);
                     }
                 } else {
-                    setUser(null);
-                    setTarget(null);
+                    // Если сессии нет, пробуем getUser (может быть в процессе обновления)
+                    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+                    
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log('AuthStatusClient: getUser check', { 
+                            hasUser: !!currentUser, 
+                            userId: currentUser?.id,
+                            error: userError 
+                        });
+                    }
+
+                    if (currentUser) {
+                        setUser(currentUser);
+                        const path = await getTargetPath(currentUser.id);
+                        if (mounted) {
+                            setTarget(path);
+                        }
+                    } else {
+                        setUser(null);
+                        setTarget(null);
+                    }
                 }
             } catch (error) {
-                console.warn('AuthStatusClient: error updating status', error);
+                console.error('AuthStatusClient: error updating status', error);
                 if (mounted) {
                     setUser(null);
                     setTarget(null);
