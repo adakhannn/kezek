@@ -86,6 +86,8 @@ export default function VerifyPage() {
                 if (error) throw error;
             }
 
+            // Обновляем серверные компоненты перед редиректом
+            router.refresh();
             // Решаем редирект по ролям/владению бизнесом
             await decideAndGo(redirect);
         } catch (err) {

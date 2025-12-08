@@ -1,12 +1,13 @@
 // apps/web/src/app/auth/verify-otp/page.tsx
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
 
 export default function VerifyOtpPage() {
+    const router = useRouter();
     const sp = useSearchParams();
     const phone = useMemo(() => sp.get('phone') ?? '', [sp]);
     const [token, setToken] = useState('');
@@ -33,8 +34,10 @@ export default function VerifyOtpPage() {
             });
             if (error) throw error;
 
+            // Обновляем серверные компоненты перед редиректом
+            router.refresh();
             // Успех — на главную (или обратно на ожидаемую страницу)
-            location.href = '/';
+            router.push('/');
         } catch (e) {
             alert(e instanceof Error ? e.message : String(e));
         } finally {

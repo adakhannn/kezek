@@ -34,6 +34,8 @@ function AuthCallbackContent() {
                         });
                         if (error) throw error;
                         setStatus('success');
+                        // Обновляем серверные компоненты перед редиректом
+                        router.refresh();
                         router.replace(next);
                         return;
                     }
@@ -43,6 +45,8 @@ function AuthCallbackContent() {
                     
                     if (session && !sessionError) {
                         setStatus('success');
+                        // Обновляем серверные компоненты перед редиректом
+                        router.refresh();
                         router.replace(next);
                         return;
                     }
@@ -57,6 +61,8 @@ function AuthCallbackContent() {
                                 const { error } = await supabase.auth.exchangeCodeForSession(code);
                                 if (!error) {
                                     setStatus('success');
+                                    // Обновляем серверные компоненты перед редиректом
+                                    router.refresh();
                                     router.replace(next);
                                     return;
                                 }
@@ -74,6 +80,8 @@ function AuthCallbackContent() {
                     } else {
                         // После нескольких попыток редиректим (сессия может быть установлена на сервере)
                         setStatus('success');
+                        // Обновляем серверные компоненты перед редиректом
+                        router.refresh();
                         router.replace(next);
                     }
                 } catch (e) {
@@ -84,6 +92,8 @@ function AuthCallbackContent() {
                     } else {
                         // В конце концов редиректим - если авторизация произошла, middleware перенаправит
                         setStatus('success');
+                        // Обновляем серверные компоненты перед редиректом
+                        router.refresh();
                         router.replace(next);
                     }
                 }
