@@ -4,6 +4,8 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useCallback } from 'react';
 
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { supabase } from '@/lib/supabaseClient';
 
 type Mode = 'phone' | 'email';
@@ -94,30 +96,39 @@ export default function VerifyPage() {
     }
 
     return (
-        <main className="mx-auto max-w-sm p-6 space-y-4">
-            <h1 className="text-xl font-semibold">Подтверждение</h1>
-            <div className="text-sm text-gray-600">
-                Мы отправили код на {mode === 'phone' ? <b>{phone}</b> : <b>{email}</b>}
-            </div>
+        <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 dark:from-indigo-950 dark:via-gray-900 dark:to-pink-950 flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8 space-y-6">
+                <div className="text-center">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Подтверждение</h1>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Мы отправили код на {mode === 'phone' ? <b className="text-gray-900 dark:text-gray-100">{phone}</b> : <b className="text-gray-900 dark:text-gray-100">{email}</b>}
+                    </div>
+                </div>
 
-            <form onSubmit={verify} className="space-y-3">
-                <input
-                    className="border rounded px-3 py-2 w-full"
-                    placeholder="Код из сообщения"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    inputMode="numeric"
-                    required
-                />
-                <button
-                    className="border rounded px-3 py-2 w-full disabled:opacity-50"
-                    disabled={verifying}
-                    type="submit"
-                >
-                    Подтвердить
-                </button>
-                {!!error && <div className="text-red-600 text-sm">{error}</div>}
-            </form>
+                <form onSubmit={verify} className="space-y-4">
+                    <Input
+                        placeholder="Код из сообщения"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        inputMode="numeric"
+                        required
+                        className="text-center text-2xl tracking-widest"
+                    />
+                    {!!error && (
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                        </div>
+                    )}
+                    <Button
+                        type="submit"
+                        disabled={verifying}
+                        isLoading={verifying}
+                        className="w-full"
+                    >
+                        Подтвердить
+                    </Button>
+                </form>
+            </div>
         </main>
     );
 }

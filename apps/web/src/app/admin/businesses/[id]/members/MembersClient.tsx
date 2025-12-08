@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+
 type MemberRow = {
     user_id: string;
     email: string | null;
@@ -111,109 +113,117 @@ export default function MembersClient({
 
     return (
         <div className="space-y-6">
-            {err && <div className="text-sm text-red-600">{err}</div>}
+            {err && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
+                </div>
+            )}
 
-            <div className="overflow-x-auto">
-                <table className="min-w-[960px] w-full border-collapse">
-                    <thead className="text-left text-sm text-gray-500">
-                    <tr>
-                        <th className="border-b p-2 w-[340px]">Пользователь</th>
-                        <th className="border-b p-2">Роли</th>
-                        {canManage && <th className="border-b p-2 w-[260px]">Добавить роль</th>}
-                        {canManage && <th className="border-b p-2 w-[200px]">Участник</th>}
-                    </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                    {loading && (
-                        <tr>
-                            <td className="p-3" colSpan={canManage ? 4 : 2}>
-                                Загрузка…
-                            </td>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-[960px] w-full">
+                        <thead>
+                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-[340px]">Пользователь</th>
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Роли</th>
+                            {canManage && <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-[260px]">Добавить роль</th>}
+                            {canManage && <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-[200px]">Участник</th>}
                         </tr>
-                    )}
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {loading && (
+                            <tr>
+                                <td className="p-8 text-center text-gray-500 dark:text-gray-400" colSpan={canManage ? 4 : 2}>
+                                    Загрузка…
+                                </td>
+                            </tr>
+                        )}
 
-                    {!loading && items.length === 0 && (
-                        <tr>
-                            <td className="p-3 text-gray-500" colSpan={canManage ? 4 : 2}>
-                                Пока никого.
-                            </td>
-                        </tr>
-                    )}
+                        {!loading && items.length === 0 && (
+                            <tr>
+                                <td className="p-8 text-center text-gray-500 dark:text-gray-400" colSpan={canManage ? 4 : 2}>
+                                    Пока никого.
+                                </td>
+                            </tr>
+                        )}
 
-                    {!loading &&
-                        items.map((m) => {
-                            const canAdd = (role: RoleKey) => !m.roles.includes(role);
+                        {!loading &&
+                            items.map((m) => {
+                                const canAdd = (role: RoleKey) => !m.roles.includes(role);
 
-                            return (
-                                <tr key={m.user_id}>
-                                    <td className="border-b p-2 align-top">
-                                        <div className="font-mono text-xs text-gray-500 mb-1">{m.user_id}</div>
-                                        <div>{m.full_name || '—'}</div>
-                                        <div className="text-gray-600">{m.email || '—'}</div>
-                                        <div className="text-gray-600">{m.phone || '—'}</div>
-                                    </td>
+                                return (
+                                    <tr key={m.user_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                        <td className="p-4 align-top">
+                                            <div className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-1">{m.user_id}</div>
+                                            <div className="font-medium text-gray-900 dark:text-gray-100">{m.full_name || '—'}</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">{m.email || '—'}</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">{m.phone || '—'}</div>
+                                        </td>
 
-                                    <td className="border-b p-2 align-top">
-                                        <div className="flex flex-wrap gap-2">
-                                            {m.roles.map((r) => (
-                                                <span
-                                                    key={r}
-                                                    className="inline-flex items-center gap-2 border rounded-full px-3 py-1"
-                                                    title={canManage ? 'Роль участника' : undefined}
-                                                >
-                            {r}
-                                                    {canManage && (
-                                                        <button
-                                                            className="opacity-60 hover:opacity-100"
-                                                            onClick={() => revoke(m.user_id, r as RoleKey)}
-                                                            type="button"
-                                                            title="Убрать роль"
-                                                            aria-label="Убрать роль"
-                                                        >
-                                                            ×
-                                                        </button>
-                                                    )}
-                          </span>
-                                            ))}
-                                            {m.roles.length === 0 && <span className="text-gray-500">нет</span>}
-                                        </div>
-                                    </td>
-
-                                    {canManage && (
-                                        <td className="border-b p-2 align-top">
+                                        <td className="p-4 align-top">
                                             <div className="flex flex-wrap gap-2">
-                                                {(['owner', 'admin', 'manager', 'staff', 'client'] as RoleKey[])
-                                                    .filter((r) => canAdd(r))
-                                                    .map((r) => (
-                                                        <button
-                                                            key={r}
-                                                            className="border rounded-full px-3 py-1 hover:bg-gray-50"
-                                                            onClick={() => grant(m.user_id, r)}
-                                                            type="button"
-                                                        >
-                                                            + {r}
-                                                        </button>
-                                                    ))}
+                                                {m.roles.map((r) => (
+                                                    <span
+                                                        key={r}
+                                                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800"
+                                                        title={canManage ? 'Роль участника' : undefined}
+                                                    >
+                                                        {r}
+                                                        {canManage && (
+                                                            <button
+                                                                className="opacity-60 hover:opacity-100 transition-opacity"
+                                                                onClick={() => revoke(m.user_id, r as RoleKey)}
+                                                                type="button"
+                                                                title="Убрать роль"
+                                                                aria-label="Убрать роль"
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        )}
+                                                    </span>
+                                                ))}
+                                                {m.roles.length === 0 && <span className="text-gray-500 dark:text-gray-400">нет</span>}
                                             </div>
                                         </td>
-                                    )}
 
-                                    {canManage && (
-                                        <td className="border-b p-2 align-top">
-                                            <button
-                                                className="border rounded px-3 py-1.5 hover:bg-gray-50"
-                                                onClick={() => demote(m.user_id)}
-                                                type="button"
-                                            >
-                                                Убрать из участников → client
-                                            </button>
-                                        </td>
-                                    )}
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                                        {canManage && (
+                                            <td className="p-4 align-top">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(['owner', 'admin', 'manager', 'staff', 'client'] as RoleKey[])
+                                                        .filter((r) => canAdd(r))
+                                                        .map((r) => (
+                                                            <Button
+                                                                key={r}
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => grant(m.user_id, r)}
+                                                                type="button"
+                                                            >
+                                                                + {r}
+                                                            </Button>
+                                                        ))}
+                                                </div>
+                                            </td>
+                                        )}
+
+                                        {canManage && (
+                                            <td className="p-4 align-top">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => demote(m.user_id)}
+                                                    type="button"
+                                                >
+                                                    Убрать из участников → client
+                                                </Button>
+                                            </td>
+                                        )}
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

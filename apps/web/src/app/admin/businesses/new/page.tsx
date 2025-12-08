@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { supabase } from '@/lib/supabaseClient';
 
 type CatRow = { id: string; slug: string; name_ru: string; is_active: boolean };
@@ -145,64 +147,65 @@ export default function NewBizPage() {
     }
 
     return (
-        <main className="space-y-6 p-4">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Админка — Создать бизнес</h1>
-                <div className="flex gap-3 text-sm">
-                    <Link href="/admin/businesses" className="underline">
-                        ← К бизнесам
-                    </Link>
-                    <Link href="/admin/categories" className="underline">
-                        Справочник категорий
-                    </Link>
+        <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Создать бизнес</h1>
+                        <p className="text-gray-600 dark:text-gray-400">Добавление нового бизнеса в систему</p>
+                    </div>
+                    <div className="flex gap-3">
+                        <Link href="/admin/businesses" className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            К бизнесам
+                        </Link>
+                        <Link href="/admin/categories" className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200">
+                            Справочник категорий
+                        </Link>
+                    </div>
                 </div>
             </div>
 
-            <form onSubmit={submit} className="space-y-4 max-w-xl">
-                <div className="grid gap-2">
-                    <input
-                        className="border rounded px-3 py-2"
-                        placeholder="Название *"
+            <form onSubmit={submit} className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6 max-w-2xl">
+                <div className="space-y-4">
+                    <Input
+                        label="Название"
+                        placeholder="Название бизнеса"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
                     />
 
-                    <input
-                        className="border rounded px-3 py-2"
-                        placeholder="Slug * (латиница)"
+                    <Input
+                        label="Slug"
+                        placeholder="Slug (латиница)"
                         value={slug}
                         onChange={(e) => {
                             setSlug(e.target.value);
-                            setSlugDirty(true); // пользователь начал править — отключаем автогенерацию
+                            setSlugDirty(true);
                         }}
                         onBlur={(e) => {
                             const v = e.target.value.trim();
                             if (!v) {
-                                // очищено — снова включаем автогенерацию
                                 setSlugDirty(false);
                                 setSlug(makeSlug(name));
                             } else {
-                                setSlug(makeSlug(v)); // нормализуем вручную введённый slug
+                                setSlug(makeSlug(v));
                             }
                         }}
                         required
+                        helperText="Автоматически генерируется из названия"
                     />
                 </div>
 
                 {/* Выбор категорий из справочника */}
-                <div className="grid gap-2">
-                    <label className="text-sm">Категории *</label>
-
-                    <div className="flex gap-2">
-                        <input
-                            className="border rounded px-3 py-2 flex-1"
-                            placeholder="Поиск по названию/slug…"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Категории *</label>
                         <Link
-                            className="border rounded px-3 py-2 text-sm hover:bg-gray-50"
+                            className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
                             href="/admin/categories/new"
                             title="Добавить категорию"
                         >
@@ -210,20 +213,27 @@ export default function NewBizPage() {
                         </Link>
                     </div>
 
-                    <div className="max-h-56 overflow-auto border rounded p-2">
+                    <Input
+                        placeholder="Поиск по названию/slug…"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+
+                    <div className="max-h-56 overflow-auto bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2">
                         {visibleCats.map((c) => (
-                            <label key={c.id} className="flex items-center gap-2 py-1 cursor-pointer">
+                            <label key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     checked={selected.includes(c.slug)}
                                     onChange={() => toggle(c.slug)}
+                                    className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                                 />
-                                <span>{c.name_ru}</span>
-                                <span className="text-xs text-gray-500">({c.slug})</span>
+                                <span className="text-sm text-gray-700 dark:text-gray-300">{c.name_ru}</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">({c.slug})</span>
                             </label>
                         ))}
                         {visibleCats.length === 0 && (
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-gray-400 p-2">
                                 Нет категорий. Создайте в «Справочнике категорий».
                             </div>
                         )}
@@ -233,31 +243,37 @@ export default function NewBizPage() {
                         {selected.map((sl) => (
                             <span
                                 key={sl}
-                                className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-sm"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800"
                             >
-                {sl}
+                                {sl}
                                 <button
                                     type="button"
-                                    className="opacity-60 hover:opacity-100"
+                                    className="opacity-60 hover:opacity-100 transition-opacity"
                                     onClick={() => toggle(sl)}
                                 >
-                  ×
-                </button>
-              </span>
+                                    ×
+                                </button>
+                            </span>
                         ))}
                     </div>
 
-                    <p className="text-xs text-gray-500">
-                        В БД сохраняем как массив slug’ов: <code>businesses.categories text[]</code>.
+                    <p className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                        В БД сохраняем как массив slug'ов: <code className="font-mono">businesses.categories text[]</code>.
                     </p>
                 </div>
 
-                {err && <div className="text-red-600 text-sm">{err}</div>}
+                {err && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                        <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
+                    </div>
+                )}
 
-                <button className="border px-3 py-2 rounded" disabled={loading} type="submit">
-                    {loading ? 'Создаём…' : 'Создать бизнес'}
-                </button>
+                <div className="pt-2">
+                    <Button type="submit" disabled={loading} isLoading={loading}>
+                        {loading ? 'Создаём…' : 'Создать бизнес'}
+                    </Button>
+                </div>
             </form>
-        </main>
+        </div>
     );
 }

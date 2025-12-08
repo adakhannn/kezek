@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+
 type UserRow = {
     id: string;
     email: string | null;
@@ -84,10 +86,11 @@ export function OwnerForm({
     }
 
     return (
-        <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Владелец бизнеса</h3>
+            <div className="flex flex-wrap items-center gap-3">
                 <select
-                    className="border rounded px-3 py-2 min-w-[320px]"
+                    className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 min-w-[320px]"
                     value={selected}
                     onChange={(e) => setSelected(e.target.value)}
                 >
@@ -99,19 +102,27 @@ export function OwnerForm({
                     ))}
                 </select>
 
-                <button
-                    className="border rounded px-3 py-2 disabled:opacity-50"
+                <Button
                     onClick={save}
                     disabled={loading || !changed}
+                    isLoading={loading}
                 >
                     {loading ? 'Сохраняю…' : 'Сохранить'}
-                </button>
-                {!changed && <span className="text-xs text-gray-500">Нет изменений</span>}
+                </Button>
+                {!changed && <span className="text-xs text-gray-500 dark:text-gray-400">Нет изменений</span>}
             </div>
 
-            {err && <div className="text-red-600 text-sm">{err}</div>}
-            {ok && <div className="text-green-600 text-sm">{ok}</div>}
-            <div className="text-xs text-gray-500">
+            {err && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                    <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
+                </div>
+            )}
+            {ok && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                    <p className="text-green-600 dark:text-green-400 text-sm font-medium">{ok}</p>
+                </div>
+            )}
+            <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                 Выберите существующего пользователя системы. Заблокированные не могут быть владельцами.
             </div>
         </div>

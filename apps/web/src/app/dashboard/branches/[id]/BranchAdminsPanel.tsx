@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
 type AdminRow = {
     user_id: string;
     source: 'owner' | 'biz_admin' | 'branch_admin';
@@ -94,43 +97,63 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
     );
 
     return (
-        <section className="rounded border p-4 space-y-4">
-            <h3 className="font-semibold">Администраторы филиала</h3>
+        <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Администраторы филиала</h3>
 
-            {err && <div className="text-red-600 text-sm">{err}</div>}
+            {err && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
+                </div>
+            )}
 
             <div className="overflow-x-auto">
-                <table className="min-w-[720px] text-sm">
+                <table className="min-w-[720px] w-full">
                     <thead>
-                    <tr className="text-left">
-                        <th className="p-2">Пользователь</th>
-                        <th className="p-2">Источник</th>
-                        <th className="p-2 w-40">Действия</th>
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Пользователь</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Источник</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-40">Действия</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    {loading && <tr><td className="p-2" colSpan={3}>Загрузка…</td></tr>}
-                    {!loading && list.length === 0 && <tr><td className="p-2 text-gray-500" colSpan={3}>Пока пусто</td></tr>}
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {loading && (
+                        <tr>
+                            <td className="p-4 text-center text-gray-500 dark:text-gray-400" colSpan={3}>Загрузка…</td>
+                        </tr>
+                    )}
+                    {!loading && list.length === 0 && (
+                        <tr>
+                            <td className="p-4 text-center text-gray-500 dark:text-gray-400" colSpan={3}>Пока пусто</td>
+                        </tr>
+                    )}
                     {!loading && list.map((row) => (
-                        <tr key={`${row.user_id}:${row.source}`} className="border-t">
-                            <td className="p-2">
-                                <div className="font-mono text-xs text-gray-500">{row.user_id}</div>
-                                <div>{row.full_name ?? '—'}</div>
-                                <div className="text-gray-600">{row.email ?? '—'}</div>
-                                <div className="text-gray-600">{row.phone ?? '—'}</div>
+                        <tr key={`${row.user_id}:${row.source}`} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                            <td className="p-4">
+                                <div className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-1">{row.user_id}</div>
+                                <div className="font-medium text-gray-900 dark:text-gray-100">{row.full_name ?? '—'}</div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">{row.email ?? '—'}</div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">{row.phone ?? '—'}</div>
                             </td>
-                            <td className="p-2">
-                                {row.source === 'owner' ? 'владелец бизнеса'
-                                    : row.source === 'biz_admin' ? 'админ бизнеса'
-                                        : 'админ филиала'}
+                            <td className="p-4">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    row.source === 'owner'
+                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                                        : row.source === 'biz_admin'
+                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400'
+                                }`}>
+                                    {row.source === 'owner' ? 'владелец бизнеса'
+                                        : row.source === 'biz_admin' ? 'админ бизнеса'
+                                            : 'админ филиала'}
+                                </span>
                             </td>
-                            <td className="p-2">
+                            <td className="p-4">
                                 {row.source === 'branch_admin' ? (
-                                    <button className="border rounded px-3 py-1 hover:bg-gray-50" onClick={() => remove(row.user_id)} type="button">
+                                    <Button variant="outline" size="sm" onClick={() => remove(row.user_id)} type="button">
                                         Убрать
-                                    </button>
+                                    </Button>
                                 ) : (
-                                    <span className="text-xs text-gray-500">наследовано</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">наследовано</span>
                                 )}
                             </td>
                         </tr>
@@ -140,45 +163,50 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
             </div>
 
             {/* Поиск и добавление явных админов */}
-            <div className="border rounded p-3 space-y-2">
-                <div className="text-sm text-gray-600">Добавить администратора из существующих пользователей</div>
-                <div className="flex gap-2">
-                    <input className="border rounded px-3 py-2 w-full" placeholder="email / телефон / имя" value={q} onChange={e=>setQ(e.target.value)} />
-                    <button className="border rounded px-3 py-2" onClick={doSearch} disabled={searching}>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-4">
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Добавить администратора из существующих пользователей</div>
+                <div className="flex gap-3">
+                    <Input
+                        placeholder="email / телефон / имя"
+                        value={q}
+                        onChange={e=>setQ(e.target.value)}
+                        className="flex-1"
+                    />
+                    <Button onClick={doSearch} disabled={searching} isLoading={searching}>
                         {searching ? 'Ищем…' : 'Найти'}
-                    </button>
+                    </Button>
                 </div>
 
                 {found.length > 0 && (
-                    <div className="max-h-56 overflow-auto border rounded">
+                    <div className="max-h-56 overflow-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                         <table className="min-w-full text-sm">
                             <thead>
-                            <tr className="text-left">
-                                <th className="p-2">Имя</th>
-                                <th className="p-2">Email</th>
-                                <th className="p-2">Телефон</th>
-                                <th className="p-2 w-32">Действия</th>
+                            <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Имя</th>
+                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Email</th>
+                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Телефон</th>
+                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-32">Действия</th>
                             </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                             {found.map(u => (
-                                <tr key={u.id} className="border-t">
-                                    <td className="p-2">{u.full_name ?? '—'}</td>
-                                    <td className="p-2">{u.email ?? '—'}</td>
-                                    <td className="p-2">{u.phone ?? '—'}</td>
-                                    <td className="p-2">
-                                        <button
-                                            className="border rounded px-3 py-1 hover:bg-gray-50 disabled:opacity-50"
+                                <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                    <td className="p-3 font-medium text-gray-900 dark:text-gray-100">{u.full_name ?? '—'}</td>
+                                    <td className="p-3 text-gray-700 dark:text-gray-300">{u.email ?? '—'}</td>
+                                    <td className="p-3 text-gray-700 dark:text-gray-300">{u.phone ?? '—'}</td>
+                                    <td className="p-3">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
                                             onClick={() => add(u.id)}
                                             disabled={explicitIds.has(u.id)}
                                             type="button"
                                         >
                                             {explicitIds.has(u.id) ? 'Уже добавлен' : 'Добавить'}
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}
-                            {found.length === 0 && <tr><td className="p-2 text-gray-500" colSpan={4}>Ничего не найдено</td></tr>}
                             </tbody>
                         </table>
                     </div>
