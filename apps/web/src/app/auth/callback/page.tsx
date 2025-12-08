@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
 
+// Отключаем статическую генерацию для этой страницы
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export default function AuthCallback() {
     const router = useRouter();
     const searchParams = useSearchParams();
