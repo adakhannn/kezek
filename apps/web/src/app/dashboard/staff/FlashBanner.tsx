@@ -36,8 +36,13 @@ export default function FlashBanner({
 
     if (!show) return null;
     return (
-        <div className="border rounded p-3 text-sm bg-green-50 border-green-300 text-green-900">
-            {text}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 shadow-md animate-fade-in">
+            <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm font-medium text-green-800 dark:text-green-300">{text}</p>
+            </div>
         </div>
     );
 }

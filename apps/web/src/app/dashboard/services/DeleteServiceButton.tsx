@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+
 export default function DeleteServiceButton({ id }: { id: string }) {
     const r = useRouter();
     const [loading, setLoading] = useState(false);
@@ -24,8 +26,15 @@ export default function DeleteServiceButton({ id }: { id: string }) {
     }
 
     return (
-        <button type="button" className="border rounded px-2 py-1" onClick={onDelete} disabled={loading}>
+        <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            onClick={onDelete}
+            disabled={loading}
+            isLoading={loading}
+        >
             {loading ? 'Удаляем…' : 'Удалить'}
-        </button>
+        </Button>
     );
 }

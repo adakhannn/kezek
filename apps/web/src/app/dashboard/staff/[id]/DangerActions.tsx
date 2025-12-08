@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+
 export default function DangerActions({ staffId }: { staffId: string }) {
     const r = useRouter();
     const [busy, setBusy] = useState(false);
@@ -28,17 +30,27 @@ export default function DangerActions({ staffId }: { staffId: string }) {
     }
 
     return (
-        <div className="border rounded p-3 bg-red-50 border-red-300">
-            <div className="font-medium text-red-800 mb-2">Опасная зона</div>
-            {err && <div className="text-sm text-red-700 mb-2">{err}</div>}
-            <button
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 shadow-lg space-y-4">
+            <div className="flex items-center gap-3">
+                <svg className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h3 className="text-lg font-bold text-red-800 dark:text-red-300">Опасная зона</h3>
+            </div>
+            {err && (
+                <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-lg p-3">
+                    <p className="text-sm text-red-700 dark:text-red-400">{err}</p>
+                </div>
+            )}
+            <Button
+                variant="danger"
                 disabled={busy}
                 onClick={dismiss}
-                className="px-3 py-1 border rounded bg-white hover:bg-red-100"
+                isLoading={busy}
             >
                 {busy ? 'Выполняем…' : 'Уволить сотрудника'}
-            </button>
-            <p className="text-xs text-red-700 mt-2">
+            </Button>
+            <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
                 Будущие записи не должны существовать. Права в бизнесе будут сохранены только как «client».
             </p>
         </div>
