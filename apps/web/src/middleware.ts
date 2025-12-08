@@ -39,9 +39,16 @@ export async function middleware(req: NextRequest) {
         url.pathname = '/admin';
         return NextResponse.redirect(url, 302);
     }
-    if (keys.includes('owner') || keys.some(k => ['admin','manager','staff'].includes(k))) {
+    // Владельцы, админы и менеджеры → dashboard
+    if (keys.includes('owner') || keys.some(k => ['admin','manager'].includes(k))) {
         const url = req.nextUrl.clone();
         url.pathname = '/dashboard';
+        return NextResponse.redirect(url, 302);
+    }
+    // Сотрудники → staff кабинет
+    if (keys.includes('staff')) {
+        const url = req.nextUrl.clone();
+        url.pathname = '/staff';
         return NextResponse.redirect(url, 302);
     }
 

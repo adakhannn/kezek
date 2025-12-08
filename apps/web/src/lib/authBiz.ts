@@ -93,3 +93,43 @@ export async function getBizContextForManagers() {
     return { supabase, userId, bizId };
 }
 
+/**
+ * Возвращает { supabase, userId, staffId, bizId } для кабинета сотрудника.
+ * Проверяет, что пользователь имеет роль staff в каком-либо бизнесе.
+ */
+export async function getStaffContext() {
+    const supabase = await getSupabaseServer();
+
+    // 1) юзер обязателен
+    const { data: userData, error: eUser } = await supabase.auth.getUser();
+    if (eUser || !userData?.user) throw new Error('UNAUTHORIZED');
+    const userId = userData.user.id;
+
+    // 2) Проверяем роль staff через user_roles
+    const [{ data: ur }, { data: roleRows }] = await Promise.all([
+        supabase.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
+        supabase.from('roles').select('id, key'),
+    ]);
+
+    if (!ur || !roleRows) throw new Error('NO_STAFF_ACCESS');
+
+    const rolesMap = new Map<string, string>(roleRows.map(r => [String(r.id), String(r.key)]));
+    const staffRole = ur.find(r => rolesMap.get(String(r.role_id)) === 'staff');
+    
+    if (!staffRole?.biz_id) throw new Error('NO_STAFF_ACCESS');
+    const bizId = String(staffRole.biz_id);
+
+    // 3) Находим запись staff по user_id и biz_id
+    const { data: staff } = await supabase
+        .from('staff')
+        .select('id, full_name, branch_id, is_active')
+        .eq('biz_id', bizId)
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    if (!staff) throw new Error('NO_STAFF_RECORD');
+
+    return { supabase, userId, staffId: staff.id, bizId, branchId: staff.branch_id };
+}
+
