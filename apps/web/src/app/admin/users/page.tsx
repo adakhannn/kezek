@@ -99,94 +99,114 @@ export default async function UsersListPage(
     const data = await fetchList(q, page, perPage, status);
 
     return (
-        <main className="space-y-6 p-4">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Пользователи</h1>
-                <div className="flex gap-3 text-sm">
-                    <Link href="/admin" className="underline">
-                        ← В админку
-                    </Link>
-                    <Link href="/admin/users/new" className="border px-3 py-1.5 rounded hover:bg-gray-50">
-                        + Новый пользователь
-                    </Link>
+        <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Пользователи</h1>
+                        <p className="text-gray-600 dark:text-gray-400">Управление пользователями системы</p>
+                    </div>
+                    <div className="flex gap-3">
+                        <Link href="/admin" className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            В админку
+                        </Link>
+                        <Link href="/admin/users/new" className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Новый пользователь
+                        </Link>
+                    </div>
                 </div>
             </div>
 
-            <form action="/admin/users" className="flex flex-wrap gap-2 items-center">
-                <input
-                    name="q"
-                    defaultValue={q}
-                    className="border rounded px-3 py-2 w-full max-w-md"
-                    placeholder="Поиск: email, телефон, имя, id"
-                />
-                <select
-                    name="status"
-                    defaultValue={status}
-                    className="border rounded px-3 py-2"
-                    title="Статус"
-                >
-                    <option value="all">Все</option>
-                    <option value="active">Активные</option>
-                    <option value="blocked">Заблокированные</option>
-                </select>
-                <button className="border rounded px-3 py-2">Искать</button>
-            </form>
-
-            <div className="overflow-x-auto">
-                <table className="min-w-[900px] w-full border-collapse">
-                    <thead className="text-left text-sm text-gray-500">
-                    <tr>
-                        <th className="border-b p-2">Имя</th>
-                        <th className="border-b p-2">Email</th>
-                        <th className="border-b p-2">Телефон</th>
-                        <th className="border-b p-2">Последний вход</th>
-                        <th className="border-b p-2 w-28">Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                    {data.items.map((u) => (
-                        <tr key={u.id} className={u.is_blocked ? 'opacity-60' : ''}>
-                            <td className="border-b p-2">
-                                <div className="flex items-center gap-2">
-                                    <span>{u.full_name || '—'}</span>
-                                    {u.is_super && (
-                                        <span className="text-[10px] px-1.5 py-0.5 border rounded">super</span>
-                                    )}
-                                    {u.is_blocked && (
-                                        <span
-                                            className="text-[10px] px-1.5 py-0.5 border rounded border-red-400 text-red-600">
-                        blocked
-                      </span>
-                                    )}
-                                </div>
-                                {u.is_blocked && u.block_reason && (
-                                    <div className="text-[11px] text-red-600 mt-0.5">
-                                        Причина: {u.block_reason}
-                                    </div>
-                                )}
-                            </td>
-                            <td className="border-b p-2">{u.email || '—'}</td>
-                            <td className="border-b p-2">{u.phone || '—'}</td>
-                            <td className="border-b p-2">
-                                {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString('ru-RU') : '—'}
-                            </td>
-                            <td className="border-b p-2">
-                                <Link className="underline" href={`/admin/users/${u.id}`}>
-                                    Открыть
-                                </Link>
-                            </td>
-                        </tr>
-                    ))}
-                    {data.items.length === 0 && (
-                        <tr>
-                            <td className="p-3 text-gray-500" colSpan={5}>
-                                Ничего не найдено.
-                            </td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-lg border border-gray-200 dark:border-gray-800">
+                <form action="/admin/users" className="flex flex-wrap gap-3 items-end">
+                    <div className="flex-1 min-w-[200px]">
+                        <input
+                            name="q"
+                            defaultValue={q}
+                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                            placeholder="Поиск: email, телефон, имя, id"
+                        />
+                    </div>
+                    <select
+                        name="status"
+                        defaultValue={status}
+                        className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                        title="Статус"
+                    >
+                        <option value="all">Все</option>
+                        <option value="active">Активные</option>
+                        <option value="blocked">Заблокированные</option>
+                    </select>
+                    <button className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200">
+                        Искать
+                    </button>
+                </form>
             </div>
-        </main>
+
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-[900px] w-full">
+                        <thead>
+                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Имя</th>
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Email</th>
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Телефон</th>
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Последний вход</th>
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-28">Действия</th>
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {data.items.map((u) => (
+                            <tr key={u.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${u.is_blocked ? 'opacity-60' : ''}`}>
+                                <td className="p-4">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{u.full_name || '—'}</span>
+                                        {u.is_super && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                                                super
+                                            </span>
+                                        )}
+                                        {u.is_blocked && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                                blocked
+                                            </span>
+                                        )}
+                                    </div>
+                                    {u.is_blocked && u.block_reason && (
+                                        <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                                            Причина: {u.block_reason}
+                                        </div>
+                                    )}
+                                </td>
+                                <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{u.email || '—'}</td>
+                                <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{u.phone || '—'}</td>
+                                <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
+                                    {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString('ru-RU') : '—'}
+                                </td>
+                                <td className="p-4">
+                                    <Link className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline" href={`/admin/users/${u.id}`}>
+                                        Открыть
+                                    </Link>
+                                </td>
+                            </tr>
+                        ))}
+                        {data.items.length === 0 && (
+                            <tr>
+                                <td className="p-8 text-center text-gray-500 dark:text-gray-400" colSpan={5}>
+                                    Ничего не найдено.
+                                </td>
+                            </tr>
+                        )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     );
 }
