@@ -42,12 +42,16 @@ function Tabs({ value, onChange }: { value: TabKey; onChange: (v: TabKey) => voi
         <button
             key={key}
             onClick={() => onChange(key)}
-            className={`px-3 py-1 border rounded ${value === key ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'}`}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                value === key
+                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+            }`}
         >
             {label}
         </button>
     );
-    return <div className="flex gap-2">{btn('calendar', 'Календарь')}{btn('list', 'Список')}{btn('desk', 'Стойка')}</div>;
+    return <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">{btn('calendar', 'Календарь')}{btn('list', 'Список')}{btn('desk', 'Стойка')}</div>;
 }
 
 // ---------------- Calendar ----------------
@@ -67,8 +71,14 @@ function BookingPill({ id, startISO, endISO, status }: { id: string; startISO: s
     const start = new Date(startISO);
     const end   = new Date(endISO);
     const label = `${formatInTimeZone(start, TZ, 'HH:mm')}–${formatInTimeZone(end, TZ, 'HH:mm')}`;
+    const statusStyles = {
+        hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800',
+        confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-800',
+        paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-800',
+        cancelled: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border-gray-300 dark:border-gray-700 line-through',
+    };
     return (
-        <Link href={`/booking/${id}`} className={`inline-block text-[11px] px-1.5 py-0.5 border rounded ${statusClasses(status)} hover:opacity-90`} title={`Открыть бронь #${id.slice(0, 8)}`}>
+        <Link href={`/booking/${id}`} className={`inline-block text-xs px-2 py-1 border rounded-lg font-medium ${statusStyles[status]} hover:opacity-90 transition-opacity`} title={`Открыть бронь #${id.slice(0, 8)}`}>
             {label}
         </Link>
     );
@@ -128,32 +138,37 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
     }, [items, staff]);
 
     return (
-        <section className="border rounded p-4">
-            <div className="flex items-center justify-between mb-3">
-                <h2 className="font-medium">Календарь на день</h2>
-                <div className="flex items-center gap-2">
-                    <input className="border rounded px-2 py-1" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                    <button className="border px-2 py-1 rounded" onClick={exportCsv}>Экспорт CSV</button>
+        <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Календарь на день</h2>
+                <div className="flex items-center gap-3">
+                    <input className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                    <button className="px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 text-sm flex items-center gap-2" onClick={exportCsv}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Экспорт CSV
+                    </button>
                 </div>
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+                <table className="min-w-full">
                     <thead>
-                    <tr className="text-left">
-                        <th className="p-2 w-24 text-gray-500">Время</th>
-                        {staff.map(s => (<th key={s.id} className="p-2">{s.full_name}</th>))}
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-24">Время</th>
+                        {staff.map(s => (<th key={s.id} className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{s.full_name}</th>))}
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {hours.map(h => (
-                        <tr key={h} className="border-t align-top">
-                            <td className="p-2 text-gray-500">{`${String(h).padStart(2, '0')}:00`}</td>
+                        <tr key={h} className="align-top">
+                            <td className="p-4 text-sm font-medium text-gray-600 dark:text-gray-400">{`${String(h).padStart(2, '0')}:00`}</td>
                             {staff.map(s => {
                                 const events = (byStaff.get(s.id) ?? []).filter(ev => Math.floor(minutesFromMidnight(new Date(ev.start_at)) / 60) === h);
                                 return (
-                                    <td key={cellKey(s.id, h)} className="p-2">
-                                        {events.length === 0 && <span className="text-gray-300 text-xs">—</span>}
+                                    <td key={cellKey(s.id, h)} className="p-4">
+                                        {events.length === 0 && <span className="text-gray-300 dark:text-gray-600 text-xs">—</span>}
                                         {events.map(ev => (
                                             <div key={ev.id} className="mb-1">
                                                 <BookingPill id={ev.id} startISO={ev.start_at} endISO={ev.end_at} status={ev.status} />
@@ -168,11 +183,23 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
                 </table>
             </div>
 
-            <div className="flex gap-3 text-xs text-gray-600 mt-3">
-                <span><span className="inline-block w-3 h-3 align-[-1px] mr-1 rounded border border-yellow-300 bg-yellow-50" /> hold</span>
-                <span><span className="inline-block w-3 h-3 align-[-1px] mr-1 rounded border border-blue-300 bg-blue-50" /> confirmed</span>
-                <span><span className="inline-block w-3 h-3 align-[-1px] mr-1 rounded border border-green-300 bg-green-50" /> paid</span>
-                <span><span className="inline-block w-3 h-3 align-[-1px] mr-1 rounded border border-gray-300 bg-gray-50" /> cancelled</span>
+            <div className="flex flex-wrap gap-4 text-xs pt-2 border-t border-gray-200 dark:border-gray-700">
+                <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <span className="inline-block w-3 h-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800" />
+                    hold
+                </span>
+                <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <span className="inline-block w-3 h-3 rounded-full bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-800" />
+                    confirmed
+                </span>
+                <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <span className="inline-block w-3 h-3 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800" />
+                    paid
+                </span>
+                <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <span className="inline-block w-3 h-3 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700" />
+                    cancelled
+                </span>
             </div>
         </section>
     );
@@ -206,35 +233,64 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
         await refresh();
     }
 
+    const statusColors = {
+        hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+        paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
+    };
+
     return (
-        <section className="border rounded p-4">
-            <h2 className="font-medium mb-3">Последние 30 броней</h2>
+        <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
+            <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Последние 30 броней</h2>
+                <button className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 flex items-center gap-2" onClick={refresh}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Обновить
+                </button>
+            </div>
             <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+                <table className="min-w-full">
                     <thead>
-                    <tr className="text-left">
-                        <th className="p-2">#</th>
-                        <th className="p-2">Услуга</th>
-                        <th className="p-2">Мастер</th>
-                        <th className="p-2">Начало</th>
-                        <th className="p-2">Статус</th>
-                        <th className="p-2">Действия</th>
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">#</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Услуга</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Мастер</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Начало</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Статус</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Действия</th>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {list.map(b => {
                         const service = Array.isArray(b.services) ? b.services[0] : b.services;
                         const master  = Array.isArray(b.staff)    ? b.staff[0]    : b.staff;
                         return (
-                            <tr key={b.id} className="border-t">
-                                <td className="p-2">{String(b.id).slice(0, 8)}</td>
-                                <td className="p-2">{service?.name_ru}</td>
-                                <td className="p-2">{master?.full_name}</td>
-                                <td className="p-2">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
-                                <td className="p-2">{b.status}</td>
-                                <td className="p-2 flex gap-2">
-                                    {b.status !== 'cancelled' && <button className="border px-2 py-1 rounded" onClick={() => cancel(b.id)}>Отменить</button>}
-                                    {b.status === 'hold' && <button className="border px-2 py-1 rounded" onClick={() => confirm(b.id)}>Подтвердить</button>}
+                            <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <td className="p-4 text-sm font-mono text-gray-600 dark:text-gray-400">{String(b.id).slice(0, 8)}</td>
+                                <td className="p-4 text-sm font-medium text-gray-900 dark:text-gray-100">{service?.name_ru}</td>
+                                <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{master?.full_name}</td>
+                                <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
+                                <td className="p-4">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
+                                        {b.status}
+                                    </span>
+                                </td>
+                                <td className="p-4">
+                                    <div className="flex gap-2">
+                                        {b.status !== 'cancelled' && (
+                                            <button className="px-3 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" onClick={() => cancel(b.id)}>
+                                                Отменить
+                                            </button>
+                                        )}
+                                        {b.status === 'hold' && (
+                                            <button className="px-3 py-1.5 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" onClick={() => confirm(b.id)}>
+                                                Подтвердить
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         );
@@ -242,7 +298,6 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
                     </tbody>
                 </table>
             </div>
-            <div className="mt-3"><button className="border px-3 py-1 rounded" onClick={refresh}>Обновить</button></div>
         </section>
     );
 }
@@ -391,18 +446,23 @@ function QuickDesk({
     }
 
     return (
-        <section className="border rounded p-4">
-            <h2 className="font-medium mb-3">Быстрая запись (стойка)</h2>
+        <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Быстрая запись (стойка)
+            </h2>
 
             {/* Параметры записи */}
-            <div className="grid sm:grid-cols-5 gap-2">
+            <div className="grid sm:grid-cols-5 gap-3">
                 {/* Филиал */}
-                <select className="border rounded px-2 py-1" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
                     {branches.map(b => (<option key={b.id} value={b.id}>{b.name}</option>))}
                 </select>
 
                 {/* Услуга */}
-                <select className="border rounded px-2 py-1" value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
+                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
                     {servicesByBranch.map(s => (
                         <option key={s.id} value={s.id}>{s.name_ru} ({s.duration_min}м)</option>
                     ))}
@@ -410,16 +470,16 @@ function QuickDesk({
                 </select>
 
                 {/* Мастер */}
-                <select className="border rounded px-2 py-1" value={staffId} onChange={(e) => setStaffId(e.target.value)}>
+                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={staffId} onChange={(e) => setStaffId(e.target.value)}>
                     {staffByBranch.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
                     {staffByBranch.length === 0 && <option value="">Нет мастеров в филиале</option>}
                 </select>
 
                 {/* Дата */}
-                <input className="border rounded px-2 py-1" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                <input className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
 
                 {/* Слоты */}
-                <select className="border rounded px-2 py-1" value={slotStartISO} onChange={(e) => setSlotStartISO(e.target.value)}>
+                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={slotStartISO} onChange={(e) => setSlotStartISO(e.target.value)}>
                     {slots.length === 0 && <option value="">Нет свободных слотов</option>}
                     {slots.map((s, i) => (
                         <option key={`${s.staff_id}-${s.start_at}-${i}`} value={s.start_at}>
@@ -430,64 +490,65 @@ function QuickDesk({
             </div>
 
             {/* Блок клиента */}
-            <div className="mt-4 border rounded p-3 space-y-3">
-                <div className="font-medium">Клиент</div>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-4">
+                <div className="font-semibold text-gray-900 dark:text-gray-100">Клиент</div>
 
-                <div className="flex flex-wrap gap-3 text-sm">
-                    <label className="inline-flex items-center gap-2">
-                        <input type="radio" name="clientMode" checked={clientMode==='none'} onChange={()=>setClientMode('none')} />
-                        Без клиента (walk-in)
+                <div className="flex flex-wrap gap-4">
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="clientMode" checked={clientMode==='none'} onChange={()=>setClientMode('none')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Без клиента (walk-in)</span>
                     </label>
-                    <label className="inline-flex items-center gap-2">
-                        <input type="radio" name="clientMode" checked={clientMode==='existing'} onChange={()=>setClientMode('existing')} />
-                        Существующий
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="clientMode" checked={clientMode==='existing'} onChange={()=>setClientMode('existing')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Существующий</span>
                     </label>
-                    <label className="inline-flex items-center gap-2">
-                        <input type="radio" name="clientMode" checked={clientMode==='new'} onChange={()=>setClientMode('new')} />
-                        Новый (быстрый)
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="clientMode" checked={clientMode==='new'} onChange={()=>setClientMode('new')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Новый (быстрый)</span>
                     </label>
                 </div>
 
                 {clientMode === 'existing' && (
-                    <div className="space-y-2">
-                        <div className="flex gap-2">
-                            <input className="border rounded px-3 py-2 w-full" placeholder="Поиск: +996..., email, ФИО"
+                    <div className="space-y-3">
+                        <div className="flex gap-3">
+                            <input className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder="Поиск: +996..., email, ФИО"
                                    value={searchQ} onChange={e => setSearchQ(e.target.value)} />
-                            <button className="border rounded px-3 py-2" onClick={()=>searchUsers(searchQ)} disabled={searchLoading}>
+                            <button className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50" onClick={()=>searchUsers(searchQ)} disabled={searchLoading}>
                                 {searchLoading ? 'Ищем…' : 'Найти'}
                             </button>
                         </div>
-                        {searchErr && <div className="text-red-600 text-sm">{searchErr}</div>}
-                        <div className="max-h-48 overflow-auto border rounded">
+                        {searchErr && <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">{searchErr}</div>}
+                        <div className="max-h-48 overflow-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                             <table className="min-w-full text-sm">
                                 <thead>
-                                <tr className="text-left">
-                                    <th className="p-2 w-10">#</th>
-                                    <th className="p-2">Имя</th>
-                                    <th className="p-2">Email</th>
-                                    <th className="p-2">Телефон</th>
-                                    <th className="p-2 w-24">Выбрать</th>
+                                <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-10">#</th>
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Имя</th>
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Email</th>
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Телефон</th>
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-24">Выбрать</th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {foundUsers.map((u, i) => (
-                                    <tr key={u.id} className="border-t">
-                                        <td className="p-2">{i+1}</td>
-                                        <td className="p-2">{u.full_name}</td>
-                                        <td className="p-2">{u.email ?? '—'}</td>
-                                        <td className="p-2">{u.phone ?? '—'}</td>
-                                        <td className="p-2">
+                                    <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                        <td className="p-3 text-gray-600 dark:text-gray-400">{i+1}</td>
+                                        <td className="p-3 font-medium text-gray-900 dark:text-gray-100">{u.full_name}</td>
+                                        <td className="p-3 text-gray-700 dark:text-gray-300">{u.email ?? '—'}</td>
+                                        <td className="p-3 text-gray-700 dark:text-gray-300">{u.phone ?? '—'}</td>
+                                        <td className="p-3">
                                             <input
                                                 type="radio"
                                                 name="pickClient"
                                                 checked={selectedClientId === u.id}
                                                 onChange={()=>setSelectedClientId(u.id)}
+                                                className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
                                             />
                                         </td>
                                     </tr>
                                 ))}
                                 {foundUsers.length === 0 && (
-                                    <tr><td className="p-2 text-gray-500" colSpan={5}>Ничего не найдено</td></tr>
+                                    <tr><td className="p-4 text-center text-gray-500 dark:text-gray-400" colSpan={5}>Ничего не найдено</td></tr>
                                 )}
                                 </tbody>
                             </table>
@@ -496,22 +557,24 @@ function QuickDesk({
                 )}
 
                 {clientMode === 'new' && (
-                    <div className="grid sm:grid-cols-2 gap-2">
-                        <input className="border rounded px-3 py-2 w-full" placeholder="Имя (необязательно)"
+                    <div className="grid sm:grid-cols-2 gap-3">
+                        <input className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder="Имя (необязательно)"
                                value={newClientName} onChange={e=>setNewClientName(e.target.value)} />
-                        <input className="border rounded px-3 py-2 w-full" placeholder="Телефон (желательно)"
+                        <input className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder="Телефон (желательно)"
                                value={newClientPhone} onChange={e=>setNewClientPhone(e.target.value)} />
-                        <div className="sm:col-span-2 text-xs text-gray-500">
+                        <div className="sm:col-span-2 text-xs text-gray-500 dark:text-gray-400">
                             Эти данные сохранятся только в брони (без создания аккаунта).
                         </div>
                     </div>
                 )}
             </div>
 
-            <div className="mt-3">
-                <button className="border px-3 py-1 rounded" onClick={quickCreate}>Создать запись</button>
+            <div className="pt-2">
+                <button className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-bold rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200" onClick={quickCreate}>
+                    Создать запись
+                </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
                 Слоты считаются по `get_free_slots_service_day` с учётом расписания и занятых броней.
             </p>
         </section>
@@ -531,15 +594,20 @@ export default function AdminBookingsView({
 }) {
     const [tab, setTab] = useState<TabKey>('calendar');
     return (
-        <main className="mx-auto max-w-6xl p-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Брони</h1>
-                <Tabs value={tab} onChange={setTab} />
+        <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Брони</h1>
+                        <p className="text-gray-600 dark:text-gray-400">Управление бронированиями</p>
+                    </div>
+                    <Tabs value={tab} onChange={setTab} />
+                </div>
             </div>
 
             {tab === 'calendar' && <CalendarDay bizId={bizId} staff={staff} />}
             {tab === 'list'     && <ListTable   bizId={bizId} initial={initial} />}
             {tab === 'desk'     && <QuickDesk   bizId={bizId} services={services} staff={staff} branches={branches} />}
-        </main>
+        </div>
     );
 }

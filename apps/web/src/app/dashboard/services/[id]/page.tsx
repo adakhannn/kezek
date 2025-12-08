@@ -35,28 +35,36 @@ export default async function EditServicePage(context: unknown) {
     if (!svc || String(svc.biz_id) !== String(bizId)) return notFound();
 
     return (
-        <main className="mx-auto max-w-3xl p-6 space-y-4">
-            <h1 className="text-2xl font-semibold">Редактирование услуги</h1>
-            <ServiceForm
-                initial={{
-                    id: String(svc.id),
-                    name_ru: String(svc.name_ru),
-                    duration_min: Number(svc.duration_min),
-                    price_from: Number(svc.price_from),
-                    price_to: Number(svc.price_to),
-                    active: !!svc.active,
-                    branch_id: String(svc.branch_id),
-                }}
-                branches={branches || []}
-                apiBase="/api/services"
-            />
-            {/* ↓↓↓ Блок назначения мастеров на услугу */}
-            <div className="border rounded p-4">
+        <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Редактирование услуги</h1>
+                    <p className="text-gray-600 dark:text-gray-400">Управление данными услуги</p>
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+                <ServiceForm
+                    initial={{
+                        id: String(svc.id),
+                        name_ru: String(svc.name_ru),
+                        duration_min: Number(svc.duration_min),
+                        price_from: Number(svc.price_from),
+                        price_to: Number(svc.price_to),
+                        active: !!svc.active,
+                        branch_id: String(svc.branch_id),
+                    }}
+                    branches={branches || []}
+                    apiBase="/api/services"
+                />
+            </div>
+
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
                 <ServiceMastersEditor
                     serviceId={String(svc.id)}
                     serviceBranchId={String(svc.branch_id)}
                 />
             </div>
-        </main>
+        </div>
     );
 }
