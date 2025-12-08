@@ -4,6 +4,9 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
 type Branch = { id: string; name: string };
 
 type Initial = {
@@ -119,117 +122,111 @@ export default function ServiceForm({
     }
 
     return (
-        <form onSubmit={onSubmit} className="space-y-4">
-            {err && <div className="text-red-600 text-sm">{err}</div>}
+        <form onSubmit={onSubmit} className="space-y-6">
+            {err && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
+                </div>
+            )}
 
-            <div>
-                <label className="block text-sm text-gray-600 mb-1">Название *</label>
-                <input
-                    className="border rounded px-3 py-2 w-full"
-                    value={form.name_ru}
-                    onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
-                    required
-                />
-            </div>
+            <Input
+                label="Название"
+                value={form.name_ru}
+                onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
+                required
+            />
 
             <div className="grid sm:grid-cols-3 gap-4">
-                <div>
-                    <label className="block text-sm text-gray-600 mb-1">Длительность (мин) *</label>
-                    <input
-                        type="number"
-                        min={1}
-                        className="border rounded px-3 py-2 w-full"
-                        value={form.duration_min}
-                        onChange={(e) => setForm((f) => ({ ...f, duration_min: Number(e.target.value) || 0 }))}
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm text-gray-600 mb-1">Цена от *</label>
-                    <input
-                        type="number"
-                        min={0}
-                        className="border rounded px-3 py-2 w-full"
-                        value={form.price_from}
-                        onChange={(e) => setForm((f) => ({ ...f, price_from: Number(e.target.value) || 0 }))}
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm text-gray-600 mb-1">Цена до *</label>
-                    <input
-                        type="number"
-                        min={0}
-                        className="border rounded px-3 py-2 w-full"
-                        value={form.price_to}
-                        onChange={(e) => setForm((f) => ({ ...f, price_to: Number(e.target.value) || 0 }))}
-                        required
-                    />
-                </div>
+                <Input
+                    label="Длительность (мин)"
+                    type="number"
+                    min={1}
+                    value={form.duration_min}
+                    onChange={(e) => setForm((f) => ({ ...f, duration_min: Number(e.target.value) || 0 }))}
+                    required
+                />
+                <Input
+                    label="Цена от"
+                    type="number"
+                    min={0}
+                    value={form.price_from}
+                    onChange={(e) => setForm((f) => ({ ...f, price_from: Number(e.target.value) || 0 }))}
+                    required
+                />
+                <Input
+                    label="Цена до"
+                    type="number"
+                    min={0}
+                    value={form.price_to}
+                    onChange={(e) => setForm((f) => ({ ...f, price_to: Number(e.target.value) || 0 }))}
+                    required
+                />
             </div>
 
             {/* Ветвление по режимам */}
             {!isEdit ? (
                 // CREATE: мультивыбор филиалов
-                <div className="space-y-2">
+                <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <label className="text-sm text-gray-600">Филиалы *</label>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Филиалы *</label>
                         <button
                             type="button"
-                            className="text-xs underline"
+                            className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
                             onClick={toggleAll}
                         >
                             {allSelected ? 'Снять все' : 'Выбрать все'}
                         </button>
                     </div>
 
-                    <div className="max-h-56 overflow-auto border rounded p-2">
+                    <div className="max-h-56 overflow-auto bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2">
                         {branches.map((b) => {
                             const checked = (form.branch_ids ?? []).includes(b.id);
                             return (
-                                <label key={b.id} className="flex items-center gap-2 py-1">
+                                <label key={b.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={checked}
                                         onChange={() => toggleBranch(b.id)}
+                                        className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                                     />
-                                    <span>{b.name}</span>
+                                    <span className="text-sm text-gray-700 dark:text-gray-300">{b.name}</span>
                                 </label>
                             );
                         })}
                         {branches.length === 0 && (
-                            <div className="text-sm text-gray-500">Нет активных филиалов</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 p-2">Нет активных филиалов</div>
                         )}
                     </div>
                 </div>
             ) : (
                 // EDIT: одиночный выбор (зафиксированный филиал)
                 <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm text-gray-600 mb-1">Филиал</label>
-                        <input
-                            className="border rounded px-3 py-2 w-full bg-gray-50"
-                            value={branches.find((b) => b.id === form.branch_id)?.name ?? form.branch_id}
-                            readOnly
-                        />
-                    </div>
+                    <Input
+                        label="Филиал"
+                        value={branches.find((b) => b.id === form.branch_id)?.name ?? form.branch_id}
+                        readOnly
+                        className="bg-gray-50 dark:bg-gray-800"
+                    />
                 </div>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <input
                     id="active"
                     type="checkbox"
                     checked={!!form.active}
                     onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+                    className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                 />
-                <label htmlFor="active">Активна (доступна для записи)</label>
+                <label htmlFor="active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                    Активна (доступна для записи)
+                </label>
             </div>
 
-            <div className="flex gap-2">
-                <button disabled={saving} className="border rounded px-4 py-2">
+            <div className="pt-2">
+                <Button type="submit" disabled={saving} isLoading={saving}>
                     {saving ? 'Сохраняем…' : 'Сохранить'}
-                </button>
+                </Button>
             </div>
         </form>
     );

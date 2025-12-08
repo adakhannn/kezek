@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
 type Initial = {
     id?: string;
     name: string;
@@ -51,43 +54,44 @@ export default function BranchForm({
     }
 
     return (
-        <form onSubmit={onSubmit} className="space-y-4">
-            {err && <div className="text-red-600 text-sm">{err}</div>}
+        <form onSubmit={onSubmit} className="space-y-6">
+            {err && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
+                </div>
+            )}
 
-            <div>
-                <label className="block text-sm text-gray-600 mb-1">Название *</label>
-                <input
-                    className="border rounded px-3 py-2 w-full"
-                    value={form.name}
-                    onChange={(e)=>setForm(f=>({...f, name: e.target.value }))}
-                    required
-                />
-            </div>
+            <Input
+                label="Название"
+                value={form.name}
+                onChange={(e)=>setForm(f=>({...f, name: e.target.value }))}
+                required
+            />
 
-            <div>
-                <label className="block text-sm text-gray-600 mb-1">Адрес</label>
-                <input
-                    className="border rounded px-3 py-2 w-full"
-                    value={form.address ?? ''}
-                    onChange={(e)=>setForm(f=>({...f, address: e.target.value || null }))}
-                    placeholder="г. Бишкек, ул. ... 12"
-                />
-            </div>
+            <Input
+                label="Адрес"
+                value={form.address ?? ''}
+                onChange={(e)=>setForm(f=>({...f, address: e.target.value || null }))}
+                placeholder="г. Бишкек, ул. ... 12"
+            />
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <input
                     id="is_active"
                     type="checkbox"
                     checked={!!form.is_active}
                     onChange={(e)=>setForm(f=>({...f, is_active: e.target.checked }))}
+                    className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                 />
-                <label htmlFor="is_active">Активен (отображается клиентам)</label>
+                <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                    Активен (отображается клиентам)
+                </label>
             </div>
 
-            <div className="flex gap-2">
-                <button disabled={saving} className="border rounded px-4 py-2">
+            <div className="pt-2">
+                <Button type="submit" disabled={saving} isLoading={saving}>
                     {saving ? 'Сохраняем…' : 'Сохранить'}
-                </button>
+                </Button>
             </div>
         </form>
     );
