@@ -11,53 +11,81 @@ export default function AuthCallback() {
 
     useEffect(() => {
         (async () => {
-            try {
-                // Получаем параметр next из query string
-                const next = searchParams.get('next') || '/';
+            const next = searchParams.get('next') || '/';
+            let attempts = 0;
+            const maxAttempts = 10;
 
-                // Проверяем, есть ли в URL hash с токенами (старый способ)
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = hashParams.get('access_token');
-                const refreshToken = hashParams.get('refresh_token');
+            const checkSession = async () => {
+                try {
+                    // Проверяем hash с токенами (старый способ)
+                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                    const accessToken = hashParams.get('access_token');
+                    const refreshToken = hashParams.get('refresh_token');
 
-                if (accessToken && refreshToken) {
-                    // Старый способ через hash
-                    const { error } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                    });
-                    if (error) throw error;
-                } else {
-                    // Новый способ через PKCE code
-                    // Извлекаем code из query string
-                    const code = searchParams.get('code');
-                    if (!code) {
-                        // Если нет code, проверяем, может быть уже есть сессия
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (session) {
-                            setStatus('success');
-                            router.replace(next);
-                            return;
-                        }
-                        throw new Error('No authorization code found');
+                    if (accessToken && refreshToken) {
+                        // Устанавливаем сессию из hash
+                        const { error } = await supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken,
+                        });
+                        if (error) throw error;
+                        setStatus('success');
+                        router.replace(next);
+                        return;
                     }
 
-                    // Обмениваем code на сессию
-                    const { error } = await supabase.auth.exchangeCodeForSession(code);
-                    if (error) throw error;
-                }
+                    // Проверяем наличие сессии (Supabase может установить её автоматически через cookies)
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                    
+                    if (session && !sessionError) {
+                        setStatus('success');
+                        router.replace(next);
+                        return;
+                    }
 
-                setStatus('success');
-                router.replace(next);
-            } catch (e) {
-                console.error('callback error', e);
-                setStatus('error');
-                // Даем время Supabase обработать на своей стороне, затем редиректим
-                setTimeout(() => {
-                    const next = searchParams.get('next') || '/';
-                    router.replace(next);
-                }, 2000);
-            }
+                    // Если есть code в URL, пытаемся обменять (но только если есть code_verifier в storage)
+                    const code = searchParams.get('code');
+                    if (code && attempts === 0) {
+                        try {
+                            // Проверяем, есть ли code_verifier в sessionStorage
+                            const storedVerifier = sessionStorage.getItem(`supabase.auth.code_verifier`);
+                            if (storedVerifier) {
+                                const { error } = await supabase.auth.exchangeCodeForSession(code);
+                                if (!error) {
+                                    setStatus('success');
+                                    router.replace(next);
+                                    return;
+                                }
+                            }
+                        } catch (e) {
+                            // Игнорируем ошибку, продолжаем проверку сессии
+                            console.warn('exchangeCodeForSession failed, will check session:', e);
+                        }
+                    }
+
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        // Ждем немного и проверяем снова (Supabase может обработать на своей стороне)
+                        setTimeout(checkSession, 500);
+                    } else {
+                        // После нескольких попыток редиректим (сессия может быть установлена на сервере)
+                        setStatus('success');
+                        router.replace(next);
+                    }
+                } catch (e) {
+                    console.error('callback error', e);
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        setTimeout(checkSession, 500);
+                    } else {
+                        // В конце концов редиректим - если авторизация произошла, middleware перенаправит
+                        setStatus('success');
+                        router.replace(next);
+                    }
+                }
+            };
+
+            checkSession();
         })();
     }, [router, searchParams]);
 
