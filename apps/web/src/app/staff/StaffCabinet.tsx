@@ -143,9 +143,11 @@ export default function StaffCabinet({
                                         </div>
 
                                         <div className="flex gap-2">
-                                            <Button variant="outline" size="sm">
-                                                <Link href={`/booking/${booking.id}`}>Подробнее</Link>
-                                            </Button>
+                                            <Link href={`/booking/${booking.id}`}>
+                                                <Button variant="outline" size="sm">
+                                                    Подробнее
+                                                </Button>
+                                            </Link>
                                         </div>
                                     </div>
                                 </Card>
