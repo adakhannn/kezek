@@ -3,7 +3,8 @@ import {Geist, Geist_Mono} from 'next/font/google';
 import Link from 'next/link';
 
 import './globals.css';
-import {AuthStatusWrapper} from './_components/AuthStatusWrapper';
+import {AuthStatusServer} from './_components/AuthStatusServer';
+import {AuthStatusUpdater} from './_components/AuthStatusWrapper';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -42,7 +43,8 @@ export default function RootLayout({
                             <span className="relative text-2xl font-bold gradient-text">Kezek</span>
                         </div>
                     </Link>
-                    <AuthStatusWrapper/>
+                    <AuthStatusServer/>
+                    <AuthStatusUpdater/>
                 </div>
             </div>
         </header>

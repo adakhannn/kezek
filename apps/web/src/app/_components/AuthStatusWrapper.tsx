@@ -3,16 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { AuthStatusServer } from './AuthStatusServer';
-
 import { supabase } from '@/lib/supabaseClient';
 
-
 /**
- * Клиентский wrapper для AuthStatusServer, который отслеживает изменения авторизации
+ * Клиентский компонент, который отслеживает изменения авторизации
  * и автоматически обновляет серверные компоненты
+ * 
+ * Этот компонент не рендерит ничего, только подписывается на изменения
  */
-export function AuthStatusWrapper() {
+export function AuthStatusUpdater() {
     const router = useRouter();
 
     useEffect(() => {
@@ -31,6 +30,7 @@ export function AuthStatusWrapper() {
         };
     }, [router]);
 
-    return <AuthStatusServer />;
+    // Этот компонент ничего не рендерит
+    return null;
 }
 
