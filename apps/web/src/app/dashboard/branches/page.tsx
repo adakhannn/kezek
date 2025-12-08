@@ -27,47 +27,57 @@ export default async function BranchesListPage() {
     }
 
     return (
-        <main className="mx-auto max-w-5xl space-y-4">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Филиалы</h1>
-                {/* Кнопку добавления убрали для владельцев/менеджеров */}
+        <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Филиалы</h1>
+                    <p className="text-gray-600 dark:text-gray-400">Управление филиалами бизнеса</p>
+                </div>
             </div>
 
-            <div className="border rounded overflow-x-auto">
-                <table className="min-w-full text-sm">
-                    <thead>
-                    <tr className="text-left">
-                        <th className="p-2">Название</th>
-                        <th className="p-2">Адрес</th>
-                        <th className="p-2">Статус</th>
-                        <th className="p-2 w-40">Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {(branches ?? []).map((b: Branch) => (
-                        <tr key={b.id} className="border-t">
-                            <td className="p-2">{b.name}</td>
-                            <td className="p-2">{b.address ?? '—'}</td>
-                            <td className="p-2">{b.is_active ? 'активен' : 'скрыт'}</td>
-                            <td className="p-2">
-                                <div className="flex gap-2">
-                                    <Link href={`/dashboard/branches/${b.id}`} className="border rounded px-2 py-1">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                        <thead>
+                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Название</th>
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Адрес</th>
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Статус</th>
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-40">Действия</th>
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {(branches ?? []).map((b: Branch) => (
+                            <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <td className="p-4 text-sm font-medium text-gray-900 dark:text-gray-100">{b.name}</td>
+                                <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{b.address ?? '—'}</td>
+                                <td className="p-4">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        b.is_active
+                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                                    }`}>
+                                        {b.is_active ? 'активен' : 'скрыт'}
+                                    </span>
+                                </td>
+                                <td className="p-4">
+                                    <Link href={`/dashboard/branches/${b.id}`} className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200">
                                         Редакт.
                                     </Link>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                    {(branches ?? []).length === 0 && (
-                        <tr>
-                            <td className="p-3 text-gray-500" colSpan={4}>
-                                Пока нет филиалов
-                            </td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
+                                </td>
+                            </tr>
+                        ))}
+                        {(branches ?? []).length === 0 && (
+                            <tr>
+                                <td className="p-8 text-center text-gray-500 dark:text-gray-400" colSpan={4}>
+                                    Пока нет филиалов
+                                </td>
+                            </tr>
+                        )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </main>
+        </div>
     );
 }
