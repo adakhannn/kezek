@@ -65,3 +65,4 @@ npx supabase gen types typescript --project-id beulnmftzbmtbdlgurht > apps/web/s
 - Project ref: `beulnmftzbmtbdlgurht`
 - URL проекта: `https://beulnmftzbmtbdlgurht.supabase.co`
 
+

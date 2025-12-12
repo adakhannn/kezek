@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 import {NextResponse} from 'next/server';
 
 import {getBizContextForManagers} from '@/lib/authBiz';
-import { formatErrorSimple } from '@/lib/errors';
 
 type Body = {
     full_name: string;
@@ -25,13 +24,8 @@ export async function POST(req: Request) {
             .eq('user_id', userId)
             .eq('biz_id', bizId);
 
-        const ok = (roles ?? []).some(r => {
-            if (!r || typeof r !== 'object' || !('roles' in r)) return false;
-            const roleObj = (r as { roles?: { key?: unknown } | null }).roles;
-            if (!roleObj || typeof roleObj !== 'object' || !('key' in roleObj)) return false;
-            const key = roleObj.key;
-            return typeof key === 'string' && ['owner', 'admin', 'manager'].includes(key);
-        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ok = (roles ?? []).some(r => (r as any).roles?.key && ['owner', 'admin', 'manager'].includes((r as any).roles.key));
         if (!ok) return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
 
         const body = (await req.json()) as Body;
@@ -56,6 +50,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ok: true, id: data?.id});
     } catch (e: unknown) {
-        return NextResponse.json({ok: false, error: formatErrorSimple(e) || 'UNKNOWN'}, {status: 500});
+        const msg = e instanceof Error ? e.message : 'UNKNOWN';
+        return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }
