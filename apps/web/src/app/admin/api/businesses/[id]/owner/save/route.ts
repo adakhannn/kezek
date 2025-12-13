@@ -6,23 +6,15 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { getRouteParamRequired } from '@/lib/routeParams';
+
 type Body = {
     user_id?: string | null;
 };
 
 export async function POST(req: Request, ctx: unknown) {
     try {
-        const bizId =
-            typeof ctx === 'object' &&
-            ctx !== null &&
-            'params' in ctx &&
-            (ctx as { params: Record<string, string> }).params.id
-                ? (ctx as { params: Record<string, string> }).params.id
-                : null;
-
-        if (!bizId) {
-            return NextResponse.json({ ok: false, error: 'missing business id' }, { status: 400 });
-        }
+        const bizId = await getRouteParamRequired(ctx, 'id');
 
         const raw = (await req.json()) as Body;
         const userId = raw.user_id?.trim() || null;

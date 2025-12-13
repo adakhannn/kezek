@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
     title: 'Kezek — бронирование в Оше',
-    description: 'Быстрая запись в барбершопы и сервисы города Ош',
+    description: 'Быстрая запись в сервисы города Ош',
     manifest: '/manifest.webmanifest',
     icons: [
         {rel: 'icon', url: '/icon-192.png'},

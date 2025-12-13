@@ -9,15 +9,9 @@ import { isUuid } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewMemberPage(context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
-    const {id} = params;
+export default async function NewMemberPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    
     if (!id || !isUuid(id)) {
         return <main className="p-4 text-red-600">Некорректный business id</main>;
     }

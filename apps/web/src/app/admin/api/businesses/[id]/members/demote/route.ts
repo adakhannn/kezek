@@ -6,25 +6,15 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import { getRouteParamRequired } from '@/lib/routeParams';
+import { isUuid } from '@/lib/validation';
+
 type Body = { user_id?: string };
 
-function isUuid(v?: string | null): v is string {
-    return (
-        !!v &&
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
-    );
-}
-
 export async function POST(req: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
     try {
-        const biz_id = params?.id;
+        const biz_id = await getRouteParamRequired(context, 'id');
+        
         if (!isUuid(biz_id)) {
             return NextResponse.json({ok: false, error: 'bad biz_id'}, {status: 400});
         }

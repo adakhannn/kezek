@@ -108,6 +108,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
         setLoading(true);
         setErr(null);
         setMsg(null);
+        
         try {
             const resp = await fetch(`/admin/api/users/${userId}/delete`, { method: 'POST' });
             const j = (await resp.json()) as DeleteUserResp;
@@ -119,18 +120,23 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                         ? j.businesses.map((b) => (b.slug ? `${b.name} (@${b.slug})` : (b.name ?? 'Без названия'))).join(', ')
                         : '';
                     setErr('Удаление не доступно. Используйте «Заблокировать» выше.' + (list ? ` Бизнесы: ${list}` : ''));
+                    setLoading(false);
                     return;
                 }
                 setErr(('error' in j && j.error) || ('message' in j && j.message) || `HTTP ${resp.status}`);
                 setMsg('Можно вместо удаления заблокировать пользователя (кнопка ниже).');
+                setLoading(false);
                 return;
             }
 
-            router.push('/admin/users');
-            router.refresh();
+            // УСПЕШНОЕ удаление - немедленный редирект БЕЗ задержек
+            // Используем replace вместо href, чтобы не добавлять в историю
+            // И делаем это СРАЗУ, до любых других операций
+            window.location.replace('/admin/users');
+            // Не выполняем код после этой строки - редирект уже начался
+            return;
         } catch (e) {
             setErr(extractError(e));
-        } finally {
             setLoading(false);
         }
     }

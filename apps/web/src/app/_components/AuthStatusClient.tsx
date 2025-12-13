@@ -139,6 +139,10 @@ export function AuthStatusClient() {
         } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (!mounted) return;
 
+            if (process.env.NODE_ENV === 'development') {
+                console.log('AuthStatusClient: auth state change', { event, hasSession: !!session, hasUser: !!session?.user });
+            }
+
             if (session?.user) {
                 setUser(session.user);
                 // Определяем путь для редиректа
@@ -149,8 +153,10 @@ export function AuthStatusClient() {
                 // Обновляем серверные компоненты
                 router.refresh();
             } else {
+                // Выход из системы - очищаем состояние
                 setUser(null);
                 setTarget(null);
+                setLoading(false);
                 // Обновляем серверные компоненты
                 router.refresh();
             }

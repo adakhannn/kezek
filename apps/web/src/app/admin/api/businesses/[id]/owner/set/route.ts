@@ -9,6 +9,8 @@ import {createClient, type SupabaseClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import { getRouteParamRequired } from '@/lib/routeParams';
+
 
 // ---------- Admin API shim (минимальные типы) ----------
 type AdminUser = {
@@ -127,13 +129,9 @@ async function upsertOwnerUser(admin: AdminClient, payload: Body): Promise<strin
 }
 
 export async function POST(req: Request, context: unknown) {
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
     try {
+        const bizId = await getRouteParamRequired(context, 'id');
+        
         // env & auth
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -155,7 +153,6 @@ export async function POST(req: Request, context: unknown) {
 
         const admin: AdminClient = createClient(URL, SERVICE);
         const body = (await req.json()) as Body;
-        const bizId = params.id;
 
         // найдём/создадим нового владельца
         const newOwnerId = await upsertOwnerUser(admin, body);

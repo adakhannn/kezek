@@ -9,12 +9,8 @@ export const dynamic = 'force-dynamic';
 
 import { isUuid } from '@/lib/validation';
 
-export default async function MembersPage(context: unknown) {
-    const params =
-        typeof context === 'object' && context !== null && 'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
-    const { id } = params;
+export default async function MembersPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
 
     if (!id || !isUuid(id)) {
         return (

@@ -7,17 +7,15 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { getRouteParamRequired } from '@/lib/routeParams';
+
 type Body = { force?: boolean };
 type CategoryRow = { id: string; slug: string };
 
 export async function POST(req: Request, context: unknown) {
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
     try {
+        const categoryId = await getRouteParamRequired(context, 'id');
+        
         const URL     = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -45,7 +43,7 @@ export async function POST(req: Request, context: unknown) {
         const { data: cat, error: eCat } = await admin
             .from('categories')
             .select('id,slug')
-            .eq('id', params.id)
+            .eq('id', categoryId)
             .maybeSingle<CategoryRow>();
 
         if (eCat)   return NextResponse.json({ ok: false, error: eCat.message }, { status: 400 });

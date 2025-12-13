@@ -3,21 +3,18 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 import { UserBasicForm } from '@/components/admin/users/UserBasicForm';           // client-компонент (как было)
+import { UserPageRedirect } from '@/components/admin/users/UserPageRedirect'; // клиентский компонент для редиректа
 import { UserSecurityActions } from '@/components/admin/users/UserSecurityActions'; // client-компонент (как было)
 
 export const dynamic = 'force-dynamic';
 
 type Biz = { id: string; name: string; slug: string | null };
 
-export default async function UserPage(ctx: unknown) {
-    // params
-    const params =
-        typeof ctx === 'object' && ctx !== null && 'params' in ctx
-            ? (ctx as { params: Record<string, string> }).params
-            : {};
-    const id = params.id;
+export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
 
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -51,7 +48,10 @@ export default async function UserPage(ctx: unknown) {
     const { data: got, error: eGet } = await admin.auth.admin.getUserById(id);
     if (eGet) return <div className="p-4">Ошибка: {eGet.message}</div>;
     const u = got?.user;
-    if (!u) return <div className="p-4">Пользователь не найден</div>;
+    if (!u) {
+        // Если пользователь не найден (возможно, был удален), редиректим на список
+        redirect('/admin/users');
+    }
 
     // профиль
     const userMeta = (u.user_metadata ?? {}) as Partial<{ full_name: string }>;
@@ -121,8 +121,10 @@ export default async function UserPage(ctx: unknown) {
     const isBlocked = !!susp;
 
     return (
-        <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+        <>
+            <UserPageRedirect userId={id} userExists={!!u} />
+            <div className="space-y-6">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Пользователь</h1>
@@ -195,6 +197,7 @@ export default async function UserPage(ctx: unknown) {
                     <UserSecurityActions userId={id} isSuper={isSuperUser} isBlocked={isBlocked} />
                 </aside>
             </section>
-        </div>
+            </div>
+        </>
     );
 }

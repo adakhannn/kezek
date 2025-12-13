@@ -7,6 +7,8 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import { getRouteParamRequired } from '@/lib/routeParams';
+
 type Body = { full_name?: string | null; email?: string | null; phone?: string | null };
 type BizOwnerRow = { owner_id: string | null };
 type UpdateUserPayload = {
@@ -21,13 +23,9 @@ const norm = (s?: string | null) => {
 };
 
 export async function POST(req: Request, context: unknown) {
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
     try {
+        const bizId = await getRouteParamRequired(context, 'id');
+        
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -48,7 +46,6 @@ export async function POST(req: Request, context: unknown) {
         if (!isSuper) return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
 
         const admin = createClient(URL, SERVICE);
-        const bizId = params.id;
         const body = (await req.json()) as Body;
 
         // узнаём owner_id (без .returns<> / дженериков)

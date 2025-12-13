@@ -8,6 +8,7 @@ import {createClient, type SupabaseClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import { getRouteParamRequired } from '@/lib/routeParams';
 import {sendEmailPassword} from '@/lib/senders/email';
 import {sendSMS, normalizePhoneToE164} from '@/lib/senders/sms';
 
@@ -78,14 +79,9 @@ async function findUserIdByEmailOrPhone(
 }
 
 export async function POST(req: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
     try {
+        const bizId = await getRouteParamRequired(context, 'id');
+        
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -112,12 +108,6 @@ export async function POST(req: Request, context: unknown) {
 
         if (roleErr || !superRow) {
             return NextResponse.json({ok: false, error: 'forbidden'}, {status: 403});
-        }
-
-        // params
-        const bizId = params?.id ?? '';
-        if (!bizId) {
-            return NextResponse.json({ok: false, error: 'bad biz_id'}, {status: 400});
         }
 
         // body

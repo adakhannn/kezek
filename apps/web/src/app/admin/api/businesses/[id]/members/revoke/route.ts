@@ -7,16 +7,11 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { getRouteParamRequired } from '@/lib/routeParams';
+
 export async function POST(req: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
     try {
-        const biz_id = params?.id ?? '';
+        const biz_id = await getRouteParamRequired(context, 'id');
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;

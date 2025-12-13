@@ -5,6 +5,7 @@ import {useState} from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import {normalizePhoneToE164} from '@/lib/senders/sms';
 import {supabase} from '@/lib/supabaseClient';
 
 type Mode = 'phone' | 'email';
@@ -24,11 +25,23 @@ export default function SignUpPage() {
         setError(null);
         try {
             if (mode === 'phone') {
-                const {error} = await supabase.auth.signInWithOtp({phone, options: {channel: 'sms'}});
+                // Нормализуем телефон в формат E.164
+                const phoneNormalized = normalizePhoneToE164(phone.trim());
+                if (!phoneNormalized) {
+                    throw new Error('Некорректный номер телефона');
+                }
+                
+                const {error} = await supabase.auth.signInWithOtp({
+                    phone: phoneNormalized, 
+                    options: {
+                        channel: 'sms',
+                        shouldCreateUser: true
+                    }
+                });
                 if (error) throw error;
                 // имя сохраним после верификации: /auth/post-signup обновит metadata
                 localStorage.setItem('signup_full_name', fullName);
-                router.push(`/auth/verify?mode=phone&phone=${encodeURIComponent(phone)}&redirect=/auth/post-signup`);
+                router.push(`/auth/verify?mode=phone&phone=${encodeURIComponent(phoneNormalized)}&redirect=/auth/post-signup`);
             } else {
                 const { error } = await supabase.auth.signInWithOtp({
                     email,

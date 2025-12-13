@@ -60,7 +60,7 @@ export default async function Home({
                         <span className="gradient-text">Найдите свой сервис</span>
                     </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                        Быстрая запись в барбершопы и сервисы города Ош
+                        Быстрая запись в сервисы города Ош
                     </p>
                 </div>
 

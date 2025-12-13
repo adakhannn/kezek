@@ -6,6 +6,7 @@ import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import { getRouteParamRequired } from '@/lib/routeParams';
 import { isUuid } from '@/lib/validation';
 
 type Item = {
@@ -17,15 +18,9 @@ type Item = {
 };
 
 export async function GET(_req: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string> }).params
-            : {};
     try {
-        const id = params?.id ?? '';
+        const id = await getRouteParamRequired(context, 'id');
+        
         if (!isUuid(id)) {
             return NextResponse.json({ok: false, error: 'bad biz_id'}, {status: 400});
         }
