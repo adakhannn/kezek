@@ -13,7 +13,7 @@ type BranchRow  = { id: string; name: string };
 
 type BookingItem = {
     id: string;
-    status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
+    status: 'hold' | 'confirmed' | 'paid' | 'cancelled' | 'no_show';
     start_at: string;
     end_at: string;
     services?: { name_ru: string }[];
@@ -64,6 +64,7 @@ function statusClasses(s: BookingItem['status']) {
         case 'confirmed': return 'bg-blue-50 border-blue-300 text-blue-800';
         case 'paid': return 'bg-green-50 border-green-300 text-green-800';
         case 'cancelled': return 'bg-gray-50 border-gray-300 text-gray-600 line-through';
+        case 'no_show': return 'bg-red-50 border-red-300 text-red-800';
         default: return 'bg-gray-50 border-gray-300 text-gray-700';
     }
 }
@@ -76,6 +77,7 @@ function BookingPill({ id, startISO, endISO, status }: { id: string; startISO: s
         confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-800',
         paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-800',
         cancelled: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border-gray-300 dark:border-gray-700 line-through',
+        no_show: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-800',
     };
     return (
         <Link href={`/booking/${id}`} className={`inline-block text-xs px-2 py-1 border rounded-lg font-medium ${statusStyles[status]} hover:opacity-90 transition-opacity`} title={`Открыть бронь #${id.slice(0, 8)}`}>
@@ -194,7 +196,11 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
                 </span>
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800" />
-                    paid
+                    paid / пришел
+                </span>
+                <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <span className="inline-block w-3 h-3 rounded-full bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800" />
+                    no_show / не пришел
                 </span>
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700" />
@@ -210,12 +216,15 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
     const [list, setList] = useState<BookingItem[]>(initial);
 
     async function refresh() {
+        const now = new Date().toISOString();
+        // Загружаем прошедшие брони (для отметки посещения) и будущие
         const { data } = await supabase
             .from('bookings')
             .select('id,status,start_at,end_at,services(name_ru),staff(full_name)')
             .eq('biz_id', bizId)
+            .neq('status', 'cancelled')
             .order('start_at', { ascending: false })
-            .limit(30);
+            .limit(50);
         setList(data || []);
     }
 
@@ -227,9 +236,39 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
     }
 
     async function cancel(id: string) {
+        // Пытаемся отменить через RPC
         const { error } = await supabase.rpc('cancel_booking', { p_booking_id: id });
-        if (error) return alert(error.message);
+        
+        // Если ошибка связана с назначением сотрудника, обновляем статус напрямую
+        if (error) {
+            const errorMsg = error.message.toLowerCase();
+            if (errorMsg.includes('not assigned to branch') || errorMsg.includes('staff')) {
+                // Обновляем статус напрямую, минуя проверку назначения
+                const { error: updateError } = await supabase
+                    .from('bookings')
+                    .update({ status: 'cancelled' })
+                    .eq('id', id);
+                
+                if (updateError) {
+                    return alert(updateError.message);
+                }
+            } else {
+                return alert(error.message);
+            }
+        }
+        
         await notify('cancel', id);
+        await refresh();
+    }
+
+    async function markAttendance(id: string, attended: boolean) {
+        const res = await fetch(`/api/bookings/${id}/mark-attendance`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ attended }),
+        });
+        const j = await res.json();
+        if (!j.ok) return alert(j.error || 'Не удалось обновить статус');
         await refresh();
     }
 
@@ -238,6 +277,7 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
         confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
         paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
         cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
+        no_show: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     };
 
     return (
@@ -267,6 +307,9 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
                     {list.map(b => {
                         const service = Array.isArray(b.services) ? b.services[0] : b.services;
                         const master  = Array.isArray(b.staff)    ? b.staff[0]    : b.staff;
+                        const isPast = new Date(b.start_at) < new Date();
+                        const canMarkAttendance = isPast && b.status !== 'cancelled' && b.status !== 'no_show' && b.status !== 'paid';
+                        
                         return (
                             <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                 <td className="p-4 text-sm font-mono text-gray-600 dark:text-gray-400">{String(b.id).slice(0, 8)}</td>
@@ -275,17 +318,33 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
                                 <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
                                 <td className="p-4">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
-                                        {b.status}
+                                        {b.status === 'no_show' ? 'не пришел' : b.status === 'paid' && isPast ? 'пришел' : b.status}
                                     </span>
                                 </td>
                                 <td className="p-4">
-                                    <div className="flex gap-2">
-                                        {b.status !== 'cancelled' && (
+                                    <div className="flex gap-2 flex-wrap">
+                                        {canMarkAttendance && (
+                                            <>
+                                                <button 
+                                                    className="px-3 py-1.5 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" 
+                                                    onClick={() => markAttendance(b.id, true)}
+                                                >
+                                                    Пришел
+                                                </button>
+                                                <button 
+                                                    className="px-3 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" 
+                                                    onClick={() => markAttendance(b.id, false)}
+                                                >
+                                                    Не пришел
+                                                </button>
+                                            </>
+                                        )}
+                                        {!isPast && b.status !== 'cancelled' && (
                                             <button className="px-3 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" onClick={() => cancel(b.id)}>
                                                 Отменить
                                             </button>
                                         )}
-                                        {b.status === 'hold' && (
+                                        {!isPast && b.status === 'hold' && (
                                             <button className="px-3 py-1.5 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" onClick={() => confirm(b.id)}>
                                                 Подтвердить
                                             </button>

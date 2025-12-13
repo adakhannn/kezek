@@ -9,23 +9,19 @@ export const runtime = 'nodejs';
 
 type Branch = { id: string; name: string; is_active: boolean };
 
-export default async function StaffSchedulePage(context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
-
-    const staffId = String(params.id ?? '');
+export default async function StaffSchedulePage({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
     const { supabase, bizId } = await getBizContextForManagers();
 
     // сотрудник
     const { data: staff, error: eStaff } = await supabase
         .from('staff')
         .select('id, full_name, branch_id, biz_id')
-        .eq('id', staffId)
+        .eq('id', id)
         .maybeSingle();
 
     if (eStaff) {
@@ -56,7 +52,7 @@ export default async function StaffSchedulePage(context: unknown) {
                 bizId={String(bizId)}
                 staffId={String(staff.id)}
                 branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
-                homeBranchId={String(staff.branch_id)}  // ← ВАЖНО: родной филиал
+                homeBranchId={String(staff.branch_id)}
             />
         </main>
     );

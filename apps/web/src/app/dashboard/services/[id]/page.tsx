@@ -8,21 +8,19 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export default async function EditServicePage(context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
+export default async function EditServicePage({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
     const { supabase, bizId } = await getBizContextForManagers();
 
     const [{ data: svc }, { data: branches }] = await Promise.all([
         supabase
             .from('services')
             .select('id,name_ru,duration_min,price_from,price_to,active,branch_id,biz_id')
-            .eq('id', params.id)
+            .eq('id', id)
             .maybeSingle(),
         supabase
             .from('branches')
@@ -33,6 +31,20 @@ export default async function EditServicePage(context: unknown) {
     ]);
 
     if (!svc || String(svc.biz_id) !== String(bizId)) return notFound();
+
+    // Находим все активные услуги с таким же названием в этом бизнесе (это "копии" услуги в разных филиалах)
+    // Неактивные услуги (мягко удаленные) не должны показываться
+    const { data: allServiceBranches } = await supabase
+        .from('services')
+        .select('branch_id')
+        .eq('biz_id', bizId)
+        .eq('name_ru', svc.name_ru)
+        .eq('active', true); // Только активные услуги
+
+    // Получаем список ID филиалов, где есть эта услуга
+    const serviceBranchIds = new Set(
+        (allServiceBranches ?? []).map((s: { branch_id: string }) => s.branch_id)
+    );
 
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -53,6 +65,7 @@ export default async function EditServicePage(context: unknown) {
                         price_to: Number(svc.price_to),
                         active: !!svc.active,
                         branch_id: String(svc.branch_id),
+                        branch_ids: Array.from(serviceBranchIds),
                     }}
                     branches={branches || []}
                     apiBase="/api/services"

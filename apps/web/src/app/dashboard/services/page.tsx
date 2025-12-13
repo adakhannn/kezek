@@ -51,9 +51,49 @@ export default async function ServicesListPage({
         return <main className="p-6 text-red-600">Ошибка: {error.message}</main>;
     }
 
-    const list = (services ?? []).filter(
-        (s) => !branchFilter || s.branch_id === branchFilter,
-    );
+    // Группируем услуги по названию (убираем дубли)
+    type GroupedService = {
+        name_ru: string;
+        duration_min: number;
+        price_from: number;
+        price_to: number;
+        active: boolean;
+        branch_ids: string[];
+        first_id: string; // ID первой услуги для редактирования
+    };
+
+    const serviceMap = new Map<string, GroupedService>();
+    
+    (services ?? []).forEach((s: ServiceRow) => {
+        // Применяем фильтр по филиалу
+        if (branchFilter && s.branch_id !== branchFilter) return;
+        
+        // Учитываем только активные услуги при группировке
+        // Неактивные услуги (мягко удаленные) не должны показываться в списке филиалов
+        if (!s.active) return;
+        
+        const key = s.name_ru;
+        if (!serviceMap.has(key)) {
+            serviceMap.set(key, {
+                name_ru: s.name_ru,
+                duration_min: s.duration_min,
+                price_from: s.price_from,
+                price_to: s.price_to,
+                active: s.active ?? false,
+                branch_ids: [s.branch_id],
+                first_id: s.id,
+            });
+        } else {
+            const existing = serviceMap.get(key)!;
+            if (!existing.branch_ids.includes(s.branch_id)) {
+                existing.branch_ids.push(s.branch_id);
+            }
+            // Обновляем статус: активна, если хотя бы в одном филиале активна
+            if (s.active) existing.active = true;
+        }
+    });
+
+    const list = Array.from(serviceMap.values());
 
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -115,17 +155,27 @@ export default async function ServicesListPage({
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {list.map((s: ServiceRow) => {
-                            const branchName =
-                                (branches ?? []).find((b) => b.id === s.branch_id)?.name ?? '—';
+                        {list.map((s: GroupedService) => {
+                            const branchNames = s.branch_ids
+                                .map((bid) => (branches ?? []).find((b) => b.id === bid)?.name)
+                                .filter(Boolean)
+                                .join(', ');
+                            
                             return (
-                                <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <tr key={s.first_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                     <td className="p-4 text-sm font-medium text-gray-900 dark:text-gray-100">{s.name_ru}</td>
                                     <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{s.duration_min} мин</td>
                                     <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
                                         {s.price_from}–{s.price_to} сом
                                     </td>
-                                    <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{branchName}</td>
+                                    <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
+                                        {branchNames || '—'}
+                                        {s.branch_ids.length > 1 && (
+                                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                                ({s.branch_ids.length} филиалов)
+                                            </span>
+                                        )}
+                                    </td>
                                     <td className="p-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                             s.active
@@ -138,12 +188,12 @@ export default async function ServicesListPage({
                                     <td className="p-4">
                                         <div className="flex gap-2">
                                             <Link
-                                                href={`/dashboard/services/${s.id}`}
+                                                href={`/dashboard/services/${s.first_id}`}
                                                 className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
                                             >
                                                 Редакт.
                                             </Link>
-                                            <DeleteServiceButton id={s.id} />
+                                            <DeleteServiceButton id={s.first_id} />
                                         </div>
                                     </td>
                                 </tr>

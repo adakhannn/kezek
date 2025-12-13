@@ -11,14 +11,12 @@ import {getBizContextForManagers} from '@/lib/authBiz';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export default async function Page(context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
+export default async function Page({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
     const {supabase, bizId} = await getBizContextForManagers();
 
     // Грузим сотрудника и список филиалов текущего бизнеса
@@ -26,7 +24,7 @@ export default async function Page(context: unknown) {
         supabase
             .from('staff')
             .select('id,full_name,email,phone,branch_id,is_active,biz_id')
-            .eq('id', params.id)
+            .eq('id', id)
             .maybeSingle(),
         supabase
             .from('branches')
@@ -46,6 +44,7 @@ export default async function Page(context: unknown) {
     }
 
     const activeBranches = (branches ?? []).filter(b => b.is_active);
+    const currentBranch = (branches ?? []).find(b => b.id === staff.branch_id);
 
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -53,7 +52,23 @@ export default async function Page(context: unknown) {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Редактирование сотрудника</h1>
-                        <p className="text-gray-600 dark:text-gray-400">Управление данными сотрудника</p>
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <p className="text-gray-600 dark:text-gray-400">Управление данными сотрудника</p>
+                            {currentBranch && (
+                                <>
+                                    <span className="text-gray-400 dark:text-gray-500">•</span>
+                                    <div className="flex items-center gap-2">
+                                        <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Филиал: <span className="text-indigo-600 dark:text-indigo-400">{currentBranch.name}</span>
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
                         <Link className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200" href={`/dashboard/staff/${staff.id}/schedule`}>

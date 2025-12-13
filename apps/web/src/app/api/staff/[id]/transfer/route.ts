@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 type Body = {
@@ -17,15 +18,8 @@ function isoDate(d: Date) {
 }
 
 export async function POST(req: Request, context: unknown) {
-    // безопасно params
-    const params =
-        typeof context === 'object' && context !== null && 'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
-    const staffId = String(params.id ?? '');
-
     try {
-        if (!staffId) return NextResponse.json({ ok: false, error: 'STAFF_ID_REQUIRED' }, { status: 400 });
+        const staffId = await getRouteParamRequired(context, 'id');
 
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();

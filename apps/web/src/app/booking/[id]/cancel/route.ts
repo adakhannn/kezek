@@ -23,10 +23,46 @@ export async function POST(
         },
     });
 
+    // Проверяем текущий статус брони
+    const {data: booking} = await supabase
+        .from('bookings')
+        .select('id, status, client_id')
+        .eq('id', id)
+        .maybeSingle();
+
+    // Если уже отменена, редиректим
+    if (booking?.status === 'cancelled') {
+        return NextResponse.redirect(new URL(`/booking/${id}`, req.url));
+    }
+
+    // Пытаемся отменить через RPC
     const {error} = await supabase.rpc('cancel_booking', {p_booking_id: id});
+    
+    // Если ошибка связана с назначением сотрудника, обновляем статус напрямую
     if (error) {
-        console.error(error);
-        return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        const errorMsg = error.message.toLowerCase();
+        if (errorMsg.includes('not assigned to branch') || errorMsg.includes('staff')) {
+            // Получаем текущего пользователя
+            const {data: {user}} = await supabase.auth.getUser();
+            if (!user || !booking || booking.client_id !== user.id) {
+                return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+            }
+            
+            // Обновляем статус напрямую, минуя проверку назначения
+            const {error: updateError} = await supabase
+                .from('bookings')
+                .update({status: 'cancelled'})
+                .eq('id', id)
+                .eq('client_id', user.id);
+            
+            if (updateError) {
+                console.error(updateError);
+                return NextResponse.json({ok: false, error: updateError.message}, {status: 400});
+            }
+        } else {
+            console.error(error);
+            return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        }
     }
 
     await fetch(new URL('/api/notify', req.url), {

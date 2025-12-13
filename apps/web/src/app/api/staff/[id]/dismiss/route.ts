@@ -2,20 +2,15 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getRouteParamRequired } from '@/lib/routeParams';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(_: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
-    const { supabase, bizId } = await getBizContextForManagers();
-    const staffId = params.id;
+    try {
+        const staffId = await getRouteParamRequired(context, 'id');
+        const { supabase, bizId } = await getBizContextForManagers();
 
     // 1) читаем сотрудника
     const { data: staff, error: eStaff } = await supabase
@@ -100,5 +95,9 @@ export async function POST(_: Request, context: unknown) {
             );
     }
 
-    return NextResponse.json({ ok: true });
+        return NextResponse.json({ ok: true });
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    }
 }

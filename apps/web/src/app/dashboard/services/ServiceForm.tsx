@@ -79,29 +79,22 @@ export default function ServiceForm({
                 const ids = form.branch_ids ?? [];
                 if (ids.length === 0) throw new Error('Выберите хотя бы один филиал');
             } else {
-                if (!form.branch_id) throw new Error('Не указан филиал для редактирования услуги');
+                const ids = form.branch_ids ?? [];
+                if (ids.length === 0) throw new Error('Выберите хотя бы один филиал');
             }
 
             // готовим тело запроса:
             // - create: шлём branch_ids: string[]
-            // - edit:   шлём branch_id: string
-            const payload = isEdit
-                ? {
-                    name_ru: form.name_ru.trim(),
-                    duration_min: Number(form.duration_min) || 0,
-                    price_from: Number(form.price_from) || 0,
-                    price_to: Number(form.price_to) || 0,
-                    active: !!form.active,
-                    branch_id: form.branch_id,               // один
-                }
-                : {
-                    name_ru: form.name_ru.trim(),
-                    duration_min: Number(form.duration_min) || 0,
-                    price_from: Number(form.price_from) || 0,
-                    price_to: Number(form.price_to) || 0,
-                    active: !!form.active,
-                    branch_ids: form.branch_ids ?? [],       // много
-                };
+            // - edit:   шлём branch_ids: string[] (теперь тоже множественный выбор)
+            const payload = {
+                name_ru: form.name_ru.trim(),
+                duration_min: Number(form.duration_min) || 0,
+                price_from: Number(form.price_from) || 0,
+                price_to: Number(form.price_to) || 0,
+                active: !!form.active,
+                ...(isEdit ? { service_id: form.id } : {}),
+                branch_ids: form.branch_ids ?? [],
+            };
 
             const res = await fetch(url, {
                 method: 'POST',
@@ -110,7 +103,8 @@ export default function ServiceForm({
             });
             const j = await res.json().catch(() => ({ ok: false, error: 'NON_JSON_RESPONSE' }));
             if (!res.ok || !j.ok) {
-                setErr(j.error ?? `HTTP_${res.status}`);
+                // Используем message, если есть, иначе error
+                setErr(j.message ?? j.error ?? `HTTP_${res.status}`);
                 return;
             }
             r.push('/dashboard/services');
@@ -163,52 +157,39 @@ export default function ServiceForm({
                 />
             </div>
 
-            {/* Ветвление по режимам */}
-            {!isEdit ? (
-                // CREATE: мультивыбор филиалов
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Филиалы *</label>
-                        <button
-                            type="button"
-                            className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
-                            onClick={toggleAll}
-                        >
-                            {allSelected ? 'Снять все' : 'Выбрать все'}
-                        </button>
-                    </div>
+            {/* Мультивыбор филиалов (для создания и редактирования) */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Филиалы *</label>
+                    <button
+                        type="button"
+                        className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                        onClick={toggleAll}
+                    >
+                        {allSelected ? 'Снять все' : 'Выбрать все'}
+                    </button>
+                </div>
 
-                    <div className="max-h-56 overflow-auto bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2">
-                        {branches.map((b) => {
-                            const checked = (form.branch_ids ?? []).includes(b.id);
-                            return (
-                                <label key={b.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={checked}
-                                        onChange={() => toggleBranch(b.id)}
-                                        className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
-                                    />
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">{b.name}</span>
-                                </label>
-                            );
-                        })}
-                        {branches.length === 0 && (
-                            <div className="text-sm text-gray-500 dark:text-gray-400 p-2">Нет активных филиалов</div>
-                        )}
-                    </div>
+                <div className="max-h-56 overflow-auto bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2">
+                    {branches.map((b) => {
+                        const checked = (form.branch_ids ?? []).includes(b.id);
+                        return (
+                            <label key={b.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => toggleBranch(b.id)}
+                                    className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
+                                />
+                                <span className="text-sm text-gray-700 dark:text-gray-300">{b.name}</span>
+                            </label>
+                        );
+                    })}
+                    {branches.length === 0 && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 p-2">Нет активных филиалов</div>
+                    )}
                 </div>
-            ) : (
-                // EDIT: одиночный выбор (зафиксированный филиал)
-                <div className="grid sm:grid-cols-2 gap-4">
-                    <Input
-                        label="Филиал"
-                        value={branches.find((b) => b.id === form.branch_id)?.name ?? form.branch_id}
-                        readOnly
-                        className="bg-gray-50 dark:bg-gray-800"
-                    />
-                </div>
-            )}
+            </div>
 
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <input

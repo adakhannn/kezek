@@ -1,7 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
-import { InputHTMLAttributes, forwardRef } from 'react';
+import { InputHTMLAttributes, forwardRef, useId } from 'react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
@@ -11,7 +11,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
     ({ className, label, error, helperText, id, ...props }, ref) => {
-        const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+        const generatedId = useId();
+        const inputId = id || generatedId;
         
         return (
             <div className="w-full">
@@ -31,6 +32,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                         'placeholder:text-gray-400 dark:placeholder:text-gray-500',
                         'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
                         'disabled:opacity-50 disabled:cursor-not-allowed',
+                        'read-only:bg-gray-50 read-only:dark:bg-gray-800 read-only:cursor-not-allowed',
                         error && 'border-red-500 focus:ring-red-500',
                         className
                     )}

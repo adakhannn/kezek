@@ -6,22 +6,19 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export default async function StaffSlotsPage(context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
-
+export default async function StaffSlotsPage({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
     const { supabase, bizId } = await getBizContextForManagers();
 
     // 1) сотрудник
     const { data: staff } = await supabase
         .from('staff')
         .select('id, full_name, is_active, biz_id')
-        .eq('id', params.id)
+        .eq('id', id)
         .maybeSingle();
 
     if (!staff || String(staff.biz_id) !== String(bizId)) {

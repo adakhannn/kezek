@@ -11,17 +11,36 @@ export default function DangerActions({ staffId }: { staffId: string }) {
     const [err, setErr] = useState<string | null>(null);
 
     async function dismiss() {
-        if (!confirm('Уволить сотрудника? Будущие записи должны быть отменены заранее.')) return;
+        if (!confirm('Уволить сотрудника? Будущие записи должны быть отменены заранее. Сотрудник будет скрыт, но данные сохранятся.')) return;
         setBusy(true); setErr(null);
         try {
             const res = await fetch(`/api/staff/${encodeURIComponent(staffId)}/dismiss`, { method: 'POST' });
             const json = await res.json().catch(() => ({}));
             if (!res.ok || !json.ok) {
-                setErr(json.error || `HTTP_${res.status}`);
+                setErr(json.error || json.message || `HTTP_${res.status}`);
                 return;
             }
             // ✅ успешное увольнение — сразу на список сотрудников
             r.push('/dashboard/staff?dismissed=1');
+        } catch (e: unknown) {
+            setErr(e instanceof Error ? e.message : String(e));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function deletePermanently() {
+        if (!confirm('УДАЛИТЬ СОТРУДНИКА НАВСЕГДА?\n\nЭто действие нельзя отменить. Будут удалены:\n- Все прошедшие брони\n- Расписание\n- Связи с услугами\n- История назначений\n\nБудущие брони должны быть отменены заранее.')) return;
+        setBusy(true); setErr(null);
+        try {
+            const res = await fetch(`/api/staff/${encodeURIComponent(staffId)}/delete`, { method: 'POST' });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || !json.ok) {
+                setErr(json.error || json.message || `HTTP_${res.status}`);
+                return;
+            }
+            // ✅ успешное удаление — сразу на список сотрудников
+            r.push('/dashboard/staff?deleted=1');
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : String(e));
         } finally {
@@ -42,17 +61,34 @@ export default function DangerActions({ staffId }: { staffId: string }) {
                     <p className="text-sm text-red-700 dark:text-red-400">{err}</p>
                 </div>
             )}
-            <Button
-                variant="danger"
-                disabled={busy}
-                onClick={dismiss}
-                isLoading={busy}
-            >
-                {busy ? 'Выполняем…' : 'Уволить сотрудника'}
-            </Button>
-            <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
-                Будущие записи не должны существовать. Права в бизнесе будут сохранены только как «client».
-            </p>
+            <div className="space-y-3">
+                <div>
+                    <Button
+                        variant="danger"
+                        disabled={busy}
+                        onClick={dismiss}
+                        isLoading={busy}
+                    >
+                        {busy ? 'Выполняем…' : 'Уволить сотрудника'}
+                    </Button>
+                    <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed mt-2">
+                        Сотрудник будет скрыт (is_active = false), но все данные сохранятся. Можно восстановить позже.
+                    </p>
+                </div>
+                <div className="border-t border-red-200 dark:border-red-800 pt-3">
+                    <Button
+                        variant="danger"
+                        disabled={busy}
+                        onClick={deletePermanently}
+                        isLoading={busy}
+                    >
+                        {busy ? 'Удаляем…' : 'Удалить навсегда'}
+                    </Button>
+                    <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed mt-2">
+                        Полное удаление сотрудника и всех связанных данных. Будущие брони должны быть отменены. Это действие нельзя отменить.
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }
