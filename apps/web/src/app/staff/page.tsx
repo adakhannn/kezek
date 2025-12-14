@@ -41,12 +41,14 @@ export default async function Page() {
             .from('service_staff')
             .select(`
                 is_active,
-                services:services!service_staff_service_id_fkey (
+                service_id,
+                services:services (
                     id,
                     name_ru,
                     duration_min,
                     price_from,
-                    price_to
+                    price_to,
+                    active
                 )
             `)
             .eq('staff_id', staffId)
@@ -84,15 +86,15 @@ export default async function Page() {
     const upcoming = upcomingResult.data ?? [];
     const past = pastResult.data ?? [];
 
-    // Извлекаем услуги из service_staff
+    // Извлекаем услуги из service_staff (только активные услуги)
     const services = servicesData
         .filter(ss => ss.is_active && ss.services)
         .map(ss => {
             const svc = Array.isArray(ss.services) ? ss.services[0] : ss.services;
             return svc;
         })
-        .filter((svc): svc is { id: string; name_ru: string; duration_min: number; price_from: number | null; price_to: number | null } => 
-            svc !== null && typeof svc === 'object' && 'id' in svc
+        .filter((svc): svc is { id: string; name_ru: string; duration_min: number; price_from: number | null; price_to: number | null; active: boolean } => 
+            svc !== null && typeof svc === 'object' && 'id' in svc && svc.active === true
         );
 
     return (
