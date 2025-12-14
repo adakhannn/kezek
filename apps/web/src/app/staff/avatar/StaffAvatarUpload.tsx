@@ -76,13 +76,21 @@ export default function StaffAvatarUpload({
 
             if (uploadError) {
                 console.error('Upload error details:', uploadError);
+                console.error('File path:', filePath);
+                console.error('File name:', fileName);
+                console.error('File size:', file.size);
+                console.error('File type:', file.type);
+                
                 // Проверяем, существует ли bucket
                 if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
                     throw new Error('Bucket "avatars" не найден. Пожалуйста, создайте bucket в Supabase Storage.');
                 }
                 // Проверяем права доступа
-                if (uploadError.message?.includes('new row violates row-level security') || uploadError.message?.includes('permission denied')) {
-                    throw new Error('Нет прав на загрузку файлов. Проверьте настройки RLS политик для bucket "avatars".');
+                if (uploadError.message?.includes('new row violates row-level security') || 
+                    uploadError.message?.includes('permission denied') ||
+                    uploadError.message?.includes('row-level security') ||
+                    String(uploadError).includes('403')) {
+                    throw new Error(`Нет прав на загрузку файлов. Ошибка: ${uploadError.message}. Проверьте настройки RLS политик для bucket "avatars".`);
                 }
                 throw uploadError;
             }
