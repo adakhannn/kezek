@@ -99,9 +99,8 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
             const ymaps = (await loadYandexMaps()) as unknown as IYMaps;
             if (destroyed || !boxRef.current) return;
 
-            // Yandex Maps использует формат [lon, lat], но мы храним [lat, lon]
-            // Поэтому при инициализации карты меняем местами
-            const startCenter: Coordinates = lat && lon ? [lon, lat] : [72.8030, 40.5146]; // Ош [lon, lat]
+            // Yandex Maps использует формат [lat, lon] для center и Placemark
+            const startCenter: Coordinates = lat && lon ? [lat, lon] : [40.5146, 72.8030]; // Ош [lat, lon]
             const startZoom = lat && lon ? 16 : 12;
 
             const map = new ymaps.Map(boxRef.current, {
@@ -144,9 +143,8 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                 const meta = item.properties.get<{ GeocoderMetaData?: { text?: string } }>('metaDataProperty');
                 const addr = meta?.GeocoderMetaData?.text ?? item.properties.get<string | undefined>('text') ?? undefined;
 
-                // Yandex Maps использует формат [lon, lat], но мы храним [lat, lon]
-                // Поэтому меняем местами при вызове onPick
-                onPick(coords[1], coords[0], addr);
+                // Yandex Maps возвращает координаты в формате [lat, lon]
+                onPick(coords[0], coords[1], addr);
                 map.setCenter(coords, 16, { duration: 200 });
             });
 
@@ -165,8 +163,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
 
             async function geocodeAndEmit(coords: Coordinates) {
                 try {
-                    // В Yandex Maps координаты в формате [долгота, широта] = [lon, lat]
-                    // Но мы передаем в onPick как [lat, lon], поэтому нужно поменять местами
+                    // Yandex Maps использует формат [lat, lon] для координат
                     const res = await ymaps.geocode(coords, { kind: 'house' });
                     const first = res.geoObjects.get(0);
                     let addr: string | undefined;
@@ -181,18 +178,17 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                         addr = maybeAddrLine ?? meta?.GeocoderMetaData?.text ?? text ?? undefined;
                     }
 
-                    // Yandex Maps использует формат [lon, lat], но мы храним [lat, lon]
-                    // Поэтому меняем местами при вызове onPick
-                    onPick(coords[1], coords[0], addr);
+                    // Yandex Maps возвращает координаты в формате [lat, lon]
+                    onPick(coords[0], coords[1], addr);
                 } catch (error) {
                     console.error('Geocoding error:', error);
                     // В случае ошибки все равно передаем координаты
-                    onPick(coords[1], coords[0], undefined);
+                    onPick(coords[0], coords[1], undefined);
                 }
             }
 
-            // начальная метка (Yandex Maps использует [lon, lat])
-            if (lat && lon) setPoint([lon, lat]);
+            // начальная метка (Yandex Maps использует [lat, lon])
+            if (lat && lon) setPoint([lat, lon]);
 
             // клик по карте
             map.events.add('click', async (e) => {
