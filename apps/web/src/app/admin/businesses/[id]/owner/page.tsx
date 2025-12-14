@@ -58,16 +58,60 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
     if (eBiz) return <div className="p-4">Ошибка: {eBiz.message}</div>;
     if (!biz) return <div className="p-4">Бизнес не найден</div>;
 
-    // 5) Список существующих пользователей (до 200, можно добавить поиск/пагинацию)
-    const { data: users, error: eUsers } = await admin
-        .from('auth_users_view')
-        .select('id,email,phone,full_name,is_suspended')
-        .limit(200)
-        .returns<UserRow[]>();
+    // 5) Список существующих пользователей через Admin API (только подтвержденные)
+    const { data: listResp, error: eUsers } = await admin.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+    });
 
     if (eUsers) {
         return <div className="p-4">Ошибка загрузки пользователей: {eUsers.message}</div>;
     }
+
+    const allUsers = listResp?.users ?? [];
+    
+    // Фильтруем только подтвержденных пользователей (email_confirmed_at или phone_confirmed_at не null)
+    const confirmedUsers = allUsers.filter((u) => {
+        const hasEmail = u.email && u.email_confirmed_at;
+        const hasPhone = (u as { phone?: string | null; phone_confirmed_at?: string | null }).phone && 
+                        (u as { phone_confirmed_at?: string | null }).phone_confirmed_at;
+        return hasEmail || hasPhone;
+    });
+
+    // Подтягиваем full_name из profiles
+    const userIds = confirmedUsers.map((u) => u.id);
+    const profiles: Record<string, { full_name: string | null }> = {};
+    if (userIds.length > 0) {
+        const { data: profRows } = await admin
+            .from('profiles')
+            .select('id,full_name')
+            .in('id', userIds);
+        for (const r of profRows ?? []) {
+            profiles[r.id] = { full_name: r.full_name };
+        }
+    }
+
+    // Проверяем заблокированных пользователей
+    const userIdsForSuspension = confirmedUsers.map((u) => u.id);
+    const suspendedMap = new Set<string>();
+    if (userIdsForSuspension.length > 0) {
+        const { data: suspensions } = await admin
+            .from('user_suspensions')
+            .select('user_id')
+            .in('user_id', userIdsForSuspension);
+        for (const s of suspensions ?? []) {
+            suspendedMap.add(s.user_id);
+        }
+    }
+
+    // Преобразуем в нужный формат
+    const users: UserRow[] = confirmedUsers.map((u) => ({
+        id: u.id,
+        email: u.email ?? null,
+        phone: (u as { phone?: string | null }).phone ?? null,
+        full_name: profiles[u.id]?.full_name ?? (u.user_metadata?.full_name as string | undefined) ?? null,
+        is_suspended: suspendedMap.has(u.id) ? true : null,
+    }));
 
     return (
         <div className="p-4 space-y-4">
