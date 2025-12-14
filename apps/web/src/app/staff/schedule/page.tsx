@@ -1,7 +1,8 @@
 // apps/web/src/app/staff/schedule/page.tsx
 import { notFound } from 'next/navigation';
 
-import Client from '@/app/dashboard/staff/[id]/schedule/Client';
+import ViewSchedule from './ViewSchedule';
+
 import { getStaffContext } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -39,11 +40,12 @@ export default async function StaffSchedulePage() {
 
     return (
         <main className="mx-auto max-w-5xl p-6 space-y-4">
-            <h1 className="text-2xl font-semibold">
-                Расписание — {staff.full_name}
-            </h1>
+            <div>
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Моё расписание</h1>
+                <p className="text-gray-600 dark:text-gray-400">Просмотр вашего рабочего расписания</p>
+            </div>
 
-            <Client
+            <ViewSchedule
                 bizId={String(bizId)}
                 staffId={String(staff.id)}
                 branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
