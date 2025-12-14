@@ -38,13 +38,33 @@ async function getTargetPath(userId: string): Promise<TargetPath> {
             return { href: '/dashboard', label: 'Кабинет владельца' };
         }
 
-        // Проверяем роли пользователя
-        const { data: roleKeys } = await supabase.rpc('my_role_keys');
-        const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
-        const isStaff = roles.includes('staff');
+        // Проверяем роли пользователя (прямой запрос для надежности)
+        let isStaff = false;
+        try {
+            const [{ data: ur }, { data: roleRows }] = await Promise.all([
+                supabase.from('user_roles').select('role_id').eq('user_id', userId),
+                supabase.from('roles').select('id, key').eq('key', 'staff'),
+            ]);
+            
+            if (ur && roleRows && roleRows.length > 0) {
+                const staffRoleId = roleRows[0].id;
+                isStaff = ur.some(r => String(r.role_id) === String(staffRoleId));
+            }
+        } catch (error) {
+            console.warn('AuthStatusClient: error checking staff role directly, using RPC', error);
+            // Fallback: проверяем через RPC
+            const { data: roleKeys } = await supabase.rpc('my_role_keys');
+            const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
+            isStaff = roles.includes('staff');
+        }
+        
         if (isStaff) {
             return { href: '/staff', label: 'Кабинет сотрудника', isStaff: true };
         }
+        
+        // Проверяем другие роли через RPC
+        const { data: roleKeys } = await supabase.rpc('my_role_keys');
+        const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
         if (roles.some((r) => ['owner', 'admin', 'manager'].includes(r))) {
             return { href: '/dashboard', label: 'Кабинет бизнеса', isStaff: false };
         }

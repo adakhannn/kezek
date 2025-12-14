@@ -73,10 +73,25 @@ export async function AuthStatusServer() {
     const label = user.email ?? (user.phone as string | undefined) ?? 'аккаунт';
     const target = await getTargetPath(supabase, user.id);
     
-    // Проверяем, является ли пользователь сотрудником
-    const { data: roleKeys } = await supabase.rpc('my_role_keys');
-    const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
-    const isStaff = roles.includes('staff');
+    // Проверяем, является ли пользователь сотрудником (прямой запрос к таблицам для надежности)
+    let isStaff = false;
+    try {
+        const [{ data: ur }, { data: roleRows }] = await Promise.all([
+            supabase.from('user_roles').select('role_id').eq('user_id', user.id),
+            supabase.from('roles').select('id, key').eq('key', 'staff'),
+        ]);
+        
+        if (ur && roleRows && roleRows.length > 0) {
+            const staffRoleId = roleRows[0].id;
+            isStaff = ur.some(r => String(r.role_id) === String(staffRoleId));
+        }
+    } catch (error) {
+        console.warn('AuthStatusServer: error checking staff role', error);
+        // Fallback: проверяем через RPC
+        const { data: roleKeys } = await supabase.rpc('my_role_keys');
+        const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
+        isStaff = roles.includes('staff');
+    }
 
     return (
         <div className="flex items-center gap-3">
