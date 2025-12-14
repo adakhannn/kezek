@@ -58,6 +58,27 @@ export default async function Page() {
             redirect('/b/kezek');
         }
         // нет подходящего бизнеса → мягкое сообщение
-        return <main className="p-6">Нет доступа к кабинету.</main>;
+        if (e instanceof Error && e.message === 'NO_BIZ_ACCESS') {
+            return (
+                <main className="p-6">
+                    <h1 className="text-xl font-semibold mb-2">Нет доступа к кабинету</h1>
+                    <p className="text-sm text-gray-600">
+                        У вашей учётной записи нет ролей <code>owner / admin / manager</code> ни в одном бизнесе.
+                    </p>
+                </main>
+            );
+        }
+        // Другие ошибки
+        return (
+            <main className="p-6">
+                <h1 className="text-xl font-semibold mb-2 text-red-600">Ошибка</h1>
+                <p className="text-sm text-gray-600">
+                    Произошла ошибка при загрузке броней. Пожалуйста, попробуйте обновить страницу.
+                </p>
+                {e instanceof Error && (
+                    <p className="text-xs text-gray-500 mt-2">Детали: {e.message}</p>
+                )}
+            </main>
+        );
     }
 }

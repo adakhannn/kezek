@@ -60,15 +60,36 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
         );
     } catch (e: unknown) {
-        if (e instanceof Error && e.message === 'UNAUTHORIZED') {
-            redirect('/b/kezek');
+        if (e instanceof Error) {
+            // Не авторизован → редирект на публичную страницу
+            if (e.message === 'UNAUTHORIZED') {
+                redirect('/b/kezek');
+            }
+            // Нет доступа к бизнесу → показываем сообщение
+            if (e.message === 'NO_BIZ_ACCESS') {
+                return (
+                    <main className="p-6">
+                        <h1 className="text-xl font-semibold mb-2">Нет доступа к кабинету</h1>
+                        <p className="text-sm text-gray-600">
+                            У вашей учётной записи нет ролей <code>owner / admin / manager</code> ни в одном бизнесе.
+                        </p>
+                        <div className="mt-4">
+                            <Link className="underline" href="/b/kezek">Перейти на публичную витрину</Link>
+                        </div>
+                    </main>
+                );
+            }
         }
+        // Другие ошибки → показываем общее сообщение
         return (
             <main className="p-6">
-                <h1 className="text-xl font-semibold mb-2">Нет доступа к кабинету</h1>
+                <h1 className="text-xl font-semibold mb-2 text-red-600">Ошибка</h1>
                 <p className="text-sm text-gray-600">
-                    У вашей учётной записи нет ролей <code>owner / manager / staff</code> ни в одном бизнесе.
+                    Произошла ошибка при загрузке кабинета. Пожалуйста, попробуйте обновить страницу.
                 </p>
+                {e instanceof Error && (
+                    <p className="text-xs text-gray-500 mt-2">Детали: {e.message}</p>
+                )}
                 <div className="mt-4">
                     <Link className="underline" href="/b/kezek">Перейти на публичную витрину</Link>
                 </div>
