@@ -7,6 +7,45 @@ import {getBizContextForManagers} from '@/lib/authBiz';
 import { formatErrorSimple } from '@/lib/errors';
 import {getServiceClient} from '@/lib/supabaseService';
 
+/**
+ * Добавляет роль staff пользователю в бизнесе (idempotent)
+ */
+async function addStaffRole(admin: ReturnType<typeof getServiceClient>, userId: string, bizId: string): Promise<void> {
+    const { data: roleStaff } = await admin
+        .from('roles')
+        .select('id')
+        .eq('key', 'staff')
+        .maybeSingle();
+    
+    if (!roleStaff?.id) {
+        console.warn('Staff role not found in roles table');
+        return;
+    }
+
+    // Проверяем, нет ли уже такой роли
+    const { data: existsRole } = await admin
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('role_id', roleStaff.id)
+        .eq('biz_id', bizId)
+        .maybeSingle();
+
+    if (!existsRole) {
+        const { error: eRole } = await admin
+            .from('user_roles')
+            .insert({
+                user_id: userId,
+                biz_id: bizId,
+                role_id: roleStaff.id,
+                biz_key: bizId,
+            });
+        if (eRole) {
+            console.warn('Failed to add staff role:', eRole.message);
+        }
+    }
+}
+
 type Body = {
     full_name: string;
     email?: string | null;
@@ -80,37 +119,7 @@ export async function POST(req: Request, context: unknown) {
 
         // Если нашли пользователя и привязали, добавляем роль staff
         if (linkedUserId) {
-            const { data: roleStaff } = await admin
-                .from('roles')
-                .select('id')
-                .eq('key', 'staff')
-                .maybeSingle();
-            
-            if (roleStaff?.id) {
-                // Проверяем, нет ли уже такой роли
-                const { data: existsRole } = await admin
-                    .from('user_roles')
-                    .select('id')
-                    .eq('user_id', linkedUserId)
-                    .eq('role_id', roleStaff.id)
-                    .eq('biz_id', bizId)
-                    .maybeSingle();
-
-                if (!existsRole) {
-                    const { error: eRole } = await admin
-                        .from('user_roles')
-                        .insert({
-                            user_id: linkedUserId,
-                            biz_id: bizId,
-                            role_id: roleStaff.id,
-                            biz_key: bizId,
-                        });
-                    if (eRole) {
-                        console.warn('Failed to add staff role:', eRole.message);
-                        // Не возвращаем ошибку, т.к. сотрудник уже обновлен
-                    }
-                }
-            }
+            await addStaffRole(admin, linkedUserId, bizId);
         }
 
         return NextResponse.json({ok: true, user_linked: !!linkedUserId});
