@@ -102,7 +102,7 @@ export async function getBizContextForManagers() {
 
 /**
  * Возвращает { supabase, userId, staffId, bizId } для кабинета сотрудника.
- * Проверяет, что пользователь имеет роль staff в каком-либо бизнесе.
+ * Проверяет наличие записи в staff с user_id, автоматически добавляет роль если её нет.
  */
 export async function getStaffContext() {
     const supabase = await getSupabaseServer();
@@ -112,30 +112,60 @@ export async function getStaffContext() {
     if (eUser || !userData?.user) throw new Error('UNAUTHORIZED');
     const userId = userData.user.id;
 
-    // 2) Проверяем роль staff через user_roles
-    const [{ data: ur }, { data: roleRows }] = await Promise.all([
-        supabase.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
-        supabase.from('roles').select('id, key'),
-    ]);
-
-    if (!ur || !roleRows) throw new Error('NO_STAFF_ACCESS');
-
-    const rolesMap = new Map<string, string>(roleRows.map(r => [String(r.id), String(r.key)]));
-    const staffRole = ur.find(r => rolesMap.get(String(r.role_id)) === 'staff');
-    
-    if (!staffRole?.biz_id) throw new Error('NO_STAFF_ACCESS');
-    const bizId = String(staffRole.biz_id);
-
-    // 3) Находим запись staff по user_id и biz_id
+    // 2) Ищем запись в staff по user_id (это источник правды)
     const { data: staff } = await supabase
         .from('staff')
-        .select('id, full_name, branch_id, is_active')
-        .eq('biz_id', bizId)
+        .select('id, biz_id, branch_id, full_name, is_active')
         .eq('user_id', userId)
         .eq('is_active', true)
         .maybeSingle();
 
     if (!staff) throw new Error('NO_STAFF_RECORD');
+    
+    const bizId = String(staff.biz_id);
+
+    // 3) Проверяем и автоматически добавляем роль staff в user_roles, если её нет
+    const { createClient } = await import('@supabase/supabase-js');
+    const serviceClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false } }
+    );
+
+    // Получаем ID роли staff
+    const { data: roleStaff } = await serviceClient
+        .from('roles')
+        .select('id')
+        .eq('key', 'staff')
+        .maybeSingle();
+
+    if (roleStaff?.id) {
+        // Проверяем, есть ли уже роль
+        const { data: existsRole } = await serviceClient
+            .from('user_roles')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('role_id', roleStaff.id)
+            .eq('biz_id', bizId)
+            .maybeSingle();
+
+        // Если роли нет - добавляем автоматически
+        if (!existsRole) {
+            const { error: eRole } = await serviceClient
+                .from('user_roles')
+                .insert({
+                    user_id: userId,
+                    biz_id: bizId,
+                    role_id: roleStaff.id,
+                    biz_key: bizId,
+                });
+            
+            if (eRole) {
+                console.warn('Failed to auto-add staff role:', eRole.message);
+                // Не бросаем ошибку, т.к. запись staff есть - это главное
+            }
+        }
+    }
 
     return { supabase, userId, staffId: staff.id, bizId, branchId: staff.branch_id };
 }

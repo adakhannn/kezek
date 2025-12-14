@@ -62,6 +62,23 @@ export default function SignInPage() {
         async (fallback: string, userId?: string) => {
             if (await fetchIsSuper()) return '/admin';
             if (await fetchOwnsBusiness(userId)) return '/dashboard';
+            
+            // Проверяем наличие записи в staff (источник правды)
+            if (userId) {
+                try {
+                    const { data: staff } = await supabase
+                        .from('staff')
+                        .select('id')
+                        .eq('user_id', userId)
+                        .eq('is_active', true)
+                        .maybeSingle();
+                    
+                    if (staff) return '/staff';
+                } catch (error) {
+                    console.warn('decideRedirect: error checking staff', error);
+                }
+            }
+            
             const roles = await fetchMyRoles();
             if (roles.includes('owner')) return '/dashboard';
             if (roles.includes('staff')) return '/staff';

@@ -26,7 +26,7 @@ async function getTargetPath(userId: string): Promise<TargetPath> {
         // Проверяем, является ли пользователь супер-админом
         const { data: isSuperData } = await supabase.rpc('is_super_admin');
         if (isSuperData) {
-            return { href: '/admin', label: 'Админ-панель' };
+            return { href: '/admin', label: 'Админ-панель', isStaff: false };
         }
 
         // Проверяем, владеет ли пользователь бизнесом
@@ -35,29 +35,37 @@ async function getTargetPath(userId: string): Promise<TargetPath> {
             .select('id', { count: 'exact', head: true })
             .eq('owner_id', userId);
         if ((count ?? 0) > 0) {
-            return { href: '/dashboard', label: 'Кабинет владельца' };
+            return { href: '/dashboard', label: 'Кабинет владельца', isStaff: false };
         }
 
-        // Проверяем роли пользователя (используем ту же логику, что и getStaffContext)
+        // Проверяем, является ли пользователь сотрудником - ищем запись в staff (источник правды)
         let isStaff = false;
         try {
-            const [{ data: ur }, { data: roleRows }] = await Promise.all([
-                supabase.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
-                supabase.from('roles').select('id, key'),
-            ]);
+            const { data: staff } = await supabase
+                .from('staff')
+                .select('id, biz_id')
+                .eq('user_id', userId)
+                .eq('is_active', true)
+                .maybeSingle();
             
-            if (ur && roleRows) {
-                const rolesMap = new Map<string, string>(roleRows.map(r => [String(r.id), String(r.key)]));
-                const staffRole = ur.find(r => rolesMap.get(String(r.role_id)) === 'staff');
-                // Проверяем, что роль staff есть и привязана к бизнесу (biz_id не NULL)
-                isStaff = !!staffRole?.biz_id;
-            }
+            isStaff = !!staff;
         } catch (error) {
-            console.warn('AuthStatusClient: error checking staff role directly, using RPC', error);
-            // Fallback: проверяем через RPC
-            const { data: roleKeys } = await supabase.rpc('my_role_keys');
-            const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
-            isStaff = roles.includes('staff');
+            console.warn('AuthStatusClient: error checking staff record', error);
+            // Fallback: проверяем через user_roles
+            try {
+                const [{ data: ur }, { data: roleRows }] = await Promise.all([
+                    supabase.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
+                    supabase.from('roles').select('id, key'),
+                ]);
+                
+                if (ur && roleRows) {
+                    const rolesMap = new Map<string, string>(roleRows.map(r => [String(r.id), String(r.key)]));
+                    const staffRole = ur.find(r => rolesMap.get(String(r.role_id)) === 'staff');
+                    isStaff = !!staffRole?.biz_id;
+                }
+            } catch (fallbackError) {
+                console.warn('AuthStatusClient: fallback check also failed', fallbackError);
+            }
         }
         
         if (isStaff) {

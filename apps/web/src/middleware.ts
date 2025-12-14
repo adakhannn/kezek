@@ -45,7 +45,22 @@ export async function middleware(req: NextRequest) {
         url.pathname = '/dashboard';
         return NextResponse.redirect(url, 302);
     }
-    // Сотрудники → staff кабинет
+    
+    // Сотрудники → проверяем наличие записи в staff (источник правды)
+    const { data: staff } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('user_id', userRes.user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+    
+    if (staff) {
+        const url = req.nextUrl.clone();
+        url.pathname = '/staff';
+        return NextResponse.redirect(url, 302);
+    }
+    
+    // Fallback: проверяем роль через RPC
     if (keys.includes('staff')) {
         const url = req.nextUrl.clone();
         url.pathname = '/staff';
