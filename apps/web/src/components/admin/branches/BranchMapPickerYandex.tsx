@@ -96,8 +96,9 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
         let destroyed = false;
 
         (async () => {
-            const ymaps = (await loadYandexMaps()) as unknown as IYMaps;
-            if (destroyed || !boxRef.current) return;
+            try {
+                const ymaps = (await loadYandexMaps()) as unknown as IYMaps;
+                if (destroyed || !boxRef.current) return;
 
             // Yandex Maps использует формат [lat, lon] для center и Placemark
             const startCenter: Coordinates = lat && lon ? [lat, lon] : [40.5146, 72.8030]; // Ош [lat, lon]
@@ -204,6 +205,19 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                     console.error('Error handling map click:', error);
                 }
             });
+            } catch (error) {
+                console.error('Failed to initialize Yandex Maps:', error);
+                if (boxRef.current) {
+                    boxRef.current.innerHTML = `
+                        <div class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800 rounded border">
+                            <div class="text-center p-4">
+                                <p class="text-red-600 dark:text-red-400 font-medium mb-2">Ошибка загрузки карты</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">${error instanceof Error ? error.message : 'Неизвестная ошибка'}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
         })();
 
         return () => {
