@@ -27,7 +27,7 @@ export default async function Page() {
         // Информация о сотруднике
         supabase
             .from('staff')
-            .select('full_name, email, phone')
+            .select('full_name, email, phone, avatar_url')
             .eq('id', staffId)
             .single(),
         // Информация о филиале
@@ -102,6 +102,7 @@ export default async function Page() {
             userId={userId}
             staffId={staffId}
             staffName={staff?.full_name ?? 'Сотрудник'}
+            avatarUrl={staff?.avatar_url ?? null}
             branch={branch ? { id: branch.id, name: branch.name, address: branch.address } : null}
             services={services}
             upcoming={upcoming}

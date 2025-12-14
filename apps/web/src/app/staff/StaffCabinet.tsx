@@ -4,6 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 import { useState } from 'react';
 
+
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TZ } from '@/lib/time';
@@ -36,8 +37,9 @@ type ServiceInfo = {
 
 export default function StaffCabinet({
                                          userId: _userId,
-                                         staffId: _staffId,
+                                         staffId,
                                          staffName,
+                                         avatarUrl,
                                          branch,
                                          services,
                                          upcoming,
@@ -46,6 +48,7 @@ export default function StaffCabinet({
     userId: string;
     staffId: string;
     staffName: string;
+    avatarUrl: string | null;
     branch: BranchInfo | null;
     services: ServiceInfo[];
     upcoming: Booking[];
