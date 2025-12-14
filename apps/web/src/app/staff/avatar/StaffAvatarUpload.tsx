@@ -65,11 +65,13 @@ export default function StaffAvatarUpload({
             }
 
             // Загружаем новый файл
+            // Используем upsert: true для перезаписи существующих файлов
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(filePath, file, {
                     cacheControl: '3600',
                     upsert: true, // Разрешаем перезапись
+                    contentType: file.type, // Явно указываем тип контента
                 });
 
             if (uploadError) {
