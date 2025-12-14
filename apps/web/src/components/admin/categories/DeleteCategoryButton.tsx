@@ -3,6 +3,8 @@
 import {useRouter} from 'next/navigation';
 import {useState} from 'react';
 
+import { Button } from '@/components/ui/Button';
+
 type ApiOk = { ok: true };
 type ApiErr = { ok: false; error?: string };
 type DeleteResp = ApiOk | ApiErr;
@@ -55,27 +57,32 @@ export function DeleteCategoryButton({id, slug}: { id: string; slug: string }) {
 
     return (
         <div className="flex flex-col gap-2">
-            <label className="inline-flex items-center gap-2 text-xs">
+            <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                 <input
                     type="checkbox"
                     checked={force}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForce(e.target.checked)}
+                    className="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
                 />
                 Также удалить категорию из всех бизнесов
             </label>
 
-            <button
+            <Button
                 type="button"
-                className="border border-red-600 text-red-600 rounded px-2 py-1 hover:bg-red-50 text-sm disabled:opacity-60"
+                variant="danger"
+                size="sm"
                 onClick={onDelete}
                 disabled={loading}
-                aria-disabled={loading}
-                aria-busy={loading}
+                isLoading={loading}
             >
-                {loading ? 'Удаляю…' : 'Удалить'}
-            </button>
+                Удалить
+            </Button>
 
-            {err && <div className="text-xs text-red-600 max-w-[28rem]">{err}</div>}
+            {err && (
+                <div className="text-xs text-red-600 dark:text-red-400 max-w-[28rem] bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2">
+                    {err}
+                </div>
+            )}
         </div>
     );
 }
