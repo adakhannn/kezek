@@ -69,11 +69,26 @@ export async function POST(req: Request) {
                     email,
                     phone,
                     is_active: body.is_active ?? true,
+                    user_id: body.user_id, // ВАЖНО: привязываем к пользователю
                 })
                 .select('id')
                 .single();
             if (eIns) return NextResponse.json({ ok: false, error: eIns.message }, { status: 400 });
             staffId = inserted?.id as string;
+        } else {
+            // Если сотрудник уже существует, обновляем user_id, если его еще нет
+            const { data: existingStaff } = await admin
+                .from('staff')
+                .select('user_id')
+                .eq('id', staffId)
+                .maybeSingle();
+            
+            if (existingStaff && !existingStaff.user_id) {
+                await admin
+                    .from('staff')
+                    .update({ user_id: body.user_id })
+                    .eq('id', staffId);
+            }
         }
 
         // 4) Выдаём роль staff пользователю в этом бизнесе (id роли по key='staff')
