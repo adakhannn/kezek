@@ -27,11 +27,21 @@ export function OwnerForm({
 
     const options = useMemo(
         () =>
-            users.map((u) => ({
-                id: u.id,
-                label: u.full_name || u.email || u.phone || u.id,
-                suspended: !!u.is_suspended,
-            })),
+            users.map((u) => {
+                const parts: string[] = [];
+                if (u.full_name) parts.push(u.full_name);
+                if (u.email) parts.push(u.email);
+                if (u.phone) parts.push(u.phone);
+                const label = parts.length > 0 ? parts.join(' • ') : u.id;
+                return {
+                    id: u.id,
+                    label,
+                    full_name: u.full_name,
+                    email: u.email,
+                    phone: u.phone,
+                    suspended: !!u.is_suspended,
+                };
+            }),
         [users]
     );
 
@@ -90,7 +100,7 @@ export function OwnerForm({
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Владелец бизнеса</h3>
             <div className="flex flex-wrap items-center gap-3">
                 <select
-                    className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 min-w-[320px]"
+                    className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 min-w-[400px] text-sm"
                     value={selected}
                     onChange={(e) => setSelected(e.target.value)}
                 >
