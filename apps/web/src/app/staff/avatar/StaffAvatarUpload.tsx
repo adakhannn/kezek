@@ -65,14 +65,25 @@ export default function StaffAvatarUpload({
             }
 
             // Загружаем новый файл
-            const { error: uploadError } = await supabase.storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(filePath, file, {
                     cacheControl: '3600',
-                    upsert: false,
+                    upsert: true, // Разрешаем перезапись
                 });
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.error('Upload error details:', uploadError);
+                // Проверяем, существует ли bucket
+                if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
+                    throw new Error('Bucket "avatars" не найден. Пожалуйста, создайте bucket в Supabase Storage.');
+                }
+                // Проверяем права доступа
+                if (uploadError.message?.includes('new row violates row-level security') || uploadError.message?.includes('permission denied')) {
+                    throw new Error('Нет прав на загрузку файлов. Проверьте настройки RLS политик для bucket "avatars".');
+                }
+                throw uploadError;
+            }
 
             // Получаем публичный URL
             const {
@@ -91,7 +102,8 @@ export default function StaffAvatarUpload({
             onUploaded?.(publicUrl);
         } catch (error) {
             console.error('Error uploading avatar:', error);
-            alert('Ошибка при загрузке аватарки. Попробуйте еще раз.');
+            const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+            alert(`Ошибка при загрузке аватарки: ${errorMessage}`);
         } finally {
             setUploading(false);
         }
