@@ -38,17 +38,19 @@ async function getTargetPath(userId: string): Promise<TargetPath> {
             return { href: '/dashboard', label: 'Кабинет владельца' };
         }
 
-        // Проверяем роли пользователя (прямой запрос для надежности)
+        // Проверяем роли пользователя (используем ту же логику, что и getStaffContext)
         let isStaff = false;
         try {
             const [{ data: ur }, { data: roleRows }] = await Promise.all([
-                supabase.from('user_roles').select('role_id').eq('user_id', userId),
-                supabase.from('roles').select('id, key').eq('key', 'staff'),
+                supabase.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
+                supabase.from('roles').select('id, key'),
             ]);
             
-            if (ur && roleRows && roleRows.length > 0) {
-                const staffRoleId = roleRows[0].id;
-                isStaff = ur.some(r => String(r.role_id) === String(staffRoleId));
+            if (ur && roleRows) {
+                const rolesMap = new Map<string, string>(roleRows.map(r => [String(r.id), String(r.key)]));
+                const staffRole = ur.find(r => rolesMap.get(String(r.role_id)) === 'staff');
+                // Проверяем, что роль staff есть и привязана к бизнесу (biz_id не NULL)
+                isStaff = !!staffRole?.biz_id;
             }
         } catch (error) {
             console.warn('AuthStatusClient: error checking staff role directly, using RPC', error);
