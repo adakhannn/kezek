@@ -4,6 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import StaffAvatarUpload from './avatar/StaffAvatarUpload';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -82,7 +83,21 @@ export default function StaffCabinet({
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
                 {/* Информация о сотруднике */}
                 <Card variant="elevated" className="p-6">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">{staffName}</h1>
+                    <div className="flex flex-col sm:flex-row gap-6 mb-6">
+                        <div className="flex-shrink-0">
+                            <StaffAvatarUpload
+                                staffId={staffId}
+                                currentAvatarUrl={avatarUrl}
+                                onUploaded={() => {
+                                    // Обновляем страницу после загрузки
+                                    window.location.reload();
+                                }}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{staffName}</h1>
+                        </div>
+                    </div>
                     
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Информация о филиале */}
