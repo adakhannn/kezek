@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import {NextResponse} from 'next/server';
 
 import {getBizContextForManagers} from '@/lib/authBiz';
+import {getServiceClient} from '@/lib/supabaseService';
 
 type Body = {
     full_name: string;
@@ -33,6 +34,23 @@ export async function POST(req: Request) {
             return NextResponse.json({ok: false, error: 'INVALID_BODY'}, {status: 400});
         }
 
+        // Используем service client для поиска пользователя и добавления роли
+        const admin = getServiceClient();
+        let linkedUserId: string | null = null;
+
+        // Пытаемся найти существующего пользователя по email или phone
+        if (body.email || body.phone) {
+            const { data: userList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+            const foundUser = userList?.users?.find(u => {
+                if (body.email && u.email === body.email) return true;
+                if (body.phone && u.phone === body.phone) return true;
+                return false;
+            });
+            if (foundUser) {
+                linkedUserId = foundUser.id;
+            }
+        }
+
         const {data, error} = await supabase
             .from('staff')
             .insert({
@@ -42,13 +60,49 @@ export async function POST(req: Request) {
                 email: body.email ?? null,
                 phone: body.phone ?? null,
                 is_active: !!body.is_active,
+                user_id: linkedUserId,
             })
             .select('id')
             .single();
 
         if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
 
-        return NextResponse.json({ok: true, id: data?.id});
+        // Если нашли пользователя, добавляем роль staff
+        if (linkedUserId) {
+            const { data: roleStaff } = await admin
+                .from('roles')
+                .select('id')
+                .eq('key', 'staff')
+                .maybeSingle();
+            
+            if (roleStaff?.id) {
+                // Проверяем, нет ли уже такой роли
+                const { data: existsRole } = await admin
+                    .from('user_roles')
+                    .select('id')
+                    .eq('user_id', linkedUserId)
+                    .eq('role_id', roleStaff.id)
+                    .eq('biz_id', bizId)
+                    .maybeSingle();
+
+                if (!existsRole) {
+                    const { error: eRole } = await admin
+                        .from('user_roles')
+                        .insert({
+                            user_id: linkedUserId,
+                            biz_id: bizId,
+                            role_id: roleStaff.id,
+                            biz_key: bizId,
+                        });
+                    if (eRole) {
+                        console.warn('Failed to add staff role:', eRole.message);
+                        // Не возвращаем ошибку, т.к. сотрудник уже создан
+                    }
+                }
+            }
+        }
+
+        return NextResponse.json({ok: true, id: data?.id, user_linked: !!linkedUserId});
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : 'UNKNOWN';
         return NextResponse.json({ok: false, error: msg}, {status: 500});
