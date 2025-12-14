@@ -124,17 +124,16 @@ export default function StaffAvatarUpload({
 
         setUploading(true);
         try {
-            // Удаляем файл из storage
-            const oldPath = currentAvatarUrl.split('/').slice(-2).join('/');
-            await supabase.storage.from('avatars').remove([oldPath]);
+            // Используем API endpoint для удаления
+            const response = await fetch('/api/staff/avatar/remove', {
+                method: 'POST',
+            });
 
-            // Обновляем запись в БД
-            const { error: updateError } = await supabase
-                .from('staff')
-                .update({ avatar_url: null })
-                .eq('id', staffId);
+            const result = await response.json();
 
-            if (updateError) throw updateError;
+            if (!result.ok) {
+                throw new Error(result.error || 'Ошибка при удалении');
+            }
 
             setPreview(null);
             onUploaded?.('');
