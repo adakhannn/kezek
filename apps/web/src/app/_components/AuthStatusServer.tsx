@@ -26,6 +26,9 @@ async function getTargetPath(supabase: ReturnType<typeof createServerClient>, us
     // роли пользователя (перестрахуемся на случай делегированных ролей)
     const { data: roleKeys } = await supabase.rpc('my_role_keys');
     const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
+    if (roles.includes('staff')) {
+        return { href: '/staff', label: 'Кабинет сотрудника' };
+    }
     if (roles.some((r) => ['owner', 'admin', 'manager'].includes(r))) {
         return { href: '/dashboard', label: 'Кабинет бизнеса' };
     }

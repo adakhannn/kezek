@@ -64,6 +64,8 @@ export default function SignInPage() {
             if (await fetchOwnsBusiness(userId)) return '/dashboard';
             const roles = await fetchMyRoles();
             if (roles.includes('owner')) return '/dashboard';
+            if (roles.includes('staff')) return '/staff';
+            if (roles.some(r => ['admin', 'manager'].includes(r))) return '/dashboard';
             return fallback || '/';
         },
         [fetchIsSuper, fetchMyRoles, fetchOwnsBusiness]
