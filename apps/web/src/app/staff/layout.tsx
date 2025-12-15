@@ -39,6 +39,12 @@ export default async function StaffLayout({ children }: { children: React.ReactN
                                     </svg>
                                     Расписание
                                 </Link>
+                                <Link className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200" href="/staff/finance">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h4v11H3zM10 3h4v18h-4zM17 8h4v13h-4z" />
+                                    </svg>
+                                    Финансы
+                                </Link>
                             </nav>
                         </div>
                     </aside>
