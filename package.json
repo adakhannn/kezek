@@ -22,7 +22,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix --ignore-pattern '**/types/supabase.ts'"
+      "eslint --fix"
     ]
   },
   "dependencies": {

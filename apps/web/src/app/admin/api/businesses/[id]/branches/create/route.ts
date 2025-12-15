@@ -15,7 +15,18 @@ type Body = {
     lon?: number | null;
 };
 
-import { coordsToEWKT, normalizeString, validateLatLon } from '@/lib/validation';
+const norm = (s?: string | null) => {
+    const v = (s ?? '').trim();
+    return v.length ? v : null;
+};
+
+function validateLatLon(lat: unknown, lon: unknown) {
+    if (lat == null || lon == null) return { ok: false as const };
+    const la = Number(lat), lo = Number(lon);
+    if (!Number.isFinite(la) || !Number.isFinite(lo)) return { ok: false as const };
+    if (la < -90 || la > 90 || lo < -180 || lo > 180) return { ok: false as const };
+    return { ok: true as const, lat: la, lon: lo };
+}
 
 export async function POST(req: Request, context: unknown) {
     const params =
@@ -46,7 +57,7 @@ export async function POST(req: Request, context: unknown) {
         const admin = createClient(URL, SERVICE);
         const body = (await req.json()) as Body;
 
-        const name = normalizeString(body.name);
+        const name = norm(body.name);
         if (!name) return NextResponse.json({ ok: false, error: 'Название обязательно' }, { status: 400 });
 
         // ТОЛЬКО coords (EWKT). lat/lon НЕ отправляем — их заполнит БД.
@@ -54,7 +65,7 @@ export async function POST(req: Request, context: unknown) {
         if (body.lat != null || body.lon != null) {
             const v = validateLatLon(body.lat, body.lon);
             if (!v.ok) return NextResponse.json({ ok: false, error: 'Некорректные координаты' }, { status: 400 });
-            coordsWkt = coordsToEWKT(v.lat, v.lon);
+            coordsWkt = `SRID=4326;POINT(${v.lon} ${v.lat})`;
         }
 
         const { data, error } = await admin
@@ -62,7 +73,7 @@ export async function POST(req: Request, context: unknown) {
             .insert({
                 biz_id: bizId,
                 name,
-                address: normalizeString(body.address),
+                address: norm(body.address),
                 is_active: body.is_active ?? true,
                 coords: coordsWkt, // ← только это поле
             })

@@ -9,11 +9,6 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { formatErrorSimple } from '@/lib/errors';
-import { getRouteParamRequired } from '@/lib/routeParams';
-import { sendEmailPassword } from '@/lib/senders/email';
-import { sendSMS } from '@/lib/senders/sms';
-
 type Body = {
     full_name?: string | null;
     email?: string | null;
@@ -30,11 +25,21 @@ type CreateUserPayload = {
     user_metadata?: { full_name?: string };
 };
 
-import { isEmail, isE164, isUuid, normalizeString } from '@/lib/validation';
+function norm(v?: string | null) { const s = (v ?? '').trim(); return s || null; }
+function isUuid(v: string) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v); }
+function isEmail(s: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+function isE164(s: string) { return /^\+[1-9]\d{1,14}$/.test(s); }
 
 export async function POST(req: Request, context: unknown) {
+    // безопасно достаём params.id без any
+    const params =
+        typeof context === 'object' &&
+        context !== null &&
+        'params' in context
+            ? (context as { params: Record<string, string> }).params
+            : {};
     try {
-        const biz_id = await getRouteParamRequired(context, 'id');
+        const biz_id = params?.id ?? '';
         if (!isUuid(biz_id)) {
             return NextResponse.json({ ok: false, error: 'bad biz_id' }, { status: 400 });
         }
@@ -70,9 +75,9 @@ export async function POST(req: Request, context: unknown) {
         if (!allowed) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
 
         const body = (await req.json()) as Body;
-        const full_name = normalizeString(body.full_name);
-        const email = normalizeString(body.email);
-        const phone = normalizeString(body.phone);
+        const full_name = norm(body.full_name);
+        const email = norm(body.email);
+        const phone = norm(body.phone);
         const roles = Array.isArray(body.roles) ? body.roles.filter(Boolean) : [];
 
         if (!email && !phone) {
@@ -136,18 +141,9 @@ export async function POST(req: Request, context: unknown) {
                 await admin.from('profiles').upsert({ id: userId, full_name }, { onConflict: 'id' });
             }
 
-            // Отправка SMS/email с временным паролем
-            try {
-                if (phone) {
-                    await sendSMS({ to: phone, text: `Ваш временный пароль для Kezek: ${tempPassword}. Рекомендуем сменить после первого входа.` });
-                }
-                if (email) {
-                    await sendEmailPassword({ to: email, tempPassword, subject: 'Приглашение в Kezek — временный пароль' });
-                }
-            } catch (sendErr) {
-                // Логируем ошибку отправки, но не прерываем процесс создания пользователя
-                console.error('[invite] Failed to send temp password:', sendErr);
-            }
+            // TODO: отправка SMS/email с временным паролем
+            // if (phone) await sendSms(phone, `Ваш временный пароль: ${tempPassword}`);
+            // if (email) await sendEmail(email, `Временный пароль: ${tempPassword}`);
         } else {
             // обновим имя, если прислали
             if (full_name) {
@@ -166,7 +162,8 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-        return NextResponse.json({ ok: false, error: formatErrorSimple(e) }, { status: 500 });
+    } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

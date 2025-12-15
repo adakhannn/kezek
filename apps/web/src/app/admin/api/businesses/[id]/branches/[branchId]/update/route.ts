@@ -7,8 +7,6 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { coordsToEWKT, normalizeString, validateLatLon } from '@/lib/validation';
-
 type Body = {
     name?: string | null;
     address?: string | null;
@@ -19,6 +17,18 @@ type Body = {
 
 type Patch = Partial<{ name: string | null; address: string | null; is_active: boolean }> & { [k: string]: unknown };
 
+const norm = (s?: string | null) => {
+    const v = (s ?? '').trim();
+    return v.length ? v : null;
+};
+
+function validateLatLon(lat: unknown, lon: unknown) {
+    if (lat == null || lon == null) return { ok: false as const };
+    const la = Number(lat), lo = Number(lon);
+    if (!Number.isFinite(la) || !Number.isFinite(lo)) return { ok: false as const };
+    if (la < -90 || la > 90 || lo < -180 || lo > 180) return { ok: false as const };
+    return { ok: true as const, lat: la, lon: lo };
+}
 
 function extractIds(urlStr: string): { id: string; branchId: string } {
     const parts = new URL(urlStr).pathname.split('/').filter(Boolean);
@@ -50,8 +60,8 @@ async function handler(req: Request) {
         const body = (await req.json()) as Body;
 
         const patch: Patch = {};
-        if ('name' in body) patch.name = normalizeString(body.name);
-        if ('address' in body) patch.address = normalizeString(body.address);
+        if ('name' in body) patch.name = norm(body.name);
+        if ('address' in body) patch.address = norm(body.address);
         if ('is_active' in body) patch.is_active = !!body.is_active;
 
         // Координаты: меняем ТОЛЬКО coords; lat/lon не трогаем (их пересчитает БД)
@@ -59,7 +69,7 @@ async function handler(req: Request) {
             if (body.lat != null && body.lon != null) {
                 const v = validateLatLon(body.lat, body.lon);
                 if (!v.ok) return NextResponse.json({ ok: false, error: 'Некорректные координаты' }, { status: 400 });
-                patch.coords = coordsToEWKT(v.lat, v.lon);
+                patch.coords = `SRID=4326;POINT(${v.lon} ${v.lat})`;
             } else {
                 patch.coords = null;
             }

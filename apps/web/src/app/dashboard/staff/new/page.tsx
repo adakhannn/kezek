@@ -21,8 +21,8 @@ export default async function NewStaffPage() {
                 <NewFromUser branches={branches || []} />
             </main>
         );
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
-        return <main className="p-6 text-red-600">Нет доступа: {msg}</main>;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+        return <main className="p-6 text-red-600">Нет доступа: {e?.message}</main>;
     }
 }

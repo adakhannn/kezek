@@ -19,7 +19,6 @@ export default function MapDialog({
         let destroyed = false;
 
         (async () => {
-            // Yandex Maps API загружается динамически, типы доступны через @types/yandex-maps
             const ymaps = await loadYandexMaps();
             if (destroyed || !boxRef.current) return;
 

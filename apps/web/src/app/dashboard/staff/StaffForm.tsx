@@ -3,9 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-
 type Staff = {
     id?: string;
     full_name: string;
@@ -63,53 +60,58 @@ export default function StaffForm({
 
 
     return (
-        <form onSubmit={onSubmit} className="space-y-6">
-            {err && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
-                </div>
-            )}
+        <form onSubmit={onSubmit} className="space-y-3">
+            {err && <div className="text-red-600 text-sm">{err}</div>}
 
-            <Input
-                label="ФИО"
-                value={form.full_name}
-                onChange={e => set('full_name', e.target.value)}
-                required
-            />
-
-            <div className="grid sm:grid-cols-2 gap-4">
-                <Input
-                    label="E-mail"
-                    type="email"
-                    value={form.email ?? ''}
-                    onChange={e => set('email', e.target.value || null)}
-                    placeholder="optional"
-                />
-                <Input
-                    label="Телефон"
-                    value={form.phone ?? ''}
-                    onChange={e => set('phone', e.target.value || null)}
-                    placeholder="+996…"
+            <div>
+                <label className="block text-sm text-gray-600 mb-1">ФИО</label>
+                <input
+                    className="border rounded px-3 py-2 w-full"
+                    value={form.full_name}
+                    onChange={e => set('full_name', e.target.value)}
+                    required
                 />
             </div>
 
-            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <input
-                    id="is_active"
-                    type="checkbox"
-                    checked={form.is_active}
-                    onChange={e => set('is_active', e.target.checked)}
-                    className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
-                />
-                <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                    Активен
-                </label>
+            <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                    <label className="block text-sm text-gray-600 mb-1">E-mail</label>
+                    <input
+                        className="border rounded px-3 py-2 w-full"
+                        value={form.email ?? ''}
+                        onChange={e => set('email', e.target.value || null)}
+                        type="email"
+                        placeholder="optional"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm text-gray-600 mb-1">Телефон</label>
+                    <input
+                        className="border rounded px-3 py-2 w-full"
+                        value={form.phone ?? ''}
+                        onChange={e => set('phone', e.target.value || null)}
+                        placeholder="+996…"
+                    />
+                </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+
+                <div className="flex items-center gap-2 mt-6 sm:mt-0">
+                    <input
+                        id="is_active"
+                        type="checkbox"
+                        checked={form.is_active}
+                        onChange={e => set('is_active', e.target.checked)}
+                    />
+                    <label htmlFor="is_active">Активен</label>
+                </div>
             </div>
 
             <div className="pt-2">
-                <Button type="submit" disabled={saving} isLoading={saving}>
+                <button disabled={saving} className="border rounded px-4 py-2">
                     {saving ? 'Сохраняем…' : 'Сохранить'}
-                </Button>
+                </button>
             </div>
         </form>
     );

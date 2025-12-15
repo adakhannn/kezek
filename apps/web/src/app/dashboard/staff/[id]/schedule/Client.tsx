@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import DatePicker from '@/components/pickers/DatePicker';
 import DateRangePicker from '@/components/pickers/DateRangePicker';
 import TimeRangeList, { TimeRange } from '@/components/pickers/TimeRangeList';
-import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabaseClient';
 
 type Branch = { id: string; name: string };
@@ -52,14 +51,14 @@ function WeekRow({
     useEffect(() => { setBr(row?.breaks ?? []); }, [row?.breaks]);
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 space-y-4">
-            <div className="font-semibold text-gray-900 dark:text-gray-100">{DOW[dow]}</div>
+        <div className="border rounded p-3 space-y-3">
+            <div className="font-medium">{DOW[dow]}</div>
             <TimeRangeList label="Интервалы рабочего времени" items={iv} onChange={setIv} />
             <TimeRangeList label="Перерывы (опционально)" items={br} onChange={setBr} />
-            <Button variant="outline" size="sm" disabled={saving} isLoading={saving}
+            <button className="border rounded px-3 py-1" disabled={saving}
                     onClick={() => onSave(dow, iv, br)}>
                 {saving ? 'Сохраняем…' : 'Сохранить'}
-            </Button>
+            </button>
         </div>
     );
 }
@@ -265,32 +264,23 @@ export default function Client({
 
     /* UI */
     return (
-        <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Расписание сотрудника</h2>
-            <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+        <section className="border rounded p-4 space-y-4">
+            <div className="flex gap-2">
                 {(['weekly', 'rules', 'timeoff'] as const).map((k) => (
-                    <button
-                        key={k}
-                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                            tab === k
-                                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
-                                : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
-                        onClick={() => setTab(k)}
-                    >
+                    <button key={k}
+                            className={`px-3 py-1 border rounded ${tab === k ? 'bg-gray-100 font-medium' : ''}`}
+                            onClick={() => setTab(k)}>
                         {k === 'weekly' ? 'Еженедельно' : k === 'rules' ? 'Исключения (правила)' : 'Отпуска'}
                     </button>
                 ))}
             </div>
 
             {tab === 'weekly' && (
-                <div className="space-y-4">
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                            Пустой список интервалов = день нерабочий.
-                        </p>
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                        Пустой список интервалов = день нерабочий.
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-3">
                         {Array.from({ length: 7 }, (_, i) => i).map((dow) => (
                             <WeekRow key={dow} dow={dow} row={whByDow[dow]} saving={savingWH} onSave={saveWH} />
                         ))}
@@ -299,13 +289,13 @@ export default function Client({
             )}
 
             {tab === 'rules' && (
-                <div className="space-y-6">
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-4">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Новое правило</h3>
+                <div className="space-y-4">
+                    <div className="border rounded p-3 space-y-3">
+                        <div className="font-medium">Новое правило</div>
 
-                        <div className="grid sm:grid-cols-3 gap-4 items-start">
+                        <div className="grid sm:grid-cols-3 gap-3 items-start">
                             <select
-                                className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                className="border rounded px-2 py-1"
                                 value={formRule.kind}
                                 onChange={(e) =>
                                     setFormRule((r) => ({
@@ -326,7 +316,7 @@ export default function Client({
 
                             {formRule.kind === 'weekly' && (
                                 <select
-                                    className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                    className="border rounded px-2 py-1"
                                     value={formRule.day_of_week ?? ''}
                                     onChange={(e) =>
                                         setFormRule((r) => ({ ...r, day_of_week: Number(e.target.value) }))
@@ -362,7 +352,7 @@ export default function Client({
 
                             {/* ВЫБОР ТОЛЬКО ИЗ "ЧУЖИХ" ФИЛИАЛОВ */}
                             <select
-                                className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50"
+                                className="border rounded px-2 py-1"
                                 value={formRule.branch_id || ''}
                                 onChange={(e) => setFormRule((r) => ({ ...r, branch_id: e.target.value }))}
                                 disabled={otherBranches.length === 0}
@@ -376,7 +366,7 @@ export default function Client({
                             </select>
 
                             <input
-                                className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                className="border rounded px-2 py-1"
                                 placeholder="TZ"
                                 value={formRule.tz || 'Asia/Bishkek'}
                                 onChange={(e) => setFormRule((r) => ({ ...r, tz: e.target.value }))}
@@ -394,96 +384,75 @@ export default function Client({
                             onChange={(arr) => setFormRule((r) => ({ ...r, breaks: arr }))}
                         />
 
-                        <div className="flex items-center gap-4 flex-wrap">
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Приоритет</label>
-                                <input
-                                    type="number"
-                                    className="px-3 py-1.5 w-24 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                                    value={formRule.priority ?? 0}
-                                    onChange={(e) => setFormRule((r) => ({ ...r, priority: Number(e.target.value) }))}
-                                />
-                            </div>
-                            <label className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
+                        <div className="flex items-center gap-3">
+                            <label className="text-sm">Приоритет</label>
+                            <input
+                                type="number"
+                                className="border rounded px-2 py-1 w-24"
+                                value={formRule.priority ?? 0}
+                                onChange={(e) => setFormRule((r) => ({ ...r, priority: Number(e.target.value) }))}
+                            />
+                            <label className="flex items-center gap-2 text-sm">
                                 <input
                                     type="checkbox"
                                     checked={formRule.is_active ?? true}
                                     onChange={(e) => setFormRule((r) => ({ ...r, is_active: e.target.checked }))}
-                                    className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                                 />
-                                <span className="text-sm text-gray-700 dark:text-gray-300">Активно</span>
+                                Активно
                             </label>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={savingRule || otherBranches.length === 0}
-                                onClick={addRule}
-                                isLoading={savingRule}
-                                title={otherBranches.length === 0 ? 'Нет других филиалов' : undefined}
-                            >
+                            <button className="border rounded px-3 py-1" disabled={savingRule || otherBranches.length === 0}
+                                    onClick={addRule} title={otherBranches.length === 0 ? 'Нет других филиалов' : undefined}>
                                 {savingRule ? 'Сохраняем…' : 'Добавить правило'}
-                            </Button>
+                            </button>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Существующие правила</h3>
-                        <div className="space-y-3">
+                    <div>
+                        <div className="font-medium mb-2">Существующие правила</div>
+                        <div className="space-y-2">
                             {rules.map((r) => (
-                                <div key={r.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                                    <div className="text-sm space-y-1">
-                                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                                <div key={r.id} className="border rounded p-2 flex items-center justify-between">
+                                    <div className="text-sm">
+                                        <div>
                                             <b>{r.kind}</b>{' '}
                                             {r.kind === 'weekly' && `(${DOW[r.day_of_week ?? 0]})`}
                                             {r.kind === 'date' && `(${r.date_on})`}
                                             {r.kind === 'range' && `(${r.date_from} → ${r.date_to})`}
                                         </div>
-                                        <div className="text-gray-600 dark:text-gray-400">
-                                            Филиал: {branches.find((b) => b.id === r.branch_id)?.name ?? r.branch_id}
+                                        <div>
+                                            Филиал:&nbsp;
+                                            {branches.find((b) => b.id === r.branch_id)?.name ?? r.branch_id}
                                         </div>
-                                        <div className="text-gray-600 dark:text-gray-400">
+                                        <div>
                                             Интервалы: {intervalsToStr(r.intervals)}; Перерывы: {intervalsToStr(r.breaks)}
                                         </div>
-                                        <div className="text-gray-600 dark:text-gray-400">
-                                            TZ: {r.tz}; Приоритет: {r.priority};{' '}
-                                            <span className={r.is_active ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}>
-                                                {r.is_active ? 'Активно' : 'Отключено'}
-                                            </span>
+                                        <div>
+                                            TZ: {r.tz}; Приоритет: {r.priority}; {r.is_active ? 'Активно' : 'Отключено'}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => toggleRule(r.id, !r.is_active)}
-                                        >
+                                        <button className="border rounded px-2 py-1 text-xs"
+                                                onClick={() => toggleRule(r.id, !r.is_active)}>
                                             {r.is_active ? 'Отключить' : 'Включить'}
-                                        </Button>
-                                        <Button
-                                            variant="danger"
-                                            size="sm"
-                                            onClick={() => deleteRule(r.id)}
-                                        >
+                                        </button>
+                                        <button className="border rounded px-2 py-1 text-xs"
+                                                onClick={() => deleteRule(r.id)}>
                                             Удалить
-                                        </Button>
+                                        </button>
                                     </div>
                                 </div>
                             ))}
-                            {rules.length === 0 && (
-                                <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                                    Правил пока нет
-                                </div>
-                            )}
+                            {rules.length === 0 && <div className="text-sm text-gray-500">Правил пока нет</div>}
                         </div>
                     </div>
                 </div>
             )}
 
             {tab === 'timeoff' && (
-                <div className="space-y-6">
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-4">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Новый отпуск/отсутствие</h3>
-                        <div className="grid sm:grid-cols-3 gap-4 items-start">
+                <div className="space-y-3">
+                    <div className="border rounded p-3 space-y-2">
+                        <div className="font-medium">Новый отпуск/отсутствие</div>
+                        <div className="grid sm:grid-cols-3 gap-2 items-start">
                             <DatePicker
                                 value={formTO.date_from || null}
                                 onChange={(v) => setFormTO((f) => ({ ...f, date_from: v || '' }))}
@@ -493,39 +462,32 @@ export default function Client({
                                 onChange={(v) => setFormTO((f) => ({ ...f, date_to: v || '' }))}
                             />
                             <input
-                                className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                className="border rounded px-2 py-1"
                                 placeholder="Причина"
                                 value={formTO.reason || ''}
                                 onChange={(e) => setFormTO((f) => ({ ...f, reason: e.target.value }))}
                             />
                         </div>
-                        <Button variant="outline" disabled={savingTO} onClick={addTO} isLoading={savingTO}>
+                        <button className="border rounded px-3 py-1" disabled={savingTO} onClick={addTO}>
                             {savingTO ? 'Сохраняем…' : 'Добавить'}
-                        </Button>
+                        </button>
                     </div>
 
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Список отсутствий</h3>
-                        <div className="space-y-3">
+                    <div>
+                        <div className="font-medium mb-2">Список отсутствий</div>
+                        <div className="space-y-2">
                             {timeoff.map((t) => (
-                                <div key={t.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                <div key={t.id} className="border rounded p-2 flex items-center justify-between">
+                                    <div className="text-sm">
                                         {t.date_from} → {t.date_to} {t.reason ? `— ${t.reason}` : ''}
                                     </div>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        onClick={() => deleteTO(t.id)}
-                                    >
+                                    <button className="border rounded px-2 py-1 text-xs"
+                                            onClick={() => deleteTO(t.id)}>
                                         Удалить
-                                    </Button>
+                                    </button>
                                 </div>
                             ))}
-                            {timeoff.length === 0 && (
-                                <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                                    Отсутствий нет
-                                </div>
-                            )}
+                            {timeoff.length === 0 && <div className="text-sm text-gray-500">Отсутствий нет</div>}
                         </div>
                     </div>
                 </div>

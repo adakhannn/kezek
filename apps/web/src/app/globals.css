@@ -1,64 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  /* Цветовая палитра - современная и практичная */
-  --background: #fafafa;
-  --foreground: #0a0a0a;
-  
-  /* Основные цвета бренда */
-  --primary: #6366f1; /* Indigo */
-  --primary-dark: #4f46e5;
-  --primary-light: #818cf8;
-  
-  /* Акцентные цвета */
-  --accent: #ec4899; /* Pink */
-  --accent-dark: #db2777;
-  
-  /* Нейтральные */
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --border: #e4e4e7;
-  --ring: #6366f1;
-  
-  /* Семантические */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --info: #3b82f6;
-  
-  /* Градиенты */
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-  --gradient-subtle: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%);
-  
-  /* Тени */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  
-  /* Радиусы */
-  --radius-sm: 0.375rem;
-  --radius: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  --background: #ffffff;
+  --foreground: #171717;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-dark: var(--primary-dark);
-  --color-primary-light: var(--primary-light);
-  --color-accent: var(--accent);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
-  --color-info: var(--info);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -67,107 +16,11 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-    --muted: #18181b;
-    --muted-foreground: #a1a1aa;
-    --border: #27272a;
   }
-}
-
-* {
-  @apply border-border;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Плавные переходы для интерактивных элементов */
-a, button {
-  @apply transition-all duration-200 ease-in-out;
-}
-
-/* Кастомные скроллбары */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--muted);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--muted-foreground);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground);
-}
-
-/* Анимации */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Градиентный текст */
-.gradient-text {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Glassmorphism эффект */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-@media (prefers-color-scheme: dark) {
-  .glass {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
+  font-family: Arial, Helvetica, sans-serif;
 }

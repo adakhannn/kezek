@@ -1,10 +1,9 @@
 // apps/web/src/app/cabinet/page.tsx
+import { createServerClient } from '@supabase/ssr';
 import { formatInTimeZone } from 'date-fns-tz';
+import { cookies } from 'next/headers';
 
 import ClientCabinet from './ClientCabinet';
-
-import { getSupabaseServer } from '@/lib/authBiz';
-
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,7 +11,17 @@ export const runtime = 'nodejs';
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 export default async function Page() {
-    const supabase = await getSupabaseServer();
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get: (n) => cookieStore.get(n)?.value,
+                // set/remove в RSC не используем
+            },
+        }
+    );
 
     const { data: auth } = await supabase.auth.getUser();
     const userId = auth.user?.id;
@@ -27,37 +36,38 @@ export default async function Page() {
     // Текущее время в нужной TZ как ISO (с оффсетом)
     const nowISO = formatInTimeZone(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
 
-    // Общий select для броней
-    const bookingsSelect = `
+    // Берём только свои брони (client_id = текущий пользователь)
+    // Исключаем отменённые из предстоящих
+    const { data: upcoming } = await supabase
+        .from('bookings')
+        .select(`
       id, status, start_at, end_at,
       services:services!bookings_service_id_fkey ( name_ru, duration_min ),
       staff:staff!bookings_staff_id_fkey ( full_name ),
       branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
       businesses:businesses!bookings_biz_id_fkey ( name, slug ),
       reviews:reviews ( id, rating, comment )
-    `;
+    `)
+        .eq('client_id', userId)
+        .neq('status', 'cancelled')
+        .gte('start_at', nowISO)
+        .order('start_at', { ascending: true });
 
-    // Параллельные запросы для предстоящих и прошедших броней
-    const [upcomingResult, pastResult] = await Promise.all([
-        // Предстоящие брони (исключаем отменённые)
-        supabase
-            .from('bookings')
-            .select(bookingsSelect)
-            .eq('client_id', userId)
-            .neq('status', 'cancelled')
-            .gte('start_at', nowISO)
-            .order('start_at', { ascending: true }),
-        // Прошедшие брони
-        supabase
-            .from('bookings')
-            .select(bookingsSelect)
-            .eq('client_id', userId)
-            .lt('start_at', nowISO)
-            .order('start_at', { ascending: false }),
-    ]);
+    console.log(upcoming)
 
-    const upcoming = upcomingResult.data ?? [];
-    const past = pastResult.data ?? [];
+    const { data: past } = await supabase
+        .from('bookings')
+        .select(`
+      id, status, start_at, end_at,
+      services:services!bookings_service_id_fkey ( name_ru, duration_min ),
+      staff:staff!bookings_staff_id_fkey ( full_name ),
+      branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
+      businesses:businesses!bookings_biz_id_fkey ( name, slug ),
+      reviews:reviews ( id, rating, comment )
+    `)
+        .eq('client_id', userId)
+        .lt('start_at', nowISO)
+        .order('start_at', { ascending: false });
 
     return (
         <ClientCabinet

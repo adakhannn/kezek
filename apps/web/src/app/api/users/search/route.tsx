@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { formatErrorSimple } from '@/lib/errors';
 import { getServiceClient } from '@/lib/supabaseService';
 
 /**
@@ -53,7 +52,8 @@ export async function POST(req: Request) {
             : mapped;
 
         return NextResponse.json({ ok: true, items, page, perPage });
-    } catch (e: unknown) {
-        return NextResponse.json({ ok: false, error: formatErrorSimple(e) || 'UNKNOWN' }, { status: 500 });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+        return NextResponse.json({ ok: false, error: e?.message ?? 'UNKNOWN' }, { status: 500 });
     }
 }

@@ -19,11 +19,13 @@ function isRole(v: string): v is RoleLiteral {
     return (ROLES as readonly string[]).includes(v);
 }
 function isApiOk(v: unknown): v is ApiOk {
-    return typeof v === 'object' && v !== null && 'ok' in v && (v as { ok?: unknown }).ok === true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return typeof v === 'object' && v !== null && (v as any).ok === true;
 }
 function getApiError(v: unknown): string | undefined {
     if (typeof v !== 'object' || v === null) return undefined;
-    const raw = 'error' in v ? (v as { error?: unknown }).error : undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = (v as any).error;
     return typeof raw === 'string' && raw.trim().length ? raw.trim() : undefined;
 }
 
@@ -67,12 +69,7 @@ export function UserRolesEditor({
             });
 
             let json: unknown = null;
-            try {
-                json = await resp.json();
-            } catch (parseErr) {
-                // Если ответ не JSON, json останется null, ошибка будет обработана ниже
-                console.warn('[UserRolesEditor] Failed to parse JSON response:', parseErr);
-            }
+            try { json = await resp.json(); } catch {}
 
             if (!resp.ok || !isApiOk(json)) {
                 throw new Error(getApiError(json) ?? `HTTP ${resp.status}`);
@@ -100,12 +97,7 @@ export function UserRolesEditor({
                 body: JSON.stringify({ biz_id, role: r }),
             });
             let json: unknown = null;
-            try {
-                json = await resp.json();
-            } catch (parseErr) {
-                // Если ответ не JSON, json останется null, ошибка будет обработана ниже
-                console.warn('[UserRolesEditor] Failed to parse JSON response:', parseErr);
-            }
+            try { json = await resp.json(); } catch {}
             if (!resp.ok || !isApiOk(json)) {
                 throw new Error(getApiError(json) ?? `HTTP ${resp.status}`);
             }

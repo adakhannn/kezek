@@ -3,7 +3,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 
@@ -99,27 +98,19 @@ export default function Client({
 
 
     return (
-        <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Свободные слоты</h2>
-
-            <div className="grid sm:grid-cols-4 gap-4">
+        <section className="border rounded p-4 space-y-3">
+            <div className="grid sm:grid-cols-4 gap-2">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Филиал</label>
-                    <select
-                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                        value={branchId}
-                        onChange={e=>setBranchId(e.target.value)}
-                    >
+                    <label className="block text-sm text-gray-600 mb-1">Филиал</label>
+                    <select className="border rounded px-2 py-1 w-full"
+                            value={branchId} onChange={e=>setBranchId(e.target.value)}>
                         {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Услуга</label>
-                    <select
-                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                        value={serviceId}
-                        onChange={e=>setServiceId(e.target.value)}
-                    >
+                    <label className="block text-sm text-gray-600 mb-1">Услуга</label>
+                    <select className="border rounded px-2 py-1 w-full"
+                            value={serviceId} onChange={e=>setServiceId(e.target.value)}>
                         {servicesByBranch.map(s => (
                             <option key={s.id} value={s.id}>
                                 {s.name} ({s.duration_min}м)
@@ -129,63 +120,42 @@ export default function Client({
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Дата</label>
-                    <input
-                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                        type="date"
-                        value={date}
-                        onChange={e=>setDate(e.target.value)}
-                    />
+                    <label className="block text-sm text-gray-600 mb-1">Дата</label>
+                    <input className="border rounded px-2 py-1 w-full" type="date" value={date}
+                           onChange={e=>setDate(e.target.value)} />
                 </div>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Доступные слоты</h3>
-                {loading && (
-                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Загружаем…
-                    </div>
-                )}
-                {err && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                        <p className="text-sm text-red-600 dark:text-red-400">Ошибка: {err}</p>
-                    </div>
-                )}
+            <div className="border-t pt-3">
+                <h3 className="font-medium mb-2">Свободные слоты</h3>
+                {loading && <div className="text-sm text-gray-500">Загружаем…</div>}
+                {err && <div className="text-sm text-red-600">Ошибка: {err}</div>}
 
                 {(!loading && uniq.length === 0) && (
-                    <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        Нет свободных слотов на выбранные параметры
-                    </div>
+                    <div className="text-sm text-gray-500">Нет свободных слотов на выбранные параметры</div>
                 )}
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                     {uniq.map(s => {
                         const label = `${formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}–${formatInTimeZone(new Date(s.end_at), TZ, 'HH:mm')}`;
                         return (
-                            <Button
+                            <button
                                 key={s.start_at}
-                                variant="outline"
-                                size="sm"
+                                className="border rounded px-2 py-1 text-sm hover:bg-gray-50"
                                 onClick={()=>createBooking(s.start_at)}
                                 title="Создать запись в этот слот"
                             >
                                 {label}
-                            </Button>
+                            </button>
                         );
                     })}
                 </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                    Слоты рассчитываются RPC <code className="font-mono text-indigo-600 dark:text-indigo-400">get_free_slots_service_day_v2</code> с учётом правил расписания,
-                    родного филиала и существующих броней.
-                </p>
-            </div>
+            <p className="text-xs text-gray-500">
+                Слоты рассчитываются RPC <code>get_free_slots_service_day_v2</code> с учётом правил расписания,
+                родного филиала и существующих броней.
+            </p>
         </section>
     );
 }

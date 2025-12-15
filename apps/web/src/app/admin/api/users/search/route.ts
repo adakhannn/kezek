@@ -5,16 +5,9 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-/**
- * Нормализует и экранирует поисковый запрос для безопасного использования в ilike
- * Экранирует специальные символы PostgREST: %, _, \
- */
+/** простая защита от вредного запроса */
 function normQ(v: unknown): string {
-    if (typeof v !== 'string') return '';
-    // Ограничиваем длину запроса для защиты от DoS
-    const trimmed = v.trim().slice(0, 100);
-    // Экранируем специальные символы для ilike: %, _, \
-    return trimmed.replace(/[%_\\]/g, (char) => `\\${char}`);
+    return typeof v === 'string' ? v.trim() : '';
 }
 
 export async function GET(req: Request) {
@@ -43,12 +36,10 @@ export async function GET(req: Request) {
             .limit(20);
 
         if (q) {
-            // Безопасный поиск: экранированные значения подставляются в параметризованный запрос
-            // PostgREST автоматически экранирует значения в .or(), но мы дополнительно экранируем для ilike
-            const searchPattern = `%${q}%`;
+            // простой OR по полям
             query = supa.from('auth_users_view')
                 .select('id,email,phone,full_name')
-                .or(`email.ilike.${searchPattern},phone.ilike.${searchPattern},full_name.ilike.${searchPattern}`)
+                .or(`email.ilike.%${q}%,phone.ilike.%${q}%,full_name.ilike.%${q}%`)
                 .order('id', { ascending: true })
                 .limit(20);
         }

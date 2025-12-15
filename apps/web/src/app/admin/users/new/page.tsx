@@ -1,4 +1,5 @@
 // apps/web/src/app/admin/users/new/page.tsx
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -21,9 +22,11 @@ export default function UserNewPage() {
 async function createUserAction(formData: FormData) {
     'use server';
 
-    // Используем общую логику напрямую, без внутреннего HTTP запроса
-    const { createUser } = await import('@/app/admin/api/users/create/_lib');
-    
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const url = new URL('/admin/api/users/create', base).toString();
+
+    const cookieHeader = (await cookies()).getAll().map(c => `${c.name}=${c.value}`).join('; ');
+
     const norm = (v: FormDataEntryValue | null) => {
         const s = typeof v === 'string' ? v.trim() : '';
         return s || null;
@@ -36,10 +39,31 @@ async function createUserAction(formData: FormData) {
         password: norm(formData.get('password')),
     };
 
-    const result = await createUser(payload);
+    // Серверная валидация (осталась как была)
+    if (!payload.email && !payload.phone) {
+        throw new Error('Нужен email или телефон');
+    }
+    if (payload.email && (!payload.password || payload.password.length < 8)) {
+        throw new Error('Для email требуется пароль (минимум 8 символов)');
+    }
+    if (!payload.email && payload.phone && payload.password) {
+        throw new Error('Для телефона пароль не нужен — вход через OTP');
+    }
 
-    if (!result.ok) {
-        throw new Error(result.error);
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+            ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+        },
+        credentials: 'include',
+        cache: 'no-store',
+        body: JSON.stringify(payload),
+    });
+
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j?.ok !== true) {
+        throw new Error(j?.error || `HTTP ${res.status}`);
     }
 
     redirect('/admin/users?created=1');
