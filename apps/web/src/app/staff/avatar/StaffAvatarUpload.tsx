@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { supabase } from '@/lib/supabaseClient';
 
 export default function StaffAvatarUpload({
     staffId,
@@ -49,67 +48,23 @@ export default function StaffAvatarUpload({
 
         setUploading(true);
         try {
-            // Генерируем уникальное имя файла
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${staffId}-${Date.now()}.${fileExt}`;
-            const filePath = `staff-avatars/${fileName}`;
+            // Используем API endpoint для загрузки (обходит RLS через service role)
+            const formData = new FormData();
+            formData.append('file', file);
 
-            // Удаляем старую аватарку, если есть
-            if (currentAvatarUrl) {
-                try {
-                    const oldPath = currentAvatarUrl.split('/').slice(-2).join('/'); // staff-avatars/filename.ext
-                    await supabase.storage.from('avatars').remove([oldPath]);
-                } catch (error) {
-                    console.warn('Failed to delete old avatar:', error);
-                }
+            const response = await fetch('/api/staff/avatar/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (!result.ok) {
+                throw new Error(result.error || 'Ошибка при загрузке');
             }
 
-            // Загружаем новый файл
-            // Используем upsert: true для перезаписи существующих файлов
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, file, {
-                    cacheControl: '3600',
-                    upsert: true, // Разрешаем перезапись
-                    contentType: file.type, // Явно указываем тип контента
-                });
-
-            if (uploadError) {
-                console.error('Upload error details:', uploadError);
-                console.error('File path:', filePath);
-                console.error('File name:', fileName);
-                console.error('File size:', file.size);
-                console.error('File type:', file.type);
-                
-                // Проверяем, существует ли bucket
-                if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
-                    throw new Error('Bucket "avatars" не найден. Пожалуйста, создайте bucket в Supabase Storage.');
-                }
-                // Проверяем права доступа
-                if (uploadError.message?.includes('new row violates row-level security') || 
-                    uploadError.message?.includes('permission denied') ||
-                    uploadError.message?.includes('row-level security') ||
-                    String(uploadError).includes('403')) {
-                    throw new Error(`Нет прав на загрузку файлов. Ошибка: ${uploadError.message}. Проверьте настройки RLS политик для bucket "avatars".`);
-                }
-                throw uploadError;
-            }
-
-            // Получаем публичный URL
-            const {
-                data: { publicUrl },
-            } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-            // Обновляем запись в БД
-            const { error: updateError } = await supabase
-                .from('staff')
-                .update({ avatar_url: publicUrl })
-                .eq('id', staffId);
-
-            if (updateError) throw updateError;
-
-            setPreview(publicUrl);
-            onUploaded?.(publicUrl);
+            setPreview(result.url);
+            onUploaded?.(result.url);
         } catch (error) {
             console.error('Error uploading avatar:', error);
             const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
