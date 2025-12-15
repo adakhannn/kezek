@@ -1,7 +1,6 @@
 'use client';
 
-import Image from 'next/image';
-import { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 
@@ -17,6 +16,16 @@ export default function StaffAvatarUpload({
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(currentAvatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Обновляем preview при изменении currentAvatarUrl
+    useEffect(() => {
+        setPreview(currentAvatarUrl);
+    }, [currentAvatarUrl]);
+
+    // Обновляем preview при изменении currentAvatarUrl
+    useEffect(() => {
+        setPreview(currentAvatarUrl);
+    }, [currentAvatarUrl]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -105,12 +114,14 @@ export default function StaffAvatarUpload({
             <div className="flex items-center gap-4">
                 <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600">
                     {preview ? (
-                        <Image
+                        <img
                             src={preview}
                             alt="Аватар"
-                            fill
-                            className="object-cover"
-                            sizes="96px"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                                console.error('Error loading avatar image:', preview);
+                                e.currentTarget.style.display = 'none';
+                            }}
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
