@@ -32,6 +32,22 @@ export async function GET() {
             );
         }
 
+        // Позиции по клиентам для текущей смены
+        let items: unknown[] = [];
+        if (shift) {
+            const { data: itemsData, error: itemsError } = await supabase
+                .from('staff_shift_items')
+                .select('id, client_name, service_name, amount, note')
+                .eq('shift_id', shift.id)
+                .order('created_at', { ascending: true });
+
+            if (itemsError) {
+                console.error('Error loading shift items:', itemsError);
+            } else {
+                items = itemsData ?? [];
+            }
+        }
+
         // Общая статистика по всем закрытым сменам сотрудника
         const { data: allShifts, error: statsError } = await supabase
             .from('staff_shifts')
@@ -60,11 +76,13 @@ export async function GET() {
                       exists: true,
                       status: shift.status,
                       shift,
+                      items,
                   }
                 : {
                       exists: false,
                       status: 'none' as const,
                       shift: null,
+                      items: [],
                   },
             stats: {
                 totalAmount,

@@ -6,6 +6,14 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TZ } from '@/lib/time';
 
+type ShiftItem = {
+    id?: string;
+    clientName: string;
+    serviceName: string;
+    amount: number;
+    note?: string;
+};
+
 type Shift = {
     id: string;
     shift_date: string;
@@ -34,8 +42,8 @@ type TodayResponse =
     | {
           ok: true;
           today:
-              | { exists: false; status: 'none'; shift: null }
-              | { exists: true; status: 'open' | 'closed'; shift: Shift };
+              | { exists: false; status: 'none'; shift: null; items: ShiftItem[] }
+              | { exists: true; status: 'open' | 'closed'; shift: Shift; items: ShiftItem[] };
           stats: Stats;
       }
     | { ok: false; error: string };
@@ -57,7 +65,7 @@ export default function StaffFinanceView() {
     const [loading, setLoading] = useState(true);
     const [today, setToday] = useState<TodayResponse | null>(null);
 
-    const [sum, setSum] = useState('');
+    const [items, setItems] = useState<ShiftItem[]>([]);
     const [consumables, setConsumables] = useState('');
     const [percentMaster, setPercentMaster] = useState('60');
     const [percentSalon, setPercentSalon] = useState('40');
@@ -71,12 +79,19 @@ export default function StaffFinanceView() {
             setToday(json);
             if (json.ok && json.today.exists && json.today.shift) {
                 const sh = json.today.shift;
-                setSum(sh.total_amount ? String(sh.total_amount) : '');
+                const loadedItems = (json.today.items ?? []).map((it) => ({
+                    id: it.id,
+                    clientName: it.clientName ?? (it as any).client_name ?? '',
+                    serviceName: it.serviceName ?? (it as any).service_name ?? '',
+                    amount: Number(it.amount ?? 0) || 0,
+                    note: it.note,
+                }));
+                setItems(loadedItems);
                 setConsumables(sh.consumables_amount ? String(sh.consumables_amount) : '');
                 setPercentMaster(sh.percent_master ? String(sh.percent_master) : '60');
                 setPercentSalon(sh.percent_salon ? String(sh.percent_salon) : '40');
             } else {
-                setSum('');
+                setItems([]);
                 setConsumables('');
                 setPercentMaster('60');
                 setPercentSalon('40');
@@ -117,7 +132,7 @@ export default function StaffFinanceView() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    totalAmount: Number(sum || 0),
+                    items,
                     consumablesAmount: Number(consumables || 0),
                     percentMaster: Number(percentMaster || 60),
                     percentSalon: Number(percentSalon || 40),
@@ -142,10 +157,15 @@ export default function StaffFinanceView() {
 
     const stats: Stats | null = today && today.ok ? today.stats : null;
 
+    const totalFromItems = items.reduce(
+        (sum, it) => sum + (Number(it.amount ?? 0) || 0),
+        0
+    );
+
     const net =
-        Number(sum || 0) -
+        totalFromItems -
         Number(consumables || 0) >= 0
-            ? Number(sum || 0) - Number(consumables || 0)
+            ? totalFromItems - Number(consumables || 0)
             : 0;
     const pM = Number(percentMaster || 0);
     const pS = Number(percentSalon || 0);
@@ -251,14 +271,12 @@ export default function StaffFinanceView() {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Сумма за услуги (сом)
                             </label>
-                            <input
-                                type="number"
-                                className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                                value={sum}
-                                onChange={(e) => setSum(e.target.value)}
-                                disabled={!isOpen}
-                                min={0}
-                            />
+                            <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-right font-semibold text-gray-900 dark:text-gray-100">
+                                {totalFromItems} сом
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Считается автоматически по списку клиентов ниже
+                            </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -333,6 +351,103 @@ export default function StaffFinanceView() {
                         </div>
                     </div>
                 </div>
+            </Card>
+
+            {/* Таблица клиентов за смену */}
+            <Card variant="elevated" className="p-6 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        Клиенты за смену
+                    </h2>
+                    {isOpen && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                                setItems((prev) => [
+                                    ...prev,
+                                    { clientName: '', serviceName: '', amount: 0, note: '' },
+                                ])
+                            }
+                            disabled={saving}
+                        >
+                            Добавить клиента
+                        </Button>
+                    )}
+                </div>
+
+                {items.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Пока нет добавленных клиентов. Добавьте хотя бы одну строку и укажите сумму,
+                        чтобы посчитать выручку за смену.
+                    </p>
+                ) : (
+                    <div className="space-y-2 text-sm">
+                        {items.map((item, idx) => (
+                            <div
+                                key={item.id ?? idx}
+                                className="grid grid-cols-[2fr,2fr,1fr,auto] gap-2 items-center"
+                            >
+                                <input
+                                    type="text"
+                                    placeholder="Клиент"
+                                    className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1"
+                                    value={item.clientName}
+                                    onChange={(e) => {
+                                        const v = e.target.value;
+                                        setItems((prev) =>
+                                            prev.map((it, i) =>
+                                                i === idx ? { ...it, clientName: v } : it
+                                            )
+                                        );
+                                    }}
+                                    disabled={!isOpen}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Услуга / комментарий"
+                                    className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1"
+                                    value={item.serviceName}
+                                    onChange={(e) => {
+                                        const v = e.target.value;
+                                        setItems((prev) =>
+                                            prev.map((it, i) =>
+                                                i === idx ? { ...it, serviceName: v } : it
+                                            )
+                                        );
+                                    }}
+                                    disabled={!isOpen}
+                                />
+                                <input
+                                    type="number"
+                                    min={0}
+                                    className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-right"
+                                    value={item.amount}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value || 0);
+                                        setItems((prev) =>
+                                            prev.map((it, i) =>
+                                                i === idx ? { ...it, amount: v } : it
+                                            )
+                                        );
+                                    }}
+                                    disabled={!isOpen}
+                                />
+                                {isOpen && (
+                                    <button
+                                        type="button"
+                                        className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                        onClick={() =>
+                                            setItems((prev) => prev.filter((_, i) => i !== idx))
+                                        }
+                                    >
+                                        Удалить
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </Card>
 
             {stats && (
