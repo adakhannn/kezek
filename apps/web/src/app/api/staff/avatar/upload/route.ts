@@ -57,6 +57,7 @@ export async function POST(req: Request) {
         const buffer = Buffer.from(arrayBuffer);
 
         // Загружаем файл через service client (обходит RLS)
+        console.log('Uploading file:', { filePath, fileSize: file.size, fileType: file.type });
         const { data: uploadData, error: uploadError } = await admin.storage
             .from('avatars')
             .upload(filePath, buffer, {
@@ -67,7 +68,15 @@ export async function POST(req: Request) {
 
         if (uploadError) {
             console.error('Upload error:', uploadError);
-            return NextResponse.json({ ok: false, error: uploadError.message }, { status: 400 });
+            console.error('Error details:', JSON.stringify(uploadError, null, 2));
+            // Проверяем, что используется service role
+            const isServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith('eyJ');
+            console.log('Using service role:', isServiceRole);
+            return NextResponse.json({ 
+                ok: false, 
+                error: uploadError.message,
+                details: uploadError 
+            }, { status: 400 });
         }
 
         // Получаем публичный URL
