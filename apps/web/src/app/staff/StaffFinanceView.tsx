@@ -197,42 +197,52 @@ export default function StaffFinanceView() {
                             </div>
                         )}
                     </div>
-                    <div className="flex gap-2">
-                        {!todayShift && (
-                            <Button
-                                variant="primary"
-                                onClick={handleOpenShift}
-                                disabled={loading || saving}
-                                isLoading={saving}
-                            >
-                                Открыть смену
-                            </Button>
-                        )}
-                        {isOpen && (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    onClick={load}
-                                    disabled={loading || saving}
-                                >
-                                    Обновить
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    onClick={handleCloseShift}
-                                    disabled={saving}
-                                    isLoading={saving}
-                                >
-                                    Закрыть смену
-                                </Button>
-                            </>
-                        )}
-                        {isClosed && (
-                            <div className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                Смена закрыта
-                            </div>
-                        )}
-                    </div>
+                     <div className="flex gap-2 items-center flex-wrap">
+                         {!todayShift && (
+                             <Button
+                                 variant="primary"
+                                 onClick={handleOpenShift}
+                                 disabled={loading || saving}
+                                 isLoading={saving}
+                             >
+                                 Открыть смену
+                             </Button>
+                         )}
+                         {isOpen && (
+                             <>
+                                 <Button
+                                     variant="outline"
+                                     onClick={load}
+                                     disabled={loading || saving}
+                                 >
+                                     Обновить
+                                 </Button>
+                                 <Button
+                                     variant="primary"
+                                     onClick={handleCloseShift}
+                                     disabled={saving}
+                                     isLoading={saving}
+                                 >
+                                     Закрыть смену
+                                 </Button>
+                             </>
+                         )}
+                         {isClosed && (
+                             <>
+                                 <div className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                     Смена закрыта
+                                 </div>
+                                 <Button
+                                     variant="outline"
+                                     onClick={handleOpenShift}
+                                     disabled={saving}
+                                     isLoading={saving}
+                                 >
+                                     Переоткрыть смену
+                                 </Button>
+                             </>
+                         )}
+                     </div>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">

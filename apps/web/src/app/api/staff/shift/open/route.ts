@@ -28,16 +28,38 @@ export async function POST() {
             return NextResponse.json({ ok: false, error: loadError.message }, { status: 500 });
         }
 
-        if (existing && existing.status === 'closed') {
-            return NextResponse.json(
-                { ok: false, error: 'Смена за сегодня уже закрыта' },
-                { status: 400 }
-            );
-        }
+        if (existing) {
+            if (existing.status === 'open') {
+                // Уже открыта — просто возвращаем
+                return NextResponse.json({ ok: true, shift: existing });
+            }
 
-        if (existing && existing.status === 'open') {
-            // Просто возвращаем текущую открытую смену
-            return NextResponse.json({ ok: true, shift: existing });
+            // Смена была закрыта, но сотрудник хочет её переоткрыть.
+            // Логика: сохраняем первое время открытия и опоздание (opened_at / late_minutes),
+            // очищаем финансы и closed_at, переводим статус обратно в open.
+            const { data: reopened, error: reopenError } = await supabase
+                .from('staff_shifts')
+                .update({
+                    status: 'open',
+                    closed_at: null,
+                    total_amount: 0,
+                    consumables_amount: 0,
+                    master_share: 0,
+                    salon_share: 0,
+                })
+                .eq('id', existing.id)
+                .select('*')
+                .maybeSingle();
+
+            if (reopenError || !reopened) {
+                console.error('Error reopening shift:', reopenError);
+                return NextResponse.json(
+                    { ok: false, error: reopenError?.message || 'Не удалось переоткрыть смену' },
+                    { status: 500 }
+                );
+            }
+
+            return NextResponse.json({ ok: true, shift: reopened });
         }
 
         // Определяем ожидаемое время начала смены по расписанию
