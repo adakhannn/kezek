@@ -95,6 +95,7 @@ export default function StaffFinanceView() {
     const [currentGuaranteedAmount, setCurrentGuaranteedAmount] = useState<number | null>(null);
     const [isDayOff, setIsDayOff] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
 
     const load = async () => {
         setLoading(true);
@@ -536,8 +537,8 @@ export default function StaffFinanceView() {
                             size="sm"
                             onClick={() =>
                                 setItems((prev) => [
-                                    ...prev,
                                     { clientName: '', serviceName: '', serviceAmount: 0, consumablesAmount: 0, bookingId: null, note: '' },
+                                    ...prev,
                                 ])
                             }
                             disabled={saving}
@@ -552,17 +553,92 @@ export default function StaffFinanceView() {
                         Пока нет добавленных клиентов. Добавьте клиента из записей или введите вручную, укажите суммы за услугу и расходники.
                     </p>
                 ) : (
-                    <div className="space-y-3 text-sm">
+                    <div className="space-y-2 text-sm">
                         {items.map((item, idx) => {
                             const usedBookingIds = items.filter((it, i) => i !== idx && it.bookingId).map(it => it.bookingId);
                             const availableBookings = bookings.filter(b => !usedBookingIds.includes(b.id));
+                            const isExpanded = expandedItems.has(idx);
                             
+                            // Компактная строка (свернутое состояние)
+                            if (!isExpanded) {
+                                return (
+                                    <div
+                                        key={item.id ?? idx}
+                                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                        onClick={() => isOpen && setExpandedItems((prev) => new Set(prev).add(idx))}
+                                    >
+                                        <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 items-center">
+                                            <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                {item.clientName || 'Клиент не указан'}
+                                            </div>
+                                            <div className="text-gray-600 dark:text-gray-400">
+                                                {item.serviceName || '—'}
+                                            </div>
+                                            <div className="text-right font-medium text-gray-900 dark:text-gray-100">
+                                                {item.serviceAmount > 0 ? `${item.serviceAmount} сом` : '—'}
+                                            </div>
+                                            <div className="text-right font-medium text-gray-900 dark:text-gray-100">
+                                                {item.consumablesAmount > 0 ? `${item.consumablesAmount} сом` : '—'}
+                                            </div>
+                                        </div>
+                                        {isOpen && (
+                                            <div className="flex items-center gap-2 ml-4">
+                                                <button
+                                                    type="button"
+                                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setExpandedItems((prev) => new Set(prev).add(idx));
+                                                    }}
+                                                >
+                                                    Редактировать
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setItems((prev) => prev.filter((_, i) => i !== idx));
+                                                        setExpandedItems((prev) => {
+                                                            const next = new Set(prev);
+                                                            next.delete(idx);
+                                                            return next;
+                                                        });
+                                                    }}
+                                                >
+                                                    Удалить
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
+                            
+                            // Раскрытая форма редактирования
                             return (
                                 <div
                                     key={item.id ?? idx}
-                                    className="grid grid-cols-[2fr,2fr,1fr,1fr,auto] gap-2 items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+                                    className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3"
                                 >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="font-medium text-gray-900 dark:text-gray-100">Редактирование клиента</h3>
+                                        <button
+                                            type="button"
+                                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                                            onClick={() => setExpandedItems((prev) => {
+                                                const next = new Set(prev);
+                                                next.delete(idx);
+                                                return next;
+                                            })}
+                                        >
+                                            Свернуть
+                                        </button>
+                                    </div>
+                                    
                                     <div>
+                                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                            Клиент
+                                        </label>
                                         <select
                                             className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm"
                                             value={item.bookingId ?? ''}
@@ -618,63 +694,102 @@ export default function StaffFinanceView() {
                                             />
                                         )}
                                     </div>
-                                    <input
-                                        type="text"
-                                        placeholder="Услуга / комментарий"
-                                        className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1"
-                                        value={item.serviceName}
-                                        onChange={(e) => {
-                                            const v = e.target.value;
-                                            setItems((prev) =>
-                                                prev.map((it, i) =>
-                                                    i === idx ? { ...it, serviceName: v } : it
-                                                )
-                                            );
-                                        }}
-                                        disabled={!isOpen}
-                                    />
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        placeholder="Услуга"
-                                        className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-right"
-                                        value={item.serviceAmount || ''}
-                                        onChange={(e) => {
-                                            const v = Number(e.target.value || 0);
-                                            setItems((prev) =>
-                                                prev.map((it, i) =>
-                                                    i === idx ? { ...it, serviceAmount: v } : it
-                                                )
-                                            );
-                                        }}
-                                        disabled={!isOpen}
-                                    />
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        placeholder="Расходники"
-                                        className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-right"
-                                        value={item.consumablesAmount || ''}
-                                        onChange={(e) => {
-                                            const v = Number(e.target.value || 0);
-                                            setItems((prev) =>
-                                                prev.map((it, i) =>
-                                                    i === idx ? { ...it, consumablesAmount: v } : it
-                                                )
-                                            );
-                                        }}
-                                        disabled={!isOpen}
-                                    />
+                                    
+                                    <div>
+                                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                            Услуга / комментарий
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Услуга / комментарий"
+                                            className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm"
+                                            value={item.serviceName}
+                                            onChange={(e) => {
+                                                const v = e.target.value;
+                                                setItems((prev) =>
+                                                    prev.map((it, i) =>
+                                                        i === idx ? { ...it, serviceName: v } : it
+                                                    )
+                                                );
+                                            }}
+                                            disabled={!isOpen}
+                                        />
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                Цена за услугу (сом)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                placeholder="0"
+                                                className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm text-right"
+                                                value={item.serviceAmount || ''}
+                                                onChange={(e) => {
+                                                    const v = Number(e.target.value || 0);
+                                                    setItems((prev) =>
+                                                        prev.map((it, i) =>
+                                                            i === idx ? { ...it, serviceAmount: v } : it
+                                                        )
+                                                    );
+                                                }}
+                                                disabled={!isOpen}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                Расходники (сом)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                placeholder="0"
+                                                className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm text-right"
+                                                value={item.consumablesAmount || ''}
+                                                onChange={(e) => {
+                                                    const v = Number(e.target.value || 0);
+                                                    setItems((prev) =>
+                                                        prev.map((it, i) =>
+                                                            i === idx ? { ...it, consumablesAmount: v } : it
+                                                        )
+                                                    );
+                                                }}
+                                                disabled={!isOpen}
+                                            />
+                                        </div>
+                                    </div>
+                                    
                                     {isOpen && (
-                                        <button
-                                            type="button"
-                                            className="text-xs text-red-600 dark:text-red-400 hover:underline"
-                                            onClick={() =>
-                                                setItems((prev) => prev.filter((_, i) => i !== idx))
-                                            }
-                                        >
-                                            Удалить
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                            <button
+                                                type="button"
+                                                className="px-3 py-1 text-sm border rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                onClick={() => {
+                                                    setExpandedItems((prev) => {
+                                                        const next = new Set(prev);
+                                                        next.delete(idx);
+                                                        return next;
+                                                    });
+                                                }}
+                                            >
+                                                Отмена
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                                onClick={() => {
+                                                    setExpandedItems((prev) => {
+                                                        const next = new Set(prev);
+                                                        next.delete(idx);
+                                                        return next;
+                                                    });
+                                                }}
+                                            >
+                                                Сохранить
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             );
