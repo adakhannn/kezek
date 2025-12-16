@@ -212,7 +212,7 @@ export default function StaffFinanceView() {
     const mShare = Math.round((net * pM) / ps);
     // Доля салона = остаток от чистой суммы + 100% расходников
     const sShareFromNet = Math.max(0, net - mShare);
-    const sShare = sShareFromNet + Number(consumables || 0);
+    const sShare = sShareFromNet + finalConsumables;
 
     const todayLabel = new Date().toLocaleDateString('ru-RU', {
         day: '2-digit',

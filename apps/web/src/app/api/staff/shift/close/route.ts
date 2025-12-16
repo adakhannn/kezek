@@ -174,7 +174,7 @@ export async function POST(req: Request) {
                     booking_id: it.bookingId ?? it.booking_id ?? null,
                     note: it.note ?? null,
                 }))
-                .filter((it: { service_amount: number }) => it.service_amount > 0 || it.consumables_amount > 0);
+                .filter((it: { service_amount: number; consumables_amount: number }) => it.service_amount > 0 || it.consumables_amount > 0);
 
             const { error: delError } = await supabase
                 .from('staff_shift_items')
