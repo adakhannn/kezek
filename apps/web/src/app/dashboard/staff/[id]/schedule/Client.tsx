@@ -203,18 +203,67 @@ export default function Client({
                 .order('date_on', { ascending: true });
 
             if (ignore) return;
-            setRules(
-                (data ?? []).map((r) => ({
-                    id: r.id,
-                    date_on: r.date_on,
-                    intervals: (r.intervals ?? []) as TimeRange[],
-                }))
-            );
+            const loadedRules = (data ?? []).map((r) => ({
+                id: r.id,
+                date_on: r.date_on,
+                intervals: (r.intervals ?? []) as TimeRange[],
+            }));
+            setRules(loadedRules);
+
+            // Автоматически создаем правила для дней, где их нет (рабочие дни по умолчанию)
+            const allDates = [
+                ...currentWeekDates.map((d) => formatInTimeZone(d, TZ, 'yyyy-MM-dd')),
+                ...nextWeekDates.map((d) => formatInTimeZone(d, TZ, 'yyyy-MM-dd')),
+            ];
+            const existingDates = new Set(loadedRules.map((r) => r.date_on));
+            const missingDates = allDates.filter((d) => !existingDates.has(d));
+
+            if (missingDates.length > 0) {
+                // Создаем правила для отсутствующих дней с дефолтным расписанием
+                const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
+                const inserts = missingDates.map((date) => ({
+                    biz_id: bizId,
+                    staff_id: staffId,
+                    kind: 'date' as const,
+                    date_on: date,
+                    branch_id: homeBranchId,
+                    tz: TZ,
+                    intervals: [defaultInterval],
+                    breaks: [],
+                    is_active: true,
+                    priority: 0,
+                }));
+
+                // Вставляем все отсутствующие правила
+                await supabase.from('staff_schedule_rules').insert(inserts);
+
+                // Перезагружаем правила
+                const { data: reloadedData } = await supabase
+                    .from('staff_schedule_rules')
+                    .select('id, date_on, intervals')
+                    .eq('biz_id', bizId)
+                    .eq('staff_id', staffId)
+                    .eq('kind', 'date')
+                    .eq('is_active', true)
+                    .gte('date_on', weekStart)
+                    .lt('date_on', weekEnd)
+                    .order('date_on', { ascending: true });
+
+                if (!ignore) {
+                    setRules(
+                        (reloadedData ?? []).map((r) => ({
+                            id: r.id,
+                            date_on: r.date_on,
+                            intervals: (r.intervals ?? []) as TimeRange[],
+                        }))
+                    );
+                }
+            }
         })();
         return () => {
             ignore = true;
         };
-    }, [bizId, staffId, currentWeekDates, nextWeekDates]);
+    }, [bizId, staffId, homeBranchId, currentWeekDates, nextWeekDates]);
 
     // Создаем карту правил по датам
     const rulesByDate = useMemo(() => {
