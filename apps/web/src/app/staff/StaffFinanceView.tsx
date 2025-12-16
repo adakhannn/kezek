@@ -67,8 +67,8 @@ export default function StaffFinanceView() {
 
     const [items, setItems] = useState<ShiftItem[]>([]);
     const [consumables, setConsumables] = useState('');
-    const [percentMaster, setPercentMaster] = useState('60');
-    const [percentSalon, setPercentSalon] = useState('40');
+    const [staffPercentMaster, setStaffPercentMaster] = useState(60);
+    const [staffPercentSalon, setStaffPercentSalon] = useState(40);
     const [saving, setSaving] = useState(false);
 
     const load = async () => {
@@ -96,13 +96,14 @@ export default function StaffFinanceView() {
                 }));
                 setItems(loadedItems);
                 setConsumables(sh.consumables_amount ? String(sh.consumables_amount) : '');
-                setPercentMaster(sh.percent_master ? String(sh.percent_master) : '60');
-                setPercentSalon(sh.percent_salon ? String(sh.percent_salon) : '40');
             } else {
                 setItems([]);
                 setConsumables('');
-                setPercentMaster('60');
-                setPercentSalon('40');
+            }
+            // Проценты из настроек сотрудника (не из смены)
+            if (json.ok && 'staffPercentMaster' in json && 'staffPercentSalon' in json) {
+                setStaffPercentMaster(Number(json.staffPercentMaster ?? 60));
+                setStaffPercentSalon(Number(json.staffPercentSalon ?? 40));
             }
         } catch (e) {
             console.error('Error loading today shift:', e);
@@ -142,8 +143,6 @@ export default function StaffFinanceView() {
                 body: JSON.stringify({
                     items,
                     consumablesAmount: Number(consumables || 0),
-                    percentMaster: Number(percentMaster || 60),
-                    percentSalon: Number(percentSalon || 40),
                 }),
             });
             const json = await res.json();
@@ -175,11 +174,13 @@ export default function StaffFinanceView() {
         Number(consumables || 0) >= 0
             ? totalFromItems - Number(consumables || 0)
             : 0;
-    const pM = Number(percentMaster || 0);
-    const pS = Number(percentSalon || 0);
+    const pM = staffPercentMaster;
+    const pS = staffPercentSalon;
     const ps = pM + pS || 100;
     const mShare = Math.round((net * pM) / ps);
-    const sShare = Math.max(0, net - mShare);
+    // Доля салона = остаток от чистой суммы + 100% расходников
+    const sShareFromNet = Math.max(0, net - mShare);
+    const sShare = sShareFromNet + Number(consumables || 0);
 
     const todayLabel = new Date().toLocaleDateString('ru-RU', {
         day: '2-digit',
@@ -307,27 +308,23 @@ export default function StaffFinanceView() {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Доля мастера (%)
                                 </label>
-                                <input
-                                    type="number"
-                                    className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                                    value={percentMaster}
-                                    onChange={(e) => setPercentMaster(e.target.value)}
-                                    disabled={!isOpen}
-                                    min={0}
-                                />
+                                <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-center font-semibold text-gray-900 dark:text-gray-100">
+                                    {staffPercentMaster}%
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Из настроек сотрудника
+                                </p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Доля салона (%)
                                 </label>
-                                <input
-                                    type="number"
-                                    className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                                    value={percentSalon}
-                                    onChange={(e) => setPercentSalon(e.target.value)}
-                                    disabled={!isOpen}
-                                    min={0}
-                                />
+                                <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-center font-semibold text-gray-900 dark:text-gray-100">
+                                    {staffPercentSalon}%
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Из настроек сотрудника
+                                </p>
                             </div>
                         </div>
 
@@ -350,12 +347,15 @@ export default function StaffFinanceView() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">
-                                    Доля салона
+                                    Доля салона (включая расходники)
                                 </span>
                                 <span className="font-semibold text-gray-900 dark:text-gray-100">
                                     {sShare} сом
                                 </span>
                             </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                Примечание: расходники 100% идут салону
+                            </p>
                         </div>
                     </div>
                 </div>

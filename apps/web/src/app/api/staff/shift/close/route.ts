@@ -15,9 +15,25 @@ export async function POST(req: Request) {
         const body = await req.json().catch(() => ({}));
         const totalAmountRaw = Number(body.totalAmount ?? 0);
         const consumablesAmount = Number(body.consumablesAmount ?? 0);
-        const percentMaster = Number(body.percentMaster ?? 60);
-        const percentSalon = Number(body.percentSalon ?? 40);
         const items = Array.isArray(body.items) ? body.items : [];
+
+        // Получаем проценты из настроек сотрудника
+        const { data: staffData, error: staffError } = await supabase
+            .from('staff')
+            .select('percent_master, percent_salon')
+            .eq('id', staffId)
+            .maybeSingle();
+
+        if (staffError) {
+            console.error('Error loading staff for percent:', staffError);
+            return NextResponse.json(
+                { ok: false, error: 'Не удалось загрузить настройки сотрудника' },
+                { status: 500 }
+            );
+        }
+
+        const percentMaster = Number(staffData?.percent_master ?? 60);
+        const percentSalon = Number(staffData?.percent_salon ?? 40);
 
         if (totalAmountRaw < 0 || consumablesAmount < 0) {
             return NextResponse.json(
@@ -68,7 +84,10 @@ export async function POST(req: Request) {
 
         const totalAmount = items.length > 0 ? totalAmountFromItems : totalAmountRaw;
 
+        // Чистая сумма (после вычета расходников) - от неё считаются проценты
         const net = Math.max(0, totalAmount - consumablesAmount);
+        
+        // Проценты из настроек сотрудника (уже должны быть 100% в сумме)
         const safePercentMaster = Number.isFinite(percentMaster) ? percentMaster : 60;
         const safePercentSalon = Number.isFinite(percentSalon) ? percentSalon : 40;
         const percentSum = safePercentMaster + safePercentSalon || 100;
@@ -76,8 +95,11 @@ export async function POST(req: Request) {
         const normalizedMaster = (safePercentMaster / percentSum) * 100;
         const normalizedSalon = (safePercentSalon / percentSum) * 100;
 
+        // Доля мастера = процент от чистой суммы
         const masterShare = Math.round((net * normalizedMaster) / 100);
-        const salonShare = Math.max(0, net - masterShare);
+        // Доля салона = остаток от чистой суммы + 100% расходников
+        const salonShareFromNet = Math.max(0, net - masterShare);
+        const salonShare = salonShareFromNet + consumablesAmount; // расходники 100% идут салону
 
         const updatePayload = {
             total_amount: totalAmount,

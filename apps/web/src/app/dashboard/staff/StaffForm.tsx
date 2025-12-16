@@ -10,6 +10,8 @@ type Staff = {
     phone?: string | null;
     branch_id: string;
     is_active: boolean;
+    percent_master?: number;
+    percent_salon?: number;
 };
 
 export default function StaffForm({
@@ -96,7 +98,6 @@ export default function StaffForm({
             </div>
 
             <div className="grid sm:grid-cols-2 gap-3">
-
                 <div className="flex items-center gap-2 mt-6 sm:mt-0">
                     <input
                         id="is_active"
@@ -106,6 +107,49 @@ export default function StaffForm({
                     />
                     <label htmlFor="is_active">Активен</label>
                 </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Распределение доходов</h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                        <label className="block text-sm text-gray-600 mb-1">
+                            Доля мастера (%)
+                        </label>
+                        <input
+                            className="border rounded px-3 py-2 w-full"
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={form.percent_master ?? 60}
+                            onChange={e => {
+                                const master = Number(e.target.value) || 0;
+                                set('percent_master', master);
+                                set('percent_salon', 100 - master);
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-gray-600 mb-1">
+                            Доля салона (%)
+                        </label>
+                        <input
+                            className="border rounded px-3 py-2 w-full"
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={form.percent_salon ?? 40}
+                            onChange={e => {
+                                const salon = Number(e.target.value) || 0;
+                                set('percent_salon', salon);
+                                set('percent_master', 100 - salon);
+                            }}
+                        />
+                    </div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Проценты распределяются от чистой суммы (после вычета расходников). Расходники 100% идут салону.
+                </p>
             </div>
 
             <div className="pt-2">

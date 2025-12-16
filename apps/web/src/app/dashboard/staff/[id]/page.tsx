@@ -23,7 +23,7 @@ export default async function Page({
     const [{data: staff, error: eStaff}, {data: branches, error: eBr}] = await Promise.all([
         supabase
             .from('staff')
-            .select('id,full_name,email,phone,branch_id,is_active,biz_id')
+            .select('id,full_name,email,phone,branch_id,is_active,biz_id,percent_master,percent_salon')
             .eq('id', id)
             .maybeSingle(),
         supabase
@@ -111,6 +111,8 @@ export default async function Page({
                         phone: (staff.phone ?? null),
                         branch_id: String(staff.branch_id),
                         is_active: Boolean(staff.is_active),
+                        percent_master: Number(staff.percent_master ?? 60),
+                        percent_salon: Number(staff.percent_salon ?? 40),
                     }}
                     apiBase="/api/staff"
                 />

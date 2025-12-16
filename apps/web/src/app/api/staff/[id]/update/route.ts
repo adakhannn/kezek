@@ -13,6 +13,8 @@ type Body = {
     phone?: string | null;
     branch_id: string;
     is_active: boolean;
+    percent_master?: number;
+    percent_salon?: number;
 };
 
 export async function POST(req: Request, context: unknown) {
@@ -64,17 +66,38 @@ export async function POST(req: Request, context: unknown) {
 
         const isBranchChanged = String(st.branch_id) !== String(body.branch_id);
 
-        // 3) обновляем карточку сотрудника (ФИО, контакты, активность)
+        // 3) обновляем карточку сотрудника (ФИО, контакты, активность, проценты)
         {
+            const updateData: {
+                full_name: string;
+                email: string | null;
+                phone: string | null;
+                is_active: boolean;
+                percent_master?: number;
+                percent_salon?: number;
+            } = {
+                full_name: body.full_name,
+                email: body.email ?? null,
+                phone: body.phone ?? null,
+                is_active: !!body.is_active,
+            };
+
+            // Обновляем проценты, если они переданы
+            if (typeof body.percent_master === 'number' && typeof body.percent_salon === 'number') {
+                const sum = body.percent_master + body.percent_salon;
+                if (Math.abs(sum - 100) > 0.01) {
+                    return NextResponse.json(
+                        { ok: false, error: 'Сумма процентов должна быть равна 100' },
+                        { status: 400 }
+                    );
+                }
+                updateData.percent_master = body.percent_master;
+                updateData.percent_salon = body.percent_salon;
+            }
+
             const { error: eUpd } = await admin
                 .from('staff')
-                .update({
-                    full_name: body.full_name,
-                    email: body.email ?? null,
-                    phone: body.phone ?? null,
-                    is_active: !!body.is_active,
-                    // branch_id обновим ниже, если действительно перенос
-                })
+                .update(updateData)
                 .eq('id', staffId)
                 .eq('biz_id', bizId);
             if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });

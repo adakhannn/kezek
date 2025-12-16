@@ -12,6 +12,20 @@ export async function GET() {
     try {
         const { supabase, staffId } = await getStaffContext();
 
+        // Получаем проценты из настроек сотрудника
+        const { data: staffData, error: staffError } = await supabase
+            .from('staff')
+            .select('percent_master, percent_salon')
+            .eq('id', staffId)
+            .maybeSingle();
+
+        if (staffError) {
+            console.error('Error loading staff for percent:', staffError);
+        }
+
+        const staffPercentMaster = Number(staffData?.percent_master ?? 60);
+        const staffPercentSalon = Number(staffData?.percent_salon ?? 40);
+
         // Текущая дата в локальной TZ (без времени)
         const now = new Date();
         const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
@@ -84,6 +98,8 @@ export async function GET() {
                       shift: null,
                       items: [],
                   },
+            staffPercentMaster: staffPercentMaster,
+            staffPercentSalon: staffPercentSalon,
             stats: {
                 totalAmount,
                 totalMaster,
