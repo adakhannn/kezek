@@ -239,13 +239,13 @@ export default function StaffFinanceView() {
     const finalConsumables = totalConsumablesFromItems;
 
     // Проценты считаются от общей суммы услуг (до вычета расходников)
-    // Расходники добавляются к доле салона сверху
+    // Расходники добавляются к доле бизнеса сверху
     const pM = staffPercentMaster;
     const pS = staffPercentSalon;
     const ps = pM + pS || 100;
-    // Доля мастера = процент от общей суммы услуг
+    // Доля сотрудника = процент от общей суммы услуг
     const mShare = Math.round((totalAmount * pM) / ps);
-    // Доля салона = процент от общей суммы услуг + 100% расходников
+    // Доля бизнеса = процент от общей суммы услуг + 100% расходников
     const sShareFromAmount = Math.round((totalAmount * pS) / ps);
     const sShare = sShareFromAmount + finalConsumables;
     
@@ -422,7 +422,7 @@ export default function StaffFinanceView() {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Доля мастера (%)
+                                    Доля сотрудника (%)
                                 </label>
                                 <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-center font-semibold text-gray-900 dark:text-gray-100">
                                     {staffPercentMaster}%
@@ -433,7 +433,7 @@ export default function StaffFinanceView() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Доля салона (%)
+                                    Доля бизнеса (%)
                                 </label>
                                 <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-center font-semibold text-gray-900 dark:text-gray-100">
                                     {staffPercentSalon}%
@@ -455,7 +455,7 @@ export default function StaffFinanceView() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">
-                                    Доля мастера
+                                    Доля сотрудника
                                 </span>
                                 <span className="font-semibold text-gray-900 dark:text-gray-100">
                                     {mShare} сом
@@ -463,13 +463,50 @@ export default function StaffFinanceView() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">
-                                    Доля салона (включая расходники)
+                                    Доля бизнеса (включая расходники)
                                 </span>
                                 <span className="font-semibold text-gray-900 dark:text-gray-100">
                                     {sShare} сом
                                 </span>
                             </div>
-                            {todayShift && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined && (
+                            {/* Показываем оплату за выход для открытой смены */}
+                            {isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null && (
+                                <>
+                                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                        <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Оплата за выход
+                                        </div>
+                                        <div className="space-y-1 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">
+                                                    Отработано часов
+                                                </span>
+                                                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                                    {currentHoursWorked.toFixed(2)} ч
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">
+                                                    Ставка за час
+                                                </span>
+                                                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                                    {hourlyRate} сом/ч
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
+                                                <span className="text-green-600 dark:text-green-400 font-medium">
+                                                    К получению за выход:
+                                                </span>
+                                                <span className="font-semibold text-green-600 dark:text-green-400">
+                                                    {currentGuaranteedAmount.toFixed(2)} сом
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                            {/* Показываем оплату за выход для закрытой смены */}
+                            {isClosed && todayShift && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined && (
                                 <>
                                     <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                         <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -523,7 +560,7 @@ export default function StaffFinanceView() {
                                 </>
                             )}
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                Примечание: расходники 100% идут салону
+                                Примечание: расходники 100% идут бизнесу
                             </p>
                         </div>
                     </div>
@@ -821,13 +858,13 @@ export default function StaffFinanceView() {
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-gray-600 dark:text-gray-400">Сумма мастера</div>
+                            <div className="text-gray-600 dark:text-gray-400">Сумма сотрудника</div>
                             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 {stats.totalMaster} сом
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-gray-600 dark:text-gray-400">Сумма салона</div>
+                            <div className="text-gray-600 dark:text-gray-400">Сумма бизнеса</div>
                             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 {stats.totalSalon} сом
                             </div>

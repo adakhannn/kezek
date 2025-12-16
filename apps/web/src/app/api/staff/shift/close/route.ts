@@ -139,7 +139,7 @@ export async function POST(req: Request) {
             // Гарантированная сумма за выход
             guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
 
-            // Если гарантированная сумма больше доли мастера, владелец доплачивает разницу
+            // Если гарантированная сумма больше доли сотрудника, владелец доплачивает разницу
             if (guaranteedAmount > masterShare) {
                 topupAmount = Math.round((guaranteedAmount - masterShare) * 100) / 100;
             }
