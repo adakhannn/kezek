@@ -109,7 +109,7 @@ export async function POST(req: Request) {
         if (items.length > 0) {
             const shiftId = updated.id;
             const cleanItems = items
-                .map((it: any) => ({
+                .map((it: { clientName?: string; client_name?: string; serviceName?: string; service_name?: string; amount?: number; note?: string }) => ({
                     shift_id: shiftId,
                     client_name: it.clientName ?? it.client_name ?? null,
                     service_name: it.serviceName ?? it.service_name ?? null,

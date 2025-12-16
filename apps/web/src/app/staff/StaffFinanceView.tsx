@@ -79,10 +79,18 @@ export default function StaffFinanceView() {
             setToday(json);
             if (json.ok && json.today.exists && json.today.shift) {
                 const sh = json.today.shift;
-                const loadedItems = (json.today.items ?? []).map((it) => ({
+                const loadedItems = (json.today.items ?? []).map((it: {
+                    id?: string;
+                    clientName?: string;
+                    client_name?: string;
+                    serviceName?: string;
+                    service_name?: string;
+                    amount?: number;
+                    note?: string;
+                }) => ({
                     id: it.id,
-                    clientName: it.clientName ?? (it as any).client_name ?? '',
-                    serviceName: it.serviceName ?? (it as any).service_name ?? '',
+                    clientName: it.clientName ?? it.client_name ?? '',
+                    serviceName: it.serviceName ?? it.service_name ?? '',
                     amount: Number(it.amount ?? 0) || 0,
                     note: it.note,
                 }));
