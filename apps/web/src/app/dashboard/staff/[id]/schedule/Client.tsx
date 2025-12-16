@@ -87,8 +87,9 @@ function DayRow({
     onSave: (date: string, interval: TimeRange | null) => void;
 }) {
     const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    // Если интервал не указан в БД, день считается выходным
-    const isDayOffFromDb = !intervals || intervals.length === 0;
+    // Если правила нет в БД или интервалы пустые - день выходной
+    // Если правила нет - день рабочий по умолчанию
+    const isDayOffFromDb = intervals !== null && intervals !== undefined && intervals.length === 0;
     const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
     
     const [isDayOff, setIsDayOff] = useState(isDayOffFromDb);
@@ -97,7 +98,9 @@ function DayRow({
     );
 
     useEffect(() => {
-        const isOff = !intervals || intervals.length === 0;
+        // Если правила нет (null) - день рабочий по умолчанию
+        // Если правило есть, но интервалы пустые - день выходной
+        const isOff = intervals !== null && intervals !== undefined && intervals.length === 0;
         setIsDayOff(isOff);
         if (intervals && intervals.length > 0) {
             setInterval(intervals[0]);
@@ -111,7 +114,8 @@ function DayRow({
     }
 
     function handleSave() {
-        // Если день выходной, сохраняем null, иначе сохраняем интервал
+        // Если день выходной, передаем null (будет сохранено с пустыми интервалами)
+        // Если день рабочий, передаем интервал
         onSave(dateStr, isDayOff ? null : interval);
     }
 
@@ -226,22 +230,16 @@ export default function Client({
         try {
             const existing = rules.find((r) => r.date_on === date);
 
-            // Если интервал пустой, удаляем правило
-            if (!interval || (interval.start === interval.end)) {
-                if (existing?.id) {
-                    await supabase
-                        .from('staff_schedule_rules')
-                        .delete()
-                        .eq('id', existing.id)
-                        .eq('biz_id', bizId)
-                        .eq('staff_id', staffId);
-                }
-            } else if (existing?.id) {
+            // Если interval === null, значит день выходной - сохраняем с пустыми интервалами
+            // Если interval есть, значит день рабочий - сохраняем с интервалом
+            const intervalsToSave = interval ? [interval] : [];
+
+            if (existing?.id) {
                 // Обновляем существующее правило
                 await supabase
                     .from('staff_schedule_rules')
                     .update({
-                        intervals: [interval],
+                        intervals: intervalsToSave,
                         breaks: [],
                         is_active: true,
                     })
@@ -249,7 +247,7 @@ export default function Client({
                     .eq('biz_id', bizId)
                     .eq('staff_id', staffId);
             } else {
-                // Создаем новое правило
+                // Создаем новое правило (даже для выходного дня, чтобы пометить его явно)
                 await supabase.from('staff_schedule_rules').insert({
                     biz_id: bizId,
                     staff_id: staffId,
@@ -257,7 +255,7 @@ export default function Client({
                     date_on: date,
                     branch_id: homeBranchId,
                     tz: TZ,
-                    intervals: [interval],
+                    intervals: intervalsToSave,
                     breaks: [],
                     is_active: true,
                     priority: 0,
@@ -307,12 +305,15 @@ export default function Client({
                         const dow = date.getDay(); // 0-6 (0=воскресенье)
                         const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
                         const intervals = rulesByDate.get(dateStr);
+                        // Если правила нет - null (рабочий день по умолчанию)
+                        // Если правило есть с пустыми интервалами - [] (выходной день)
+                        // Если правило есть с интервалами - массив интервалов (рабочий день)
                         return (
                             <DayRow
                                 key={dateStr}
                                 date={date}
                                 dow={dow}
-                                intervals={intervals ?? null}
+                                intervals={intervals !== undefined ? intervals : null}
                                 saving={saving}
                                 onSave={saveDay}
                             />
@@ -332,12 +333,15 @@ export default function Client({
                         const dow = date.getDay(); // 0-6 (0=воскресенье)
                         const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
                         const intervals = rulesByDate.get(dateStr);
+                        // Если правила нет - null (рабочий день по умолчанию)
+                        // Если правило есть с пустыми интервалами - [] (выходной день)
+                        // Если правило есть с интервалами - массив интервалов (рабочий день)
                         return (
                             <DayRow
                                 key={dateStr}
                                 date={date}
                                 dow={dow}
-                                intervals={intervals ?? null}
+                                intervals={intervals !== undefined ? intervals : null}
                                 saving={saving}
                                 onSave={saveDay}
                             />
