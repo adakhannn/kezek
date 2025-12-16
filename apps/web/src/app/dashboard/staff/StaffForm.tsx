@@ -165,7 +165,10 @@ export default function StaffForm({
                         min={0}
                         step={0.01}
                         value={form.hourly_rate ?? ''}
-                        onChange={e => set('hourly_rate', e.target.value ? Number(e.target.value) : null)}
+                        onChange={e => {
+                            const val = e.target.value.trim();
+                            set('hourly_rate', val === '' ? null : Number(val) || null);
+                        }}
                         placeholder="Не указано (сотрудник получает только процент от выручки)"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">

@@ -99,7 +99,14 @@ export async function POST(req: Request, context: unknown) {
 
             // Обновляем ставку за час, если она передана
             if (body.hourly_rate !== undefined) {
-                updateData.hourly_rate = body.hourly_rate === null || body.hourly_rate === 0 ? null : body.hourly_rate;
+                // Сохраняем null если значение null или undefined
+                // Если значение <= 0, также сохраняем null (ставка не может быть нулевой или отрицательной)
+                if (body.hourly_rate === null || body.hourly_rate === undefined) {
+                    updateData.hourly_rate = null;
+                } else {
+                    const numVal = Number(body.hourly_rate);
+                    updateData.hourly_rate = isNaN(numVal) || numVal <= 0 ? null : numVal;
+                }
             }
 
             const { error: eUpd } = await admin
