@@ -17,10 +17,10 @@ export async function POST(req: Request) {
         const consumablesAmount = Number(body.consumablesAmount ?? 0); // для обратной совместимости
         const items = Array.isArray(body.items) ? body.items : [];
 
-        // Получаем проценты из настроек сотрудника
+        // Получаем проценты и ставку за час из настроек сотрудника
         const { data: staffData, error: staffError } = await supabase
             .from('staff')
-            .select('percent_master, percent_salon')
+            .select('percent_master, percent_salon, hourly_rate')
             .eq('id', staffId)
             .maybeSingle();
 
@@ -121,15 +121,54 @@ export async function POST(req: Request) {
         const masterShare = Math.round((net * normalizedMaster) / 100);
         // Доля салона = остаток от чистой суммы + 100% расходников
         const salonShareFromNet = Math.max(0, net - masterShare);
-        const salonShare = salonShareFromNet + consumablesAmount; // расходники 100% идут салону
+        const salonShare = salonShareFromNet + finalConsumablesAmount; // расходники 100% идут салону
 
-        const updatePayload = {
+        // Расчет оплаты за выход (если указана ставка за час)
+        const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
+        let hoursWorked: number | null = null;
+        let guaranteedAmount = 0;
+        let topupAmount = 0;
+
+        if (hourlyRate && existing.opened_at) {
+            // Вычисляем количество отработанных часов
+            const openedAt = new Date(existing.opened_at);
+            const closedAt = now;
+            const diffMs = closedAt.getTime() - openedAt.getTime();
+            hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // округляем до 2 знаков
+
+            // Гарантированная сумма за выход
+            guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
+
+            // Если гарантированная сумма больше доли мастера, владелец доплачивает разницу
+            if (guaranteedAmount > masterShare) {
+                topupAmount = Math.round((guaranteedAmount - masterShare) * 100) / 100;
+            }
+        }
+
+        const updatePayload: {
+            total_amount: number;
+            consumables_amount: number;
+            percent_master: number;
+            percent_salon: number;
+            master_share: number;
+            salon_share: number;
+            hours_worked: number | null;
+            hourly_rate: number | null;
+            guaranteed_amount: number;
+            topup_amount: number;
+            status: 'closed';
+            closed_at: string;
+        } = {
             total_amount: totalAmount,
             consumables_amount: finalConsumablesAmount,
             percent_master: normalizedMaster,
             percent_salon: normalizedSalon,
             master_share: masterShare,
             salon_share: salonShare,
+            hours_worked: hoursWorked,
+            hourly_rate: hourlyRate,
+            guaranteed_amount: guaranteedAmount,
+            topup_amount: topupAmount,
             status: 'closed' as const,
             closed_at: now.toISOString(),
         };

@@ -12,6 +12,7 @@ type Staff = {
     is_active: boolean;
     percent_master?: number;
     percent_salon?: number;
+    hourly_rate?: number | null;
 };
 
 export default function StaffForm({
@@ -150,6 +151,27 @@ export default function StaffForm({
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     Проценты распределяются от чистой суммы (после вычета расходников). Расходники 100% идут салону.
                 </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Оплата за выход</h3>
+                <div>
+                    <label className="block text-sm text-gray-600 mb-1">
+                        Ставка за час (сом/час)
+                    </label>
+                    <input
+                        className="border rounded px-3 py-2 w-full"
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={form.hourly_rate ?? ''}
+                        onChange={e => set('hourly_rate', e.target.value ? Number(e.target.value) : null)}
+                        placeholder="Не указано (сотрудник получает только процент от выручки)"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        Если указана ставка, сотрудник получает оплату за выход. Если сумма за выход больше доли от выручки, владелец доплачивает разницу.
+                    </p>
+                </div>
             </div>
 
             <div className="pt-2">

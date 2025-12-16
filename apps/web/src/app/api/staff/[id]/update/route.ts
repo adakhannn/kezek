@@ -15,6 +15,7 @@ type Body = {
     is_active: boolean;
     percent_master?: number;
     percent_salon?: number;
+    hourly_rate?: number | null;
 };
 
 export async function POST(req: Request, context: unknown) {
@@ -75,6 +76,7 @@ export async function POST(req: Request, context: unknown) {
                 is_active: boolean;
                 percent_master?: number;
                 percent_salon?: number;
+                hourly_rate?: number | null;
             } = {
                 full_name: body.full_name,
                 email: body.email ?? null,
@@ -93,6 +95,11 @@ export async function POST(req: Request, context: unknown) {
                 }
                 updateData.percent_master = body.percent_master;
                 updateData.percent_salon = body.percent_salon;
+            }
+
+            // Обновляем ставку за час, если она передана
+            if (body.hourly_rate !== undefined) {
+                updateData.hourly_rate = body.hourly_rate === null || body.hourly_rate === 0 ? null : body.hourly_rate;
             }
 
             const { error: eUpd } = await admin

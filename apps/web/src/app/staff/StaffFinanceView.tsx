@@ -38,6 +38,10 @@ type Shift = {
     salon_share: number;
     percent_master: number;
     percent_salon: number;
+    hours_worked?: number | null;
+    hourly_rate?: number | null;
+    guaranteed_amount?: number;
+    topup_amount?: number;
 };
 
 type Stats = {
@@ -391,6 +395,59 @@ export default function StaffFinanceView() {
                                     {sShare} сом
                                 </span>
                             </div>
+                            {todayShift && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined && (
+                                <>
+                                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                        <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Оплата за выход
+                                        </div>
+                                        <div className="space-y-1 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">
+                                                    Отработано часов
+                                                </span>
+                                                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                                    {todayShift.hours_worked.toFixed(2)} ч
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">
+                                                    Ставка за час
+                                                </span>
+                                                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                                    {todayShift.hourly_rate} сом/ч
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">
+                                                    Гарантированная сумма за выход
+                                                </span>
+                                                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                                    {todayShift.guaranteed_amount?.toFixed(2) ?? '0.00'} сом
+                                                </span>
+                                            </div>
+                                            {todayShift.topup_amount && todayShift.topup_amount > 0 && (
+                                                <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
+                                                    <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                                        Доплата владельца
+                                                    </span>
+                                                    <span className="font-semibold text-amber-600 dark:text-amber-400">
+                                                        +{todayShift.topup_amount.toFixed(2)} сом
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700 mt-1">
+                                                <span className="text-green-600 dark:text-green-400 font-medium">
+                                                    Итого к получению
+                                                </span>
+                                                <span className="font-semibold text-green-600 dark:text-green-400">
+                                                    {((todayShift.guaranteed_amount ?? 0) + (todayShift.topup_amount ?? 0)).toFixed(2)} сом
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                 Примечание: расходники 100% идут салону
                             </p>
