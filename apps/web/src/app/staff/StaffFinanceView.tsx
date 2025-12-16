@@ -334,12 +334,12 @@ export default function StaffFinanceView() {
                     Финансы
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Управление сменой и просмотр общей статистики
+                    Управление сменой, клиентами и тем, сколько получает сотрудник и бизнес
                 </p>
             </div>
 
             <Card variant="elevated" className="p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div>
                         <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             Текущая смена
@@ -405,7 +405,7 @@ export default function StaffFinanceView() {
                             </div>
                         )}
                     </div>
-                     <div className="flex gap-2 items-center flex-wrap">
+                    <div className="flex gap-2 items-center flex-wrap">
                          {!todayShift && (
                              <>
                                  {isDayOff ? (
@@ -458,8 +458,36 @@ export default function StaffFinanceView() {
                                  </Button>
                              </>
                          )}
-                     </div>
+                    </div>
                 </div>
+
+                {/* Краткое резюме по деньгам за смену */}
+                {todayShift && (
+                    <div className="mt-4 grid sm:grid-cols-2 gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 px-4 py-3">
+                        <div className="space-y-1">
+                            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                Итого сотруднику за смену
+                            </div>
+                            <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+                                {mShare} сом
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Учитывает проценты и оплату за выход
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                Итого бизнесу за смену
+                            </div>
+                            <div className="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
+                                {sShare} сом
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Включая все расходники и возможные доплаты сотруднику
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
                     <div className="space-y-3">
