@@ -165,6 +165,22 @@ export default function StaffFinanceView() {
         void load();
     }, []);
 
+    // Вычисляем состояние смены для использования в useEffect
+    const todayShift = today && today.ok && today.today.exists ? today.today.shift : null;
+    const isOpen = todayShift && todayShift.status === 'open';
+    const isClosed = todayShift && todayShift.status === 'closed';
+
+    // Автообновление часов работы для открытой смены (каждую минуту)
+    useEffect(() => {
+        if (!isOpen || !hourlyRate) return;
+
+        const interval = setInterval(() => {
+            void load();
+        }, 60000); // обновляем каждую минуту
+
+        return () => clearInterval(interval);
+    }, [isOpen, hourlyRate]);
+
     const handleOpenShift = async () => {
         setSaving(true);
         try {
@@ -204,10 +220,6 @@ export default function StaffFinanceView() {
             setSaving(false);
         }
     };
-
-    const todayShift = today && today.ok && today.today.exists ? today.today.shift : null;
-    const isOpen = todayShift && todayShift.status === 'open';
-    const isClosed = todayShift && todayShift.status === 'closed';
 
     const stats: Stats | null = today && today.ok ? today.stats : null;
 
@@ -275,22 +287,30 @@ export default function StaffFinanceView() {
                                         ? `${todayShift.late_minutes} мин`
                                         : 'нет'}
                                 </div>
-                                {isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null && (
+                                {/* Показываем оплату за выход, если указана ставка за час */}
+                                {((isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null) ||
+                                    (isClosed && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined)) && (
                                     <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                                         <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Оплата за выход
                                         </div>
-                                        <div className="space-y-1">
+                                        <div className="space-y-1 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600 dark:text-gray-400">Отработано:</span>
                                                 <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {currentHoursWorked.toFixed(2)} ч
+                                                    {isOpen
+                                                        ? currentHoursWorked?.toFixed(2) ?? '0.00'
+                                                        : todayShift.hours_worked?.toFixed(2) ?? '0.00'}{' '}
+                                                    ч
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600 dark:text-gray-400">Ставка:</span>
                                                 <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {hourlyRate} сом/ч
+                                                    {isOpen
+                                                        ? hourlyRate ?? 0
+                                                        : todayShift.hourly_rate ?? 0}{' '}
+                                                    сом/ч
                                                 </span>
                                             </div>
                                             <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
@@ -298,7 +318,10 @@ export default function StaffFinanceView() {
                                                     К получению за выход:
                                                 </span>
                                                 <span className="font-semibold text-green-600 dark:text-green-400">
-                                                    {currentGuaranteedAmount.toFixed(2)} сом
+                                                    {isOpen
+                                                        ? currentGuaranteedAmount?.toFixed(2) ?? '0.00'
+                                                        : todayShift.guaranteed_amount?.toFixed(2) ?? '0.00'}{' '}
+                                                    сом
                                                 </span>
                                             </div>
                                         </div>
