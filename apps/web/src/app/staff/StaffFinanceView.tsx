@@ -10,8 +10,18 @@ type ShiftItem = {
     id?: string;
     clientName: string;
     serviceName: string;
-    amount: number;
+    serviceAmount: number;
+    consumablesAmount: number;
+    bookingId?: string | null;
     note?: string;
+};
+
+type Booking = {
+    id: string;
+    client_name: string | null;
+    client_phone: string | null;
+    start_at: string;
+    services: { name_ru: string } | { name_ru: string }[] | null;
 };
 
 type Shift = {
@@ -44,6 +54,9 @@ type TodayResponse =
           today:
               | { exists: false; status: 'none'; shift: null; items: ShiftItem[] }
               | { exists: true; status: 'open' | 'closed'; shift: Shift; items: ShiftItem[] };
+          bookings?: Booking[];
+          staffPercentMaster?: number;
+          staffPercentSalon?: number;
           stats: Stats;
       }
     | { ok: false; error: string };
@@ -66,7 +79,7 @@ export default function StaffFinanceView() {
     const [today, setToday] = useState<TodayResponse | null>(null);
 
     const [items, setItems] = useState<ShiftItem[]>([]);
-    const [consumables, setConsumables] = useState('');
+    const [bookings, setBookings] = useState<Booking[]>([]);
     const [staffPercentMaster, setStaffPercentMaster] = useState(60);
     const [staffPercentSalon, setStaffPercentSalon] = useState(40);
     const [saving, setSaving] = useState(false);
@@ -85,20 +98,29 @@ export default function StaffFinanceView() {
                     client_name?: string;
                     serviceName?: string;
                     service_name?: string;
-                    amount?: number;
+                    serviceAmount?: number;
+                    amount?: number; // для обратной совместимости
+                    consumablesAmount?: number;
+                    consumables_amount?: number; // для обратной совместимости
+                    bookingId?: string | null;
+                    booking_id?: string | null; // для обратной совместимости
                     note?: string;
                 }) => ({
                     id: it.id,
                     clientName: it.clientName ?? it.client_name ?? '',
                     serviceName: it.serviceName ?? it.service_name ?? '',
-                    amount: Number(it.amount ?? 0) || 0,
+                    serviceAmount: Number(it.serviceAmount ?? it.amount ?? 0) || 0,
+                    consumablesAmount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
+                    bookingId: it.bookingId ?? it.booking_id ?? null,
                     note: it.note,
                 }));
                 setItems(loadedItems);
-                setConsumables(sh.consumables_amount ? String(sh.consumables_amount) : '');
             } else {
                 setItems([]);
-                setConsumables('');
+            }
+            // Записи за сегодня для выбора клиентов
+            if (json.ok && 'bookings' in json && Array.isArray(json.bookings)) {
+                setBookings(json.bookings);
             }
             // Проценты из настроек сотрудника (не из смены)
             if (json.ok && 'staffPercentMaster' in json && 'staffPercentSalon' in json) {
@@ -142,7 +164,6 @@ export default function StaffFinanceView() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     items,
-                    consumablesAmount: Number(consumables || 0),
                 }),
             });
             const json = await res.json();
@@ -164,16 +185,21 @@ export default function StaffFinanceView() {
 
     const stats: Stats | null = today && today.ok ? today.stats : null;
 
-    const totalFromItems = items.reduce(
-        (sum, it) => sum + (Number(it.amount ?? 0) || 0),
+    // Сумма услуг = сумма всех serviceAmount
+    const totalServiceFromItems = items.reduce(
+        (sum, it) => sum + (Number(it.serviceAmount ?? 0) || 0),
+        0
+    );
+    // Сумма расходников = сумма всех consumablesAmount
+    const totalConsumablesFromItems = items.reduce(
+        (sum, it) => sum + (Number(it.consumablesAmount ?? 0) || 0),
         0
     );
 
-    const net =
-        totalFromItems -
-        Number(consumables || 0) >= 0
-            ? totalFromItems - Number(consumables || 0)
-            : 0;
+    const totalAmount = totalServiceFromItems;
+    const finalConsumables = totalConsumablesFromItems;
+
+    const net = totalAmount - finalConsumables >= 0 ? totalAmount - finalConsumables : 0;
     const pM = staffPercentMaster;
     const pS = staffPercentSalon;
     const ps = pM + pS || 100;
@@ -281,7 +307,7 @@ export default function StaffFinanceView() {
                                 Сумма за услуги (сом)
                             </label>
                             <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-right font-semibold text-gray-900 dark:text-gray-100">
-                                {totalFromItems} сом
+                                {totalAmount} сом
                             </div>
                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 Считается автоматически по списку клиентов ниже
@@ -291,14 +317,12 @@ export default function StaffFinanceView() {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Расходники (сом)
                             </label>
-                            <input
-                                type="number"
-                                className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                                value={consumables}
-                                onChange={(e) => setConsumables(e.target.value)}
-                                disabled={!isOpen}
-                                min={0}
-                            />
+                            <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-right font-semibold text-gray-900 dark:text-gray-100">
+                                {finalConsumables} сом
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Считается автоматически по списку клиентов ниже
+                            </p>
                         </div>
                     </div>
 
@@ -374,7 +398,7 @@ export default function StaffFinanceView() {
                             onClick={() =>
                                 setItems((prev) => [
                                     ...prev,
-                                    { clientName: '', serviceName: '', amount: 0, note: '' },
+                                    { clientName: '', serviceName: '', serviceAmount: 0, consumablesAmount: 0, bookingId: null, note: '' },
                                 ])
                             }
                             disabled={saving}
@@ -386,74 +410,136 @@ export default function StaffFinanceView() {
 
                 {items.length === 0 ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Пока нет добавленных клиентов. Добавьте хотя бы одну строку и укажите сумму,
-                        чтобы посчитать выручку за смену.
+                        Пока нет добавленных клиентов. Добавьте клиента из записей или введите вручную, укажите суммы за услугу и расходники.
                     </p>
                 ) : (
-                    <div className="space-y-2 text-sm">
-                        {items.map((item, idx) => (
-                            <div
-                                key={item.id ?? idx}
-                                className="grid grid-cols-[2fr,2fr,1fr,auto] gap-2 items-center"
-                            >
-                                <input
-                                    type="text"
-                                    placeholder="Клиент"
-                                    className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1"
-                                    value={item.clientName}
-                                    onChange={(e) => {
-                                        const v = e.target.value;
-                                        setItems((prev) =>
-                                            prev.map((it, i) =>
-                                                i === idx ? { ...it, clientName: v } : it
-                                            )
-                                        );
-                                    }}
-                                    disabled={!isOpen}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Услуга / комментарий"
-                                    className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1"
-                                    value={item.serviceName}
-                                    onChange={(e) => {
-                                        const v = e.target.value;
-                                        setItems((prev) =>
-                                            prev.map((it, i) =>
-                                                i === idx ? { ...it, serviceName: v } : it
-                                            )
-                                        );
-                                    }}
-                                    disabled={!isOpen}
-                                />
-                                <input
-                                    type="number"
-                                    min={0}
-                                    className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-right"
-                                    value={item.amount}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value || 0);
-                                        setItems((prev) =>
-                                            prev.map((it, i) =>
-                                                i === idx ? { ...it, amount: v } : it
-                                            )
-                                        );
-                                    }}
-                                    disabled={!isOpen}
-                                />
-                                {isOpen && (
-                                    <button
-                                        type="button"
-                                        className="text-xs text-red-600 dark:text-red-400 hover:underline"
-                                        onClick={() =>
-                                            setItems((prev) => prev.filter((_, i) => i !== idx))
-                                        }
-                                    >
-                                        Удалить
-                                    </button>
-                                )}
-                            </div>
-                        ))}
+                    <div className="space-y-3 text-sm">
+                        {items.map((item, idx) => {
+                            const usedBookingIds = items.filter((it, i) => i !== idx && it.bookingId).map(it => it.bookingId);
+                            const availableBookings = bookings.filter(b => !usedBookingIds.includes(b.id));
+                            
+                            return (
+                                <div
+                                    key={item.id ?? idx}
+                                    className="grid grid-cols-[2fr,2fr,1fr,1fr,auto] gap-2 items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+                                >
+                                    <div>
+                                        <select
+                                            className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm"
+                                            value={item.bookingId ?? ''}
+                                            onChange={(e) => {
+                                                const bookingId = e.target.value || null;
+                                                const booking = bookingId ? bookings.find(b => b.id === bookingId) : null;
+                                                const service = booking?.services 
+                                                    ? (Array.isArray(booking.services) ? booking.services[0] : booking.services)
+                                                    : null;
+                                                setItems((prev) =>
+                                                    prev.map((it, i) =>
+                                                        i === idx ? {
+                                                            ...it,
+                                                            bookingId,
+                                                            clientName: booking ? (booking.client_name || booking.client_phone || '') : it.clientName,
+                                                            serviceName: service ? service.name_ru : it.serviceName,
+                                                        } : it
+                                                    )
+                                                );
+                                            }}
+                                            disabled={!isOpen}
+                                        >
+                                            <option value="">Выберите клиента из записей...</option>
+                                            {availableBookings.map((b) => {
+                                                const service = b.services 
+                                                    ? (Array.isArray(b.services) ? b.services[0] : b.services)
+                                                    : null;
+                                                const clientLabel = b.client_name || b.client_phone || 'Клиент';
+                                                const serviceLabel = service?.name_ru || '';
+                                                const time = new Date(b.start_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                                                return (
+                                                    <option key={b.id} value={b.id}>
+                                                        {clientLabel} - {serviceLabel} ({time})
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                        {!item.bookingId && (
+                                            <input
+                                                type="text"
+                                                placeholder="Или введите имя клиента"
+                                                className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs"
+                                                value={item.clientName}
+                                                onChange={(e) => {
+                                                    const v = e.target.value;
+                                                    setItems((prev) =>
+                                                        prev.map((it, i) =>
+                                                            i === idx ? { ...it, clientName: v, bookingId: null } : it
+                                                        )
+                                                    );
+                                                }}
+                                                disabled={!isOpen}
+                                            />
+                                        )}
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Услуга / комментарий"
+                                        className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1"
+                                        value={item.serviceName}
+                                        onChange={(e) => {
+                                            const v = e.target.value;
+                                            setItems((prev) =>
+                                                prev.map((it, i) =>
+                                                    i === idx ? { ...it, serviceName: v } : it
+                                                )
+                                            );
+                                        }}
+                                        disabled={!isOpen}
+                                    />
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        placeholder="Услуга"
+                                        className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-right"
+                                        value={item.serviceAmount || ''}
+                                        onChange={(e) => {
+                                            const v = Number(e.target.value || 0);
+                                            setItems((prev) =>
+                                                prev.map((it, i) =>
+                                                    i === idx ? { ...it, serviceAmount: v } : it
+                                                )
+                                            );
+                                        }}
+                                        disabled={!isOpen}
+                                    />
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        placeholder="Расходники"
+                                        className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-right"
+                                        value={item.consumablesAmount || ''}
+                                        onChange={(e) => {
+                                            const v = Number(e.target.value || 0);
+                                            setItems((prev) =>
+                                                prev.map((it, i) =>
+                                                    i === idx ? { ...it, consumablesAmount: v } : it
+                                                )
+                                            );
+                                        }}
+                                        disabled={!isOpen}
+                                    />
+                                    {isOpen && (
+                                        <button
+                                            type="button"
+                                            className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                            onClick={() =>
+                                                setItems((prev) => prev.filter((_, i) => i !== idx))
+                                            }
+                                        >
+                                            Удалить
+                                        </button>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </Card>

@@ -51,7 +51,7 @@ export async function GET() {
         if (shift) {
             const { data: itemsData, error: itemsError } = await supabase
                 .from('staff_shift_items')
-                .select('id, client_name, service_name, amount, note')
+                .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id')
                 .eq('shift_id', shift.id)
                 .order('created_at', { ascending: true });
 
@@ -60,6 +60,22 @@ export async function GET() {
             } else {
                 items = itemsData ?? [];
             }
+        }
+
+        // Записи (bookings) сотрудника за сегодня для выбора клиентов
+        const todayStart = `${ymd}T00:00:00`;
+        const todayEnd = `${ymd}T23:59:59`;
+        const { data: todayBookings, error: bookingsError } = await supabase
+            .from('bookings')
+            .select('id, client_name, client_phone, start_at, services:services!bookings_service_id_fkey (name_ru)')
+            .eq('staff_id', staffId)
+            .gte('start_at', todayStart)
+            .lte('start_at', todayEnd)
+            .neq('status', 'cancelled')
+            .order('start_at', { ascending: true });
+
+        if (bookingsError) {
+            console.error('Error loading today bookings:', bookingsError);
         }
 
         // Общая статистика по всем закрытым сменам сотрудника
@@ -100,6 +116,7 @@ export async function GET() {
                   },
             staffPercentMaster: staffPercentMaster,
             staffPercentSalon: staffPercentSalon,
+            bookings: todayBookings ?? [],
             stats: {
                 totalAmount,
                 totalMaster,

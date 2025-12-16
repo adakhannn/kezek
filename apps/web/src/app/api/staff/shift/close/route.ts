@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
         const body = await req.json().catch(() => ({}));
         const totalAmountRaw = Number(body.totalAmount ?? 0);
-        const consumablesAmount = Number(body.consumablesAmount ?? 0);
+        const consumablesAmount = Number(body.consumablesAmount ?? 0); // для обратной совместимости
         const items = Array.isArray(body.items) ? body.items : [];
 
         // Получаем проценты из настроек сотрудника
@@ -35,7 +35,19 @@ export async function POST(req: Request) {
         const percentMaster = Number(staffData?.percent_master ?? 60);
         const percentSalon = Number(staffData?.percent_salon ?? 40);
 
-        if (totalAmountRaw < 0 || consumablesAmount < 0) {
+        // Валидация: проверяем суммы в items, если они переданы
+        if (items.length > 0) {
+            for (const it of items) {
+                const serviceAmt = Number((it as { serviceAmount?: number }).serviceAmount ?? 0);
+                const consumablesAmt = Number((it as { consumablesAmount?: number }).consumablesAmount ?? 0);
+                if (serviceAmt < 0 || consumablesAmt < 0) {
+                    return NextResponse.json(
+                        { ok: false, error: 'Суммы не могут быть отрицательными' },
+                        { status: 400 }
+                    );
+                }
+            }
+        } else if (totalAmountRaw < 0 || consumablesAmount < 0) {
             return NextResponse.json(
                 { ok: false, error: 'Суммы не могут быть отрицательными' },
                 { status: 400 }
@@ -75,17 +87,27 @@ export async function POST(req: Request) {
         }
 
         // Если переданы позиции по клиентам, считаем итог по ним
-        const totalAmountFromItems = Array.isArray(items)
+        const totalServiceAmount = Array.isArray(items)
             ? items.reduce(
-                  (sum: number, it: { amount?: number }) => sum + Number(it?.amount ?? 0),
+                  (sum: number, it: { serviceAmount?: number }) => sum + Number(it?.serviceAmount ?? 0),
                   0
               )
             : 0;
 
-        const totalAmount = items.length > 0 ? totalAmountFromItems : totalAmountRaw;
+        const totalConsumablesFromItems = Array.isArray(items)
+            ? items.reduce(
+                  (sum: number, it: { consumablesAmount?: number }) => sum + Number(it?.consumablesAmount ?? 0),
+                  0
+              )
+            : 0;
+
+        // Итоговая сумма услуг = сумма всех serviceAmount
+        // Итоговые расходники = либо из поля consumablesAmount (если не переданы items), либо сумма consumablesAmount по клиентам
+        const totalAmount = items.length > 0 ? totalServiceAmount : totalAmountRaw;
+        const finalConsumablesAmount = items.length > 0 ? totalConsumablesFromItems : consumablesAmount;
 
         // Чистая сумма (после вычета расходников) - от неё считаются проценты
-        const net = Math.max(0, totalAmount - consumablesAmount);
+        const net = Math.max(0, totalAmount - finalConsumablesAmount);
         
         // Проценты из настроек сотрудника (уже должны быть 100% в сумме)
         const safePercentMaster = Number.isFinite(percentMaster) ? percentMaster : 60;
@@ -103,7 +125,7 @@ export async function POST(req: Request) {
 
         const updatePayload = {
             total_amount: totalAmount,
-            consumables_amount: consumablesAmount,
+            consumables_amount: finalConsumablesAmount,
             percent_master: normalizedMaster,
             percent_salon: normalizedSalon,
             master_share: masterShare,
@@ -131,14 +153,28 @@ export async function POST(req: Request) {
         if (items.length > 0) {
             const shiftId = updated.id;
             const cleanItems = items
-                .map((it: { clientName?: string; client_name?: string; serviceName?: string; service_name?: string; amount?: number; note?: string }) => ({
+                .map((it: {
+                    clientName?: string;
+                    client_name?: string;
+                    serviceName?: string;
+                    service_name?: string;
+                    serviceAmount?: number;
+                    amount?: number; // для обратной совместимости
+                    consumablesAmount?: number;
+                    consumables_amount?: number; // для обратной совместимости
+                    bookingId?: string;
+                    booking_id?: string; // для обратной совместимости
+                    note?: string;
+                }) => ({
                     shift_id: shiftId,
                     client_name: it.clientName ?? it.client_name ?? null,
                     service_name: it.serviceName ?? it.service_name ?? null,
-                    amount: Number(it.amount ?? 0) || 0,
+                    service_amount: Number(it.serviceAmount ?? it.amount ?? 0) || 0,
+                    consumables_amount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
+                    booking_id: it.bookingId ?? it.booking_id ?? null,
                     note: it.note ?? null,
                 }))
-                .filter((it: { amount: number }) => it.amount > 0);
+                .filter((it: { service_amount: number }) => it.service_amount > 0 || it.consumables_amount > 0);
 
             const { error: delError } = await supabase
                 .from('staff_shift_items')
