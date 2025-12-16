@@ -107,6 +107,9 @@ export async function POST(req: Request, context: unknown) {
                     const numVal = Number(body.hourly_rate);
                     updateData.hourly_rate = isNaN(numVal) || numVal <= 0 ? null : numVal;
                 }
+            } else {
+                // Если hourly_rate не передан, не обновляем его (сохраняем текущее значение)
+                // Но для явного обновления нужно всегда передавать это поле
             }
 
             const { error: eUpd } = await admin
@@ -114,6 +117,11 @@ export async function POST(req: Request, context: unknown) {
                 .update(updateData)
                 .eq('id', staffId)
                 .eq('biz_id', bizId);
+            
+            if (eUpd) {
+                console.error('Error updating staff:', eUpd);
+                console.error('Update data:', JSON.stringify(updateData, null, 2));
+            }
             if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });
         }
 
