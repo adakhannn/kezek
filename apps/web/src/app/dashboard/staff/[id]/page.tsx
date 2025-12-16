@@ -113,7 +113,7 @@ export default async function Page({
                         is_active: Boolean(staff.is_active),
                         percent_master: Number(staff.percent_master ?? 60),
                         percent_salon: Number(staff.percent_salon ?? 40),
-                        hourly_rate: staff.hourly_rate ? Number(staff.hourly_rate) : null,
+                        hourly_rate: staff.hourly_rate !== null && staff.hourly_rate !== undefined ? Number(staff.hourly_rate) : null,
                     }}
                     apiBase="/api/staff"
                 />
