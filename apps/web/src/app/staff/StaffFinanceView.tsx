@@ -96,6 +96,8 @@ export default function StaffFinanceView() {
     const [isDayOff, setIsDayOff] = useState(false);
     const [saving, setSaving] = useState(false);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
+    const [savingItems, setSavingItems] = useState(false);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     const load = async () => {
         setLoading(true);
@@ -159,6 +161,7 @@ export default function StaffFinanceView() {
             setToday({ ok: false, error: 'Не удалось загрузить данные смены' });
         } finally {
             setLoading(false);
+            setIsInitialLoad(false);
         }
     };
 
@@ -170,6 +173,33 @@ export default function StaffFinanceView() {
     const todayShift = today && today.ok && today.today.exists ? today.today.shift : null;
     const isOpen = todayShift && todayShift.status === 'open';
     const isClosed = todayShift && todayShift.status === 'closed';
+
+    // Автосохранение клиентов при изменении (debounce)
+    useEffect(() => {
+        // Не сохраняем при первой загрузке или если смена закрыта
+        if (isInitialLoad || !isOpen) return;
+        
+        const timeoutId = setTimeout(async () => {
+            setSavingItems(true);
+            try {
+                const res = await fetch('/api/staff/shift/items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items }),
+                });
+                const json = await res.json();
+                if (!json.ok) {
+                    console.error('Error auto-saving items:', json.error);
+                }
+            } catch (e) {
+                console.error('Error auto-saving items:', e);
+            } finally {
+                setSavingItems(false);
+            }
+        }, 1000); // сохраняем через 1 секунду после последнего изменения
+
+        return () => clearTimeout(timeoutId);
+    }, [items, isOpen, isInitialLoad]);
 
     // Автообновление часов работы для открытой смены (каждую минуту)
     useEffect(() => {
@@ -574,19 +604,26 @@ export default function StaffFinanceView() {
                         Клиенты за смену
                     </h2>
                     {isOpen && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                setItems((prev) => [
-                                    { clientName: '', serviceName: '', serviceAmount: 0, consumablesAmount: 0, bookingId: null, note: '' },
-                                    ...prev,
-                                ])
-                            }
-                            disabled={saving}
-                        >
-                            Добавить клиента
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            {savingItems && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Сохранение...
+                                </span>
+                            )}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    setItems((prev) => [
+                                        { clientName: '', serviceName: '', serviceAmount: 0, consumablesAmount: 0, bookingId: null, note: '' },
+                                        ...prev,
+                                    ])
+                                }
+                                disabled={saving || savingItems}
+                            >
+                                Добавить клиента
+                            </Button>
+                        </div>
                     )}
                 </div>
 
