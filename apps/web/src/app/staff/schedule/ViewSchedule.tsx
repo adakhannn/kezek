@@ -1,38 +1,23 @@
 'use client';
 
+import { startOfWeek, addDays, addWeeks } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Card } from '@/components/ui/Card';
 import { supabase } from '@/lib/supabaseClient';
+import { TZ } from '@/lib/time';
 
 type TimeRange = { start: string; end: string };
-type WH = { id: string; day_of_week: number; intervals: TimeRange[]; breaks: TimeRange[] };
-type Rule = {
-    id: string;
-    kind: 'weekly' | 'date' | 'range';
-    day_of_week: number | null;
-    date_on: string | null;
-    date_from: string | null;
-    date_to: string | null;
-    branch_id: string;
-    tz: string;
-    intervals: TimeRange[];
-    breaks: TimeRange[];
-    is_active: boolean;
-    priority: number;
-};
-type TimeOff = { id: string; date_from: string; date_to: string; reason: string | null };
 
-const DOW = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+const DOW = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
-function intervalsToStr(j: TimeRange[]): string {
-    try {
-        const arr = Array.isArray(j) ? j : [];
-        if (arr.length === 0) return 'Выходной';
-        return arr.map((x) => `${x.start}-${x.end}`).join(', ');
-    } catch {
-        return 'Выходной';
-    }
+// Получаем даты текущей и следующей недели
+function getWeekDates(weekOffset: number): Date[] {
+    const today = new Date();
+    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Понедельник
+    const targetWeekStart = addWeeks(weekStart, weekOffset);
+    return Array.from({ length: 7 }, (_, i) => addDays(targetWeekStart, i));
 }
 
 export default function ViewSchedule({
@@ -46,65 +31,72 @@ export default function ViewSchedule({
     branches: { id: string; name: string }[];
     homeBranchId: string;
 }) {
-    const [tab, setTab] = useState<'weekly' | 'rules' | 'timeoff'>('weekly');
-
-    const branchesMap = useMemo(() => {
-        const map = new Map<string, string>();
-        branches.forEach((b) => map.set(b.id, b.name));
-        return map;
-    }, [branches]);
-
-    // WEEKLY
-    const [wh, setWh] = useState<WH[]>([]);
-    const whByDow: Record<number, WH | undefined> = useMemo(() => {
-        const map: Record<number, WH | undefined> = {};
-        for (const row of wh) map[row.day_of_week] = row;
-        return map;
-    }, [wh]);
-
-    // RULES
-    const [rules, setRules] = useState<Rule[]>([]);
-
-    // TIME OFF
-    const [timeoff, setTimeoff] = useState<TimeOff[]>([]);
     const [loading, setLoading] = useState(true);
+    const [rules, setRules] = useState<
+        Array<{
+            id: string;
+            date_on: string;
+            intervals: TimeRange[];
+        }>
+    >([]);
 
-    // load all
+    // Получаем даты текущей и следующей недели
+    const currentWeekDates = useMemo(() => getWeekDates(0), []);
+    const nextWeekDates = useMemo(() => getWeekDates(1), []);
+
+    // Загружаем правила для текущей и следующей недели
     useEffect(() => {
         let ignore = false;
         (async () => {
             setLoading(true);
-            const [whRes, rulesRes, toRes] = await Promise.all([
-                supabase
-                    .from('working_hours')
-                    .select('id, day_of_week, intervals, breaks')
-                    .eq('biz_id', bizId)
-                    .eq('staff_id', staffId)
-                    .order('day_of_week'),
-                supabase
-                    .from('staff_schedule_rules')
-                    .select('id, kind, day_of_week, date_on, date_from, date_to, branch_id, tz, intervals, breaks, is_active, priority')
-                    .eq('biz_id', bizId)
-                    .eq('staff_id', staffId)
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false }),
-                supabase
-                    .from('staff_time_off')
-                    .select('id, date_from, date_to, reason')
-                    .eq('biz_id', bizId)
-                    .eq('staff_id', staffId)
-                    .order('date_from', { ascending: false }),
-            ]);
+            const weekStart = formatInTimeZone(currentWeekDates[0], TZ, 'yyyy-MM-dd');
+            const weekEnd = formatInTimeZone(addDays(nextWeekDates[6], 1), TZ, 'yyyy-MM-dd');
+
+            const { data } = await supabase
+                .from('staff_schedule_rules')
+                .select('id, date_on, intervals')
+                .eq('biz_id', bizId)
+                .eq('staff_id', staffId)
+                .eq('kind', 'date')
+                .eq('is_active', true)
+                .gte('date_on', weekStart)
+                .lt('date_on', weekEnd)
+                .order('date_on', { ascending: true });
+
             if (ignore) return;
-            setWh(whRes.data ?? []);
-            setRules(rulesRes.data ?? []);
-            setTimeoff(toRes.data ?? []);
+            setRules(
+                (data ?? []).map((r) => ({
+                    id: r.id,
+                    date_on: r.date_on,
+                    intervals: (r.intervals ?? []) as TimeRange[],
+                }))
+            );
             setLoading(false);
         })();
         return () => {
             ignore = true;
         };
-    }, [bizId, staffId]);
+    }, [bizId, staffId, currentWeekDates, nextWeekDates]);
+
+    // Создаем карту правил по датам
+    const rulesByDate = useMemo(() => {
+        const map = new Map<string, TimeRange[]>();
+        for (const r of rules) {
+            map.set(r.date_on, r.intervals);
+        }
+        return map;
+    }, [rules]);
+
+    function formatTimeRange(intervals: TimeRange[] | null | undefined): string {
+        if (!intervals || intervals.length === 0) {
+            return 'Выходной';
+        }
+        if (intervals.length > 0) {
+            const first = intervals[0];
+            return `${first.start} - ${first.end}`;
+        }
+        return 'Выходной';
+    }
 
     if (loading) {
         return (
@@ -115,167 +107,135 @@ export default function ViewSchedule({
     }
 
     return (
-        <div className="space-y-6">
-            {/* Табы */}
-            <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                <button
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        tab === 'weekly'
-                            ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
-                    onClick={() => setTab('weekly')}
-                >
-                    Еженедельное расписание
-                </button>
-                <button
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        tab === 'rules'
-                            ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
-                    onClick={() => setTab('rules')}
-                >
-                    Правила ({rules.length})
-                </button>
-                <button
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        tab === 'timeoff'
-                            ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
-                    onClick={() => setTab('timeoff')}
-                >
-                    Выходные ({timeoff.length})
-                </button>
-            </div>
+        <section className="space-y-6">
+            <div>
+                <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Текущая неделя</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    {formatInTimeZone(currentWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
+                    {formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}
+                </p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {currentWeekDates.map((date) => {
+                        const dow = date.getDay(); // 0-6 (0=воскресенье)
+                        const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                        const intervals = rulesByDate.get(dateStr);
+                        const isDayOff = intervals !== undefined && intervals.length === 0;
+                        const isWorking = intervals !== undefined && intervals.length > 0;
 
-            {/* Еженедельное расписание */}
-            {tab === 'weekly' && (
-                <Card variant="elevated" className="p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Еженедельное расписание</h2>
-                    <div className="space-y-4">
-                        {[0, 1, 2, 3, 4, 5, 6].map((dow) => {
-                            const row = whByDow[dow];
-                            const intervals = row?.intervals ?? [];
-                            const breaks = row?.breaks ?? [];
-
-                            return (
-                                <div
-                                    key={dow}
-                                    className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-                                >
-                                    <div className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{DOW[dow]}</div>
-                                    <div className="space-y-2 text-sm">
-                                        <div>
-                                            <span className="text-gray-600 dark:text-gray-400">Рабочее время: </span>
-                                            <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                {intervalsToStr(intervals)}
-                                            </span>
-                                        </div>
-                                        {breaks.length > 0 && (
+                        return (
+                            <Card
+                                key={dateStr}
+                                variant="elevated"
+                                className="p-4"
+                            >
+                                <div className="space-y-2">
+                                    <div>
+                                        <div className="font-medium text-gray-900 dark:text-gray-100">{DOW[dow]}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">{dateStr}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        {isDayOff && (
+                                            <div className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                                Выходной день
+                                            </div>
+                                        )}
+                                        {isWorking && intervals && intervals.length > 0 && (
                                             <div>
-                                                <span className="text-gray-600 dark:text-gray-400">Перерывы: </span>
-                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {intervalsToStr(breaks)}
-                                                </span>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                    Рабочее время
+                                                </div>
+                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {formatTimeRange(intervals)}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {!isDayOff && !isWorking && (
+                                            <div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                    Рабочее время
+                                                </div>
+                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    09:00 - 21:00
+                                                </div>
+                                                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                    (по умолчанию)
+                                                </div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                </Card>
-            )}
+                            </Card>
+                        );
+                    })}
+                </div>
+            </div>
 
-            {/* Правила */}
-            {tab === 'rules' && (
-                <Card variant="elevated" className="p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Правила расписания</h2>
-                    {rules.length === 0 ? (
-                        <p className="text-gray-500 dark:text-gray-400">Нет правил расписания</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {rules.map((rule) => {
-                                const branchName = branchesMap.get(rule.branch_id) || 'Неизвестный филиал';
-                                let ruleDesc = '';
-                                if (rule.kind === 'weekly' && rule.day_of_week !== null) {
-                                    ruleDesc = `Каждый ${DOW[rule.day_of_week]}`;
-                                } else if (rule.kind === 'date' && rule.date_on) {
-                                    ruleDesc = `Дата: ${rule.date_on}`;
-                                } else if (rule.kind === 'range' && rule.date_from && rule.date_to) {
-                                    ruleDesc = `Период: ${rule.date_from} - ${rule.date_to}`;
-                                }
+            <div>
+                <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Следующая неделя</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    {formatInTimeZone(nextWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
+                    {formatInTimeZone(nextWeekDates[6], TZ, 'dd.MM.yyyy')}
+                </p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {nextWeekDates.map((date) => {
+                        const dow = date.getDay(); // 0-6 (0=воскресенье)
+                        const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                        const intervals = rulesByDate.get(dateStr);
+                        const isDayOff = intervals !== undefined && intervals.length === 0;
+                        const isWorking = intervals !== undefined && intervals.length > 0;
 
-                                return (
-                                    <div
-                                        key={rule.id}
-                                        className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-                                    >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div>
-                                                <div className="font-semibold text-gray-900 dark:text-gray-100">{ruleDesc}</div>
-                                                <div className="text-sm text-gray-600 dark:text-gray-400">Филиал: {branchName}</div>
+                        return (
+                            <Card
+                                key={dateStr}
+                                variant="elevated"
+                                className="p-4"
+                            >
+                                <div className="space-y-2">
+                                    <div>
+                                        <div className="font-medium text-gray-900 dark:text-gray-100">{DOW[dow]}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">{dateStr}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        {isDayOff && (
+                                            <div className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                                Выходной день
                                             </div>
-                                            <span className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 rounded">
-                                                Приоритет: {rule.priority}
-                                            </span>
-                                        </div>
-                                        <div className="space-y-1 text-sm">
+                                        )}
+                                        {isWorking && intervals && intervals.length > 0 && (
                                             <div>
-                                                <span className="text-gray-600 dark:text-gray-400">Рабочее время: </span>
-                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {intervalsToStr(rule.intervals)}
-                                                </span>
-                                            </div>
-                                            {rule.breaks.length > 0 && (
-                                                <div>
-                                                    <span className="text-gray-600 dark:text-gray-400">Перерывы: </span>
-                                                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {intervalsToStr(rule.breaks)}
-                                                    </span>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                    Рабочее время
                                                 </div>
-                                            )}
-                                        </div>
+                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {formatTimeRange(intervals)}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {!isDayOff && !isWorking && (
+                                            <div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                    Рабочее время
+                                                </div>
+                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    09:00 - 21:00
+                                                </div>
+                                                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                    (по умолчанию)
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </Card>
-            )}
-
-            {/* Выходные */}
-            {tab === 'timeoff' && (
-                <Card variant="elevated" className="p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Выходные дни</h2>
-                    {timeoff.length === 0 ? (
-                        <p className="text-gray-500 dark:text-gray-400">Нет запланированных выходных</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {timeoff.map((to) => (
-                                <div
-                                    key={to.id}
-                                    className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-                                >
-                                    <div className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                        {to.date_from === to.date_to
-                                            ? to.date_from
-                                            : `${to.date_from} - ${to.date_to}`}
-                                    </div>
-                                    {to.reason && (
-                                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                            Причина: {to.reason}
-                                        </div>
-                                    )}
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </Card>
-            )}
-        </div>
+                            </Card>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p>• Расписание управляется владельцем бизнеса</p>
+                <p>• Если для дня не указано специальное расписание, действует расписание по умолчанию (09:00-21:00)</p>
+            </div>
+        </section>
     );
 }
-
