@@ -238,14 +238,19 @@ export default function StaffFinanceView() {
     const totalAmount = totalServiceFromItems;
     const finalConsumables = totalConsumablesFromItems;
 
-    const net = totalAmount - finalConsumables >= 0 ? totalAmount - finalConsumables : 0;
+    // Проценты считаются от общей суммы услуг (до вычета расходников)
+    // Расходники добавляются к доле салона сверху
     const pM = staffPercentMaster;
     const pS = staffPercentSalon;
     const ps = pM + pS || 100;
-    const mShare = Math.round((net * pM) / ps);
-    // Доля салона = остаток от чистой суммы + 100% расходников
-    const sShareFromNet = Math.max(0, net - mShare);
-    const sShare = sShareFromNet + finalConsumables;
+    // Доля мастера = процент от общей суммы услуг
+    const mShare = Math.round((totalAmount * pM) / ps);
+    // Доля салона = процент от общей суммы услуг + 100% расходников
+    const sShareFromAmount = Math.round((totalAmount * pS) / ps);
+    const sShare = sShareFromAmount + finalConsumables;
+    
+    // Чистая сумма (для отображения) = общая сумма - расходники
+    const net = totalAmount - finalConsumables >= 0 ? totalAmount - finalConsumables : 0;
 
     const todayLabel = new Date().toLocaleDateString('ru-RU', {
         day: '2-digit',

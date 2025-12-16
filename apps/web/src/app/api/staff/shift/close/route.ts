@@ -106,8 +106,8 @@ export async function POST(req: Request) {
         const totalAmount = items.length > 0 ? totalServiceAmount : totalAmountRaw;
         const finalConsumablesAmount = items.length > 0 ? totalConsumablesFromItems : consumablesAmount;
 
-        // Чистая сумма (после вычета расходников) - от неё считаются проценты
-        const net = Math.max(0, totalAmount - finalConsumablesAmount);
+        // Проценты считаются от общей суммы услуг (до вычета расходников)
+        // Расходники добавляются к доле салона сверху
         
         // Проценты из настроек сотрудника (уже должны быть 100% в сумме)
         const safePercentMaster = Number.isFinite(percentMaster) ? percentMaster : 60;
@@ -117,11 +117,11 @@ export async function POST(req: Request) {
         const normalizedMaster = (safePercentMaster / percentSum) * 100;
         const normalizedSalon = (safePercentSalon / percentSum) * 100;
 
-        // Доля мастера = процент от чистой суммы
-        const masterShare = Math.round((net * normalizedMaster) / 100);
-        // Доля салона = остаток от чистой суммы + 100% расходников
-        const salonShareFromNet = Math.max(0, net - masterShare);
-        const salonShare = salonShareFromNet + finalConsumablesAmount; // расходники 100% идут салону
+        // Доля мастера = процент от общей суммы услуг
+        const masterShare = Math.round((totalAmount * normalizedMaster) / 100);
+        // Доля салона = процент от общей суммы услуг + 100% расходников
+        const salonShareFromAmount = Math.round((totalAmount * normalizedSalon) / 100);
+        const salonShare = salonShareFromAmount + finalConsumablesAmount; // расходники 100% идут салону
 
         // Расчет оплаты за выход (если указана ставка за час)
         const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
