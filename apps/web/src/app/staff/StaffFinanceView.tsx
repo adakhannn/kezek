@@ -61,6 +61,9 @@ type TodayResponse =
           bookings?: Booking[];
           staffPercentMaster?: number;
           staffPercentSalon?: number;
+          hourlyRate?: number | null;
+          currentHoursWorked?: number | null;
+          currentGuaranteedAmount?: number | null;
           isDayOff?: boolean;
           stats: Stats;
       }
@@ -87,6 +90,9 @@ export default function StaffFinanceView() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [staffPercentMaster, setStaffPercentMaster] = useState(60);
     const [staffPercentSalon, setStaffPercentSalon] = useState(40);
+    const [hourlyRate, setHourlyRate] = useState<number | null>(null);
+    const [currentHoursWorked, setCurrentHoursWorked] = useState<number | null>(null);
+    const [currentGuaranteedAmount, setCurrentGuaranteedAmount] = useState<number | null>(null);
     const [isDayOff, setIsDayOff] = useState(false);
     const [saving, setSaving] = useState(false);
 
@@ -136,6 +142,16 @@ export default function StaffFinanceView() {
             // Выходной день
             if (json.ok && 'isDayOff' in json) {
                 setIsDayOff(Boolean(json.isDayOff));
+            }
+            // Ставка за час и текущие часы работы
+            if (json.ok && 'hourlyRate' in json) {
+                setHourlyRate(json.hourlyRate ?? null);
+            }
+            if (json.ok && 'currentHoursWorked' in json) {
+                setCurrentHoursWorked(json.currentHoursWorked ?? null);
+            }
+            if (json.ok && 'currentGuaranteedAmount' in json) {
+                setCurrentGuaranteedAmount(json.currentGuaranteedAmount ?? null);
             }
         } catch (e) {
             console.error('Error loading today shift:', e);
@@ -259,6 +275,35 @@ export default function StaffFinanceView() {
                                         ? `${todayShift.late_minutes} мин`
                                         : 'нет'}
                                 </div>
+                                {isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null && (
+                                    <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                        <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Оплата за выход
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Отработано:</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {currentHoursWorked.toFixed(2)} ч
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Ставка:</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {hourlyRate} сом/ч
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
+                                                <span className="font-medium text-green-600 dark:text-green-400">
+                                                    К получению за выход:
+                                                </span>
+                                                <span className="font-semibold text-green-600 dark:text-green-400">
+                                                    {currentGuaranteedAmount.toFixed(2)} сом
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

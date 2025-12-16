@@ -12,10 +12,10 @@ export async function GET() {
     try {
         const { supabase, staffId, bizId } = await getStaffContext();
 
-        // Получаем проценты из настроек сотрудника
+        // Получаем проценты и ставку за час из настроек сотрудника
         const { data: staffData, error: staffError } = await supabase
             .from('staff')
-            .select('percent_master, percent_salon')
+            .select('percent_master, percent_salon, hourly_rate')
             .eq('id', staffId)
             .maybeSingle();
 
@@ -25,6 +25,7 @@ export async function GET() {
 
         const staffPercentMaster = Number(staffData?.percent_master ?? 60);
         const staffPercentSalon = Number(staffData?.percent_salon ?? 40);
+        const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
 
         // Текущая дата в локальной TZ (без времени)
         const now = new Date();
@@ -127,6 +128,18 @@ export async function GET() {
             console.error('Error loading today bookings:', bookingsError);
         }
 
+        // Расчет текущих часов работы и суммы за выход для открытой смены
+        let currentHoursWorked: number | null = null;
+        let currentGuaranteedAmount: number | null = null;
+
+        if (shift && shift.status === 'open' && shift.opened_at && hourlyRate) {
+            const openedAt = new Date(shift.opened_at);
+            const now = new Date();
+            const diffMs = now.getTime() - openedAt.getTime();
+            currentHoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // округляем до 2 знаков
+            currentGuaranteedAmount = Math.round(currentHoursWorked * hourlyRate * 100) / 100;
+        }
+
         // Общая статистика по всем закрытым сменам сотрудника
         const { data: allShifts, error: statsError } = await supabase
             .from('staff_shifts')
@@ -165,6 +178,9 @@ export async function GET() {
                   },
             staffPercentMaster: staffPercentMaster,
             staffPercentSalon: staffPercentSalon,
+            hourlyRate: hourlyRate,
+            currentHoursWorked: currentHoursWorked,
+            currentGuaranteedAmount: currentGuaranteedAmount,
             bookings: todayBookings ?? [],
             isDayOff: isDayOff,
             stats: {
