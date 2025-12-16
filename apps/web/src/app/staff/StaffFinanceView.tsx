@@ -114,9 +114,10 @@ export default function StaffFinanceView() {
                     serviceName?: string;
                     service_name?: string;
                     serviceAmount?: number;
+                    service_amount?: number; // из БД
                     amount?: number; // для обратной совместимости
                     consumablesAmount?: number;
-                    consumables_amount?: number; // для обратной совместимости
+                    consumables_amount?: number; // из БД / для обратной совместимости
                     bookingId?: string | null;
                     booking_id?: string | null; // для обратной совместимости
                     note?: string;
@@ -124,8 +125,22 @@ export default function StaffFinanceView() {
                     id: it.id,
                     clientName: it.clientName ?? it.client_name ?? '',
                     serviceName: it.serviceName ?? it.service_name ?? '',
-                    serviceAmount: Number(it.serviceAmount ?? it.amount ?? 0) || 0,
-                    consumablesAmount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
+                    // Сумма за услугу: сначала из поля service_amount (из БД),
+                    // затем из serviceAmount/amount для обратной совместимости
+                    serviceAmount:
+                        Number(
+                            it.service_amount ??
+                                it.serviceAmount ??
+                                it.amount ??
+                                0
+                        ) || 0,
+                    // Расходники: из consumables_amount (из БД) или других полей
+                    consumablesAmount:
+                        Number(
+                            it.consumables_amount ??
+                                it.consumablesAmount ??
+                                0
+                        ) || 0,
                     bookingId: it.bookingId ?? it.booking_id ?? null,
                     note: it.note,
                 }));
