@@ -38,10 +38,21 @@ export default function StaffForm({
             const url = form.id
                 ? `${apiBase}/${encodeURIComponent(form.id)}/update`
                 : `${apiBase}/create`;
+            
+            // Проверяем, что все обязательные поля присутствуют
+            if (!form.full_name || !form.branch_id) {
+                setErr('Заполните все обязательные поля');
+                setSaving(false);
+                return;
+            }
+            
+            const requestBody = JSON.stringify(form);
+            console.log('Sending form data:', requestBody);
+            
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify(form),
+                body: requestBody,
             });
 
             const text = await res.text();
