@@ -57,6 +57,7 @@ type TodayResponse =
           bookings?: Booking[];
           staffPercentMaster?: number;
           staffPercentSalon?: number;
+          isDayOff?: boolean;
           stats: Stats;
       }
     | { ok: false; error: string };
@@ -82,6 +83,7 @@ export default function StaffFinanceView() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [staffPercentMaster, setStaffPercentMaster] = useState(60);
     const [staffPercentSalon, setStaffPercentSalon] = useState(40);
+    const [isDayOff, setIsDayOff] = useState(false);
     const [saving, setSaving] = useState(false);
 
     const load = async () => {
@@ -126,6 +128,10 @@ export default function StaffFinanceView() {
             if (json.ok && 'staffPercentMaster' in json && 'staffPercentSalon' in json) {
                 setStaffPercentMaster(Number(json.staffPercentMaster ?? 60));
                 setStaffPercentSalon(Number(json.staffPercentSalon ?? 40));
+            }
+            // Выходной день
+            if (json.ok && 'isDayOff' in json) {
+                setIsDayOff(Boolean(json.isDayOff));
             }
         } catch (e) {
             console.error('Error loading today shift:', e);
@@ -254,14 +260,22 @@ export default function StaffFinanceView() {
                     </div>
                      <div className="flex gap-2 items-center flex-wrap">
                          {!todayShift && (
-                             <Button
-                                 variant="primary"
-                                 onClick={handleOpenShift}
-                                 disabled={loading || saving}
-                                 isLoading={saving}
-                             >
-                                 Открыть смену
-                             </Button>
+                             <>
+                                 {isDayOff ? (
+                                     <div className="text-sm text-amber-600 dark:text-amber-400 font-medium px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
+                                         Сегодня у вас выходной день. Нельзя открыть смену.
+                                     </div>
+                                 ) : (
+                                     <Button
+                                         variant="primary"
+                                         onClick={handleOpenShift}
+                                         disabled={loading || saving || isDayOff}
+                                         isLoading={saving}
+                                     >
+                                         Открыть смену
+                                     </Button>
+                                 )}
+                             </>
                          )}
                          {isOpen && (
                              <>

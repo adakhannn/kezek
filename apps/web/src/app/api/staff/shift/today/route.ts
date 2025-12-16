@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
 
 export async function GET() {
     try {
-        const { supabase, staffId } = await getStaffContext();
+        const { supabase, staffId, bizId } = await getStaffContext();
 
         // Получаем проценты из настроек сотрудника
         const { data: staffData, error: staffError } = await supabase
@@ -29,6 +29,55 @@ export async function GET() {
         // Текущая дата в локальной TZ (без времени)
         const now = new Date();
         const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
+
+        // Проверяем, выходной ли сегодня
+        let isDayOff = false;
+
+        // 1. Проверяем staff_time_off
+        const { data: timeOffs } = await supabase
+            .from('staff_time_off')
+            .select('id')
+            .eq('biz_id', bizId)
+            .eq('staff_id', staffId)
+            .lte('date_from', ymd)
+            .gte('date_to', ymd);
+
+        if (timeOffs && timeOffs.length > 0) {
+            isDayOff = true;
+        } else {
+            // 2. Проверяем staff_schedule_rules для конкретной даты
+            const { data: dateRule } = await supabase
+                .from('staff_schedule_rules')
+                .select('intervals, is_active')
+                .eq('biz_id', bizId)
+                .eq('staff_id', staffId)
+                .eq('kind', 'date')
+                .eq('date_on', ymd)
+                .eq('is_active', true)
+                .maybeSingle();
+
+            if (dateRule && dateRule.is_active) {
+                const intervals = (dateRule.intervals ?? []) as { start: string; end: string }[];
+                if (!Array.isArray(intervals) || intervals.length === 0) {
+                    isDayOff = true;
+                }
+            } else {
+                // 3. Проверяем еженедельное расписание
+                const { data: whRow } = await supabase
+                    .from('working_hours')
+                    .select('intervals')
+                    .eq('biz_id', bizId)
+                    .eq('staff_id', staffId)
+                    .eq('day_of_week', dow)
+                    .maybeSingle();
+
+                const intervals = (whRow?.intervals ?? []) as { start: string; end: string }[];
+                if (!Array.isArray(intervals) || intervals.length === 0) {
+                    isDayOff = true;
+                }
+            }
+        }
 
         // Текущая смена
         const { data: shift, error: shiftError } = await supabase
@@ -117,6 +166,7 @@ export async function GET() {
             staffPercentMaster: staffPercentMaster,
             staffPercentSalon: staffPercentSalon,
             bookings: todayBookings ?? [],
+            isDayOff: isDayOff,
             stats: {
                 totalAmount,
                 totalMaster,

@@ -62,35 +62,100 @@ export async function POST() {
             return NextResponse.json({ ok: true, shift: reopened });
         }
 
-        // Определяем ожидаемое время начала смены по расписанию
+        // Проверяем, не выходной ли сегодня
         const baseDate = todayTz();
         const dow = baseDate.getDay(); // 0-6
 
-        let expectedStart: Date | null = null;
-
-        const { data: whRow, error: whError } = await supabase
-            .from('working_hours')
-            .select('intervals')
+        // 1. Проверяем staff_time_off (выходные)
+        const { data: timeOffs, error: toError } = await supabase
+            .from('staff_time_off')
+            .select('id, date_from, date_to')
             .eq('biz_id', bizId)
             .eq('staff_id', staffId)
-            .eq('day_of_week', dow)
-            .maybeSingle();
+            .lte('date_from', ymd)
+            .gte('date_to', ymd);
 
-        if (whError) {
-            console.warn('Cannot load working_hours for shift open:', whError.message);
+        if (toError) {
+            console.warn('Cannot load staff_time_off for shift open:', toError.message);
         }
 
-        try {
-            const intervals = (whRow?.intervals ?? []) as { start: string; end: string }[];
-            if (Array.isArray(intervals) && intervals.length > 0) {
-                const sorted = [...intervals].sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''));
-                const first = sorted[0];
-                if (first?.start) {
-                    expectedStart = dateAtTz(ymd, first.start);
+        if (timeOffs && timeOffs.length > 0) {
+            return NextResponse.json(
+                { ok: false, error: 'Сегодня у вас выходной день. Нельзя открыть смену.' },
+                { status: 400 }
+            );
+        }
+
+        // 2. Проверяем staff_schedule_rules для конкретной даты (приоритет выше еженедельного)
+        const { data: dateRule, error: ruleError } = await supabase
+            .from('staff_schedule_rules')
+            .select('intervals, is_active')
+            .eq('biz_id', bizId)
+            .eq('staff_id', staffId)
+            .eq('kind', 'date')
+            .eq('date_on', ymd)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        if (ruleError) {
+            console.warn('Cannot load staff_schedule_rules for shift open:', ruleError.message);
+        }
+
+        let hasWorkingHours = false;
+        let expectedStart: Date | null = null;
+
+        // Если есть правило на конкретную дату
+        if (dateRule && dateRule.is_active) {
+            try {
+                const intervals = (dateRule.intervals ?? []) as { start: string; end: string }[];
+                if (Array.isArray(intervals) && intervals.length > 0) {
+                    hasWorkingHours = true;
+                    const sorted = [...intervals].sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''));
+                    const first = sorted[0];
+                    if (first?.start) {
+                        expectedStart = dateAtTz(ymd, first.start);
+                    }
                 }
+            } catch (e) {
+                console.warn('Failed to parse staff_schedule_rules.intervals for shift open:', e);
             }
-        } catch (e) {
-            console.warn('Failed to parse working_hours.intervals for shift open:', e);
+        }
+
+        // 3. Если нет правила на дату, проверяем еженедельное расписание
+        if (!hasWorkingHours) {
+            const { data: whRow, error: whError } = await supabase
+                .from('working_hours')
+                .select('intervals')
+                .eq('biz_id', bizId)
+                .eq('staff_id', staffId)
+                .eq('day_of_week', dow)
+                .maybeSingle();
+
+            if (whError) {
+                console.warn('Cannot load working_hours for shift open:', whError.message);
+            }
+
+            try {
+                const intervals = (whRow?.intervals ?? []) as { start: string; end: string }[];
+                if (Array.isArray(intervals) && intervals.length > 0) {
+                    hasWorkingHours = true;
+                    const sorted = [...intervals].sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''));
+                    const first = sorted[0];
+                    if (first?.start) {
+                        expectedStart = dateAtTz(ymd, first.start);
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to parse working_hours.intervals for shift open:', e);
+            }
+        }
+
+        // Если нет рабочих часов - это выходной
+        if (!hasWorkingHours) {
+            return NextResponse.json(
+                { ok: false, error: 'Сегодня у вас выходной день. Нельзя открыть смену.' },
+                { status: 400 }
+            );
         }
 
         const openedAt = now;
