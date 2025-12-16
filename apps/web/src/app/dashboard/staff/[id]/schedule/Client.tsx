@@ -51,10 +51,6 @@ function SingleTimeRange({
         }
     }
 
-    function handleClear() {
-        onChange(null);
-    }
-
     return (
         <div className="flex items-center gap-2">
             <input
@@ -72,16 +68,6 @@ function SingleTimeRange({
                 onChange={handleEndChange}
                 disabled={disabled}
             />
-            {value && (
-                <button
-                    type="button"
-                    className="text-xs text-red-600 hover:underline"
-                    onClick={handleClear}
-                    disabled={disabled}
-                >
-                    Очистить
-                </button>
-            )}
         </div>
     );
 }
@@ -101,16 +87,32 @@ function DayRow({
     onSave: (date: string, interval: TimeRange | null) => void;
 }) {
     const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    const [interval, setInterval] = useState<TimeRange | null>(
-        intervals && intervals.length > 0 ? intervals[0] : null
+    // Если интервал не указан в БД, день считается выходным
+    const isDayOffFromDb = !intervals || intervals.length === 0;
+    const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
+    
+    const [isDayOff, setIsDayOff] = useState(isDayOffFromDb);
+    const [interval, setInterval] = useState<TimeRange>(
+        intervals && intervals.length > 0 ? intervals[0] : defaultInterval
     );
 
     useEffect(() => {
-        setInterval(intervals && intervals.length > 0 ? intervals[0] : null);
+        const isOff = !intervals || intervals.length === 0;
+        setIsDayOff(isOff);
+        if (intervals && intervals.length > 0) {
+            setInterval(intervals[0]);
+        } else {
+            setInterval(defaultInterval);
+        }
     }, [intervals]);
 
+    function handleDayOffChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setIsDayOff(e.target.checked);
+    }
+
     function handleSave() {
-        onSave(dateStr, interval);
+        // Если день выходной, сохраняем null, иначе сохраняем интервал
+        onSave(dateStr, isDayOff ? null : interval);
     }
 
     return (
@@ -128,11 +130,26 @@ function DayRow({
                     {saving ? 'Сохраняем…' : 'Сохранить'}
                 </button>
             </div>
-            <div>
-                <div className="text-xs text-gray-500 mb-1">Рабочее время</div>
-                <SingleTimeRange value={interval} onChange={setInterval} disabled={saving} />
-                {!interval && (
-                    <div className="text-xs text-gray-400 mt-1">Выходной день</div>
+            <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={isDayOff}
+                        onChange={handleDayOffChange}
+                        disabled={saving}
+                        className="w-4 h-4"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Выходной день</span>
+                </label>
+                {!isDayOff && (
+                    <div>
+                        <div className="text-xs text-gray-500 mb-1">Рабочее время</div>
+                        <SingleTimeRange 
+                            value={interval} 
+                            onChange={(v) => v && setInterval(v)} 
+                            disabled={saving || isDayOff}
+                        />
+                    </div>
                 )}
             </div>
         </div>
@@ -330,7 +347,7 @@ export default function Client({
             </div>
 
             <div className="text-sm text-gray-500 pt-4 border-t">
-                <p>• Если не указано рабочее время — день считается выходным</p>
+                <p>• По умолчанию все дни рабочие (09:00-21:00). Отметьте чекбокс "Выходной день", чтобы сделать день нерабочим.</p>
                 <p>• Можно управлять расписанием только на текущую и следующую неделю</p>
             </div>
         </section>
