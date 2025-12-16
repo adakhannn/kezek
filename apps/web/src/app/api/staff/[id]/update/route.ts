@@ -32,12 +32,23 @@ export async function POST(req: Request, context: unknown) {
         let body: Body;
         try {
             body = await req.json();
-        } catch {
+        } catch (e) {
+            console.error('Error parsing JSON:', e);
             return NextResponse.json({ ok: false, error: 'INVALID_JSON' }, { status: 400 });
         }
 
-        if (!staffId || !body.full_name || !body.branch_id) {
-            return NextResponse.json({ ok: false, error: 'INVALID_BODY' }, { status: 400 });
+        // Валидация обязательных полей
+        if (!staffId) {
+            console.error('Missing staffId');
+            return NextResponse.json({ ok: false, error: 'INVALID_BODY: missing staffId' }, { status: 400 });
+        }
+        if (!body.full_name || typeof body.full_name !== 'string' || body.full_name.trim() === '') {
+            console.error('Invalid full_name:', body.full_name);
+            return NextResponse.json({ ok: false, error: 'INVALID_BODY: invalid full_name' }, { status: 400 });
+        }
+        if (!body.branch_id || typeof body.branch_id !== 'string') {
+            console.error('Invalid branch_id:', body.branch_id);
+            return NextResponse.json({ ok: false, error: 'INVALID_BODY: invalid branch_id' }, { status: 400 });
         }
 
         // 1) staff принадлежит бизнесу?
