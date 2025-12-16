@@ -288,14 +288,38 @@ export default function StaffFinanceView() {
     const pM = staffPercentMaster;
     const pS = staffPercentSalon;
     const ps = pM + pS || 100;
-    // Доля сотрудника = процент от общей суммы услуг
-    const mShare = Math.round((totalAmount * pM) / ps);
-    // Доля бизнеса = процент от общей суммы услуг + 100% расходников
-    const sShareFromAmount = Math.round((totalAmount * pS) / ps);
-    const sShare = sShareFromAmount + finalConsumables;
-    
-    // Чистая сумма (для отображения) = общая сумма - расходники
-    const net = totalAmount - finalConsumables >= 0 ? totalAmount - finalConsumables : 0;
+    // Базовая доля сотрудника = процент от общей суммы услуг
+    const baseStaffShare = Math.round((totalAmount * pM) / ps);
+    // Базовая доля бизнеса = процент от общей суммы услуг + 100% расходников
+    const baseBizShareFromAmount = Math.round((totalAmount * pS) / ps);
+    const baseBizShare = baseBizShareFromAmount + finalConsumables;
+
+    // С учётом оплаты за выход:
+    // если гарантированная сумма за выход больше базовой доли сотрудника,
+    // разница вычитается из доли бизнеса
+    let mShare = baseStaffShare;
+    let sShare = baseBizShare;
+
+    // Для открытой смены используем текущую гарантированную сумму
+    if (isOpen && hourlyRate && currentGuaranteedAmount !== null && currentGuaranteedAmount !== undefined) {
+        const guarantee = currentGuaranteedAmount;
+        if (guarantee > baseStaffShare) {
+            const diff = Math.round((guarantee - baseStaffShare) * 100) / 100;
+            mShare = Math.round(guarantee);
+            sShare = baseBizShare - diff;
+        }
+    }
+
+    // Для закрытой смены используем сохранённые значения guaranteed_amount и topup_amount
+    if (isClosed && todayShift) {
+        const guaranteed = todayShift.guaranteed_amount ?? null;
+        const topup = todayShift.topup_amount ?? 0;
+        if (guaranteed !== null && guaranteed > baseStaffShare) {
+            const diff = Math.round(topup * 100) / 100 || Math.round((guaranteed - baseStaffShare) * 100) / 100;
+            mShare = baseStaffShare + diff;
+            sShare = baseBizShare - diff;
+        }
+    }
 
     const todayLabel = new Date().toLocaleDateString('ru-RU', {
         day: '2-digit',
@@ -490,14 +514,6 @@ export default function StaffFinanceView() {
                         </div>
 
                         <div className="mt-2 space-y-1 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600 dark:text-gray-400">
-                                    Чистая сумма (после расходников)
-                                </span>
-                                <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                    {net} сом
-                                </span>
-                            </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">
                                     Доля сотрудника
