@@ -355,7 +355,21 @@ export default function BizClient({ data }: { data: Data }) {
     const staffCurrent = staff.find((m) => m.id === staffId) ?? null;
     const serviceCurrent = service ?? null;
 
-    const dayLabel = `${format(day, 'dd.MM.yyyy')} (${format(day, 'EEEE', { locale: undefined })})`;
+    const dayLabel = `${format(day, 'dd.MM.yyyy')} (${format(day, 'EEEE')})`;
+
+    /* ---------- пошаговый визард ---------- */
+    const [step, setStep] = useState<number>(1);
+    const totalSteps = 4;
+
+    const stepsMeta = [
+        { id: 1, label: 'Филиал' },
+        { id: 2, label: 'Услуга' },
+        { id: 3, label: 'Мастер' },
+        { id: 4, label: 'День и время' },
+    ] as const;
+
+    const canGoNext = step < totalSteps;
+    const canGoPrev = step > 1;
 
     /* ---------- UI ---------- */
     return (
@@ -392,195 +406,269 @@ export default function BizClient({ data }: { data: Data }) {
                     </div>
                 )}
 
+                {/* Степпер по шагам */}
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                    {stepsMeta.map((s, index) => {
+                        const isActive = s.id === step;
+                        const isCompleted = s.id < step;
+                        return (
+                            <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => setStep(s.id)}
+                                className="flex items-center gap-2"
+                            >
+                                <div
+                                    className={`flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold transition ${
+                                        isActive
+                                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
+                                            : isCompleted
+                                            ? 'border-emerald-500 bg-emerald-500 text-white'
+                                            : 'border-gray-300 bg-white text-gray-600 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-300'
+                                    }`}
+                                >
+                                    {isCompleted ? '✓' : s.id}
+                                </div>
+                                <span
+                                    className={`text-[11px] font-medium ${
+                                        isActive
+                                            ? 'text-indigo-700 dark:text-indigo-300'
+                                            : 'text-gray-600 dark:text-gray-300'
+                                    }`}
+                                >
+                                    {index + 1}. {s.label}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
                 <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
                     <div className="space-y-4">
                         {/* Шаг 1: филиал */}
-                        <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                            <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                Шаг 1. Выберите филиал
-                            </h2>
-                            {branches.length === 0 ? (
-                                <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                    Нет активных филиалов.
-                                </div>
-                            ) : (
-                                <div className="flex flex-wrap gap-2">
-                                    {branches.map((b) => {
-                                        const active = b.id === branchId;
-                                        return (
-                                            <button
-                                                key={b.id}
-                                                type="button"
-                                                onClick={() => setBranchId(b.id)}
-                                                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                                                    active
-                                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                                        : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                                                }`}
-                                            >
-                                                {b.name}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </section>
+                        {step === 1 && (
+                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                    Шаг 1. Выберите филиал
+                                </h2>
+                                {branches.length === 0 ? (
+                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                                        Нет активных филиалов.
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                        {branches.map((b) => {
+                                            const active = b.id === branchId;
+                                            return (
+                                                <button
+                                                    key={b.id}
+                                                    type="button"
+                                                    onClick={() => setBranchId(b.id)}
+                                                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                        active
+                                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
+                                                            : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                    }`}
+                                                >
+                                                    {b.name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </section>
+                        )}
 
                         {/* Шаг 2: услуга */}
-                        <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                            <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                Шаг 2. Услуга
-                            </h2>
-                            {servicesByBranch.length === 0 ? (
-                                <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                    В этом филиале пока нет активных услуг.
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-2">
-                                    {servicesByBranch.map((s) => {
-                                        const active = s.id === serviceId;
-                                        const hasRange =
-                                            typeof s.price_from === 'number' &&
-                                            (typeof s.price_to === 'number' ? s.price_to !== s.price_from : false);
-                                        return (
-                                            <button
-                                                key={s.id}
-                                                type="button"
-                                                onClick={() => setServiceId(s.id)}
-                                                className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
-                                                    active
-                                                        ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
-                                                        : 'border-gray-200 bg-white hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                                                }`}
-                                            >
-                                                <div>
-                                                    <div className="font-semibold text-gray-900 dark:text-gray-100">
-                                                        {s.name_ru}
+                        {step === 2 && (
+                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                    Шаг 2. Услуга
+                                </h2>
+                                {servicesByBranch.length === 0 ? (
+                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                                        В этом филиале пока нет активных услуг.
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-2">
+                                        {servicesByBranch.map((s) => {
+                                            const active = s.id === serviceId;
+                                            const hasRange =
+                                                typeof s.price_from === 'number' &&
+                                                (typeof s.price_to === 'number'
+                                                    ? s.price_to !== s.price_from
+                                                    : false);
+                                            return (
+                                                <button
+                                                    key={s.id}
+                                                    type="button"
+                                                    onClick={() => setServiceId(s.id)}
+                                                    className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
+                                                        active
+                                                            ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
+                                                            : 'border-gray-200 bg-white hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                    }`}
+                                                >
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                                            {s.name_ru}
+                                                        </div>
+                                                        <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                                                            {s.duration_min} мин
+                                                        </div>
                                                     </div>
-                                                    <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-                                                        {s.duration_min} мин
-                                                    </div>
-                                                </div>
-                                                {(typeof s.price_from === 'number' || typeof s.price_to === 'number') && (
-                                                    <div className="whitespace-nowrap text-right text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                                        {s.price_from}
-                                                        {hasRange && s.price_to
-                                                            ? `–${s.price_to}`
-                                                            : ''}{' '}
-                                                        сом
-                                                    </div>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                                                    {(typeof s.price_from === 'number' ||
+                                                        typeof s.price_to === 'number') && (
+                                                        <div className="whitespace-nowrap text-right text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                            {s.price_from}
+                                                            {hasRange && s.price_to ? `–${s.price_to}` : ''}{' '}
+                                                            сом
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
 
-                            {serviceCurrent && (
-                                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                    Продолжительность: {serviceCurrent.duration_min} мин.
-                                    {serviceCurrent.price_from && (
-                                        <>
-                                            {' '}
-                                            Примерная стоимость:{' '}
-                                            {serviceCurrent.price_from}
-                                            {serviceCurrent.price_to &&
-                                            serviceCurrent.price_to !== serviceCurrent.price_from
-                                                ? `–${serviceCurrent.price_to}`
-                                                : ''}{' '}
-                                            сом.
-                                        </>
-                                    )}
-                                </p>
-                            )}
-                        </section>
+                                {serviceCurrent && (
+                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                        Продолжительность: {serviceCurrent.duration_min} мин.
+                                        {serviceCurrent.price_from && (
+                                            <>
+                                                {' '}
+                                                Примерная стоимость:{' '}
+                                                {serviceCurrent.price_from}
+                                                {serviceCurrent.price_to &&
+                                                serviceCurrent.price_to !== serviceCurrent.price_from
+                                                    ? `–${serviceCurrent.price_to}`
+                                                    : ''}{' '}
+                                                сом.
+                                            </>
+                                        )}
+                                    </p>
+                                )}
+                            </section>
+                        )}
 
                         {/* Шаг 3: мастер */}
-                        <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                            <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                Шаг 3. Мастер
-                            </h2>
-                            {staffFiltered.length === 0 ? (
-                                <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                    Для выбранной услуги пока нет мастеров.
-                                </div>
-                            ) : (
-                                <div className="flex flex-wrap gap-2">
-                                    {staffFiltered.map((m) => {
-                                        const active = m.id === staffId;
-                                        return (
-                                            <button
-                                                key={m.id}
-                                                type="button"
-                                                onClick={() => setStaffId(m.id)}
-                                                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                                                    active
-                                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                                        : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                                                }`}
-                                            >
-                                                {m.full_name}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </section>
+                        {step === 3 && (
+                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                    Шаг 3. Мастер
+                                </h2>
+                                {staffFiltered.length === 0 ? (
+                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                                        Для выбранной услуги пока нет мастеров.
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                        {staffFiltered.map((m) => {
+                                            const active = m.id === staffId;
+                                            return (
+                                                <button
+                                                    key={m.id}
+                                                    type="button"
+                                                    onClick={() => setStaffId(m.id)}
+                                                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                        active
+                                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
+                                                            : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                    }`}
+                                                >
+                                                    {m.full_name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </section>
+                        )}
 
                         {/* Шаг 4: день и время */}
-                        <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                            <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                Шаг 4. День и время
-                            </h2>
-                            <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-                                <input
-                                    type="date"
-                                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-                                    value={dayStr}
-                                    min={todayStr}
-                                    max={maxStr}
-                                    onChange={(e) => {
-                                        const v = e.target.value; // 'yyyy-MM-dd'
-                                        if (!v) return;
-                                        setDay(dateAtTz(v, '00:00'));
-                                    }}
-                                />
-                                <button
-                                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
-                                    onClick={() => setDay(todayTz())}
-                                >
-                                    Сегодня
-                                </button>
-                                <button
-                                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
-                                    onClick={() => setDay(addDays(todayTz(), 1))}
-                                >
-                                    Завтра
-                                </button>
-                            </div>
-
-                            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                Свободные слоты
-                            </h3>
-                            {slots.length === 0 && (
-                                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                    Нет свободных окон на этот день. Попробуйте выбрать другой день или мастера.
-                                </div>
-                            )}
-                            <div className="mt-1 flex flex-wrap gap-2">
-                                {slots.map((t) => (
+                        {step === 4 && (
+                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                    Шаг 4. День и время
+                                </h2>
+                                <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+                                    <input
+                                        type="date"
+                                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                                        value={dayStr}
+                                        min={todayStr}
+                                        max={maxStr}
+                                        onChange={(e) => {
+                                            const v = e.target.value; // 'yyyy-MM-dd'
+                                            if (!v) return;
+                                            setDay(dateAtTz(v, '00:00'));
+                                        }}
+                                    />
                                     <button
-                                        key={t.toISOString()}
-                                        disabled={loading || !!holding}
-                                        className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
-                                        onClick={() => (isAuthed ? hold(t) : redirectToAuth())}
-                                        title={isAuthed ? '' : 'Войдите, чтобы забронировать'}
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
+                                        onClick={() => setDay(todayTz())}
                                     >
-                                        {toLabel(t)}
+                                        Сегодня
                                     </button>
-                                ))}
-                            </div>
-                        </section>
+                                    <button
+                                        className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
+                                        onClick={() => setDay(addDays(todayTz(), 1))}
+                                    >
+                                        Завтра
+                                    </button>
+                                </div>
+
+                                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                    Свободные слоты
+                                </h3>
+                                {slots.length === 0 && (
+                                    <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                                        Нет свободных окон на этот день. Попробуйте выбрать другой день или мастера.
+                                    </div>
+                                )}
+                                <div className="mt-1 flex flex-wrap gap-2">
+                                    {slots.map((t) => (
+                                        <button
+                                            key={t.toISOString()}
+                                            disabled={loading || !!holding}
+                                            className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
+                                            onClick={() => (isAuthed ? hold(t) : redirectToAuth())}
+                                            title={isAuthed ? '' : 'Войдите, чтобы забронировать'}
+                                        >
+                                            {toLabel(t)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Навигация по шагам */}
+                        <div className="flex justify-between pt-1 text-xs">
+                            <button
+                                type="button"
+                                disabled={!canGoPrev}
+                                onClick={() => canGoPrev && setStep(step - 1)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                                    canGoPrev
+                                        ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800'
+                                        : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
+                                }`}
+                            >
+                                ← Назад
+                            </button>
+                            <button
+                                type="button"
+                                disabled={!canGoNext}
+                                onClick={() => canGoNext && setStep(step + 1)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                                    canGoNext
+                                        ? 'border-indigo-500 bg-indigo-600 text-white hover:bg-indigo-700 dark:border-indigo-400'
+                                        : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
+                                }`}
+                            >
+                                {step === totalSteps - 1 ? 'К выбору времени →' : 'Далее →'}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Корзина / итог */}
