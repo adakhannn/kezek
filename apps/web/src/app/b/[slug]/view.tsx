@@ -745,12 +745,13 @@ export default function BizClient({ data }: { data: Data }) {
 
                         {/* Гостевой режим: без авторизации, но с телефоном/именем */}
                         {!isAuthed && guestSlotISO && (
-                            <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-800 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
+                                <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-800 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                 <div className="font-semibold text-gray-900 dark:text-gray-100">
                                     Запись без регистрации
                                 </div>
                                 <p className="text-[11px] text-gray-600 dark:text-gray-400">
                                     Укажите имя и номер телефона, чтобы мастер мог связаться с вами при необходимости.
+                                    Или авторизуйтесь, чтобы видеть свои записи в личном кабинете.
                                 </p>
                                 <div className="space-y-1.5">
                                     <input
@@ -768,9 +769,17 @@ export default function BizClient({ data }: { data: Data }) {
                                         onChange={(e) => setGuestPhone(e.target.value)}
                                     />
                                 </div>
-                                <button
-                                    className="mt-1 w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
-                                    onClick={async () => {
+                                <div className="mt-2 flex flex-col gap-2">
+                                    <button
+                                        type="button"
+                                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[11px] font-semibold text-gray-800 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                                        onClick={redirectToAuth}
+                                    >
+                                        Войти или зарегистрироваться
+                                    </button>
+                                    <button
+                                        className="w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+                                        onClick={async () => {
                                         if (!serviceCurrent) {
                                             alert('Выбери услугу');
                                             return;
@@ -831,10 +840,11 @@ export default function BizClient({ data }: { data: Data }) {
                                             setLoading(false);
                                         }
                                     }}
-                                    disabled={loading}
-                                >
-                                    Записаться без регистрации
-                                </button>
+                                        disabled={loading}
+                                    >
+                                        Записаться без регистрации
+                                    </button>
+                                </div>
                             </div>
                         )}
 
