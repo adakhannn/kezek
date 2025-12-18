@@ -273,7 +273,7 @@ export default function BizClient({ data }: { data: Data }) {
     }, [intervals, service, busy, staffId, day, dayStr]);
 
     /* ---------- hold / confirm и таймер ---------- */
-    const [holding, setHolding] = useState<{ bookingId: string; until: number } | null>(null);
+    const [holding, setHolding] = useState<{ bookingId: string; until: number; slotLabel: string } | null>(null);
     const [loading, setLoading] = useState(false);
 
     async function hold(t: Date) {
@@ -300,7 +300,7 @@ export default function BizClient({ data }: { data: Data }) {
             }
 
             const bookingId = String(data);
-            setHolding({ bookingId, until: Date.now() + 120_000 });
+            setHolding({ bookingId, until: Date.now() + 120_000, slotLabel: toLabel(t) });
 
             fetch('/api/notify', {
                 method: 'POST',
@@ -350,138 +350,277 @@ export default function BizClient({ data }: { data: Data }) {
     const leftSec = Math.max(0, holding ? Math.ceil((holding.until - Date.now()) / 1000) : 0);
     void tick;
 
+    /* ---------- производные значения для отображения ---------- */
+    const branch = branches.find((b) => b.id === branchId) ?? null;
+    const staffCurrent = staff.find((m) => m.id === staffId) ?? null;
+    const serviceCurrent = service ?? null;
+
+    const dayLabel = `${format(day, 'dd.MM.yyyy')} (${format(day, 'EEEE', { locale: undefined })})`;
+
     /* ---------- UI ---------- */
     return (
-        <main className="mx-auto max-w-4xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-semibold">{biz.name}</h1>
-                    <p className="text-gray-600">{biz.address}</p>
-                </div>
-                <AuthPanelLazy />
-            </div>
-
-            {!isAuthed && (
-                <div className="border rounded p-3 bg-yellow-50 text-sm flex items-center justify-between">
-                    <div>Чтобы забронировать время, войдите по номеру телефона.</div>
-                    <button className="border px-3 py-1 rounded" onClick={redirectToAuth}>
-                        Войти по SMS
-                    </button>
-                </div>
-            )}
-
-            <div className="grid sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2 border p-3 rounded">
-                    {/* Филиал */}
-                    <h2 className="font-medium mb-2">Филиал</h2>
-                    <select
-                        className="border rounded px-2 py-1 w-full mb-3"
-                        value={branchId}
-                        onChange={(e) => setBranchId(e.target.value)}
-                    >
-                        {branches.map((b) => (
-                            <option key={b.id} value={b.id}>
-                                {b.name}
-                            </option>
-                        ))}
-                        {branches.length === 0 && <option value="">Нет активных филиалов</option>}
-                    </select>
-
-                    {/* Услуга */}
-                    <h2 className="font-medium mb-2">Услуга</h2>
-                    <select
-                        className="border rounded px-2 py-1 w-full mb-3"
-                        value={serviceId}
-                        onChange={(e) => setServiceId(e.target.value)}
-                    >
-                        {servicesByBranch.map((s) => (
-                            <option key={s.id} value={s.id}>
-                                {s.name_ru} — {s.duration_min} мин
-                                {s.price_from ? ` (${s.price_from}-${s.price_to ?? s.price_from} сом)` : ''}
-                            </option>
-                        ))}
-                        {servicesByBranch.length === 0 && <option value="">Нет услуг в этом филиале</option>}
-                    </select>
-
-                    {/* Мастер — фильтруется по филиалу и по навыку (если данные есть) */}
-                    <h2 className="font-medium mb-2">Мастер</h2>
-                    <select
-                        className="border rounded px-2 py-1 w-full mb-3"
-                        value={staffId}
-                        onChange={(e) => setStaffId(e.target.value)}
-                    >
-                        {staffFiltered.map((m) => (
-                            <option key={m.id} value={m.id}>
-                                {m.full_name}
-                            </option>
-                        ))}
-                        {staffFiltered.length === 0 && <option value="">Нет мастеров для этой услуги</option>}
-                    </select>
-
-                    {/* День */}
-                    <h2 className="font-medium mb-2">День</h2>
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <input
-                            type="date"
-                            className="border rounded px-2 py-1"
-                            value={dayStr}
-                            min={todayStr}
-                            max={maxStr}
-                            onChange={(e) => {
-                                const v = e.target.value; // 'yyyy-MM-dd'
-                                if (!v) return;
-                                setDay(dateAtTz(v, '00:00'));
-                            }}
-                        />
-                        <button className="border px-3 py-1 rounded" onClick={() => setDay(todayTz())}>
-                            Сегодня
-                        </button>
-                        <button className="border px-3 py-1 rounded" onClick={() => setDay(addDays(todayTz(), 1))}>
-                            Завтра
-                        </button>
+        <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+            <div className="mx-auto max-w-5xl px-4 py-6 space-y-5">
+                <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100">
+                            {biz.name}
+                        </h1>
+                        {biz.address && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{biz.address}</p>
+                        )}
+                        {biz.phones?.length ? (
+                            <p className="text-xs text-gray-500 dark:text-gray-500">
+                                Телефон: {biz.phones.join(', ')}
+                            </p>
+                        ) : null}
                     </div>
-
-                    {/* Слоты */}
-                    <h2 className="font-medium mb-2">Свободные слоты</h2>
-                    {slots.length === 0 && <div className="text-gray-500">Нет свободных окон</div>}
-                    <div className="flex flex-wrap gap-2">
-                        {slots.map((t) => (
-                            <button
-                                key={t.toISOString()}
-                                disabled={loading || !!holding}
-                                className="border px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
-                                onClick={() => (isAuthed ? hold(t) : redirectToAuth())}
-                                title={isAuthed ? '' : 'Войдите, чтобы забронировать'}
-                            >
-                                {toLabel(t)}
-                            </button>
-                        ))}
-                    </div>
+                    <AuthPanelLazy />
                 </div>
 
-                {/* Корзина */}
-                <div className="border p-3 rounded">
-                    <h2 className="font-medium mb-2">Корзина</h2>
-                    {!holding && <div className="text-gray-500 text-sm">Выберите слот, чтобы забронировать.</div>}
-                    {holding && (
-                        <div className="space-y-2">
-                            <div className="text-sm">
-                                Слот удержан на <b>{leftSec}</b> сек.
-                            </div>
-                            {isAuthed ? (
-                                <button className="border px-3 py-1 rounded w-full" onClick={confirm}>
-                                    Подтвердить бронь
-                                </button>
-                            ) : (
-                                <button className="border px-3 py-1 rounded w-full" onClick={redirectToAuth}>
-                                    Войти, чтобы подтвердить
-                                </button>
-                            )}
-                            <div className="text-xs text-gray-500">
-                                Без оплаты (MVP). После оплаты будет авто-подтверждение.
-                            </div>
+                {!isAuthed && (
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+                        <div>
+                            Чтобы забронировать время, войдите по номеру телефона. Это займёт меньше минуты.
                         </div>
-                    )}
+                        <button
+                            className="whitespace-nowrap rounded-lg border border-amber-400 bg-white/80 px-3 py-1.5 text-xs font-semibold text-amber-900 shadow-sm hover:bg-amber-100 dark:bg-amber-900 dark:text-amber-50 dark:hover:bg-amber-800"
+                            onClick={redirectToAuth}
+                        >
+                            Войти по SMS
+                        </button>
+                    </div>
+                )}
+
+                <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
+                    <div className="space-y-4">
+                        {/* Шаг 1: филиал */}
+                        <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                            <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                Шаг 1. Выберите филиал
+                            </h2>
+                            <select
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                                value={branchId}
+                                onChange={(e) => setBranchId(e.target.value)}
+                            >
+                                {branches.map((b) => (
+                                    <option key={b.id} value={b.id}>
+                                        {b.name}
+                                    </option>
+                                ))}
+                                {branches.length === 0 && <option value="">Нет активных филиалов</option>}
+                            </select>
+                        </section>
+
+                        {/* Шаг 2: услуга */}
+                        <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                            <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                Шаг 2. Услуга
+                            </h2>
+                            <select
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                                value={serviceId}
+                                onChange={(e) => setServiceId(e.target.value)}
+                            >
+                                {servicesByBranch.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name_ru} — {s.duration_min} мин
+                                        {s.price_from ? ` (${s.price_from}-${s.price_to ?? s.price_from} сом)` : ''}
+                                    </option>
+                                ))}
+                                {servicesByBranch.length === 0 && (
+                                    <option value="">Нет услуг в этом филиале</option>
+                                )}
+                            </select>
+
+                            {serviceCurrent && (
+                                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    Продолжительность: {serviceCurrent.duration_min} мин.
+                                    {serviceCurrent.price_from && (
+                                        <>
+                                            {' '}
+                                            Примерная стоимость:{' '}
+                                            {serviceCurrent.price_from}
+                                            {serviceCurrent.price_to && serviceCurrent.price_to !== serviceCurrent.price_from
+                                                ? `–${serviceCurrent.price_to}`
+                                                : ''}{' '}
+                                            сом.
+                                        </>
+                                    )}
+                                </p>
+                            )}
+                        </section>
+
+                        {/* Шаг 3: мастер */}
+                        <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                            <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                Шаг 3. Мастер
+                            </h2>
+                            <select
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                                value={staffId}
+                                onChange={(e) => setStaffId(e.target.value)}
+                            >
+                                {staffFiltered.map((m) => (
+                                    <option key={m.id} value={m.id}>
+                                        {m.full_name}
+                                    </option>
+                                ))}
+                                {staffFiltered.length === 0 && (
+                                    <option value="">Нет мастеров для этой услуги</option>
+                                )}
+                            </select>
+                        </section>
+
+                        {/* Шаг 4: день и время */}
+                        <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                            <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                Шаг 4. День и время
+                            </h2>
+                            <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+                                <input
+                                    type="date"
+                                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                                    value={dayStr}
+                                    min={todayStr}
+                                    max={maxStr}
+                                    onChange={(e) => {
+                                        const v = e.target.value; // 'yyyy-MM-dd'
+                                        if (!v) return;
+                                        setDay(dateAtTz(v, '00:00'));
+                                    }}
+                                />
+                                <button
+                                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
+                                    onClick={() => setDay(todayTz())}
+                                >
+                                    Сегодня
+                                </button>
+                                <button
+                                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
+                                    onClick={() => setDay(addDays(todayTz(), 1))}
+                                >
+                                    Завтра
+                                </button>
+                            </div>
+
+                            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                Свободные слоты
+                            </h3>
+                            {slots.length === 0 && (
+                                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                                    Нет свободных окон на этот день. Попробуйте выбрать другой день или мастера.
+                                </div>
+                            )}
+                            <div className="mt-1 flex flex-wrap gap-2">
+                                {slots.map((t) => (
+                                    <button
+                                        key={t.toISOString()}
+                                        disabled={loading || !!holding}
+                                        className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
+                                        onClick={() => (isAuthed ? hold(t) : redirectToAuth())}
+                                        title={isAuthed ? '' : 'Войдите, чтобы забронировать'}
+                                    >
+                                        {toLabel(t)}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+
+                    {/* Корзина / итог */}
+                    <aside className="space-y-3 rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                        <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            Ваша запись
+                        </h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Шаги слева → выберите услугу, мастера, день и время. Здесь вы увидите итог перед
+                            подтверждением.
+                        </p>
+
+                        <div className="mt-2 space-y-1 rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-gray-950 dark:text-gray-200">
+                            <div className="flex justify-between gap-2">
+                                <span className="text-gray-500">Филиал:</span>
+                                <span className="font-medium">{branch ? branch.name : 'Не выбран'}</span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <span className="text-gray-500">Услуга:</span>
+                                <span className="text-right font-medium">
+                                    {serviceCurrent ? serviceCurrent.name_ru : 'Не выбрана'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <span className="text-gray-500">Мастер:</span>
+                                <span className="text-right font-medium">
+                                    {staffCurrent ? staffCurrent.full_name : 'Не выбран'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <span className="text-gray-500">День:</span>
+                                <span className="text-right font-medium">{dayLabel}</span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <span className="text-gray-500">Время:</span>
+                                <span className="text-right font-medium">
+                                    {holding ? holding.slotLabel : 'Выберите слот'}
+                                </span>
+                            </div>
+                            {serviceCurrent?.price_from && (
+                                <div className="mt-1 flex justify-between gap-2 border-t border-dashed border-gray-300 pt-1 dark:border-gray-700">
+                                    <span className="text-gray-500">Ориентировочная стоимость:</span>
+                                    <span className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                                        {serviceCurrent.price_from}
+                                        {serviceCurrent.price_to &&
+                                        serviceCurrent.price_to !== serviceCurrent.price_from
+                                            ? `–${serviceCurrent.price_to}`
+                                            : ''}{' '}
+                                        сом
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {!holding && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Сначала выберите свободный слот, затем вы сможете подтвердить бронь.
+                            </div>
+                        )}
+
+                        {holding && (
+                            <div className="space-y-2 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-100">
+                                <div className="flex items-center justify-between">
+                                    <span>
+                                        Слот удержан ещё{' '}
+                                        <b>
+                                            {leftSec}
+                                        </b>{' '}
+                                        сек.
+                                    </span>
+                                </div>
+                                {isAuthed ? (
+                                    <button
+                                        className="mt-1 w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+                                        onClick={confirm}
+                                        disabled={loading}
+                                    >
+                                        Подтвердить бронь
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="mt-1 w-full rounded-lg border border-indigo-400 bg-white/80 px-3 py-1.5 text-xs font-semibold text-indigo-900 shadow-sm hover:bg-indigo-50 dark:bg-indigo-900 dark:text-indigo-50 dark:hover:bg-indigo-800"
+                                        onClick={redirectToAuth}
+                                    >
+                                        Войти, чтобы подтвердить
+                                    </button>
+                                )}
+                                <div className="text-[11px] text-indigo-900/80 dark:text-indigo-100/80">
+                                    Пока без онлайн-оплаты. После добавления оплаты бронь будет подтверждаться
+                                    автоматически.
+                                </div>
+                            </div>
+                        )}
+                    </aside>
                 </div>
             </div>
         </main>
