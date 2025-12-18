@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, enumerateSlots, toLabel, TZ } from '@/lib/time';
 
-type Biz = { id: string; name: string; address: string; phones: string[] };
+type Biz = { id: string; slug: string; name: string; address: string; phones: string[] };
 type Branch = { id: string; name: string };
 type Service = {
     id: string;
@@ -78,11 +78,6 @@ export default function BizClient({ data }: { data: Data }) {
         };
     }, []);
 
-    const redirectToAuth = () => {
-        const redirect = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = `/auth/sign-in?mode=phone&redirect=${redirect}`;
-    };
-
     /* ---------- выбор филиала/услуги/мастера ---------- */
     const [branchId, setBranchId] = useState<string>(branches[0]?.id ?? '');
 
@@ -97,12 +92,14 @@ export default function BizClient({ data }: { data: Data }) {
 
     const [serviceId, setServiceId] = useState<string>(servicesByBranch[0]?.id ?? '');
     const [staffId, setStaffId] = useState<string>(staffByBranch[0]?.id ?? '');
+    const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
-    // при смене филиала — сбрасываем выборы/слоты
+    // при смене филиала — сбрасываем выборы/слоты (если не восстановили состояние из localStorage)
     useEffect(() => {
+        if (restoredFromStorage) return;
         setServiceId(servicesByBranch[0]?.id ?? '');
         setStaffId(staffByBranch[0]?.id ?? '');
-    }, [branchId, servicesByBranch, staffByBranch]);
+    }, [branchId, servicesByBranch, staffByBranch, restoredFromStorage]);
 
     /* ---------- сервисные навыки мастеров (service_staff) ---------- */
     const [serviceStaff, setServiceStaff] = useState<ServiceStaffRow[] | null>(null);
@@ -290,6 +287,57 @@ export default function BizClient({ data }: { data: Data }) {
     const [guestSlotISO, setGuestSlotISO] = useState<string | null>(null);
     const [guestName, setGuestName] = useState<string>('');
     const [guestPhone, setGuestPhone] = useState<string>('');
+
+    // Восстановление состояния после авторизации (localStorage)
+    useEffect(() => {
+        if (restoredFromStorage) return;
+        if (typeof window === 'undefined') return;
+        try {
+            const key = `booking_state_${biz.id}`;
+            const raw = window.localStorage.getItem(key);
+            if (!raw) {
+                setRestoredFromStorage(true);
+                return;
+            }
+            const parsed = JSON.parse(raw) as {
+                branchId?: string;
+                serviceId?: string;
+                staffId?: string;
+                day?: string;
+                step?: number;
+                guestSlotISO?: string | null;
+            };
+
+            if (parsed.branchId && branches.some((b) => b.id === parsed.branchId)) {
+                setBranchId(parsed.branchId);
+            }
+            if (parsed.serviceId && services.some((s) => s.id === parsed.serviceId)) {
+                setServiceId(parsed.serviceId);
+            }
+            if (parsed.staffId && staff.some((m) => m.id === parsed.staffId)) {
+                setStaffId(parsed.staffId);
+            }
+            if (parsed.day) {
+                try {
+                    setDay(dateAtTz(parsed.day, '00:00'));
+                } catch {
+                    // ignore
+                }
+            }
+            if (parsed.step && parsed.step >= 1 && parsed.step <= 4) {
+                setStep(parsed.step);
+            }
+            if (parsed.guestSlotISO) {
+                setGuestSlotISO(parsed.guestSlotISO);
+            }
+
+            window.localStorage.removeItem(key);
+        } catch (e) {
+            console.error('restore booking state failed', e);
+        } finally {
+            setRestoredFromStorage(true);
+        }
+    }, [biz.id, branches, services, staff, restoredFromStorage]);
     const [loading, setLoading] = useState(false);
 
     async function hold(t: Date) {
@@ -379,6 +427,26 @@ export default function BizClient({ data }: { data: Data }) {
 
     const guestSlotLabel =
         guestSlotISO != null ? toLabel(new Date(guestSlotISO)) : null;
+
+    function redirectToAuth() {
+        if (typeof window === 'undefined') return;
+        try {
+            const key = `booking_state_${biz.id}`;
+            const payload = {
+                branchId,
+                serviceId,
+                staffId,
+                day: dayStr,
+                step,
+                guestSlotISO,
+            };
+            window.localStorage.setItem(key, JSON.stringify(payload));
+        } catch (e) {
+            console.error('save booking state failed', e);
+        }
+        const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/auth/sign-in?mode=phone&redirect=${redirect}`;
+    }
 
     const dayLabel = `${format(day, 'dd.MM.yyyy')} (${format(day, 'EEEE')})`;
 
