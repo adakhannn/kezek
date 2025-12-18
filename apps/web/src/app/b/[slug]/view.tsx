@@ -3,7 +3,6 @@
 
 import { addDays, format } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
-import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
@@ -37,8 +36,6 @@ type BookingRow = {
 
 // связь услуга ↔ мастер
 type ServiceStaffRow = { service_id: string; staff_id: string; is_active: boolean };
-
-const AuthPanelLazy = dynamic(() => import('@/components/auth/AuthPanel'), { ssr: false });
 
 function fmtErr(e: unknown): string {
     if (e && typeof e === 'object') {
@@ -391,21 +388,18 @@ export default function BizClient({ data }: { data: Data }) {
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
             <div className="mx-auto max-w-5xl px-4 py-6 space-y-5">
-                <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100">
-                            {biz.name}
-                        </h1>
-                        {biz.address && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{biz.address}</p>
-                        )}
-                        {biz.phones?.length ? (
-                            <p className="text-xs text-gray-500 dark:text-gray-500">
-                                Телефон: {biz.phones.join(', ')}
-                            </p>
-                        ) : null}
-                    </div>
-                    <AuthPanelLazy />
+                <div className="space-y-1">
+                    <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100">
+                        {biz.name}
+                    </h1>
+                    {biz.address && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{biz.address}</p>
+                    )}
+                    {biz.phones?.length ? (
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                            Телефон: {biz.phones.join(', ')}
+                        </p>
+                    ) : null}
                 </div>
 
                 {!isAuthed && (
