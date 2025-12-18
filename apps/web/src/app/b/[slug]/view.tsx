@@ -168,7 +168,7 @@ export default function BizClient({ data }: { data: Data }) {
     const [intervals, setIntervals] = useState<{ start: string; end: string }[]>([]);
     const [busy, setBusy] = useState<Set<number>>(new Set());
 
-    // рабочие интервалы на конкретный день недели
+    // рабочие интервалы на конкретный день (используем staff_schedule_rules)
     useEffect(() => {
         let ignore = false;
         (async () => {
@@ -176,14 +176,16 @@ export default function BizClient({ data }: { data: Data }) {
                 setIntervals([]);
                 return;
             }
-            const dowIso = Number(format(day, 'i')); // 1..7
-            const dowDb = dowIso % 7; // 0..6
-            const { data: wh, error } = await supabase
-                .from('working_hours')
-                .select('intervals,breaks')
+
+            const { data, error } = await supabase
+                .from('staff_schedule_rules')
+                .select('intervals')
                 .eq('biz_id', biz.id)
                 .eq('staff_id', staffId)
-                .eq('day_of_week', dowDb);
+                .eq('kind', 'date')
+                .eq('is_active', true)
+                .eq('date_on', dayStr)
+                .order('priority', { ascending: false });
 
             if (ignore) return;
             if (error) {
@@ -191,13 +193,27 @@ export default function BizClient({ data }: { data: Data }) {
                 setIntervals([]);
                 return;
             }
-            const merged = (wh?.[0]?.intervals ?? []) as { start: string; end: string }[];
-            setIntervals(merged);
+
+            const ruleIntervals = (data?.[0]?.intervals ?? null) as { start: string; end: string }[] | null;
+
+            // Если правила нет — используем дефолт 09:00–21:00
+            if (!ruleIntervals) {
+                setIntervals([{ start: '09:00', end: '21:00' }]);
+                return;
+            }
+
+            // Если правило есть, но интервалов нет — выходной день
+            if (ruleIntervals.length === 0) {
+                setIntervals([]);
+                return;
+            }
+
+            setIntervals(ruleIntervals);
         })();
         return () => {
             ignore = true;
         };
-    }, [biz.id, staffId, day]);
+    }, [biz.id, staffId, day, dayStr]);
 
     // занятые минуты по броням в выбранный день
     useEffect(() => {
