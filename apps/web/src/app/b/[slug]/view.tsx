@@ -415,21 +415,9 @@ export default function BizClient({ data }: { data: Data }) {
                 </div>
 
                 {!isAuthed && (
-                    <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
-                        <div className="font-medium">
-                            Рекомендуем войти по номеру телефона — так вы сможете видеть историю записей и управлять ими.
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <button
-                                className="whitespace-nowrap rounded-lg border border-amber-400 bg-white/80 px-3 py-1.5 text-xs font-semibold text-amber-900 shadow-sm hover:bg-amber-100 dark:bg-amber-900 dark:text-amber-50 dark:hover:bg-amber-800"
-                                onClick={redirectToAuth}
-                            >
-                                Войти по SMS
-                            </button>
-                            <span className="text-xs opacity-80">
-                                или продолжите без входа — мы просто спросим ваше имя и номер телефона
-                            </span>
-                        </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                        При желании вы можете войти через кнопку «Войти» вверху, чтобы видеть историю своих записей,
+                        но это не обязательно — ниже можно записаться просто указав имя и номер телефона.
                     </div>
                 )}
 
