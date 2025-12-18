@@ -52,6 +52,17 @@ export default async function Home({
     const total = count ?? 0;
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+    const typedBusinesses: Business[] = (businesses as Business[] | null) ?? [];
+
+    // Собираем список доступных категорий из текущей выдачи
+    const categoriesAvailable = Array.from(
+        new Set(
+            typedBusinesses
+                .flatMap((b) => b.categories ?? [])
+                .filter((c) => !!c)
+        )
+    ).sort();
+
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -60,14 +71,14 @@ export default async function Home({
                         <span className="gradient-text">Найдите свой сервис</span>
                     </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                        Быстрая запись в сервисы города Ош
+                        Запись в салоны и студии города Ош за пару кликов — без звонков и переписок
                     </p>
                 </div>
 
-                <Header q={q} cat={cat}/>
+                <Header q={q} cat={cat} categories={categoriesAvailable}/>
 
                 <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {(businesses as Business[] | null ?? []).map((b, index) => (
+                    {typedBusinesses.map((b, index) => (
                         <article 
                             key={b.id} 
                             className="group animate-fade-in"
@@ -148,14 +159,19 @@ export default async function Home({
 }
 
 /* ---------- поиск/фильтры в шапке ---------- */
-function Header({q, cat}: { q: string; cat: string }) {
+function Header({q, cat, categories}: { q: string; cat: string; categories: string[] }) {
     return (
-        <div className="max-w-3xl mx-auto">
-            <form className="flex items-center gap-3">
-                <div className="relative flex-1">
+        <div className="max-w-4xl mx-auto space-y-3">
+            <form className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="relative flex-1 w-full">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
                         </svg>
                     </div>
                     <input
@@ -173,14 +189,45 @@ function Header({q, cat}: { q: string; cat: string }) {
                     Искать
                 </button>
                 {q && (
-                    <Link 
-                        href="/" 
+                    <Link
+                        href="/"
                         className="px-4 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                     >
                         Сброс
                     </Link>
                 )}
             </form>
+
+            {categories.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap text-sm">
+                    <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Популярные категории:
+                    </span>
+                    <Link
+                        href={q ? `/?q=${encodeURIComponent(q)}` : '/'}
+                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                            !cat
+                                ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 border-transparent shadow-sm'
+                                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400'
+                        }`}
+                    >
+                        Все
+                    </Link>
+                    {categories.map((c) => (
+                        <Link
+                            key={c}
+                            href={`/?cat=${encodeURIComponent(c)}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+                            className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                                cat === c
+                                    ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white border-transparent shadow-sm'
+                                    : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400'
+                            }`}
+                        >
+                            {c}
+                        </Link>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
