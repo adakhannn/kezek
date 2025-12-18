@@ -91,6 +91,40 @@ export async function POST(req: Request) {
             }
         }
 
+        // 3.1) Гарантируем наличие записи в истории закреплений (staff_branch_assignments)
+        if (staffId) {
+            try {
+                const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+                // Проверяем, есть ли уже активное назначение на этот филиал
+                const { data: existingAssign } = await admin
+                    .from('staff_branch_assignments')
+                    .select('id')
+                    .eq('biz_id', bizId)
+                    .eq('staff_id', staffId)
+                    .eq('branch_id', body.branch_id)
+                    .is('valid_to', null)
+                    .maybeSingle();
+
+                if (!existingAssign) {
+                    const { error: eAssign } = await admin.from('staff_branch_assignments').insert({
+                        biz_id: bizId,
+                        staff_id: staffId,
+                        branch_id: body.branch_id,
+                        valid_from: todayISO,
+                    });
+                    if (eAssign) {
+                        console.warn(
+                            'Failed to create staff_branch_assignments row in create-from-user:',
+                            eAssign.message
+                        );
+                    }
+                }
+            } catch (e) {
+                console.warn('Unexpected error while creating staff_branch_assignments row (create-from-user):', e);
+            }
+        }
+
         // 4) Выдаём роль staff пользователю в этом бизнесе (id роли по key='staff')
         const { data: roleStaff } = await admin
             .from('roles')
