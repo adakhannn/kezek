@@ -6,7 +6,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
-import { todayTz, dateAtTz, enumerateSlots, toLabel, TZ } from '@/lib/time';
+import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[] };
 type Branch = { id: string; name: string };
@@ -36,6 +36,14 @@ type BookingRow = {
 
 // связь услуга ↔ мастер
 type ServiceStaffRow = { service_id: string; staff_id: string; is_active: boolean };
+
+// RPC get_free_slots_service_day_v2
+type Slot = {
+    staff_id: string;
+    branch_id: string;
+    start_at: string;
+    end_at: string;
+};
 
 function fmtErr(e: unknown): string {
     if (e && typeof e === 'object') {
@@ -159,135 +167,58 @@ export default function BizClient({ data }: { data: Data }) {
         }
     }, [serviceId, staffFiltered, staffId]);
 
-    /* ---------- дата ---------- */
+    /* ---------- дата и слоты через RPC get_free_slots_service_day_v2 ---------- */
     const [day, setDay] = useState<Date>(todayTz());
     const dayStr = formatInTimeZone(day, TZ, 'yyyy-MM-dd');
     const todayStr = formatInTimeZone(todayTz(), TZ, 'yyyy-MM-dd');
     const maxStr = formatInTimeZone(addDays(todayTz(), 60), TZ, 'yyyy-MM-dd');
 
-    /* ---------- интервалы и занятость ---------- */
-    const [intervals, setIntervals] = useState<{ start: string; end: string }[]>([]);
-    const [busy, setBusy] = useState<Set<number>>(new Set());
+    const [slots, setSlots] = useState<Slot[]>([]);
+    const [slotsLoading, setSlotsLoading] = useState(false);
+    const [slotsError, setSlotsError] = useState<string | null>(null);
 
-    // рабочие интервалы на конкретный день (используем staff_schedule_rules)
     useEffect(() => {
         let ignore = false;
         (async () => {
-            if (!staffId) {
-                setIntervals([]);
+            if (!serviceId || !staffId || !dayStr) {
+                setSlots([]);
                 return;
             }
-
-            const { data, error } = await supabase
-                .from('staff_schedule_rules')
-                .select('intervals')
-                .eq('biz_id', biz.id)
-                .eq('staff_id', staffId)
-                .eq('kind', 'date')
-                .eq('is_active', true)
-                .eq('date_on', dayStr)
-                .order('priority', { ascending: false });
-
-            if (ignore) return;
-            if (error) {
-                console.error(error);
-                setIntervals([]);
-                return;
-            }
-
-            const ruleIntervals = (data?.[0]?.intervals ?? null) as { start: string; end: string }[] | null;
-
-            // Если правила нет — используем дефолт 09:00–21:00
-            if (!ruleIntervals) {
-                setIntervals([{ start: '09:00', end: '21:00' }]);
-                return;
-            }
-
-            // Если правило есть, но интервалов нет — выходной день
-            if (ruleIntervals.length === 0) {
-                setIntervals([]);
-                return;
-            }
-
-            setIntervals(ruleIntervals);
-        })();
-        return () => {
-            ignore = true;
-        };
-    }, [biz.id, staffId, day, dayStr]);
-
-    // занятые минуты по броням в выбранный день
-    useEffect(() => {
-        let ignore = false;
-        (async () => {
-            if (!staffId) {
-                setBusy(new Set());
-                return;
-            }
-            const startDay = formatInTimeZone(day, TZ, "yyyy-MM-dd'T'00:00:00XXX");
-            const endDay = formatInTimeZone(addDays(day, 1), TZ, "yyyy-MM-dd'T'00:00:00XXX");
-
-            const { data, error } = await supabase
-                .from('bookings')
-                .select('start_at,end_at,staff_id,status')
-                .eq('biz_id', biz.id)
-                .eq('staff_id', staffId)
-                .in('status', ['hold', 'confirmed', 'paid'])
-                .gte('start_at', startDay)
-                .lt('start_at', endDay);
-
-            if (ignore) return;
-            if (error) {
-                console.error(error);
-                setBusy(new Set());
-                return;
-            }
-
-            const set = new Set<number>();
-            for (const b of (data ?? []) as BookingRow[]) {
-                const s = new Date(b.start_at);
-                const e = new Date(b.end_at);
-                const base = new Date(formatInTimeZone(day, TZ, "yyyy-MM-dd'T'00:00:00XXX"));
-                const m0 = Math.floor((s.getTime() - base.getTime()) / 60000);
-                const m1 = Math.floor((e.getTime() - base.getTime()) / 60000);
-                for (let m = m0; m < m1; m++) set.add(m);
-            }
-            setBusy(set);
-        })();
-        return () => {
-            ignore = true;
-        };
-    }, [biz.id, staffId, day]);
-
-    /* ---------- слоты ---------- */
-    const service = servicesByBranch.find((s) => s.id === serviceId);
-
-    const slots = useMemo<Date[]>(() => {
-        if (!service || intervals.length === 0) return [];
-        if (!staffId) return [];
-        const res: Date[] = [];
-        const base = new Date(formatInTimeZone(day, TZ, "yyyy-MM-dd'T'00:00:00XXX"));
-
-        for (const win of intervals) {
-            const winStart = dateAtTz(dayStr, win.start);
-            const winEnd = dateAtTz(dayStr, win.end);
-            const enumed = enumerateSlots(winStart, winEnd, service.duration_min, 15);
-
-            for (const t of enumed) {
-                const startM = Math.floor((t.getTime() - base.getTime()) / 60000);
-                const endM = startM + service.duration_min;
-                let ok = true;
-                for (let m = startM; m < endM; m++) {
-                    if (busy.has(m)) {
-                        ok = false;
-                        break;
-                    }
+            setSlotsLoading(true);
+            setSlotsError(null);
+            try {
+                const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
+                    p_biz_id: biz.id,
+                    p_service_id: serviceId,
+                    p_day: dayStr,
+                    p_per_staff: 400,
+                    p_step_min: 15,
+                });
+                if (ignore) return;
+                if (error) {
+                    console.error('[get_free_slots_service_day_v2] error:', error);
+                    setSlots([]);
+                    setSlotsError(error.message);
+                    return;
                 }
-                if (ok) res.push(t);
+                const all = (data ?? []) as Slot[];
+                const filtered = all.filter(
+                    (s) => s.staff_id === staffId && s.branch_id === branchId
+                );
+                setSlots(filtered);
+            } catch (e) {
+                if (ignore) return;
+                console.error('[get_free_slots_service_day_v2] catch:', e);
+                setSlots([]);
+                setSlotsError(fmtErr(e));
+            } finally {
+                if (!ignore) setSlotsLoading(false);
             }
-        }
-        return res;
-    }, [intervals, service, busy, staffId, day, dayStr]);
+        })();
+        return () => {
+            ignore = true;
+        };
+    }, [biz.id, serviceId, staffId, branchId, dayStr]);
 
     /* ---------- hold / confirm и таймер ---------- */
     const [holding, setHolding] = useState<{ bookingId: string; until: number; slotLabel: string } | null>(null);
@@ -346,6 +277,11 @@ export default function BizClient({ data }: { data: Data }) {
         }
     }, [biz.id, branches, services, staff, restoredFromStorage]);
     const [loading, setLoading] = useState(false);
+
+    const service = useMemo(
+        () => servicesByBranch.find((s) => s.id === serviceId) ?? null,
+        [servicesByBranch, serviceId]
+    );
 
     async function hold(t: Date) {
         if (!service) return alert('Выбери услугу');
@@ -430,7 +366,7 @@ export default function BizClient({ data }: { data: Data }) {
     /* ---------- производные значения для отображения ---------- */
     const branch = branches.find((b) => b.id === branchId) ?? null;
     const staffCurrent = staff.find((m) => m.id === staffId) ?? null;
-    const serviceCurrent = service ?? null;
+    const serviceCurrent = service;
 
     const guestSlotLabel =
         guestSlotISO != null ? toLabel(new Date(guestSlotISO)) : null;
@@ -711,23 +647,38 @@ export default function BizClient({ data }: { data: Data }) {
                                 <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                     Свободные слоты
                                 </h3>
-                                {slots.length === 0 && (
+                                {slotsLoading && (
+                                    <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                                        Загружаем свободные слоты...
+                                    </div>
+                                )}
+                                {!slotsLoading && slotsError && (
+                                    <div className="rounded-lg border border-dashed border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-700 dark:bg-red-950/40 dark:text-red-200">
+                                        {slotsError}
+                                    </div>
+                                )}
+                                {!slotsLoading && !slotsError && slots.length === 0 && (
                                     <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
                                         Нет свободных окон на этот день. Попробуйте выбрать другой день или мастера.
                                     </div>
                                 )}
-                                <div className="mt-1 flex flex-wrap gap-2">
-                                    {slots.map((t) => (
-                                        <button
-                                            key={t.toISOString()}
-                                            disabled={loading}
-                                            className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
-                                            onClick={() => hold(t)}
-                                        >
-                                            {toLabel(t)}
-                                        </button>
-                                    ))}
-                                </div>
+                                {!slotsLoading && !slotsError && slots.length > 0 && (
+                                    <div className="mt-1 flex flex-wrap gap-2">
+                                        {slots.map((s) => {
+                                            const d = new Date(s.start_at);
+                                            return (
+                                                <button
+                                                    key={s.start_at}
+                                                    disabled={loading}
+                                                    className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
+                                                    onClick={() => hold(d)}
+                                                >
+                                                    {toLabel(d)}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </section>
                         )}
 
