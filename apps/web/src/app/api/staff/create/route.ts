@@ -106,6 +106,22 @@ export async function POST(req: Request) {
 
         if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
 
+        // Создаём первую запись в истории закреплений сотрудника за филиалом
+        try {
+            const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            const { error: eAssign } = await admin.from('staff_branch_assignments').insert({
+                biz_id: bizId,
+                staff_id: data?.id,
+                branch_id: body.branch_id,
+                valid_from: todayISO,
+            });
+            if (eAssign) {
+                console.warn('Failed to create initial staff_branch_assignments row:', eAssign.message);
+            }
+        } catch (e) {
+            console.warn('Unexpected error while creating staff_branch_assignments row:', e);
+        }
+
         // Если нашли пользователя, добавляем роль staff
         if (linkedUserId) {
             await addStaffRole(admin, linkedUserId, bizId);
