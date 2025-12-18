@@ -399,18 +399,31 @@ export default function BizClient({ data }: { data: Data }) {
                             <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                 Шаг 1. Выберите филиал
                             </h2>
-                            <select
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-                                value={branchId}
-                                onChange={(e) => setBranchId(e.target.value)}
-                            >
-                                {branches.map((b) => (
-                                    <option key={b.id} value={b.id}>
-                                        {b.name}
-                                    </option>
-                                ))}
-                                {branches.length === 0 && <option value="">Нет активных филиалов</option>}
-                            </select>
+                            {branches.length === 0 ? (
+                                <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                                    Нет активных филиалов.
+                                </div>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {branches.map((b) => {
+                                        const active = b.id === branchId;
+                                        return (
+                                            <button
+                                                key={b.id}
+                                                type="button"
+                                                onClick={() => setBranchId(b.id)}
+                                                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                    active
+                                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
+                                                        : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                }`}
+                                            >
+                                                {b.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </section>
 
                         {/* Шаг 2: услуга */}
@@ -418,21 +431,50 @@ export default function BizClient({ data }: { data: Data }) {
                             <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                 Шаг 2. Услуга
                             </h2>
-                            <select
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-                                value={serviceId}
-                                onChange={(e) => setServiceId(e.target.value)}
-                            >
-                                {servicesByBranch.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name_ru} — {s.duration_min} мин
-                                        {s.price_from ? ` (${s.price_from}-${s.price_to ?? s.price_from} сом)` : ''}
-                                    </option>
-                                ))}
-                                {servicesByBranch.length === 0 && (
-                                    <option value="">Нет услуг в этом филиале</option>
-                                )}
-                            </select>
+                            {servicesByBranch.length === 0 ? (
+                                <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                                    В этом филиале пока нет активных услуг.
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    {servicesByBranch.map((s) => {
+                                        const active = s.id === serviceId;
+                                        const hasRange =
+                                            typeof s.price_from === 'number' &&
+                                            (typeof s.price_to === 'number' ? s.price_to !== s.price_from : false);
+                                        return (
+                                            <button
+                                                key={s.id}
+                                                type="button"
+                                                onClick={() => setServiceId(s.id)}
+                                                className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
+                                                    active
+                                                        ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
+                                                        : 'border-gray-200 bg-white hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                }`}
+                                            >
+                                                <div>
+                                                    <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                                        {s.name_ru}
+                                                    </div>
+                                                    <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                                                        {s.duration_min} мин
+                                                    </div>
+                                                </div>
+                                                {(typeof s.price_from === 'number' || typeof s.price_to === 'number') && (
+                                                    <div className="whitespace-nowrap text-right text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                        {s.price_from}
+                                                        {hasRange && s.price_to
+                                                            ? `–${s.price_to}`
+                                                            : ''}{' '}
+                                                        сом
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
                             {serviceCurrent && (
                                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -442,7 +484,8 @@ export default function BizClient({ data }: { data: Data }) {
                                             {' '}
                                             Примерная стоимость:{' '}
                                             {serviceCurrent.price_from}
-                                            {serviceCurrent.price_to && serviceCurrent.price_to !== serviceCurrent.price_from
+                                            {serviceCurrent.price_to &&
+                                            serviceCurrent.price_to !== serviceCurrent.price_from
                                                 ? `–${serviceCurrent.price_to}`
                                                 : ''}{' '}
                                             сом.
@@ -457,20 +500,31 @@ export default function BizClient({ data }: { data: Data }) {
                             <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                 Шаг 3. Мастер
                             </h2>
-                            <select
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-                                value={staffId}
-                                onChange={(e) => setStaffId(e.target.value)}
-                            >
-                                {staffFiltered.map((m) => (
-                                    <option key={m.id} value={m.id}>
-                                        {m.full_name}
-                                    </option>
-                                ))}
-                                {staffFiltered.length === 0 && (
-                                    <option value="">Нет мастеров для этой услуги</option>
-                                )}
-                            </select>
+                            {staffFiltered.length === 0 ? (
+                                <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                                    Для выбранной услуги пока нет мастеров.
+                                </div>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {staffFiltered.map((m) => {
+                                        const active = m.id === staffId;
+                                        return (
+                                            <button
+                                                key={m.id}
+                                                type="button"
+                                                onClick={() => setStaffId(m.id)}
+                                                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                    active
+                                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
+                                                        : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                }`}
+                                            >
+                                                {m.full_name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </section>
 
                         {/* Шаг 4: день и время */}
