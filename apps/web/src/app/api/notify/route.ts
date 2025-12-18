@@ -100,8 +100,12 @@ function buildHtmlPersonal(
 ) {
     const header =
         `<p style="margin:0 0 12px 0">${greet(name)} <i>(${roleRu(role)})</i></p>`;
-    // безопасно вставляем приветствие в начало корневого контейнера
-    return baseHtml.replace('<div', `<div>${header}`);
+
+    // Вставляем приветствие внутрь первого <div ...>, после закрывающего символа '>'
+    const idx = baseHtml.indexOf('>');
+    if (idx === -1) return baseHtml; // на всякий случай
+
+    return baseHtml.slice(0, idx + 1) + header + baseHtml.slice(idx + 1);
 }
 
 /* ---------- route ---------- */
@@ -192,7 +196,7 @@ export async function POST(req: Request) {
 
         // HTML + текстовая версия (базовая, без персонализации)
         const baseHtml = `
-      <div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5">
+      <div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5;">
         <h2 style="margin:0 0 12px 0">${title}: ${bizName}</h2>
         <p style="margin:0 0 6px 0"><b>Услуга:</b> ${svcName}</p>
         <p style="margin:0 0 6px 0"><b>Мастер:</b> ${master}</p>
