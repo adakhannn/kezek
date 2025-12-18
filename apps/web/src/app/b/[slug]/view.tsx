@@ -287,13 +287,22 @@ export default function BizClient({ data }: { data: Data }) {
 
     /* ---------- hold / confirm и таймер ---------- */
     const [holding, setHolding] = useState<{ bookingId: string; until: number; slotLabel: string } | null>(null);
+    const [guestSlotISO, setGuestSlotISO] = useState<string | null>(null);
+    const [guestName, setGuestName] = useState<string>('');
+    const [guestPhone, setGuestPhone] = useState<string>('');
     const [loading, setLoading] = useState(false);
 
     async function hold(t: Date) {
-        if (!isAuthed) return redirectToAuth();
         if (!service) return alert('Выбери услугу');
         if (!staffId) return alert('Выбери мастера');
         if (!branchId) return alert('Выбери филиал');
+
+        // Гость: не создаём бронь на hold, просто запоминаем выбранное время
+        if (!isAuthed) {
+            setGuestSlotISO(t.toISOString());
+            setHolding(null);
+            return;
+        }
 
         setLoading(true);
         try {
@@ -368,6 +377,9 @@ export default function BizClient({ data }: { data: Data }) {
     const staffCurrent = staff.find((m) => m.id === staffId) ?? null;
     const serviceCurrent = service ?? null;
 
+    const guestSlotLabel =
+        guestSlotISO != null ? toLabel(new Date(guestSlotISO)) : null;
+
     const dayLabel = `${format(day, 'dd.MM.yyyy')} (${format(day, 'EEEE')})`;
 
     /* ---------- пошаговый визард ---------- */
@@ -403,16 +415,21 @@ export default function BizClient({ data }: { data: Data }) {
                 </div>
 
                 {!isAuthed && (
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
-                        <div>
-                            Чтобы забронировать время, войдите по номеру телефона. Это займёт меньше минуты.
+                    <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+                        <div className="font-medium">
+                            Рекомендуем войти по номеру телефона — так вы сможете видеть историю записей и управлять ими.
                         </div>
-                        <button
-                            className="whitespace-nowrap rounded-lg border border-amber-400 bg-white/80 px-3 py-1.5 text-xs font-semibold text-amber-900 shadow-sm hover:bg-amber-100 dark:bg-amber-900 dark:text-amber-50 dark:hover:bg-amber-800"
-                            onClick={redirectToAuth}
-                        >
-                            Войти по SMS
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                className="whitespace-nowrap rounded-lg border border-amber-400 bg-white/80 px-3 py-1.5 text-xs font-semibold text-amber-900 shadow-sm hover:bg-amber-100 dark:bg-amber-900 dark:text-amber-50 dark:hover:bg-amber-800"
+                                onClick={redirectToAuth}
+                            >
+                                Войти по SMS
+                            </button>
+                            <span className="text-xs opacity-80">
+                                или продолжите без входа — мы просто спросим ваше имя и номер телефона
+                            </span>
+                        </div>
                     </div>
                 )}
 
@@ -715,7 +732,7 @@ export default function BizClient({ data }: { data: Data }) {
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">Время:</span>
                                 <span className="text-right font-medium">
-                                    {holding ? holding.slotLabel : 'Выберите слот'}
+                                    {holding ? holding.slotLabel : guestSlotLabel ?? 'Выберите слот'}
                                 </span>
                             </div>
                             {serviceCurrent?.price_from && (
@@ -733,9 +750,104 @@ export default function BizClient({ data }: { data: Data }) {
                             )}
                         </div>
 
-                        {!holding && (
+                        {!holding && !guestSlotISO && (
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                                 Сначала выберите свободный слот, затем вы сможете подтвердить бронь.
+                            </div>
+                        )}
+
+                        {/* Гостевой режим: без авторизации, но с телефоном/именем */}
+                        {!isAuthed && guestSlotISO && (
+                            <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-800 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
+                                <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                    Запись без регистрации
+                                </div>
+                                <p className="text-[11px] text-gray-600 dark:text-gray-400">
+                                    Укажите имя и номер телефона, чтобы мастер мог связаться с вами при необходимости.
+                                </p>
+                                <div className="space-y-1.5">
+                                    <input
+                                        type="text"
+                                        className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                        placeholder="Имя (необязательно, но желательно)"
+                                        value={guestName}
+                                        onChange={(e) => setGuestName(e.target.value)}
+                                    />
+                                    <input
+                                        type="tel"
+                                        className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                        placeholder="Телефон (обязательно)"
+                                        value={guestPhone}
+                                        onChange={(e) => setGuestPhone(e.target.value)}
+                                    />
+                                </div>
+                                <button
+                                    className="mt-1 w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+                                    onClick={async () => {
+                                        if (!serviceCurrent) {
+                                            alert('Выбери услугу');
+                                            return;
+                                        }
+                                        if (!branchId) {
+                                            alert('Выбери филиал');
+                                            return;
+                                        }
+                                        if (!staffId) {
+                                            alert('Выбери мастера');
+                                            return;
+                                        }
+                                        if (!guestSlotISO) {
+                                            alert('Выбери слот');
+                                            return;
+                                        }
+                                        if (!guestPhone.trim()) {
+                                            alert('Укажи номер телефона');
+                                            return;
+                                        }
+
+                                        setLoading(true);
+                                        try {
+                                            const startISO = formatInTimeZone(
+                                                new Date(guestSlotISO),
+                                                TZ,
+                                                "yyyy-MM-dd'T'HH:mm:ssXXX"
+                                            );
+                                            const res = await fetch('/api/public/bookings/guest-create', {
+                                                method: 'POST',
+                                                headers: { 'content-type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    biz_id: biz.id,
+                                                    branch_id: branchId,
+                                                    service_id: serviceCurrent.id,
+                                                    staff_id: staffId,
+                                                    start_at: startISO,
+                                                    duration_min: serviceCurrent.duration_min,
+                                                    client_name: guestName || null,
+                                                    client_phone: guestPhone || null,
+                                                }),
+                                            });
+                                            const json = (await res.json().catch(() => ({}))) as {
+                                                ok?: boolean;
+                                                booking_id?: string;
+                                                message?: string;
+                                                error?: string;
+                                            };
+                                            if (!res.ok || !json.ok || !json.booking_id) {
+                                                alert(json.message || json.error || 'Не удалось создать запись');
+                                                return;
+                                            }
+                                            location.href = `/booking/${json.booking_id}`;
+                                        } catch (e) {
+                                            console.error('guest booking error', e);
+                                            alert('Ошибка при создании записи');
+                                        } finally {
+                                            setLoading(false);
+                                        }
+                                    }}
+                                    disabled={loading}
+                                >
+                                    Записаться без регистрации
+                                </button>
                             </div>
                         )}
 
