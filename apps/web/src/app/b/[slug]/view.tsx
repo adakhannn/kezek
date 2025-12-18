@@ -40,6 +40,13 @@ type ServiceStaffRow = { service_id: string; staff_id: string; is_active: boolea
 function fmtErr(e: unknown): string {
     if (e && typeof e === 'object') {
         const any = e as { message?: string; details?: string; hint?: string; code?: string };
+        const rawMessage = any.message || '';
+
+        // Пользовательский текст для частых бизнес-ошибок
+        if (rawMessage.includes('is not assigned to branch')) {
+            return 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
+        }
+
         if (any.message) {
             const parts = [
                 any.message,
