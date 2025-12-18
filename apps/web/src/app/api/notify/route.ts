@@ -78,6 +78,21 @@ function roleRu(role: RoleKey) {
     }
 }
 
+function statusRu(status: string): string {
+    switch (status) {
+        case 'hold':
+            return 'Ожидает подтверждения';
+        case 'confirmed':
+            return 'Подтверждена';
+        case 'paid':
+            return 'Оплачена';
+        case 'cancelled':
+            return 'Отменена';
+        default:
+            return status;
+    }
+}
+
 function buildHtmlPersonal(
     baseHtml: string,
     name: string | null | undefined,
@@ -173,18 +188,19 @@ export async function POST(req: Request) {
         const master  = staf?.full_name ?? 'Мастер';
         const bizName = biz?.name ?? 'Бизнес';
         const link    = `${origin}/booking/${raw.id}`;
+        const statusRuText = statusRu(raw.status);
 
         // HTML + текстовая версия (базовая, без персонализации)
         const baseHtml = `
       <div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5">
-        <h2>${title}: ${bizName}</h2>
-        <p><b>Услуга:</b> ${svcName}</p>
-        <p><b>Мастер:</b> ${master}</p>
-        <p><b>Время:</b> ${when} (${TZ})</p>
-        <p><b>Статус:</b> ${raw.status}</p>
-        <p><a href="${link}" target="_blank" rel="noopener">Открыть бронь</a></p>
-        <hr/>
-        <small>Письмо отправлено автоматически Kezek</small>
+        <h2 style="margin:0 0 12px 0">${title}: ${bizName}</h2>
+        <p style="margin:0 0 6px 0"><b>Услуга:</b> ${svcName}</p>
+        <p style="margin:0 0 6px 0"><b>Мастер:</b> ${master}</p>
+        <p style="margin:0 0 6px 0"><b>Время:</b> ${when} (${TZ})</p>
+        <p style="margin:0 0 10px 0"><b>Статус:</b> ${statusRuText}</p>
+        <p style="margin:0 0 12px 0"><a href="${link}" target="_blank" rel="noopener">Открыть бронь</a></p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0" />
+        <small style="color:#6b7280">Письмо отправлено автоматически Kezek</small>
       </div>
     `.trim();
 
@@ -193,7 +209,7 @@ export async function POST(req: Request) {
             `Услуга: ${svcName}\n` +
             `Мастер: ${master}\n` +
             `Время: ${when} (${TZ})\n` +
-            `Статус: ${raw.status}\n` +
+            `Статус: ${statusRuText}\n` +
             `Ссылка: ${link}`;
 
         // --- формируем получателей
