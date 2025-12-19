@@ -1,8 +1,10 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+
+type AdminClient = SupabaseClient;
 
 type Body = {
     biz_id?: string;
@@ -18,6 +20,96 @@ type Body = {
 function normStr(v?: string | null): string | null {
     const s = (v ?? '').trim();
     return s.length ? s : null;
+}
+
+// Поиск пользователя по телефону через Admin API
+async function findUserIdByPhone(
+    admin: AdminClient,
+    phone: string
+): Promise<string | null> {
+    // Пробуем найти через view user_roles_with_user (быстрее, если пользователь уже есть в системе)
+    try {
+        const { data: found, error } = await admin
+            .from('user_roles_with_user')
+            .select('user_id')
+            .eq('phone', phone)
+            .limit(1)
+            .maybeSingle();
+        
+        if (!error && found?.user_id) {
+            return found.user_id as string;
+        }
+    } catch {
+        // Игнорируем ошибки, переходим к пагинации
+    }
+    
+    // Если не нашли через view, ищем через пагинацию auth.users
+    const api = admin.auth.admin as {
+        listUsers: (args: { page?: number; perPage?: number }) => Promise<{
+            data: {
+                users: Array<{ id: string; phone?: string | null; user_metadata?: unknown }>
+            } | null;
+            error: { message: string } | null;
+        }>;
+    };
+    
+    for (let page = 1; page <= 10; page++) {
+        const { data, error } = await api.listUsers({ page, perPage: 1000 });
+        if (error) break;
+        
+        const users = data?.users ?? [];
+        const found = users.find((u) => {
+            const byPhone = u.phone === phone;
+            const meta = (u.user_metadata && typeof u.user_metadata === 'object'
+                ? (u.user_metadata as { phone?: string })
+                : {}) as { phone?: string };
+            const metaPhone = meta.phone;
+            return byPhone || metaPhone === phone;
+        });
+        
+        if (found) return found.id;
+        if (users.length < 1000) break; // последняя страница
+    }
+    
+    return null;
+}
+
+// Создание пользователя с телефоном (без пароля, для OTP входа)
+async function createUserByPhone(
+    admin: AdminClient,
+    phone: string,
+    fullName?: string | null
+): Promise<string> {
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        phone,
+        phone_confirm: true,
+        user_metadata: fullName ? { full_name: fullName, phone } : { phone },
+    });
+    
+    if (createErr) {
+        // Если пользователь уже существует, пытаемся найти его
+        if (/already registered/i.test(createErr.message)) {
+            const found = await findUserIdByPhone(admin, phone);
+            if (found) return found;
+        }
+        throw new Error(createErr.message);
+    }
+    
+    if (!created?.user?.id) {
+        throw new Error('Failed to create user');
+    }
+    
+    const userId = created.user.id;
+    
+    // Обновляем профиль с именем, если указано
+    if (fullName) {
+        await admin.from('profiles').upsert(
+            { id: userId, full_name: fullName },
+            { onConflict: 'id' }
+        );
+    }
+    
+    return userId;
 }
 
 export async function POST(req: Request) {
@@ -51,6 +143,29 @@ export async function POST(req: Request) {
             );
         }
 
+        // Ищем или создаем пользователя по телефону
+        let client_id: string | null = null;
+        if (client_phone) {
+            try {
+                // Сначала пытаемся найти существующего пользователя
+                client_id = await findUserIdByPhone(admin, client_phone);
+                
+                // Если не нашли - создаем нового
+                if (!client_id) {
+                    client_id = await createUserByPhone(admin, client_phone, client_name);
+                } else if (client_name) {
+                    // Если пользователь найден, но имя не совпадает - обновляем профиль
+                    await admin.from('profiles').upsert(
+                        { id: client_id, full_name: client_name },
+                        { onConflict: 'id' }
+                    );
+                }
+            } catch (e) {
+                console.error('Error finding/creating user by phone:', e);
+                // Продолжаем без client_id - запись будет создана с client_name и client_phone
+            }
+        }
+
         const { data, error } = await admin.rpc('create_internal_booking', {
             p_biz_id: biz_id,
             p_branch_id: branch_id,
@@ -58,7 +173,7 @@ export async function POST(req: Request) {
             p_staff_id: staff_id,
             p_start: start_at,
             p_minutes: duration_min,
-            p_client_id: null,
+            p_client_id: client_id,
             p_client_name: client_name,
             p_client_phone: client_phone,
         });
