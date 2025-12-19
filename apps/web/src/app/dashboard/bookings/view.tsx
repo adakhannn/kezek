@@ -1,5 +1,6 @@
 'use client';
 
+import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
@@ -454,7 +455,10 @@ function QuickDesk({
                 return;
             }
             const raw = (data || []) as RpcSlot[];
-            const filtered = staffId ? raw.filter(s => s.staff_id === staffId) : raw;
+            const now = new Date();
+            const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
+            const filtered = (staffId ? raw.filter(s => s.staff_id === staffId) : raw)
+                .filter(s => new Date(s.start_at) > minTime);
 
             // dedupe по start_at
             const uniq = Array.from(new Map(filtered.map(s => [s.start_at, s])).values());

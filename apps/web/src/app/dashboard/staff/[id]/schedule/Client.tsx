@@ -87,6 +87,10 @@ function DayRow({
     onSave: (date: string, interval: TimeRange | null) => void;
 }) {
     const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+    // Проверяем, является ли дата прошедшей (сравниваем только дату, без времени)
+    const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const isPastDate = dateStr < todayStr;
+    
     // Если правила нет в БД или интервалы пустые - день выходной
     // Если правила нет - день рабочий по умолчанию
     const isDayOffFromDb = intervals !== null && intervals !== undefined && intervals.length === 0;
@@ -127,23 +131,26 @@ function DayRow({
                     <div className="text-xs text-gray-500">{dateStr}</div>
                 </div>
                 <button
-                    className="border rounded px-3 py-1 text-sm"
-                    disabled={saving}
+                    className="border rounded px-3 py-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={saving || isPastDate}
                     onClick={handleSave}
                 >
                     {saving ? 'Сохраняем…' : 'Сохранить'}
                 </button>
             </div>
             <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className={`flex items-center gap-2 ${isPastDate ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                     <input
                         type="checkbox"
                         checked={isDayOff}
                         onChange={handleDayOffChange}
-                        disabled={saving}
+                        disabled={saving || isPastDate}
                         className="w-4 h-4"
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Выходной день</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                        Выходной день
+                        {isPastDate && <span className="text-xs text-gray-400 ml-1">(недоступно для прошедших дат)</span>}
+                    </span>
                 </label>
                 {!isDayOff && (
                     <div>
@@ -151,7 +158,7 @@ function DayRow({
                         <SingleTimeRange 
                             value={interval} 
                             onChange={(v) => v && setInterval(v)} 
-                            disabled={saving || isDayOff}
+                            disabled={saving || isDayOff || isPastDate}
                         />
                     </div>
                 )}

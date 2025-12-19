@@ -1,5 +1,6 @@
 'use client';
 
+import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -70,8 +71,14 @@ export default function Client({
                 if (ignore) return;
                 if (error) { setSlots([]); setErr(error.message); return; }
                 const all = (data ?? []) as Slot[];
-                // конкретный сотрудник + на нужный филиал (совпадает с филиалом услуги)
-                const filtered = all.filter(s => s.staff_id === staffId && s.branch_id === branchId);
+                const now = new Date();
+                const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
+                // конкретный сотрудник + на нужный филиал (совпадает с филиалом услуги) + только будущие слоты (минимум через 30 минут)
+                const filtered = all.filter(s => 
+                    s.staff_id === staffId && 
+                    s.branch_id === branchId &&
+                    new Date(s.start_at) > minTime
+                );
                 setSlots(filtered);
             } finally { if (!ignore) setLoading(false); }
         })();

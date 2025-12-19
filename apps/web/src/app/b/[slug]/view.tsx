@@ -1,7 +1,7 @@
 // apps/web/src/app/[slug]/view.tsx
 'use client';
 
-import { addDays, format } from 'date-fns';
+import { addDays, addMinutes, format } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -202,8 +202,12 @@ export default function BizClient({ data }: { data: Data }) {
                     return;
                 }
                 const all = (data ?? []) as Slot[];
+                const now = new Date();
+                const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
                 const filtered = all.filter(
-                    (s) => s.staff_id === staffId && s.branch_id === branchId
+                    (s) => s.staff_id === staffId && 
+                           s.branch_id === branchId &&
+                           new Date(s.start_at) > minTime
                 );
                 setSlots(filtered);
             } catch (e) {
