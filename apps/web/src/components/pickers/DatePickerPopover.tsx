@@ -5,6 +5,23 @@ import 'react-day-picker/dist/style.css';
 import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
+// Русские названия для календаря
+const MONTHS = [
+    'Январь',
+    'Февраль',
+    'Март',
+    'Апрель',
+    'Май',
+    'Июнь',
+    'Июль',
+    'Август',
+    'Сентябрь',
+    'Октябрь',
+    'Ноябрь',
+    'Декабрь',
+];
+const WEEKDAYS_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
 // --- helpers: локальное форматирование/парсинг YYYY-MM-DD без UTC-сдвига
 function toYmdLocal(d: Date): string {
     const y = d.getFullYear();
@@ -123,6 +140,20 @@ export default function DatePickerPopover({
                         }}
                         weekStartsOn={1}
                         showOutsideDays
+                        formatters={{
+                            formatMonthCaption: (month) => {
+                                return MONTHS[month.getMonth()] + ' ' + month.getFullYear();
+                            },
+                            formatWeekdayName: (day) => {
+                                return WEEKDAYS_SHORT[day.getDay()];
+                            },
+                        }}
+                        labels={{
+                            labelMonthDropdown: () => 'Месяц',
+                            labelYearDropdown: () => 'Год',
+                            labelNext: () => 'Следующий месяц',
+                            labelPrevious: () => 'Предыдущий месяц',
+                        }}
                         classNames={{
                             root: 'w-full',
                             months: 'w-full',
