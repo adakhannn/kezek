@@ -3,11 +3,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { formatInTimeZone } from 'date-fns-tz';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { buildIcs } from '@/lib/ics';
+import { sendSMS, normalizePhoneToE164 } from '@/lib/senders/sms';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
@@ -25,6 +27,7 @@ interface ServiceRow {
 interface StaffRow {
     full_name: string;
     email: string | null;
+    phone: string | null;
 }
 interface BizRow {
     name: string;
@@ -41,6 +44,7 @@ interface BookingRow {
     end_at: string;   // ISO
     created_at: string;
     client_id: string | null;
+    client_phone: string | null;
     services: ServiceRow[] | ServiceRow | null;
     staff:    StaffRow[]    | StaffRow    | null;
     biz:      BizRow[]      | BizRow      | null;
@@ -128,18 +132,22 @@ export async function POST(req: Request) {
         // Supabase client (SSR)
         const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+        const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const cookieStore = await cookies();
         const supabase = createServerClient(url, anon, {
             cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
+        
+        // Admin client для получения email владельца
+        const admin = createClient(url, service);
 
         // Получаем данные брони с денормализованными связями
         const { data: raw, error } = await supabase
             .from('bookings')
             .select(`
-        id, status, start_at, end_at, created_at, client_id,
+        id, status, start_at, end_at, created_at, client_id, client_phone,
         services:services!bookings_service_id_fkey ( name_ru, duration_min ),
-        staff:staff!bookings_staff_id_fkey ( full_name, email ),
+        staff:staff!bookings_staff_id_fkey ( full_name, email, phone ),
         biz:businesses!bookings_biz_id_fkey ( name, email_notify_to, slug, address, phones, owner_id )
       `)
             .eq('id', body.booking_id)
@@ -153,33 +161,54 @@ export async function POST(req: Request) {
         const staf = first<StaffRow>(raw.staff);
         const biz  = first<BizRow>(raw.biz);
 
-        // E-mail + имя клиента
+        // E-mail + имя + телефон клиента
         let clientEmail: string | null = null;
         let clientName: string | null = null;
+        let clientPhone: string | null = null;
         if (raw.client_id) {
             const { data: au } = await supabase
                 .from('auth_users_view')
-                .select('email, full_name')
+                .select('email, full_name, phone')
                 .eq('id', raw.client_id)
-                .maybeSingle<{ email: string | null; full_name: string | null }>();
+                .maybeSingle<{ email: string | null; full_name: string | null; phone: string | null }>();
             clientEmail = au?.email ?? null;
             clientName  = au?.full_name ?? null;
+            clientPhone = au?.phone ?? null;
+        }
+        // Если нет client_id, но есть client_phone (гостевая бронь)
+        if (!clientPhone && raw.client_phone) {
+            clientPhone = raw.client_phone;
         }
 
-        // E-mail + имя владельца
+        // E-mail + имя + телефон владельца (через Admin API для надежности)
         let ownerEmail: string | null = null;
         let ownerName: string | null = null;
+        let ownerPhone: string | null = null;
         if (biz?.owner_id) {
-            const { data: ou } = await supabase
-                .from('auth_users_view')
-                .select('email, full_name')
-                .eq('id', biz.owner_id)
-                .maybeSingle<{ email: string | null; full_name: string | null }>();
-            ownerEmail = ou?.email ?? null;
-            ownerName  = ou?.full_name ?? null;
+            try {
+                const { data: ou, error: ouError } = await admin.auth.admin.getUserById(biz.owner_id);
+                if (!ouError && ou?.user) {
+                    ownerEmail = ou.user.email ?? null;
+                    const meta = (ou.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
+                    ownerName = meta.full_name ?? null;
+                    ownerPhone = (ou.user as { phone?: string | null }).phone ?? null;
+                }
+            } catch (e) {
+                console.error('[notify] failed to get owner data:', e);
+                // Fallback: пробуем через auth_users_view
+                const { data: ou } = await supabase
+                    .from('auth_users_view')
+                    .select('email, full_name, phone')
+                    .eq('id', biz.owner_id)
+                    .maybeSingle<{ email: string | null; full_name: string | null; phone: string | null }>();
+                ownerEmail = ou?.email ?? null;
+                ownerName  = ou?.full_name ?? null;
+                ownerPhone = ou?.phone ?? null;
+            }
         }
 
         const staffEmail = staf?.email ?? null;
+        const staffPhone = staf?.phone ?? null;
         const adminEmails = biz?.email_notify_to ?? [];
 
         const title =
@@ -292,7 +321,50 @@ export async function POST(req: Request) {
             sent += 1;
         }
 
-        return NextResponse.json({ ok: true, sent });
+        // --- отправляем SMS уведомления
+        const smsText = `${title}: ${bizName}\nУслуга: ${svcName}\nМастер: ${master}\nВремя: ${when}\nСтатус: ${statusRuText}`;
+        let smsSent = 0;
+
+        // SMS клиенту
+        if (clientPhone) {
+            try {
+                const phoneE164 = normalizePhoneToE164(clientPhone);
+                if (phoneE164) {
+                    await sendSMS({ to: phoneE164, text: smsText });
+                    smsSent += 1;
+                }
+            } catch (e) {
+                console.error('[notify] SMS to client failed:', e);
+            }
+        }
+
+        // SMS мастеру
+        if (staffPhone) {
+            try {
+                const phoneE164 = normalizePhoneToE164(staffPhone);
+                if (phoneE164) {
+                    await sendSMS({ to: phoneE164, text: smsText });
+                    smsSent += 1;
+                }
+            } catch (e) {
+                console.error('[notify] SMS to staff failed:', e);
+            }
+        }
+
+        // SMS владельцу
+        if (ownerPhone) {
+            try {
+                const phoneE164 = normalizePhoneToE164(ownerPhone);
+                if (phoneE164) {
+                    await sendSMS({ to: phoneE164, text: smsText });
+                    smsSent += 1;
+                }
+            } catch (e) {
+                console.error('[notify] SMS to owner failed:', e);
+            }
+        }
+
+        return NextResponse.json({ ok: true, sent, smsSent });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[notify] error:', msg);

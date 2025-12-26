@@ -12,7 +12,8 @@ type Mode = 'phone' | 'email';
 
 export default function SignUpPage() {
     const router = useRouter();
-    const [mode, setMode] = useState<Mode>('phone');
+    // Временно отключена регистрация по телефону - используем только email
+    const [mode] = useState<Mode>('email'); // Убрали setMode - режим фиксирован
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
@@ -92,30 +93,7 @@ export default function SignUpPage() {
                     <p className="text-gray-600 dark:text-gray-400">Создайте аккаунт для записи</p>
                 </div>
 
-                <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                    <button
-                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                            mode === 'phone'
-                                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
-                                : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
-                        onClick={() => setMode('phone')}
-                        type="button"
-                    >
-                        По телефону
-                    </button>
-                    <button
-                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                            mode === 'email'
-                                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
-                                : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
-                        onClick={() => setMode('email')}
-                        type="button"
-                    >
-                        По e-mail
-                    </button>
-                </div>
+                {/* Переключатель режима временно скрыт - используется только email */}
 
                 <form onSubmit={sendOtp} className="space-y-4">
                     <Input
