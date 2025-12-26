@@ -5,6 +5,7 @@ import { addDays, addMinutes, format } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 
@@ -622,25 +623,26 @@ export default function BizClient({ data }: { data: Data }) {
                                     Шаг 4. День и время
                                 </h2>
                                 <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-                                    <input
-                                        type="date"
-                                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-                                        value={dayStr}
-                                        min={todayStr}
-                                        max={maxStr}
-                                        onChange={(e) => {
-                                            const v = e.target.value; // 'yyyy-MM-dd'
-                                            if (!v) return;
-                                            setDay(dateAtTz(v, '00:00'));
-                                        }}
-                                    />
+                                    <div className="flex-1 min-w-[200px]">
+                                        <DatePickerPopover
+                                            value={dayStr}
+                                            min={todayStr}
+                                            max={maxStr}
+                                            onChange={(v) => {
+                                                if (!v) return;
+                                                setDay(dateAtTz(v, '00:00'));
+                                            }}
+                                        />
+                                    </div>
                                     <button
+                                        type="button"
                                         className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
                                         onClick={() => setDay(todayTz())}
                                     >
                                         Сегодня
                                     </button>
                                     <button
+                                        type="button"
                                         className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
                                         onClick={() => setDay(addDays(todayTz(), 1))}
                                     >
