@@ -230,6 +230,7 @@ export default function BizClient({ data }: { data: Data }) {
     const [guestSlotISO, setGuestSlotISO] = useState<string | null>(null);
     const [guestName, setGuestName] = useState<string>('');
     const [guestPhone, setGuestPhone] = useState<string>('');
+    const [guestEmail, setGuestEmail] = useState<string>('');
 
     // Восстановление состояния после авторизации (localStorage)
     useEffect(() => {
@@ -782,7 +783,7 @@ export default function BizClient({ data }: { data: Data }) {
                                     Запись без регистрации
                                 </div>
                                 <p className="text-[11px] text-gray-600 dark:text-gray-400">
-                                    Укажите имя и номер телефона, чтобы мастер мог связаться с вами при необходимости.
+                                    Укажите имя, номер телефона и email, чтобы мастер мог связаться с вами при необходимости.
                                     Или авторизуйтесь, чтобы видеть свои записи в личном кабинете.
                                 </p>
                                 <div className="space-y-1.5">
@@ -799,6 +800,13 @@ export default function BizClient({ data }: { data: Data }) {
                                         placeholder="Телефон (обязательно)"
                                         value={guestPhone}
                                         onChange={(e) => setGuestPhone(e.target.value)}
+                                    />
+                                    <input
+                                        type="email"
+                                        className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                        placeholder="Email (необязательно)"
+                                        value={guestEmail}
+                                        onChange={(e) => setGuestEmail(e.target.value)}
                                     />
                                 </div>
                                 <div className="mt-2 flex flex-col gap-2">
@@ -852,6 +860,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                     duration_min: serviceCurrent.duration_min,
                                                     client_name: guestName || null,
                                                     client_phone: guestPhone || null,
+                                                    client_email: guestEmail || null,
                                                 }),
                                             });
                                             const json = (await res.json().catch(() => ({}))) as {

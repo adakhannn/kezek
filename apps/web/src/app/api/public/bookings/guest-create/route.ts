@@ -15,6 +15,7 @@ type Body = {
     duration_min?: number;
     client_name?: string | null;
     client_phone?: string | null;
+    client_email?: string | null;
 };
 
 function normStr(v?: string | null): string | null {
@@ -78,11 +79,14 @@ async function findUserIdByPhone(
 async function createUserByPhone(
     admin: AdminClient,
     phone: string,
-    fullName?: string | null
+    fullName?: string | null,
+    email?: string | null
 ): Promise<string> {
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
         phone,
         phone_confirm: true,
+        email: email || undefined,
+        email_confirm: email ? true : undefined,
         user_metadata: fullName ? { full_name: fullName, phone } : { phone },
     });
     
@@ -101,12 +105,13 @@ async function createUserByPhone(
     
     const userId = created.user.id;
     
-    // Обновляем профиль с именем, если указано
-    if (fullName) {
-        await admin.from('profiles').upsert(
-            { id: userId, full_name: fullName },
-            { onConflict: 'id' }
-        );
+    // Обновляем профиль с именем и email, если указано
+    const profileData: { id: string; full_name?: string; email?: string } = { id: userId };
+    if (fullName) profileData.full_name = fullName;
+    if (email) profileData.email = email;
+    
+    if (fullName || email) {
+        await admin.from('profiles').upsert(profileData, { onConflict: 'id' });
     }
     
     return userId;
@@ -128,6 +133,7 @@ export async function POST(req: Request) {
         const duration_min = Number(raw.duration_min || 0) || 0;
         const client_name = normStr(raw.client_name ?? null);
         const client_phone = normStr(raw.client_phone ?? null);
+        const client_email = normStr(raw.client_email ?? null);
 
         if (!biz_id || !branch_id || !service_id || !staff_id || !start_at || !duration_min) {
             return NextResponse.json(
@@ -136,34 +142,41 @@ export async function POST(req: Request) {
             );
         }
 
-        if (!client_name && !client_phone) {
+        if (!client_name && !client_phone && !client_email) {
             return NextResponse.json(
-                { ok: false, error: 'missing_client', message: 'Укажите имя или телефон' },
+                { ok: false, error: 'missing_client', message: 'Укажите имя, телефон или email' },
                 { status: 400 }
             );
         }
 
-        // Ищем или создаем пользователя по телефону
+        // Ищем или создаем пользователя по телефону или email
         let client_id: string | null = null;
         if (client_phone) {
             try {
-                // Сначала пытаемся найти существующего пользователя
+                // Сначала пытаемся найти существующего пользователя по телефону
                 client_id = await findUserIdByPhone(admin, client_phone);
                 
                 // Если не нашли - создаем нового
                 if (!client_id) {
-                    client_id = await createUserByPhone(admin, client_phone, client_name);
-                } else if (client_name) {
-                    // Если пользователь найден, но имя не совпадает - обновляем профиль
-                    await admin.from('profiles').upsert(
-                        { id: client_id, full_name: client_name },
-                        { onConflict: 'id' }
-                    );
+                    client_id = await createUserByPhone(admin, client_phone, client_name, client_email);
+                } else {
+                    // Если пользователь найден - обновляем профиль с именем и email, если указано
+                    const profileData: { id: string; full_name?: string; email?: string } = { id: client_id };
+                    if (client_name) profileData.full_name = client_name;
+                    if (client_email) profileData.email = client_email;
+                    
+                    if (client_name || client_email) {
+                        await admin.from('profiles').upsert(profileData, { onConflict: 'id' });
+                    }
                 }
             } catch (e) {
                 console.error('Error finding/creating user by phone:', e);
                 // Продолжаем без client_id - запись будет создана с client_name и client_phone
             }
+        } else if (client_email) {
+            // Если нет телефона, но есть email - можно попробовать найти по email
+            // (но создавать пользователя без телефона не будем, так как нужен телефон для OTP)
+            // Просто сохраним email в профиле, если пользователь будет найден позже
         }
 
         const { data, error } = await admin.rpc('create_internal_booking', {
@@ -184,6 +197,19 @@ export async function POST(req: Request) {
         }
 
         const bookingId = String(data);
+
+        // Обновляем email в брони, если указан (RPC может не поддерживать p_client_email)
+        if (client_email) {
+            try {
+                await admin
+                    .from('bookings')
+                    .update({ client_email })
+                    .eq('id', bookingId);
+            } catch (e) {
+                console.error('Failed to update client_email in booking:', e);
+                // Не критично, продолжаем
+            }
+        }
 
         // Уведомление как при обычном confirm
         try {
