@@ -189,6 +189,7 @@ export default function BizClient({ data }: { data: Data }) {
             setSlotsLoading(true);
             setSlotsError(null);
             try {
+                // Добавляем timestamp для предотвращения кэширования
                 const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                     p_biz_id: biz.id,
                     p_service_id: serviceId,
@@ -225,6 +226,20 @@ export default function BizClient({ data }: { data: Data }) {
             ignore = true;
         };
     }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey]);
+
+    // Обновляем список слотов при возврате на страницу (например, через кнопку "Назад")
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && serviceId && staffId && dayStr) {
+                // Обновляем список слотов при возврате на страницу
+                setSlotsRefreshKey((k) => k + 1);
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [serviceId, staffId, dayStr]);
 
     /* ---------- hold / confirm и таймер ---------- */
     const [holding, setHolding] = useState<{ bookingId: string; until: number; slotLabel: string } | null>(null);
@@ -881,8 +896,12 @@ export default function BizClient({ data }: { data: Data }) {
                                                 }
                                                 return;
                                             }
-                                            // Очищаем выбранный слот перед редиректом
+                                            // Очищаем выбранный слот и обновляем список слотов перед редиректом
+                                            // Это нужно, чтобы если пользователь вернется, он не увидел занятый слот
                                             setGuestSlotISO(null);
+                                            setSlotsRefreshKey((k) => k + 1); // Обновляем список слотов
+                                            // Небольшая задержка для обновления данных в БД
+                                            await new Promise(resolve => setTimeout(resolve, 300));
                                             location.href = `/booking/${json.booking_id}`;
                                         } catch (e) {
                                             console.error('guest booking error', e);
