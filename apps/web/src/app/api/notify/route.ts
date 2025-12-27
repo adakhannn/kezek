@@ -123,7 +123,9 @@ export async function POST(req: Request) {
 
         const apiKey = process.env.RESEND_API_KEY;
         const from = process.env.EMAIL_FROM || 'Kezek <noreply@mail.kezek.kg>';
-        const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
+        // Всегда используем kezek.kg для ссылок в письмах, даже если NEXT_PUBLIC_SITE_ORIGIN указывает на vercel.app
+        const originEnv = process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
+        const origin = originEnv.includes('vercel.app') ? 'https://kezek.kg' : originEnv;
 
         if (!apiKey) {
             return NextResponse.json({ ok: false, error: 'no RESEND_API_KEY' }, { status: 500 });

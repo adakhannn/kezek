@@ -177,6 +177,7 @@ export default function BizClient({ data }: { data: Data }) {
     const [slots, setSlots] = useState<Slot[]>([]);
     const [slotsLoading, setSlotsLoading] = useState(false);
     const [slotsError, setSlotsError] = useState<string | null>(null);
+    const [slotsRefreshKey, setSlotsRefreshKey] = useState(0); // Ключ для принудительного обновления
 
     useEffect(() => {
         let ignore = false;
@@ -223,7 +224,7 @@ export default function BizClient({ data }: { data: Data }) {
         return () => {
             ignore = true;
         };
-    }, [biz.id, serviceId, staffId, branchId, dayStr]);
+    }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey]);
 
     /* ---------- hold / confirm и таймер ---------- */
     const [holding, setHolding] = useState<{ bookingId: string; until: number; slotLabel: string } | null>(null);
@@ -870,13 +871,30 @@ export default function BizClient({ data }: { data: Data }) {
                                                 error?: string;
                                             };
                                             if (!res.ok || !json.ok || !json.booking_id) {
-                                                alert(json.message || json.error || 'Не удалось создать запись');
+                                                const errorMsg = json.message || json.error || 'Не удалось создать запись';
+                                                alert(errorMsg);
+                                                // Если слот занят - обновляем список слотов
+                                                if (errorMsg.includes('уже занят') || errorMsg.includes('no_overlap') || errorMsg.includes('занят')) {
+                                                    // Очищаем выбранный слот и обновляем список
+                                                    setGuestSlotISO(null);
+                                                    setSlotsRefreshKey((k) => k + 1); // Триггерим обновление слотов
+                                                }
                                                 return;
                                             }
+                                            // Очищаем выбранный слот перед редиректом
+                                            setGuestSlotISO(null);
                                             location.href = `/booking/${json.booking_id}`;
                                         } catch (e) {
                                             console.error('guest booking error', e);
-                                            alert('Ошибка при создании записи');
+                                            const errorMsg = e instanceof Error ? e.message : String(e);
+                                            if (errorMsg.includes('no_overlap') || errorMsg.includes('exclusion constraint')) {
+                                                alert('Этот слот уже занят. Пожалуйста, выберите другое время.');
+                                                // Очищаем выбранный слот и обновляем список
+                                                setGuestSlotISO(null);
+                                                setSlotsRefreshKey((k) => k + 1); // Триггерим обновление слотов
+                                            } else {
+                                                alert('Ошибка при создании записи: ' + errorMsg);
+                                            }
                                         } finally {
                                             setLoading(false);
                                         }

@@ -193,7 +193,14 @@ export async function POST(req: Request) {
 
         if (error) {
             const msg = (error as { message?: string }).message ?? 'RPC error';
-            return NextResponse.json({ ok: false, error: 'rpc', message: msg }, { status: 400 });
+            // Улучшаем сообщение об ошибке для пользователя
+            let userMessage = msg;
+            if (msg.includes('no_overlap') || msg.includes('exclusion constraint')) {
+                userMessage = 'Этот слот уже занят. Пожалуйста, выберите другое время.';
+            } else if (msg.includes('is not assigned to branch')) {
+                userMessage = 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
+            }
+            return NextResponse.json({ ok: false, error: 'rpc', message: userMessage }, { status: 400 });
         }
 
         const bookingId = String(data);
