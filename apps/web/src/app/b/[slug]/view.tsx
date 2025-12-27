@@ -207,11 +207,47 @@ export default function BizClient({ data }: { data: Data }) {
                 const all = (data ?? []) as Slot[];
                 const now = new Date();
                 const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
-                const filtered = all.filter(
+                let filtered = all.filter(
                     (s) => s.staff_id === staffId && 
                            s.branch_id === branchId &&
                            new Date(s.start_at) > minTime
                 );
+                
+                // Дополнительная проверка: исключаем слоты, которые уже забронированы
+                // (на случай, если RPC не учитывает все статусы)
+                try {
+                    // Формируем диапазон дат с учетом таймзоны
+                    const dayStart = formatInTimeZone(new Date(dayStr + 'T00:00:00'), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+                    const dayEnd = formatInTimeZone(new Date(dayStr + 'T23:59:59'), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+                    
+                    const { data: existingBookings } = await supabase
+                        .from('bookings')
+                        .select('start_at, end_at, status')
+                        .eq('staff_id', staffId)
+                        .eq('branch_id', branchId)
+                        .in('status', ['hold', 'confirmed', 'paid']) // исключаем cancelled и no_show
+                        .gte('start_at', dayStart)
+                        .lt('start_at', dayEnd);
+                    
+                    if (existingBookings && existingBookings.length > 0) {
+                        // Исключаем слоты, которые пересекаются с существующими бронями
+                        filtered = filtered.filter(slot => {
+                            const slotStart = new Date(slot.start_at);
+                            const slotEnd = new Date(slot.end_at);
+                            
+                            return !existingBookings.some(booking => {
+                                const bookingStart = new Date(booking.start_at);
+                                const bookingEnd = new Date(booking.end_at);
+                                // Проверяем пересечение: слот не должен пересекаться с бронями
+                                return (slotStart < bookingEnd && slotEnd > bookingStart);
+                            });
+                        });
+                    }
+                } catch (e) {
+                    console.error('[filter bookings] error:', e);
+                    // Игнорируем ошибку, используем данные от RPC
+                }
+                
                 setSlots(filtered);
             } catch (e) {
                 if (ignore) return;
@@ -892,16 +928,22 @@ export default function BizClient({ data }: { data: Data }) {
                                                 if (errorMsg.includes('уже занят') || errorMsg.includes('no_overlap') || errorMsg.includes('занят')) {
                                                     // Очищаем выбранный слот и обновляем список
                                                     setGuestSlotISO(null);
-                                                    setSlotsRefreshKey((k) => k + 1); // Триггерим обновление слотов
+                                                    // Обновляем список слотов несколько раз с задержкой для надежности
+                                                    setSlotsRefreshKey((k) => k + 1);
+                                                    setTimeout(() => setSlotsRefreshKey((k) => k + 1), 500);
+                                                    setTimeout(() => setSlotsRefreshKey((k) => k + 1), 1000);
                                                 }
                                                 return;
                                             }
                                             // Очищаем выбранный слот и обновляем список слотов перед редиректом
                                             // Это нужно, чтобы если пользователь вернется, он не увидел занятый слот
                                             setGuestSlotISO(null);
-                                            setSlotsRefreshKey((k) => k + 1); // Обновляем список слотов
+                                            // Обновляем список слотов несколько раз с задержкой для надежности
+                                            setSlotsRefreshKey((k) => k + 1);
+                                            setTimeout(() => setSlotsRefreshKey((k) => k + 1), 500);
+                                            setTimeout(() => setSlotsRefreshKey((k) => k + 1), 1000);
                                             // Небольшая задержка для обновления данных в БД
-                                            await new Promise(resolve => setTimeout(resolve, 300));
+                                            await new Promise(resolve => setTimeout(resolve, 500));
                                             location.href = `/booking/${json.booking_id}`;
                                         } catch (e) {
                                             console.error('guest booking error', e);
