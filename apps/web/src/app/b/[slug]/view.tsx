@@ -216,26 +216,25 @@ export default function BizClient({ data }: { data: Data }) {
                 // Дополнительная проверка: исключаем слоты, которые уже забронированы
                 // (на случай, если RPC не учитывает все статусы)
                 try {
-                    // Используем более широкий диапазон для поиска броней (весь день в UTC)
-                    // Формируем начало и конец дня в локальной таймзоне, затем конвертируем в ISO строки
-                    const dayStartLocal = new Date(dayStr + 'T00:00:00');
-                    const dayEndLocal = new Date(dayStr + 'T23:59:59.999');
+                    // Запрашиваем все брони для этого мастера и филиала на выбранный день
+                    // Используем более широкий диапазон, чтобы захватить все брони, которые могут пересекаться
+                    // Бронь в базе хранится в UTC, поэтому нужно искать по UTC дате
+                    // dayStr = '2025-12-30' в локальной таймзоне
+                    // В UTC это может быть другой день, поэтому используем широкий диапазон
+                    const dayStartUTC = new Date(dayStr + 'T00:00:00Z'); // Начало дня в UTC
+                    const dayEndUTC = new Date(dayStr + 'T23:59:59.999Z'); // Конец дня в UTC
+                    // Добавляем запас в 12 часов в обе стороны для учета таймзон
+                    const searchStart = new Date(dayStartUTC.getTime() - 12 * 60 * 60 * 1000);
+                    const searchEnd = new Date(dayEndUTC.getTime() + 12 * 60 * 60 * 1000);
                     
-                    // Конвертируем в ISO строки с таймзоной для запроса к БД
-                    const dayStartISO = formatInTimeZone(dayStartLocal, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
-                    const dayEndISO = formatInTimeZone(dayEndLocal, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
-                    
-                    // Запрашиваем все брони для этого мастера и филиала, которые пересекаются с выбранным днем
-                    // Бронь пересекается с днем, если: start_at <= dayEnd AND end_at >= dayStart
-                    // В Supabase это можно сделать через: start_at <= dayEnd AND end_at >= dayStart
                     const { data: existingBookings, error: bookingsError } = await supabase
                         .from('bookings')
                         .select('start_at, end_at, status')
                         .eq('staff_id', staffId)
                         .eq('branch_id', branchId)
                         .in('status', ['hold', 'confirmed', 'paid']) // исключаем cancelled и no_show
-                        .lte('start_at', dayEndISO) // Бронь начинается до конца дня
-                        .gte('end_at', dayStartISO); // Бронь заканчивается после начала дня
+                        .gte('start_at', searchStart.toISOString())
+                        .lte('end_at', searchEnd.toISOString());
                     
                     if (bookingsError) {
                         console.error('[filter bookings] query error:', bookingsError);
@@ -245,6 +244,7 @@ export default function BizClient({ data }: { data: Data }) {
                         console.log(`[filter bookings] Found ${existingBookings.length} existing bookings for ${dayStr}`, existingBookings);
                         
                         // Исключаем слоты, которые пересекаются с существующими бронями
+                        // Все времена в UTC, поэтому сравнение корректно
                         const beforeFilter = filtered.length;
                         filtered = filtered.filter(slot => {
                             const slotStart = new Date(slot.start_at);
@@ -256,7 +256,7 @@ export default function BizClient({ data }: { data: Data }) {
                                 // Проверяем пересечение: слот не должен пересекаться с бронями
                                 const hasOverlap = slotStart < bookingEnd && slotEnd > bookingStart;
                                 if (hasOverlap) {
-                                    console.log(`[filter bookings] Slot ${slot.start_at} overlaps with booking ${booking.start_at} - ${booking.end_at}`);
+                                    console.log(`[filter bookings] Slot ${slot.start_at} (${toLabel(slotStart)}) overlaps with booking ${booking.start_at} (${toLabel(bookingStart)}) - ${booking.end_at} (${toLabel(bookingEnd)})`);
                                 }
                                 return hasOverlap;
                             });
@@ -266,7 +266,7 @@ export default function BizClient({ data }: { data: Data }) {
                         
                         const afterFilter = filtered.length;
                         if (beforeFilter !== afterFilter) {
-                            console.log(`[filter bookings] Filtered out ${beforeFilter - afterFilter} slots`);
+                            console.log(`[filter bookings] Filtered out ${beforeFilter - afterFilter} slots (from ${beforeFilter} to ${afterFilter})`);
                         }
                     } else {
                         console.log(`[filter bookings] No existing bookings found for ${dayStr}`);

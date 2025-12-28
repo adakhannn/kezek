@@ -142,23 +142,37 @@ export async function POST(req: Request) {
             );
         }
 
-        if (!client_name && !client_phone && !client_email) {
+        // Телефон обязателен для гостевого бронирования (нужен для создания пользователя и связи)
+        if (!client_phone) {
             return NextResponse.json(
-                { ok: false, error: 'missing_client', message: 'Укажите имя, телефон или email' },
+                { ok: false, error: 'missing_phone', message: 'Телефон обязателен для записи' },
                 { status: 400 }
             );
+        }
+        
+        // Имя желательно, но не обязательно
+        if (!client_name && !client_email) {
+            console.warn('[guest-create] No name or email provided, only phone');
         }
 
         // Ищем или создаем пользователя по телефону или email
         let client_id: string | null = null;
         if (client_phone) {
             try {
+                console.log(`[guest-create] Looking for user by phone: ${client_phone}`);
                 // Сначала пытаемся найти существующего пользователя по телефону
                 client_id = await findUserIdByPhone(admin, client_phone);
+                
+                if (client_id) {
+                    console.log(`[guest-create] Found existing user: ${client_id}`);
+                } else {
+                    console.log(`[guest-create] User not found, creating new user with phone: ${client_phone}`);
+                }
                 
                 // Если не нашли - создаем нового
                 if (!client_id) {
                     client_id = await createUserByPhone(admin, client_phone, client_name, client_email);
+                    console.log(`[guest-create] Created new user: ${client_id}`);
                 } else {
                     // Если пользователь найден - обновляем профиль с именем и email, если указано
                     const profileData: { id: string; full_name?: string; email?: string } = { id: client_id };
@@ -167,18 +181,88 @@ export async function POST(req: Request) {
                     
                     if (client_name || client_email) {
                         await admin.from('profiles').upsert(profileData, { onConflict: 'id' });
+                        console.log(`[guest-create] Updated profile for user: ${client_id}`);
                     }
                 }
             } catch (e) {
-                console.error('Error finding/creating user by phone:', e);
-                // Продолжаем без client_id - запись будет создана с client_name и client_phone
+                const errorMsg = e instanceof Error ? e.message : String(e);
+                console.error('[guest-create] Error finding/creating user by phone:', e);
+                // Если не удалось создать/найти пользователя, возвращаем ошибку
+                // Это важно, чтобы client_id всегда был установлен для связи брони с пользователем
+                return NextResponse.json(
+                    { ok: false, error: 'user_creation_failed', message: `Не удалось создать пользователя: ${errorMsg}` },
+                    { status: 500 }
+                );
+            }
+            
+            // Проверяем, что client_id был установлен
+            if (!client_id) {
+                console.error('[guest-create] client_id is still null after phone lookup/creation');
+                return NextResponse.json(
+                    { ok: false, error: 'user_not_found', message: 'Не удалось найти или создать пользователя' },
+                    { status: 500 }
+                );
             }
         } else if (client_email) {
-            // Если нет телефона, но есть email - можно попробовать найти по email
-            // (но создавать пользователя без телефона не будем, так как нужен телефон для OTP)
-            // Просто сохраним email в профиле, если пользователь будет найден позже
+            // Если нет телефона, но есть email - создаем пользователя по email
+            try {
+                // Ищем существующего пользователя по email
+                const { data: users } = await admin.auth.admin.listUsers();
+                const found = users?.users.find((u) => u.email === client_email);
+                
+                if (found) {
+                    client_id = found.id;
+                    // Обновляем профиль с именем, если указано
+                    if (client_name) {
+                        await admin.from('profiles').upsert(
+                            { id: client_id, full_name: client_name },
+                            { onConflict: 'id' }
+                        );
+                    }
+                } else {
+                    // Создаем нового пользователя с email (без пароля, для OTP входа по email)
+                    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+                        email: client_email,
+                        email_confirm: true,
+                        user_metadata: client_name ? { full_name: client_name } : {},
+                    });
+                    
+                    if (createErr) {
+                        // Если пользователь уже существует, пытаемся найти его
+                        if (/already registered/i.test(createErr.message)) {
+                            const { data: users2 } = await admin.auth.admin.listUsers();
+                            const found2 = users2?.users.find((u) => u.email === client_email);
+                            if (found2) {
+                                client_id = found2.id;
+                                if (client_name) {
+                                    await admin.from('profiles').upsert(
+                                        { id: client_id, full_name: client_name },
+                                        { onConflict: 'id' }
+                                    );
+                                }
+                            }
+                        } else {
+                            console.error('Error creating user by email:', createErr);
+                        }
+                    } else if (created?.user?.id) {
+                        client_id = created.user.id;
+                        // Обновляем профиль с именем, если указано
+                        if (client_name) {
+                            await admin.from('profiles').upsert(
+                                { id: client_id, full_name: client_name },
+                                { onConflict: 'id' }
+                            );
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error finding/creating user by email:', e);
+                // Продолжаем без client_id - запись будет создана с client_name и client_email
+            }
         }
 
+        console.log(`[guest-create] Creating booking with client_id: ${client_id}, client_phone: ${client_phone}, client_name: ${client_name}, client_email: ${client_email}`);
+        
         const { data, error } = await admin.rpc('create_internal_booking', {
             p_biz_id: biz_id,
             p_branch_id: branch_id,
