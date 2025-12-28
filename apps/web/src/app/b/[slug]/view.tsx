@@ -216,32 +216,60 @@ export default function BizClient({ data }: { data: Data }) {
                 // Дополнительная проверка: исключаем слоты, которые уже забронированы
                 // (на случай, если RPC не учитывает все статусы)
                 try {
-                    // Формируем диапазон дат с учетом таймзоны
-                    const dayStart = formatInTimeZone(new Date(dayStr + 'T00:00:00'), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
-                    const dayEnd = formatInTimeZone(new Date(dayStr + 'T23:59:59'), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+                    // Используем более широкий диапазон для поиска броней (весь день в UTC)
+                    // Формируем начало и конец дня в локальной таймзоне, затем конвертируем в ISO строки
+                    const dayStartLocal = new Date(dayStr + 'T00:00:00');
+                    const dayEndLocal = new Date(dayStr + 'T23:59:59.999');
                     
-                    const { data: existingBookings } = await supabase
+                    // Конвертируем в ISO строки с таймзоной для запроса к БД
+                    const dayStartISO = formatInTimeZone(dayStartLocal, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+                    const dayEndISO = formatInTimeZone(dayEndLocal, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+                    
+                    // Запрашиваем все брони для этого мастера и филиала, которые пересекаются с выбранным днем
+                    // Бронь пересекается с днем, если: start_at <= dayEnd AND end_at >= dayStart
+                    // В Supabase это можно сделать через: start_at <= dayEnd AND end_at >= dayStart
+                    const { data: existingBookings, error: bookingsError } = await supabase
                         .from('bookings')
                         .select('start_at, end_at, status')
                         .eq('staff_id', staffId)
                         .eq('branch_id', branchId)
                         .in('status', ['hold', 'confirmed', 'paid']) // исключаем cancelled и no_show
-                        .gte('start_at', dayStart)
-                        .lt('start_at', dayEnd);
+                        .lte('start_at', dayEndISO) // Бронь начинается до конца дня
+                        .gte('end_at', dayStartISO); // Бронь заканчивается после начала дня
+                    
+                    if (bookingsError) {
+                        console.error('[filter bookings] query error:', bookingsError);
+                    }
                     
                     if (existingBookings && existingBookings.length > 0) {
+                        console.log(`[filter bookings] Found ${existingBookings.length} existing bookings for ${dayStr}`, existingBookings);
+                        
                         // Исключаем слоты, которые пересекаются с существующими бронями
+                        const beforeFilter = filtered.length;
                         filtered = filtered.filter(slot => {
                             const slotStart = new Date(slot.start_at);
                             const slotEnd = new Date(slot.end_at);
                             
-                            return !existingBookings.some(booking => {
+                            const overlaps = existingBookings.some(booking => {
                                 const bookingStart = new Date(booking.start_at);
                                 const bookingEnd = new Date(booking.end_at);
                                 // Проверяем пересечение: слот не должен пересекаться с бронями
-                                return (slotStart < bookingEnd && slotEnd > bookingStart);
+                                const hasOverlap = slotStart < bookingEnd && slotEnd > bookingStart;
+                                if (hasOverlap) {
+                                    console.log(`[filter bookings] Slot ${slot.start_at} overlaps with booking ${booking.start_at} - ${booking.end_at}`);
+                                }
+                                return hasOverlap;
                             });
+                            
+                            return !overlaps;
                         });
+                        
+                        const afterFilter = filtered.length;
+                        if (beforeFilter !== afterFilter) {
+                            console.log(`[filter bookings] Filtered out ${beforeFilter - afterFilter} slots`);
+                        }
+                    } else {
+                        console.log(`[filter bookings] No existing bookings found for ${dayStr}`);
                     }
                 } catch (e) {
                     console.error('[filter bookings] error:', e);

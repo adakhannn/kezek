@@ -45,6 +45,8 @@ interface BookingRow {
     created_at: string;
     client_id: string | null;
     client_phone: string | null;
+    client_name: string | null;
+    client_email: string | null;
     services: ServiceRow[] | ServiceRow | null;
     staff:    StaffRow[]    | StaffRow    | null;
     biz:      BizRow[]      | BizRow      | null;
@@ -147,7 +149,7 @@ export async function POST(req: Request) {
         const { data: raw, error } = await supabase
             .from('bookings')
             .select(`
-        id, status, start_at, end_at, created_at, client_id, client_phone,
+        id, status, start_at, end_at, created_at, client_id, client_phone, client_name, client_email,
         services:services!bookings_service_id_fkey ( name_ru, duration_min ),
         staff:staff!bookings_staff_id_fkey ( full_name, email, phone ),
         biz:businesses!bookings_biz_id_fkey ( name, email_notify_to, slug, address, phones, owner_id )
@@ -180,6 +182,14 @@ export async function POST(req: Request) {
         // Если нет client_id, но есть client_phone (гостевая бронь)
         if (!clientPhone && raw.client_phone) {
             clientPhone = raw.client_phone;
+        }
+        // Если нет email из auth_users_view, но есть client_email в брони (гостевая бронь с email)
+        if (!clientEmail && (raw as { client_email?: string | null }).client_email) {
+            clientEmail = (raw as { client_email: string }).client_email;
+        }
+        // Если нет имени из auth_users_view, но есть client_name в брони (гостевая бронь)
+        if (!clientName && raw.client_name) {
+            clientName = raw.client_name;
         }
 
         // E-mail + имя + телефон владельца (через Admin API для надежности)
