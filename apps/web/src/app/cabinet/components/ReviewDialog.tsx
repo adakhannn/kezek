@@ -1,7 +1,6 @@
 // apps/web/src/app/cabinet/components/ReviewDialog.tsx
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 type ReviewDialogProps = {
@@ -13,7 +12,6 @@ type ReviewDialogProps = {
 export default function ReviewDialog({
                                          bookingId, onClose, existingReview,
                                      }: ReviewDialogProps) {
-    const router = useRouter();
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [busy, setBusy] = useState(false);
@@ -49,8 +47,11 @@ export default function ReviewDialog({
                 if (!j.ok) return setErr(j.error || 'Не удалось отправить отзыв');
             }
             onClose();
-            // Используем router.refresh() для обновления серверных данных в Next.js
-            router.refresh();
+            // Используем полную перезагрузку для гарантированного обновления данных
+            // Небольшая задержка, чтобы дать время базе данных обновиться
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
         } finally {
             setBusy(false);
         }
