@@ -55,15 +55,34 @@ export async function POST(req: Request) {
         // Проверяем, что отзыв еще не существует
         const { data: existingReview } = await supabase
             .from('reviews')
-            .select('id')
+            .select('id, client_id')
             .eq('booking_id', body.booking_id)
             .maybeSingle();
 
         if (existingReview) {
-            return NextResponse.json({ok: false, error: 'REVIEW_ALREADY_EXISTS'}, {status: 400});
+            // Если отзыв существует и принадлежит текущему пользователю, обновляем его
+            if (existingReview.client_id === userId) {
+                const {error, data} = await supabase
+                    .from('reviews')
+                    .update({
+                        rating: body.rating,
+                        comment: body.comment ?? null,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', existingReview.id)
+                    .select('id')
+                    .single();
+
+                if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+
+                return NextResponse.json({ok: true, id: data?.id, updated: true});
+            } else {
+                // Отзыв существует, но принадлежит другому пользователю
+                return NextResponse.json({ok: false, error: 'REVIEW_ALREADY_EXISTS'}, {status: 400});
+            }
         }
 
-        // Создаем отзыв с client_id
+        // Создаем новый отзыв с client_id
         const {error, data} = await supabase
             .from('reviews')
             .insert({
@@ -77,7 +96,7 @@ export async function POST(req: Request) {
 
         if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
 
-        return NextResponse.json({ok: true, id: data?.id});
+        return NextResponse.json({ok: true, id: data?.id, updated: false});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
