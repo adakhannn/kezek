@@ -76,6 +76,9 @@ export default function SignUpPage() {
                 });
                 if (error) throw error;
                 localStorage.setItem('signup_full_name', fullName);
+                if (phone.trim()) {
+                    localStorage.setItem('signup_phone', phone.trim());
+                }
                 router.push('/auth/verify-email');
             }
         } catch (err) {
@@ -109,13 +112,24 @@ export default function SignUpPage() {
                             required
                         />
                     ) : (
-                        <Input
-                            type="email"
-                            placeholder="you@example.com"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            required
-                        />
+                        <>
+                            <Input
+                                type="email"
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                            />
+                            <Input
+                                type="tel"
+                                placeholder="Телефон (необязательно, для связи)"
+                                value={phone}
+                                onChange={e => setPhone(e.target.value)}
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Укажите номер телефона, чтобы мастера могли связаться с вами при необходимости
+                            </p>
+                        </>
                     )}
                     {!!error && (
                         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
