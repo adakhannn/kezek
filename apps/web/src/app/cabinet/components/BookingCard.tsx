@@ -13,7 +13,7 @@ export default function BookingCard({
                                         bookingId, status, start_at, end_at,
                                         service, staff, branch, business,
                                         canCancel,
-                                        review,
+                                        review: initialReview,
                                     }: {
     bookingId: string;
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
@@ -29,6 +29,10 @@ export default function BookingCard({
     const [showMap, setShowMap] = useState(false);
     const [openReview, setOpenReview] = useState(false);
     const [busy, setBusy] = useState(false);
+    // Локальное состояние для отзыва (оптимистичное обновление)
+    const [review, setReview] = useState(initialReview);
+    // Флаг для блокировки повторных кликов
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
     async function cancelBooking() {
         if (!confirm('Отменить запись?')) return;
@@ -144,8 +148,12 @@ export default function BookingCard({
                 )}
                 {!canCancel && !review && status !== 'cancelled' && (
                     <button
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors text-sm font-medium"
-                        onClick={() => setOpenReview(true)}
+                        disabled={reviewSubmitting}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => {
+                            setReviewSubmitting(true);
+                            setOpenReview(true);
+                        }}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -191,8 +199,17 @@ export default function BookingCard({
             {openReview && (
                 <ReviewDialog
                     bookingId={bookingId}
-                    onClose={() => setOpenReview(false)}
+                    onClose={() => {
+                        setOpenReview(false);
+                        setReviewSubmitting(false);
+                    }}
                     existingReview={review || null}
+                    onReviewCreated={(newReview) => {
+                        // Оптимистичное обновление: сразу обновляем состояние
+                        setReview(newReview);
+                        setOpenReview(false);
+                        setReviewSubmitting(false);
+                    }}
                 />
             )}
         </div>

@@ -7,10 +7,11 @@ type ReviewDialogProps = {
     bookingId: string;
     onClose: () => void;
     existingReview?: { id: string; rating: number; comment: string | null } | null;
+    onReviewCreated?: (review: { id: string; rating: number; comment: string | null }) => void;
 };
 
 export default function ReviewDialog({
-                                         bookingId, onClose, existingReview,
+                                         bookingId, onClose, existingReview, onReviewCreated,
                                      }: ReviewDialogProps) {
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
@@ -44,11 +45,27 @@ export default function ReviewDialog({
                     body: JSON.stringify({ booking_id: bookingId, rating, comment }),
                 });
                 const j = await r.json();
-                if (!j.ok) return setErr(j.error || 'Не удалось отправить отзыв');
+                if (!j.ok) {
+                    setBusy(false);
+                    return setErr(j.error || 'Не удалось отправить отзыв');
+                }
+                
+                // Если отзыв был создан, вызываем callback для оптимистичного обновления
+                if (j.id && onReviewCreated) {
+                    onReviewCreated({
+                        id: j.id,
+                        rating,
+                        comment: comment || null,
+                    });
+                    // Перезагружаем страницу через небольшую задержку для синхронизации с сервером
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                    return;
+                }
             }
             onClose();
-            // Используем полную перезагрузку для гарантированного обновления данных
-            // Небольшая задержка, чтобы дать время базе данных обновиться
+            // Для обновления существующего отзыва просто перезагружаем страницу
             setTimeout(() => {
                 window.location.reload();
             }, 300);
