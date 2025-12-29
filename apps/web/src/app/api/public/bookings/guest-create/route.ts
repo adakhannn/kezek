@@ -75,6 +75,37 @@ async function findUserIdByPhone(
     return null;
 }
 
+// Поиск пользователя по email через Admin API
+async function findUserIdByEmail(
+    admin: AdminClient,
+    email: string
+): Promise<string | null> {
+    const emailLc = email.toLowerCase();
+    const api = admin.auth.admin as {
+        listUsers: (args: { page?: number; perPage?: number }) => Promise<{
+            data: {
+                users: Array<{ id: string; email?: string | null }>
+            } | null;
+            error: { message: string } | null;
+        }>;
+    };
+    
+    for (let page = 1; page <= 10; page++) {
+        const { data, error } = await api.listUsers({ page, perPage: 1000 });
+        if (error) break;
+        
+        const users = data?.users ?? [];
+        const found = users.find((u) => {
+            return u.email?.toLowerCase() === emailLc;
+        });
+        
+        if (found) return found.id;
+        if (users.length < 1000) break; // последняя страница
+    }
+    
+    return null;
+}
+
 // Создание пользователя с телефоном (без пароля, для OTP входа)
 async function createUserByPhone(
     admin: AdminClient,
@@ -82,6 +113,39 @@ async function createUserByPhone(
     fullName?: string | null,
     email?: string | null
 ): Promise<string> {
+    // Сначала проверяем, не существует ли пользователь с таким email
+    // Это нужно, чтобы избежать ошибки "already registered"
+    if (email) {
+        const foundByEmail = await findUserIdByEmail(admin, email);
+        if (foundByEmail) {
+            console.log(`[createUserByPhone] Found existing user by email: ${foundByEmail}`);
+            // Обновляем найденного пользователя: добавляем телефон, если его нет
+            try {
+                const user = await admin.auth.admin.getUserById(foundByEmail);
+                if (user.data?.user && !user.data.user.phone) {
+                    await admin.auth.admin.updateUserById(foundByEmail, {
+                        phone,
+                        phone_confirm: true,
+                    });
+                    console.log(`[createUserByPhone] Added phone to existing user: ${foundByEmail}`);
+                }
+            } catch (e) {
+                console.error('[createUserByPhone] Error updating user phone:', e);
+                // Продолжаем, даже если не удалось обновить телефон
+            }
+            
+            // Обновляем профиль с именем, если указано
+            const profileData: { id: string; full_name?: string } = { id: foundByEmail };
+            if (fullName) profileData.full_name = fullName;
+            
+            if (fullName) {
+                await admin.from('profiles').upsert(profileData, { onConflict: 'id' });
+            }
+            
+            return foundByEmail;
+        }
+    }
+    
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
         phone,
         phone_confirm: true,
@@ -93,8 +157,42 @@ async function createUserByPhone(
     if (createErr) {
         // Если пользователь уже существует, пытаемся найти его
         if (/already registered/i.test(createErr.message)) {
-            const found = await findUserIdByPhone(admin, phone);
-            if (found) return found;
+            console.log(`[createUserByPhone] User already exists, searching by phone: ${phone}`);
+            // Сначала ищем по телефону
+            let found = await findUserIdByPhone(admin, phone);
+            
+            // Если не нашли по телефону, но есть email - ищем по email
+            if (!found && email) {
+                console.log(`[createUserByPhone] Searching by email: ${email}`);
+                found = await findUserIdByEmail(admin, email);
+            }
+            
+            if (found) {
+                console.log(`[createUserByPhone] Found existing user: ${found}`);
+                // Обновляем найденного пользователя: добавляем телефон, если его нет
+                try {
+                    const user = await admin.auth.admin.getUserById(found);
+                    if (user.data?.user && !user.data.user.phone) {
+                        await admin.auth.admin.updateUserById(found, {
+                            phone,
+                            phone_confirm: true,
+                        });
+                    }
+                } catch (e) {
+                    console.error('[createUserByPhone] Error updating user phone:', e);
+                }
+                
+                // Обновляем профиль с именем и email, если указано
+                const profileData: { id: string; full_name?: string; email?: string } = { id: found };
+                if (fullName) profileData.full_name = fullName;
+                if (email) profileData.email = email;
+                
+                if (fullName || email) {
+                    await admin.from('profiles').upsert(profileData, { onConflict: 'id' });
+                }
+                
+                return found;
+            }
         }
         throw new Error(createErr.message);
     }
