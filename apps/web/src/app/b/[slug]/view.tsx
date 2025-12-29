@@ -28,12 +28,6 @@ type Data = {
     staff: Staff[];
 };
 
-type BookingRow = {
-    start_at: string;
-    end_at: string;
-    staff_id: string;
-    status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
-};
 
 // связь услуга ↔ мастер
 type ServiceStaffRow = { service_id: string; staff_id: string; is_active: boolean };
@@ -113,9 +107,13 @@ export default function BizClient({ data }: { data: Data }) {
     // при смене филиала — сбрасываем выборы/слоты (если не восстановили состояние из localStorage)
     useEffect(() => {
         if (restoredFromStorage) return;
-        setServiceId(servicesByBranch[0]?.id ?? '');
-        setStaffId(staffByBranch[0]?.id ?? '');
-    }, [branchId, servicesByBranch, staffByBranch, restoredFromStorage]);
+        // Используем только branchId, чтобы избежать бесконечных ререндеров
+        const newServiceId = servicesByBranch[0]?.id ?? '';
+        const newStaffId = staffByBranch[0]?.id ?? '';
+        // Обновляем только если значения действительно изменились
+        setServiceId((prev) => (prev !== newServiceId ? newServiceId : prev));
+        setStaffId((prev) => (prev !== newStaffId ? newStaffId : prev));
+    }, [branchId, restoredFromStorage]); // Убрали servicesByBranch и staffByBranch из зависимостей
 
     /* ---------- сервисные навыки мастеров (service_staff) ---------- */
     const [serviceStaff, setServiceStaff] = useState<ServiceStaffRow[] | null>(null);
@@ -241,7 +239,7 @@ export default function BizClient({ data }: { data: Data }) {
                     }
                     
                     if (existingBookings && existingBookings.length > 0) {
-                        console.log(`[filter bookings] Found ${existingBookings.length} existing bookings for ${dayStr}`, existingBookings);
+                        // console.log(`[filter bookings] Found ${existingBookings.length} existing bookings for ${dayStr}`, existingBookings);
                         
                         // Исключаем слоты, которые пересекаются с существующими бронями
                         // Все времена в UTC, поэтому сравнение корректно
@@ -256,7 +254,7 @@ export default function BizClient({ data }: { data: Data }) {
                                 // Проверяем пересечение: слот не должен пересекаться с бронями
                                 const hasOverlap = slotStart < bookingEnd && slotEnd > bookingStart;
                                 if (hasOverlap) {
-                                    console.log(`[filter bookings] Slot ${slot.start_at} (${toLabel(slotStart)}) overlaps with booking ${booking.start_at} (${toLabel(bookingStart)}) - ${booking.end_at} (${toLabel(bookingEnd)})`);
+                                    // console.log(`[filter bookings] Slot ${slot.start_at} (${toLabel(slotStart)}) overlaps with booking ${booking.start_at} (${toLabel(bookingStart)}) - ${booking.end_at} (${toLabel(bookingEnd)})`);
                                 }
                                 return hasOverlap;
                             });
@@ -266,10 +264,10 @@ export default function BizClient({ data }: { data: Data }) {
                         
                         const afterFilter = filtered.length;
                         if (beforeFilter !== afterFilter) {
-                            console.log(`[filter bookings] Filtered out ${beforeFilter - afterFilter} slots (from ${beforeFilter} to ${afterFilter})`);
+                            // console.log(`[filter bookings] Filtered out ${beforeFilter - afterFilter} slots (from ${beforeFilter} to ${afterFilter})`);
                         }
                     } else {
-                        console.log(`[filter bookings] No existing bookings found for ${dayStr}`);
+                        // console.log(`[filter bookings] No existing bookings found for ${dayStr}`);
                     }
                 } catch (e) {
                     console.error('[filter bookings] error:', e);
@@ -292,9 +290,16 @@ export default function BizClient({ data }: { data: Data }) {
     }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey]);
 
     // Обновляем список слотов при возврате на страницу (например, через кнопку "Назад")
+    // Используем useRef для хранения предыдущих значений, чтобы избежать лишних обновлений
     useEffect(() => {
+        let lastUpdate = 0;
         const handleVisibilityChange = () => {
+            // Ограничиваем частоту обновлений (не чаще раза в 2 секунды)
+            const now = Date.now();
+            if (now - lastUpdate < 2000) return;
+            
             if (document.visibilityState === 'visible' && serviceId && staffId && dayStr) {
+                lastUpdate = now;
                 // Обновляем список слотов при возврате на страницу
                 setSlotsRefreshKey((k) => k + 1);
             }
@@ -316,6 +321,12 @@ export default function BizClient({ data }: { data: Data }) {
     useEffect(() => {
         if (restoredFromStorage) return;
         if (typeof window === 'undefined') return;
+        
+        // Используем useMemo для создания стабильных ссылок на массивы
+        const branchIds = new Set(branches.map((b) => b.id));
+        const serviceIds = new Set(services.map((s) => s.id));
+        const staffIds = new Set(staff.map((m) => m.id));
+        
         try {
             const key = `booking_state_${biz.id}`;
             const raw = window.localStorage.getItem(key);
@@ -332,13 +343,13 @@ export default function BizClient({ data }: { data: Data }) {
                 guestSlotISO?: string | null;
             };
 
-            if (parsed.branchId && branches.some((b) => b.id === parsed.branchId)) {
+            if (parsed.branchId && branchIds.has(parsed.branchId)) {
                 setBranchId(parsed.branchId);
             }
-            if (parsed.serviceId && services.some((s) => s.id === parsed.serviceId)) {
+            if (parsed.serviceId && serviceIds.has(parsed.serviceId)) {
                 setServiceId(parsed.serviceId);
             }
-            if (parsed.staffId && staff.some((m) => m.id === parsed.staffId)) {
+            if (parsed.staffId && staffIds.has(parsed.staffId)) {
                 setStaffId(parsed.staffId);
             }
             if (parsed.day) {
@@ -361,7 +372,7 @@ export default function BizClient({ data }: { data: Data }) {
         } finally {
             setRestoredFromStorage(true);
         }
-    }, [biz.id, branches, services, staff, restoredFromStorage]);
+    }, [biz.id, restoredFromStorage]); // Убрали branches, services, staff из зависимостей, чтобы избежать бесконечных ререндеров
     const [loading, setLoading] = useState(false);
 
     const service = useMemo(
