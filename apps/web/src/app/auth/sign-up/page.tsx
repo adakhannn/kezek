@@ -43,6 +43,7 @@ export default function SignUpPage() {
         }
     }
 
+
     async function sendOtp(e: React.FormEvent) {
         e.preventDefault();
         setSending(true);
