@@ -108,6 +108,7 @@ export default function ClientCabinet({
                                     staff={first(b.staff)}
                                     branch={first(b.branches)}
                                     business={first(b.businesses)}
+                                    review={Array.isArray(b.reviews) ? b.reviews[0] : null}
                                     canCancel
                                 />
                             ))
