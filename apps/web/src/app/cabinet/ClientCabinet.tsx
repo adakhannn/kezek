@@ -4,7 +4,6 @@
 import {useState} from 'react';
 
 import BookingCard from './components/BookingCard';
-import ProfileForm from './components/ProfileForm';
 
 type Booking = {
     id: string;
@@ -40,49 +39,45 @@ export default function ClientCabinet({
     const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
-            <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8 space-y-6">
-                {/* Заголовок */}
-                <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200 dark:border-gray-800">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Личный кабинет</h1>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                {tab === 'upcoming' 
-                                    ? `У вас ${upcoming.length} ${upcoming.length === 1 ? 'предстоящая запись' : upcoming.length < 5 ? 'предстоящие записи' : 'предстоящих записей'}`
-                                    : `У вас ${past.length} ${past.length === 1 ? 'прошедшая запись' : past.length < 5 ? 'прошедшие записи' : 'прошедших записей'}`
-                                }
-                            </p>
-                        </div>
-                        <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                            <button
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                                    tab === 'upcoming'
-                                        ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                }`}
-                                onClick={() => setTab('upcoming')}
-                            >
-                                Предстоящие
-                            </button>
-                            <button
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                                    tab === 'past'
-                                        ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                }`}
-                                onClick={() => setTab('past')}
-                            >
-                                Прошедшие
-                            </button>
-                        </div>
+        <div className="space-y-6">
+            {/* Заголовок */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200 dark:border-gray-800">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Мои записи</h1>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            {tab === 'upcoming' 
+                                ? `У вас ${upcoming.length} ${upcoming.length === 1 ? 'предстоящая запись' : upcoming.length < 5 ? 'предстоящие записи' : 'предстоящих записей'}`
+                                : `У вас ${past.length} ${past.length === 1 ? 'прошедшая запись' : past.length < 5 ? 'прошедшие записи' : 'прошедших записей'}`
+                            }
+                        </p>
+                    </div>
+                    <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                        <button
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                tab === 'upcoming'
+                                    ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                            }`}
+                            onClick={() => setTab('upcoming')}
+                        >
+                            Предстоящие
+                        </button>
+                        <button
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                tab === 'past'
+                                    ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                            }`}
+                            onClick={() => setTab('past')}
+                        >
+                            Прошедшие
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                {/* Профиль */}
-                <ProfileForm />
-
-                {/* Список бронирований */}
+            {/* Список бронирований */}
                 {tab === 'upcoming' && (
                     <section className="space-y-4">
                         {upcoming.length === 0 ? (
@@ -151,7 +146,6 @@ export default function ClientCabinet({
                         )}
                     </section>
                 )}
-            </div>
-        </main>
+        </div>
     );
 }
