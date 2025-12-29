@@ -312,10 +312,6 @@ export default function BizClient({ data }: { data: Data }) {
 
     /* ---------- hold / confirm и таймер ---------- */
     const [holding, setHolding] = useState<{ bookingId: string; until: number; slotLabel: string } | null>(null);
-    const [guestSlotISO, setGuestSlotISO] = useState<string | null>(null);
-    const [guestName, setGuestName] = useState<string>('');
-    const [guestPhone, setGuestPhone] = useState<string>('');
-    const [guestEmail, setGuestEmail] = useState<string>('');
 
     // Восстановление состояния после авторизации (localStorage)
     useEffect(() => {
@@ -340,7 +336,6 @@ export default function BizClient({ data }: { data: Data }) {
                 staffId?: string;
                 day?: string;
                 step?: number;
-                guestSlotISO?: string | null;
             };
 
             if (parsed.branchId && branchIds.has(parsed.branchId)) {
@@ -362,9 +357,6 @@ export default function BizClient({ data }: { data: Data }) {
             if (parsed.step && parsed.step >= 1 && parsed.step <= 4) {
                 setStep(parsed.step);
             }
-            if (parsed.guestSlotISO) {
-                setGuestSlotISO(parsed.guestSlotISO);
-            }
 
             window.localStorage.removeItem(key);
         } catch (e) {
@@ -385,10 +377,9 @@ export default function BizClient({ data }: { data: Data }) {
         if (!staffId) return alert('Выбери мастера');
         if (!branchId) return alert('Выбери филиал');
 
-        // Гость: не создаём бронь на hold, просто запоминаем выбранное время
+        // Требуем авторизацию для бронирования
         if (!isAuthed) {
-            setGuestSlotISO(t.toISOString());
-            setHolding(null);
+            redirectToAuth();
             return;
         }
 
@@ -465,9 +456,6 @@ export default function BizClient({ data }: { data: Data }) {
     const staffCurrent = staff.find((m) => m.id === staffId) ?? null;
     const serviceCurrent = service;
 
-    const guestSlotLabel =
-        guestSlotISO != null ? toLabel(new Date(guestSlotISO)) : null;
-
     function redirectToAuth() {
         if (typeof window === 'undefined') return;
         try {
@@ -478,7 +466,6 @@ export default function BizClient({ data }: { data: Data }) {
                 staffId,
                 day: dayStr,
                 step,
-                guestSlotISO,
             };
             window.localStorage.setItem(key, JSON.stringify(payload));
         } catch (e) {
@@ -523,9 +510,8 @@ export default function BizClient({ data }: { data: Data }) {
                 </div>
 
                 {!isAuthed && (
-                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                        При желании вы можете войти через кнопку «Войти» вверху, чтобы видеть историю своих записей,
-                        но это не обязательно — ниже можно записаться просто указав имя и номер телефона.
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+                        Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.
                     </div>
                 )}
 
@@ -843,7 +829,7 @@ export default function BizClient({ data }: { data: Data }) {
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">Время:</span>
                                 <span className="text-right font-medium">
-                                    {holding ? holding.slotLabel : guestSlotLabel ?? 'Выберите слот'}
+                                    {holding ? holding.slotLabel : 'Выберите слот'}
                                 </span>
                             </div>
                             {serviceCurrent?.price_from && (
@@ -861,149 +847,13 @@ export default function BizClient({ data }: { data: Data }) {
                             )}
                         </div>
 
-                        {!holding && !guestSlotISO && (
+                        {!holding && (
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                                Сначала выберите свободный слот, затем вы сможете подтвердить бронь.
-                            </div>
-                        )}
-
-                        {/* Гостевой режим: без авторизации, но с телефоном/именем */}
-                        {!isAuthed && guestSlotISO && (
-                                <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-800 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
-                                <div className="font-semibold text-gray-900 dark:text-gray-100">
-                                    Запись без регистрации
-                                </div>
-                                <p className="text-[11px] text-gray-600 dark:text-gray-400">
-                                    Укажите имя, номер телефона и email, чтобы мастер мог связаться с вами при необходимости.
-                                    Или авторизуйтесь, чтобы видеть свои записи в личном кабинете.
-                                </p>
-                                <div className="space-y-1.5">
-                                    <input
-                                        type="text"
-                                        className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                                        placeholder="Имя (необязательно, но желательно)"
-                                        value={guestName}
-                                        onChange={(e) => setGuestName(e.target.value)}
-                                    />
-                                    <input
-                                        type="tel"
-                                        className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                                        placeholder="Телефон (обязательно)"
-                                        value={guestPhone}
-                                        onChange={(e) => setGuestPhone(e.target.value)}
-                                    />
-                                    <input
-                                        type="email"
-                                        className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                                        placeholder="Email (необязательно)"
-                                        value={guestEmail}
-                                        onChange={(e) => setGuestEmail(e.target.value)}
-                                    />
-                                </div>
-                                <div className="mt-2 flex flex-col gap-2">
-                                    <button
-                                        type="button"
-                                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[11px] font-semibold text-gray-800 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
-                                        onClick={redirectToAuth}
-                                    >
-                                        Войти или зарегистрироваться
-                                    </button>
-                                    <button
-                                        className="w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
-                                        onClick={async () => {
-                                        if (!serviceCurrent) {
-                                            alert('Выбери услугу');
-                                            return;
-                                        }
-                                        if (!branchId) {
-                                            alert('Выбери филиал');
-                                            return;
-                                        }
-                                        if (!staffId) {
-                                            alert('Выбери мастера');
-                                            return;
-                                        }
-                                        if (!guestSlotISO) {
-                                            alert('Выбери слот');
-                                            return;
-                                        }
-                                        if (!guestPhone.trim()) {
-                                            alert('Укажи номер телефона');
-                                            return;
-                                        }
-
-                                        setLoading(true);
-                                        try {
-                                            const startISO = formatInTimeZone(
-                                                new Date(guestSlotISO),
-                                                TZ,
-                                                "yyyy-MM-dd'T'HH:mm:ssXXX"
-                                            );
-                                            const res = await fetch('/api/public/bookings/guest-create', {
-                                                method: 'POST',
-                                                headers: { 'content-type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    biz_id: biz.id,
-                                                    branch_id: branchId,
-                                                    service_id: serviceCurrent.id,
-                                                    staff_id: staffId,
-                                                    start_at: startISO,
-                                                    duration_min: serviceCurrent.duration_min,
-                                                    client_name: guestName || null,
-                                                    client_phone: guestPhone || null,
-                                                    client_email: guestEmail || null,
-                                                }),
-                                            });
-                                            const json = (await res.json().catch(() => ({}))) as {
-                                                ok?: boolean;
-                                                booking_id?: string;
-                                                message?: string;
-                                                error?: string;
-                                            };
-                                            if (!res.ok || !json.ok || !json.booking_id) {
-                                                const errorMsg = json.message || json.error || 'Не удалось создать запись';
-                                                alert(errorMsg);
-                                                // Если слот занят - обновляем список слотов
-                                                if (errorMsg.includes('уже занят') || errorMsg.includes('no_overlap') || errorMsg.includes('занят')) {
-                                                    // Очищаем выбранный слот и обновляем список
-                                                    setGuestSlotISO(null);
-                                                    // Обновляем список слотов несколько раз с задержкой для надежности
-                                                    setSlotsRefreshKey((k) => k + 1);
-                                                    setTimeout(() => setSlotsRefreshKey((k) => k + 1), 500);
-                                                    setTimeout(() => setSlotsRefreshKey((k) => k + 1), 1000);
-                                                }
-                                                return;
-                                            }
-                                            // Очищаем выбранный слот и обновляем список слотов перед редиректом
-                                            // Это нужно, чтобы если пользователь вернется, он не увидел занятый слот
-                                            setGuestSlotISO(null);
-                                            // Обновляем список слотов несколько раз с задержкой для надежности
-                                            setSlotsRefreshKey((k) => k + 1);
-                                            setTimeout(() => setSlotsRefreshKey((k) => k + 1), 500);
-                                            setTimeout(() => setSlotsRefreshKey((k) => k + 1), 1000);
-                                            // Небольшая задержка для обновления данных в БД
-                                            await new Promise(resolve => setTimeout(resolve, 500));
-                                            location.href = `/booking/${json.booking_id}`;
-                                        } catch (e) {
-                                            console.error('guest booking error', e);
-                                            const errorMsg = e instanceof Error ? e.message : String(e);
-                                            if (errorMsg.includes('no_overlap') || errorMsg.includes('exclusion constraint')) {
-                                                alert('Этот слот уже занят. Пожалуйста, выберите другое время.');
-                                                // Очищаем выбранный слот и обновляем список
-                                                setGuestSlotISO(null);
-                                                setSlotsRefreshKey((k) => k + 1); // Триггерим обновление слотов
-                                            } else {
-                                                alert('Ошибка при создании записи: ' + errorMsg);
-                                            }
-                                        } finally {
-                                            setLoading(false);
-                                        }
-                                    }}
-                                        disabled={loading}
-                                    >
-                                        Записаться без регистрации
-                                    </button>
-                                </div>
+                                {!isAuthed ? (
+                                    <span>Для бронирования необходимо войти. Нажмите кнопку «Войти» вверху страницы.</span>
+                                ) : (
+                                    <span>Сначала выберите свободный слот, затем вы сможете подтвердить бронь.</span>
+                                )}
                             </div>
                         )}
 
