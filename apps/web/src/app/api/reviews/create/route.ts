@@ -28,10 +28,47 @@ export async function POST(req: Request) {
             }
         );
 
+        // Получаем текущего пользователя
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) {
+            return NextResponse.json({ok: false, error: 'UNAUTHORIZED'}, {status: 401});
+        }
+
+        const userId = auth.user.id;
+
+        // Проверяем, что запись принадлежит текущему пользователю
+        const { data: booking, error: bookingError } = await supabase
+            .from('bookings')
+            .select('id, client_id, status')
+            .eq('id', body.booking_id)
+            .maybeSingle();
+
+        if (bookingError || !booking) {
+            return NextResponse.json({ok: false, error: 'BOOKING_NOT_FOUND'}, {status: 404});
+        }
+
+        // Проверяем, что запись принадлежит текущему пользователю
+        if (booking.client_id !== userId) {
+            return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+        }
+
+        // Проверяем, что отзыв еще не существует
+        const { data: existingReview } = await supabase
+            .from('reviews')
+            .select('id')
+            .eq('booking_id', body.booking_id)
+            .maybeSingle();
+
+        if (existingReview) {
+            return NextResponse.json({ok: false, error: 'REVIEW_ALREADY_EXISTS'}, {status: 400});
+        }
+
+        // Создаем отзыв с client_id
         const {error, data} = await supabase
             .from('reviews')
             .insert({
                 booking_id: body.booking_id,
+                client_id: userId,
                 rating: body.rating,
                 comment: body.comment ?? null,
             })
