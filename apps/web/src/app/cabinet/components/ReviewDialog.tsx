@@ -1,26 +1,51 @@
 // apps/web/src/app/cabinet/components/ReviewDialog.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+type ReviewDialogProps = {
+    bookingId: string;
+    onClose: () => void;
+    existingReview?: { id: string; rating: number; comment: string | null } | null;
+};
 
 export default function ReviewDialog({
-                                         bookingId, onClose,
-                                     }: { bookingId: string; onClose: () => void }) {
+                                         bookingId, onClose, existingReview,
+                                     }: ReviewDialogProps) {
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState<string | null>(null);
 
+    useEffect(() => {
+        if (existingReview) {
+            setRating(existingReview.rating);
+            setComment(existingReview.comment || '');
+        }
+    }, [existingReview]);
+
     async function submit() {
         setBusy(true); setErr(null);
         try {
-            const r = await fetch('/api/reviews/create', {
-                method: 'POST',
-                headers: { 'content-type':'application/json' },
-                body: JSON.stringify({ booking_id: bookingId, rating, comment }),
-            });
-            const j = await r.json();
-            if (!j.ok) return setErr(j.error || 'Не удалось отправить отзыв');
+            if (existingReview) {
+                // Обновление существующего отзыва
+                const r = await fetch('/api/reviews/update', {
+                    method: 'POST',
+                    headers: { 'content-type':'application/json' },
+                    body: JSON.stringify({ review_id: existingReview.id, rating, comment }),
+                });
+                const j = await r.json();
+                if (!j.ok) return setErr(j.error || 'Не удалось обновить отзыв');
+            } else {
+                // Создание нового отзыва
+                const r = await fetch('/api/reviews/create', {
+                    method: 'POST',
+                    headers: { 'content-type':'application/json' },
+                    body: JSON.stringify({ booking_id: bookingId, rating, comment }),
+                });
+                const j = await r.json();
+                if (!j.ok) return setErr(j.error || 'Не удалось отправить отзыв');
+            }
             onClose();
             location.reload();
         } finally {
@@ -32,7 +57,7 @@ export default function ReviewDialog({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
             <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-xl w-[90vw] max-w-md p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                    <div className="font-medium">Оставить отзыв</div>
+                    <div className="font-medium">{existingReview ? 'Редактировать отзыв' : 'Оставить отзыв'}</div>
                     <button className="text-sm underline" onClick={onClose}>Закрыть</button>
                 </div>
 
@@ -55,7 +80,7 @@ export default function ReviewDialog({
 
                 <button disabled={busy} className="border rounded px-3 py-1"
                         onClick={submit}>
-                    {busy ? 'Отправляю…' : 'Отправить'}
+                    {busy ? (existingReview ? 'Обновляю…' : 'Отправляю…') : (existingReview ? 'Обновить' : 'Отправить')}
                 </button>
             </div>
         </div>
