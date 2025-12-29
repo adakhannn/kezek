@@ -142,7 +142,7 @@ export default function BookingCard({
                         {busy ? 'Отмена...' : 'Отменить'}
                     </button>
                 )}
-                {!canCancel && !review && (
+                {!canCancel && !review && status !== 'cancelled' && (
                     <button
                         className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors text-sm font-medium"
                         onClick={() => setOpenReview(true)}
@@ -153,7 +153,7 @@ export default function BookingCard({
                         Оставить отзыв
                     </button>
                 )}
-                {!canCancel && review && (
+                {!canCancel && review && status !== 'cancelled' && (
                     <button
                         className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-sm font-medium"
                         onClick={() => setOpenReview(true)}
