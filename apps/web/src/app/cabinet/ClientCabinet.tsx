@@ -4,6 +4,7 @@
 import {useState} from 'react';
 
 import BookingCard from './components/BookingCard';
+import ProfileForm from './components/ProfileForm';
 
 type Booking = {
     id: string;
@@ -55,6 +56,8 @@ export default function ClientCabinet({
                     </button>
                 </div>
             </div>
+
+            <ProfileForm />
 
             {tab === 'upcoming' && (
                 <section className="space-y-3">
