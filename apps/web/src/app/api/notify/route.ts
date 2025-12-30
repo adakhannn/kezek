@@ -381,43 +381,70 @@ export async function POST(req: Request) {
         const whatsappText = `${title}: ${bizName}\n\nУслуга: ${svcName}\nМастер: ${master}\nВремя: ${when}\nСтатус: ${statusRuText}\n\n${link}`;
         let whatsappSent = 0;
 
+        // Проверяем наличие переменных окружения для WhatsApp
+        const hasWhatsAppConfig = !!process.env.WHATSAPP_ACCESS_TOKEN && !!process.env.WHATSAPP_PHONE_NUMBER_ID;
+        if (!hasWhatsAppConfig) {
+            console.warn('[notify] WhatsApp not configured: missing WHATSAPP_ACCESS_TOKEN or WHATSAPP_PHONE_NUMBER_ID');
+        }
+
         // WhatsApp клиенту
-        if (clientPhone) {
+        if (clientPhone && hasWhatsAppConfig) {
             try {
                 const phoneE164 = normalizePhoneToE164(clientPhone);
                 if (phoneE164) {
+                    console.log('[notify] Sending WhatsApp to client:', phoneE164);
                     await sendWhatsApp({ to: phoneE164, text: whatsappText });
                     whatsappSent += 1;
+                    console.log('[notify] WhatsApp to client sent successfully');
+                } else {
+                    console.warn('[notify] Client phone not normalized:', clientPhone);
                 }
             } catch (e) {
-                console.error('[notify] WhatsApp to client failed:', e);
+                const errorMsg = e instanceof Error ? e.message : String(e);
+                console.error('[notify] WhatsApp to client failed:', errorMsg, { phone: clientPhone });
             }
+        } else if (!clientPhone) {
+            console.log('[notify] No client phone for WhatsApp');
         }
 
         // WhatsApp мастеру
-        if (staffPhone) {
+        if (staffPhone && hasWhatsAppConfig) {
             try {
                 const phoneE164 = normalizePhoneToE164(staffPhone);
                 if (phoneE164) {
+                    console.log('[notify] Sending WhatsApp to staff:', phoneE164);
                     await sendWhatsApp({ to: phoneE164, text: whatsappText });
                     whatsappSent += 1;
+                    console.log('[notify] WhatsApp to staff sent successfully');
+                } else {
+                    console.warn('[notify] Staff phone not normalized:', staffPhone);
                 }
             } catch (e) {
-                console.error('[notify] WhatsApp to staff failed:', e);
+                const errorMsg = e instanceof Error ? e.message : String(e);
+                console.error('[notify] WhatsApp to staff failed:', errorMsg, { phone: staffPhone });
             }
+        } else if (!staffPhone) {
+            console.log('[notify] No staff phone for WhatsApp');
         }
 
         // WhatsApp владельцу
-        if (ownerPhone) {
+        if (ownerPhone && hasWhatsAppConfig) {
             try {
                 const phoneE164 = normalizePhoneToE164(ownerPhone);
                 if (phoneE164) {
+                    console.log('[notify] Sending WhatsApp to owner:', phoneE164);
                     await sendWhatsApp({ to: phoneE164, text: whatsappText });
                     whatsappSent += 1;
+                    console.log('[notify] WhatsApp to owner sent successfully');
+                } else {
+                    console.warn('[notify] Owner phone not normalized:', ownerPhone);
                 }
             } catch (e) {
-                console.error('[notify] WhatsApp to owner failed:', e);
+                const errorMsg = e instanceof Error ? e.message : String(e);
+                console.error('[notify] WhatsApp to owner failed:', errorMsg, { phone: ownerPhone });
             }
+        } else if (!ownerPhone) {
+            console.log('[notify] No owner phone for WhatsApp');
         }
 
         return NextResponse.json({ ok: true, sent, smsSent, whatsappSent });

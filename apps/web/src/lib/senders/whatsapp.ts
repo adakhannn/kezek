@@ -28,6 +28,10 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
     // Убираем все нецифровые символы на случай, если есть пробелы и т.д.
     phoneNumber = phoneNumber.replace(/\D/g, '');
 
+    if (!phoneNumber || phoneNumber.length < 9) {
+        throw new Error(`Invalid phone number format: ${to} (normalized: ${phoneNumber})`);
+    }
+
     const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
 
     const body = {
@@ -41,6 +45,8 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
         },
     };
 
+    console.log('[WhatsApp] Sending message:', { to: phoneNumber, url, hasToken: !!WHATSAPP_ACCESS_TOKEN, hasPhoneId: !!WHATSAPP_PHONE_NUMBER_ID });
+
     const resp = await fetch(url, {
         method: 'POST',
         headers: {
@@ -53,16 +59,20 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
     if (!resp.ok) {
         const errText = await resp.text();
         let errorMessage = `WhatsApp API error: HTTP ${resp.status}`;
+        let errorDetails: unknown = null;
         try {
             const errJson = JSON.parse(errText);
             errorMessage += ` — ${errJson.error?.message || errText.slice(0, 500)}`;
+            errorDetails = errJson.error;
         } catch {
             errorMessage += ` — ${errText.slice(0, 500)}`;
         }
+        console.error('[WhatsApp] API error:', { status: resp.status, error: errorDetails, response: errText });
         throw new Error(errorMessage);
     }
 
     const result = await resp.json();
+    console.log('[WhatsApp] Message sent successfully:', { messageId: result.messages?.[0]?.id, to: phoneNumber });
     return result;
 }
 
