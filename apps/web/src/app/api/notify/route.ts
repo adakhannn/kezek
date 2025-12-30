@@ -179,6 +179,39 @@ export async function POST(req: Request) {
             clientEmail = au?.email ?? null;
             clientName  = au?.full_name ?? null;
             clientPhone = au?.phone ?? null;
+            
+            // Если номер телефона не найден в auth_users_view, проверяем profiles
+            if (!clientPhone) {
+                try {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('phone')
+                        .eq('id', raw.client_id)
+                        .maybeSingle<{ phone: string | null }>();
+                    if (profile?.phone) {
+                        clientPhone = profile.phone;
+                        console.log('[notify] Got client phone from profiles table:', clientPhone);
+                    }
+                } catch (e) {
+                    console.error('[notify] failed to get client phone from profiles:', e);
+                }
+            }
+            
+            // Если имя не найдено в auth_users_view, проверяем profiles
+            if (!clientName) {
+                try {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('id', raw.client_id)
+                        .maybeSingle<{ full_name: string | null }>();
+                    if (profile?.full_name) {
+                        clientName = profile.full_name;
+                    }
+                } catch (e) {
+                    console.error('[notify] failed to get client name from profiles:', e);
+                }
+            }
         }
         // Если нет client_id, но есть client_phone (гостевая бронь)
         if (!clientPhone && raw.client_phone) {
@@ -204,19 +237,61 @@ export async function POST(req: Request) {
                     ownerEmail = ou.user.email ?? null;
                     const meta = (ou.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
                     ownerName = meta.full_name ?? null;
+                    // Номер телефона из auth.users.phone (для авторизации по телефону)
                     ownerPhone = (ou.user as { phone?: string | null }).phone ?? null;
                 }
             } catch (e) {
-                console.error('[notify] failed to get owner data:', e);
-                // Fallback: пробуем через auth_users_view
-                const { data: ou } = await supabase
-                    .from('auth_users_view')
-                    .select('email, full_name, phone')
-                    .eq('id', biz.owner_id)
-                    .maybeSingle<{ email: string | null; full_name: string | null; phone: string | null }>();
-                ownerEmail = ou?.email ?? null;
-                ownerName  = ou?.full_name ?? null;
-                ownerPhone = ou?.phone ?? null;
+                console.error('[notify] failed to get owner data via Admin API:', e);
+            }
+            
+            // Fallback: пробуем через auth_users_view
+            if (!ownerEmail || !ownerPhone) {
+                try {
+                    const { data: ou } = await supabase
+                        .from('auth_users_view')
+                        .select('email, full_name, phone')
+                        .eq('id', biz.owner_id)
+                        .maybeSingle<{ email: string | null; full_name: string | null; phone: string | null }>();
+                    if (ou) {
+                        ownerEmail = ownerEmail || ou.email ?? null;
+                        ownerName = ownerName || ou.full_name ?? null;
+                        ownerPhone = ownerPhone || ou.phone ?? null;
+                    }
+                } catch (e) {
+                    console.error('[notify] failed to get owner data via auth_users_view:', e);
+                }
+            }
+            
+            // Важно: номер телефона может быть в profiles.phone (для связи, не для авторизации)
+            if (!ownerPhone) {
+                try {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('phone')
+                        .eq('id', biz.owner_id)
+                        .maybeSingle<{ phone: string | null }>();
+                    if (profile?.phone) {
+                        ownerPhone = profile.phone;
+                        console.log('[notify] Got owner phone from profiles table:', ownerPhone);
+                    }
+                } catch (e) {
+                    console.error('[notify] failed to get owner phone from profiles:', e);
+                }
+            }
+            
+            if (!ownerName) {
+                try {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('id', biz.owner_id)
+                        .maybeSingle<{ full_name: string | null }>();
+                    if (profile?.full_name) {
+                        ownerName = profile.full_name;
+                    }
+                } catch (e) {
+                    console.error('[notify] failed to get owner name from profiles:', e);
+                }
             }
         }
 
