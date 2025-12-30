@@ -166,10 +166,13 @@ export async function POST(req: Request) {
         const staf = first<StaffRow>(raw.staff);
         const biz  = first<BizRow>(raw.biz);
 
-        // E-mail + имя + телефон клиента
+        // E-mail + имя + телефон + настройки уведомлений клиента
         let clientEmail: string | null = null;
         let clientName: string | null = null;
         let clientPhone: string | null = null;
+        let clientNotifyEmail = true;
+        let clientNotifySms = true;
+        let clientNotifyWhatsapp = true;
         if (raw.client_id) {
             const { data: au } = await supabase
                 .from('auth_users_view')
@@ -180,37 +183,36 @@ export async function POST(req: Request) {
             clientName  = au?.full_name ?? null;
             clientPhone = au?.phone ?? null;
             
-            // Если номер телефона не найден в auth_users_view, проверяем profiles
-            if (!clientPhone) {
-                try {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('phone')
-                        .eq('id', raw.client_id)
-                        .maybeSingle<{ phone: string | null }>();
-                    if (profile?.phone) {
+            // Получаем данные из profiles (включая настройки уведомлений)
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('phone, full_name, notify_email, notify_sms, notify_whatsapp')
+                    .eq('id', raw.client_id)
+                    .maybeSingle<{ 
+                        phone: string | null; 
+                        full_name: string | null;
+                        notify_email: boolean | null;
+                        notify_sms: boolean | null;
+                        notify_whatsapp: boolean | null;
+                    }>();
+                if (profile) {
+                    // Если номер телефона не найден в auth_users_view, берем из profiles
+                    if (!clientPhone && profile.phone) {
                         clientPhone = profile.phone;
                         console.log('[notify] Got client phone from profiles table:', clientPhone);
                     }
-                } catch (e) {
-                    console.error('[notify] failed to get client phone from profiles:', e);
-                }
-            }
-            
-            // Если имя не найдено в auth_users_view, проверяем profiles
-            if (!clientName) {
-                try {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('full_name')
-                        .eq('id', raw.client_id)
-                        .maybeSingle<{ full_name: string | null }>();
-                    if (profile?.full_name) {
+                    // Если имя не найдено в auth_users_view, берем из profiles
+                    if (!clientName && profile.full_name) {
                         clientName = profile.full_name;
                     }
-                } catch (e) {
-                    console.error('[notify] failed to get client name from profiles:', e);
+                    // Получаем настройки уведомлений (по умолчанию true, если не указано)
+                    clientNotifyEmail = profile.notify_email ?? true;
+                    clientNotifySms = profile.notify_sms ?? true;
+                    clientNotifyWhatsapp = profile.notify_whatsapp ?? true;
                 }
+            } catch (e) {
+                console.error('[notify] failed to get client data from profiles:', e);
             }
         }
         // Если нет client_id, но есть client_phone (гостевая бронь)
@@ -343,9 +345,11 @@ export async function POST(req: Request) {
 
         const recipients: Recipient[] = [];
 
-        // клиент — отдельное письмо с .ics
-        if (clientEmail) {
+        // клиент — отдельное письмо с .ics (только если включены email уведомления)
+        if (clientEmail && clientNotifyEmail) {
             recipients.push({ email: clientEmail, name: clientName, role: 'client', withIcs: true });
+        } else if (clientEmail && !clientNotifyEmail) {
+            console.log('[notify] Skipping email to client: notifications disabled');
         }
 
         // мастер
@@ -413,8 +417,8 @@ export async function POST(req: Request) {
         const smsText = `${title}: ${bizName}\nУслуга: ${svcName}\nМастер: ${master}\nВремя: ${when}\nСтатус: ${statusRuText}`;
         let smsSent = 0;
 
-        // SMS клиенту
-        if (clientPhone) {
+        // SMS клиенту (только если включены SMS уведомления)
+        if (clientPhone && clientNotifySms) {
             try {
                 const phoneE164 = normalizePhoneToE164(clientPhone);
                 if (phoneE164) {
@@ -424,6 +428,8 @@ export async function POST(req: Request) {
             } catch (e) {
                 console.error('[notify] SMS to client failed:', e);
             }
+        } else if (clientPhone && !clientNotifySms) {
+            console.log('[notify] Skipping SMS to client: notifications disabled');
         }
 
         // SMS мастеру
@@ -462,8 +468,8 @@ export async function POST(req: Request) {
             console.warn('[notify] WhatsApp not configured: missing WHATSAPP_ACCESS_TOKEN or WHATSAPP_PHONE_NUMBER_ID');
         }
 
-        // WhatsApp клиенту
-        if (clientPhone && hasWhatsAppConfig) {
+        // WhatsApp клиенту (только если включены WhatsApp уведомления)
+        if (clientPhone && hasWhatsAppConfig && clientNotifyWhatsapp) {
             try {
                 const phoneE164 = normalizePhoneToE164(clientPhone);
                 if (phoneE164) {
@@ -478,6 +484,8 @@ export async function POST(req: Request) {
                 const errorMsg = e instanceof Error ? e.message : String(e);
                 console.error('[notify] WhatsApp to client failed:', errorMsg, { phone: clientPhone });
             }
+        } else if (clientPhone && !clientNotifyWhatsapp) {
+            console.log('[notify] Skipping WhatsApp to client: notifications disabled');
         } else if (!clientPhone) {
             console.log('[notify] No client phone for WhatsApp');
         }

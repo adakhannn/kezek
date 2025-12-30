@@ -8,6 +8,9 @@ import { NextResponse } from 'next/server';
 type Body = {
     full_name?: string | null;
     phone?: string | null;
+    notify_email?: boolean;
+    notify_sms?: boolean;
+    notify_whatsapp?: boolean;
 };
 
 export async function POST(req: Request) {
@@ -33,6 +36,9 @@ export async function POST(req: Request) {
         const body = (await req.json()) as Body;
         const full_name = body.full_name?.trim() || null;
         const phone = body.phone?.trim() || null;
+        const notify_email = body.notify_email ?? true;
+        const notify_sms = body.notify_sms ?? true;
+        const notify_whatsapp = body.notify_whatsapp ?? true;
 
         // Обновляем профиль в таблице profiles
         const { error: profileError } = await supabase
@@ -42,6 +48,9 @@ export async function POST(req: Request) {
                     id: user.id,
                     full_name: full_name,
                     phone: phone,
+                    notify_email: notify_email,
+                    notify_sms: notify_sms,
+                    notify_whatsapp: notify_whatsapp,
                 },
                 { onConflict: 'id' }
             );
