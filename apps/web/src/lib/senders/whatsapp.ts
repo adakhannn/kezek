@@ -45,7 +45,14 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
         },
     };
 
-    console.log('[WhatsApp] Sending message:', { to: phoneNumber, url, hasToken: !!WHATSAPP_ACCESS_TOKEN, hasPhoneId: !!WHATSAPP_PHONE_NUMBER_ID });
+    console.log('[WhatsApp] Sending message:', { 
+        to: phoneNumber, 
+        url, 
+        hasToken: !!WHATSAPP_ACCESS_TOKEN, 
+        hasPhoneId: !!WHATSAPP_PHONE_NUMBER_ID,
+        phoneNumberId: WHATSAPP_PHONE_NUMBER_ID,
+        tokenPreview: WHATSAPP_ACCESS_TOKEN ? `${WHATSAPP_ACCESS_TOKEN.slice(0, 10)}...${WHATSAPP_ACCESS_TOKEN.slice(-5)}` : 'missing'
+    });
 
     const resp = await fetch(url, {
         method: 'POST',
@@ -64,10 +71,29 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
             const errJson = JSON.parse(errText);
             errorMessage += ` — ${errJson.error?.message || errText.slice(0, 500)}`;
             errorDetails = errJson.error;
+            
+            // Дополнительная информация об ошибке
+            if (errJson.error?.type === 'OAuthException') {
+                errorMessage += '\n\nВозможные причины:\n';
+                errorMessage += '1. Неверный WHATSAPP_ACCESS_TOKEN\n';
+                errorMessage += '2. Токен истек или был отозван\n';
+                errorMessage += '3. Токен не имеет необходимых разрешений';
+            } else if (errJson.error?.code === 100) {
+                errorMessage += '\n\nВозможные причины:\n';
+                errorMessage += '1. Неверный WHATSAPP_PHONE_NUMBER_ID\n';
+                errorMessage += '2. Phone Number ID не связан с вашим WhatsApp Business Account\n';
+                errorMessage += '3. Phone Number ID не имеет разрешений на отправку сообщений';
+            }
         } catch {
             errorMessage += ` — ${errText.slice(0, 500)}`;
         }
-        console.error('[WhatsApp] API error:', { status: resp.status, error: errorDetails, response: errText });
+        console.error('[WhatsApp] API error:', { 
+            status: resp.status, 
+            error: errorDetails, 
+            response: errText,
+            phoneNumberId: WHATSAPP_PHONE_NUMBER_ID,
+            url
+        });
         throw new Error(errorMessage);
     }
 
