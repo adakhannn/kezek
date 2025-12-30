@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 
 import { buildIcs } from '@/lib/ics';
 import { sendSMS, normalizePhoneToE164 } from '@/lib/senders/sms';
+import { sendWhatsApp } from '@/lib/senders/whatsapp';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
@@ -376,7 +377,50 @@ export async function POST(req: Request) {
             }
         }
 
-        return NextResponse.json({ ok: true, sent, smsSent });
+        // --- отправляем WhatsApp уведомления
+        const whatsappText = `${title}: ${bizName}\n\nУслуга: ${svcName}\nМастер: ${master}\nВремя: ${when}\nСтатус: ${statusRuText}\n\n${link}`;
+        let whatsappSent = 0;
+
+        // WhatsApp клиенту
+        if (clientPhone) {
+            try {
+                const phoneE164 = normalizePhoneToE164(clientPhone);
+                if (phoneE164) {
+                    await sendWhatsApp({ to: phoneE164, text: whatsappText });
+                    whatsappSent += 1;
+                }
+            } catch (e) {
+                console.error('[notify] WhatsApp to client failed:', e);
+            }
+        }
+
+        // WhatsApp мастеру
+        if (staffPhone) {
+            try {
+                const phoneE164 = normalizePhoneToE164(staffPhone);
+                if (phoneE164) {
+                    await sendWhatsApp({ to: phoneE164, text: whatsappText });
+                    whatsappSent += 1;
+                }
+            } catch (e) {
+                console.error('[notify] WhatsApp to staff failed:', e);
+            }
+        }
+
+        // WhatsApp владельцу
+        if (ownerPhone) {
+            try {
+                const phoneE164 = normalizePhoneToE164(ownerPhone);
+                if (phoneE164) {
+                    await sendWhatsApp({ to: phoneE164, text: whatsappText });
+                    whatsappSent += 1;
+                }
+            } catch (e) {
+                console.error('[notify] WhatsApp to owner failed:', e);
+            }
+        }
+
+        return NextResponse.json({ ok: true, sent, smsSent, whatsappSent });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[notify] error:', msg);
