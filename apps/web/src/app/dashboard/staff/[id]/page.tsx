@@ -163,18 +163,16 @@ export default async function Page({
                 />
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                    Временные переводы между филиалами задаются в разделе{' '}
-                    <Link href={`/dashboard/staff/${staff.id}/schedule`} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-                        «Расписание»
-                    </Link>.
-                </p>
-            </div>
-
             {/* Отзывы */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Отзывы</h2>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Отзывы</h2>
+                    {reviews.length > 0 && (
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                            Всего: {reviews.length}
+                        </span>
+                    )}
+                </div>
                 {reviews.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
@@ -227,6 +225,15 @@ export default async function Page({
                         })}
                     </div>
                 )}
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Временные переводы между филиалами задаются в разделе{' '}
+                    <Link href={`/dashboard/staff/${staff.id}/schedule`} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+                        «Расписание»
+                    </Link>.
+                </p>
             </div>
 
             <DangerActions staffId={String(staff.id)}/>
