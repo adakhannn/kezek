@@ -27,6 +27,15 @@ function first<T>(v: T | T[] | null | undefined): T | null {
     return Array.isArray(v) ? (v[0] ?? null) : v;
 }
 
+function extractReview(reviews: { id: string; rating: number; comment: string | null }[] | { id: string; rating: number; comment: string | null } | null | undefined): { id: string; rating: number; comment: string | null } | null {
+    if (!reviews) return null;
+    if (Array.isArray(reviews)) {
+        return reviews.length > 0 ? reviews[0] : null;
+    }
+    // Если это объект (не массив), возвращаем его
+    return reviews;
+}
+
 export default function ClientCabinet({
                                           userId,
                                           upcoming,
@@ -108,7 +117,7 @@ export default function ClientCabinet({
                                     staff={first(b.staff)}
                                     branch={first(b.branches)}
                                     business={first(b.businesses)}
-                                    review={Array.isArray(b.reviews) ? b.reviews[0] : null}
+                                    review={extractReview(b.reviews)}
                                     canCancel
                                 />
                             ))
@@ -140,7 +149,7 @@ export default function ClientCabinet({
                                     staff={first(b.staff)}
                                     branch={first(b.branches)}
                                     business={first(b.businesses)}
-                                    review={Array.isArray(b.reviews) ? b.reviews[0] : null}
+                                    review={extractReview(b.reviews)}
                                     canCancel={false}
                                 />
                             ))

@@ -36,9 +36,20 @@ export default function ReviewDialog({
                     body: JSON.stringify({ review_id: existingReview.id, rating, comment }),
                 });
                 const j = await r.json();
-                if (!j.ok) return setErr(j.error || 'Не удалось обновить отзыв');
+                if (!j.ok) {
+                    setBusy(false);
+                    return setErr(j.error || 'Не удалось обновить отзыв');
+                }
+                // Обновляем состояние через callback
+                if (onReviewCreated) {
+                    onReviewCreated({
+                        id: existingReview.id,
+                        rating,
+                        comment: comment || null,
+                    });
+                }
             } else {
-                // Создание нового отзыва
+                // Создание нового отзыва (API автоматически обновит существующий, если он есть)
                 const r = await fetch('/api/reviews/create', {
                     method: 'POST',
                     headers: { 'content-type':'application/json' },
@@ -47,25 +58,28 @@ export default function ReviewDialog({
                 const j = await r.json();
                 if (!j.ok) {
                     setBusy(false);
+                    // Если отзыв уже существует, показываем понятное сообщение и обновляем состояние
+                    if (j.error === 'REVIEW_ALREADY_EXISTS') {
+                        setErr('Отзыв для этой записи уже существует. Обновляю страницу...');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                        return;
+                    }
                     return setErr(j.error || 'Не удалось отправить отзыв');
                 }
                 
-                // Если отзыв был создан, вызываем callback для оптимистичного обновления
+                // Если отзыв был создан или обновлен, вызываем callback для оптимистичного обновления
                 if (j.id && onReviewCreated) {
                     onReviewCreated({
                         id: j.id,
                         rating,
                         comment: comment || null,
                     });
-                    // Перезагружаем страницу через небольшую задержку для синхронизации с сервером
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
-                    return;
                 }
             }
             onClose();
-            // Для обновления существующего отзыва просто перезагружаем страницу
+            // Перезагружаем страницу для синхронизации с сервером
             setTimeout(() => {
                 window.location.reload();
             }, 300);

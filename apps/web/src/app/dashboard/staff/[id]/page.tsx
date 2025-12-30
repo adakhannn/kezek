@@ -1,3 +1,4 @@
+import {formatInTimeZone} from 'date-fns-tz';
 import Link from 'next/link';
 import {notFound} from 'next/navigation';
 
@@ -7,6 +8,8 @@ import DangerActions from "@/app/dashboard/staff/[id]/DangerActions";
 import StaffServicesEditor from "@/app/dashboard/staff/[id]/StaffServicesEditor";
 import TransferStaffDialog from "@/app/dashboard/staff/[id]/TransferStaffDialog";
 import {getBizContextForManagers} from '@/lib/authBiz';
+
+const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -19,8 +22,8 @@ export default async function Page({
     const { id } = await params;
     const {supabase, bizId} = await getBizContextForManagers();
 
-    // Грузим сотрудника и список филиалов текущего бизнеса
-    const [{data: staff, error: eStaff}, {data: branches, error: eBr}] = await Promise.all([
+    // Грузим сотрудника, список филиалов текущего бизнеса и отзывы
+    const [{data: staff, error: eStaff}, {data: branches, error: eBr}, {data: reviewsData}] = await Promise.all([
         supabase
             .from('staff')
             .select('id,full_name,email,phone,branch_id,is_active,biz_id,percent_master,percent_salon,hourly_rate')
@@ -31,6 +34,16 @@ export default async function Page({
             .select('id,name,is_active')
             .eq('biz_id', bizId)
             .order('name'),
+        supabase
+            .from('bookings')
+            .select(`
+                id, start_at, end_at, client_name, client_phone,
+                services:services!bookings_service_id_fkey ( name_ru ),
+                reviews:reviews ( id, rating, comment, created_at )
+            `)
+            .eq('staff_id', id)
+            .order('start_at', { ascending: false })
+            .limit(100),
     ]);
 
     if (eStaff) {
@@ -45,6 +58,30 @@ export default async function Page({
 
     const activeBranches = (branches ?? []).filter(b => b.is_active);
     const currentBranch = (branches ?? []).find(b => b.id === staff.branch_id);
+    
+    // Обрабатываем отзывы: фильтруем только те, где есть отзыв
+    const reviews = (reviewsData ?? [])
+        .map(booking => {
+            const review = Array.isArray(booking.reviews) ? booking.reviews[0] : booking.reviews;
+            if (!review) return null;
+            const service = Array.isArray(booking.services) ? booking.services[0] : booking.services;
+            const serviceName = service && typeof service === 'object' && 'name_ru' in service 
+                ? String(service.name_ru) 
+                : null;
+            return {
+                id: review.id,
+                rating: review.rating,
+                comment: review.comment,
+                created_at: review.created_at,
+                booking_id: booking.id,
+                service_name: serviceName,
+                start_at: booking.start_at,
+                end_at: booking.end_at,
+                client_name: booking.client_name,
+                client_phone: booking.client_phone,
+            };
+        })
+        .filter((r): r is NonNullable<typeof r> => r !== null);
 
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -133,6 +170,63 @@ export default async function Page({
                         «Расписание»
                     </Link>.
                 </p>
+            </div>
+
+            {/* Отзывы */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Отзывы</h2>
+                {reviews.length === 0 ? (
+                    <div className="text-center py-12">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
+                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400">Пока нет отзывов</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {reviews.map((review) => {
+                            const dateStr = formatInTimeZone(new Date(review.start_at), TZ, 'dd.MM.yyyy HH:mm');
+                            return (
+                                <div key={review.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: 5 }).map((_, i) => (
+                                                        <svg
+                                                            key={i}
+                                                            className={`w-5 h-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300 dark:text-gray-600'}`}
+                                                            fill="currentColor"
+                                                            viewBox="0 0 20 20"
+                                                        >
+                                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                        </svg>
+                                                    ))}
+                                                </div>
+                                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{review.rating}★</span>
+                                            </div>
+                                            {review.service_name && (
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                                    Услуга: <span className="font-medium">{review.service_name}</span>
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-gray-500 dark:text-gray-500">
+                                                {dateStr} • {review.client_name || review.client_phone || 'Клиент'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {review.comment && (
+                                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{review.comment}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             <DangerActions staffId={String(staff.id)}/>
