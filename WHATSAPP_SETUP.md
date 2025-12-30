@@ -19,11 +19,40 @@ EAAeAsutyBQIBQWFfjlBNwSY7J8QkuD2rrZBDhe6QeRugqu3brxeTIqaGKBt6qQDWKZBbbLp1LmYZAjt
 
 ## Шаг 2: Получение Phone Number ID
 
+**Важно:** Есть два разных ID:
+- **WhatsApp Business Account ID** - ID аккаунта (например: `1185726307058446`)
+- **Phone Number ID** - ID конкретного номера телефона (другое число)
+
+### Способ 1: Через Meta Developers (вручную)
+
 1. В Meta Developers перейди в **WhatsApp** → **API Setup**
 2. Создай или выбери **WhatsApp Business Account**
 3. Добавь номер телефона (если еще не добавлен)
 4. После регистрации номера найди **Phone number ID** (это числовой ID, например `123456789012345`)
 5. Скопируй Phone Number ID
+
+### Способ 2: Через API (автоматически)
+
+Используй созданный endpoint для получения правильного Phone Number ID:
+
+**Вариант A: Если у тебя есть Business Account ID:**
+```
+GET https://kezek.kg/api/whatsapp/get-phone-numbers?account_id=1185726307058446
+```
+
+**Вариант B: Автоматическое получение (рекомендуется):**
+```
+GET https://kezek.kg/api/whatsapp/get-business-account
+```
+
+Этот endpoint автоматически:
+1. Получит список Business Accounts
+2. Найдет номера телефонов для первого аккаунта
+3. Покажет правильный Phone Number ID
+
+**Результат будет содержать:**
+- `phone_numbers[].id` - это и есть **WHATSAPP_PHONE_NUMBER_ID**
+- `selected_account.id` - это **WHATSAPP_BUSINESS_ACCOUNT_ID** (если понадобится)
 
 ## Шаг 3: Настройка переменных окружения
 
@@ -36,7 +65,14 @@ WHATSAPP_PHONE_NUMBER_ID=YOUR_PHONE_NUMBER_ID_HERE
 WHATSAPP_VERIFY_TOKEN=kezek_whatsapp_verify
 ```
 
-**Важно:** Замени `YOUR_PHONE_NUMBER_ID_HERE` на реальный Phone Number ID из шага 2.
+**Важно:** 
+- `WHATSAPP_PHONE_NUMBER_ID` - это **НЕ** Business Account ID!
+- Используй endpoint `/api/whatsapp/get-business-account` чтобы получить правильный Phone Number ID
+- Phone Number ID - это ID конкретного номера телефона, а не аккаунта
+
+**Пример:**
+- ❌ Неправильно: `WHATSAPP_PHONE_NUMBER_ID=1185726307058446` (это Business Account ID)
+- ✅ Правильно: `WHATSAPP_PHONE_NUMBER_ID=123456789012345` (это Phone Number ID из списка номеров)
 
 ## Шаг 4: Настройка Webhook в Meta
 
