@@ -8,16 +8,26 @@ WHATSAPP_PHONE_NUMBER_ID=1185726307058446  ❌ (это Business Account ID)
 
 ## Решение
 
-### Шаг 1: Получить правильный Phone Number ID
+### Шаг 1: Проверить разрешения Access Token
 
-Открой в браузере (после деплоя):
+Если получаешь ошибку "Missing Permission", нужно обновить разрешения токена:
+
+1. Зайди в [Meta Developers](https://developers.facebook.com/apps/)
+2. Выбери приложение → **Настройки компании** → **Пользователи системы**
+3. Выбери пользователя системы, который используется для генерации токена
+4. Убедись, что у него есть разрешения:
+   - ✅ `whatsapp_business_messaging`
+   - ✅ `whatsapp_business_management`
+   - ✅ `business_management` (важно для доступа к Business Accounts)
+5. Если разрешений нет - добавь их
+6. Сгенерируй **новый Long-lived token** с этими разрешениями
+7. Обнови `WHATSAPP_ACCESS_TOKEN` в переменных окружения
+
+## Шаг 2: Получить правильный Phone Number ID
+
+После обновления токена открой в браузере:
 ```
 https://kezek.kg/api/whatsapp/get-business-account
-```
-
-Или используй curl:
-```bash
-curl "https://kezek.kg/api/whatsapp/get-business-account"
 ```
 
 **Результат будет содержать:**

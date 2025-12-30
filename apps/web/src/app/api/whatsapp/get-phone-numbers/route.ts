@@ -62,10 +62,20 @@ export async function GET(req: Request) {
                 errorMessage += ` — ${errJson.error?.message || errText.slice(0, 500)}`;
                 errorDetails = errJson.error;
                 
-                // Если account_id не подходит, пробуем получить Business Account ID
+                // Специальная обработка ошибки Missing Permission
                 if (errJson.error?.code === 100 || errJson.error?.type === 'OAuthException') {
-                    errorMessage += '\n\nПопробуйте использовать WhatsApp Business Account ID вместо Phone Number ID.';
-                    errorMessage += '\nНайти его можно в Meta Developers → WhatsApp → API Setup → "WhatsApp Business Account ID"';
+                    errorMessage += '\n\nОшибка: Недостаточно разрешений для доступа к номерам телефонов.';
+                    errorMessage += '\n\nРешение:';
+                    errorMessage += '\n1. Зайди в Meta Developers → Настройки компании → Пользователи системы';
+                    errorMessage += '\n2. Выбери пользователя системы, который используется для генерации токена';
+                    errorMessage += '\n3. Убедись, что у него есть разрешения:';
+                    errorMessage += '\n   - whatsapp_business_messaging';
+                    errorMessage += '\n   - whatsapp_business_management';
+                    errorMessage += '\n   - business_management';
+                    errorMessage += '\n4. Сгенерируй новый Long-lived token с этими разрешениями';
+                    errorMessage += '\n5. Обнови WHATSAPP_ACCESS_TOKEN в переменных окружения';
+                } else if (errJson.error?.code === 100) {
+                    errorMessage += '\n\nВозможно, account_id неверный. Попробуйте использовать WhatsApp Business Account ID.';
                 }
             } catch {
                 errorMessage += ` — ${errText.slice(0, 500)}`;

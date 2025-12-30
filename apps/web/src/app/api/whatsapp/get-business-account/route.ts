@@ -41,11 +41,26 @@ export async function GET() {
             const errText = await resp.text();
             let errorMessage = `Graph API error: HTTP ${resp.status}`;
             let errorDetails: unknown = null;
+            let troubleshooting: string[] = [];
             
             try {
                 const errJson = JSON.parse(errText);
                 errorMessage += ` — ${errJson.error?.message || errText.slice(0, 500)}`;
                 errorDetails = errJson.error;
+                
+                // Специальная обработка ошибки Missing Permission
+                if (errJson.error?.code === 100 || errJson.error?.type === 'OAuthException') {
+                    troubleshooting = [
+                        '1. Зайди в Meta Developers → Настройки компании → Пользователи системы',
+                        '2. Выбери пользователя системы, который используется для генерации токена',
+                        '3. Убедись, что у него есть разрешения:',
+                        '   - whatsapp_business_messaging',
+                        '   - whatsapp_business_management',
+                        '   - business_management (для доступа к Business Accounts)',
+                        '4. Сгенерируй новый Long-lived token с этими разрешениями',
+                        '5. Обнови WHATSAPP_ACCESS_TOKEN в переменных окружения',
+                    ];
+                }
             } catch {
                 errorMessage += ` — ${errText.slice(0, 500)}`;
             }
@@ -56,6 +71,7 @@ export async function GET() {
                     error: 'api_error',
                     message: errorMessage,
                     details: errorDetails,
+                    troubleshooting: troubleshooting.length > 0 ? troubleshooting : undefined,
                 },
                 { status: resp.status }
             );
