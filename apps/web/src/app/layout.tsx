@@ -57,12 +57,24 @@ export default function RootLayout({
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                         © {new Date().getFullYear()} Kezek. Все права защищены.
                     </p>
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-6 flex-wrap">
                         <Link 
                             href="/privacy" 
                             className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                         >
                             Политика конфиденциальности
+                        </Link>
+                        <Link
+                            href="/terms"
+                            className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                            Пользовательское соглашение
+                        </Link>
+                        <Link
+                            href="/data-deletion"
+                            className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                            Удаление данных
                         </Link>
                     </div>
                 </div>
