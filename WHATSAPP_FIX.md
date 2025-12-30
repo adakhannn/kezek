@@ -6,46 +6,46 @@
 WHATSAPP_PHONE_NUMBER_ID=1185726307058446  ❌ (это Business Account ID)
 ```
 
-## Решение
+## Решение (выбери один способ)
 
-### Шаг 1: Проверить разрешения Access Token
-
-Если получаешь ошибку "Missing Permission", нужно обновить разрешения токена:
+### Способ 1: Через Meta Developers Dashboard (САМЫЙ ПРОСТОЙ) ⭐
 
 1. Зайди в [Meta Developers](https://developers.facebook.com/apps/)
-2. Выбери приложение → **Настройки компании** → **Пользователи системы**
-3. Выбери пользователя системы, который используется для генерации токена
-4. Убедись, что у него есть разрешения:
-   - ✅ `whatsapp_business_messaging`
-   - ✅ `whatsapp_business_management`
-   - ✅ `business_management` (важно для доступа к Business Accounts)
-5. Если разрешений нет - добавь их
-6. Сгенерируй **новый Long-lived token** с этими разрешениями
-7. Обнови `WHATSAPP_ACCESS_TOKEN` в переменных окружения
+2. Выбери свое приложение
+3. Перейди в **WhatsApp** → **API Setup**
+4. В разделе **"From"** найди свой номер телефона
+5. Рядом с номером будет показан **Phone number ID** (это числовой ID, например: `123456789012345`)
+6. Скопируй этот ID
+7. Обнови `WHATSAPP_PHONE_NUMBER_ID` в Vercel этим значением
 
-## Шаг 2: Получить правильный Phone Number ID
+**Важно:** Это НЕ то же самое, что "WhatsApp Business Account ID"!
 
-После обновления токена открой в браузере:
-```
-https://kezek.kg/api/whatsapp/get-business-account
-```
+### Способ 2: Через Graph API Explorer
 
-**Результат будет содержать:**
-- `phone_numbers[].id` - это и есть правильный **WHATSAPP_PHONE_NUMBER_ID**
-- Скопируй значение `id` из массива `phone_numbers`
+1. Зайди в [Graph API Explorer](https://developers.facebook.com/tools/explorer/)
+2. Выбери свое приложение
+3. В поле "Access Token" вставь свой `WHATSAPP_ACCESS_TOKEN`
+4. В поле "GET" введи: `/1185726307058446/phone_numbers`
+5. Нажми "Submit"
+6. В ответе найди массив `data` и скопируй значение `id` из первого элемента
+7. Обнови `WHATSAPP_PHONE_NUMBER_ID` в Vercel этим значением
 
-### Шаг 2: Обновить переменные окружения
+### Способ 3: Через наш API endpoint (требует разрешения business_management)
 
-В Vercel (или где развернут проект) обнови:
-```
-WHATSAPP_PHONE_NUMBER_ID=<скопированное_значение_из_phone_numbers[].id>
-```
+Если у токена есть разрешение `business_management`:
 
-**Важно:** Это должно быть другое число, не `1185726307058446`
+1. Открой: `https://kezek.kg/api/whatsapp/get-business-account`
+2. В ответе найди `phone_numbers[].id`
+3. Скопируй это значение
+4. Обнови `WHATSAPP_PHONE_NUMBER_ID` в Vercel
 
-### Шаг 3: Проверить конфигурацию
+**Если получаешь ошибку "Missing Permission":**
+- Нужно добавить разрешение `business_management` к токену
+- Или используй Способ 1 (самый простой)
 
-Открой:
+## Проверка
+
+После обновления открой:
 ```
 https://kezek.kg/api/whatsapp/test
 ```
@@ -54,20 +54,12 @@ https://kezek.kg/api/whatsapp/test
 - ✅ `WHATSAPP_PHONE_NUMBER_ID_VALID: true`
 - ✅ `configured: true`
 
-### Шаг 4: Протестировать отправку
+## Тестирование
 
 1. Зайди в `/cabinet/profile`
 2. Включи WhatsApp уведомления
 3. Нажми "Отправить код"
 4. Должен прийти OTP код на WhatsApp
-
-## Альтернативный способ (через Meta Developers)
-
-1. Зайди в [Meta Developers](https://developers.facebook.com/apps/)
-2. Выбери приложение → **WhatsApp** → **API Setup**
-3. В разделе **"From"** найди свой номер телефона
-4. Скопируй **Phone number ID** (это число рядом с номером)
-5. Обнови `WHATSAPP_PHONE_NUMBER_ID` этим значением
 
 ## Разница между ID
 
@@ -75,4 +67,3 @@ https://kezek.kg/api/whatsapp/test
 - **Phone Number ID** (другое число) - ID конкретного номера телефона
 
 Для отправки сообщений нужен именно **Phone Number ID**!
-
