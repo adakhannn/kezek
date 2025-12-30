@@ -173,6 +173,7 @@ export async function POST(req: Request) {
         let clientNotifyEmail = true;
         let clientNotifySms = true;
         let clientNotifyWhatsapp = true;
+        let clientWhatsappVerified = false;
         if (raw.client_id) {
             const { data: au } = await supabase
                 .from('auth_users_view')
@@ -183,11 +184,11 @@ export async function POST(req: Request) {
             clientName  = au?.full_name ?? null;
             clientPhone = au?.phone ?? null;
             
-            // Получаем данные из profiles (включая настройки уведомлений)
+            // Получаем данные из profiles (включая настройки уведомлений и статус верификации)
             try {
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('phone, full_name, notify_email, notify_sms, notify_whatsapp')
+                    .select('phone, full_name, notify_email, notify_sms, notify_whatsapp, whatsapp_verified')
                     .eq('id', raw.client_id)
                     .maybeSingle<{ 
                         phone: string | null; 
@@ -195,6 +196,7 @@ export async function POST(req: Request) {
                         notify_email: boolean | null;
                         notify_sms: boolean | null;
                         notify_whatsapp: boolean | null;
+                        whatsapp_verified: boolean | null;
                     }>();
                 if (profile) {
                     // Если номер телефона не найден в auth_users_view, берем из profiles
@@ -210,6 +212,7 @@ export async function POST(req: Request) {
                     clientNotifyEmail = profile.notify_email ?? true;
                     clientNotifySms = profile.notify_sms ?? true;
                     clientNotifyWhatsapp = profile.notify_whatsapp ?? true;
+                    clientWhatsappVerified = profile.whatsapp_verified ?? false;
                 }
             } catch (e) {
                 console.error('[notify] failed to get client data from profiles:', e);
@@ -468,8 +471,8 @@ export async function POST(req: Request) {
             console.warn('[notify] WhatsApp not configured: missing WHATSAPP_ACCESS_TOKEN or WHATSAPP_PHONE_NUMBER_ID');
         }
 
-        // WhatsApp клиенту (только если включены WhatsApp уведомления)
-        if (clientPhone && hasWhatsAppConfig && clientNotifyWhatsapp) {
+        // WhatsApp клиенту (только если включены WhatsApp уведомления и номер подтвержден)
+        if (clientPhone && hasWhatsAppConfig && clientNotifyWhatsapp && clientWhatsappVerified) {
             try {
                 const phoneE164 = normalizePhoneToE164(clientPhone);
                 if (phoneE164) {
@@ -486,6 +489,8 @@ export async function POST(req: Request) {
             }
         } else if (clientPhone && !clientNotifyWhatsapp) {
             console.log('[notify] Skipping WhatsApp to client: notifications disabled');
+        } else if (clientPhone && !clientWhatsappVerified) {
+            console.log('[notify] Skipping WhatsApp to client: phone not verified');
         } else if (!clientPhone) {
             console.log('[notify] No client phone for WhatsApp');
         }
