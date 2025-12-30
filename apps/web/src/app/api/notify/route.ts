@@ -255,9 +255,9 @@ export async function POST(req: Request) {
                         .eq('id', biz.owner_id)
                         .maybeSingle<{ email: string | null; full_name: string | null; phone: string | null }>();
                     if (ou) {
-                        ownerEmail = ownerEmail || ou.email ?? null;
-                        ownerName = ownerName || ou.full_name ?? null;
-                        ownerPhone = ownerPhone || ou.phone ?? null;
+                        ownerEmail = ownerEmail || (ou.email ?? null);
+                        ownerName = ownerName || (ou.full_name ?? null);
+                        ownerPhone = ownerPhone || (ou.phone ?? null);
                     }
                 } catch (e) {
                     console.error('[notify] failed to get owner data via auth_users_view:', e);
