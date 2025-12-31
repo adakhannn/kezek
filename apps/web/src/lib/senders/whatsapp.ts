@@ -51,7 +51,8 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
         hasToken: !!WHATSAPP_ACCESS_TOKEN, 
         hasPhoneId: !!WHATSAPP_PHONE_NUMBER_ID,
         phoneNumberId: WHATSAPP_PHONE_NUMBER_ID,
-        tokenPreview: WHATSAPP_ACCESS_TOKEN ? `${WHATSAPP_ACCESS_TOKEN.slice(0, 10)}...${WHATSAPP_ACCESS_TOKEN.slice(-5)}` : 'missing'
+        tokenPreview: WHATSAPP_ACCESS_TOKEN ? `${WHATSAPP_ACCESS_TOKEN.slice(0, 10)}...${WHATSAPP_ACCESS_TOKEN.slice(-5)}` : 'missing',
+        note: 'Для тестового номера получатель должен быть добавлен в список тестовых получателей в Meta Developers'
     });
 
     const resp = await fetch(url, {
@@ -92,6 +93,14 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
                 errorMessage += '1. Перейди в WhatsApp Manager (business.facebook.com)\n';
                 errorMessage += '2. Убедись, что номер телефона зарегистрирован и имеет статус "Подключено"\n';
                 errorMessage += '3. Проверь, что Phone Number ID соответствует правильному номеру';
+            } else if (errJson.error?.code === 131047 || errJson.error?.error_subcode === 131047) {
+                errorMessage += '\n\nВозможные причины:\n';
+                errorMessage += '1. Для тестового номера получатель должен быть добавлен в список тестовых получателей\n';
+                errorMessage += '2. Номер получателя не добавлен в Meta Developers\n';
+                errorMessage += '\nРешение:\n';
+                errorMessage += '1. Перейди в Meta Developers → WhatsApp → Быстрый старт → Протестируйте API\n';
+                errorMessage += '2. Добавь номер получателя в список тестовых получателей\n';
+                errorMessage += '3. Или используй реальный номер (после завершения проверки)';
             }
         } catch {
             errorMessage += ` — ${errText.slice(0, 500)}`;
