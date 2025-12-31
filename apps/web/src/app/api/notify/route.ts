@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { buildIcs } from '@/lib/ics';
-import { sendSMS, normalizePhoneToE164 } from '@/lib/senders/sms';
+import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
@@ -171,7 +171,6 @@ export async function POST(req: Request) {
         let clientName: string | null = null;
         let clientPhone: string | null = null;
         let clientNotifyEmail = true;
-        let clientNotifySms = true;
         let clientNotifyWhatsapp = true;
         let clientWhatsappVerified = false;
         if (raw.client_id) {
@@ -188,13 +187,12 @@ export async function POST(req: Request) {
             try {
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('phone, full_name, notify_email, notify_sms, notify_whatsapp, whatsapp_verified')
+                    .select('phone, full_name, notify_email, notify_whatsapp, whatsapp_verified')
                     .eq('id', raw.client_id)
                     .maybeSingle<{ 
                         phone: string | null; 
                         full_name: string | null;
                         notify_email: boolean | null;
-                        notify_sms: boolean | null;
                         notify_whatsapp: boolean | null;
                         whatsapp_verified: boolean | null;
                     }>();
@@ -210,7 +208,6 @@ export async function POST(req: Request) {
                     }
                     // Получаем настройки уведомлений (по умолчанию true, если не указано)
                     clientNotifyEmail = profile.notify_email ?? true;
-                    clientNotifySms = profile.notify_sms ?? true;
                     clientNotifyWhatsapp = profile.notify_whatsapp ?? true;
                     clientWhatsappVerified = profile.whatsapp_verified ?? false;
                 }
@@ -416,50 +413,7 @@ export async function POST(req: Request) {
             sent += 1;
         }
 
-        // --- отправляем SMS уведомления
-        const smsText = `${title}: ${bizName}\nУслуга: ${svcName}\nМастер: ${master}\nВремя: ${when}\nСтатус: ${statusRuText}`;
-        let smsSent = 0;
-
-        // SMS клиенту (только если включены SMS уведомления)
-        if (clientPhone && clientNotifySms) {
-            try {
-                const phoneE164 = normalizePhoneToE164(clientPhone);
-                if (phoneE164) {
-                    await sendSMS({ to: phoneE164, text: smsText });
-                    smsSent += 1;
-                }
-            } catch (e) {
-                console.error('[notify] SMS to client failed:', e);
-            }
-        } else if (clientPhone && !clientNotifySms) {
-            console.log('[notify] Skipping SMS to client: notifications disabled');
-        }
-
-        // SMS мастеру
-        if (staffPhone) {
-            try {
-                const phoneE164 = normalizePhoneToE164(staffPhone);
-                if (phoneE164) {
-                    await sendSMS({ to: phoneE164, text: smsText });
-                    smsSent += 1;
-                }
-            } catch (e) {
-                console.error('[notify] SMS to staff failed:', e);
-            }
-        }
-
-        // SMS владельцу
-        if (ownerPhone) {
-            try {
-                const phoneE164 = normalizePhoneToE164(ownerPhone);
-                if (phoneE164) {
-                    await sendSMS({ to: phoneE164, text: smsText });
-                    smsSent += 1;
-                }
-            } catch (e) {
-                console.error('[notify] SMS to owner failed:', e);
-            }
-        }
+        // SMS уведомления отключены - используем только Email и WhatsApp
 
         // --- отправляем WhatsApp уведомления
         const whatsappText = `${title}: ${bizName}\n\nУслуга: ${svcName}\nМастер: ${master}\nВремя: ${when}\nСтатус: ${statusRuText}\n\n${link}`;
@@ -535,7 +489,7 @@ export async function POST(req: Request) {
             console.log('[notify] No owner phone for WhatsApp');
         }
 
-        return NextResponse.json({ ok: true, sent, smsSent, whatsappSent });
+        return NextResponse.json({ ok: true, sent, whatsappSent });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[notify] error:', msg);
