@@ -126,9 +126,15 @@ export default function PostSignup() {
             localStorage.removeItem('signup_phone');
 
             setMessage('Профиль сохранен');
+            
+            // Обновляем страницу, чтобы middleware увидел новое имя, затем редиректим
+            router.refresh();
+            
+            // Небольшая задержка для обновления данных на сервере
             setTimeout(() => {
-                router.replace('/');
-            }, 1000);
+                // Используем window.location для гарантированного редиректа
+                window.location.href = '/';
+            }, 500);
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             console.error('[post-signup] Error:', e);
