@@ -15,15 +15,27 @@ export function SignOutButton({ className }: { className?: string }) {
         
         setLoading(true);
         
+        // Таймаут для гарантированного редиректа, даже если signOut зависнет
+        const redirectTimeout = setTimeout(() => {
+            console.log('[SignOut] Timeout - forcing redirect');
+            window.location.href = '/';
+        }, 2000);
+        
         try {
             console.log('[SignOut] Starting sign out...');
             
-            // Выполняем выход
-            const { error } = await supabase.auth.signOut();
+            // Выполняем выход с таймаутом
+            const signOutPromise = supabase.auth.signOut();
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('SignOut timeout')), 1500)
+            );
+            
+            const { error } = await Promise.race([signOutPromise, timeoutPromise]) as { error?: Error };
+            
+            clearTimeout(redirectTimeout);
             
             if (error) {
                 console.error('[SignOut] Error:', error);
-                // Даже при ошибке делаем редирект, чтобы очистить состояние
             } else {
                 console.log('[SignOut] Sign out successful');
             }
@@ -32,14 +44,10 @@ export function SignOutButton({ className }: { className?: string }) {
             // Это обновит все компоненты и очистит кэш
             window.location.href = '/';
         } catch (error) {
+            clearTimeout(redirectTimeout);
             console.error('[SignOut] Exception:', error);
             // В случае ошибки все равно делаем редирект
             window.location.href = '/';
-        } finally {
-            // Если редирект не произошел, сбрасываем состояние
-            setTimeout(() => {
-                setLoading(false);
-            }, 2000);
         }
     };
 
