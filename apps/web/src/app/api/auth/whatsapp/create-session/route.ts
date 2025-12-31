@@ -18,7 +18,8 @@ export async function POST(req: Request) {
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         
         const body = await req.json();
-        const { phone, userId } = body as { phone?: string; userId?: string };
+        const { phone, userId, redirect: redirectParam } = body as { phone?: string; userId?: string; redirect?: string };
+        const finalRedirect = redirectParam || '/';
 
         if (!phone && !userId) {
             return NextResponse.json(
@@ -86,9 +87,7 @@ export async function POST(req: Request) {
         const userEmail = user.email;
         const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
         
-        // Получаем redirect из body, если передан
-        const redirect = body.redirect || '/';
-        const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(redirect)}`;
+        const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(finalRedirect)}`;
 
         if (userEmail) {
             // Если есть email, используем generateLink
