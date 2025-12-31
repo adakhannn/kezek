@@ -85,6 +85,7 @@ function WhatsAppAuthContent() {
                 body: JSON.stringify({ 
                     phone: normalizedPhone,
                     userId: data.userId,
+                    redirect: redirect,
                 }),
             });
             
