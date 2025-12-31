@@ -94,13 +94,15 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
                 errorMessage += '2. Убедись, что номер телефона зарегистрирован и имеет статус "Подключено"\n';
                 errorMessage += '3. Проверь, что Phone Number ID соответствует правильному номеру';
             } else if (errJson.error?.code === 131047 || errJson.error?.error_subcode === 131047) {
-                errorMessage += '\n\nВозможные причины:\n';
-                errorMessage += '1. Для тестового номера получатель должен быть добавлен в список тестовых получателей\n';
-                errorMessage += '2. Номер получателя не добавлен в Meta Developers\n';
-                errorMessage += '\nРешение:\n';
-                errorMessage += '1. Перейди в Meta Developers → WhatsApp → Быстрый старт → Протестируйте API\n';
-                errorMessage += '2. Добавь номер получателя в список тестовых получателей\n';
-                errorMessage += '3. Или используй реальный номер (после завершения проверки)';
+                errorMessage += '\n\nПроблема: Re-engagement message\n';
+                errorMessage += 'Прошло более 24 часов с момента последнего ответа клиента.\n';
+                errorMessage += 'WhatsApp Business API позволяет отправлять обычные сообщения только в течение 24 часов после последнего сообщения от клиента.\n';
+                errorMessage += '\nРешения:\n';
+                errorMessage += '1. Инициируй разговор через Meta Developers → WhatsApp → Быстрый старт → Протестируйте API\n';
+                errorMessage += '   (отправь тестовое сообщение на номер получателя, чтобы открыть 24-часовое окно)\n';
+                errorMessage += '2. Используй шаблоны сообщений (Message Templates) для отправки вне 24-часового окна\n';
+                errorMessage += '   (шаблоны должны быть одобрены WhatsApp)\n';
+                errorMessage += '3. Для тестового номера: добавь получателя в список тестовых получателей';
             }
         } catch {
             errorMessage += ` — ${errText.slice(0, 500)}`;
