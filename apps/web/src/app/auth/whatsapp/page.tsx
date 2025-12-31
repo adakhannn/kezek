@@ -129,21 +129,42 @@ function WhatsAppAuthContent() {
                 return;
             }
             
+            // Если нужно войти через email и пароль
+            if (sessionData.email && sessionData.password && sessionData.needsSignIn) {
+                console.log('[whatsapp] Signing in with email and password');
+                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                    email: sessionData.email,
+                    password: sessionData.password,
+                });
+                
+                if (signInError) {
+                    console.error('[whatsapp] Failed to sign in:', signInError);
+                    setError('Не удалось войти: ' + signInError.message);
+                    return;
+                }
+                
+                // Проверяем, что сессия создана
+                const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+                if (userError || !currentUser) {
+                    console.error('[whatsapp] Sign in successful but user not found:', userError);
+                    setError('Вход выполнен, но сессия не была создана. Попробуйте еще раз.');
+                    return;
+                }
+                
+                console.log('[whatsapp] Sign in successful, user:', currentUser.id);
+                
+                // Сессия создана успешно
+                router.refresh();
+                router.push(redirect);
+                return;
+            }
+            
             // Если есть magic link, переходим по нему
             if (sessionData.magicLink) {
                 console.log('[whatsapp] Redirecting to magic link:', sessionData.magicLink);
                 // Переходим по magic link - Supabase создаст сессию автоматически
                 window.location.href = sessionData.magicLink;
                 return;
-            }
-            
-            // Если есть token для обмена
-            if (sessionData.token && sessionData.needsExchange) {
-                console.log('[whatsapp] Token needs exchange, redirecting to magic link');
-                if (sessionData.magicLink) {
-                    window.location.href = sessionData.magicLink;
-                    return;
-                }
             }
             
             // Если ничего не сработало, показываем ошибку

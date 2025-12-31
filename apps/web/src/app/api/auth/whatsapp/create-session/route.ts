@@ -2,6 +2,8 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import crypto from 'crypto';
+
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
@@ -84,107 +86,55 @@ export async function POST(req: Request) {
         // Временно: используем generateLink с email, если он есть
         // Если email нет, создаем временный email или используем другой метод
         
-        const userEmail = user.email;
-        const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
+        // Используем подход с временным паролем для создания сессии
+        // Это работает надежнее, чем magic link, так как не зависит от email
         
-        const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(finalRedirect)}`;
-
-        if (userEmail) {
-            // Если есть email, используем generateLink
-            const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-                type: 'magiclink',
-                email: userEmail,
-                options: {
-                    redirectTo,
-                },
-            });
-
-            if (linkError || !linkData) {
-                console.error('[auth/whatsapp/create-session] Link generation error:', linkError);
-                return NextResponse.json(
-                    { ok: false, error: 'session_failed', message: 'Не удалось создать сессию' },
-                    { status: 500 }
-                );
-            }
-
-            const magicLink = linkData.properties?.action_link;
-            if (!magicLink) {
-                return NextResponse.json(
-                    { ok: false, error: 'session_failed', message: 'Не удалось получить ссылку для входа' },
-                    { status: 500 }
-                );
-            }
-
-            // Magic link содержит токены в hash фрагменте, который доступен только на клиенте
-            // Поэтому всегда возвращаем magic link для перехода
-            // Callback страница обработает токены и создаст сессию
-            console.log('[auth/whatsapp/create-session] Returning magic link for redirect');
-            return NextResponse.json({
-                ok: true,
-                magicLink: magicLink,
-                needsRedirect: true,
-            });
-        } else {
-            // Если нет email, создаем временный email для генерации magic link
-            // Используем формат: phone+whatsapp@kezek.kg (временный email на основе номера телефона)
+        // Генерируем временный пароль
+        const tempPassword = crypto.randomBytes(16).toString('hex');
+        
+        // Устанавливаем временный пароль для пользователя
+        // Если у пользователя нет email, создаем временный
+        let emailToUse = user.email;
+        if (!emailToUse) {
             const phoneDigits = user.phone?.replace(/[^0-9]/g, '') || user.id.replace(/-/g, '');
-            const tempEmail = `${phoneDigits}@whatsapp.kezek.kg`;
+            emailToUse = `${phoneDigits}@whatsapp.kezek.kg`;
             
-            console.log('[auth/whatsapp/create-session] Creating temp email for user without email:', { userId: user.id, tempEmail });
+            console.log('[auth/whatsapp/create-session] Creating temp email:', emailToUse);
             
             // Обновляем пользователя, добавляя временный email
             const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
-                email: tempEmail,
+                email: emailToUse,
                 email_confirm: true,
             });
             
             if (updateError) {
                 console.error('[auth/whatsapp/create-session] Failed to add temp email:', updateError);
-                return NextResponse.json(
-                    { ok: false, error: 'update_failed', message: `Не удалось создать сессию: ${updateError.message}` },
-                    { status: 500 }
-                );
+                // Продолжаем, даже если не удалось добавить email
             }
-            
-            console.log('[auth/whatsapp/create-session] Temp email added, generating magic link...');
-            
-            // Теперь генерируем magic link с временным email
-            const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-                type: 'magiclink',
-                email: tempEmail,
-                options: {
-                    redirectTo,
-                },
-            });
-
-            if (linkError || !linkData) {
-                console.error('[auth/whatsapp/create-session] Link generation error:', linkError);
-                return NextResponse.json(
-                    { ok: false, error: 'session_failed', message: `Не удалось создать сессию: ${linkError?.message || 'unknown error'}` },
-                    { status: 500 }
-                );
-            }
-
-            const magicLink = linkData.properties?.action_link;
-            console.log('[auth/whatsapp/create-session] Magic link generated:', magicLink?.substring(0, 100) + '...');
-            
-            if (!magicLink) {
-                return NextResponse.json(
-                    { ok: false, error: 'session_failed', message: 'Не удалось получить ссылку для входа' },
-                    { status: 500 }
-                );
-            }
-
-            // Magic link содержит токены в hash фрагменте, который доступен только на клиенте
-            // Поэтому всегда возвращаем magic link для перехода
-            // Callback страница обработает токены и создаст сессию
-            console.log('[auth/whatsapp/create-session] Returning magic link for redirect (no email case)');
-            return NextResponse.json({
-                ok: true,
-                magicLink: magicLink,
-                needsRedirect: true,
-            });
         }
+        
+        // Устанавливаем временный пароль
+        const { error: passwordError } = await admin.auth.admin.updateUserById(user.id, {
+            password: tempPassword,
+        });
+        
+        if (passwordError) {
+            console.error('[auth/whatsapp/create-session] Failed to set temp password:', passwordError);
+            return NextResponse.json(
+                { ok: false, error: 'password_failed', message: `Не удалось создать сессию: ${passwordError.message}` },
+                { status: 500 }
+            );
+        }
+        
+        console.log('[auth/whatsapp/create-session] Temp password set, returning credentials');
+        
+        // Возвращаем email и пароль для входа на клиенте
+        return NextResponse.json({
+            ok: true,
+            email: emailToUse,
+            password: tempPassword,
+            needsSignIn: true,
+        });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[auth/whatsapp/create-session] error:', e);
