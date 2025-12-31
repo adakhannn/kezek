@@ -3,6 +3,17 @@
 type SendWhatsAppOpts = {
     to: string;     // E.164, напр. +996XXXXXXXXX
     text: string;   // текст сообщения
+    template?: {
+        name: string;      // имя шаблона
+        language: string;  // код языка (например, 'ru')
+        components?: Array<{
+            type: 'body' | 'header' | 'button';
+            parameters?: Array<{
+                type: 'text';
+                text: string;
+            }>;
+        }>;
+    };
 };
 
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
@@ -12,7 +23,8 @@ const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
  * Отправка сообщения через WhatsApp Cloud API
  * Документация: https://developers.facebook.com/docs/whatsapp/cloud-api
  */
-export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
+export async function sendWhatsApp(opts: SendWhatsAppOpts) {
+    const { to, text } = opts;
     if (!WHATSAPP_ACCESS_TOKEN) {
         throw new Error('WhatsApp ENV not configured (WHATSAPP_ACCESS_TOKEN)');
     }
@@ -34,7 +46,20 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
 
     const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
 
-    const body = {
+    // Если указан шаблон, используем его (для отправки вне 24-часового окна)
+    const body = opts.template ? {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: phoneNumber,
+        type: 'template',
+        template: {
+            name: opts.template.name,
+            language: {
+                code: opts.template.language,
+            },
+            components: opts.template.components || [],
+        },
+    } : {
         messaging_product: 'whatsapp',
         recipient_type: 'individual',
         to: phoneNumber,
@@ -98,11 +123,12 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
                 errorMessage += 'Прошло более 24 часов с момента последнего ответа клиента.\n';
                 errorMessage += 'WhatsApp Business API позволяет отправлять обычные сообщения только в течение 24 часов после последнего сообщения от клиента.\n';
                 errorMessage += '\nРешения:\n';
-                errorMessage += '1. Инициируй разговор через Meta Developers → WhatsApp → Быстрый старт → Протестируйте API\n';
-                errorMessage += '   (отправь тестовое сообщение на номер получателя, чтобы открыть 24-часовое окно)\n';
-                errorMessage += '2. Используй шаблоны сообщений (Message Templates) для отправки вне 24-часового окна\n';
-                errorMessage += '   (шаблоны должны быть одобрены WhatsApp)\n';
-                errorMessage += '3. Для тестового номера: добавь получателя в список тестовых получателей';
+                errorMessage += '1. **Для тестового номера:** Добавь получателя в список тестовых получателей:\n';
+                errorMessage += '   Meta Developers → WhatsApp → Быстрый старт → Протестируйте API → Управление номерами\n';
+                errorMessage += '2. **Или:** Клиент должен ответить на тестовое сообщение в WhatsApp\n';
+                errorMessage += '   (отправь тестовое сообщение через API Testing, клиент должен ответить на него)\n';
+                errorMessage += '3. **Для продакшена:** Используй шаблоны сообщений (Message Templates)\n';
+                errorMessage += '   (шаблоны позволяют отправлять вне 24-часового окна, но требуют одобрения WhatsApp)';
             }
         } catch {
             errorMessage += ` — ${errText.slice(0, 500)}`;
