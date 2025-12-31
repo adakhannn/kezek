@@ -14,42 +14,77 @@ export default function PostSignup() {
     const [phone, setPhone] = useState('');
 
     useEffect(() => {
+        let mounted = true;
+        
         (async () => {
-            // Проверяем, авторизован ли пользователь
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                router.replace('/auth/sign-in');
-                return;
-            }
-
-            // Загружаем текущий профиль
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('full_name, phone')
-                .eq('id', user.id)
-                .maybeSingle();
-
-            // Заполняем поля из localStorage или профиля
-            const storedName = localStorage.getItem('signup_full_name');
-            const storedPhone = localStorage.getItem('signup_phone');
+            setLoading(true);
             
-            setFullName(profile?.full_name || storedName || user.user_metadata?.full_name || '');
-            setPhone(profile?.phone || storedPhone || '');
+            try {
+                // Проверяем, авторизован ли пользователь
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError || !user) {
+                    console.warn('[post-signup] User not authenticated:', userError);
+                    if (mounted) {
+                        router.replace('/auth/sign-in');
+                    }
+                    return;
+                }
 
-            // Если имя уже есть в профиле, можно сразу завершить (телефон не обязателен)
-            if (profile?.full_name) {
-                localStorage.removeItem('signup_full_name');
-                localStorage.removeItem('signup_phone');
-                // Небольшая задержка для обновления данных
-                setTimeout(() => {
-                    router.replace('/');
-                }, 500);
+                // Загружаем текущий профиль
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('full_name, phone')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profileError) {
+                    console.error('[post-signup] Error loading profile:', profileError);
+                }
+
+                if (!mounted) return;
+
+                // Заполняем поля из localStorage или профиля
+                const storedName = localStorage.getItem('signup_full_name');
+                const storedPhone = localStorage.getItem('signup_phone');
+                
+                setFullName(profile?.full_name || storedName || user.user_metadata?.full_name || '');
+                setPhone(profile?.phone || storedPhone || '');
+
+                // Если имя уже есть в профиле, можно сразу завершить (телефон не обязателен)
+                if (profile?.full_name?.trim()) {
+                    localStorage.removeItem('signup_full_name');
+                    localStorage.removeItem('signup_phone');
+                    // Небольшая задержка для обновления данных
+                    setTimeout(() => {
+                        if (mounted) {
+                            router.replace('/');
+                        }
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('[post-signup] Error in useEffect:', error);
+            } finally {
+                if (mounted) {
+                    setLoading(false);
+                }
             }
         })();
+        
+        return () => {
+            mounted = false;
+        };
     }, [router]);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        
+        // Проверяем, что имя заполнено
+        if (!fullName.trim()) {
+            setError('Пожалуйста, введите ваше имя');
+            return;
+        }
+        
         setSaving(true);
         setMessage(null);
         setError(null);
@@ -60,18 +95,29 @@ export default function PostSignup() {
                 throw new Error('Не авторизован');
             }
 
+            console.log('[post-signup] Saving profile:', { fullName: fullName.trim() });
+
             // Обновляем профиль
             const res = await fetch('/api/profile/update', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
                     full_name: fullName.trim() || null,
-                    phone: phone.trim() || null,
+                    // phone больше не требуется, но оставляем для совместимости
                 }),
             });
 
+            console.log('[post-signup] Response status:', res.status);
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({ message: 'Ошибка при сохранении' }));
+                throw new Error(errorData.message || errorData.error || 'Ошибка при сохранении');
+            }
+
             const data = await res.json();
-            if (!res.ok || !data.ok) {
+            console.log('[post-signup] Response data:', data);
+            
+            if (!data.ok) {
                 throw new Error(data.message || data.error || 'Ошибка при сохранении');
             }
 
@@ -85,9 +131,14 @@ export default function PostSignup() {
             }, 1000);
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
+            console.error('[post-signup] Error:', e);
             setError(msg);
+            setSaving(false); // Убеждаемся, что состояние сбрасывается при ошибке
         } finally {
-            setSaving(false);
+            // Дополнительная проверка - сбрасываем состояние через таймаут на случай, если что-то пошло не так
+            setTimeout(() => {
+                setSaving(false);
+            }, 10000); // Максимум 10 секунд
         }
     }
 
