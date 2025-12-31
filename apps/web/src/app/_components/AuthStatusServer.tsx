@@ -79,7 +79,14 @@ export async function AuthStatusServer() {
         );
     }
 
-    const label = user.email ?? (user.phone as string | undefined) ?? 'аккаунт';
+    // Получаем имя из профиля
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .maybeSingle();
+    
+    const label = profile?.full_name?.trim() || user.email || (user.phone as string | undefined) || 'аккаунт';
     const target = await getTargetPath(supabase, user.id);
     
     // Проверяем, является ли пользователь сотрудником - ищем запись в staff (источник правды)

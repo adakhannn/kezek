@@ -97,6 +97,7 @@ export function AuthStatusClient() {
     const [user, setUser] = useState<User | null>(null);
     const [target, setTarget] = useState<TargetPath | null>(null);
     const [loading, setLoading] = useState(true);
+    const [profileName, setProfileName] = useState<string | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -203,6 +204,26 @@ export function AuthStatusClient() {
         };
     }, [router]);
 
+    // Получаем имя из профиля
+    useEffect(() => {
+        if (user) {
+            supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', user.id)
+                .maybeSingle()
+                .then(({ data }) => {
+                    if (data?.full_name) {
+                        setProfileName(data.full_name);
+                    } else {
+                        setProfileName(null);
+                    }
+                });
+        } else {
+            setProfileName(null);
+        }
+    }, [user]);
+
     // Показываем кнопку "Войти" если не авторизован
     if (!user || loading) {
         return (
@@ -216,8 +237,8 @@ export function AuthStatusClient() {
             </div>
         );
     }
-
-    const label = user.email ?? user.phone ?? 'аккаунт';
+    
+    const label = profileName || user.email ?? user.phone ?? 'аккаунт';
 
     // Если путь еще не определен, показываем загрузку
     if (!target) {
