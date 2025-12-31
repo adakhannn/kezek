@@ -70,31 +70,49 @@ function WhatsAppAuthContent() {
                 throw new Error(data.message || 'Неверный код');
             }
 
-            // После проверки OTP через WhatsApp используем стандартный Supabase phone auth
-            // для создания сессии
-            const { supabase } = await import('@/lib/supabaseClient');
+            // После проверки OTP через WhatsApp создаем сессию через API
+            // Используем специальный endpoint для создания сессии после WhatsApp OTP
+            const { normalizePhoneToE164 } = await import('@/lib/senders/sms');
+            const normalizedPhone = normalizePhoneToE164(phone);
             
-            // Используем signInWithOtp для создания сессии
-            // Но так как OTP уже проверен через WhatsApp, используем verifyOtp с любым кодом
-            // Или создаем сессию через admin API
-            
-            // Упрощенный подход: после проверки OTP через WhatsApp
-            // используем стандартный Supabase phone auth для создания сессии
-            // Но так как OTP уже проверен, можно использовать прямой вход
-            
-            // Временно: просто обновляем страницу и редиректим
-            // В будущем можно улучшить логику создания сессии
-            router.refresh();
-            
-            // Пробуем получить пользователя
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
-            if (currentUser) {
-                router.push(redirect);
-            } else {
-                // Если сессия не создана, перенаправляем на страницу входа
-                // с информацией, что OTP уже проверен
-                router.push(`/auth/sign-in?phone=${encodeURIComponent(phone)}&whatsapp_verified=true&redirect=${encodeURIComponent(redirect)}`);
+            if (!normalizedPhone) {
+                throw new Error('Неверный формат номера телефона');
             }
+            
+            const sessionResponse = await fetch('/api/auth/whatsapp/create-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    phone: normalizedPhone,
+                    userId: data.userId,
+                }),
+            });
+            
+            const sessionData = await sessionResponse.json();
+            
+            if (!sessionData.ok || !sessionData.session) {
+                console.error('[whatsapp] Failed to create session:', sessionData);
+                // Если не удалось создать сессию, перенаправляем на страницу входа
+                router.push(`/auth/sign-in?phone=${encodeURIComponent(phone)}&whatsapp_verified=true&redirect=${encodeURIComponent(redirect)}`);
+                return;
+            }
+            
+            // Устанавливаем сессию на клиенте
+            const { supabase } = await import('@/lib/supabaseClient');
+            const { error: sessionError } = await supabase.auth.setSession({
+                access_token: sessionData.session.access_token,
+                refresh_token: sessionData.session.refresh_token,
+            });
+            
+            if (sessionError) {
+                console.error('[whatsapp] Failed to set session:', sessionError);
+                router.push(`/auth/sign-in?phone=${encodeURIComponent(phone)}&whatsapp_verified=true&redirect=${encodeURIComponent(redirect)}`);
+                return;
+            }
+            
+            // Сессия создана успешно
+            router.refresh();
+            router.push(redirect);
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
         } finally {
