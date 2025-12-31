@@ -150,6 +150,39 @@ curl -X POST https://kezek.kg/api/notify \
    - `WHATSAPP_VERIFY_TOKEN` - должен быть установлен
 3. Webhook настроен и верифицирован в Meta Developers
 
+### Диагностика через API
+
+Используй диагностический endpoint для полной проверки конфигурации:
+
+```bash
+GET https://kezek.kg/api/whatsapp/diagnose
+```
+
+Этот endpoint проверит:
+- ✅ Валидность токена
+- ✅ Доступность бизнес-аккаунтов
+- ✅ Список всех зарегистрированных номеров
+- ✅ Соответствие Phone Number ID реальному номеру
+- ✅ Статус регистрации номеров
+
+**Пример ответа:**
+```json
+{
+  "ok": true,
+  "tokenCheck": { "ok": true, "message": "Токен валиден" },
+  "businessAccounts": { "ok": true, "accounts": [...] },
+  "phoneNumbers": { "ok": true, "phones": [...] },
+  "currentPhoneNumberId": { "ok": true, "phone": {...} },
+  "recommendations": [...],
+  "summary": {
+    "tokenValid": true,
+    "hasBusinessAccounts": true,
+    "hasPhoneNumbers": true,
+    "phoneNumberIdValid": true
+  }
+}
+```
+
 ### Типичные ошибки
 
 - **HTTP 400 - Unsupported post request**: Проверь, что `WHATSAPP_PHONE_NUMBER_ID` правильный (не Business Account ID)
