@@ -83,6 +83,15 @@ export async function sendWhatsApp({ to, text }: SendWhatsAppOpts) {
                 errorMessage += '1. Неверный WHATSAPP_PHONE_NUMBER_ID\n';
                 errorMessage += '2. Phone Number ID не связан с вашим WhatsApp Business Account\n';
                 errorMessage += '3. Phone Number ID не имеет разрешений на отправку сообщений';
+            } else if (errJson.error?.code === 133010 || errJson.error?.error_subcode === 133010) {
+                errorMessage += '\n\nВозможные причины:\n';
+                errorMessage += '1. Номер телефона не зарегистрирован в WhatsApp Business Account\n';
+                errorMessage += '2. Номер не прошел верификацию/регистрацию\n';
+                errorMessage += '3. Phone Number ID не соответствует зарегистрированному номеру\n';
+                errorMessage += '\nРешение:\n';
+                errorMessage += '1. Перейди в WhatsApp Manager (business.facebook.com)\n';
+                errorMessage += '2. Убедись, что номер телефона зарегистрирован и имеет статус "Подключено"\n';
+                errorMessage += '3. Проверь, что Phone Number ID соответствует правильному номеру';
             }
         } catch {
             errorMessage += ` — ${errText.slice(0, 500)}`;

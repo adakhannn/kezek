@@ -155,6 +155,14 @@ curl -X POST https://kezek.kg/api/notify \
 - **HTTP 400 - Unsupported post request**: Проверь, что `WHATSAPP_PHONE_NUMBER_ID` правильный (не Business Account ID)
 - **HTTP 401 - Unauthorized**: Проверь, что `WHATSAPP_ACCESS_TOKEN` актуален и не истек
 - **HTTP 403 - Forbidden**: Проверь разрешения токена (`whatsapp_business_messaging`, `whatsapp_business_management`)
+- **HTTP 400 - (#133010) Account not registered**: 
+  - **Проблема:** Номер телефона не зарегистрирован в WhatsApp Business Account
+  - **Решение:**
+    1. Перейди в [WhatsApp Manager](https://business.facebook.com/latest/whatsapp_manager/phone_numbers/)
+    2. Убедись, что номер телефона имеет статус **"Подключено"** (Connected)
+    3. Если номер не подключен, нажми на него и заверши процесс регистрации
+    4. Проверь, что Phone Number ID в переменных окружения соответствует выбранному номеру
+    5. После регистрации номера может потребоваться несколько минут для активации
 
 ## Структура проекта
 
