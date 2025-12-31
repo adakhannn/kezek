@@ -33,6 +33,24 @@ function AuthCallbackContent() {
                             refresh_token: refreshToken,
                         });
                         if (error) throw error;
+                        
+                        // Проверяем наличие имени в профиле
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (user) {
+                            const { data: profile } = await supabase
+                                .from('profiles')
+                                .select('full_name')
+                                .eq('id', user.id)
+                                .maybeSingle();
+                            
+                            if (!profile?.full_name?.trim()) {
+                                setStatus('success');
+                                router.refresh();
+                                router.replace('/auth/post-signup?from=whatsapp');
+                                return;
+                            }
+                        }
+                        
                         setStatus('success');
                         router.refresh();
                         router.replace(next);
@@ -43,6 +61,23 @@ function AuthCallbackContent() {
                     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
                     
                     if (session && !sessionError) {
+                        // Проверяем наличие имени в профиле
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (user) {
+                            const { data: profile } = await supabase
+                                .from('profiles')
+                                .select('full_name')
+                                .eq('id', user.id)
+                                .maybeSingle();
+                            
+                            if (!profile?.full_name?.trim()) {
+                                setStatus('success');
+                                router.refresh();
+                                router.replace('/auth/post-signup?from=whatsapp');
+                                return;
+                            }
+                        }
+                        
                         setStatus('success');
                         router.refresh();
                         router.replace(next);
@@ -58,6 +93,23 @@ function AuthCallbackContent() {
                             if (storedVerifier) {
                                 const { error } = await supabase.auth.exchangeCodeForSession(code);
                                 if (!error) {
+                                    // Проверяем наличие имени в профиле
+                                    const { data: { user } } = await supabase.auth.getUser();
+                                    if (user) {
+                                        const { data: profile } = await supabase
+                                            .from('profiles')
+                                            .select('full_name')
+                                            .eq('id', user.id)
+                                            .maybeSingle();
+                                        
+                                        if (!profile?.full_name?.trim()) {
+                                            setStatus('success');
+                                            router.refresh();
+                                            router.replace('/auth/post-signup?from=whatsapp');
+                                            return;
+                                        }
+                                    }
+                                    
                                     setStatus('success');
                                     router.refresh();
                                     router.replace(next);
