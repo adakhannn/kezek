@@ -26,6 +26,28 @@ export async function middleware(req: NextRequest) {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return res;
 
+    // Проверяем наличие имени в профиле - если нет, перенаправляем на страницу ввода имени
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', userRes.user.id)
+        .maybeSingle();
+    
+    if (!profile?.full_name?.trim()) {
+        // Исключаем саму страницу post-signup и страницы авторизации, чтобы избежать редиректов
+        const pathname = req.nextUrl.pathname;
+        if (!pathname.startsWith('/auth/post-signup') && 
+            !pathname.startsWith('/auth/sign-in') && 
+            !pathname.startsWith('/auth/sign-up') &&
+            !pathname.startsWith('/auth/whatsapp') &&
+            !pathname.startsWith('/auth/callback')) {
+            const url = req.nextUrl.clone();
+            url.pathname = '/auth/post-signup';
+            url.searchParams.set('from', 'whatsapp');
+            return NextResponse.redirect(url, 302);
+        }
+    }
+
     const { data: roles, error } = await supabase.rpc('my_role_keys');
     if (error) {
         // Логируем ошибку, но не прерываем запрос - пользователь останется на главной
