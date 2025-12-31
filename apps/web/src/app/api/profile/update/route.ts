@@ -40,6 +40,17 @@ export async function POST(req: Request) {
         const notify_sms = body.notify_sms ?? true;
         const notify_whatsapp = body.notify_whatsapp ?? true;
 
+        // Получаем текущий профиль, чтобы проверить, изменился ли номер телефона
+        const { data: currentProfile } = await supabase
+            .from('profiles')
+            .select('phone, whatsapp_verified')
+            .eq('id', user.id)
+            .maybeSingle<{ phone: string | null; whatsapp_verified: boolean | null }>();
+
+        // Если номер телефона был удален или изменен, сбрасываем whatsapp_verified
+        const phoneChanged = currentProfile?.phone !== phone;
+        const whatsapp_verified = phoneChanged || !phone ? false : (currentProfile?.whatsapp_verified ?? false);
+
         // Обновляем профиль в таблице profiles
         const { error: profileError } = await supabase
             .from('profiles')
@@ -51,6 +62,7 @@ export async function POST(req: Request) {
                     notify_email: notify_email,
                     notify_sms: notify_sms,
                     notify_whatsapp: notify_whatsapp,
+                    whatsapp_verified: whatsapp_verified,
                 },
                 { onConflict: 'id' }
             );
