@@ -2,9 +2,9 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
-export default function WhatsAppAuthPage() {
+function WhatsAppAuthContent() {
     const router = useRouter();
     const sp = useSearchParams();
     const redirect = sp.get('redirect') || '/';
@@ -215,6 +215,23 @@ export default function WhatsAppAuthPage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function WhatsAppAuthPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+                <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                        <p className="mt-4 text-gray-600 dark:text-gray-400">Загрузка...</p>
+                    </div>
+                </div>
+            </main>
+        }>
+            <WhatsAppAuthContent />
+        </Suspense>
     );
 }
 
