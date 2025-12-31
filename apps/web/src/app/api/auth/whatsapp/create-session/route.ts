@@ -146,15 +146,80 @@ export async function POST(req: Request) {
                 },
             });
         } else {
-            // Если нет email, используем другой подход
-            // Создаем временный email или используем signInWithPassword
-            // Но лучше всего - использовать Admin API для генерации access token напрямую
+            // Если нет email, создаем временный email для генерации magic link
+            // Используем формат: phone+whatsapp@kezek.kg (временный email на основе номера телефона)
+            const tempEmail = `${user.phone?.replace(/[^0-9]/g, '')}@whatsapp.kezek.kg`;
             
-            // Временно возвращаем ошибку, если нет email
-            return NextResponse.json(
-                { ok: false, error: 'no_email', message: 'Для создания сессии требуется email. Пожалуйста, добавьте email в профиль.' },
-                { status: 400 }
-            );
+            // Обновляем пользователя, добавляя временный email
+            const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
+                email: tempEmail,
+                email_confirm: true,
+            });
+            
+            if (updateError) {
+                console.error('[auth/whatsapp/create-session] Failed to add temp email:', updateError);
+                return NextResponse.json(
+                    { ok: false, error: 'update_failed', message: 'Не удалось создать сессию' },
+                    { status: 500 }
+                );
+            }
+            
+            // Теперь генерируем magic link с временным email
+            const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+                type: 'magiclink',
+                email: tempEmail,
+                options: {
+                    redirectTo,
+                },
+            });
+
+            if (linkError || !linkData) {
+                console.error('[auth/whatsapp/create-session] Link generation error:', linkError);
+                return NextResponse.json(
+                    { ok: false, error: 'session_failed', message: 'Не удалось создать сессию' },
+                    { status: 500 }
+                );
+            }
+
+            const magicLink = linkData.properties?.action_link;
+            if (!magicLink) {
+                return NextResponse.json(
+                    { ok: false, error: 'session_failed', message: 'Не удалось получить ссылку для входа' },
+                    { status: 500 }
+                );
+            }
+
+            // Извлекаем токены из magic link
+            let accessToken: string | null = null;
+            let refreshToken: string | null = null;
+            
+            // Пробуем извлечь из hash (формат: #access_token=...&refresh_token=...)
+            const hashMatch = magicLink.match(/#access_token=([^&]+)&refresh_token=([^&]+)/);
+            if (hashMatch) {
+                accessToken = decodeURIComponent(hashMatch[1]);
+                refreshToken = decodeURIComponent(hashMatch[2]);
+            } else {
+                // Пробуем извлечь из query параметров
+                const queryMatch = magicLink.match(/[?&]access_token=([^&]+)/);
+                const refreshMatch = magicLink.match(/[?&]refresh_token=([^&]+)/);
+                if (queryMatch) accessToken = decodeURIComponent(queryMatch[1]);
+                if (refreshMatch) refreshToken = decodeURIComponent(refreshMatch[1]);
+            }
+
+            if (!accessToken || !refreshToken) {
+                return NextResponse.json(
+                    { ok: false, error: 'session_failed', message: 'Не удалось извлечь токены из ссылки' },
+                    { status: 500 }
+                );
+            }
+
+            return NextResponse.json({
+                ok: true,
+                session: {
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                },
+            });
         }
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
