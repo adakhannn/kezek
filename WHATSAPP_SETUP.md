@@ -100,8 +100,61 @@ WHATSAPP_VERIFY_TOKEN=kezek_whatsapp_verify
 
 ## Шаг 5: Тестирование
 
-1. Отправь тестовое сообщение через **API Testing** в Meta Developers
-2. Или создай бронирование в системе - уведомления должны отправляться через WhatsApp
+### Способ 1: Тестирование через Meta Developers (API Testing)
+
+1. Перейди в [Meta Developers](https://developers.facebook.com/apps/)
+2. Выбери приложение **"Kezek"**
+3. В левом меню выбери **"WhatsApp"** → **"Быстрый старт"** (Quick Start)
+4. Найди раздел **"Протестируйте API"** (Test API)
+5. Нажми кнопку **"Протестируйте API"** (Test API)
+6. В открывшемся окне:
+   - Выбери номер телефона получателя (твой WhatsApp номер)
+   - Введи тестовое сообщение
+   - Нажми **"Отправить"**
+7. Проверь, что сообщение пришло на указанный номер
+
+### Способ 2: Тестирование через систему (создание бронирования)
+
+1. Войди в систему как клиент
+2. Создай новое бронирование
+3. После создания бронирования должно прийти WhatsApp уведомление
+4. Проверь, что сообщение пришло на номер телефона клиента
+
+**Важно:** Убедись, что:
+- В профиле клиента включена настройка **"Уведомления WhatsApp"** (`notify_whatsapp = true`)
+- Номер телефона клиента указан в правильном формате
+- WhatsApp номер клиента верифицирован (`whatsapp_verified = true`)
+
+### Способ 3: Тестирование через API endpoint
+
+Можно протестировать отправку напрямую через API:
+
+```bash
+curl -X POST https://kezek.kg/api/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "booking_created",
+    "bookingId": "test-booking-id",
+    "clientPhone": "+996770574029",
+    "message": "Тестовое сообщение"
+  }'
+```
+
+### Проверка логов
+
+Если сообщение не отправляется, проверь:
+1. Логи сервера на наличие ошибок WhatsApp API
+2. Переменные окружения в `.env.local`:
+   - `WHATSAPP_ACCESS_TOKEN` - должен быть установлен
+   - `WHATSAPP_PHONE_NUMBER_ID` - должен быть установлен
+   - `WHATSAPP_VERIFY_TOKEN` - должен быть установлен
+3. Webhook настроен и верифицирован в Meta Developers
+
+### Типичные ошибки
+
+- **HTTP 400 - Unsupported post request**: Проверь, что `WHATSAPP_PHONE_NUMBER_ID` правильный (не Business Account ID)
+- **HTTP 401 - Unauthorized**: Проверь, что `WHATSAPP_ACCESS_TOKEN` актуален и не истек
+- **HTTP 403 - Forbidden**: Проверь разрешения токена (`whatsapp_business_messaging`, `whatsapp_business_management`)
 
 ## Структура проекта
 
@@ -121,4 +174,8 @@ WhatsApp Cloud API требует номера в формате без `+`:
 
 - [WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api)
 - [Webhooks Guide](https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks)
+
+---
+
+**Последнее обновление:** 2025-01-06
 
