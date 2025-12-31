@@ -15,40 +15,27 @@ export function SignOutButton({ className }: { className?: string }) {
         
         setLoading(true);
         
-        // Таймаут для гарантированного редиректа, даже если signOut зависнет
-        const redirectTimeout = setTimeout(() => {
-            console.log('[SignOut] Timeout - forcing redirect');
-            window.location.href = '/';
-        }, 2000);
+        console.log('[SignOut] Starting sign out...');
         
-        try {
-            console.log('[SignOut] Starting sign out...');
-            
-            // Выполняем выход с таймаутом
-            const signOutPromise = supabase.auth.signOut();
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('SignOut timeout')), 1500)
-            );
-            
-            const { error } = await Promise.race([signOutPromise, timeoutPromise]) as { error?: Error };
-            
-            clearTimeout(redirectTimeout);
-            
-            if (error) {
-                console.error('[SignOut] Error:', error);
-            } else {
-                console.log('[SignOut] Sign out successful');
-            }
+        // Пытаемся выполнить выход, но не ждем его завершения
+        // Редирект произойдет сразу, а signOut выполнится в фоне
+        supabase.auth.signOut()
+            .then(({ error }) => {
+                if (error) {
+                    console.error('[SignOut] Error:', error);
+                } else {
+                    console.log('[SignOut] Sign out successful');
+                }
+            })
+            .catch((error) => {
+                console.error('[SignOut] Exception:', error);
+            });
 
-            // Используем полный редирект для гарантированного обновления состояния
-            // Это обновит все компоненты и очистит кэш
+        // Немедленный редирект - не ждем завершения signOut
+        // Это гарантирует, что пользователь не останется в зависшем состоянии
+        setTimeout(() => {
             window.location.href = '/';
-        } catch (error) {
-            clearTimeout(redirectTimeout);
-            console.error('[SignOut] Exception:', error);
-            // В случае ошибки все равно делаем редирект
-            window.location.href = '/';
-        }
+        }, 100);
     };
 
     return (
