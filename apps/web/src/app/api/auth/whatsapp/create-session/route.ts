@@ -85,7 +85,10 @@ export async function POST(req: Request) {
         
         const userEmail = user.email;
         const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
-        const redirectTo = `${origin}/auth/callback?next=/`;
+        
+        // Получаем redirect из body, если передан
+        const redirect = body.redirect || '/';
+        const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(redirect)}`;
 
         if (userEmail) {
             // Если есть email, используем generateLink
