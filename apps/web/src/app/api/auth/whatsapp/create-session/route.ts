@@ -113,39 +113,10 @@ export async function POST(req: Request) {
                 );
             }
 
-            // Извлекаем токены из magic link
-            // Magic link может быть в формате URL с hash или query параметрами
-            let accessToken: string | null = null;
-            let refreshToken: string | null = null;
-            
-            // Пробуем извлечь из hash (формат: #access_token=...&refresh_token=...)
-            const hashMatch = magicLink.match(/#access_token=([^&]+)&refresh_token=([^&]+)/);
-            if (hashMatch) {
-                accessToken = decodeURIComponent(hashMatch[1]);
-                refreshToken = decodeURIComponent(hashMatch[2]);
-            } else {
-                // Пробуем извлечь из query параметров
-                const queryMatch = magicLink.match(/[?&]access_token=([^&]+)/);
-                const refreshMatch = magicLink.match(/[?&]refresh_token=([^&]+)/);
-                if (queryMatch) accessToken = decodeURIComponent(queryMatch[1]);
-                if (refreshMatch) refreshToken = decodeURIComponent(refreshMatch[1]);
-            }
-
-            // Если токены найдены, возвращаем их
-            if (accessToken && refreshToken) {
-                console.log('[auth/whatsapp/create-session] Session tokens extracted successfully');
-                return NextResponse.json({
-                    ok: true,
-                    session: {
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                    },
-                });
-            }
-            
-            // Если токены не найдены, возвращаем magic link для перехода
-            // Клиент перейдет по ссылке, и Supabase создаст сессию автоматически
-            console.log('[auth/whatsapp/create-session] Tokens not found in magic link, returning link for redirect');
+            // Magic link содержит токены в hash фрагменте, который доступен только на клиенте
+            // Поэтому всегда возвращаем magic link для перехода
+            // Callback страница обработает токены и создаст сессию
+            console.log('[auth/whatsapp/create-session] Returning magic link for redirect');
             return NextResponse.json({
                 ok: true,
                 magicLink: magicLink,
@@ -202,57 +173,14 @@ export async function POST(req: Request) {
                 );
             }
 
-            // Извлекаем токены из magic link
-            // Magic link обычно в формате: https://...?token=...&type=magiclink#access_token=...&refresh_token=...
-            let accessToken: string | null = null;
-            let refreshToken: string | null = null;
-            
-            // Пробуем извлечь из hash (формат: #access_token=...&refresh_token=...)
-            const hashMatch = magicLink.match(/#access_token=([^&]+)&refresh_token=([^&]+)/);
-            if (hashMatch) {
-                accessToken = decodeURIComponent(hashMatch[1]);
-                refreshToken = decodeURIComponent(hashMatch[2]);
-                console.log('[auth/whatsapp/create-session] Tokens extracted from hash');
-            } else {
-                // Пробуем извлечь из query параметров
-                const queryMatch = magicLink.match(/[?&]access_token=([^&]+)/);
-                const refreshMatch = magicLink.match(/[?&]refresh_token=([^&]+)/);
-                if (queryMatch) accessToken = decodeURIComponent(queryMatch[1]);
-                if (refreshMatch) refreshToken = decodeURIComponent(refreshMatch[1]);
-                console.log('[auth/whatsapp/create-session] Tokens extracted from query params');
-            }
-            
-            // Если токены не найдены, пробуем извлечь token и использовать его для создания сессии
-            if (!accessToken || !refreshToken) {
-                const tokenMatch = magicLink.match(/[?&]token=([^&]+)/);
-                if (tokenMatch) {
-                    const token = decodeURIComponent(tokenMatch[1]);
-                    console.log('[auth/whatsapp/create-session] Found token in magic link, but need to exchange it');
-                    // Token нужно обменять на сессию, но это требует клиентского кода
-                    // Возвращаем token для обмена на клиенте
-                    return NextResponse.json({
-                        ok: true,
-                        token: token,
-                        magicLink: magicLink,
-                        needsExchange: true,
-                    });
-                }
-                
-                console.error('[auth/whatsapp/create-session] Failed to extract tokens from magic link:', magicLink);
-                return NextResponse.json(
-                    { ok: false, error: 'session_failed', message: 'Не удалось извлечь токены из ссылки. Попробуйте перейти по ссылке вручную.' },
-                    { status: 500 }
-                );
-            }
-
-            console.log('[auth/whatsapp/create-session] Session tokens extracted successfully');
-            
+            // Magic link содержит токены в hash фрагменте, который доступен только на клиенте
+            // Поэтому всегда возвращаем magic link для перехода
+            // Callback страница обработает токены и создаст сессию
+            console.log('[auth/whatsapp/create-session] Returning magic link for redirect (no email case)');
             return NextResponse.json({
                 ok: true,
-                session: {
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                },
+                magicLink: magicLink,
+                needsRedirect: true,
             });
         }
     } catch (e) {
