@@ -131,19 +131,25 @@ export async function POST(req: Request) {
                 if (refreshMatch) refreshToken = decodeURIComponent(refreshMatch[1]);
             }
 
-            if (!accessToken || !refreshToken) {
-                return NextResponse.json(
-                    { ok: false, error: 'session_failed', message: 'Не удалось извлечь токены из ссылки' },
-                    { status: 500 }
-                );
+            // Если токены найдены, возвращаем их
+            if (accessToken && refreshToken) {
+                console.log('[auth/whatsapp/create-session] Session tokens extracted successfully');
+                return NextResponse.json({
+                    ok: true,
+                    session: {
+                        access_token: accessToken,
+                        refresh_token: refreshToken,
+                    },
+                });
             }
-
+            
+            // Если токены не найдены, возвращаем magic link для перехода
+            // Клиент перейдет по ссылке, и Supabase создаст сессию автоматически
+            console.log('[auth/whatsapp/create-session] Tokens not found in magic link, returning link for redirect');
             return NextResponse.json({
                 ok: true,
-                session: {
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                },
+                magicLink: magicLink,
+                needsRedirect: true,
             });
         } else {
             // Если нет email, создаем временный email для генерации magic link
