@@ -61,9 +61,12 @@ GET https://kezek.kg/api/whatsapp/get-business-account
 ```env
 # WhatsApp Cloud API
 WHATSAPP_ACCESS_TOKEN=EAAVWZCgp2rgQBQdFX7pl22Rvd6asRTfISYMEdd9qZCmVOjgX2n8l6gvnvTDhHRTvwZAXxdWZBHUn5T2AVGsvoJgvn0BMaBD6ZCGonLwcn5zLRJEZBiV6SF8B9ZCDtLeIZCkW6lWrwqZC6M9ZBZBa4TVRYd1RJdlhNXkhW4YrbYVg8r7MbshtSlhW7W3jxQAFLqeWw2BQQZDZD
-WHATSAPP_PHONE_NUMBER_ID=910313308837894
+WHATSAPP_PHONE_NUMBER_ID=943058622222058
 WHATSAPP_VERIFY_TOKEN=kezek_whatsapp_verify
 ```
+
+**Примечание:** Сейчас используется тестовый номер (15551533441) с Phone Number ID `943058622222058`. 
+После завершения проверки реального номера (+996 224 701 717) можно будет переключиться на него (Phone Number ID: `910313308837894`).
 
 **Важно:** 
 - `WHATSAPP_PHONE_NUMBER_ID` - это **НЕ** Business Account ID!
@@ -76,8 +79,11 @@ WHATSAPP_VERIFY_TOKEN=kezek_whatsapp_verify
 
 **Текущие значения:**
 - Access Token: `EAAVWZCgp2rgQBQdFX7pl22Rvd6asRTfISYMEdd9qZCmVOjgX2n8l6gvnvTDhHRTvwZAXxdWZBHUn5T2AVGsvoJgvn0BMaBD6ZCGonLwcn5zLRJEZBiV6SF8B9ZCDtLeIZCkW6lWrwqZC6M9ZBZBa4TVRYd1RJdlhNXkhW4YrbYVg8r7MbshtSlhW7W3jxQAFLqeWw2BQQZDZD`
-- Phone Number ID: `910313308837894`
+- Phone Number ID: `943058622222058` (тестовый номер 15551533441)
 - Verify Token: `kezek_whatsapp_verify`
+
+**Реальный номер (после завершения проверки):**
+- Phone Number ID: `910313308837894` (номер +996 224 701 717) - статус "На рассмотрении"
 
 ## Шаг 4: Настройка Webhook в Meta
 
