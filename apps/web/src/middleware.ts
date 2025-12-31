@@ -3,8 +3,21 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
-    // проверяем только главную (можешь расширить список путей)
-    if (req.nextUrl.pathname !== '/') return NextResponse.next();
+    const pathname = req.nextUrl.pathname;
+    
+    // Пропускаем проверку для статических файлов, API routes и страниц авторизации
+    if (
+        pathname.startsWith('/_next') ||
+        pathname.startsWith('/api') ||
+        pathname.startsWith('/auth/post-signup') ||
+        pathname.startsWith('/auth/sign-in') ||
+        pathname.startsWith('/auth/sign-up') ||
+        pathname.startsWith('/auth/whatsapp') ||
+        pathname.startsWith('/auth/callback') ||
+        pathname.startsWith('/auth/verify')
+    ) {
+        return NextResponse.next();
+    }
 
     const res = NextResponse.next();
     const supabase = createServerClient(
