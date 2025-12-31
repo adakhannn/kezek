@@ -112,13 +112,30 @@ export async function POST(req: Request) {
         }
 
         // OTP код верный - создаем или находим пользователя
+        // Сначала ищем существующего пользователя с этим номером
         const { data: existingUsers } = await admin.auth.admin.listUsers();
-        let user = existingUsers?.users.find(
-            (u) => u.phone === phoneE164 || (u.user_metadata as { phone?: string })?.phone === phoneE164
-        );
+        
+        // Ищем пользователя по номеру телефона (проверяем разные форматы)
+        let user = existingUsers?.users.find((u) => {
+            // Проверяем прямое поле phone
+            if (u.phone === phoneE164) return true;
+            
+            // Проверяем user_metadata
+            const meta = u.user_metadata as { phone?: string } | undefined;
+            if (meta?.phone === phoneE164) return true;
+            
+            // Проверяем варианты формата (с пробелами, без + и т.д.)
+            const normalizedPhone = u.phone?.replace(/\s/g, '').replace(/^\+/, '');
+            const normalizedE164 = phoneE164.replace(/\s/g, '').replace(/^\+/, '');
+            if (normalizedPhone === normalizedE164) return true;
+            
+            return false;
+        });
+
+        let isNewUser = false;
 
         if (!user) {
-            // Создаем нового пользователя
+            // Пытаемся создать нового пользователя
             const { data: newUser, error: createError } = await admin.auth.admin.createUser({
                 phone: phoneE164,
                 phone_confirm: true,
@@ -128,38 +145,67 @@ export async function POST(req: Request) {
             });
 
             if (createError) {
-                console.error('[auth/whatsapp/verify-otp] Create user error:', createError);
-                return NextResponse.json(
-                    { ok: false, error: 'create_failed', message: createError.message },
-                    { status: 500 }
-                );
+                // Если номер уже зарегистрирован, более тщательно ищем пользователя
+                if (createError.message.includes('already registered') || 
+                    createError.message.includes('already exists') ||
+                    createError.message.includes('Phone number already registered')) {
+                    
+                    // Получаем всех пользователей заново и ищем более тщательно
+                    const { data: allUsers } = await admin.auth.admin.listUsers();
+                    user = allUsers?.users.find((u) => {
+                        // Проверяем прямое поле phone
+                        if (u.phone === phoneE164) return true;
+                        
+                        // Проверяем user_metadata
+                        const meta = u.user_metadata as { phone?: string } | undefined;
+                        if (meta?.phone === phoneE164) return true;
+                        
+                        // Проверяем варианты формата
+                        const normalizedPhone = u.phone?.replace(/\s/g, '').replace(/^\+/, '');
+                        const normalizedE164 = phoneE164.replace(/\s/g, '').replace(/^\+/, '');
+                        if (normalizedPhone === normalizedE164) return true;
+                        
+                        return false;
+                    });
+
+                    if (!user) {
+                        console.error('[auth/whatsapp/verify-otp] Phone already registered but user not found:', phoneE164);
+                        console.error('[auth/whatsapp/verify-otp] Available users with phones:', 
+                            allUsers?.users.map(u => ({ id: u.id, phone: u.phone, meta: u.user_metadata }))
+                        );
+                        return NextResponse.json(
+                            { ok: false, error: 'phone_taken', message: 'Этот номер телефона уже зарегистрирован. Если это ваш номер, попробуйте войти через стандартную форму входа.' },
+                            { status: 409 }
+                        );
+                    }
+
+                    console.log('[auth/whatsapp/verify-otp] Found existing user after create error:', user.id);
+                } else {
+                    console.error('[auth/whatsapp/verify-otp] Create user error:', createError);
+                    return NextResponse.json(
+                        { ok: false, error: 'create_failed', message: createError.message },
+                        { status: 500 }
+                    );
+                }
+            } else {
+                user = newUser.user;
+                isNewUser = true;
+                console.log('[auth/whatsapp/verify-otp] New user created:', user.id);
             }
-
-            user = newUser.user;
-            console.log('[auth/whatsapp/verify-otp] New user created:', user.id);
-
-            // Создаем профиль
-            await admin
-                .from('profiles')
-                .upsert({
-                    id: user.id,
-                    phone: phoneE164,
-                    whatsapp_verified: true,
-                }, {
-                    onConflict: 'id',
-                });
         } else {
-            // Обновляем профиль существующего пользователя
-            await admin
-                .from('profiles')
-                .upsert({
-                    id: user.id,
-                    phone: phoneE164,
-                    whatsapp_verified: true,
-                }, {
-                    onConflict: 'id',
-                });
+            console.log('[auth/whatsapp/verify-otp] Found existing user:', user.id);
         }
+
+        // Обновляем профиль (для нового и существующего пользователя)
+        await admin
+            .from('profiles')
+            .upsert({
+                id: user.id,
+                phone: phoneE164,
+                whatsapp_verified: true,
+            }, {
+                onConflict: 'id',
+            });
 
         // После проверки OTP создаем сессию через admin API
         // Используем generateLink для создания magic link (но он работает только с email)
@@ -178,10 +224,10 @@ export async function POST(req: Request) {
         
         return NextResponse.json({
             ok: true,
-            message: 'Успешная аутентификация. Используйте стандартный вход через телефон для создания сессии.',
+            message: isNewUser ? 'Регистрация успешна' : 'Вход выполнен успешно',
             userId: user.id,
             phone: phoneE164,
-            isNewUser: !existingUsers?.users.find((u) => u.id === user?.id),
+            isNewUser: isNewUser,
             // Для создания сессии клиент должен использовать стандартный Supabase phone auth
             // Но так как OTP уже проверен через WhatsApp, можно использовать прямой вход
             // Или клиент может перейти на страницу входа и использовать стандартный метод
