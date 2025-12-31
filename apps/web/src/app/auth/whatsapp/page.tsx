@@ -90,29 +90,55 @@ function WhatsAppAuthContent() {
             
             const sessionData = await sessionResponse.json();
             
-            if (!sessionData.ok || !sessionData.session) {
+            if (!sessionData.ok) {
                 console.error('[whatsapp] Failed to create session:', sessionData);
                 // Если не удалось создать сессию, перенаправляем на страницу входа
                 router.push(`/auth/sign-in?phone=${encodeURIComponent(phone)}&whatsapp_verified=true&redirect=${encodeURIComponent(redirect)}`);
                 return;
             }
             
-            // Устанавливаем сессию на клиенте
             const { supabase } = await import('@/lib/supabaseClient');
-            const { error: sessionError } = await supabase.auth.setSession({
-                access_token: sessionData.session.access_token,
-                refresh_token: sessionData.session.refresh_token,
-            });
             
-            if (sessionError) {
-                console.error('[whatsapp] Failed to set session:', sessionError);
-                router.push(`/auth/sign-in?phone=${encodeURIComponent(phone)}&whatsapp_verified=true&redirect=${encodeURIComponent(redirect)}`);
+            // Если есть готовые токены, используем их
+            if (sessionData.session?.access_token && sessionData.session?.refresh_token) {
+                const { error: sessionError } = await supabase.auth.setSession({
+                    access_token: sessionData.session.access_token,
+                    refresh_token: sessionData.session.refresh_token,
+                });
+                
+                if (sessionError) {
+                    console.error('[whatsapp] Failed to set session:', sessionError);
+                    router.push(`/auth/sign-in?phone=${encodeURIComponent(phone)}&whatsapp_verified=true&redirect=${encodeURIComponent(redirect)}`);
+                    return;
+                }
+                
+                // Сессия создана успешно
+                router.refresh();
+                router.push(redirect);
                 return;
             }
             
-            // Сессия создана успешно
-            router.refresh();
-            router.push(redirect);
+            // Если есть magic link, переходим по нему
+            if (sessionData.magicLink) {
+                console.log('[whatsapp] Redirecting to magic link');
+                window.location.href = sessionData.magicLink;
+                return;
+            }
+            
+            // Если есть token для обмена
+            if (sessionData.token && sessionData.needsExchange) {
+                // Пробуем обменять token на сессию
+                // Но для этого нужен code_verifier, который мы не имеем
+                // Лучше перейти по magic link
+                if (sessionData.magicLink) {
+                    window.location.href = sessionData.magicLink;
+                    return;
+                }
+            }
+            
+            // Если ничего не сработало, перенаправляем на страницу входа
+            console.error('[whatsapp] No valid session data received:', sessionData);
+            router.push(`/auth/sign-in?phone=${encodeURIComponent(phone)}&whatsapp_verified=true&redirect=${encodeURIComponent(redirect)}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
         } finally {

@@ -148,7 +148,10 @@ export async function POST(req: Request) {
         } else {
             // Если нет email, создаем временный email для генерации magic link
             // Используем формат: phone+whatsapp@kezek.kg (временный email на основе номера телефона)
-            const tempEmail = `${user.phone?.replace(/[^0-9]/g, '')}@whatsapp.kezek.kg`;
+            const phoneDigits = user.phone?.replace(/[^0-9]/g, '') || user.id.replace(/-/g, '');
+            const tempEmail = `${phoneDigits}@whatsapp.kezek.kg`;
+            
+            console.log('[auth/whatsapp/create-session] Creating temp email for user without email:', { userId: user.id, tempEmail });
             
             // Обновляем пользователя, добавляя временный email
             const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
@@ -159,10 +162,12 @@ export async function POST(req: Request) {
             if (updateError) {
                 console.error('[auth/whatsapp/create-session] Failed to add temp email:', updateError);
                 return NextResponse.json(
-                    { ok: false, error: 'update_failed', message: 'Не удалось создать сессию' },
+                    { ok: false, error: 'update_failed', message: `Не удалось создать сессию: ${updateError.message}` },
                     { status: 500 }
                 );
             }
+            
+            console.log('[auth/whatsapp/create-session] Temp email added, generating magic link...');
             
             // Теперь генерируем magic link с временным email
             const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
@@ -176,12 +181,14 @@ export async function POST(req: Request) {
             if (linkError || !linkData) {
                 console.error('[auth/whatsapp/create-session] Link generation error:', linkError);
                 return NextResponse.json(
-                    { ok: false, error: 'session_failed', message: 'Не удалось создать сессию' },
+                    { ok: false, error: 'session_failed', message: `Не удалось создать сессию: ${linkError?.message || 'unknown error'}` },
                     { status: 500 }
                 );
             }
 
             const magicLink = linkData.properties?.action_link;
+            console.log('[auth/whatsapp/create-session] Magic link generated:', magicLink?.substring(0, 100) + '...');
+            
             if (!magicLink) {
                 return NextResponse.json(
                     { ok: false, error: 'session_failed', message: 'Не удалось получить ссылку для входа' },
@@ -190,6 +197,7 @@ export async function POST(req: Request) {
             }
 
             // Извлекаем токены из magic link
+            // Magic link обычно в формате: https://...?token=...&type=magiclink#access_token=...&refresh_token=...
             let accessToken: string | null = null;
             let refreshToken: string | null = null;
             
@@ -198,21 +206,41 @@ export async function POST(req: Request) {
             if (hashMatch) {
                 accessToken = decodeURIComponent(hashMatch[1]);
                 refreshToken = decodeURIComponent(hashMatch[2]);
+                console.log('[auth/whatsapp/create-session] Tokens extracted from hash');
             } else {
                 // Пробуем извлечь из query параметров
                 const queryMatch = magicLink.match(/[?&]access_token=([^&]+)/);
                 const refreshMatch = magicLink.match(/[?&]refresh_token=([^&]+)/);
                 if (queryMatch) accessToken = decodeURIComponent(queryMatch[1]);
                 if (refreshMatch) refreshToken = decodeURIComponent(refreshMatch[1]);
+                console.log('[auth/whatsapp/create-session] Tokens extracted from query params');
             }
-
+            
+            // Если токены не найдены, пробуем извлечь token и использовать его для создания сессии
             if (!accessToken || !refreshToken) {
+                const tokenMatch = magicLink.match(/[?&]token=([^&]+)/);
+                if (tokenMatch) {
+                    const token = decodeURIComponent(tokenMatch[1]);
+                    console.log('[auth/whatsapp/create-session] Found token in magic link, but need to exchange it');
+                    // Token нужно обменять на сессию, но это требует клиентского кода
+                    // Возвращаем token для обмена на клиенте
+                    return NextResponse.json({
+                        ok: true,
+                        token: token,
+                        magicLink: magicLink,
+                        needsExchange: true,
+                    });
+                }
+                
+                console.error('[auth/whatsapp/create-session] Failed to extract tokens from magic link:', magicLink);
                 return NextResponse.json(
-                    { ok: false, error: 'session_failed', message: 'Не удалось извлечь токены из ссылки' },
+                    { ok: false, error: 'session_failed', message: 'Не удалось извлечь токены из ссылки. Попробуйте перейти по ссылке вручную.' },
                     { status: 500 }
                 );
             }
 
+            console.log('[auth/whatsapp/create-session] Session tokens extracted successfully');
+            
             return NextResponse.json({
                 ok: true,
                 session: {
