@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
 import { useToast } from '../../contexts/ToastContext';
+import { getValidationError } from '../../utils/validation';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -20,13 +21,17 @@ export default function VerifyScreen() {
 
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
+    const [codeError, setCodeError] = useState<string | null>(null);
 
     const handleVerify = async () => {
-        if (!code || code.length !== 6) {
-            showToast('Введите 6-значный код', 'error');
+        const error = getValidationError('code', code);
+        if (error) {
+            setCodeError(error);
+            showToast(error, 'error');
             return;
         }
 
+        setCodeError(null);
         setLoading(true);
         try {
             if (email) {

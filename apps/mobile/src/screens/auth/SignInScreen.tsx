@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
 import { useToast } from '../../contexts/ToastContext';
+import { validateEmail, validatePhone, normalizePhone, getValidationError } from '../../utils/validation';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -18,39 +19,54 @@ export default function SignInScreen() {
     const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'email' | 'phone'>('email');
+    const [errors, setErrors] = useState<{ email?: string; phone?: string }>({});
 
     const handleSignIn = async () => {
-        if (mode === 'email' && !email) {
-            showToast('Введите email', 'error');
-            return;
-        }
-        if (mode === 'phone' && !phone) {
-            showToast('Введите номер телефона', 'error');
-            return;
+        // Валидация
+        const newErrors: { email?: string; phone?: string } = {};
+        
+        if (mode === 'email') {
+            const emailError = getValidationError('email', email);
+            if (emailError) {
+                newErrors.email = emailError;
+                setErrors(newErrors);
+                showToast(emailError, 'error');
+                return;
+            }
+        } else {
+            const phoneError = getValidationError('phone', phone);
+            if (phoneError) {
+                newErrors.phone = phoneError;
+                setErrors(newErrors);
+                showToast(phoneError, 'error');
+                return;
+            }
         }
 
+        setErrors({});
         setLoading(true);
         try {
             if (mode === 'email') {
                 const { error } = await supabase.auth.signInWithOtp({
-                    email,
+                    email: email.trim(),
                     options: {
                         emailRedirectTo: 'kezek://auth/callback',
                     },
                 });
                 if (error) throw error;
                 showToast('Код отправлен на email', 'success');
-                navigation.navigate('Verify', { email });
+                navigation.navigate('Verify', { email: email.trim() });
             } else {
+                const normalizedPhone = normalizePhone(phone);
                 const { error } = await supabase.auth.signInWithOtp({
-                    phone: phone.startsWith('+') ? phone : `+${phone}`,
+                    phone: normalizedPhone,
                     options: {
                         channel: 'sms',
                     },
                 });
                 if (error) throw error;
                 showToast('Код отправлен на телефон', 'success');
-                navigation.navigate('Verify', { phone });
+                navigation.navigate('Verify', { phone: normalizedPhone });
             }
         } catch (error: any) {
             showToast(error.message || 'Не удалось отправить код', 'error');
