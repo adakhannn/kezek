@@ -56,8 +56,12 @@ export function AuthStatusUpdater() {
             if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
                 lastSessionRef.current = currentUserId;
                 
-                
-                router.refresh();
+                // Небольшая задержка для установки cookies перед обновлением
+                setTimeout(() => {
+                    if (mounted) {
+                        router.refresh();
+                    }
+                }, 200);
             } else if (event === 'USER_UPDATED') {
                 // Также обновляем при изменении данных пользователя
                 checkAndRefresh();

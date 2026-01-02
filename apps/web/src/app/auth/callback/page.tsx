@@ -40,8 +40,11 @@ function AuthCallbackContent() {
                         }
                         console.log('[callback] Session set from hash, redirecting to:', next);
                         setStatus('success');
+                        // Принудительно обновляем страницу для обновления хедера
                         router.refresh();
-                        router.replace(next);
+                        // Небольшая задержка для установки cookies
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        window.location.href = next;
                         return;
                     }
 
@@ -54,8 +57,11 @@ function AuthCallbackContent() {
                             if (!exchangeError && sessionData?.session) {
                                 console.log('[callback] Code exchanged successfully, redirecting to:', next);
                                 setStatus('success');
+                                // Принудительно обновляем страницу для обновления хедера
                                 router.refresh();
-                                router.replace(next);
+                                // Небольшая задержка для установки cookies
+                                await new Promise(resolve => setTimeout(resolve, 100));
+                                window.location.href = next;
                                 return;
                             } else {
                                 console.warn('[callback] exchangeCodeForSession error:', exchangeError);
@@ -73,8 +79,11 @@ function AuthCallbackContent() {
                     if (session && !sessionError) {
                         console.log('[callback] Session found, redirecting to:', next);
                         setStatus('success');
+                        // Принудительно обновляем страницу для обновления хедера
                         router.refresh();
-                        router.replace(next);
+                        // Небольшая задержка для установки cookies
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        window.location.href = next;
                         return;
                     }
 
