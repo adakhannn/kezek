@@ -56,32 +56,6 @@ export function AuthStatusUpdater() {
             if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
                 lastSessionRef.current = currentUserId;
                 
-                // Если пользователь вошел, проверяем наличие имени в профиле
-                if (event === 'SIGNED_IN' && session?.user) {
-                    try {
-                        const { data: profile } = await supabase
-                            .from('profiles')
-                            .select('full_name')
-                            .eq('id', session.user.id)
-                            .maybeSingle();
-                        
-                        // Если имени нет, перенаправляем на страницу ввода имени
-                        if (!profile?.full_name?.trim()) {
-                            const currentPath = window.location.pathname;
-                            // Не перенаправляем, если уже на странице post-signup или auth
-                            if (!currentPath.startsWith('/auth/post-signup') && 
-                                !currentPath.startsWith('/auth/sign-in') && 
-                                !currentPath.startsWith('/auth/sign-up') &&
-                                !currentPath.startsWith('/auth/whatsapp') &&
-                                !currentPath.startsWith('/auth/callback')) {
-                                router.push('/auth/post-signup?from=whatsapp');
-                                return;
-                            }
-                        }
-                    } catch (error) {
-                        console.warn('AuthStatusUpdater: error checking profile name', error);
-                    }
-                }
                 
                 router.refresh();
             } else if (event === 'USER_UPDATED') {

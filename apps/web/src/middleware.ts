@@ -39,28 +39,6 @@ export async function middleware(req: NextRequest) {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return res;
 
-    // Проверяем наличие имени в профиле - если нет, перенаправляем на страницу ввода имени
-    // НО только если пользователь не на странице авторизации и не на главной (чтобы не блокировать вход)
-    const isAuthPage = pathname.startsWith('/auth/');
-    const isHomePage = pathname === '/';
-    
-    // Проверяем full_name только если пользователь не на страницах авторизации
-    if (!isAuthPage && !isHomePage) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', userRes.user.id)
-            .maybeSingle();
-        
-        if (!profile?.full_name?.trim()) {
-            // Редиректим на post-signup только если не на главной и не на auth страницах
-            const url = req.nextUrl.clone();
-            url.pathname = '/auth/post-signup';
-            url.searchParams.set('from', 'middleware');
-            return NextResponse.redirect(url, 302);
-        }
-    }
-
     const { data: roles, error } = await supabase.rpc('my_role_keys');
     if (error) {
         // Логируем ошибку, но не прерываем запрос - пользователь останется на главной

@@ -34,24 +34,6 @@ function AuthCallbackContent() {
                         });
                         if (error) throw error;
                         
-                        // Проверяем наличие имени в профиле
-                        const { data: { user } } = await supabase.auth.getUser();
-                        if (user) {
-                            const { data: profile } = await supabase
-                                .from('profiles')
-                                .select('full_name')
-                                .eq('id', user.id)
-                                .maybeSingle();
-                            
-                            if (!profile?.full_name?.trim()) {
-                                setStatus('success');
-                                router.refresh();
-                                const from = searchParams.get('from') || 'oauth';
-                                router.replace(`/auth/post-signup?from=${from}`);
-                                return;
-                            }
-                        }
-                        
                         setStatus('success');
                         router.refresh();
                         router.replace(next);
@@ -62,28 +44,6 @@ function AuthCallbackContent() {
                     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
                     
                     if (session && !sessionError) {
-                        // Проверяем наличие имени в профиле
-                        const { data: { user } } = await supabase.auth.getUser();
-                        if (user) {
-                            // Даем немного времени на создание/обновление профиля (для OAuth)
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            
-                            const { data: profile } = await supabase
-                                .from('profiles')
-                                .select('full_name')
-                                .eq('id', user.id)
-                                .maybeSingle();
-                            
-                            if (!profile?.full_name?.trim()) {
-                                setStatus('success');
-                                router.refresh();
-                                // Определяем источник авторизации из URL или используем 'oauth' по умолчанию
-                                const from = searchParams.get('from') || 'oauth';
-                                router.replace(`/auth/post-signup?from=${from}`);
-                                return;
-                            }
-                        }
-                        
                         setStatus('success');
                         router.refresh();
                         router.replace(next);
@@ -99,26 +59,6 @@ function AuthCallbackContent() {
                             // Для OAuth providers (Google) это должно работать без code_verifier
                             const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
                             if (!exchangeError) {
-                                // Сессия установлена, проверяем наличие имени
-                                const { data: { user } } = await supabase.auth.getUser();
-                                if (user) {
-                                    // Даем немного времени на создание/обновление профиля
-                                    await new Promise(resolve => setTimeout(resolve, 500));
-                                    
-                                    const { data: profile } = await supabase
-                                        .from('profiles')
-                                        .select('full_name')
-                                        .eq('id', user.id)
-                                        .maybeSingle();
-                                    
-                                    if (!profile?.full_name?.trim()) {
-                                        setStatus('success');
-                                        router.refresh();
-                                        router.replace('/auth/post-signup?from=oauth');
-                                        return;
-                                    }
-                                }
-                                
                                 setStatus('success');
                                 router.refresh();
                                 router.replace(next);
@@ -138,29 +78,7 @@ function AuthCallbackContent() {
                         // Ждем немного и проверяем снова (Supabase может обработать на своей стороне)
                         setTimeout(checkSession, 500);
                     } else {
-                        // После нескольких попыток проверяем сессию еще раз
-                        // Если сессия все еще не установлена, редиректим на главную
-                        const { data: { session: finalSession } } = await supabase.auth.getSession();
-                        if (finalSession) {
-                            // Сессия есть, проверяем имя
-                            const { data: { user: finalUser } } = await supabase.auth.getUser();
-                            if (finalUser) {
-                                const { data: finalProfile } = await supabase
-                                    .from('profiles')
-                                    .select('full_name')
-                                    .eq('id', finalUser.id)
-                                    .maybeSingle();
-                                
-                                if (!finalProfile?.full_name?.trim()) {
-                                    const from = searchParams.get('from') || 'callback';
-                                    setStatus('success');
-                                    router.refresh();
-                                    router.replace(`/auth/post-signup?from=${from}`);
-                                    return;
-                                }
-                            }
-                        }
-                        
+                        // После нескольких попыток редиректим (сессия может быть установлена на сервере)
                         setStatus('success');
                         router.refresh();
                         router.replace(next);
