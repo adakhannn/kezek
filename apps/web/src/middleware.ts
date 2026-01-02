@@ -39,45 +39,49 @@ export async function middleware(req: NextRequest) {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return res;
 
-    const { data: roles, error } = await supabase.rpc('my_role_keys');
-    if (error) {
-        // Логируем ошибку, но не прерываем запрос - пользователь останется на главной
-        console.warn('[middleware] Failed to get user roles:', error.message);
-        return res;
-    }
+    // Проверяем роли только если пользователь не на странице callback или главной
+    // Это предотвращает циклы редиректов
+    if (pathname !== '/auth/callback' && pathname !== '/') {
+        const { data: roles, error } = await supabase.rpc('my_role_keys');
+        if (error) {
+            // Логируем ошибку, но не прерываем запрос - пользователь останется на текущей странице
+            console.warn('[middleware] Failed to get user roles:', error.message);
+            return res;
+        }
 
-    const keys = Array.isArray(roles) ? (roles as string[]) : [];
-    if (keys.includes('super_admin')) {
-        const url = req.nextUrl.clone();
-        url.pathname = '/admin';
-        return NextResponse.redirect(url, 302);
-    }
-    // Владельцы, админы и менеджеры → dashboard
-    if (keys.includes('owner') || keys.some(k => ['admin','manager'].includes(k))) {
-        const url = req.nextUrl.clone();
-        url.pathname = '/dashboard';
-        return NextResponse.redirect(url, 302);
-    }
-    
-    // Сотрудники → проверяем наличие записи в staff (источник правды)
-    const { data: staff } = await supabase
-        .from('staff')
-        .select('id')
-        .eq('user_id', userRes.user.id)
-        .eq('is_active', true)
-        .maybeSingle();
-    
-    if (staff) {
-        const url = req.nextUrl.clone();
-        url.pathname = '/staff';
-        return NextResponse.redirect(url, 302);
-    }
-    
-    // Fallback: проверяем роль через RPC
-    if (keys.includes('staff')) {
-        const url = req.nextUrl.clone();
-        url.pathname = '/staff';
-        return NextResponse.redirect(url, 302);
+        const keys = Array.isArray(roles) ? (roles as string[]) : [];
+        if (keys.includes('super_admin')) {
+            const url = req.nextUrl.clone();
+            url.pathname = '/admin';
+            return NextResponse.redirect(url, 302);
+        }
+        // Владельцы, админы и менеджеры → dashboard
+        if (keys.includes('owner') || keys.some(k => ['admin','manager'].includes(k))) {
+            const url = req.nextUrl.clone();
+            url.pathname = '/dashboard';
+            return NextResponse.redirect(url, 302);
+        }
+        
+        // Сотрудники → проверяем наличие записи в staff (источник правды)
+        const { data: staff } = await supabase
+            .from('staff')
+            .select('id')
+            .eq('user_id', userRes.user.id)
+            .eq('is_active', true)
+            .maybeSingle();
+        
+        if (staff) {
+            const url = req.nextUrl.clone();
+            url.pathname = '/staff';
+            return NextResponse.redirect(url, 302);
+        }
+        
+        // Fallback: проверяем роль через RPC
+        if (keys.includes('staff')) {
+            const url = req.nextUrl.clone();
+            url.pathname = '/staff';
+            return NextResponse.redirect(url, 302);
+        }
     }
 
     return res;
