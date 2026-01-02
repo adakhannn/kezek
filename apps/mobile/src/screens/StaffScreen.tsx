@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -38,10 +39,11 @@ type UpcomingBooking = {
 
 export default function StaffScreen() {
     const navigation = useNavigation<StaffScreenNavigationProp>();
+    const [refreshing, setRefreshing] = useState(false);
 
     const { user } = useAuth();
 
-    const { data: staffInfo, isLoading: staffLoading } = useQuery({
+    const { data: staffInfo, isLoading: staffLoading, refetch: refetchStaff } = useQuery({
         queryKey: ['staff-info', user?.id],
         queryFn: async () => {
             if (!user?.id) return null;
@@ -64,7 +66,7 @@ export default function StaffScreen() {
         enabled: !!user?.id,
     });
 
-    const { data: upcomingBookings, isLoading: bookingsLoading } = useQuery({
+    const { data: upcomingBookings, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
         queryKey: ['staff-bookings', staffInfo?.id],
         queryFn: async () => {
             if (!staffInfo?.id) return [];
@@ -93,6 +95,12 @@ export default function StaffScreen() {
         enabled: !!staffInfo?.id,
     });
 
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await Promise.all([refetchStaff(), refetchBookings()]);
+        setRefreshing(false);
+    };
+
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('ru-RU', {
@@ -110,7 +118,7 @@ export default function StaffScreen() {
         });
     };
 
-    if (staffLoading || bookingsLoading) {
+    if ((staffLoading || bookingsLoading) && !refreshing) {
         return <LoadingSpinner message="Загрузка..." />;
     }
 
@@ -127,7 +135,10 @@ export default function StaffScreen() {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
             <View style={styles.header}>
                 <Text style={styles.title}>Кабинет сотрудника</Text>
                 <Text style={styles.subtitle}>{staffInfo.full_name}</Text>

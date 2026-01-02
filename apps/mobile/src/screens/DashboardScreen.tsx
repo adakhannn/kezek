@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,10 +24,11 @@ type Business = {
 
 export default function DashboardScreen() {
     const navigation = useNavigation<DashboardScreenNavigationProp>();
+    const [refreshing, setRefreshing] = useState(false);
 
     const { user } = useAuth();
 
-    const { data: businesses, isLoading } = useQuery({
+    const { data: businesses, isLoading, refetch } = useQuery({
         queryKey: ['my-businesses', user?.id],
         queryFn: async () => {
             if (!user?.id) return [];
@@ -61,7 +63,13 @@ export default function DashboardScreen() {
         enabled: !!user?.id,
     });
 
-    if (isLoading) {
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await refetch();
+        setRefreshing(false);
+    };
+
+    if (isLoading && !refreshing) {
         return <LoadingSpinner message="Загрузка..." />;
     }
 
@@ -78,7 +86,10 @@ export default function DashboardScreen() {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
             <View style={styles.header}>
                 <Text style={styles.title}>Кабинет бизнеса</Text>
                 <Text style={styles.subtitle}>

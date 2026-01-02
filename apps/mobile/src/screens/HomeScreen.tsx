@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +9,8 @@ import { MainTabParamList } from '../navigation/types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import EmptyState from '../components/ui/EmptyState';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Home'>;
 
@@ -21,8 +23,9 @@ type Business = {
 export default function HomeScreen() {
     const navigation = useNavigation<HomeScreenNavigationProp>();
     const [search, setSearch] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
 
-    const { data: businesses, isLoading } = useQuery({
+    const { data: businesses, isLoading, refetch } = useQuery({
         queryKey: ['businesses', search],
         queryFn: async () => {
             let query = supabase.from('businesses').select('id, name, slug').eq('is_active', true);
@@ -37,13 +40,22 @@ export default function HomeScreen() {
         },
     });
 
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await refetch();
+        setRefreshing(false);
+    };
+
     const handleBusinessPress = (slug: string) => {
         // @ts-ignore - типы навигации будут исправлены позже
         navigation.navigate('Booking', { slug });
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
             <View style={styles.header}>
                 <Text style={styles.title}>Kezek</Text>
                 <Text style={styles.subtitle}>Бронирование в Оше</Text>
@@ -58,8 +70,8 @@ export default function HomeScreen() {
                 />
             </View>
 
-            {isLoading ? (
-                <Text style={styles.loading}>Загрузка...</Text>
+            {isLoading && !refreshing ? (
+                <LoadingSpinner message="Загрузка..." />
             ) : businesses && businesses.length > 0 ? (
                 <View style={styles.businessList}>
                     {businesses.map((business) => (
@@ -74,16 +86,11 @@ export default function HomeScreen() {
                     ))}
                 </View>
             ) : (
-                <View style={styles.empty}>
-                    <Text style={styles.emptyTitle}>
-                        {search ? 'Ничего не найдено' : 'Нет доступных бизнесов'}
-                    </Text>
-                    {!search && (
-                        <Text style={styles.emptyHint}>
-                            Бизнесы появятся здесь после регистрации
-                        </Text>
-                    )}
-                </View>
+                <EmptyState
+                    icon="search"
+                    title={search ? 'Ничего не найдено' : 'Нет доступных бизнесов'}
+                    message={search ? 'Попробуйте другой запрос' : 'Бизнесы появятся здесь после регистрации'}
+                />
             )}
         </ScrollView>
     );
