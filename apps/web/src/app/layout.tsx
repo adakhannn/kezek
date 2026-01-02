@@ -5,6 +5,7 @@ import Link from 'next/link';
 import './globals.css';
 import {AuthStatusServer} from './_components/AuthStatusServer';
 import {AuthStatusUpdater} from './_components/AuthStatusWrapper';
+import {Logo} from './_components/Logo';
 import {NameReminderBanner} from './_components/NameReminderBanner';
 
 const geistSans = Geist({
@@ -38,12 +39,7 @@ export default function RootLayout({
         <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-pink-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                            <span className="relative text-2xl font-bold gradient-text">Kezek</span>
-                        </div>
-                    </Link>
+                    <Logo />
                     <AuthStatusServer/>
                     <AuthStatusUpdater/>
                 </div>
