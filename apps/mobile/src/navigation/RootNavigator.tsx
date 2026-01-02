@@ -5,6 +5,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 
 import { supabase } from '../lib/supabase';
 import { RootStackParamList } from './types';
+import { linking } from './linking';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import BookingDetailsScreen from '../screens/BookingDetailsScreen';
@@ -43,7 +44,7 @@ export default function RootNavigator() {
     }
 
     return (
-        <NavigationContainer>
+        <NavigationContainer linking={linking}>
             <Stack.Navigator screenOptions={{ headerShown: true }}>
                 {session ? (
                     <>

@@ -22,6 +22,7 @@ export default function App() {
         <ErrorBoundary>
             <QueryClientProvider client={queryClient}>
                 <ToastProvider>
+                    <NetworkStatusBanner />
                     <RootNavigator />
                     <StatusBar style="auto" />
                 </ToastProvider>
