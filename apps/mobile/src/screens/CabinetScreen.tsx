@@ -5,11 +5,11 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { supabase } from '../lib/supabase';
-import { MainTabParamList } from '../navigation/types';
+import { CabinetStackParamList } from '../navigation/types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
-type CabinetScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Cabinet'>;
+type CabinetScreenNavigationProp = NativeStackNavigationProp<CabinetStackParamList, 'CabinetMain'>;
 
 type Booking = {
     id: string;
@@ -125,9 +125,6 @@ export default function CabinetScreen() {
         navigation.navigate('BookingDetails', { id: bookingId });
     };
 
-    const handleSignOut = async () => {
-        await supabase.auth.signOut();
-    };
 
     if (isLoading) {
         return (
@@ -217,7 +214,11 @@ export default function CabinetScreen() {
             </View>
 
             <View style={styles.footer}>
-                <Button title="Выйти" onPress={handleSignOut} variant="outline" />
+                <Button
+                    title="Профиль"
+                    onPress={() => navigation.navigate('Profile')}
+                    variant="outline"
+                />
             </View>
         </ScrollView>
     );

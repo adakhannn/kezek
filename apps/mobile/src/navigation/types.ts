@@ -9,9 +9,14 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
     Home: undefined;
-    Cabinet: undefined;
+    Cabinet: NavigatorScreenParams<CabinetStackParamList>;
     Dashboard: undefined;
     Staff: undefined;
+};
+
+export type CabinetStackParamList = {
+    CabinetMain: undefined;
+    Profile: undefined;
 };
 
 export type AuthStackParamList = {

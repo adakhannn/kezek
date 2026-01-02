@@ -1,12 +1,32 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
-import { MainTabParamList } from './types';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigatorScreenParams } from '@react-navigation/native';
+import { MainTabParamList, CabinetStackParamList } from './types';
 import HomeScreen from '../screens/HomeScreen';
 import CabinetScreen from '../screens/CabinetScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import StaffScreen from '../screens/StaffScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const CabinetStack = createNativeStackNavigator<CabinetStackParamList>();
+
+function CabinetNavigator() {
+    return (
+        <CabinetStack.Navigator>
+            <CabinetStack.Screen
+                name="CabinetMain"
+                component={CabinetScreen}
+                options={{ title: 'Личный кабинет' }}
+            />
+            <CabinetStack.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ title: 'Профиль' }}
+            />
+        </CabinetStack.Navigator>
+    );
+}
 
 export default function MainNavigator() {
     return (
@@ -30,9 +50,9 @@ export default function MainNavigator() {
             />
             <Tab.Screen 
                 name="Cabinet" 
-                component={CabinetScreen} 
+                component={CabinetNavigator}
                 options={{ 
-                    title: 'Личный кабинет',
+                    headerShown: false,
                     tabBarLabel: 'Кабинет',
                 }} 
             />
