@@ -3,6 +3,7 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 export type RootStackParamList = {
     Auth: undefined;
     Main: NavigatorScreenParams<MainTabParamList>;
+    BookingDetails: { id: string };
 };
 
 export type MainTabParamList = {

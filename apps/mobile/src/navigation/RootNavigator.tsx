@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { RootStackParamList } from './types';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import BookingDetailsScreen from '../screens/BookingDetailsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -42,11 +43,26 @@ export default function RootNavigator() {
 
     return (
         <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator screenOptions={{ headerShown: true }}>
                 {session ? (
-                    <Stack.Screen name="Main" component={MainNavigator} />
+                    <>
+                        <Stack.Screen
+                            name="Main"
+                            component={MainNavigator}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                            name="BookingDetails"
+                            component={BookingDetailsScreen}
+                            options={{ title: 'Детали записи' }}
+                        />
+                    </>
                 ) : (
-                    <Stack.Screen name="Auth" component={AuthNavigator} />
+                    <Stack.Screen
+                        name="Auth"
+                        component={AuthNavigator}
+                        options={{ headerShown: false }}
+                    />
                 )}
             </Stack.Navigator>
         </NavigationContainer>
