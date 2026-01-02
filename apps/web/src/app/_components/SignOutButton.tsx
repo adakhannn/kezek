@@ -8,31 +8,30 @@ export function SignOutButton({ className }: { className?: string }) {
     const [loading, setLoading] = useState(false);
 
     const handleSignOut = (e: React.MouseEvent<HTMLButtonElement>) => {
-        console.log('[SignOut] Button clicked!');
         e.preventDefault();
         e.stopPropagation();
         
         if (loading) {
-            console.log('[SignOut] Already loading, ignoring click');
             return;
         }
         
+        console.log('[SignOut] Step 1: Setting loading state');
         setLoading(true);
-        console.log('[SignOut] Starting sign out...');
         
+        console.log('[SignOut] Step 2: Starting signOut');
         // Выполняем выход асинхронно, но не блокируем редирект
         supabase.auth.signOut()
             .then(({ error }) => {
+                console.log('[SignOut] Step 3: signOut completed', error ? 'with error' : 'successfully');
                 if (error) {
                     console.error('[SignOut] Supabase signOut error:', error);
-                } else {
-                    console.log('[SignOut] Supabase signOut successful');
                 }
             })
             .catch((error) => {
-                console.error('[SignOut] Exception:', error);
+                console.error('[SignOut] signOut exception:', error);
             });
         
+        console.log('[SignOut] Step 4: Clearing localStorage');
         // Очищаем localStorage (включая все ключи Supabase)
         try {
             const keysToRemove: string[] = [];
@@ -43,26 +42,28 @@ export function SignOutButton({ className }: { className?: string }) {
                 }
             }
             keysToRemove.forEach(key => localStorage.removeItem(key));
-            console.log('[SignOut] Cleared localStorage keys:', keysToRemove.length);
+            console.log('[SignOut] Step 5: Cleared', keysToRemove.length, 'localStorage keys');
         } catch (localStorageError) {
             console.warn('[SignOut] Error clearing localStorage:', localStorageError);
         }
         
+        console.log('[SignOut] Step 6: Clearing sessionStorage');
         // Очищаем sessionStorage
         try {
             sessionStorage.clear();
-            console.log('[SignOut] Cleared sessionStorage');
+            console.log('[SignOut] Step 7: Cleared sessionStorage');
         } catch (sessionStorageError) {
             console.warn('[SignOut] Error clearing sessionStorage:', sessionStorageError);
         }
         
+        console.log('[SignOut] Step 8: Setting redirect timeout');
         // Немедленный редирект - не ждем завершения signOut
-        console.log('[SignOut] Redirecting...');
-        // Небольшой таймаут, чтобы дать время на выполнение очистки
         setTimeout(() => {
-            console.log('[SignOut] Executing redirect now');
+            console.log('[SignOut] Step 9: Executing redirect');
             window.location.href = '/';
-        }, 50);
+        }, 100);
+        
+        console.log('[SignOut] Step 10: Function completed');
     };
 
     return (
