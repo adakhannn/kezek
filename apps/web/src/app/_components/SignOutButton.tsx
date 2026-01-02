@@ -4,44 +4,31 @@ import { supabase } from '@/lib/supabaseClient';
 
 export function SignOutButton({ className }: { className?: string }) {
     const handleSignOut = async () => {
+        // Выполняем выход (не ждем завершения)
+        supabase.auth.signOut().catch(console.error);
+        
+        // Очищаем данные сессии
         try {
-            // Выполняем выход
-            const { error } = await supabase.auth.signOut();
-            
-            if (error) {
-                console.error('SignOut error:', error);
-                // Даже при ошибке продолжаем очистку и редирект
-            }
-
-            // Очищаем данные сессии (для WhatsApp авторизации)
-            try {
-                // Очищаем localStorage (ключи Supabase)
-                const keysToRemove: string[] = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth'))) {
-                        keysToRemove.push(key);
-                    }
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth'))) {
+                    keysToRemove.push(key);
                 }
-                keysToRemove.forEach(key => localStorage.removeItem(key));
-            } catch (err) {
-                console.warn('SignOut localStorage error:', err);
             }
-
-            try {
-                sessionStorage.clear();
-            } catch (err) {
-                console.warn('SignOut sessionStorage error:', err);
-            }
-
-            // Используем полный редирект для гарантированного обновления состояния
-            // Это обновит все компоненты и очистит кэш
-            window.location.href = '/';
-        } catch (error) {
-            console.error('SignOut exception:', error);
-            // В случае ошибки все равно делаем редирект
-            window.location.href = '/';
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+        } catch (err) {
+            // Игнорируем ошибки
         }
+
+        try {
+            sessionStorage.clear();
+        } catch (err) {
+            // Игнорируем ошибки
+        }
+
+        // Редирект на страницу выхода, которая обработает все правильно
+        window.location.href = '/auth/sign-out';
     };
 
     return (
