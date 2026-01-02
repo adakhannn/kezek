@@ -21,75 +21,82 @@ function AuthCallbackContent() {
 
             const checkSession = async () => {
                 try {
-                    // Проверяем hash с токенами (старый способ)
+                    console.log('[callback] Attempt:', attempts + 1, 'URL:', window.location.href);
+                    
+                    // 1. Проверяем hash с токенами (старый способ)
                     const hashParams = new URLSearchParams(window.location.hash.substring(1));
                     const accessToken = hashParams.get('access_token');
                     const refreshToken = hashParams.get('refresh_token');
 
                     if (accessToken && refreshToken) {
-                        // Устанавливаем сессию из hash
+                        console.log('[callback] Found tokens in hash, setting session');
                         const { error } = await supabase.auth.setSession({
                             access_token: accessToken,
                             refresh_token: refreshToken,
                         });
-                        if (error) throw error;
-                        
+                        if (error) {
+                            console.error('[callback] setSession error:', error);
+                            throw error;
+                        }
+                        console.log('[callback] Session set from hash, redirecting to:', next);
                         setStatus('success');
                         router.refresh();
                         router.replace(next);
                         return;
                     }
 
-                    // Проверяем наличие сессии (Supabase может установить её автоматически через cookies)
-                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                    
-                    if (session && !sessionError) {
-                        setStatus('success');
-                        router.refresh();
-                        router.replace(next);
-                        return;
-                    }
-
-                    // Если есть code в URL, пытаемся обменять
-                    // Для OAuth (Google и др.) Supabase может обработать code автоматически
+                    // 2. Если есть code в URL, пытаемся обменять (для OAuth providers)
                     const code = searchParams.get('code');
-                    if (code && attempts === 0) {
+                    if (code) {
+                        console.log('[callback] Found code parameter, attempting exchange');
                         try {
-                            // Пытаемся обменять code на сессию
-                            // Для OAuth providers (Google) это должно работать без code_verifier
-                            const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-                            if (!exchangeError) {
+                            const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+                            if (!exchangeError && sessionData?.session) {
+                                console.log('[callback] Code exchanged successfully, redirecting to:', next);
                                 setStatus('success');
                                 router.refresh();
                                 router.replace(next);
                                 return;
                             } else {
                                 console.warn('[callback] exchangeCodeForSession error:', exchangeError);
-                                // Продолжаем проверку сессии - возможно Supabase обработал на сервере
+                                // Продолжаем - возможно Supabase обработал на сервере
                             }
                         } catch (e) {
-                            // Игнорируем ошибку, продолжаем проверку сессии
                             console.warn('[callback] exchangeCodeForSession exception:', e);
+                            // Продолжаем проверку
                         }
                     }
 
+                    // 3. Проверяем наличие сессии (Supabase может установить её автоматически через cookies)
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                    
+                    if (session && !sessionError) {
+                        console.log('[callback] Session found, redirecting to:', next);
+                        setStatus('success');
+                        router.refresh();
+                        router.replace(next);
+                        return;
+                    }
+
+                    // 4. Если сессии нет, ждем и проверяем снова
                     attempts++;
                     if (attempts < maxAttempts) {
-                        // Ждем немного и проверяем снова (Supabase может обработать на своей стороне)
-                        setTimeout(checkSession, 500);
+                        console.log('[callback] No session yet, waiting... (attempt', attempts, 'of', maxAttempts, ')');
+                        setTimeout(checkSession, 1000); // Увеличил до 1 секунды
                     } else {
-                        // После нескольких попыток редиректим (сессия может быть установлена на сервере)
+                        // После всех попыток редиректим - если авторизация произошла, middleware перенаправит
+                        console.warn('[callback] Max attempts reached, redirecting anyway to:', next);
                         setStatus('success');
                         router.refresh();
                         router.replace(next);
                     }
                 } catch (e) {
-                    console.error('callback error', e);
+                    console.error('[callback] Error in checkSession:', e);
                     attempts++;
                     if (attempts < maxAttempts) {
-                        setTimeout(checkSession, 500);
+                        setTimeout(checkSession, 1000);
                     } else {
-                        // В конце концов редиректим - если авторизация произошла, middleware перенаправит
+                        console.warn('[callback] Max attempts reached after error, redirecting to:', next);
                         setStatus('success');
                         router.refresh();
                         router.replace(next);
@@ -136,3 +143,4 @@ export default function AuthCallback() {
         </Suspense>
     );
 }
+
