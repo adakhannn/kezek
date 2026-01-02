@@ -123,20 +123,6 @@ function WhatsAppAuthContent() {
                 
                 console.log('[whatsapp] Session created successfully, user:', currentUser.id);
                 
-                // Проверяем, есть ли имя в профиле
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('full_name')
-                    .eq('id', currentUser.id)
-                    .maybeSingle();
-                
-                // Если имени нет, перенаправляем на страницу ввода имени
-                if (!profile?.full_name?.trim()) {
-                    console.log('[whatsapp] No name in profile, redirecting to post-signup');
-                    router.push('/auth/post-signup?from=whatsapp');
-                    return;
-                }
-                
                 // Сессия создана успешно
                 router.refresh();
                 router.push(redirect);
