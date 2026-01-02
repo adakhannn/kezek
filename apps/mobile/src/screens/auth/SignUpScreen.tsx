@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
+import { useToast } from '../../contexts/ToastContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -12,12 +13,13 @@ type SignUpScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 
 
 export default function SignUpScreen() {
     const navigation = useNavigation<SignUpScreenNavigationProp>();
+    const { showToast } = useToast();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSignUp = async () => {
         if (!email) {
-            Alert.alert('Ошибка', 'Введите email');
+            showToast('Введите email', 'error');
             return;
         }
 
@@ -31,9 +33,10 @@ export default function SignUpScreen() {
                 },
             });
             if (error) throw error;
+            showToast('Код отправлен на email', 'success');
             navigation.navigate('Verify', { email });
         } catch (error: any) {
-            Alert.alert('Ошибка', error.message || 'Не удалось отправить код');
+            showToast(error.message || 'Не удалось отправить код', 'error');
         } finally {
             setLoading(false);
         }

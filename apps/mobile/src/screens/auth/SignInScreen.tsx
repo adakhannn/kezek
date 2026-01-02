@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
+import { useToast } from '../../contexts/ToastContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -12,6 +13,7 @@ type SignInScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 
 
 export default function SignInScreen() {
     const navigation = useNavigation<SignInScreenNavigationProp>();
+    const { showToast } = useToast();
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
@@ -19,11 +21,11 @@ export default function SignInScreen() {
 
     const handleSignIn = async () => {
         if (mode === 'email' && !email) {
-            Alert.alert('Ошибка', 'Введите email');
+            showToast('Введите email', 'error');
             return;
         }
         if (mode === 'phone' && !phone) {
-            Alert.alert('Ошибка', 'Введите номер телефона');
+            showToast('Введите номер телефона', 'error');
             return;
         }
 
@@ -37,6 +39,7 @@ export default function SignInScreen() {
                     },
                 });
                 if (error) throw error;
+                showToast('Код отправлен на email', 'success');
                 navigation.navigate('Verify', { email });
             } else {
                 const { error } = await supabase.auth.signInWithOtp({
@@ -46,10 +49,11 @@ export default function SignInScreen() {
                     },
                 });
                 if (error) throw error;
+                showToast('Код отправлен на телефон', 'success');
                 navigation.navigate('Verify', { phone });
             }
         } catch (error: any) {
-            Alert.alert('Ошибка', error.message || 'Не удалось отправить код');
+            showToast(error.message || 'Не удалось отправить код', 'error');
         } finally {
             setLoading(false);
         }

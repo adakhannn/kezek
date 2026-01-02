@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { supabase } from '../lib/supabase';
 import { apiRequest } from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
@@ -42,6 +43,7 @@ export default function BookingDetailsScreen() {
     const route = useRoute<BookingDetailsScreenRouteProp>();
     const navigation = useNavigation<BookingDetailsScreenNavigationProp>();
     const queryClient = useQueryClient();
+    const { showToast } = useToast();
     const bookingId = route.params?.id;
 
     const { data: booking, isLoading } = useQuery({
@@ -77,11 +79,11 @@ export default function BookingDetailsScreen() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
-            Alert.alert('Успешно', 'Бронирование отменено');
-            navigation.goBack();
+            showToast('Бронирование отменено', 'success');
+            setTimeout(() => navigation.goBack(), 500);
         },
         onError: (error: Error) => {
-            Alert.alert('Ошибка', error.message);
+            showToast(error.message, 'error');
         },
     });
 

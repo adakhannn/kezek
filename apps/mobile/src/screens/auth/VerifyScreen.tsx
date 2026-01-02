@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useState, useRef } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useState } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
+import { useToast } from '../../contexts/ToastContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
@@ -14,6 +15,7 @@ type VerifyScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 
 export default function VerifyScreen() {
     const route = useRoute<VerifyScreenRouteProp>();
     const navigation = useNavigation<VerifyScreenNavigationProp>();
+    const { showToast } = useToast();
     const { phone, email } = route.params || {};
 
     const [code, setCode] = useState('');
@@ -21,7 +23,7 @@ export default function VerifyScreen() {
 
     const handleVerify = async () => {
         if (!code || code.length !== 6) {
-            Alert.alert('Ошибка', 'Введите 6-значный код');
+            showToast('Введите 6-значный код', 'error');
             return;
         }
 
@@ -44,9 +46,10 @@ export default function VerifyScreen() {
             } else {
                 throw new Error('Не указан email или телефон');
             }
+            showToast('Вход выполнен успешно', 'success');
             // Навигация произойдет автоматически через RootNavigator при изменении сессии
         } catch (error: any) {
-            Alert.alert('Ошибка', error.message || 'Неверный код');
+            showToast(error.message || 'Неверный код', 'error');
         } finally {
             setLoading(false);
         }
@@ -72,9 +75,9 @@ export default function VerifyScreen() {
                 });
                 if (error) throw error;
             }
-            Alert.alert('Успешно', 'Код отправлен повторно');
+            showToast('Код отправлен повторно', 'success');
         } catch (error: any) {
-            Alert.alert('Ошибка', error.message || 'Не удалось отправить код');
+            showToast(error.message || 'Не удалось отправить код', 'error');
         } finally {
             setLoading(false);
         }

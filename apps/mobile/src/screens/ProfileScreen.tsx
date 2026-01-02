@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Alert, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
@@ -6,12 +6,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { supabase } from '../lib/supabase';
 import { apiRequest } from '../lib/api';
-import { MainTabParamList } from '../navigation/types';
+import { CabinetStackParamList } from '../navigation/types';
+import { useToast } from '../contexts/ToastContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Cabinet'>;
+type ProfileScreenNavigationProp = NativeStackNavigationProp<CabinetStackParamList, 'Profile'>;
 
 type Profile = {
     id: string;
@@ -25,6 +26,7 @@ type Profile = {
 export default function ProfileScreen() {
     const navigation = useNavigation<ProfileScreenNavigationProp>();
     const queryClient = useQueryClient();
+    const { showToast } = useToast();
 
     const { data: user } = useQuery({
         queryKey: ['user'],
@@ -81,16 +83,16 @@ export default function ProfileScreen() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
-            Alert.alert('Успешно', 'Профиль обновлен');
+            showToast('Профиль обновлен', 'success');
         },
         onError: (error: Error) => {
-            Alert.alert('Ошибка', error.message || 'Не удалось обновить профиль');
+            showToast(error.message || 'Не удалось обновить профиль', 'error');
         },
     });
 
     const handleSave = () => {
         if (!fullName.trim()) {
-            Alert.alert('Ошибка', 'Введите имя');
+            showToast('Введите имя', 'error');
             return;
         }
         updateProfileMutation.mutate();

@@ -8,6 +8,7 @@ import { addDays, addMinutes } from 'date-fns';
 
 import { supabase } from '../lib/supabase';
 import { apiRequest } from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -57,6 +58,7 @@ const TZ = 'Asia/Bishkek';
 export default function BookingScreen() {
     const route = useRoute<BookingScreenRouteProp>();
     const navigation = useNavigation<BookingScreenNavigationProp>();
+    const { showToast } = useToast();
     const { slug } = route.params || {};
 
     const [branchId, setBranchId] = useState<string>('');
@@ -191,24 +193,20 @@ export default function BookingScreen() {
             });
         },
         onSuccess: (data) => {
-            Alert.alert('Успешно', 'Запись создана!', [
-                {
-                    text: 'OK',
-                    onPress: () => {
-                        // @ts-ignore
-                        navigation.navigate('BookingDetails', { id: data.booking_id });
-                    },
-                },
-            ]);
+            showToast('Запись создана!', 'success');
+            setTimeout(() => {
+                // @ts-ignore
+                navigation.navigate('BookingDetails', { id: data.booking_id });
+            }, 500);
         },
         onError: (error: Error) => {
-            Alert.alert('Ошибка', error.message || 'Не удалось создать запись');
+            showToast(error.message || 'Не удалось создать запись', 'error');
         },
     });
 
     const handleCreateBooking = () => {
         if (!selectedSlot) {
-            Alert.alert('Ошибка', 'Выберите время');
+            showToast('Выберите время', 'error');
             return;
         }
 
