@@ -120,9 +120,8 @@ export default function SignInPage() {
                 ? window.location.origin 
                 : (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg');
             
-            // При входе через Google перенаправляем на post-signup для завершения регистрации
-            // (если пользователь новый) или на обычный redirect (если уже зарегистрирован)
-            const redirectTo = `${origin}/auth/callback?next=/auth/post-signup`;
+            // При входе через Google перенаправляем на callback, который сам решит куда редиректить
+            const redirectTo = `${origin}/auth/callback?from=google`;
             
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',

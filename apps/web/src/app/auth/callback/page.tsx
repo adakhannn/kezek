@@ -46,7 +46,8 @@ function AuthCallbackContent() {
                             if (!profile?.full_name?.trim()) {
                                 setStatus('success');
                                 router.refresh();
-                                router.replace('/auth/post-signup?from=whatsapp');
+                                const from = searchParams.get('from') || 'oauth';
+                                router.replace(`/auth/post-signup?from=${from}`);
                                 return;
                             }
                         }
@@ -64,6 +65,9 @@ function AuthCallbackContent() {
                         // Проверяем наличие имени в профиле
                         const { data: { user } } = await supabase.auth.getUser();
                         if (user) {
+                            // Даем немного времени на создание/обновление профиля (для OAuth)
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            
                             const { data: profile } = await supabase
                                 .from('profiles')
                                 .select('full_name')
@@ -73,7 +77,9 @@ function AuthCallbackContent() {
                             if (!profile?.full_name?.trim()) {
                                 setStatus('success');
                                 router.refresh();
-                                router.replace('/auth/post-signup?from=whatsapp');
+                                // Определяем источник авторизации из URL или используем 'oauth' по умолчанию
+                                const from = searchParams.get('from') || 'oauth';
+                                router.replace(`/auth/post-signup?from=${from}`);
                                 return;
                             }
                         }
@@ -84,41 +90,46 @@ function AuthCallbackContent() {
                         return;
                     }
 
-                    // Если есть code в URL, пытаемся обменять (но только если есть code_verifier в storage)
+                    // Если есть code в URL, пытаемся обменять
+                    // Для OAuth (Google и др.) Supabase может обработать code автоматически
                     const code = searchParams.get('code');
                     if (code && attempts === 0) {
                         try {
-                            // Проверяем, есть ли code_verifier в sessionStorage
-                            const storedVerifier = sessionStorage.getItem(`supabase.auth.code_verifier`);
-                            if (storedVerifier) {
-                                const { error } = await supabase.auth.exchangeCodeForSession(code);
-                                if (!error) {
-                                    // Проверяем наличие имени в профиле
-                                    const { data: { user } } = await supabase.auth.getUser();
-                                    if (user) {
-                                        const { data: profile } = await supabase
-                                            .from('profiles')
-                                            .select('full_name')
-                                            .eq('id', user.id)
-                                            .maybeSingle();
-                                        
-                                        if (!profile?.full_name?.trim()) {
-                                            setStatus('success');
-                                            router.refresh();
-                                            router.replace('/auth/post-signup?from=whatsapp');
-                                            return;
-                                        }
-                                    }
+                            // Пытаемся обменять code на сессию
+                            // Для OAuth providers (Google) это должно работать без code_verifier
+                            const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+                            if (!exchangeError) {
+                                // Сессия установлена, проверяем наличие имени
+                                const { data: { user } } = await supabase.auth.getUser();
+                                if (user) {
+                                    // Даем немного времени на создание/обновление профиля
+                                    await new Promise(resolve => setTimeout(resolve, 500));
                                     
-                                    setStatus('success');
-                                    router.refresh();
-                                    router.replace(next);
-                                    return;
+                                    const { data: profile } = await supabase
+                                        .from('profiles')
+                                        .select('full_name')
+                                        .eq('id', user.id)
+                                        .maybeSingle();
+                                    
+                                    if (!profile?.full_name?.trim()) {
+                                        setStatus('success');
+                                        router.refresh();
+                                        router.replace('/auth/post-signup?from=oauth');
+                                        return;
+                                    }
                                 }
+                                
+                                setStatus('success');
+                                router.refresh();
+                                router.replace(next);
+                                return;
+                            } else {
+                                console.warn('[callback] exchangeCodeForSession error:', exchangeError);
+                                // Продолжаем проверку сессии - возможно Supabase обработал на сервере
                             }
                         } catch (e) {
                             // Игнорируем ошибку, продолжаем проверку сессии
-                            console.warn('exchangeCodeForSession failed, will check session:', e);
+                            console.warn('[callback] exchangeCodeForSession exception:', e);
                         }
                     }
 
