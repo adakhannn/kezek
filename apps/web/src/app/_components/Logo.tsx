@@ -14,7 +14,7 @@ export function Logo() {
     return (
         <Link href="/" className="flex items-center gap-3 group">
             {!imageError ? (
-                // Пытаемся загрузить изображение логотипа
+                // Пытаемся загрузить изображение логотипа (сначала PNG, потом SVG)
                 <div className="relative h-10 w-auto">
                     <Image
                         src="/logo.png"
@@ -23,7 +23,16 @@ export function Logo() {
                         height={40}
                         className="h-10 w-auto object-contain"
                         priority
-                        onError={() => setImageError(true)}
+                        onError={() => {
+                            // Если PNG не загрузился, пробуем SVG
+                            const img = document.querySelector('img[src="/logo.png"]') as HTMLImageElement;
+                            if (img) {
+                                img.src = '/logo.svg';
+                                img.onerror = () => setImageError(true);
+                            } else {
+                                setImageError(true);
+                            }
+                        }}
                     />
                 </div>
             ) : (
