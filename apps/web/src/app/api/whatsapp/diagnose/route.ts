@@ -157,7 +157,7 @@ export async function GET() {
                     results.recommendations.push('Установи WHATSAPP_PHONE_NUMBER_ID в переменных окружения');
                 }
 
-                // 5. Проверяем статус номеров
+                // 5. Проверяем статус номеров и даем рекомендации
                 const registeredPhones = allPhoneNumbers.filter(
                     (p: unknown) => 
                         typeof p === 'object' && 
@@ -170,6 +170,35 @@ export async function GET() {
                     results.recommendations.push(
                         'Не найдено зарегистрированных номеров. ' +
                         'Убедись, что номер телефона зарегистрирован в WhatsApp Business Account через WhatsApp Manager.'
+                    );
+                }
+
+                // 6. Проверяем статус текущего номера (если установлен)
+                if (phoneNumberId && results.currentPhoneNumberId && typeof results.currentPhoneNumberId === 'object' && 'ok' in results.currentPhoneNumberId && results.currentPhoneNumberId.ok === true && 'phone' in results.currentPhoneNumberId) {
+                    const phone = results.currentPhoneNumberId.phone as { code_verification_status?: string; verified_name?: string | null };
+                    
+                    if (phone.code_verification_status === 'NOT_VERIFIED') {
+                        results.recommendations.push(
+                            '⚠️ Номер не верифицирован (code_verification_status: NOT_VERIFIED). ' +
+                            'Это может вызывать ошибку "Account not registered". ' +
+                            'Запроси верификацию номера в WhatsApp Manager или дождись завершения процесса регистрации.'
+                        );
+                    }
+
+                    if (!phone.verified_name) {
+                        results.recommendations.push(
+                            '⚠️ У номера нет verified_name. ' +
+                            'Номер может быть не полностью зарегистрирован. ' +
+                            'Проверь статус номера в WhatsApp Manager - он должен быть "Подключено" (CONNECTED).'
+                        );
+                    }
+                } else if (phoneNumberId) {
+                    // Phone Number ID установлен, но не найден в списке
+                    results.recommendations.push(
+                        `❌ WHATSAPP_PHONE_NUMBER_ID=${phoneNumberId} не найден в списке зарегистрированных номеров. ` +
+                        'Это может вызывать ошибку "Account not registered". ' +
+                        'Проверь правильность Phone Number ID через Graph API Explorer: `/me/businesses` → выбери Business Account → `/business_account_id/phone_numbers`. ' +
+                        'Используй поле `id` из ответа (НЕ webhook_configuration.id).'
                     );
                 }
 
