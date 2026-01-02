@@ -8,6 +8,7 @@ import { RootStackParamList } from './types';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import BookingDetailsScreen from '../screens/BookingDetailsScreen';
+import BookingScreen from '../screens/BookingScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -55,6 +56,11 @@ export default function RootNavigator() {
                             name="BookingDetails"
                             component={BookingDetailsScreen}
                             options={{ title: 'Детали записи' }}
+                        />
+                        <Stack.Screen
+                            name="Booking"
+                            component={BookingScreen}
+                            options={{ title: 'Запись' }}
                         />
                     </>
                 ) : (

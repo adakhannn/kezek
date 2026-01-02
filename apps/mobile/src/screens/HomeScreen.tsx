@@ -38,8 +38,8 @@ export default function HomeScreen() {
     });
 
     const handleBusinessPress = (slug: string) => {
-        // В будущем: навигация на экран бронирования
-        // navigation.navigate('Booking', { slug });
+        // @ts-ignore - типы навигации будут исправлены позже
+        navigation.navigate('Booking', { slug });
     };
 
     return (
