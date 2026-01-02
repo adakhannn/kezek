@@ -1,0 +1,49 @@
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useEffect, useState } from 'react';
+
+import { supabase } from '../lib/supabase';
+import { RootStackParamList } from './types';
+import AuthNavigator from './AuthNavigator';
+import MainNavigator from './MainNavigator';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export default function RootNavigator() {
+    const [session, setSession] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Проверяем текущую сессию
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setLoading(false);
+        });
+
+        // Подписываемся на изменения авторизации
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    if (loading) {
+        return null; // Можно показать splash screen
+    }
+
+    return (
+        <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+                {session ? (
+                    <Stack.Screen name="Main" component={MainNavigator} />
+                ) : (
+                    <Stack.Screen name="Auth" component={AuthNavigator} />
+                )}
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
+
