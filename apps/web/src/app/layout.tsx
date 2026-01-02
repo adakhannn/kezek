@@ -5,6 +5,7 @@ import Link from 'next/link';
 import './globals.css';
 import {AuthStatusServer} from './_components/AuthStatusServer';
 import {AuthStatusUpdater} from './_components/AuthStatusWrapper';
+import {NameReminderBanner} from './_components/NameReminderBanner';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -48,6 +49,8 @@ export default function RootLayout({
                 </div>
             </div>
         </header>
+
+        <NameReminderBanner />
 
         {children}
         
