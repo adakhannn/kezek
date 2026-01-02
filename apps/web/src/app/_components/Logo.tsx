@@ -15,13 +15,13 @@ export function Logo() {
         <Link href="/" className="flex items-center gap-3 group">
             {!imageError ? (
                 // Пытаемся загрузить изображение логотипа (сначала PNG, потом SVG)
-                <div className="relative h-10 w-auto">
+                <div className="relative h-12 sm:h-14 w-auto">
                     <Image
                         src="/logo.png"
                         alt="КЕЗЕК CRM СИСТЕМА"
-                        width={150}
-                        height={40}
-                        className="h-10 w-auto object-contain"
+                        width={200}
+                        height={56}
+                        className="h-12 sm:h-14 w-auto object-contain"
                         priority
                         onError={() => {
                             // Если PNG не загрузился, пробуем SVG
