@@ -58,7 +58,11 @@ export function SignOutButton({ className }: { className?: string }) {
         
         // Немедленный редирект - не ждем завершения signOut
         console.log('[SignOut] Redirecting...');
-        window.location.href = '/';
+        // Небольшой таймаут, чтобы дать время на выполнение очистки
+        setTimeout(() => {
+            console.log('[SignOut] Executing redirect now');
+            window.location.href = '/';
+        }, 50);
     };
 
     return (
