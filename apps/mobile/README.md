@@ -1,95 +1,148 @@
 # Kezek Mobile App
 
-Мобильное приложение Kezek на React Native (Expo).
+Мобильное приложение для бронирования услуг в Оше.
+
+## Технологии
+
+- **Expo** - фреймворк для разработки React Native приложений
+- **React Native** - кроссплатформенная разработка
+- **TypeScript** - типизация
+- **React Navigation** - навигация
+- **React Query** - управление состоянием и кэширование
+- **Supabase** - бэкенд и аутентификация
+
+## Требования
+
+- Node.js 18+
+- pnpm (или npm/yarn)
+- Expo CLI (устанавливается автоматически)
+- Для iOS: Xcode и CocoaPods
+- Для Android: Android Studio и Android SDK
+
+## Установка
+
+1. Установите зависимости:
+```bash
+cd apps/mobile
+pnpm install
+```
+
+2. Создайте файл `.env.local` в корне проекта (`apps/mobile/.env.local`):
+```env
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+EXPO_PUBLIC_API_URL=https://kezek.kg
+```
+
+3. Запустите приложение:
+```bash
+pnpm start
+```
+
+Или:
+```bash
+npx expo start
+```
+
+## Запуск на устройстве
+
+### iOS (требуется Mac)
+
+1. Установите Expo Go из App Store на iPhone
+2. Запустите `pnpm start`
+3. Отсканируйте QR-код камерой iPhone или в приложении Expo Go
+
+### Android
+
+1. Установите Expo Go из Google Play на Android устройство
+2. Запустите `pnpm start`
+3. Отсканируйте QR-код в приложении Expo Go
+
+### Эмуляторы
+
+**iOS Simulator (только на Mac):**
+```bash
+pnpm ios
+```
+
+**Android Emulator:**
+```bash
+pnpm android
+```
 
 ## Структура проекта
 
 ```
 apps/mobile/
 ├── src/
-│   ├── lib/           # Утилиты (Supabase, API клиент)
-│   ├── navigation/    # Навигация (React Navigation)
-│   ├── screens/       # Экраны приложения
-│   └── types/         # TypeScript типы
-├── assets/            # Иконки, изображения
-├── App.tsx            # Точка входа
-└── package.json
+│   ├── components/     # Переиспользуемые компоненты
+│   ├── screens/        # Экраны приложения
+│   ├── navigation/     # Настройка навигации
+│   ├── lib/            # Утилиты и конфигурация
+│   ├── hooks/          # Кастомные хуки
+│   ├── contexts/       # React контексты
+│   └── utils/          # Вспомогательные функции
+├── App.tsx             # Точка входа
+├── app.json            # Конфигурация Expo
+└── package.json        # Зависимости
 ```
 
-## Установка
+## Основные функции
 
-1. Установи зависимости:
+- ✅ Авторизация (Email/Phone OTP, Google OAuth)
+- ✅ Поиск и просмотр бизнесов
+- ✅ Создание бронирований
+- ✅ Личный кабинет с бронированиями
+- ✅ Профиль пользователя
+- ✅ Кабинет владельца бизнеса
+- ✅ Кабинет сотрудника
+- ✅ Уведомления (Toast)
+- ✅ Pull-to-refresh
+- ✅ Глубокие ссылки
+
+## Разработка
+
+### TypeScript проверка
 ```bash
-cd apps/mobile
-npm install
-# или
-pnpm install
+pnpm typecheck
 ```
 
-2. Создай файл `.env`:
-```env
-EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-EXPO_PUBLIC_API_URL=https://kezek.kg/api
-```
+### Сборка для продакшена
 
-3. Запусти приложение:
-```bash
-npm start
-# или
-pnpm start
-```
-
-## Запуск на устройстве
-
-### iOS
-```bash
-npm run ios
-```
-
-### Android
-```bash
-npm run android
-```
-
-### Web (для тестирования)
-```bash
-npm run web
-```
-
-## Использование Expo Go
-
-1. Установи Expo Go на телефон (iOS/Android)
-2. Запусти `npm start`
-3. Отсканируй QR-код в терминале
-
-## Сборка для продакшена
-
-### iOS
-```bash
-eas build --platform ios
-```
-
-### Android
+**Android:**
 ```bash
 eas build --platform android
 ```
 
-Требуется настройка EAS (Expo Application Services).
+**iOS:**
+```bash
+eas build --platform ios
+```
 
-## Особенности
+## Переменные окружения
 
-- **Supabase Auth** - аутентификация через Supabase
-- **React Navigation** - навигация между экранами
-- **TypeScript** - типизация
-- **React Query** - кэширование данных
-- **React Hook Form** - работа с формами
+Все переменные окружения должны начинаться с `EXPO_PUBLIC_` для доступа в клиентском коде.
 
-## Следующие шаги
+## Troubleshooting
 
-1. Реализовать экраны авторизации (SignIn, SignUp, Verify)
-2. Подключить API endpoints из web версии
-3. Создать экраны бронирования
-4. Добавить уведомления (Expo Notifications)
-5. Настроить глубокие ссылки (Deep Linking)
+### Ошибка "Unable to resolve module"
+```bash
+rm -rf node_modules
+pnpm install
+```
 
+### Ошибка Metro bundler
+```bash
+npx expo start --clear
+```
+
+### Проблемы с кэшем
+```bash
+npx expo start -c
+```
+
+## Дополнительная информация
+
+- [Expo Documentation](https://docs.expo.dev/)
+- [React Navigation](https://reactnavigation.org/)
+- [React Query](https://tanstack.com/query/latest)
