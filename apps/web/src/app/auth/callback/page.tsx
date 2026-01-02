@@ -138,7 +138,29 @@ function AuthCallbackContent() {
                         // Ждем немного и проверяем снова (Supabase может обработать на своей стороне)
                         setTimeout(checkSession, 500);
                     } else {
-                        // После нескольких попыток редиректим (сессия может быть установлена на сервере)
+                        // После нескольких попыток проверяем сессию еще раз
+                        // Если сессия все еще не установлена, редиректим на главную
+                        const { data: { session: finalSession } } = await supabase.auth.getSession();
+                        if (finalSession) {
+                            // Сессия есть, проверяем имя
+                            const { data: { user: finalUser } } = await supabase.auth.getUser();
+                            if (finalUser) {
+                                const { data: finalProfile } = await supabase
+                                    .from('profiles')
+                                    .select('full_name')
+                                    .eq('id', finalUser.id)
+                                    .maybeSingle();
+                                
+                                if (!finalProfile?.full_name?.trim()) {
+                                    const from = searchParams.get('from') || 'callback';
+                                    setStatus('success');
+                                    router.refresh();
+                                    router.replace(`/auth/post-signup?from=${from}`);
+                                    return;
+                                }
+                            }
+                        }
+                        
                         setStatus('success');
                         router.refresh();
                         router.replace(next);

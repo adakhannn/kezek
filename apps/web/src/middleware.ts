@@ -40,23 +40,23 @@ export async function middleware(req: NextRequest) {
     if (!userRes.user) return res;
 
     // Проверяем наличие имени в профиле - если нет, перенаправляем на страницу ввода имени
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', userRes.user.id)
-        .maybeSingle();
+    // НО только если пользователь не на странице авторизации и не на главной (чтобы не блокировать вход)
+    const isAuthPage = pathname.startsWith('/auth/');
+    const isHomePage = pathname === '/';
     
-    if (!profile?.full_name?.trim()) {
-        // Исключаем саму страницу post-signup и страницы авторизации, чтобы избежать редиректов
-        const pathname = req.nextUrl.pathname;
-        if (!pathname.startsWith('/auth/post-signup') && 
-            !pathname.startsWith('/auth/sign-in') && 
-            !pathname.startsWith('/auth/sign-up') &&
-            !pathname.startsWith('/auth/whatsapp') &&
-            !pathname.startsWith('/auth/callback')) {
+    // Проверяем full_name только если пользователь не на страницах авторизации
+    if (!isAuthPage && !isHomePage) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', userRes.user.id)
+            .maybeSingle();
+        
+        if (!profile?.full_name?.trim()) {
+            // Редиректим на post-signup только если не на главной и не на auth страницах
             const url = req.nextUrl.clone();
             url.pathname = '/auth/post-signup';
-            url.searchParams.set('from', 'whatsapp');
+            url.searchParams.set('from', 'middleware');
             return NextResponse.redirect(url, 302);
         }
     }
