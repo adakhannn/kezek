@@ -66,12 +66,7 @@ export function SignOutButton({ className }: { className?: string }) {
             type="button"
             className={className ?? 'px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed'}
             onClick={handleSignOut}
-            onMouseDown={(e) => {
-                console.log('[SignOut] Mouse down event');
-                e.preventDefault();
-            }}
             disabled={loading}
-            style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
         >
             {loading ? 'Выход...' : 'Выйти'}
         </button>
