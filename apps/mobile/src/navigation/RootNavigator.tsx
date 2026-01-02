@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 
 import { supabase } from '../lib/supabase';
 import { RootStackParamList } from './types';
@@ -31,7 +32,12 @@ export default function RootNavigator() {
     }, []);
 
     if (loading) {
-        return null; // Можно показать splash screen
+        return (
+            <View style={styles.loading}>
+                <ActivityIndicator size="large" color="#6366f1" />
+                <Text style={styles.loadingText}>Загрузка...</Text>
+            </View>
+        );
     }
 
     return (
@@ -46,4 +52,18 @@ export default function RootNavigator() {
         </NavigationContainer>
     );
 }
+
+const styles = StyleSheet.create({
+    loading: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 16,
+        color: '#6b7280',
+    },
+});
 

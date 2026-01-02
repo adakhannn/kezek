@@ -1,29 +1,139 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+import { supabase } from '../lib/supabase';
+import { MainTabParamList } from '../navigation/types';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+
+type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Home'>;
+
+type Business = {
+    id: string;
+    name: string;
+    slug: string;
+};
 
 export default function HomeScreen() {
+    const navigation = useNavigation<HomeScreenNavigationProp>();
+    const [search, setSearch] = useState('');
+
+    const { data: businesses, isLoading } = useQuery({
+        queryKey: ['businesses', search],
+        queryFn: async () => {
+            let query = supabase.from('businesses').select('id, name, slug').eq('is_active', true);
+
+            if (search) {
+                query = query.ilike('name', `%${search}%`);
+            }
+
+            const { data, error } = await query.limit(20);
+            if (error) throw error;
+            return data as Business[];
+        },
+    });
+
+    const handleBusinessPress = (slug: string) => {
+        // В будущем: навигация на экран бронирования
+        // navigation.navigate('Booking', { slug });
+    };
+
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Kezek</Text>
-            <Text style={styles.subtitle}>Бронирование в Оше</Text>
-        </View>
+        <ScrollView style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Kezek</Text>
+                <Text style={styles.subtitle}>Бронирование в Оше</Text>
+            </View>
+
+            <View style={styles.searchContainer}>
+                <Input
+                    placeholder="Поиск бизнеса..."
+                    value={search}
+                    onChangeText={setSearch}
+                    style={styles.searchInput}
+                />
+            </View>
+
+            {isLoading ? (
+                <Text style={styles.loading}>Загрузка...</Text>
+            ) : businesses && businesses.length > 0 ? (
+                <View style={styles.businessList}>
+                    {businesses.map((business) => (
+                        <TouchableOpacity
+                            key={business.id}
+                            onPress={() => handleBusinessPress(business.slug)}
+                        >
+                            <Card style={styles.businessCard}>
+                                <Text style={styles.businessName}>{business.name}</Text>
+                            </Card>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            ) : (
+                <View style={styles.empty}>
+                    <Text style={styles.emptyText}>
+                        {search ? 'Ничего не найдено' : 'Нет доступных бизнесов'}
+                    </Text>
+                </View>
+            )}
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: '#f9fafb',
+    },
+    header: {
+        padding: 20,
         backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb',
     },
     title: {
         fontSize: 32,
         fontWeight: 'bold',
-        marginBottom: 8,
+        color: '#111827',
+        marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
+        color: '#6b7280',
+    },
+    searchContainer: {
+        padding: 20,
+    },
+    searchInput: {
+        marginBottom: 0,
+    },
+    loading: {
+        textAlign: 'center',
+        padding: 40,
+        color: '#6b7280',
+    },
+    businessList: {
+        padding: 20,
+        gap: 12,
+    },
+    businessCard: {
+        marginBottom: 12,
+    },
+    businessName: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#111827',
+    },
+    empty: {
+        padding: 40,
+        alignItems: 'center',
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#6b7280',
     },
 });
-
