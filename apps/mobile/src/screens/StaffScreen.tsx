@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { MainTabParamList } from '../navigation/types';
+import { formatDate, formatTime } from '../utils/format';
 import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import EmptyState from '../components/ui/EmptyState';
@@ -101,22 +102,6 @@ export default function StaffScreen() {
         setRefreshing(false);
     };
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-        });
-    };
-
-    const formatTime = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleTimeString('ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
 
     if ((staffLoading || bookingsLoading) && !refreshing) {
         return <LoadingSpinner message="Загрузка..." />;
