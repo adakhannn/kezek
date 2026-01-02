@@ -38,21 +38,31 @@ curl https://kezek.kg/api/whatsapp/get-business-account | python -m json.tool
 2. Выбери приложение
 3. Выбери разрешения: `whatsapp_business_messaging`, `whatsapp_business_management`, `business_management`
 4. Нажми **"Generate Access Token"**
-5. В поле запроса введи:
+5. **ШАГ 1: Получи WhatsApp Business Account ID**
+   - В поле запроса введи:
+     ```
+     /me/businesses
+     ```
+   - Нажми **"Submit"**
+   - В ответе найди Business Account ID (например, `829309533409879`)
+   - **⚠️ ВАЖНО:** Это НЕ App ID! App ID (`873844638834621`) не подойдет для получения phone_numbers
 
-```
-/me/businesses
-```
+6. **ШАГ 2: Получи Phone Number ID**
+   - Используй Business Account ID из шага 1
+   - В поле запроса введи:
+     ```
+     /829309533409879/phone_numbers
+     ```
+     (замени `829309533409879` на твой Business Account ID)
+   - Нажми **"Submit"**
+   - В ответе найди Phone Number ID для номера `+996 224 701 717`
 
-6. Нажми **"Submit"**
-7. В ответе найди Business Account ID (например, `829309533409879`)
-8. Затем запроси номера:
+### ❌ Частая ошибка:
 
-```
-/829309533409879/phone_numbers
-```
+**НЕ используй App ID** (`873844638834621`) для запроса phone_numbers!
 
-9. В ответе найди Phone Number ID для номера `+996 224 701 717`
+- ❌ `/873844638834621/phone_numbers` → Ошибка: "Tried accessing nonexisting field (phone_numbers) on node type (User)"
+- ✅ `/829309533409879/phone_numbers` → Правильно (используй Business Account ID)
 
 ## Способ 4: Через Postman или Insomnia
 
