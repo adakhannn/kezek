@@ -41,8 +41,13 @@ export function SignOutButton({ className }: { className?: string }) {
             console.warn('[SignOut] sessionStorage error:', err);
         }
         
-        // Редирект
-        window.location.href = '/';
+        // Редирект - используем replace для более надежного редиректа
+        console.log('[SignOut] Redirecting...');
+        setTimeout(() => {
+            console.log('[SignOut] Executing redirect now');
+            // Используем location.replace вместо href
+            window.location.replace('/');
+        }, 50);
     };
 
     return (
