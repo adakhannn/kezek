@@ -75,9 +75,14 @@ export default function HomeScreen() {
                 </View>
             ) : (
                 <View style={styles.empty}>
-                    <Text style={styles.emptyText}>
+                    <Text style={styles.emptyTitle}>
                         {search ? 'Ничего не найдено' : 'Нет доступных бизнесов'}
                     </Text>
+                    {!search && (
+                        <Text style={styles.emptyHint}>
+                            Бизнесы появятся здесь после регистрации
+                        </Text>
+                    )}
                 </View>
             )}
         </ScrollView>
@@ -132,8 +137,16 @@ const styles = StyleSheet.create({
         padding: 40,
         alignItems: 'center',
     },
-    emptyText: {
-        fontSize: 16,
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#374151',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    emptyHint: {
+        fontSize: 14,
         color: '#6b7280',
+        textAlign: 'center',
     },
 });

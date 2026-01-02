@@ -209,6 +209,7 @@ export default function CabinetScreen() {
                 ) : (
                     <View style={styles.empty}>
                         <Text style={styles.emptyText}>У вас пока нет записей</Text>
+                        <Text style={styles.emptyHint}>Запишитесь на услугу, чтобы увидеть её здесь</Text>
                     </View>
                 )}
             </View>
@@ -325,7 +326,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyText: {
-        fontSize: 16,
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#374151',
+        marginBottom: 8,
+    },
+    emptyHint: {
+        fontSize: 14,
         color: '#6b7280',
     },
     footer: {

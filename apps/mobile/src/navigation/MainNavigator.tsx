@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigatorScreenParams } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList, CabinetStackParamList } from './types';
 import HomeScreen from '../screens/HomeScreen';
 import CabinetScreen from '../screens/CabinetScreen';
@@ -46,6 +47,9 @@ export default function MainNavigator() {
                 options={{ 
                     title: 'Главная',
                     tabBarLabel: 'Главная',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="home" size={size} color={color} />
+                    ),
                 }} 
             />
             <Tab.Screen 
@@ -54,6 +58,9 @@ export default function MainNavigator() {
                 options={{ 
                     headerShown: false,
                     tabBarLabel: 'Кабинет',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="person" size={size} color={color} />
+                    ),
                 }} 
             />
             <Tab.Screen 
@@ -62,6 +69,9 @@ export default function MainNavigator() {
                 options={{ 
                     title: 'Кабинет бизнеса',
                     tabBarLabel: 'Бизнес',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="business" size={size} color={color} />
+                    ),
                 }} 
             />
             <Tab.Screen 
@@ -70,6 +80,9 @@ export default function MainNavigator() {
                 options={{ 
                     title: 'Кабинет сотрудника',
                     tabBarLabel: 'Сотрудник',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="briefcase" size={size} color={color} />
+                    ),
                 }} 
             />
         </Tab.Navigator>
