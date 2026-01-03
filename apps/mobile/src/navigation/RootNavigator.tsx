@@ -20,6 +20,7 @@ export default function RootNavigator() {
     useEffect(() => {
         // Проверяем текущую сессию
         supabase.auth.getSession().then(({ data: { session } }) => {
+            console.log('[RootNavigator] Initial session check:', session ? 'has session' : 'no session');
             setSession(session);
             setLoading(false);
         });
@@ -27,8 +28,14 @@ export default function RootNavigator() {
         // Подписываемся на изменения авторизации
         const {
             data: { subscription: authSubscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
+        } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('[RootNavigator] Auth state changed:', event, 'hasSession:', !!session);
             setSession(session);
+            
+            // Если пользователь авторизовался, обновляем состояние
+            if (event === 'SIGNED_IN' && session) {
+                console.log('[RootNavigator] User signed in, updating UI');
+            }
         });
 
         // Обрабатываем deep links с токенами авторизации

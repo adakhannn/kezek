@@ -93,21 +93,62 @@ function CallbackMobileContent() {
             }, 300);
         }
 
-        // Fallback: если через 3 секунды не произошел редирект, редиректим на обычную callback страницу
+        // Fallback: если через 2 секунды не произошел редирект, показываем инструкцию
         const fallbackTimer = setTimeout(() => {
-            console.warn('[callback-mobile] Deep link redirect failed, falling back to web callback');
+            console.warn('[callback-mobile] Deep link redirect failed, showing instructions');
             // Проверяем, остались ли мы на этой странице
             if (window.location.pathname.includes('callback-mobile')) {
-                // Редиректим на обычную callback страницу с токенами
-                let webCallbackUrl = '/auth/callback';
-                if (accessToken && refreshToken) {
-                    webCallbackUrl += `#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}`;
-                } else if (code) {
-                    webCallbackUrl += `?code=${encodeURIComponent(code)}`;
-                }
-                window.location.href = webCallbackUrl;
+                // Показываем инструкцию пользователю вместо автоматического редиректа
+                const instructionDiv = document.createElement('div');
+                instructionDiv.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.9);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 20px;
+                    z-index: 10000;
+                    color: white;
+                    text-align: center;
+                `;
+                instructionDiv.innerHTML = `
+                    <h2 style="margin-bottom: 20px; font-size: 24px;">Авторизация завершена!</h2>
+                    <p style="margin-bottom: 30px; font-size: 16px; line-height: 1.6;">
+                        Вернитесь в мобильное приложение Kezek.<br/>
+                        Вы будете автоматически авторизованы.
+                    </p>
+                    <button 
+                        onclick="window.close()" 
+                        style="
+                            padding: 12px 24px;
+                            background: #6366f1;
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 16px;
+                            cursor: pointer;
+                        "
+                    >
+                        Закрыть
+                    </button>
+                `;
+                document.body.appendChild(instructionDiv);
+                
+                // Также пробуем открыть deep link еще раз
+                setTimeout(() => {
+                    try {
+                        window.location.href = deepLink;
+                    } catch (e) {
+                        console.warn('[callback-mobile] Final redirect attempt failed:', e);
+                    }
+                }, 500);
             }
-        }, 3000);
+        }, 2000);
 
         return () => {
             clearTimeout(fallbackTimer);
