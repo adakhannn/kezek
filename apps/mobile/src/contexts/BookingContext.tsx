@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 type Branch = {
     id: string;
@@ -76,45 +76,45 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 export function BookingProvider({ children }: { children: ReactNode }) {
     const [bookingData, setBookingData] = useState<BookingData>(initialState);
 
-    const setBusiness = (business: Business) => {
+    const setBusiness = useCallback((business: Business) => {
         setBookingData((prev) => ({ ...prev, business }));
-    };
+    }, []);
 
-    const setBranches = (branches: Branch[]) => {
+    const setBranches = useCallback((branches: Branch[]) => {
         setBookingData((prev) => ({ ...prev, branches }));
-    };
+    }, []);
 
-    const setServices = (services: Service[]) => {
+    const setServices = useCallback((services: Service[]) => {
         setBookingData((prev) => ({ ...prev, services }));
-    };
+    }, []);
 
-    const setStaff = (staff: Staff[]) => {
+    const setStaff = useCallback((staff: Staff[]) => {
         setBookingData((prev) => ({ ...prev, staff }));
-    };
+    }, []);
 
-    const setBranchId = (id: string) => {
+    const setBranchId = useCallback((id: string) => {
         setBookingData((prev) => ({ ...prev, branchId: id, serviceId: '', staffId: '', selectedSlot: null }));
-    };
+    }, []);
 
-    const setServiceId = (id: string) => {
+    const setServiceId = useCallback((id: string) => {
         setBookingData((prev) => ({ ...prev, serviceId: id, selectedSlot: null }));
-    };
+    }, []);
 
-    const setStaffId = (id: string) => {
+    const setStaffId = useCallback((id: string) => {
         setBookingData((prev) => ({ ...prev, staffId: id, selectedSlot: null }));
-    };
+    }, []);
 
-    const setSelectedDate = (date: string) => {
+    const setSelectedDate = useCallback((date: string) => {
         setBookingData((prev) => ({ ...prev, selectedDate: date, selectedSlot: null }));
-    };
+    }, []);
 
-    const setSelectedSlot = (slot: Slot | null) => {
+    const setSelectedSlot = useCallback((slot: Slot | null) => {
         setBookingData((prev) => ({ ...prev, selectedSlot: slot }));
-    };
+    }, []);
 
-    const reset = () => {
+    const reset = useCallback(() => {
         setBookingData(initialState);
-    };
+    }, []);
 
     return (
         <BookingContext.Provider
