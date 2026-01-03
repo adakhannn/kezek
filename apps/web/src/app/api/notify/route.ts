@@ -391,8 +391,11 @@ export async function POST(req: Request) {
             Authorization: `Bearer ${apiKey}`,
         } as const;
 
+        console.log('[notify] Recipients to notify:', uniqRecipients.length, uniqRecipients.map(r => ({ email: r.email, role: r.role })));
+        
         let sent = 0;
         for (const rcp of uniqRecipients) {
+            console.log('[notify] Sending email to:', rcp.email, 'role:', rcp.role);
             const htmlPersonal = buildHtmlPersonal(baseHtml, rcp.name, rcp.role);
             const payload: Record<string, unknown> = {
                 from,
@@ -405,12 +408,20 @@ export async function POST(req: Request) {
             if (rcp.withIcs) {
                 payload.attachments = [{ filename: 'booking.ics', content: icsBase64 }];
             }
-            await fetch('https://api.resend.com/emails', {
+            const emailResponse = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(payload),
             });
-            sent += 1;
+            
+            if (!emailResponse.ok) {
+                const errorText = await emailResponse.text().catch(() => 'Unknown error');
+                console.error('[notify] Failed to send email to', rcp.email, 'status:', emailResponse.status, 'error:', errorText);
+            } else {
+                const result = await emailResponse.json().catch(() => ({}));
+                console.log('[notify] Email sent successfully to', rcp.email, 'result:', result);
+                sent += 1;
+            }
         }
 
         // SMS уведомления отключены - используем только Email и WhatsApp
