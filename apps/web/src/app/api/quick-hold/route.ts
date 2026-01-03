@@ -87,6 +87,10 @@ export async function POST(req: Request) {
         return null;
     }
 
+    // Вызываем RPC с правильным контекстом авторизации
+    // Функция hold_slot использует auth.uid() для получения client_id
+    // Поэтому важно, чтобы токен был правильно передан в заголовках
+    console.log('[quick-hold] Calling hold_slot RPC for user:', user.id);
     const { data: rpcData, error } = await supabase.rpc<string, HoldSlotArgs>('hold_slot', {
         p_biz_id: biz_id,
         p_branch_id: branch.id,
@@ -94,6 +98,12 @@ export async function POST(req: Request) {
         p_staff_id: staff_id,
         p_start: start_at,
     });
+    
+    if (error) {
+        console.error('[quick-hold] RPC error:', error);
+    } else {
+        console.log('[quick-hold] RPC success, booking ID:', pickBookingId(rpcData));
+    }
 
     if (error) {
         return NextResponse.json(
