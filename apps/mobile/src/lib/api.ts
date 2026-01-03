@@ -17,19 +17,76 @@ export async function apiRequest<T>(
 ): Promise<T> {
     const url = `${API_URL}${endpoint}`;
     
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
-    });
+    try {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
 
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(error.message || `HTTP ${response.status}`);
+        if (!response.ok) {
+            let errorMessage = `HTTP ${response.status}`;
+            let errorDetails: any = null;
+
+            // Пытаемся получить JSON ошибки
+            try {
+                const errorData = await response.json();
+                errorDetails = errorData;
+                errorMessage = errorData.message || errorData.error || errorMessage;
+                
+                // Если есть детали ошибки, добавляем их
+                if (errorData.details) {
+                    errorMessage += `: ${errorData.details}`;
+                }
+            } catch {
+                // Если не JSON, пытаемся получить текст
+                try {
+                    const errorText = await response.text();
+                    if (errorText) {
+                        errorMessage = errorText.length > 200 ? `${errorText.substring(0, 200)}...` : errorText;
+                    }
+                } catch {
+                    // Если ничего не получилось, используем стандартное сообщение
+                    if (response.status === 401) {
+                        errorMessage = 'Необходима авторизация';
+                    } else if (response.status === 403) {
+                        errorMessage = 'Доступ запрещен';
+                    } else if (response.status === 404) {
+                        errorMessage = 'Ресурс не найден';
+                    } else if (response.status === 500) {
+                        errorMessage = 'Ошибка сервера. Попробуйте позже';
+                    } else if (response.status >= 400 && response.status < 500) {
+                        errorMessage = 'Ошибка запроса';
+                    } else if (response.status >= 500) {
+                        errorMessage = 'Ошибка сервера';
+                    }
+                }
+            }
+
+            const error = new Error(errorMessage);
+            // @ts-ignore
+            error.status = response.status;
+            // @ts-ignore
+            error.details = errorDetails;
+            throw error;
+        }
+
+        return response.json();
+    } catch (error: any) {
+        // Если это уже наша ошибка, пробрасываем её дальше
+        if (error.message && error.status) {
+            throw error;
+        }
+        
+        // Если это сетевая ошибка
+        if (error.message?.includes('Network request failed') || error.message?.includes('Failed to fetch')) {
+            throw new Error('Нет подключения к интернету. Проверьте соединение и попробуйте снова');
+        }
+        
+        // Если это другая ошибка, пробрасываем её
+        throw error;
     }
-
-    return response.json();
 }
 
