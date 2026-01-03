@@ -4,6 +4,7 @@
  */
 
 import Constants from 'expo-constants';
+import { supabase } from './supabase';
 
 const API_URL = 
     process.env.EXPO_PUBLIC_API_URL || 
@@ -17,13 +18,29 @@ export async function apiRequest<T>(
 ): Promise<T> {
     const url = `${API_URL}${endpoint}`;
     
+    // Получаем токен авторизации из Supabase
+    let authToken: string | null = null;
     try {
+        const { data: { session } } = await supabase.auth.getSession();
+        authToken = session?.access_token || null;
+    } catch (error) {
+        console.warn('[apiRequest] Failed to get session token:', error);
+    }
+    
+    try {
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        };
+        
+        // Добавляем токен авторизации, если он есть
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        
         const response = await fetch(url, {
             ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
+            headers,
         });
 
         if (!response.ok) {
