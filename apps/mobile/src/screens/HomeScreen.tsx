@@ -28,14 +28,23 @@ export default function HomeScreen() {
     const { data: businesses, isLoading, refetch } = useQuery({
         queryKey: ['businesses', search],
         queryFn: async () => {
-            let query = supabase.from('businesses').select('id, name, slug').eq('is_active', true);
+            // Используем те же условия, что и в веб-версии
+            let query = supabase
+                .from('businesses')
+                .select('id, name, slug')
+                .eq('is_active', true)
+                .eq('is_approved', true); // Добавляем проверку is_approved
 
             if (search) {
                 query = query.ilike('name', `%${search}%`);
             }
 
             const { data, error } = await query.limit(20);
-            if (error) throw error;
+            if (error) {
+                console.error('[HomeScreen] Error fetching businesses:', error);
+                throw error;
+            }
+            console.log('[HomeScreen] Businesses loaded:', data?.length || 0);
             return data as Business[];
         },
     });

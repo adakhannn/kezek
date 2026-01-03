@@ -48,7 +48,12 @@ export default function CabinetScreen() {
     const { data: bookings, isLoading, refetch } = useQuery({
         queryKey: ['bookings', user?.id],
         queryFn: async () => {
-            if (!user?.id) return [];
+            if (!user?.id) {
+                console.log('[CabinetScreen] No user ID, returning empty array');
+                return [];
+            }
+
+            console.log('[CabinetScreen] Fetching bookings for user:', user.id);
 
             const { data, error } = await supabase
                 .from('bookings')
@@ -66,7 +71,12 @@ export default function CabinetScreen() {
                 .order('start_at', { ascending: false })
                 .limit(50);
 
-            if (error) throw error;
+            if (error) {
+                console.error('[CabinetScreen] Error fetching bookings:', error);
+                throw error;
+            }
+            
+            console.log('[CabinetScreen] Bookings loaded:', data?.length || 0);
             return data as Booking[];
         },
         enabled: !!user?.id,
