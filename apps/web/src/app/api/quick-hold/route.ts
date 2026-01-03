@@ -120,26 +120,53 @@ export async function POST(req: Request) {
         );
     }
 
+    console.log('[quick-hold] Booking created with ID:', bookingId);
+    console.log('[quick-hold] Attempting to confirm booking...');
+
     // Автоматически подтверждаем бронирование (для мобильного приложения)
     // В веб-версии подтверждение происходит отдельно через confirm_booking
-    const { error: confirmError } = await supabase.rpc('confirm_booking', {
+    const { data: confirmData, error: confirmError } = await supabase.rpc('confirm_booking', {
         p_booking_id: bookingId,
     });
     
     if (confirmError) {
-        console.error('[quick-hold] Failed to confirm booking:', confirmError);
+        console.error('[quick-hold] Failed to confirm booking:', {
+            error: confirmError.message,
+            code: confirmError.code,
+            details: confirmError.details,
+            hint: confirmError.hint,
+        });
         // Не возвращаем ошибку, так как бронирование уже создано
         // Пользователь может подтвердить его вручную позже
     } else {
-        console.log('[quick-hold] Booking confirmed successfully:', bookingId);
+        console.log('[quick-hold] Booking confirmed successfully:', bookingId, 'confirmData:', confirmData);
+        
+        // Проверяем статус бронирования после подтверждения
+        const { data: bookingCheck, error: checkError } = await supabase
+            .from('bookings')
+            .select('id, status')
+            .eq('id', bookingId)
+            .single();
+        
+        if (checkError) {
+            console.error('[quick-hold] Failed to check booking status:', checkError);
+        } else {
+            console.log('[quick-hold] Booking status after confirm:', bookingCheck?.status);
+        }
     }
 
-    // Уведомление (type: 'confirm' вместо 'hold', так как мы подтвердили)
-    notifyHold(bookingId, req, 'confirm').catch((err) => {
+    // Уведомление (type: 'confirm' если подтвердили, иначе 'hold')
+    const notifyType = confirmError ? 'hold' : 'confirm';
+    notifyHold(bookingId, req, notifyType).catch((err) => {
         console.error('notifyHold failed', err);
     });
 
-    return NextResponse.json({ok: true, booking_id: bookingId});
+    return NextResponse.json({
+        ok: true, 
+        booking_id: bookingId,
+        confirmed: !confirmError,
+        error: confirmError ? confirmError.message : undefined,
+    });
 }
 
 async function notifyHold(bookingId: string, req: Request, type: 'hold' | 'confirm' = 'hold') {
