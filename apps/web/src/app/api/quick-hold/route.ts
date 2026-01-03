@@ -1,4 +1,5 @@
 import {createServerClient} from "@supabase/ssr";
+import {createClient} from "@supabase/supabase-js";
 import {cookies} from "next/headers";
 import {NextResponse} from "next/server";
 
@@ -13,14 +14,39 @@ type HoldSlotArgs = {
 export async function POST(req: Request) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const cookieStore = await cookies();
-    const supabase = createServerClient(url, anon, {
-        cookies: {get: (n) => cookieStore.get(n)?.value},
-    });
-
-    const {data: {user}} = await supabase.auth.getUser();
-    if (!user) {
-        return NextResponse.json({ok: false, error: 'auth', message: 'Not signed in'}, {status: 401});
+    
+    // Проверяем, есть ли Bearer token в заголовках (для мобильного приложения)
+    const authHeader = req.headers.get('Authorization');
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    
+    let supabase;
+    let user;
+    
+    if (bearerToken) {
+        // Для мобильного приложения: используем токен напрямую
+        supabase = createClient(url, anon, {
+            global: {
+                headers: {
+                    Authorization: `Bearer ${bearerToken}`,
+                },
+            },
+        });
+        const {data: {user: userData}, error: userError} = await supabase.auth.getUser(bearerToken);
+        if (userError || !userData) {
+            return NextResponse.json({ok: false, error: 'auth', message: 'Not signed in'}, {status: 401});
+        }
+        user = userData;
+    } else {
+        // Для веб-версии: используем cookies
+        const cookieStore = await cookies();
+        supabase = createServerClient(url, anon, {
+            cookies: {get: (n) => cookieStore.get(n)?.value},
+        });
+        const {data: {user: userData}} = await supabase.auth.getUser();
+        if (!userData) {
+            return NextResponse.json({ok: false, error: 'auth', message: 'Not signed in'}, {status: 401});
+        }
+        user = userData;
     }
 
     const {biz_id, service_id, staff_id, start_at} = await req.json();
