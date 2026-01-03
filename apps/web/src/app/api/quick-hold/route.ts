@@ -3,6 +3,8 @@ import {createClient} from "@supabase/supabase-js";
 import {cookies} from "next/headers";
 import {NextResponse} from "next/server";
 
+import {getServiceClient} from "@/lib/supabaseService";
+
 type HoldSlotArgs = {
     p_biz_id: string;
     p_branch_id: string;
@@ -23,29 +25,36 @@ export async function POST(req: Request) {
     let user;
     
     if (bearerToken) {
-        // Для мобильного приложения: используем токен напрямую
-        // Создаем клиент с токеном в заголовках
-        supabase = createClient(url, anon, {
-            global: {
-                headers: {
-                    Authorization: `Bearer ${bearerToken}`,
+        // Для мобильного приложения: используем Admin API для проверки токена
+        try {
+            const admin = getServiceClient();
+            // Проверяем токен через Admin API
+            const {data: {user: userData}, error: userError} = await admin.auth.getUser(bearerToken);
+            if (userError || !userData) {
+                console.error('[quick-hold] Bearer token auth failed:', userError?.message || 'No user', {
+                    hasToken: !!bearerToken,
+                    tokenLength: bearerToken?.length,
+                });
+                return NextResponse.json({ok: false, error: 'auth', message: 'Not signed in'}, {status: 401});
+            }
+            user = userData;
+            // Создаем обычный клиент для дальнейших запросов (с токеном в заголовках)
+            supabase = createClient(url, anon, {
+                global: {
+                    headers: {
+                        Authorization: `Bearer ${bearerToken}`,
+                    },
                 },
-            },
-            auth: {
-                persistSession: false,
-                autoRefreshToken: false,
-            },
-        });
-        // Проверяем токен через getUser
-        const {data: {user: userData}, error: userError} = await supabase.auth.getUser();
-        if (userError || !userData) {
-            console.error('[quick-hold] Bearer token auth failed:', userError?.message || 'No user', {
-                hasToken: !!bearerToken,
-                tokenLength: bearerToken?.length,
+                auth: {
+                    persistSession: false,
+                    autoRefreshToken: false,
+                },
             });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('[quick-hold] Bearer token verification error:', errorMessage);
             return NextResponse.json({ok: false, error: 'auth', message: 'Not signed in'}, {status: 401});
         }
-        user = userData;
     } else {
         // Для веб-версии: используем cookies
         const cookieStore = await cookies();
