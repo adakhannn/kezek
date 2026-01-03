@@ -195,12 +195,58 @@ export default function RootNavigator() {
         const handleAppStateChange = async (nextAppState: AppStateStatus) => {
             if (nextAppState === 'active') {
                 console.log('[RootNavigator] App became active, checking session...');
-                // Проверяем сессию при возврате приложения из фона
-                // Это может помочь, если deep link не сработал, но пользователь авторизовался на веб-сайте
+                
+                // Сначала проверяем текущую сессию
                 const { data: { session: currentSession } } = await supabase.auth.getSession();
                 if (currentSession && !session) {
                     console.log('[RootNavigator] Session found after app became active');
                     setSession(currentSession);
+                    return;
+                }
+                
+                // Если сессии нет, проверяем, есть ли pending токены через API
+                // Это может помочь, если deep link не сработал, но пользователь авторизовался на веб-сайте
+                if (!currentSession) {
+                    console.log('[RootNavigator] No session, checking for pending tokens...');
+                    try {
+                        const Constants = require('expo-constants').default;
+                        const apiUrl = 
+                            process.env.EXPO_PUBLIC_API_URL || 
+                            Constants.expoConfig?.extra?.apiUrl ||
+                            Constants.manifest?.extra?.apiUrl ||
+                            'https://kezek.kg';
+                        
+                        const checkResponse = await fetch(`${apiUrl}/api/auth/mobile-exchange?check=true`);
+                        if (checkResponse.ok) {
+                            const checkData = await checkResponse.json();
+                            if (checkData.hasPending && checkData.code) {
+                                console.log('[RootNavigator] Found pending tokens, exchanging code:', checkData.code);
+                                
+                                // Обмениваем код на токены
+                                const exchangeResponse = await fetch(`${apiUrl}/api/auth/mobile-exchange?code=${encodeURIComponent(checkData.code)}`);
+                                if (exchangeResponse.ok) {
+                                    const { accessToken, refreshToken } = await exchangeResponse.json();
+                                    const { error } = await supabase.auth.setSession({
+                                        access_token: accessToken,
+                                        refresh_token: refreshToken,
+                                    });
+                                    if (!error) {
+                                        console.log('[RootNavigator] Session set from pending tokens');
+                                        const { data: { session: newSession } } = await supabase.auth.getSession();
+                                        if (newSession) {
+                                            setSession(newSession);
+                                        }
+                                    } else {
+                                        console.error('[RootNavigator] Error setting session from pending tokens:', error);
+                                    }
+                                }
+                            } else {
+                                console.log('[RootNavigator] No pending tokens found');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('[RootNavigator] Error checking pending tokens:', error);
+                    }
                 } else if (!currentSession && session) {
                     console.log('[RootNavigator] Session lost after app became active');
                     setSession(null);

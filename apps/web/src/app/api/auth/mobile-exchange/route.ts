@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Временное хранилище для токенов (в продакшене лучше использовать Redis)
-const tokenStore = new Map<string, { accessToken: string; refreshToken: string; expiresAt: number }>();
+const tokenStore = new Map<string, { accessToken: string; refreshToken: string; expiresAt: number; createdAt: number }>();
 
 // Очистка истекших токенов каждые 5 минут
 setInterval(() => {
@@ -35,11 +35,15 @@ export async function POST(request: NextRequest) {
         const code = crypto.randomBytes(3).toString('hex').toUpperCase();
         
         // Сохраняем токены на 10 минут
+        const now = Date.now();
         tokenStore.set(code, {
             accessToken,
             refreshToken,
-            expiresAt: Date.now() + 10 * 60 * 1000, // 10 минут
+            expiresAt: now + 10 * 60 * 1000, // 10 минут
+            createdAt: now,
         });
+
+        console.warn('[mobile-exchange] Token stored, code:', code, 'expires at:', new Date(now + 10 * 60 * 1000).toISOString());
 
         return NextResponse.json({ code });
     } catch (error) {
@@ -55,8 +59,40 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/auth/mobile-exchange?code=XXX
  * Обменивает код на токены
+ * 
+ * GET /api/auth/mobile-exchange?check=true
+ * Проверяет, есть ли pending токены (возвращает последний созданный код, если он еще не истек)
  */
 export async function GET(request: NextRequest) {
+    const searchParams = request.nextUrl.searchParams;
+    const check = searchParams.get('check');
+    
+    // Если это проверка на pending токены
+    if (check === 'true') {
+        // Находим последний созданный код, который еще не истек
+        const now = Date.now();
+        let latestCode: string | null = null;
+        let latestCreatedAt = 0;
+        
+        for (const [code, data] of tokenStore.entries()) {
+            if (data.expiresAt > now && data.createdAt > latestCreatedAt) {
+                latestCode = code;
+                latestCreatedAt = data.createdAt;
+            }
+        }
+        
+        if (latestCode) {
+            return NextResponse.json({ 
+                hasPending: true, 
+                code: latestCode,
+                createdAt: latestCreatedAt,
+            });
+        }
+        
+        return NextResponse.json({ hasPending: false });
+    }
+    
+    // Обычная обработка обмена кода
     try {
         const searchParams = request.nextUrl.searchParams;
         const code = searchParams.get('code');
