@@ -4,6 +4,12 @@ import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { ToastProvider } from './src/contexts/ToastContext';
 import { queryClient } from './src/lib/queryClient';
 import RootNavigator from './src/navigation/RootNavigator';
+import { logEnvVars } from './src/utils/debug';
+
+// Логируем переменные окружения при запуске
+if (__DEV__) {
+    logEnvVars();
+}
 
 export default function App() {
     return (

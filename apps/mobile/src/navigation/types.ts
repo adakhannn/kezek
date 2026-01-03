@@ -23,5 +23,6 @@ export type AuthStackParamList = {
     SignIn: undefined;
     SignUp: undefined;
     Verify: { phone?: string; email?: string };
+    WhatsApp: undefined;
 };
 
