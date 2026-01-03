@@ -5,6 +5,7 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { formatInTimeZone } from 'date-fns-tz';
 import { addDays, addMinutes } from 'date-fns';
+import { Ionicons } from '@expo/vector-icons';
 
 import { supabase } from '../lib/supabase';
 import { apiRequest } from '../lib/api';
@@ -12,7 +13,6 @@ import { useToast } from '../contexts/ToastContext';
 import { formatDate, formatTime } from '../utils/format';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
 
 type BookingRouteParams = {
     slug: string;
@@ -137,19 +137,19 @@ export default function BookingScreen() {
 
     // Обновление выбранных значений при смене филиала
     useEffect(() => {
-        if (servicesByBranch.length > 0) {
+        if (servicesByBranch.length > 0 && !serviceId) {
             setServiceId(servicesByBranch[0].id);
         }
-        if (staffByBranch.length > 0) {
+        if (staffByBranch.length > 0 && !staffId) {
             setStaffId(staffByBranch[0].id);
         }
     }, [branchId]);
 
     // Загрузка слотов
     const { data: slots, isLoading: slotsLoading } = useQuery({
-        queryKey: ['slots', businessData?.business.id, serviceId, selectedDate],
+        queryKey: ['slots', businessData?.business.id, serviceId, selectedDate, staffId, branchId],
         queryFn: async () => {
-            if (!businessData || !serviceId || !selectedDate) return [];
+            if (!businessData || !serviceId || !selectedDate || !staffId || !branchId) return [];
 
             const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                 p_biz_id: businessData.business.id,
@@ -220,17 +220,17 @@ export default function BookingScreen() {
         ]);
     };
 
-    const formatTime = (dateString: string) => {
+    const formatTimeSlot = (dateString: string) => {
         const date = new Date(dateString);
         return formatInTimeZone(date, TZ, 'HH:mm');
     };
 
-    const formatDate = (dateString: string) => {
+    const formatDateLabel = (dateString: string) => {
         const date = new Date(dateString + 'T00:00:00');
-        // Используем простой формат без локализации
         const day = date.getDate();
         const month = date.toLocaleDateString('ru-RU', { month: 'long' });
-        return `${day} ${month}`;
+        const weekday = date.toLocaleDateString('ru-RU', { weekday: 'short' });
+        return { day, month, weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1) };
     };
 
     const getAvailableDates = () => {
@@ -241,6 +241,15 @@ export default function BookingScreen() {
             dates.push(formatInTimeZone(date, TZ, 'yyyy-MM-dd'));
         }
         return dates;
+    };
+
+    const formatPrice = (service: Service) => {
+        if (service.price_from && service.price_to) {
+            return `${service.price_from} - ${service.price_to} сом`;
+        } else if (service.price_from) {
+            return `от ${service.price_from} сом`;
+        }
+        return null;
     };
 
     if (businessLoading) {
@@ -263,78 +272,135 @@ export default function BookingScreen() {
     const selectedService = servicesByBranch.find((s) => s.id === serviceId);
     const selectedStaff = staffByBranch.find((s) => s.id === staffId);
 
+    // Определяем прогресс заполнения формы
+    const step = !branchId ? 1 : !serviceId ? 2 : !staffId ? 3 : !selectedDate ? 4 : !selectedSlot ? 5 : 6;
+
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            {/* Заголовок */}
             <View style={styles.header}>
                 <Text style={styles.title}>{businessData.business.name}</Text>
+                <Text style={styles.subtitle}>Запись на услугу</Text>
             </View>
 
-            <Card style={styles.card}>
-                <Text style={styles.sectionTitle}>Филиал</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                    {businessData.branches.map((branch) => (
-                        <TouchableOpacity
-                            key={branch.id}
-                            style={[styles.option, branchId === branch.id && styles.optionSelected]}
-                            onPress={() => setBranchId(branch.id)}
-                        >
-                            <Text
-                                style={[
-                                    styles.optionText,
-                                    branchId === branch.id && styles.optionTextSelected,
-                                ]}
+            {/* Шаг 1: Филиал */}
+            <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                    <View style={[styles.stepIndicator, step >= 1 && styles.stepIndicatorActive]}>
+                        <Text style={[styles.stepNumber, step >= 1 && styles.stepNumberActive]}>1</Text>
+                    </View>
+                    <Text style={styles.sectionTitle}>Выберите филиал</Text>
+                </View>
+                {businessData.branches.length > 0 ? (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+                        {businessData.branches.map((branch) => (
+                            <TouchableOpacity
+                                key={branch.id}
+                                style={[styles.optionCard, branchId === branch.id && styles.optionCardSelected]}
+                                onPress={() => {
+                                    setBranchId(branch.id);
+                                    setServiceId('');
+                                    setStaffId('');
+                                    setSelectedSlot(null);
+                                }}
                             >
-                                {branch.name}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </Card>
+                                <Ionicons 
+                                    name="location" 
+                                    size={20} 
+                                    color={branchId === branch.id ? '#6366f1' : '#6b7280'} 
+                                />
+                                <Text
+                                    style={[
+                                        styles.optionCardText,
+                                        branchId === branch.id && styles.optionCardTextSelected,
+                                    ]}
+                                >
+                                    {branch.name}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                ) : (
+                    <Text style={styles.emptyText}>Нет доступных филиалов</Text>
+                )}
+            </View>
 
-            {servicesByBranch.length > 0 && (
-                <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Услуга</Text>
+            {/* Шаг 2: Услуга */}
+            {branchId && servicesByBranch.length > 0 && (
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <View style={[styles.stepIndicator, step >= 2 && styles.stepIndicatorActive]}>
+                            <Text style={[styles.stepNumber, step >= 2 && styles.stepNumberActive]}>2</Text>
+                        </View>
+                        <Text style={styles.sectionTitle}>Выберите услугу</Text>
+                    </View>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                         {servicesByBranch.map((service) => (
                             <TouchableOpacity
                                 key={service.id}
-                                style={[styles.option, serviceId === service.id && styles.optionSelected]}
-                                onPress={() => setServiceId(service.id)}
+                                style={[styles.serviceCard, serviceId === service.id && styles.serviceCardSelected]}
+                                onPress={() => {
+                                    setServiceId(service.id);
+                                    setSelectedSlot(null);
+                                }}
                             >
                                 <Text
                                     style={[
-                                        styles.optionText,
-                                        serviceId === service.id && styles.optionTextSelected,
+                                        styles.serviceName,
+                                        serviceId === service.id && styles.serviceNameSelected,
                                     ]}
                                 >
                                     {service.name_ru}
                                 </Text>
-                                {service.price_from && (
-                                    <Text style={styles.priceText}>
-                                        {service.price_from}
-                                        {service.price_to && `-${service.price_to}`} сом
-                                    </Text>
+                                {service.duration_min && (
+                                    <View style={styles.serviceMeta}>
+                                        <Ionicons name="time-outline" size={14} color={serviceId === service.id ? '#fff' : '#6b7280'} />
+                                        <Text style={[styles.serviceDuration, serviceId === service.id && styles.serviceDurationSelected]}>
+                                            {service.duration_min} мин.
+                                        </Text>
+                                    </View>
+                                )}
+                                {formatPrice(service) && (
+                                    <View style={styles.priceContainer}>
+                                        <Text style={[styles.priceText, serviceId === service.id && styles.priceTextSelected]}>
+                                            {formatPrice(service)}
+                                        </Text>
+                                    </View>
                                 )}
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
-                </Card>
+                </View>
             )}
 
-            {staffByBranch.length > 0 && (
-                <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Мастер</Text>
+            {/* Шаг 3: Мастер */}
+            {branchId && serviceId && staffByBranch.length > 0 && (
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <View style={[styles.stepIndicator, step >= 3 && styles.stepIndicatorActive]}>
+                            <Text style={[styles.stepNumber, step >= 3 && styles.stepNumberActive]}>3</Text>
+                        </View>
+                        <Text style={styles.sectionTitle}>Выберите мастера</Text>
+                    </View>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                         {staffByBranch.map((staff) => (
                             <TouchableOpacity
                                 key={staff.id}
-                                style={[styles.option, staffId === staff.id && styles.optionSelected]}
-                                onPress={() => setStaffId(staff.id)}
+                                style={[styles.optionCard, staffId === staff.id && styles.optionCardSelected]}
+                                onPress={() => {
+                                    setStaffId(staff.id);
+                                    setSelectedSlot(null);
+                                }}
                             >
+                                <Ionicons 
+                                    name="person" 
+                                    size={20} 
+                                    color={staffId === staff.id ? '#6366f1' : '#6b7280'} 
+                                />
                                 <Text
                                     style={[
-                                        styles.optionText,
-                                        staffId === staff.id && styles.optionTextSelected,
+                                        styles.optionCardText,
+                                        staffId === staff.id && styles.optionCardTextSelected,
                                     ]}
                                 >
                                     {staff.full_name}
@@ -342,39 +408,85 @@ export default function BookingScreen() {
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
-                </Card>
+                </View>
             )}
 
-            <Card style={styles.card}>
-                <Text style={styles.sectionTitle}>Дата</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                    {getAvailableDates().map((date) => (
-                        <TouchableOpacity
-                            key={date}
-                            style={[styles.dateOption, selectedDate === date && styles.dateOptionSelected]}
-                            onPress={() => {
-                                setSelectedDate(date);
-                                setSelectedSlot(null);
-                            }}
-                        >
-                            <Text
-                                style={[
-                                    styles.dateText,
-                                    selectedDate === date && styles.dateTextSelected,
-                                ]}
-                            >
-                                {formatDate(date)}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </Card>
+            {/* Шаг 4: Дата */}
+            {branchId && serviceId && staffId && (
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <View style={[styles.stepIndicator, step >= 4 && styles.stepIndicatorActive]}>
+                            <Text style={[styles.stepNumber, step >= 4 && styles.stepNumberActive]}>4</Text>
+                        </View>
+                        <Text style={styles.sectionTitle}>Выберите дату</Text>
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+                        {getAvailableDates().map((date) => {
+                            const dateLabel = formatDateLabel(date);
+                            const isToday = date === formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+                            return (
+                                <TouchableOpacity
+                                    key={date}
+                                    style={[
+                                        styles.dateCard,
+                                        selectedDate === date && styles.dateCardSelected,
+                                        isToday && styles.dateCardToday,
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedDate(date);
+                                        setSelectedSlot(null);
+                                    }}
+                                >
+                                    {isToday && (
+                                        <Text style={[styles.todayLabel, selectedDate === date && styles.todayLabelSelected]}>
+                                            Сегодня
+                                        </Text>
+                                    )}
+                                    <Text
+                                        style={[
+                                            styles.dateDay,
+                                            selectedDate === date && styles.dateDaySelected,
+                                        ]}
+                                    >
+                                        {dateLabel.day}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.dateMonth,
+                                            selectedDate === date && styles.dateMonthSelected,
+                                        ]}
+                                    >
+                                        {dateLabel.month}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.dateWeekday,
+                                            selectedDate === date && styles.dateWeekdaySelected,
+                                        ]}
+                                    >
+                                        {dateLabel.weekday}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
+            )}
 
-            {serviceId && staffId && branchId && selectedDate && (
-                <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Время</Text>
+            {/* Шаг 5: Время */}
+            {branchId && serviceId && staffId && selectedDate && (
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <View style={[styles.stepIndicator, step >= 5 && styles.stepIndicatorActive]}>
+                            <Text style={[styles.stepNumber, step >= 5 && styles.stepNumberActive]}>5</Text>
+                        </View>
+                        <Text style={styles.sectionTitle}>Выберите время</Text>
+                    </View>
                     {slotsLoading ? (
-                        <ActivityIndicator size="small" color="#6366f1" style={styles.slotsLoading} />
+                        <View style={styles.slotsLoadingContainer}>
+                            <ActivityIndicator size="small" color="#6366f1" />
+                            <Text style={styles.slotsLoadingText}>Загрузка доступного времени...</Text>
+                        </View>
                     ) : slots && slots.length > 0 ? (
                         <View style={styles.slotsGrid}>
                             {slots.map((slot, index) => (
@@ -392,42 +504,78 @@ export default function BookingScreen() {
                                             selectedSlot?.start_at === slot.start_at && styles.slotTextSelected,
                                         ]}
                                     >
-                                        {formatTime(slot.start_at)}
+                                        {formatTimeSlot(slot.start_at)}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
                     ) : (
-                        <Text style={styles.noSlots}>Нет доступного времени</Text>
+                        <View style={styles.noSlotsContainer}>
+                            <Ionicons name="time-outline" size={48} color="#9ca3af" />
+                            <Text style={styles.noSlotsText}>Нет доступного времени</Text>
+                            <Text style={styles.noSlotsHint}>Попробуйте выбрать другую дату</Text>
+                        </View>
                     )}
-                </Card>
+                </View>
             )}
 
-            {selectedSlot && (
-                <View style={styles.summary}>
-                    <Card style={styles.card}>
-                        <Text style={styles.summaryTitle}>Итого</Text>
-                        {selectedService && (
-                            <Text style={styles.summaryText}>Услуга: {selectedService.name_ru}</Text>
-                        )}
-                        {selectedStaff && (
-                            <Text style={styles.summaryText}>Мастер: {selectedStaff.full_name}</Text>
-                        )}
-                        <Text style={styles.summaryText}>
-                            Дата: {formatDate(selectedDate)} в {formatTime(selectedSlot.start_at)}
-                        </Text>
-                        {selectedService?.duration_min && (
-                            <Text style={styles.summaryText}>
-                                Продолжительность: {selectedService.duration_min} мин.
-                            </Text>
-                        )}
+            {/* Шаг 6: Подтверждение */}
+            {selectedSlot && selectedService && selectedStaff && (
+                <View style={styles.summarySection}>
+                    <View style={styles.sectionHeader}>
+                        <View style={[styles.stepIndicator, styles.stepIndicatorActive]}>
+                            <Ionicons name="checkmark" size={16} color="#fff" />
+                        </View>
+                        <Text style={styles.sectionTitle}>Подтверждение записи</Text>
+                    </View>
+                    <Card style={styles.summaryCard}>
+                        <View style={styles.summaryRow}>
+                            <Ionicons name="business-outline" size={20} color="#6366f1" />
+                            <View style={styles.summaryContent}>
+                                <Text style={styles.summaryLabel}>Бизнес</Text>
+                                <Text style={styles.summaryValue}>{businessData.business.name}</Text>
+                            </View>
+                        </View>
+                        <View style={styles.summaryDivider} />
+                        <View style={styles.summaryRow}>
+                            <Ionicons name="cut-outline" size={20} color="#6366f1" />
+                            <View style={styles.summaryContent}>
+                                <Text style={styles.summaryLabel}>Услуга</Text>
+                                <Text style={styles.summaryValue}>{selectedService.name_ru}</Text>
+                                {selectedService.duration_min && (
+                                    <Text style={styles.summaryHint}>{selectedService.duration_min} минут</Text>
+                                )}
+                                {formatPrice(selectedService) && (
+                                    <Text style={styles.summaryPrice}>{formatPrice(selectedService)}</Text>
+                                )}
+                            </View>
+                        </View>
+                        <View style={styles.summaryDivider} />
+                        <View style={styles.summaryRow}>
+                            <Ionicons name="person-outline" size={20} color="#6366f1" />
+                            <View style={styles.summaryContent}>
+                                <Text style={styles.summaryLabel}>Мастер</Text>
+                                <Text style={styles.summaryValue}>{selectedStaff.full_name}</Text>
+                            </View>
+                        </View>
+                        <View style={styles.summaryDivider} />
+                        <View style={styles.summaryRow}>
+                            <Ionicons name="calendar-outline" size={20} color="#6366f1" />
+                            <View style={styles.summaryContent}>
+                                <Text style={styles.summaryLabel}>Дата и время</Text>
+                                <Text style={styles.summaryValue}>
+                                    {formatDateLabel(selectedDate).day} {formatDateLabel(selectedDate).month}
+                                </Text>
+                                <Text style={styles.summaryHint}>{formatTimeSlot(selectedSlot.start_at)}</Text>
+                            </View>
+                        </View>
                     </Card>
 
                     <Button
                         title="Записаться"
                         onPress={handleCreateBooking}
                         loading={createBookingMutation.isPending}
-                        disabled={createBookingMutation.isPending}
+                        disabled={createBookingMutation.isPending || !selectedSlot}
                         style={styles.createButton}
                     />
                 </View>
@@ -441,6 +589,9 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#f9fafb',
     },
+    content: {
+        paddingBottom: 40,
+    },
     header: {
         padding: 20,
         backgroundColor: '#fff',
@@ -448,9 +599,14 @@ const styles = StyleSheet.create({
         borderBottomColor: '#e5e7eb',
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#111827',
+        marginBottom: 4,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#6b7280',
     },
     loadingText: {
         marginTop: 12,
@@ -463,76 +619,193 @@ const styles = StyleSheet.create({
         color: '#ef4444',
         fontSize: 16,
     },
-    card: {
-        margin: 20,
-        marginBottom: 0,
+    section: {
+        padding: 20,
+        paddingBottom: 0,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    stepIndicator: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#e5e7eb',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    stepIndicatorActive: {
+        backgroundColor: '#6366f1',
+    },
+    stepNumber: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#6b7280',
+    },
+    stepNumberActive: {
+        color: '#fff',
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
         color: '#111827',
-        marginBottom: 12,
     },
     horizontalScroll: {
         marginHorizontal: -4,
     },
-    option: {
+    optionCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 8,
-        backgroundColor: '#f3f4f6',
-        marginRight: 8,
-        marginBottom: 8,
+        paddingVertical: 12,
+        borderRadius: 12,
+        backgroundColor: '#fff',
+        borderWidth: 2,
+        borderColor: '#e5e7eb',
+        marginRight: 12,
+        marginBottom: 12,
+        minWidth: 120,
+        gap: 8,
     },
-    optionSelected: {
+    optionCardSelected: {
         backgroundColor: '#6366f1',
+        borderColor: '#6366f1',
     },
-    optionText: {
-        fontSize: 14,
-        color: '#374151',
+    optionCardText: {
+        fontSize: 15,
         fontWeight: '500',
+        color: '#374151',
     },
-    optionTextSelected: {
+    optionCardTextSelected: {
         color: '#fff',
     },
+    serviceCard: {
+        padding: 16,
+        borderRadius: 12,
+        backgroundColor: '#fff',
+        borderWidth: 2,
+        borderColor: '#e5e7eb',
+        marginRight: 12,
+        marginBottom: 12,
+        minWidth: 160,
+    },
+    serviceCardSelected: {
+        backgroundColor: '#6366f1',
+        borderColor: '#6366f1',
+    },
+    serviceName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: 8,
+    },
+    serviceNameSelected: {
+        color: '#fff',
+    },
+    serviceMeta: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginBottom: 8,
+    },
+    serviceDuration: {
+        fontSize: 13,
+        color: '#6b7280',
+    },
+    serviceDurationSelected: {
+        color: '#fff',
+    },
+    priceContainer: {
+        marginTop: 4,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#e5e7eb',
+    },
     priceText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#059669', // Яркий зеленый для контраста
+    },
+    priceTextSelected: {
+        color: '#fff',
+        borderTopColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    dateCard: {
+        padding: 12,
+        borderRadius: 12,
+        backgroundColor: '#fff',
+        borderWidth: 2,
+        borderColor: '#e5e7eb',
+        marginRight: 12,
+        marginBottom: 12,
+        minWidth: 80,
+        alignItems: 'center',
+    },
+    dateCardSelected: {
+        backgroundColor: '#6366f1',
+        borderColor: '#6366f1',
+    },
+    dateCardToday: {
+        borderColor: '#10b981',
+    },
+    todayLabel: {
+        fontSize: 10,
+        fontWeight: '600',
+        color: '#10b981',
+        marginBottom: 4,
+        textTransform: 'uppercase',
+    },
+    todayLabelSelected: {
+        color: '#fff',
+    },
+    dateDay: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#111827',
+    },
+    dateDaySelected: {
+        color: '#fff',
+    },
+    dateMonth: {
         fontSize: 12,
         color: '#6b7280',
         marginTop: 2,
     },
-    dateOption: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 8,
-        backgroundColor: '#f3f4f6',
-        marginRight: 8,
-        alignItems: 'center',
-    },
-    dateOptionSelected: {
-        backgroundColor: '#6366f1',
-    },
-    dateText: {
-        fontSize: 14,
-        color: '#374151',
-        fontWeight: '500',
-    },
-    dateTextSelected: {
+    dateMonthSelected: {
         color: '#fff',
     },
-    slotsLoading: {
-        padding: 20,
+    dateWeekday: {
+        fontSize: 11,
+        color: '#9ca3af',
+        marginTop: 4,
+        textTransform: 'uppercase',
+    },
+    dateWeekdaySelected: {
+        color: '#fff',
+    },
+    slotsLoadingContainer: {
+        padding: 40,
+        alignItems: 'center',
+        gap: 12,
+    },
+    slotsLoadingText: {
+        fontSize: 14,
+        color: '#6b7280',
     },
     slotsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+        gap: 10,
     },
     slotButton: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 8,
-        backgroundColor: '#f3f4f6',
-        borderWidth: 1,
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 10,
+        backgroundColor: '#fff',
+        borderWidth: 2,
         borderColor: '#e5e7eb',
         minWidth: 80,
         alignItems: 'center',
@@ -542,34 +815,78 @@ const styles = StyleSheet.create({
         borderColor: '#6366f1',
     },
     slotText: {
-        fontSize: 14,
+        fontSize: 15,
+        fontWeight: '600',
         color: '#374151',
-        fontWeight: '500',
     },
     slotTextSelected: {
         color: '#fff',
     },
-    noSlots: {
+    noSlotsContainer: {
+        padding: 40,
+        alignItems: 'center',
+        gap: 12,
+    },
+    noSlotsText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+    },
+    noSlotsHint: {
+        fontSize: 14,
+        color: '#6b7280',
+        textAlign: 'center',
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#6b7280',
         textAlign: 'center',
         padding: 20,
-        color: '#6b7280',
     },
-    summary: {
+    summarySection: {
         padding: 20,
     },
-    summaryTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#111827',
-        marginBottom: 12,
+    summaryCard: {
+        marginBottom: 20,
     },
-    summaryText: {
+    summaryRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 12,
+        paddingVertical: 12,
+    },
+    summaryContent: {
+        flex: 1,
+    },
+    summaryLabel: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#6b7280',
+        marginBottom: 4,
+        textTransform: 'uppercase',
+    },
+    summaryValue: {
         fontSize: 16,
-        color: '#374151',
-        marginBottom: 8,
+        fontWeight: '600',
+        color: '#111827',
+    },
+    summaryHint: {
+        fontSize: 14,
+        color: '#6b7280',
+        marginTop: 2,
+    },
+    summaryPrice: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#059669',
+        marginTop: 4,
+    },
+    summaryDivider: {
+        height: 1,
+        backgroundColor: '#e5e7eb',
+        marginVertical: 4,
     },
     createButton: {
-        marginTop: 16,
+        marginTop: 0,
     },
 });
-
