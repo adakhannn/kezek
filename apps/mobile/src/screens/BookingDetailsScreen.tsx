@@ -24,8 +24,9 @@ type BookingDetails = {
     status: string;
     service: {
         name_ru: string;
-        duration_minutes: number;
-        price: number | null;
+        duration_min: number;
+        price_from: number | null;
+        price_to: number | null;
     } | null;
     staff: {
         full_name: string;
@@ -63,7 +64,7 @@ export default function BookingDetailsScreen() {
                     start_at,
                     end_at,
                     status,
-                    service:services(name_ru, duration_minutes, price),
+                    service:services(name_ru, duration_min, price_from, price_to),
                     staff:staff(full_name),
                     branch:branches(name, address),
                     business:businesses(name, phones)
@@ -213,17 +214,25 @@ export default function BookingDetailsScreen() {
                     <Text style={styles.time}>
                         {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
                     </Text>
-                    {booking.service?.duration_minutes && (
+                    {booking.service?.duration_min && (
                         <Text style={styles.duration}>
-                            Продолжительность: {booking.service.duration_minutes} мин.
+                            Продолжительность: {booking.service.duration_min} мин.
                         </Text>
                     )}
                 </View>
 
-                {booking.service?.price && (
+                {booking.service && (booking.service.price_from || booking.service.price_to) && (
                     <View style={styles.section}>
                         <Text style={styles.label}>Стоимость</Text>
-                        <Text style={styles.price}>{booking.service.price} сом</Text>
+                        <Text style={styles.price}>
+                            {booking.service.price_from && booking.service.price_to
+                                ? `${booking.service.price_from} - ${booking.service.price_to} сом`
+                                : booking.service.price_from
+                                ? `от ${booking.service.price_from} сом`
+                                : booking.service.price_to
+                                ? `до ${booking.service.price_to} сом`
+                                : ''}
+                        </Text>
                     </View>
                 )}
             </Card>
