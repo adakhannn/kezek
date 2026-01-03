@@ -49,16 +49,22 @@ function CallbackMobileContent() {
 
         // Пытаемся открыть deep link несколькими способами
         // Способ 1: Создаем скрытую ссылку и кликаем по ней (более надежно для мобильных)
-        const link = document.createElement('a');
-        link.href = deepLink;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        try {
+            const link = document.createElement('a');
+            link.href = deepLink;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            console.log('[callback-mobile] Attempted redirect via link.click()');
+        } catch (e) {
+            console.warn('[callback-mobile] link.click() failed:', e);
+        }
 
         // Способ 2: Пробуем через window.location (fallback)
         setTimeout(() => {
             try {
+                console.log('[callback-mobile] Attempting window.location.replace');
                 window.location.replace(deepLink);
             } catch (e) {
                 console.warn('[callback-mobile] window.location.replace failed:', e);
@@ -68,11 +74,24 @@ function CallbackMobileContent() {
         // Способ 3: Пробуем через window.open (еще один fallback)
         setTimeout(() => {
             try {
+                console.log('[callback-mobile] Attempting window.open');
                 window.open(deepLink, '_self');
             } catch (e) {
                 console.warn('[callback-mobile] window.open failed:', e);
             }
         }, 200);
+        
+        // Способ 4: Если это Universal Link (https://), пробуем открыть напрямую
+        if (deepLink.startsWith('https://')) {
+            setTimeout(() => {
+                try {
+                    console.log('[callback-mobile] Attempting direct navigation to Universal Link');
+                    window.location.href = deepLink;
+                } catch (e) {
+                    console.warn('[callback-mobile] Direct navigation failed:', e);
+                }
+            }, 300);
+        }
 
         // Fallback: если через 3 секунды не произошел редирект, редиректим на обычную callback страницу
         const fallbackTimer = setTimeout(() => {

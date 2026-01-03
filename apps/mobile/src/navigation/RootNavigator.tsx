@@ -38,8 +38,19 @@ export default function RootNavigator() {
             console.log('[RootNavigator] Handling deep link:', url);
 
             try {
-                // Проверяем, является ли это callback URL
-                if (url.includes('auth/callback') || url.includes('#access_token=') || url.includes('?code=')) {
+                console.log('[RootNavigator] Processing URL:', url);
+                
+                // Проверяем, является ли это callback URL (поддерживаем и https:// и kezek://)
+                const isCallbackUrl = 
+                    url.includes('auth/callback') || 
+                    url.includes('callback-mobile') ||
+                    url.includes('#access_token=') || 
+                    url.includes('?code=') ||
+                    url.includes('access_token=') ||
+                    url.includes('refresh_token=');
+                
+                if (isCallbackUrl) {
+                    console.log('[RootNavigator] Detected callback URL');
                     // Извлекаем токены из URL
                     let urlObj: URL;
                     try {
@@ -112,17 +123,30 @@ export default function RootNavigator() {
         // Проверяем initial URL при запуске
         Linking.getInitialURL().then((url) => {
             if (url) {
+                console.log('[RootNavigator] Initial URL:', url);
                 handleDeepLink(url);
+            } else {
+                console.log('[RootNavigator] No initial URL');
             }
         });
 
         // Слушаем входящие ссылки во время работы приложения
         const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
+            console.log('[RootNavigator] URL event received:', url);
             handleDeepLink(url);
+        });
+        
+        // Также слушаем изменения сессии от Supabase (на случай, если сессия установилась другим способом)
+        const { data: { subscription: sessionSubscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('[RootNavigator] Auth state changed:', event, 'hasSession:', !!session);
+            if (event === 'SIGNED_IN' && session) {
+                console.log('[RootNavigator] User signed in, session:', session.user.id);
+            }
         });
 
         return () => {
             authSubscription.unsubscribe();
+            sessionSubscription.unsubscribe();
             linkingSubscription.remove();
         };
     }, []);

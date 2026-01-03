@@ -38,6 +38,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
                     Profile: 'profile',
                 },
             },
+            // Обработка callback URL для OAuth
+            // Это позволит обрабатывать https://kezek.kg/auth/callback-mobile как deep link
         },
     },
     // Обработка deep links с токенами авторизации

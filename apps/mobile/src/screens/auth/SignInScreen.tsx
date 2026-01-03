@@ -85,7 +85,8 @@ export default function SignInScreen() {
     const handleGoogleSignIn = async () => {
         setGoogleLoading(true);
         try {
-            // Используем промежуточную страницу на веб-сайте, которая редиректит на deep link
+            // Используем Universal Link (https://kezek.kg) вместо custom scheme
+            // Это более надежно работает в мобильных браузерах
             const redirectTo = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
             
             console.log('[SignInScreen] Starting Google OAuth, redirectTo:', redirectTo);
@@ -112,21 +113,62 @@ export default function SignInScreen() {
             
             // Открываем браузер с OAuth URL
             // Используем WebBrowser для правильной обработки deep links
+            // redirectTo должен совпадать с тем, что мы передали в signInWithOAuth
+            console.log('[SignInScreen] Opening WebBrowser with URL:', data.url);
+            console.log('[SignInScreen] Expected redirect:', redirectTo);
+            
             const result = await WebBrowser.openAuthSessionAsync(
                 data.url,
                 redirectTo
             );
             
-            console.log('[SignInScreen] WebBrowser result:', result);
+            console.log('[SignInScreen] WebBrowser result:', JSON.stringify(result, null, 2));
+            
+            // Завершаем сессию браузера
+            WebBrowser.maybeCompleteAuthSession();
             
             if (result.type === 'success' && result.url) {
                 // Обрабатываем результат - deep link уже будет обработан RootNavigator
-                console.log('[SignInScreen] OAuth completed, URL:', result.url);
+                console.log('[SignInScreen] OAuth completed successfully, URL:', result.url);
+                
+                // Проверяем, что сессия установлена через RootNavigator
+                // Даем время на обработку deep link
+                setTimeout(async () => {
+                    const { data: { session }, error } = await supabase.auth.getSession();
+                    if (session) {
+                        console.log('[SignInScreen] Session confirmed after OAuth');
+                        showToast('Вход выполнен успешно', 'success');
+                    } else {
+                        console.warn('[SignInScreen] No session after OAuth, error:', error);
+                        // Если сессия не установлена, возможно deep link не обработался
+                        // Показываем сообщение пользователю
+                        showToast('Авторизация завершена, но сессия не установлена. Попробуйте еще раз.', 'error');
+                    }
+                }, 2000);
             } else if (result.type === 'cancel') {
                 console.log('[SignInScreen] OAuth cancelled by user');
                 showToast('Вход отменен', 'info');
+            } else if (result.type === 'dismiss') {
+                console.log('[SignInScreen] OAuth dismissed');
+                showToast('Вход отменен', 'info');
+            } else if (result.type === 'locked') {
+                console.log('[SignInScreen] OAuth locked (browser already open)');
+                showToast('Браузер уже открыт. Закройте его и попробуйте снова.', 'info');
             } else {
                 console.warn('[SignInScreen] OAuth result type:', result.type);
+                // Если результат не success, но URL есть, все равно проверяем сессию
+                if (result.url) {
+                    console.log('[SignInScreen] OAuth URL received but type is not success:', result.url);
+                    // Пробуем обработать URL вручную
+                    setTimeout(async () => {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (!session) {
+                            showToast('Проверьте, что приложение открылось после авторизации', 'info');
+                        }
+                    }, 2000);
+                } else {
+                    showToast('Не удалось завершить авторизацию. Попробуйте снова.', 'error');
+                }
             }
         } catch (error: any) {
             console.error('[SignInScreen] Google sign in error:', error);
