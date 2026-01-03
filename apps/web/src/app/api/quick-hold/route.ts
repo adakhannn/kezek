@@ -24,15 +24,25 @@ export async function POST(req: Request) {
     
     if (bearerToken) {
         // Для мобильного приложения: используем токен напрямую
+        // Создаем клиент с токеном в заголовках
         supabase = createClient(url, anon, {
             global: {
                 headers: {
                     Authorization: `Bearer ${bearerToken}`,
                 },
             },
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+            },
         });
-        const {data: {user: userData}, error: userError} = await supabase.auth.getUser(bearerToken);
+        // Проверяем токен через getUser
+        const {data: {user: userData}, error: userError} = await supabase.auth.getUser();
         if (userError || !userData) {
+            console.error('[quick-hold] Bearer token auth failed:', userError?.message || 'No user', {
+                hasToken: !!bearerToken,
+                tokenLength: bearerToken?.length,
+            });
             return NextResponse.json({ok: false, error: 'auth', message: 'Not signed in'}, {status: 401});
         }
         user = userData;

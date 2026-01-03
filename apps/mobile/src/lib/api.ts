@@ -21,8 +21,14 @@ export async function apiRequest<T>(
     // Получаем токен авторизации из Supabase
     let authToken: string | null = null;
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+            console.warn('[apiRequest] Session error:', sessionError.message);
+        }
         authToken = session?.access_token || null;
+        if (!authToken) {
+            console.warn('[apiRequest] No access token in session');
+        }
     } catch (error) {
         console.warn('[apiRequest] Failed to get session token:', error);
     }
