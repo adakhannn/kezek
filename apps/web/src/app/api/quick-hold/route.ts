@@ -158,9 +158,15 @@ export async function POST(req: Request) {
     // Уведомление (type: 'confirm' если подтвердили, иначе 'hold')
     const notifyType = confirmError ? 'hold' : 'confirm';
     console.log('[quick-hold] Sending notification, type:', notifyType);
-    notifyHold(bookingId, req, notifyType).catch((err) => {
+    
+    // Вызываем уведомление синхронно, чтобы убедиться, что оно отправлено
+    try {
+        await notifyHold(bookingId, req, notifyType);
+        console.log('[quick-hold] Notification sent successfully');
+    } catch (err) {
         console.error('[quick-hold] notifyHold failed:', err);
-    });
+        // Не возвращаем ошибку, так как бронирование уже создано
+    }
 
     return NextResponse.json({
         ok: true, 
