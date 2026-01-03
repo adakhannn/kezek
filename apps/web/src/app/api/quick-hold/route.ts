@@ -157,8 +157,9 @@ export async function POST(req: Request) {
 
     // Уведомление (type: 'confirm' если подтвердили, иначе 'hold')
     const notifyType = confirmError ? 'hold' : 'confirm';
+    console.log('[quick-hold] Sending notification, type:', notifyType);
     notifyHold(bookingId, req, notifyType).catch((err) => {
-        console.error('notifyHold failed', err);
+        console.error('[quick-hold] notifyHold failed:', err);
     });
 
     return NextResponse.json({
@@ -170,11 +171,26 @@ export async function POST(req: Request) {
 }
 
 async function notifyHold(bookingId: string, req: Request, type: 'hold' | 'confirm' = 'hold') {
-    await fetch(new URL('/api/notify', req.url), {
-        method: 'POST',
-        headers: {'content-type': 'application/json'},
-        body: JSON.stringify({type, booking_id: bookingId}),
-    });
+    try {
+        const notifyUrl = new URL('/api/notify', req.url);
+        console.log('[quick-hold] Calling notify API:', notifyUrl.toString(), 'type:', type, 'booking_id:', bookingId);
+        
+        const response = await fetch(notifyUrl, {
+            method: 'POST',
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify({type, booking_id: bookingId}),
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unknown error');
+            console.error('[quick-hold] Notify API error:', response.status, errorText);
+        } else {
+            const result = await response.json().catch(() => ({}));
+            console.log('[quick-hold] Notify API success:', result);
+        }
+    } catch (error) {
+        console.error('[quick-hold] Notify API exception:', error);
+    }
 }
 
 
