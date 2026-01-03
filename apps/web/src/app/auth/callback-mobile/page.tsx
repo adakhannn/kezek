@@ -14,6 +14,11 @@ function CallbackMobileContent() {
     useEffect(() => {
         const redirect = searchParams.get('redirect') || 'kezek://auth/callback';
         
+        console.log('[callback-mobile] Starting redirect, redirect param:', redirect);
+        console.log('[callback-mobile] Current URL:', window.location.href);
+        console.log('[callback-mobile] Hash:', window.location.hash);
+        console.log('[callback-mobile] Search:', window.location.search);
+        
         // Извлекаем токены из hash или query параметров
         const hash = window.location.hash.substring(1);
         const hashParams = new URLSearchParams(hash);
@@ -23,30 +28,71 @@ function CallbackMobileContent() {
         const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
         const code = queryParams.get('code');
 
+        console.log('[callback-mobile] Extracted:', { 
+            hasAccessToken: !!accessToken, 
+            hasRefreshToken: !!refreshToken, 
+            hasCode: !!code 
+        });
+
         // Формируем deep link с токенами
         let deepLink = redirect;
         
         if (accessToken && refreshToken) {
             // Используем hash для передачи токенов (более безопасно)
-            deepLink = `${redirect}#access_token=${accessToken}&refresh_token=${refreshToken}&type=recovery`;
+            deepLink = `${redirect}#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&type=recovery`;
         } else if (code) {
             // Используем query параметр для code
-            deepLink = `${redirect}?code=${code}`;
+            deepLink = `${redirect}?code=${encodeURIComponent(code)}`;
         }
 
-        // Пытаемся открыть deep link
-        // Если приложение установлено, оно откроется
-        // Если нет, пользователь останется на веб-сайте
-        window.location.href = deepLink;
+        console.log('[callback-mobile] Deep link:', deepLink);
 
-        // Fallback: если через 2 секунды не произошел редирект, показываем сообщение
+        // Пытаемся открыть deep link несколькими способами
+        // Способ 1: Создаем скрытую ссылку и кликаем по ней (более надежно для мобильных)
+        const link = document.createElement('a');
+        link.href = deepLink;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Способ 2: Пробуем через window.location (fallback)
         setTimeout(() => {
+            try {
+                window.location.replace(deepLink);
+            } catch (e) {
+                console.warn('[callback-mobile] window.location.replace failed:', e);
+            }
+        }, 100);
+
+        // Способ 3: Пробуем через window.open (еще один fallback)
+        setTimeout(() => {
+            try {
+                window.open(deepLink, '_self');
+            } catch (e) {
+                console.warn('[callback-mobile] window.open failed:', e);
+            }
+        }, 200);
+
+        // Fallback: если через 3 секунды не произошел редирект, редиректим на обычную callback страницу
+        const fallbackTimer = setTimeout(() => {
+            console.warn('[callback-mobile] Deep link redirect failed, falling back to web callback');
             // Проверяем, остались ли мы на этой странице
             if (window.location.pathname.includes('callback-mobile')) {
-                // Редиректим на обычную callback страницу
-                window.location.href = '/auth/callback';
+                // Редиректим на обычную callback страницу с токенами
+                let webCallbackUrl = '/auth/callback';
+                if (accessToken && refreshToken) {
+                    webCallbackUrl += `#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}`;
+                } else if (code) {
+                    webCallbackUrl += `?code=${encodeURIComponent(code)}`;
+                }
+                window.location.href = webCallbackUrl;
             }
-        }, 2000);
+        }, 3000);
+
+        return () => {
+            clearTimeout(fallbackTimer);
+        };
     }, [searchParams]);
 
     return (
