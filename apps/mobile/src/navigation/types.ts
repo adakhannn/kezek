@@ -5,6 +5,12 @@ export type RootStackParamList = {
     Main: NavigatorScreenParams<MainTabParamList>;
     BookingDetails: { id: string };
     Booking: { slug: string };
+    BookingStep1Branch: { slug: string };
+    BookingStep2Service: undefined;
+    BookingStep3Staff: undefined;
+    BookingStep4Date: undefined;
+    BookingStep5Time: undefined;
+    BookingStep6Confirm: undefined;
 };
 
 export type MainTabParamList = {

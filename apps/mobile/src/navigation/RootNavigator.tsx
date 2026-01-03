@@ -10,6 +10,13 @@ import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import BookingDetailsScreen from '../screens/BookingDetailsScreen';
 import BookingScreen from '../screens/BookingScreen';
+import BookingStep1Branch from '../screens/booking/BookingStep1Branch';
+import BookingStep2Service from '../screens/booking/BookingStep2Service';
+import BookingStep3Staff from '../screens/booking/BookingStep3Staff';
+import BookingStep4Date from '../screens/booking/BookingStep4Date';
+import BookingStep5Time from '../screens/booking/BookingStep5Time';
+import BookingStep6Confirm from '../screens/booking/BookingStep6Confirm';
+import { BookingProvider } from '../contexts/BookingContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -273,37 +280,69 @@ export default function RootNavigator() {
         );
     }
 
-    return (
-        <NavigationContainer linking={linking}>
-            <Stack.Navigator screenOptions={{ headerShown: true }}>
-                {session ? (
-                    <>
-                        <Stack.Screen
-                            name="Main"
-                            component={MainNavigator}
-                            options={{ headerShown: false }}
-                        />
-                        <Stack.Screen
-                            name="BookingDetails"
-                            component={BookingDetailsScreen}
-                            options={{ title: 'Детали записи' }}
-                        />
-                        <Stack.Screen
-                            name="Booking"
-                            component={BookingScreen}
-                            options={{ title: 'Запись' }}
-                        />
-                    </>
-                ) : (
-                    <Stack.Screen
-                        name="Auth"
-                        component={AuthNavigator}
-                        options={{ headerShown: false }}
-                    />
-                )}
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+        return (
+            <BookingProvider>
+                <NavigationContainer linking={linking}>
+                    <Stack.Navigator screenOptions={{ headerShown: true }}>
+                        {session ? (
+                            <>
+                                <Stack.Screen
+                                    name="Main"
+                                    component={MainNavigator}
+                                    options={{ headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="BookingDetails"
+                                    component={BookingDetailsScreen}
+                                    options={{ title: 'Детали записи' }}
+                                />
+                                <Stack.Screen
+                                    name="Booking"
+                                    component={BookingScreen}
+                                    options={{ title: 'Запись', headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="BookingStep1Branch"
+                                    component={BookingStep1Branch}
+                                    options={{ title: 'Выбор филиала', headerBackTitle: 'Назад' }}
+                                />
+                                <Stack.Screen
+                                    name="BookingStep2Service"
+                                    component={BookingStep2Service}
+                                    options={{ title: 'Выбор услуги', headerBackTitle: 'Назад' }}
+                                />
+                                <Stack.Screen
+                                    name="BookingStep3Staff"
+                                    component={BookingStep3Staff}
+                                    options={{ title: 'Выбор мастера', headerBackTitle: 'Назад' }}
+                                />
+                                <Stack.Screen
+                                    name="BookingStep4Date"
+                                    component={BookingStep4Date}
+                                    options={{ title: 'Выбор даты', headerBackTitle: 'Назад' }}
+                                />
+                                <Stack.Screen
+                                    name="BookingStep5Time"
+                                    component={BookingStep5Time}
+                                    options={{ title: 'Выбор времени', headerBackTitle: 'Назад' }}
+                                />
+                                <Stack.Screen
+                                    name="BookingStep6Confirm"
+                                    component={BookingStep6Confirm}
+                                    options={{ title: 'Подтверждение', headerBackTitle: 'Назад' }}
+                                />
+                            </>
+                        ) : (
+                            <Stack.Screen
+                                name="Auth"
+                                component={AuthNavigator}
+                                options={{ headerShown: false }}
+                            />
+                        )}
+                    </Stack.Navigator>
+                </NavigationContainer>
+            </BookingProvider>
+        );
 }
 
 const styles = StyleSheet.create({
