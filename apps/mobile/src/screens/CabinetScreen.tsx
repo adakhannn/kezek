@@ -21,10 +21,10 @@ type Booking = {
         name_ru: string;
     } | null;
     staff: {
-        name_ru: string;
+        full_name: string;
     } | null;
     branch: {
-        name_ru: string;
+        name: string;
         address: string;
     } | null;
     business: {
@@ -63,8 +63,8 @@ export default function CabinetScreen() {
                     end_at,
                     status,
                     service:services(name_ru),
-                    staff:staff(name_ru),
-                    branch:branches(name_ru, address),
+                    staff:staff(full_name),
+                    branch:branches(name, address),
                     business:businesses(name)
                 `)
                 .eq('client_id', user.id)
@@ -178,13 +178,13 @@ export default function CabinetScreen() {
 
                                     {booking.staff && (
                                         <Text style={styles.bookingStaff}>
-                                            Мастер: {booking.staff.name_ru}
+                                            Мастер: {booking.staff.full_name}
                                         </Text>
                                     )}
 
                                     {booking.branch && (
                                         <Text style={styles.bookingBranch}>
-                                            {booking.branch.name_ru}
+                                            {booking.branch.name}
                                             {booking.branch.address && ` • ${booking.branch.address}`}
                                         </Text>
                                     )}

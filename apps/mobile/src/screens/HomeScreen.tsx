@@ -29,11 +29,11 @@ export default function HomeScreen() {
         queryKey: ['businesses', search],
         queryFn: async () => {
             // Используем те же условия, что и в веб-версии
+            // В таблице businesses нет колонки is_active, только is_approved
             let query = supabase
                 .from('businesses')
                 .select('id, name, slug')
-                .eq('is_active', true)
-                .eq('is_approved', true); // Добавляем проверку is_approved
+                .eq('is_approved', true);
 
             if (search) {
                 query = query.ilike('name', `%${search}%`);
