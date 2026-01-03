@@ -120,7 +120,10 @@ function buildHtmlPersonal(
 export async function POST(req: Request) {
     try {
         const body: NotifyBody = await req.json();
+        console.log('[notify] Received notification request:', { type: body?.type, booking_id: body?.booking_id });
+        
         if (!body?.type || !body?.booking_id) {
+            console.error('[notify] Bad request: missing type or booking_id');
             return NextResponse.json({ ok: false, error: 'bad_request' }, { status: 400 });
         }
 
@@ -131,8 +134,11 @@ export async function POST(req: Request) {
         const origin = originEnv.includes('vercel.app') ? 'https://kezek.kg' : originEnv;
 
         if (!apiKey) {
+            console.error('[notify] RESEND_API_KEY is not set');
             return NextResponse.json({ ok: false, error: 'no RESEND_API_KEY' }, { status: 500 });
         }
+        
+        console.log('[notify] Resend API key found, from:', from);
 
         // Supabase client (SSR)
         const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -353,13 +359,27 @@ export async function POST(req: Request) {
         }
 
         // мастер
+        console.log('[notify] Staff email check:', {
+            hasEmail: !!staffEmail,
+            email: staffEmail,
+        });
         if (staffEmail) {
             recipients.push({ email: staffEmail, name: staf?.full_name ?? null, role: 'staff' });
+            console.log('[notify] Added staff to recipients:', staffEmail);
+        } else {
+            console.log('[notify] Skipping email to staff: no email address');
         }
 
         // владелец
+        console.log('[notify] Owner email check:', {
+            hasEmail: !!ownerEmail,
+            email: ownerEmail,
+        });
         if (ownerEmail) {
             recipients.push({ email: ownerEmail, name: ownerName, role: 'owner' });
+            console.log('[notify] Added owner to recipients:', ownerEmail);
+        } else {
+            console.log('[notify] Skipping email to owner: no email address');
         }
 
         // администраторы из списка
