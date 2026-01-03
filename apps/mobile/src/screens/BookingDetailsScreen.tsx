@@ -6,7 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../lib/supabase';
 import { apiRequest } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
-import { formatDateTime, formatPhone } from '../utils/format';
+import { formatDate, formatTime, formatPhone } from '../utils/format';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
@@ -28,10 +28,10 @@ type BookingDetails = {
         price: number | null;
     } | null;
     staff: {
-        name_ru: string;
+        full_name: string;
     } | null;
     branch: {
-        name_ru: string;
+        name: string;
         address: string;
     } | null;
     business: {
@@ -50,6 +50,12 @@ export default function BookingDetailsScreen() {
     const { data: booking, isLoading } = useQuery({
         queryKey: ['booking', bookingId],
         queryFn: async () => {
+            // Получаем текущего пользователя для проверки прав доступа
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                throw new Error('Необходима авторизация');
+            }
+
             const { data, error } = await supabase
                 .from('bookings')
                 .select(`
@@ -58,14 +64,23 @@ export default function BookingDetailsScreen() {
                     end_at,
                     status,
                     service:services(name_ru, duration_minutes, price),
-                    staff:staff(name_ru),
-                    branch:branches(name_ru, address),
+                    staff:staff(full_name),
+                    branch:branches(name, address),
                     business:businesses(name, phones)
                 `)
                 .eq('id', bookingId)
+                .eq('client_id', user.id) // Фильтруем по client_id для безопасности
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('[BookingDetailsScreen] Error fetching booking:', error);
+                throw error;
+            }
+            
+            if (!data) {
+                throw new Error('Бронирование не найдено');
+            }
+            
             return data as BookingDetails;
         },
         enabled: !!bookingId,
@@ -178,14 +193,14 @@ export default function BookingDetailsScreen() {
                 {booking.staff && (
                     <View style={styles.section}>
                         <Text style={styles.label}>Мастер</Text>
-                        <Text style={styles.value}>{booking.staff.name_ru}</Text>
+                        <Text style={styles.value}>{booking.staff.full_name}</Text>
                     </View>
                 )}
 
                 {booking.branch && (
                     <View style={styles.section}>
                         <Text style={styles.label}>Филиал</Text>
-                        <Text style={styles.value}>{booking.branch.name_ru}</Text>
+                        <Text style={styles.value}>{booking.branch.name}</Text>
                         {booking.branch.address && (
                             <Text style={styles.address}>{booking.branch.address}</Text>
                         )}
