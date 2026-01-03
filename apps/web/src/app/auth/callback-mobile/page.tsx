@@ -38,6 +38,9 @@ function CallbackMobileContent() {
             });
         }
 
+        // Формируем deep link заранее (будет обновлен после получения exchange code)
+        let deepLink = redirect;
+        
         // Асинхронная функция для обработки токенов
         const processTokens = async () => {
             let exchangeCode: string | null = null;
@@ -67,9 +70,7 @@ function CallbackMobileContent() {
                 }
             }
 
-            // Формируем deep link с кодом обмена
-            let deepLink = redirect;
-            
+            // Обновляем deep link с кодом обмена
             if (exchangeCode) {
                 // Используем код обмена вместо прямых токенов (более безопасно)
                 deepLink = `${redirect}?exchange_code=${encodeURIComponent(exchangeCode)}`;
@@ -82,97 +83,173 @@ function CallbackMobileContent() {
             }
 
             // Пытаемся открыть deep link несколькими способами
+            let redirectAttempted = false;
+            
+            // Функция для попытки редиректа
+            const attemptRedirect = (method: string, fn: () => void) => {
+                try {
+                    fn();
+                    redirectAttempted = true;
+                    console.warn(`[callback-mobile] Redirect attempted via ${method}`);
+                } catch (e) {
+                    console.warn(`[callback-mobile] ${method} failed:`, e);
+                }
+            };
+
             // Способ 1: Создаем скрытую ссылку и кликаем по ней (более надежно для мобильных)
-            try {
+            attemptRedirect('link.click', () => {
                 const link = document.createElement('a');
                 link.href = deepLink;
                 link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-            } catch (e) {
-                console.warn('[callback-mobile] link.click() failed:', e);
-            }
+            });
 
-            // Способ 2: Пробуем через window.location (fallback)
+            // Способ 2: Пробуем через window.location.replace
             setTimeout(() => {
-                try {
-                    window.location.replace(deepLink);
-                } catch (e) {
-                    console.warn('[callback-mobile] window.location.replace failed:', e);
+                if (!redirectAttempted) {
+                    attemptRedirect('window.location.replace', () => {
+                        window.location.replace(deepLink);
+                    });
                 }
             }, 100);
 
-            // Способ 3: Пробуем через window.open (еще один fallback)
+            // Способ 3: Пробуем через window.location.href
             setTimeout(() => {
-                try {
-                    window.open(deepLink, '_self');
-                } catch (e) {
-                    console.warn('[callback-mobile] window.open failed:', e);
+                if (!redirectAttempted) {
+                    attemptRedirect('window.location.href', () => {
+                        window.location.href = deepLink;
+                    });
                 }
             }, 200);
+
+            // Способ 4: Пробуем через window.open
+            setTimeout(() => {
+                if (!redirectAttempted) {
+                    attemptRedirect('window.open', () => {
+                        window.open(deepLink, '_self');
+                    });
+                }
+            }, 300);
             
-            // Способ 4: Если это Universal Link (https://), пробуем открыть напрямую
+            // Способ 5: Если это Universal Link (https://), пробуем открыть напрямую
             if (deepLink.startsWith('https://')) {
                 setTimeout(() => {
-                    try {
-                        window.location.href = deepLink;
-                    } catch (e) {
-                        console.warn('[callback-mobile] Direct navigation failed:', e);
+                    if (!redirectAttempted) {
+                        attemptRedirect('direct navigation', () => {
+                            window.location.href = deepLink;
+                        });
                     }
-                }, 300);
+                }, 400);
             }
         };
 
         // Запускаем обработку токенов
         processTokens();
 
-        // Fallback: если через 2 секунды не произошел редирект, показываем инструкцию
-        const fallbackTimer = setTimeout(() => {
-            // Проверяем, остались ли мы на этой странице
-            if (window.location.pathname.includes('callback-mobile')) {
-                // Показываем инструкцию пользователю вместо автоматического редиректа
-                const instructionDiv = document.createElement('div');
-                instructionDiv.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.9);
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 20px;
-                    z-index: 10000;
-                    color: white;
-                    text-align: center;
-                `;
-                instructionDiv.innerHTML = `
-                    <h2 style="margin-bottom: 20px; font-size: 24px;">Авторизация завершена!</h2>
-                    <p style="margin-bottom: 30px; font-size: 16px; line-height: 1.6;">
-                        Вернитесь в мобильное приложение Kezek.<br/>
-                        Вы будете автоматически авторизованы.
-                    </p>
-                    <button 
-                        onclick="window.close()" 
-                        style="
-                            padding: 12px 24px;
-                            background: #6366f1;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            font-size: 16px;
-                            cursor: pointer;
-                        "
-                    >
-                        Закрыть
-                    </button>
-                `;
-                document.body.appendChild(instructionDiv);
-            }
-        }, 2000);
+            // Fallback: если через 1.5 секунды не произошел редирект, показываем блокирующий экран
+            const fallbackTimer = setTimeout(() => {
+                // Проверяем, остались ли мы на этой странице
+                if (window.location.pathname.includes('callback-mobile')) {
+                    // Скрываем весь контент страницы
+                    const originalContent = document.body.innerHTML;
+                    document.body.style.overflow = 'hidden';
+                    
+                    // Показываем блокирующий экран БЕЗ кнопки закрыть
+                    const instructionDiv = document.createElement('div');
+                    instructionDiv.id = 'callback-mobile-blocker';
+                    instructionDiv.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 30px;
+                        z-index: 99999;
+                        color: white;
+                        text-align: center;
+                    `;
+                    instructionDiv.innerHTML = `
+                        <div style="
+                            background: rgba(255, 255, 255, 0.1);
+                            backdrop-filter: blur(10px);
+                            border-radius: 20px;
+                            padding: 40px 30px;
+                            max-width: 400px;
+                            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                        ">
+                            <div style="
+                                width: 80px;
+                                height: 80px;
+                                border: 4px solid rgba(255, 255, 255, 0.3);
+                                border-top-color: white;
+                                border-radius: 50%;
+                                animation: spin 1s linear infinite;
+                                margin: 0 auto 30px;
+                            "></div>
+                            <h2 style="
+                                margin: 0 0 20px 0;
+                                font-size: 28px;
+                                font-weight: bold;
+                            ">Авторизация завершена!</h2>
+                            <p style="
+                                margin: 0 0 30px 0;
+                                font-size: 18px;
+                                line-height: 1.6;
+                                opacity: 0.95;
+                            ">
+                                Вернитесь в мобильное приложение Kezek.<br/>
+                                <strong>Вы будете автоматически авторизованы.</strong>
+                            </p>
+                            <div style="
+                                background: rgba(255, 255, 255, 0.2);
+                                border-radius: 12px;
+                                padding: 20px;
+                                margin-top: 20px;
+                            ">
+                                <p style="
+                                    margin: 0;
+                                    font-size: 14px;
+                                    opacity: 0.9;
+                                ">
+                                    💡 Переключитесь на приложение вручную
+                                </p>
+                            </div>
+                        </div>
+                        <style>
+                            @keyframes spin {
+                                to { transform: rotate(360deg); }
+                            }
+                        </style>
+                    `;
+                    document.body.innerHTML = '';
+                    document.body.appendChild(instructionDiv);
+                    
+                    // Продолжаем попытки редиректа в фоне
+                    const retryInterval = setInterval(() => {
+                        if (!window.location.pathname.includes('callback-mobile')) {
+                            clearInterval(retryInterval);
+                            return;
+                        }
+                        try {
+                            window.location.href = deepLink;
+                        } catch (e) {
+                            // Игнорируем ошибки
+                        }
+                    }, 2000);
+                    
+                    // Очищаем интервал через 5 минут (на случай, если пользователь не вернется)
+                    setTimeout(() => {
+                        clearInterval(retryInterval);
+                    }, 5 * 60 * 1000);
+                }
+            }, 1500);
 
         return () => {
             clearTimeout(fallbackTimer);
