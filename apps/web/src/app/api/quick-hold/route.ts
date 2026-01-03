@@ -120,19 +120,33 @@ export async function POST(req: Request) {
         );
     }
 
-    // Уведомление
-    notifyHold(bookingId, req).catch((err) => {
+    // Автоматически подтверждаем бронирование (для мобильного приложения)
+    // В веб-версии подтверждение происходит отдельно через confirm_booking
+    const { error: confirmError } = await supabase.rpc('confirm_booking', {
+        p_booking_id: bookingId,
+    });
+    
+    if (confirmError) {
+        console.error('[quick-hold] Failed to confirm booking:', confirmError);
+        // Не возвращаем ошибку, так как бронирование уже создано
+        // Пользователь может подтвердить его вручную позже
+    } else {
+        console.log('[quick-hold] Booking confirmed successfully:', bookingId);
+    }
+
+    // Уведомление (type: 'confirm' вместо 'hold', так как мы подтвердили)
+    notifyHold(bookingId, req, 'confirm').catch((err) => {
         console.error('notifyHold failed', err);
     });
 
     return NextResponse.json({ok: true, booking_id: bookingId});
 }
 
-async function notifyHold(bookingId: string, req: Request) {
+async function notifyHold(bookingId: string, req: Request, type: 'hold' | 'confirm' = 'hold') {
     await fetch(new URL('/api/notify', req.url), {
         method: 'POST',
         headers: {'content-type': 'application/json'},
-        body: JSON.stringify({type: 'hold', booking_id: bookingId}),
+        body: JSON.stringify({type, booking_id: bookingId}),
     });
 }
 
