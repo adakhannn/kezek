@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList, CabinetStackParamList } from './types';
+import { useUserRole } from '../hooks/useUserRole';
 import HomeScreen from '../screens/HomeScreen';
 import CabinetScreen from '../screens/CabinetScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -30,6 +31,8 @@ function CabinetNavigator() {
 }
 
 export default function MainNavigator() {
+    const { isOwner, isStaff, isLoading } = useUserRole();
+
     return (
         <Tab.Navigator
             screenOptions={{
@@ -63,28 +66,34 @@ export default function MainNavigator() {
                     ),
                 }} 
             />
-            <Tab.Screen 
-                name="Dashboard" 
-                component={DashboardScreen} 
-                options={{ 
-                    title: 'Кабинет бизнеса',
-                    tabBarLabel: 'Бизнес',
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="business" size={size} color={color} />
-                    ),
-                }} 
-            />
-            <Tab.Screen 
-                name="Staff" 
-                component={StaffScreen} 
-                options={{ 
-                    title: 'Кабинет сотрудника',
-                    tabBarLabel: 'Сотрудник',
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="briefcase" size={size} color={color} />
-                    ),
-                }} 
-            />
+            {/* Показываем вкладку "Бизнес" только для владельцев бизнеса */}
+            {isOwner && (
+                <Tab.Screen 
+                    name="Dashboard" 
+                    component={DashboardScreen} 
+                    options={{ 
+                        title: 'Кабинет бизнеса',
+                        tabBarLabel: 'Бизнес',
+                        tabBarIcon: ({ color, size }) => (
+                            <Ionicons name="business" size={size} color={color} />
+                        ),
+                    }} 
+                />
+            )}
+            {/* Показываем вкладку "Сотрудник" только для сотрудников */}
+            {isStaff && (
+                <Tab.Screen 
+                    name="Staff" 
+                    component={StaffScreen} 
+                    options={{ 
+                        title: 'Кабинет сотрудника',
+                        tabBarLabel: 'Сотрудник',
+                        tabBarIcon: ({ color, size }) => (
+                            <Ionicons name="briefcase" size={size} color={color} />
+                        ),
+                    }} 
+                />
+            )}
         </Tab.Navigator>
     );
 }
