@@ -51,7 +51,7 @@ export default function BookingStep6Confirm() {
                 throw new Error('Данные бронирования неполные');
             }
 
-            return apiRequest<{ ok: boolean; booking_id: string }>('/quick-hold', {
+            return apiRequest<{ ok: boolean; booking_id: string }>('/api/quick-hold', {
                 method: 'POST',
                 body: JSON.stringify({
                     biz_id: bookingData.business.id,
