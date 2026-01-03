@@ -90,15 +90,51 @@ export default function RootNavigator() {
                     const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
                     const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
                     const code = queryParams.get('code');
+                    const exchangeCode = queryParams.get('exchange_code'); // Код для обмена через API
 
                     console.log('[RootNavigator] Extracted from URL:', { 
                         hasAccessToken: !!accessToken, 
                         hasRefreshToken: !!refreshToken, 
-                        hasCode: !!code 
+                        hasCode: !!code,
+                        hasExchangeCode: !!exchangeCode
                     });
 
-                    if (accessToken && refreshToken) {
-                        // Устанавливаем сессию из токенов
+                    // Приоритет 1: Обмен кода через API (самый безопасный способ)
+                    if (exchangeCode) {
+                        console.log('[RootNavigator] Exchanging code via API:', exchangeCode);
+                        try {
+                            // Используем тот же способ получения API_URL, что и в api.ts
+                            const Constants = require('expo-constants').default;
+                            const apiUrl = 
+                                process.env.EXPO_PUBLIC_API_URL || 
+                                Constants.expoConfig?.extra?.apiUrl ||
+                                Constants.manifest?.extra?.apiUrl ||
+                                'https://kezek.kg';
+                            
+                            console.log('[RootNavigator] API URL:', apiUrl);
+                            const response = await fetch(`${apiUrl}/api/auth/mobile-exchange?code=${encodeURIComponent(exchangeCode)}`);
+                            
+                            if (response.ok) {
+                                const { accessToken: apiAccessToken, refreshToken: apiRefreshToken } = await response.json();
+                                console.log('[RootNavigator] Tokens received from API, setting session');
+                                const { error } = await supabase.auth.setSession({
+                                    access_token: apiAccessToken,
+                                    refresh_token: apiRefreshToken,
+                                });
+                                if (error) {
+                                    console.error('[RootNavigator] Error setting session from API:', error);
+                                } else {
+                                    console.log('[RootNavigator] Session set successfully from API');
+                                }
+                            } else {
+                                const errorText = await response.text();
+                                console.error('[RootNavigator] API exchange failed:', response.status, errorText);
+                            }
+                        } catch (error) {
+                            console.error('[RootNavigator] Error exchanging code via API:', error);
+                        }
+                    } else if (accessToken && refreshToken) {
+                        // Приоритет 2: Прямые токены из URL
                         console.log('[RootNavigator] Setting session from tokens');
                         const { error } = await supabase.auth.setSession({
                             access_token: accessToken,
@@ -110,7 +146,7 @@ export default function RootNavigator() {
                             console.log('[RootNavigator] Session set successfully');
                         }
                     } else if (code) {
-                        // Обмениваем code на сессию (для OAuth)
+                        // Приоритет 3: OAuth code от Supabase
                         console.log('[RootNavigator] Exchanging code for session');
                         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                         if (error) {

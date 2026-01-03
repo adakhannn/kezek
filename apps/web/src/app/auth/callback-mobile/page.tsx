@@ -14,10 +14,11 @@ function CallbackMobileContent() {
     useEffect(() => {
         const redirect = searchParams.get('redirect') || 'kezek://auth/callback';
         
-        console.log('[callback-mobile] Starting redirect, redirect param:', redirect);
-        console.log('[callback-mobile] Current URL:', window.location.href);
-        console.log('[callback-mobile] Hash:', window.location.hash);
-        console.log('[callback-mobile] Search:', window.location.search);
+        // Логирование для отладки (только в dev режиме)
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('[callback-mobile] Starting redirect, redirect param:', redirect);
+            console.warn('[callback-mobile] Current URL:', window.location.href);
+        }
         
         // Извлекаем токены из hash или query параметров
         const hash = window.location.hash.substring(1);
@@ -28,74 +29,106 @@ function CallbackMobileContent() {
         const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
         const code = queryParams.get('code');
 
-        console.log('[callback-mobile] Extracted:', { 
-            hasAccessToken: !!accessToken, 
-            hasRefreshToken: !!refreshToken, 
-            hasCode: !!code 
-        });
-
-        // Формируем deep link с токенами
-        let deepLink = redirect;
-        
-        if (accessToken && refreshToken) {
-            // Используем hash для передачи токенов (более безопасно)
-            deepLink = `${redirect}#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&type=recovery`;
-        } else if (code) {
-            // Используем query параметр для code
-            deepLink = `${redirect}?code=${encodeURIComponent(code)}`;
+        // Логирование для отладки
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('[callback-mobile] Extracted:', { 
+                hasAccessToken: !!accessToken, 
+                hasRefreshToken: !!refreshToken, 
+                hasCode: !!code 
+            });
         }
 
-        console.log('[callback-mobile] Deep link:', deepLink);
-
-        // Пытаемся открыть deep link несколькими способами
-        // Способ 1: Создаем скрытую ссылку и кликаем по ней (более надежно для мобильных)
-        try {
-            const link = document.createElement('a');
-            link.href = deepLink;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            console.log('[callback-mobile] Attempted redirect via link.click()');
-        } catch (e) {
-            console.warn('[callback-mobile] link.click() failed:', e);
-        }
-
-        // Способ 2: Пробуем через window.location (fallback)
-        setTimeout(() => {
-            try {
-                console.log('[callback-mobile] Attempting window.location.replace');
-                window.location.replace(deepLink);
-            } catch (e) {
-                console.warn('[callback-mobile] window.location.replace failed:', e);
+        // Асинхронная функция для обработки токенов
+        const processTokens = async () => {
+            let exchangeCode: string | null = null;
+            
+            if (accessToken && refreshToken) {
+                try {
+                    const response = await fetch('/api/auth/mobile-exchange', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            accessToken,
+                            refreshToken,
+                        }),
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        exchangeCode = data.code;
+                    } else {
+                        const errorText = await response.text();
+                        console.error('[callback-mobile] Failed to store tokens:', errorText);
+                    }
+                } catch (error) {
+                    console.error('[callback-mobile] Error storing tokens:', error);
+                }
             }
-        }, 100);
 
-        // Способ 3: Пробуем через window.open (еще один fallback)
-        setTimeout(() => {
-            try {
-                console.log('[callback-mobile] Attempting window.open');
-                window.open(deepLink, '_self');
-            } catch (e) {
-                console.warn('[callback-mobile] window.open failed:', e);
+            // Формируем deep link с кодом обмена
+            let deepLink = redirect;
+            
+            if (exchangeCode) {
+                // Используем код обмена вместо прямых токенов (более безопасно)
+                deepLink = `${redirect}?exchange_code=${encodeURIComponent(exchangeCode)}`;
+            } else if (code) {
+                // Используем query параметр для code (OAuth code от Supabase)
+                deepLink = `${redirect}?code=${encodeURIComponent(code)}`;
+            } else if (accessToken && refreshToken) {
+                // Fallback: используем hash для передачи токенов напрямую
+                deepLink = `${redirect}#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&type=recovery`;
             }
-        }, 200);
-        
-        // Способ 4: Если это Universal Link (https://), пробуем открыть напрямую
-        if (deepLink.startsWith('https://')) {
+
+            // Пытаемся открыть deep link несколькими способами
+            // Способ 1: Создаем скрытую ссылку и кликаем по ней (более надежно для мобильных)
+            try {
+                const link = document.createElement('a');
+                link.href = deepLink;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                console.warn('[callback-mobile] link.click() failed:', e);
+            }
+
+            // Способ 2: Пробуем через window.location (fallback)
             setTimeout(() => {
                 try {
-                    console.log('[callback-mobile] Attempting direct navigation to Universal Link');
-                    window.location.href = deepLink;
+                    window.location.replace(deepLink);
                 } catch (e) {
-                    console.warn('[callback-mobile] Direct navigation failed:', e);
+                    console.warn('[callback-mobile] window.location.replace failed:', e);
                 }
-            }, 300);
-        }
+            }, 100);
+
+            // Способ 3: Пробуем через window.open (еще один fallback)
+            setTimeout(() => {
+                try {
+                    window.open(deepLink, '_self');
+                } catch (e) {
+                    console.warn('[callback-mobile] window.open failed:', e);
+                }
+            }, 200);
+            
+            // Способ 4: Если это Universal Link (https://), пробуем открыть напрямую
+            if (deepLink.startsWith('https://')) {
+                setTimeout(() => {
+                    try {
+                        window.location.href = deepLink;
+                    } catch (e) {
+                        console.warn('[callback-mobile] Direct navigation failed:', e);
+                    }
+                }, 300);
+            }
+        };
+
+        // Запускаем обработку токенов
+        processTokens();
 
         // Fallback: если через 2 секунды не произошел редирект, показываем инструкцию
         const fallbackTimer = setTimeout(() => {
-            console.warn('[callback-mobile] Deep link redirect failed, showing instructions');
             // Проверяем, остались ли мы на этой странице
             if (window.location.pathname.includes('callback-mobile')) {
                 // Показываем инструкцию пользователю вместо автоматического редиректа
@@ -138,15 +171,6 @@ function CallbackMobileContent() {
                     </button>
                 `;
                 document.body.appendChild(instructionDiv);
-                
-                // Также пробуем открыть deep link еще раз
-                setTimeout(() => {
-                    try {
-                        window.location.href = deepLink;
-                    } catch (e) {
-                        console.warn('[callback-mobile] Final redirect attempt failed:', e);
-                    }
-                }, 500);
             }
         }, 2000);
 
@@ -189,4 +213,3 @@ export default function CallbackMobilePage() {
         </Suspense>
     );
 }
-

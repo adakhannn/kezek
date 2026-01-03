@@ -142,15 +142,11 @@ export default function SignInScreen() {
                 }, 1000);
             } else if (result.type === 'dismiss') {
                 // Браузер был закрыт, но пользователь мог авторизоваться на веб-сайте
-                // Проверяем сессию - возможно она уже установлена через cookies/localStorage
+                // Проверяем сессию - возможно она уже установлена через deep link
                 console.log('[SignInScreen] Browser dismissed, checking if user authorized on web');
                 
-                // Даем время на то, чтобы веб-сайт установил cookies
+                // Даем время на то, чтобы deep link обработался (если он пришел)
                 setTimeout(async () => {
-                    // Пробуем получить сессию через API, так как пользователь мог авторизоваться на веб-сайте
-                    // Но в мобильном приложении cookies не доступны напрямую
-                    // Поэтому нужно использовать другой подход
-                    
                     // Проверяем, есть ли сессия (может быть установлена через deep link, который пришел позже)
                     const { data: { session }, error } = await supabase.auth.getSession();
                     if (session) {
@@ -161,7 +157,7 @@ export default function SignInScreen() {
                         // Показываем инструкцию пользователю
                         showToast('Авторизация завершена на веб-сайте. Вернитесь в приложение или перезапустите его.', 'info');
                     }
-                }, 2000);
+                }, 3000); // Увеличиваем время ожидания для обработки deep link
             } else if (result.type === 'cancel') {
                 console.log('[SignInScreen] OAuth cancelled by user');
                 showToast('Вход отменен', 'info');
