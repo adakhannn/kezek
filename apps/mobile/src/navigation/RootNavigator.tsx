@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Linking } from 'react-native';
+import { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Linking, AppState, AppStateStatus } from 'react-native';
 
 import { supabase } from '../lib/supabase';
 import { RootStackParamList } from './types';
@@ -184,13 +184,37 @@ export default function RootNavigator() {
             console.log('[RootNavigator] Auth state changed:', event, 'hasSession:', !!session);
             if (event === 'SIGNED_IN' && session) {
                 console.log('[RootNavigator] User signed in, session:', session.user.id);
+                setSession(session);
+            } else if (event === 'SIGNED_OUT') {
+                console.log('[RootNavigator] User signed out');
+                setSession(null);
             }
         });
+
+        // Слушаем изменения состояния приложения (когда приложение возвращается из фона)
+        const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+            if (nextAppState === 'active') {
+                console.log('[RootNavigator] App became active, checking session...');
+                // Проверяем сессию при возврате приложения из фона
+                // Это может помочь, если deep link не сработал, но пользователь авторизовался на веб-сайте
+                const { data: { session: currentSession } } = await supabase.auth.getSession();
+                if (currentSession && !session) {
+                    console.log('[RootNavigator] Session found after app became active');
+                    setSession(currentSession);
+                } else if (!currentSession && session) {
+                    console.log('[RootNavigator] Session lost after app became active');
+                    setSession(null);
+                }
+            }
+        };
+
+        const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
 
         return () => {
             authSubscription.unsubscribe();
             sessionSubscription.unsubscribe();
             linkingSubscription.remove();
+            appStateSubscription.remove();
         };
     }, []);
 
