@@ -1,20 +1,28 @@
 import { TextInput, Text, View, StyleSheet, TextInputProps } from 'react-native';
+import { colors } from '../../constants/colors';
 
 type InputProps = TextInputProps & {
     label?: string;
     error?: string;
+    helperText?: string;
 };
 
-export default function Input({ label, error, style, ...props }: InputProps) {
+export default function Input({ label, error, helperText, style, ...props }: InputProps) {
     return (
         <View style={styles.container}>
             {label && <Text style={styles.label}>{label}</Text>}
             <TextInput
-                style={[styles.input, error && styles.inputError, style]}
-                placeholderTextColor="#9ca3af"
+                style={[
+                    styles.input,
+                    error && styles.inputError,
+                    !error && props.editable === false && styles.inputReadOnly,
+                    style,
+                ]}
+                placeholderTextColor={colors.text.tertiary}
                 {...props}
             />
             {error && <Text style={styles.error}>{error}</Text>}
+            {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
         </View>
     );
 }
@@ -22,28 +30,39 @@ export default function Input({ label, error, style, ...props }: InputProps) {
 const styles = StyleSheet.create({
     container: {
         marginBottom: 16,
+        width: '100%',
     },
     label: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#374151',
-        marginBottom: 8,
+        color: colors.text.primary,
+        marginBottom: 6,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#d1d5db',
+        borderColor: colors.border.light,
         borderRadius: 8,
-        padding: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
         fontSize: 16,
-        backgroundColor: '#fff',
+        backgroundColor: colors.background.secondary,
+        color: colors.text.primary,
     },
     inputError: {
-        borderColor: '#ef4444',
+        borderColor: colors.status.cancelled,
+    },
+    inputReadOnly: {
+        backgroundColor: colors.background.secondary,
     },
     error: {
         fontSize: 12,
-        color: '#ef4444',
-        marginTop: 4,
+        color: colors.status.cancelled,
+        marginTop: 6,
+    },
+    helperText: {
+        fontSize: 12,
+        color: colors.text.secondary,
+        marginTop: 6,
     },
 });
 

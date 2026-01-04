@@ -222,15 +222,15 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     title: {
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: 'bold',
         marginBottom: 8,
         color: '#111827',
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 18,
         color: '#6b7280',
-        marginBottom: 24,
+        marginBottom: 32,
     },
     secondaryButton: {
         marginTop: 12,

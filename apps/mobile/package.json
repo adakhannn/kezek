@@ -20,6 +20,7 @@
     "date-fns-tz": "^3.2.0",
     "expo": "~54.0.30",
     "expo-constants": "~18.0.12",
+    "expo-linear-gradient": "^15.0.8",
     "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",
     "expo-web-browser": "^15.0.10",

@@ -4,9 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
+import { colors } from '../../constants/colors';
+import Button from '../../components/ui/Button';
+import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -38,18 +42,19 @@ export default function BookingStep3Staff() {
             setStaff(staffData);
             if (staffData.length === 1) {
                 setStaffId(staffData[0].id);
-                setTimeout(() => {
-                    // @ts-ignore
-                    navigation.navigate('BookingStep4Date');
-                }, 300);
             }
         }
-    }, [staffData, setStaff, setStaffId, navigation]);
+    }, [staffData, setStaff, setStaffId]);
 
     const handleSelectStaff = (staffId: string) => {
         setStaffId(staffId);
-        // @ts-ignore
-        navigation.navigate('BookingStep4Date');
+    };
+
+    const handleNext = () => {
+        if (bookingData.staffId) {
+            // @ts-ignore
+            navigation.navigate('BookingStep4Date');
+        }
     };
 
     if (isLoading) {
@@ -62,145 +67,152 @@ export default function BookingStep3Staff() {
 
     if (!staffData || staffData.length === 0) {
         return (
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>{bookingData.business?.name}</Text>
-                    <Text style={styles.subtitle}>Шаг 3 из 5: Выберите мастера</Text>
+            <LinearGradient
+                colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientContainer}
+            >
+                <View style={styles.container}>
+                    <BookingProgressIndicator currentStep={3} />
+                    <View style={styles.header}>
+                        <Text style={styles.title}>{bookingData.business?.name}</Text>
+                    </View>
+                    <View style={styles.emptyContainer}>
+                        <Ionicons name="person-outline" size={48} color={colors.text.tertiary} />
+                        <Text style={styles.emptyText}>Нет доступных мастеров</Text>
+                    </View>
                 </View>
-                <View style={styles.emptyContainer}>
-                    <Ionicons name="person-outline" size={48} color="#9ca3af" />
-                    <Text style={styles.emptyText}>Нет доступных мастеров</Text>
-                </View>
-            </View>
+            </LinearGradient>
         );
     }
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <View style={styles.header}>
-                <Text style={styles.title}>{bookingData.business?.name}</Text>
-                <Text style={styles.subtitle}>Шаг 3 из 5: Выберите мастера</Text>
-            </View>
-
-            <View style={styles.section}>
-                <View style={styles.optionsList}>
-                    {staffData.map((staff) => (
-                        <TouchableOpacity
-                            key={staff.id}
-                            style={[
-                                styles.optionCard,
-                                bookingData.staffId === staff.id && styles.optionCardSelected,
-                            ]}
-                            onPress={() => handleSelectStaff(staff.id)}
-                        >
-                            <View style={styles.optionContent}>
-                                <View style={[
-                                    styles.iconContainer,
-                                    bookingData.staffId === staff.id && styles.iconContainerSelected
-                                ]}>
-                                    <Ionicons 
-                                        name="person" 
-                                        size={24} 
-                                        color={bookingData.staffId === staff.id ? '#6366f1' : '#fff'} 
-                                    />
-                                </View>
-                                <Text
-                                    style={[
-                                        styles.optionText,
-                                        bookingData.staffId === staff.id && styles.optionTextSelected,
-                                    ]}
-                                >
-                                    {staff.full_name}
-                                </Text>
-                            </View>
-                            {bookingData.staffId === staff.id && (
-                                <Ionicons name="checkmark-circle" size={24} color="#6366f1" />
-                            )}
-                        </TouchableOpacity>
-                    ))}
+        <LinearGradient
+            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientContainer}
+        >
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                <BookingProgressIndicator currentStep={3} />
+                <View style={styles.header}>
+                    <Text style={styles.title}>{bookingData.business?.name}</Text>
                 </View>
-            </View>
-        </ScrollView>
+
+                <View style={styles.section}>
+                    <View style={styles.optionsList}>
+                        {staffData.map((staff) => {
+                            const isSelected = bookingData.staffId === staff.id;
+                            return (
+                                <TouchableOpacity
+                                    key={staff.id}
+                                    style={styles.chipContainer}
+                                    onPress={() => handleSelectStaff(staff.id)}
+                                    activeOpacity={0.7}
+                                >
+                                    {isSelected ? (
+                                        <LinearGradient
+                                            colors={['rgba(79, 70, 229, 0.1)', 'rgba(79, 70, 229, 0.15)']}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 0 }}
+                                            style={styles.chipSelected}
+                                        >
+                                            <Text style={styles.chipTextSelected}>{staff.full_name}</Text>
+                                        </LinearGradient>
+                                    ) : (
+                                        <View style={styles.chip}>
+                                            <Text style={styles.chipText}>{staff.full_name}</Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+
+                    {staffData.length > 0 && (
+                        <View style={styles.buttonContainer}>
+                            <Button
+                                title="Назад"
+                                onPress={() => navigation.goBack()}
+                                variant="outline"
+                                style={styles.backButton}
+                            />
+                            <Button
+                                title="Дальше"
+                                onPress={handleNext}
+                                disabled={!bookingData.staffId}
+                                variant="primary"
+                                style={styles.nextButton}
+                            />
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
     },
     content: {
         paddingBottom: 40,
     },
     header: {
         padding: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        paddingTop: 24,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
+        fontSize: 24,
+        fontWeight: '600',
+        color: colors.text.primary,
         marginBottom: 4,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#6b7280',
     },
     loadingText: {
         textAlign: 'center',
         padding: 40,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     section: {
         padding: 20,
     },
     optionsList: {
-        gap: 12,
-    },
-    optionCard: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 20,
-        borderRadius: 12,
-        backgroundColor: '#fff',
-        borderWidth: 2,
-        borderColor: '#e5e7eb',
+        flexWrap: 'wrap',
+        gap: 8,
     },
-    optionCardSelected: {
-        borderColor: '#6366f1',
-        backgroundColor: '#f0f4ff',
+    chipContainer: {
+        marginBottom: 4,
     },
-    optionContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-        gap: 16,
+    chip: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: colors.border.light,
+        backgroundColor: colors.background.secondary,
     },
-    iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#6366f1',
-        justifyContent: 'center',
-        alignItems: 'center',
+    chipSelected: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: colors.primary.from,
     },
-    iconContainerSelected: {
-        backgroundColor: '#fff',
-        borderWidth: 2,
-        borderColor: '#6366f1',
-    },
-    optionText: {
-        fontSize: 18,
+    chipText: {
+        fontSize: 12,
         fontWeight: '500',
-        color: '#111827',
-        flex: 1,
+        color: colors.text.primary,
     },
-    optionTextSelected: {
-        color: '#6366f1',
-        fontWeight: '600',
+    chipTextSelected: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: colors.primary.from,
     },
     emptyContainer: {
         padding: 40,
@@ -209,7 +221,18 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
+    },
+    buttonContainer: {
+        marginTop: 24,
+        paddingHorizontal: 0,
+        flexDirection: 'row',
+        gap: 12,
+    },
+    backButton: {
+        flex: 1,
+    },
+    nextButton: {
+        flex: 1,
     },
 });
-

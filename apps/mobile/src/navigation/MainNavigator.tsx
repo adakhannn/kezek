@@ -4,6 +4,7 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList, CabinetStackParamList } from './types';
 import { useUserRole } from '../hooks/useUserRole';
+import { colors } from '../constants/colors';
 import HomeScreen from '../screens/HomeScreen';
 import CabinetScreen from '../screens/CabinetScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -15,7 +16,21 @@ const CabinetStack = createNativeStackNavigator<CabinetStackParamList>();
 
 function CabinetNavigator() {
     return (
-        <CabinetStack.Navigator>
+        <CabinetStack.Navigator
+            screenOptions={{
+                headerStyle: {
+                    backgroundColor: colors.background.secondary,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border.dark,
+                },
+                headerTintColor: colors.text.primary,
+                headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                    color: colors.text.primary,
+                },
+            }}
+        >
             <CabinetStack.Screen
                 name="CabinetMain"
                 component={CabinetScreen}
@@ -36,12 +51,24 @@ export default function MainNavigator() {
     return (
         <Tab.Navigator
             screenOptions={{
-                tabBarActiveTintColor: '#6366f1',
-                tabBarInactiveTintColor: '#9ca3af',
-                headerStyle: {
-                    backgroundColor: '#fff',
+                tabBarActiveTintColor: colors.primary.from, // indigo-600 (из градиента)
+                tabBarInactiveTintColor: colors.text.tertiary,
+                tabBarStyle: {
+                    backgroundColor: colors.background.secondary,
+                    borderTopWidth: 1,
+                    borderTopColor: colors.border.dark,
                 },
-                headerTintColor: '#111827',
+                headerStyle: {
+                    backgroundColor: colors.background.secondary,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border.dark,
+                },
+                headerTintColor: colors.text.primary,
+                headerTitleStyle: {
+                    fontWeight: '600',
+                    fontSize: 18,
+                    color: colors.text.primary,
+                },
             }}
         >
             <Tab.Screen 

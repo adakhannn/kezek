@@ -4,9 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
+import { colors } from '../../constants/colors';
+import Button from '../../components/ui/Button';
+import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -38,13 +42,9 @@ export default function BookingStep2Service() {
             setServices(servicesData);
             if (servicesData.length === 1) {
                 setServiceId(servicesData[0].id);
-                setTimeout(() => {
-                    // @ts-ignore
-                    navigation.navigate('BookingStep3Staff');
-                }, 300);
             }
         }
-    }, [servicesData, setServices, setServiceId, navigation]);
+    }, [servicesData, setServices, setServiceId]);
 
     const formatPrice = (service: typeof servicesData[0]) => {
         if (service.price_from && service.price_to) {
@@ -57,8 +57,13 @@ export default function BookingStep2Service() {
 
     const handleSelectService = (serviceId: string) => {
         setServiceId(serviceId);
-        // @ts-ignore
-        navigation.navigate('BookingStep3Staff');
+    };
+
+    const handleNext = () => {
+        if (bookingData.serviceId) {
+            // @ts-ignore
+            navigation.navigate('BookingStep3Staff');
+        }
     };
 
     if (isLoading) {
@@ -72,9 +77,9 @@ export default function BookingStep2Service() {
     if (!servicesData || servicesData.length === 0) {
         return (
             <View style={styles.container}>
+                <BookingProgressIndicator currentStep={2} />
                 <View style={styles.header}>
                     <Text style={styles.title}>{bookingData.business?.name}</Text>
-                    <Text style={styles.subtitle}>Шаг 2 из 5: Выберите услугу</Text>
                 </View>
                 <View style={styles.emptyContainer}>
                     <Ionicons name="cut-outline" size={48} color="#9ca3af" />
@@ -84,174 +89,198 @@ export default function BookingStep2Service() {
         );
     }
 
-    return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <View style={styles.header}>
-                <Text style={styles.title}>{bookingData.business?.name}</Text>
-                <Text style={styles.subtitle}>Шаг 2 из 5: Выберите услугу</Text>
-            </View>
+        return (
+            <LinearGradient
+                colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientContainer}
+            >
+                <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                    <BookingProgressIndicator currentStep={2} />
+                    <View style={styles.header}>
+                        <Text style={styles.title}>{bookingData.business?.name}</Text>
+                    </View>
 
-            <View style={styles.section}>
-                <View style={styles.optionsList}>
-                    {servicesData.map((service) => {
-                        const price = formatPrice(service);
-                        return (
-                            <TouchableOpacity
-                                key={service.id}
-                                style={[
-                                    styles.serviceCard,
-                                    bookingData.serviceId === service.id && styles.serviceCardSelected,
-                                ]}
-                                onPress={() => handleSelectService(service.id)}
-                            >
-                                <View style={styles.serviceHeader}>
-                                    <View style={styles.serviceInfo}>
-                                        <Text
-                                            style={[
-                                                styles.serviceName,
-                                                bookingData.serviceId === service.id && styles.serviceNameSelected,
-                                            ]}
-                                        >
-                                            {service.name_ru}
-                                        </Text>
-                                        {service.duration_min && (
-                                            <View style={styles.serviceMeta}>
-                                                <Ionicons 
-                                                    name="time-outline" 
-                                                    size={16} 
-                                                    color={bookingData.serviceId === service.id ? '#fff' : '#6b7280'} 
-                                                />
-                                                <Text
-                                                    style={[
-                                                        styles.serviceDuration,
-                                                        bookingData.serviceId === service.id && styles.serviceDurationSelected,
-                                                    ]}
-                                                >
-                                                    {service.duration_min} мин.
-                                                </Text>
+                    <View style={styles.section}>
+                        <View style={styles.optionsList}>
+                            {servicesData.map((service) => {
+                                const price = formatPrice(service);
+                                const isSelected = bookingData.serviceId === service.id;
+                                return (
+                                    <TouchableOpacity
+                                        key={service.id}
+                                        style={[
+                                            styles.serviceCard,
+                                            isSelected && styles.serviceCardSelected,
+                                        ]}
+                                        onPress={() => handleSelectService(service.id)}
+                                        activeOpacity={0.7}
+                                    >
+                                        {isSelected ? (
+                                            <LinearGradient
+                                                colors={['rgba(79, 70, 229, 0.1)', 'rgba(79, 70, 229, 0.15)']}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 0 }}
+                                                style={styles.serviceCardGradient}
+                                            >
+                                                <View style={styles.serviceHeader}>
+                                                    <View style={styles.serviceInfo}>
+                                                        <Text style={styles.serviceNameSelected}>
+                                                            {service.name_ru}
+                                                        </Text>
+                                                        {service.duration_min && (
+                                                            <Text style={styles.serviceDurationSelected}>
+                                                                {service.duration_min} мин
+                                                            </Text>
+                                                        )}
+                                                    </View>
+                                                    {price && (
+                                                        <Text style={styles.priceTextSelected}>
+                                                            {price.replace(' - ', '–').replace('от ', '')}
+                                                        </Text>
+                                                    )}
+                                                </View>
+                                            </LinearGradient>
+                                        ) : (
+                                            <View style={styles.serviceCardContent}>
+                                                <View style={styles.serviceHeader}>
+                                                    <View style={styles.serviceInfo}>
+                                                        <Text style={styles.serviceName}>
+                                                            {service.name_ru}
+                                                        </Text>
+                                                        {service.duration_min && (
+                                                            <Text style={styles.serviceDuration}>
+                                                                {service.duration_min} мин
+                                                            </Text>
+                                                        )}
+                                                    </View>
+                                                    {price && (
+                                                        <Text style={styles.priceText}>
+                                                            {price.replace(' - ', '–').replace('от ', '')}
+                                                        </Text>
+                                                    )}
+                                                </View>
                                             </View>
                                         )}
-                                    </View>
-                                    {bookingData.serviceId === service.id && (
-                                        <Ionicons name="checkmark-circle" size={24} color="#fff" />
-                                    )}
-                                </View>
-                                {price && (
-                                    <View style={[
-                                        styles.priceContainer,
-                                        bookingData.serviceId === service.id && styles.priceContainerSelected
-                                    ]}>
-                                        <Text
-                                            style={[
-                                                styles.priceText,
-                                                bookingData.serviceId === service.id && styles.priceTextSelected,
-                                            ]}
-                                        >
-                                            {price}
-                                        </Text>
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        );
-                    })}
-                </View>
-            </View>
-        </ScrollView>
-    );
-}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+
+                        {servicesData.length > 0 && (
+                            <View style={styles.buttonContainer}>
+                                <Button
+                                    title="Назад"
+                                    onPress={() => navigation.goBack()}
+                                    variant="outline"
+                                    style={styles.backButton}
+                                />
+                                <Button
+                                    title="Дальше"
+                                    onPress={handleNext}
+                                    disabled={!bookingData.serviceId}
+                                    variant="primary"
+                                    style={styles.nextButton}
+                                />
+                            </View>
+                        )}
+                    </View>
+                </ScrollView>
+            </LinearGradient>
+        );
+    }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
     },
     content: {
         paddingBottom: 40,
     },
     header: {
         padding: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        paddingTop: 24,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
+        fontSize: 24,
+        fontWeight: '600',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     loadingText: {
         textAlign: 'center',
         padding: 40,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     section: {
         padding: 20,
     },
     optionsList: {
-        gap: 12,
+        gap: 8,
     },
     serviceCard: {
-        padding: 20,
-        borderRadius: 12,
-        backgroundColor: '#fff',
-        borderWidth: 2,
-        borderColor: '#e5e7eb',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.border.light,
+        backgroundColor: colors.background.secondary,
+        overflow: 'hidden',
     },
     serviceCardSelected: {
-        backgroundColor: '#6366f1',
-        borderColor: '#6366f1',
+        borderColor: colors.primary.from,
+    },
+    serviceCardGradient: {
+        padding: 12,
+    },
+    serviceCardContent: {
+        padding: 12,
     },
     serviceHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginBottom: 12,
     },
     serviceInfo: {
         flex: 1,
     },
     serviceName: {
-        fontSize: 18,
+        fontSize: 12,
         fontWeight: '600',
-        color: '#111827',
-        marginBottom: 8,
+        color: colors.text.primary,
+        marginBottom: 4,
     },
     serviceNameSelected: {
-        color: '#fff',
-    },
-    serviceMeta: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
+        fontSize: 12,
+        fontWeight: '600',
+        color: colors.text.primary,
+        marginBottom: 4,
     },
     serviceDuration: {
-        fontSize: 14,
-        color: '#6b7280',
+        fontSize: 11,
+        color: colors.text.tertiary,
     },
     serviceDurationSelected: {
-        color: '#fff',
-    },
-    priceContainer: {
-        marginTop: 8,
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
-    },
-    priceContainerSelected: {
-        borderTopColor: 'rgba(255, 255, 255, 0.3)',
+        fontSize: 11,
+        color: colors.text.secondary,
     },
     priceText: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#059669',
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#10b981', // emerald-500
+        textAlign: 'right',
     },
     priceTextSelected: {
-        color: '#fff',
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#10b981', // emerald-500
+        textAlign: 'right',
     },
     emptyContainer: {
         padding: 40,
@@ -260,7 +289,19 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
+    },
+    buttonContainer: {
+        marginTop: 24,
+        paddingHorizontal: 0,
+        flexDirection: 'row',
+        gap: 12,
+    },
+    backButton: {
+        flex: 1,
+    },
+    nextButton: {
+        flex: 1,
     },
 });
 

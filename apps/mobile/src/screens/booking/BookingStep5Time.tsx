@@ -5,9 +5,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { formatInTimeZone } from 'date-fns-tz';
 import { addMinutes } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
+import { colors } from '../../constants/colors';
+import Button from '../../components/ui/Button';
+import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -57,16 +61,27 @@ export default function BookingStep5Time() {
 
     const handleSelectSlot = (slot: any) => {
         setSelectedSlot(slot);
-        // @ts-ignore
-        navigation.navigate('BookingStep6Confirm');
+    };
+
+    const handleNext = () => {
+        if (bookingData.selectedSlot) {
+            // @ts-ignore
+            navigation.navigate('BookingStep6Confirm');
+        }
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <View style={styles.header}>
-                <Text style={styles.title}>{bookingData.business?.name}</Text>
-                <Text style={styles.subtitle}>Шаг 5 из 5: Выберите время</Text>
-            </View>
+        <LinearGradient
+            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientContainer}
+        >
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                <BookingProgressIndicator currentStep={5} />
+                <View style={styles.header}>
+                    <Text style={styles.title}>{bookingData.business?.name}</Text>
+                </View>
 
             <View style={styles.section}>
                 {isLoading ? (
@@ -103,34 +118,53 @@ export default function BookingStep5Time() {
                         <Text style={styles.noSlotsHint}>Попробуйте выбрать другую дату</Text>
                     </View>
                 )}
+
+                {slots && slots.length > 0 && (
+                    <View style={styles.buttonContainer}>
+                        <Button
+                            title="Назад"
+                            onPress={() => navigation.goBack()}
+                            variant="outline"
+                            style={styles.backButton}
+                        />
+                        <Button
+                            title="Дальше"
+                            onPress={handleNext}
+                            disabled={!bookingData.selectedSlot}
+                            variant="primary"
+                            style={styles.nextButton}
+                        />
+                    </View>
+                )}
             </View>
-        </ScrollView>
+            </ScrollView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
     },
     content: {
         paddingBottom: 40,
     },
     header: {
         padding: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        paddingTop: 24,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
+        fontSize: 24,
+        fontWeight: '600',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     section: {
         padding: 20,
@@ -142,7 +176,7 @@ const styles = StyleSheet.create({
     },
     slotsLoadingText: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     slotsGrid: {
         flexDirection: 'row',
@@ -153,23 +187,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 10,
-        backgroundColor: '#fff',
-        borderWidth: 2,
-        borderColor: '#e5e7eb',
+        backgroundColor: colors.background.secondary,
+        borderWidth: 1,
+        borderColor: colors.border.light,
         minWidth: 80,
         alignItems: 'center',
     },
     slotButtonSelected: {
-        backgroundColor: '#6366f1',
-        borderColor: '#6366f1',
+        borderColor: colors.primary.from,
     },
     slotText: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#374151',
+        color: colors.text.primary,
     },
     slotTextSelected: {
-        color: '#fff',
+        color: colors.primary.from,
     },
     noSlotsContainer: {
         padding: 40,
@@ -179,12 +212,24 @@ const styles = StyleSheet.create({
     noSlotsText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#374151',
+        color: colors.text.secondary,
     },
     noSlotsHint: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.text.tertiary,
         textAlign: 'center',
+    },
+    buttonContainer: {
+        marginTop: 24,
+        paddingHorizontal: 0,
+        flexDirection: 'row',
+        gap: 12,
+    },
+    backButton: {
+        flex: 1,
+    },
+    nextButton: {
+        flex: 1,
     },
 });
 

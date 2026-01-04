@@ -4,12 +4,15 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { formatInTimeZone } from 'date-fns-tz';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { apiRequest } from '../../lib/api';
 import { useBooking } from '../../contexts/BookingContext';
 import { useToast } from '../../contexts/ToastContext';
+import { colors } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -92,11 +95,17 @@ export default function BookingStep6Confirm() {
     const dateLabel = bookingData.selectedDate ? formatDateLabel(bookingData.selectedDate) : null;
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <View style={styles.header}>
-                <Text style={styles.title}>{bookingData.business?.name}</Text>
-                <Text style={styles.subtitle}>Подтверждение записи</Text>
-            </View>
+        <LinearGradient
+            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientContainer}
+        >
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                <BookingProgressIndicator currentStep={6} />
+                <View style={styles.header}>
+                    <Text style={styles.title}>{bookingData.business?.name}</Text>
+                </View>
 
             <View style={styles.section}>
                 <Card style={styles.summaryCard}>
@@ -148,41 +157,51 @@ export default function BookingStep6Confirm() {
                     </View>
                 </Card>
 
-                <Button
-                    title="Записаться"
-                    onPress={handleCreateBooking}
-                    loading={createBookingMutation.isPending}
-                    disabled={createBookingMutation.isPending || !bookingData.selectedSlot}
-                    style={styles.createButton}
-                />
+                <View style={styles.buttonContainer}>
+                    <Button
+                        title="Назад"
+                        onPress={() => navigation.goBack()}
+                        variant="outline"
+                        style={styles.backButton}
+                    />
+                    <Button
+                        title="Записаться"
+                        onPress={handleCreateBooking}
+                        loading={createBookingMutation.isPending}
+                        disabled={createBookingMutation.isPending || !bookingData.selectedSlot}
+                        variant="primary"
+                        style={styles.nextButton}
+                    />
+                </View>
             </View>
-        </ScrollView>
+            </ScrollView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
     },
     content: {
         paddingBottom: 40,
     },
     header: {
         padding: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        paddingTop: 24,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
+        fontSize: 24,
+        fontWeight: '600',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     section: {
         padding: 20,
@@ -202,33 +221,41 @@ const styles = StyleSheet.create({
     summaryLabel: {
         fontSize: 12,
         fontWeight: '500',
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginBottom: 6,
         textTransform: 'uppercase',
     },
     summaryValue: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
     },
     summaryHint: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginTop: 4,
     },
     summaryPrice: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#059669',
+        color: '#10b981',
         marginTop: 6,
     },
     summaryDivider: {
         height: 1,
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.border.dark,
         marginVertical: 4,
     },
-    createButton: {
+    buttonContainer: {
         marginTop: 0,
+        flexDirection: 'row',
+        gap: 12,
+    },
+    backButton: {
+        flex: 1,
+    },
+    nextButton: {
+        flex: 1,
     },
 });
 

@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, ActivityIndicator, Linking, AppState, AppStateS
 import { supabase } from '../lib/supabase';
 import { RootStackParamList } from './types';
 import { linking } from './linking';
+import { colors } from '../constants/colors';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import BookingDetailsScreen from '../screens/BookingDetailsScreen';
@@ -16,6 +17,7 @@ import BookingStep3Staff from '../screens/booking/BookingStep3Staff';
 import BookingStep4Date from '../screens/booking/BookingStep4Date';
 import BookingStep5Time from '../screens/booking/BookingStep5Time';
 import BookingStep6Confirm from '../screens/booking/BookingStep6Confirm';
+import BookingCancelButton from '../components/BookingCancelButton';
 import { BookingProvider } from '../contexts/BookingContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -283,7 +285,22 @@ export default function RootNavigator() {
         return (
             <BookingProvider>
                 <NavigationContainer linking={linking}>
-                    <Stack.Navigator screenOptions={{ headerShown: true }}>
+                    <Stack.Navigator 
+                        screenOptions={{ 
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: colors.background.secondary,
+                                borderBottomWidth: 1,
+                                borderBottomColor: colors.border.dark,
+                            },
+                            headerTintColor: colors.text.primary,
+                            headerTitleStyle: {
+                                fontWeight: '600',
+                                fontSize: 18,
+                                color: colors.text.primary,
+                            },
+                        }}
+                    >
                         {session ? (
                             <>
                                 <Stack.Screen
@@ -304,32 +321,56 @@ export default function RootNavigator() {
                                 <Stack.Screen
                                     name="BookingStep1Branch"
                                     component={BookingStep1Branch}
-                                    options={{ title: 'Выбор филиала', headerBackTitle: 'Назад' }}
+                                    options={{ 
+                                        title: 'Выбор филиала', 
+                                        headerBackTitle: 'Назад',
+                                        headerRight: () => <BookingCancelButton />,
+                                    }}
                                 />
                                 <Stack.Screen
                                     name="BookingStep2Service"
                                     component={BookingStep2Service}
-                                    options={{ title: 'Выбор услуги', headerBackTitle: 'Назад' }}
+                                    options={{ 
+                                        title: 'Выбор услуги', 
+                                        headerBackTitle: 'Назад',
+                                        headerRight: () => <BookingCancelButton />,
+                                    }}
                                 />
                                 <Stack.Screen
                                     name="BookingStep3Staff"
                                     component={BookingStep3Staff}
-                                    options={{ title: 'Выбор мастера', headerBackTitle: 'Назад' }}
+                                    options={{ 
+                                        title: 'Выбор мастера', 
+                                        headerBackTitle: 'Назад',
+                                        headerRight: () => <BookingCancelButton />,
+                                    }}
                                 />
                                 <Stack.Screen
                                     name="BookingStep4Date"
                                     component={BookingStep4Date}
-                                    options={{ title: 'Выбор даты', headerBackTitle: 'Назад' }}
+                                    options={{ 
+                                        title: 'Выбор даты', 
+                                        headerBackTitle: 'Назад',
+                                        headerRight: () => <BookingCancelButton />,
+                                    }}
                                 />
                                 <Stack.Screen
                                     name="BookingStep5Time"
                                     component={BookingStep5Time}
-                                    options={{ title: 'Выбор времени', headerBackTitle: 'Назад' }}
+                                    options={{ 
+                                        title: 'Выбор времени', 
+                                        headerBackTitle: 'Назад',
+                                        headerRight: () => <BookingCancelButton />,
+                                    }}
                                 />
                                 <Stack.Screen
                                     name="BookingStep6Confirm"
                                     component={BookingStep6Confirm}
-                                    options={{ title: 'Подтверждение', headerBackTitle: 'Назад' }}
+                                    options={{ 
+                                        title: 'Подтверждение', 
+                                        headerBackTitle: 'Назад',
+                                        headerRight: () => <BookingCancelButton />,
+                                    }}
                                 />
                             </>
                         ) : (
@@ -350,7 +391,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: colors.background.primary,
     },
     loadingText: {
         marginTop: 12,

@@ -4,8 +4,12 @@ import { addDays } from 'date-fns';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
+import { colors } from '../../constants/colors';
+import Button from '../../components/ui/Button';
+import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -35,18 +39,29 @@ export default function BookingStep4Date() {
 
     const handleSelectDate = (date: string) => {
         setSelectedDate(date);
-        // @ts-ignore
-        navigation.navigate('BookingStep5Time');
+    };
+
+    const handleNext = () => {
+        if (bookingData.selectedDate) {
+            // @ts-ignore
+            navigation.navigate('BookingStep5Time');
+        }
     };
 
     const dates = getAvailableDates();
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <View style={styles.header}>
-                <Text style={styles.title}>{bookingData.business?.name}</Text>
-                <Text style={styles.subtitle}>Шаг 4 из 5: Выберите дату</Text>
-            </View>
+        <LinearGradient
+            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientContainer}
+        >
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                <BookingProgressIndicator currentStep={4} />
+                <View style={styles.header}>
+                    <Text style={styles.title}>{bookingData.business?.name}</Text>
+                </View>
 
             <View style={styles.section}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
@@ -99,34 +114,51 @@ export default function BookingStep4Date() {
                         );
                     })}
                 </ScrollView>
+
+                <View style={styles.buttonContainer}>
+                    <Button
+                        title="Назад"
+                        onPress={() => navigation.goBack()}
+                        variant="outline"
+                        style={styles.backButton}
+                    />
+                    <Button
+                        title="Дальше"
+                        onPress={handleNext}
+                        disabled={!bookingData.selectedDate}
+                        variant="primary"
+                        style={styles.nextButton}
+                    />
+                </View>
             </View>
-        </ScrollView>
+            </ScrollView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
+    gradientContainer: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
     },
     content: {
         paddingBottom: 40,
     },
     header: {
         padding: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        paddingTop: 24,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
+        fontSize: 24,
+        fontWeight: '600',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     section: {
         padding: 20,
@@ -137,17 +169,17 @@ const styles = StyleSheet.create({
     dateCard: {
         padding: 16,
         borderRadius: 12,
-        backgroundColor: '#fff',
-        borderWidth: 2,
-        borderColor: '#e5e7eb',
+        backgroundColor: colors.background.secondary,
+        borderWidth: 1,
+        borderColor: colors.border.light,
         marginRight: 12,
         marginBottom: 12,
         minWidth: 90,
         alignItems: 'center',
     },
     dateCardSelected: {
-        backgroundColor: '#6366f1',
-        borderColor: '#6366f1',
+        borderColor: colors.primary.from,
+        backgroundColor: colors.background.secondary,
     },
     dateCardToday: {
         borderColor: '#10b981',
@@ -160,32 +192,44 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
     },
     todayLabelSelected: {
-        color: '#fff',
+        color: colors.text.primary,
     },
     dateDay: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.text.primary,
     },
     dateDaySelected: {
-        color: '#fff',
+        color: colors.text.primary,
     },
     dateMonth: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginTop: 4,
     },
     dateMonthSelected: {
-        color: '#fff',
+        color: colors.text.secondary,
     },
     dateWeekday: {
         fontSize: 11,
-        color: '#9ca3af',
+        color: colors.text.tertiary,
         marginTop: 6,
         textTransform: 'uppercase',
     },
     dateWeekdaySelected: {
-        color: '#fff',
+        color: colors.text.tertiary,
+    },
+    buttonContainer: {
+        marginTop: 24,
+        paddingHorizontal: 0,
+        flexDirection: 'row',
+        gap: 12,
+    },
+    backButton: {
+        flex: 1,
+    },
+    nextButton: {
+        flex: 1,
     },
 });
 
