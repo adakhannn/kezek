@@ -102,13 +102,16 @@ function AuthCallbackContent() {
                         }
                         const { data: { user } } = await supabase.auth.getUser();
                         
-                        // Проверяем, был ли вход через Google и нет ли телефона
-                        const fromGoogle = searchParams.get('from') === 'google';
-                        if (fromGoogle && user && !user.phone) {
-                            console.log('[callback] Google login without phone, showing WhatsApp prompt');
-                            setShowWhatsAppPrompt(true);
-                            setStatus('success');
-                            return;
+                        // Проверяем, нет ли телефона у пользователя (для всех способов входа)
+                        if (user && !user.phone) {
+                            // Проверяем, не показывали ли мы уже это предложение
+                            const hasSeenPrompt = localStorage.getItem('whatsapp_prompt_seen') === 'true';
+                            if (!hasSeenPrompt) {
+                                console.log('[callback] User without phone, showing WhatsApp prompt');
+                                setShowWhatsAppPrompt(true);
+                                setStatus('success');
+                                return;
+                            }
                         }
                         
                         const targetPath = await decideRedirect(nextParam || '/', user?.id);
@@ -131,13 +134,16 @@ function AuthCallbackContent() {
                             if (!exchangeError && sessionData?.session) {
                                 const { data: { user } } = await supabase.auth.getUser();
                                 
-                                // Проверяем, был ли вход через Google и нет ли телефона
-                                const fromGoogle = searchParams.get('from') === 'google';
-                                if (fromGoogle && user && !user.phone) {
-                                    console.log('[callback] Google login without phone, showing WhatsApp prompt');
-                                    setShowWhatsAppPrompt(true);
-                                    setStatus('success');
-                                    return;
+                                // Проверяем, нет ли телефона у пользователя (для всех способов входа)
+                                if (user && !user.phone) {
+                                    // Проверяем, не показывали ли мы уже это предложение
+                                    const hasSeenPrompt = localStorage.getItem('whatsapp_prompt_seen') === 'true';
+                                    if (!hasSeenPrompt) {
+                                        console.log('[callback] User without phone, showing WhatsApp prompt');
+                                        setShowWhatsAppPrompt(true);
+                                        setStatus('success');
+                                        return;
+                                    }
                                 }
                                 
                                 const targetPath = await decideRedirect(nextParam || '/', user?.id);
@@ -165,13 +171,16 @@ function AuthCallbackContent() {
                     if (session && !sessionError) {
                         const { data: { user } } = await supabase.auth.getUser();
                         
-                        // Проверяем, был ли вход через Google и нет ли телефона
-                        const fromGoogle = searchParams.get('from') === 'google';
-                        if (fromGoogle && user && !user.phone) {
-                            console.log('[callback] Google login without phone, showing WhatsApp prompt');
-                            setShowWhatsAppPrompt(true);
-                            setStatus('success');
-                            return;
+                        // Проверяем, нет ли телефона у пользователя (для всех способов входа)
+                        if (user && !user.phone) {
+                            // Проверяем, не показывали ли мы уже это предложение
+                            const hasSeenPrompt = localStorage.getItem('whatsapp_prompt_seen') === 'true';
+                            if (!hasSeenPrompt) {
+                                console.log('[callback] User without phone, showing WhatsApp prompt');
+                                setShowWhatsAppPrompt(true);
+                                setStatus('success');
+                                return;
+                            }
                         }
                         
                         const targetPath = await decideRedirect(nextParam || '/', user?.id);
@@ -230,6 +239,8 @@ function AuthCallbackContent() {
                 />
                 <WhatsAppConnectPrompt
                     onDismiss={() => {
+                        // Помечаем, что пользователь видел предложение
+                        localStorage.setItem('whatsapp_prompt_seen', 'true');
                         setShowWhatsAppPrompt(false);
                         // Редиректим после закрытия
                         (async () => {
@@ -242,6 +253,8 @@ function AuthCallbackContent() {
                         })();
                     }}
                     onSuccess={() => {
+                        // Помечаем, что пользователь подключил WhatsApp
+                        localStorage.setItem('whatsapp_prompt_seen', 'true');
                         setShowWhatsAppPrompt(false);
                         // Редиректим после успешного подключения
                         (async () => {
