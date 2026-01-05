@@ -7,6 +7,7 @@ import {AuthStatusServer} from './_components/AuthStatusServer';
 import {AuthStatusUpdater} from './_components/AuthStatusWrapper';
 import {Logo} from './_components/Logo';
 import {NameReminderBanner} from './_components/NameReminderBanner';
+import {WhatsAppReminderBanner} from './_components/WhatsAppReminderBanner';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -51,6 +52,7 @@ export default function RootLayout({
             </header>
 
             <NameReminderBanner />
+            <WhatsAppReminderBanner />
 
             <main className="flex-1">
                 {children}
