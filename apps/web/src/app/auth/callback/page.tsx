@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, useCallback } from 'react';
 
+import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
 import { supabase } from '@/lib/supabaseClient';
 
 function AuthCallbackContent() {
@@ -188,34 +189,34 @@ function AuthCallbackContent() {
 
     if (status === 'error') {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6">
-                <div className="text-center space-y-4">
-                    <div className="text-sm text-gray-600">Обработка авторизации...</div>
-                    <div className="text-xs text-gray-500">Если авторизация не произошла, попробуйте войти снова</div>
-                </div>
-            </div>
+            <FullScreenStatus
+                title="Не удалось завершить авторизацию"
+                subtitle="Попробуйте перезагрузить страницу или войти ещё раз"
+                message="Если проблема повторяется, закройте вкладку, откройте сайт заново и выполните вход ещё раз. 
+Мы автоматически восстановим ваш сеанс, когда это возможно."
+                loading={false}
+            />
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6">
-            <div className="text-center space-y-4">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <div className="text-sm text-gray-600">Авторизация…</div>
-            </div>
-        </div>
+        <FullScreenStatus
+            title="Авторизация…"
+            subtitle="Подтверждаем вход и настраиваем ваш кабинет"
+            message="Обычно это занимает не больше пары секунд. Пожалуйста, не закрывайте эту вкладку — вы будете автоматически перенаправлены в нужный раздел."
+            loading
+        />
     );
 }
 
 export default function AuthCallback() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center p-6">
-                <div className="text-center space-y-4">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                    <div className="text-sm text-gray-600">Загрузка…</div>
-                </div>
-            </div>
+            <FullScreenStatus
+                title="Загрузка…"
+                subtitle="Готовим страницу авторизации"
+                loading
+            />
         }>
             <AuthCallbackContent />
         </Suspense>

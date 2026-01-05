@@ -1,12 +1,14 @@
 'use client';
-import {useEffect} from 'react';
 
-import {supabase} from '@/lib/supabaseClient';
+import { useEffect } from 'react';
+
+import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function SignOutPage() {
     useEffect(() => {
         let mounted = true;
-        
+
         // Таймаут для гарантированного редиректа через 1.5 секунды
         const forceRedirectTimeout = setTimeout(() => {
             if (mounted) {
@@ -19,7 +21,7 @@ export default function SignOutPage() {
             try {
                 // 1. Вызываем API endpoint для принудительного выхода
                 try {
-                    await fetch('/api/auth/sign-out', { 
+                    await fetch('/api/auth/sign-out', {
                         method: 'POST',
                         signal: AbortSignal.timeout(1000), // Таймаут 1 секунда
                     });
@@ -36,9 +38,9 @@ export default function SignOutPage() {
                 } catch (clientErr) {
                     console.warn('[sign-out] Client sign-out error:', clientErr);
                 }
-                
+
                 if (!mounted) return;
-                
+
                 // 3. Очищаем все данные сессии
                 try {
                     // Очищаем localStorage
@@ -49,8 +51,8 @@ export default function SignOutPage() {
                             keysToRemove.push(key);
                         }
                     }
-                    keysToRemove.forEach(key => localStorage.removeItem(key));
-                    
+                    keysToRemove.forEach((key) => localStorage.removeItem(key));
+
                     // Очищаем sessionStorage
                     sessionStorage.clear();
                 } catch (err) {
@@ -60,7 +62,7 @@ export default function SignOutPage() {
                 // 4. Удаляем cookies
                 try {
                     const cookies = document.cookie.split(';');
-                    cookies.forEach(cookie => {
+                    cookies.forEach((cookie) => {
                         const eqPos = cookie.indexOf('=');
                         const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
                         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
@@ -70,7 +72,7 @@ export default function SignOutPage() {
                 }
 
                 if (!mounted) return;
-                
+
                 // 5. Очищаем таймаут и делаем редирект
                 clearTimeout(forceRedirectTimeout);
                 window.location.replace('/');
@@ -88,5 +90,13 @@ export default function SignOutPage() {
             clearTimeout(forceRedirectTimeout);
         };
     }, []);
-    return <div>Выходим…</div>;
+
+    return (
+        <FullScreenStatus
+            title="Выходим из аккаунта…"
+            subtitle="Завершаем сеанс и очищаем данные"
+            message="Это займёт не больше пары секунд. После выхода вы сможете снова войти с любого устройства."
+            loading
+        />
+    );
 }
