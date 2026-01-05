@@ -134,193 +134,359 @@ export default async function AdminHomePage() {
     ];
 
     return (
-        <main className="space-y-8 p-4">
-            <section className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Панель администратора</h1>
-                <div className="flex gap-3 text-sm">
-                    <Link href="/admin/businesses/new" className="border px-3 py-1.5 rounded hover:bg-gray-50">
-                        + Создать бизнес
-                    </Link>
-                    <Link href="/admin/categories/new" className="border px-3 py-1.5 rounded hover:bg-gray-50">
-                        + Новая категория
-                    </Link>
-                    <Link href="/admin/users/new" className="border px-3 py-1.5 rounded hover:bg-gray-50">
-                        + Новый пользователь
-                    </Link>
-                </div>
-            </section>
-
-            {/* Метрики */}
-            <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <Card title="Бизнесы" value={bizCount ?? 0} href="/admin/businesses"/>
-                <Card title="Филиалы" value={branchCount ?? 0} href="/admin/businesses"
-                      hint="управление в карточках бизнеса"/>
-                <Card title="Сотрудники" value={staffCount ?? 0}/>
-                <Card title="Услуги" value={serviceCount ?? 0}/>
-                <Card title="Брони (всего)" value={bookingCount ?? 0}/>
-                <Card title="Категории" value={catCount ?? 0} href="/admin/categories"/>
-            </section>
-
-            {/* Сегодняшние брони */}
-            <section className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">Брони сегодня — {label} (Asia/Bishkek)</h2>
-                    <div className="flex gap-2 text-xs">
-                        <Badge>{`hold: ${holdCount}`}</Badge>
-                        <Badge>{`confirmed: ${confirmedCount}`}</Badge>
-                        <Badge>{`canceled: ${canceledCount}`}</Badge>
+        <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                {/* Заголовок с быстрыми действиями */}
+                <section className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
+                            Панель администратора
+                        </h1>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            Обзор системы и управление
+                        </p>
                     </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="min-w-[880px] w-full border-collapse">
-                        <thead className="text-left text-sm text-gray-500">
-                        <tr>
-                            <th className="border-b p-2">Время</th>
-                            <th className="border-b p-2">Бизнес / филиал</th>
-                            <th className="border-b p-2">Услуга</th>
-                            <th className="border-b p-2">Мастер</th>
-                            <th className="border-b p-2">Клиент</th>
-                            <th className="border-b p-2">Статус</th>
-                        </tr>
-                        </thead>
-                        <tbody className="text-sm">
-                        {todayBookings.map((b) => (
-                            <tr key={b.id}>
-                                <td className="border-b p-2 whitespace-nowrap">
-                                    {fmtTimeBishkek(b.start_at)}–{fmtTimeBishkek(b.end_at)}
-                                </td>
-                                <td className="border-b p-2">
-                                    {b.bizId ? (
-                                        <Link className="underline" href={`/admin/businesses/${b.bizId}`}>
-                                            {b.biz}
-                                        </Link>
-                                    ) : (
-                                        b.biz
-                                    )}
-                                    <div className="text-xs text-gray-500">{b.branch}</div>
-                                </td>
-                                <td className="border-b p-2">{b.service}</td>
-                                <td className="border-b p-2">{b.staff}</td>
-                                <td className="border-b p-2">{b.client}</td>
-                                <td className="border-b p-2">
-                    <span
-                        className={`inline-block rounded px-2 py-0.5 text-xs border ${
-                            b.status === 'confirmed'
-                                ? 'border-green-600 text-green-700'
-                                : b.status === 'hold'
-                                    ? 'border-amber-600 text-amber-700'
-                                    : 'border-gray-500 text-gray-700'
-                        }`}
-                    >
-                      {b.status}
-                    </span>
-                                </td>
-                            </tr>
-                        ))}
-                        {todayBookings.length === 0 && (
-                            <tr>
-                                <td className="p-3 text-gray-500" colSpan={6}>
-                                    На сегодня броней нет.
-                                </td>
-                            </tr>
-                        )}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {/* Последние бизнесы */}
-            <section className="space-y-3">
-                <h2 className="text-lg font-semibold">Последние бизнесы</h2>
-                <div className="overflow-x-auto">
-                    <table className="min-w-[640px] w-full border-collapse">
-                        <thead className="text-left text-sm text-gray-500">
-                        <tr>
-                            <th className="border-b p-2">Название</th>
-                            <th className="border-b p-2">Slug</th>
-                            <th className="border-b p-2">Создан</th>
-                            <th className="border-b p-2 w-32">Действия</th>
-                        </tr>
-                        </thead>
-                        <tbody className="text-sm">
-                        {(latestBiz ?? []).map((b) => (
-                            <tr key={b.id}>
-                                <td className="border-b p-2">{b.name}</td>
-                                <td className="border-b p-2">{b.slug}</td>
-                                <td className="border-b p-2">{new Date(b.created_at).toLocaleString('ru-RU')}</td>
-                                <td className="border-b p-2">
-                                    <Link className="underline" href={`/admin/businesses/${b.id}`}>
-                                        Открыть
-                                    </Link>
-                                </td>
-                            </tr>
-                        ))}
-                        {(!latestBiz || latestBiz.length === 0) && (
-                            <tr>
-                                <td className="p-3 text-gray-500" colSpan={4}>
-                                    Пока нет бизнесов.
-                                </td>
-                            </tr>
-                        )}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {/* Системные проверки */}
-            <section className="space-y-2">
-                <h2 className="text-lg font-semibold">Системные проверки</h2>
-                <ul className="grid gap-2 sm:grid-cols-2">
-                    {checks.map((c, i) => (
-                        <li
-                            key={i}
-                            className={`rounded border p-3 text-sm ${c.ok ? 'border-green-600/40' : 'border-amber-600/40'}`}
+                    <div className="flex flex-wrap gap-2">
+                        <Link 
+                            href="/admin/businesses/new" 
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
                         >
-              <span
-                  className={`mr-2 inline-block h-2 w-2 rounded-full align-middle ${
-                      c.ok ? 'bg-green-600' : 'bg-amber-600'
-                  }`}
-              />
-                            {c.label} — {c.ok ? 'OK' : 'проверь .env'}
-                        </li>
-                    ))}
-                </ul>
-            </section>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Создать бизнес
+                        </Link>
+                        <Link 
+                            href="/admin/categories/new" 
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-200 text-sm"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            Категория
+                        </Link>
+                        <Link 
+                            href="/admin/users/new" 
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-200 text-sm"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Пользователь
+                        </Link>
+                    </div>
+                </section>
 
-            {/* Быстрые ссылки */}
-            <section className="space-y-2">
-                <h2 className="text-lg font-semibold">Быстрые ссылки</h2>
-                <div className="flex flex-wrap gap-2 text-sm">
-                    <Link className="border px-3 py-1.5 rounded hover:bg-gray-50" href="/admin/businesses">
-                        Все бизнесы
-                    </Link>
-                    <Link className="border px-3 py-1.5 rounded hover:bg-gray-50" href="/admin/categories">
-                        Справочник категорий
-                    </Link>
-                    <Link className="border px-3 py-1.5 rounded hover:bg-gray-50" href="/admin/users">
-                        Пользователи
-                    </Link>
-                    <Link className="border px-3 py-1.5 rounded hover:bg-gray-50" href="/">
-                        Публичный сайт
-                    </Link>
+                {/* Метрики */}
+                <section>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Общая статистика</h2>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <MetricCard 
+                            title="Бизнесы" 
+                            value={bizCount ?? 0} 
+                            href="/admin/businesses"
+                            icon={
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            }
+                            gradient="from-blue-500 to-cyan-500"
+                        />
+                        <MetricCard 
+                            title="Филиалы" 
+                            value={branchCount ?? 0} 
+                            href="/admin/businesses"
+                            hint="управление в карточках бизнеса"
+                            icon={
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            }
+                            gradient="from-emerald-500 to-teal-500"
+                        />
+                        <MetricCard 
+                            title="Сотрудники" 
+                            value={staffCount ?? 0}
+                            icon={
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            }
+                            gradient="from-purple-500 to-pink-500"
+                        />
+                        <MetricCard 
+                            title="Услуги" 
+                            value={serviceCount ?? 0}
+                            icon={
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                                </svg>
+                            }
+                            gradient="from-orange-500 to-red-500"
+                        />
+                        <MetricCard 
+                            title="Брони (всего)" 
+                            value={bookingCount ?? 0}
+                            icon={
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            }
+                            gradient="from-indigo-500 to-purple-500"
+                        />
+                        <MetricCard 
+                            title="Категории" 
+                            value={catCount ?? 0} 
+                            href="/admin/categories"
+                            icon={
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                            }
+                            gradient="from-rose-500 to-pink-500"
+                        />
+                    </div>
+                </section>
+
+                {/* Сегодняшние брони */}
+                <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                Брони сегодня
+                            </h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {label} (Asia/Bishkek)
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <StatusBadge status="hold" count={holdCount} />
+                            <StatusBadge status="confirmed" count={confirmedCount} />
+                            <StatusBadge status="canceled" count={canceledCount} />
+                        </div>
+                    </div>
+
+                    {todayBookings.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead className="bg-gray-50 dark:bg-gray-800">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Время</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Бизнес / филиал</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Услуга</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Мастер</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Клиент</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {todayBookings.map((b) => (
+                                        <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                {fmtTimeBishkek(b.start_at)}–{fmtTimeBishkek(b.end_at)}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                                {b.bizId ? (
+                                                    <Link className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline" href={`/admin/businesses/${b.bizId}`}>
+                                                        {b.biz}
+                                                    </Link>
+                                                ) : (
+                                                    <span>{b.biz}</span>
+                                                )}
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{b.branch}</div>
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{b.service}</td>
+                                            <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{b.staff}</td>
+                                            <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{b.client}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <BookingStatusBadge status={b.status} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="text-center py-12">
+                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">На сегодня броней нет</p>
+                        </div>
+                    )}
+                </section>
+
+                {/* Последние бизнесы и системные проверки */}
+                <div className="grid gap-6 lg:grid-cols-2">
+                    {/* Последние бизнесы */}
+                    <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Последние бизнесы</h2>
+                            <Link 
+                                href="/admin/businesses" 
+                                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                            >
+                                Все →
+                            </Link>
+                        </div>
+                        {(latestBiz && latestBiz.length > 0) ? (
+                            <div className="space-y-3">
+                                {latestBiz.map((b) => (
+                                    <Link 
+                                        key={b.id} 
+                                        href={`/admin/businesses/${b.id}`}
+                                        className="block p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <h3 className="font-medium text-gray-900 dark:text-gray-100">{b.name}</h3>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{b.slug}</p>
+                                            </div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 ml-4">
+                                                {new Date(b.created_at).toLocaleDateString('ru-RU', {
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                })}
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Пока нет бизнесов</p>
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Системные проверки */}
+                    <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Системные проверки</h2>
+                        <div className="space-y-3">
+                            {checks.map((c, i) => (
+                                <div
+                                    key={i}
+                                    className={`flex items-center gap-3 p-3 rounded-lg border ${
+                                        c.ok 
+                                            ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' 
+                                            : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20'
+                                    }`}
+                                >
+                                    <div className={`flex-shrink-0 w-3 h-3 rounded-full ${c.ok ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.label}</p>
+                                        <p className={`text-xs ${c.ok ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                                            {c.ok ? 'OK' : 'Проверь .env'}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
                 </div>
-            </section>
+
+                {/* Быстрые ссылки */}
+                <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Быстрые ссылки</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <QuickLink href="/admin/businesses" icon="🏢" label="Все бизнесы" />
+                        <QuickLink href="/admin/categories" icon="🏷️" label="Категории" />
+                        <QuickLink href="/admin/users" icon="👥" label="Пользователи" />
+                        <QuickLink href="/" icon="🌐" label="Публичный сайт" />
+                    </div>
+                </section>
+            </div>
         </main>
     );
 }
 
-function Card({title, value, href, hint}: { title: string; value: number | string; href?: string; hint?: string }) {
+function MetricCard({
+    title,
+    value,
+    href,
+    hint,
+    icon,
+    gradient,
+}: {
+    title: string;
+    value: number | string;
+    href?: string;
+    hint?: string;
+    icon: React.ReactNode;
+    gradient: string;
+}) {
     const inner = (
-        <div className="rounded-2xl border p-4 shadow-sm hover:shadow transition">
-            <div className="text-sm text-gray-500">{title}</div>
-            <div className="text-3xl font-semibold mt-1">{value}</div>
-            {hint && <div className="text-xs text-gray-500 mt-1">{hint}</div>}
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-6 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1`}>
+            <div className="relative z-10">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="opacity-90">{icon}</div>
+                    {hint && (
+                        <span className="text-xs opacity-75 bg-white/20 px-2 py-1 rounded-full">
+                            {hint}
+                        </span>
+                    )}
+                </div>
+                <div className="text-sm font-medium opacity-90 mb-1">{title}</div>
+                <div className="text-3xl font-bold">{value.toLocaleString('ru-RU')}</div>
+            </div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
         </div>
     );
-    return href ? <Link href={href}>{inner}</Link> : inner;
+    return href ? (
+        <Link href={href} className="block">
+            {inner}
+        </Link>
+    ) : (
+        inner
+    );
 }
 
-function Badge({children}: { children: React.ReactNode }) {
-    return <span className="inline-block rounded-full border px-2 py-0.5">{children}</span>;
+function StatusBadge({status, count}: { status: string; count: number }) {
+    const config = {
+        hold: { label: 'Ожидание', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
+        confirmed: { label: 'Подтверждено', color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700' },
+        canceled: { label: 'Отменено', color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700' },
+    };
+    const { label, color } = config[status as keyof typeof config] || { label: status, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-700' };
+    
+    return (
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${color} text-sm font-medium`}>
+            <span>{label}</span>
+            <span className="font-bold">{count}</span>
+        </div>
+    );
+}
+
+function BookingStatusBadge({status}: { status: string }) {
+    const config = {
+        confirmed: { label: 'Подтверждено', color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700' },
+        hold: { label: 'Ожидание', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
+        canceled: { label: 'Отменено', color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700' },
+        paid: { label: 'Оплачено', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-700' },
+    };
+    const { label, color } = config[status as keyof typeof config] || { label: status, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-700' };
+    
+    return (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border ${color}`}>
+            {label}
+        </span>
+    );
+}
+
+function QuickLink({href, icon, label}: { href: string; icon: string; label: string }) {
+    return (
+        <Link 
+            href={href}
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 group"
+        >
+            <span className="text-2xl group-hover:scale-110 transition-transform duration-200">{icon}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                {label}
+            </span>
+        </Link>
+    );
 }
