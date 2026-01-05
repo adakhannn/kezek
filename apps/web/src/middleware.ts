@@ -39,9 +39,9 @@ export async function middleware(req: NextRequest) {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return res;
 
-    // Проверяем роли только если пользователь не на странице callback или главной
-    // Это предотвращает циклы редиректов
-    if (pathname !== '/auth/callback' && pathname !== '/') {
+    // Ролевые редиректы включаем ТОЛЬКО для главной страницы ('/').
+    // Это исключает циклы вида /dashboard -> /dashboard и /staff -> /staff.
+    if (pathname === '/') {
         const { data: roles, error } = await supabase.rpc('my_role_keys');
         if (error) {
             // Логируем ошибку, но не прерываем запрос - пользователь останется на текущей странице
