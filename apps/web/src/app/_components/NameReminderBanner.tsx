@@ -26,6 +26,17 @@ export function NameReminderBanner() {
                     return;
                 }
 
+                // Проверяем, является ли пользователь суперадмином
+                const { data: isSuper } = await supabase.rpc('is_super_admin');
+                if (isSuper) {
+                    // Для суперадмина не показываем баннер
+                    if (mounted) {
+                        setShow(false);
+                        setLoading(false);
+                    }
+                    return;
+                }
+
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('full_name')
