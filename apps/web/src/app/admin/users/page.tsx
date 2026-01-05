@@ -157,24 +157,14 @@ export default async function UsersListPage(
                                 Управление пользователями системы
                             </p>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            <Link href="/admin">
-                                <Button variant="outline" className="w-full sm:w-auto">
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                    </svg>
-                                    В админку
-                                </Button>
-                            </Link>
-                            <Link href="/admin/users/new">
-                                <Button className="w-full sm:w-auto">
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Новый пользователь
-                                </Button>
-                            </Link>
-                        </div>
+                        <Link href="/admin">
+                            <Button variant="outline" className="w-full sm:w-auto">
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                В админку
+                            </Button>
+                        </Link>
                     </div>
                 </section>
 
