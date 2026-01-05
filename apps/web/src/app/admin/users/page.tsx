@@ -4,6 +4,10 @@ import {cookies, headers} from 'next/headers';
 import Link from 'next/link';
 import {redirect} from 'next/navigation';
 
+import UsersClient from './UsersClient';
+
+import {Button} from '@/components/ui/Button';
+
 export const dynamic = 'force-dynamic';
 
 type UserListItem = {
@@ -68,6 +72,47 @@ async function fetchList(search: string, page: number, perPage: number, status: 
     return json;
 }
 
+async function fetchStats(): Promise<{ total: number; active: number; blocked: number; super: number }> {
+    const h = await headers();
+    const proto = h.get('x-forwarded-proto') ?? 'http';
+    const host = h.get('x-forwarded-host') ?? h.get('host');
+    if (!host) throw new Error('Host header is missing');
+    const base = `${proto}://${host}`;
+
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join('; ');
+
+    // Получаем все пользователи для статистики (без пагинации)
+    const res = await fetch(`${base}/admin/api/users/list?page=1&perPage=10000&status=all`, {
+        cache: 'no-store',
+        headers: {
+            cookie: cookieHeader,
+            accept: 'application/json',
+        },
+    });
+
+    let json: ListOk | ListErr | null = null;
+    const ct = res.headers.get('content-type') ?? '';
+    if (ct.includes('application/json')) {
+        json = (await res.json()) as ListOk | ListErr;
+    } else {
+        const text = await res.text();
+        throw new Error(text.slice(0, 1500));
+    }
+
+    if (!res.ok || !json || json.ok !== true) {
+        return { total: 0, active: 0, blocked: 0, super: 0 };
+    }
+
+    const items = json.items;
+    return {
+        total: items.length,
+        active: items.filter((u) => !u.is_blocked).length,
+        blocked: items.filter((u) => u.is_blocked).length,
+        super: items.filter((u) => u.is_super).length,
+    };
+}
+
 export default async function UsersListPage(
     {searchParams}: { searchParams: Promise<{ q?: string; page?: string; perPage?: string; status?: string }> }
 ) {
@@ -96,96 +141,53 @@ export default async function UsersListPage(
     const perPage = Number(sp.perPage ?? '50');
     const status = (sp.status ?? 'all');
 
-    const data = await fetchList(q, page, perPage, status);
+    const [data, stats] = await Promise.all([fetchList(q, page, perPage, status), fetchStats()]);
 
     return (
-        <main className="space-y-6 p-4">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Пользователи</h1>
-                <div className="flex gap-3 text-sm">
-                    <Link href="/admin" className="underline">
-                        ← В админку
-                    </Link>
-                    <Link href="/admin/users/new" className="border px-3 py-1.5 rounded hover:bg-gray-50">
-                        + Новый пользователь
-                    </Link>
-                </div>
-            </div>
+        <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                {/* Заголовок */}
+                <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
+                                Пользователи
+                            </h1>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                Управление пользователями системы
+                            </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <Link href="/admin">
+                                <Button variant="outline" className="w-full sm:w-auto">
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                    </svg>
+                                    В админку
+                                </Button>
+                            </Link>
+                            <Link href="/admin/users/new">
+                                <Button className="w-full sm:w-auto">
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Новый пользователь
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </section>
 
-            <form action="/admin/users" className="flex flex-wrap gap-2 items-center">
-                <input
-                    name="q"
-                    defaultValue={q}
-                    className="border rounded px-3 py-2 w-full max-w-md"
-                    placeholder="Поиск: email, телефон, имя, id"
+                {/* Клиентский компонент с пользователями */}
+                <UsersClient
+                    initialUsers={data.items}
+                    initialPage={page}
+                    initialPerPage={perPage}
+                    initialTotal={data.total}
+                    initialSearch={q}
+                    initialStatus={status}
+                    stats={stats}
                 />
-                <select
-                    name="status"
-                    defaultValue={status}
-                    className="border rounded px-3 py-2"
-                    title="Статус"
-                >
-                    <option value="all">Все</option>
-                    <option value="active">Активные</option>
-                    <option value="blocked">Заблокированные</option>
-                </select>
-                <button className="border rounded px-3 py-2">Искать</button>
-            </form>
-
-            <div className="overflow-x-auto">
-                <table className="min-w-[900px] w-full border-collapse">
-                    <thead className="text-left text-sm text-gray-500">
-                    <tr>
-                        <th className="border-b p-2">Имя</th>
-                        <th className="border-b p-2">Email</th>
-                        <th className="border-b p-2">Телефон</th>
-                        <th className="border-b p-2">Последний вход</th>
-                        <th className="border-b p-2 w-28">Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                    {data.items.map((u) => (
-                        <tr key={u.id} className={u.is_blocked ? 'opacity-60' : ''}>
-                            <td className="border-b p-2">
-                                <div className="flex items-center gap-2">
-                                    <span>{u.full_name || '—'}</span>
-                                    {u.is_super && (
-                                        <span className="text-[10px] px-1.5 py-0.5 border rounded">super</span>
-                                    )}
-                                    {u.is_blocked && (
-                                        <span
-                                            className="text-[10px] px-1.5 py-0.5 border rounded border-red-400 text-red-600">
-                        blocked
-                      </span>
-                                    )}
-                                </div>
-                                {u.is_blocked && u.block_reason && (
-                                    <div className="text-[11px] text-red-600 mt-0.5">
-                                        Причина: {u.block_reason}
-                                    </div>
-                                )}
-                            </td>
-                            <td className="border-b p-2">{u.email || '—'}</td>
-                            <td className="border-b p-2">{u.phone || '—'}</td>
-                            <td className="border-b p-2">
-                                {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString('ru-RU') : '—'}
-                            </td>
-                            <td className="border-b p-2">
-                                <Link className="underline" href={`/admin/users/${u.id}`}>
-                                    Открыть
-                                </Link>
-                            </td>
-                        </tr>
-                    ))}
-                    {data.items.length === 0 && (
-                        <tr>
-                            <td className="p-3 text-gray-500" colSpan={5}>
-                                Ничего не найдено.
-                            </td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
             </div>
         </main>
     );
