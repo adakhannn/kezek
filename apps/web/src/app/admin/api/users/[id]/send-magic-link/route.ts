@@ -16,7 +16,7 @@ export async function POST(_req: Request, context: unknown) {
             : {};
     try {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+        const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'http://localhost:3000';
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 

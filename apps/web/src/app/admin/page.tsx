@@ -126,7 +126,7 @@ export default async function AdminHomePage() {
     // Системные проверки окружения
     const checks = [
         {ok: !!process.env.SUPABASE_SERVICE_ROLE_KEY, label: 'SUPABASE_SERVICE_ROLE_KEY задан'},
-        {ok: !!process.env.NEXT_PUBLIC_SITE_URL, label: 'NEXT_PUBLIC_SITE_URL задан'},
+        {ok: !!process.env.NEXT_PUBLIC_SITE_ORIGIN, label: 'NEXT_PUBLIC_SITE_ORIGIN задан'},
         {
             ok: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
             label: 'Публичные ключи Supabase заданы',
