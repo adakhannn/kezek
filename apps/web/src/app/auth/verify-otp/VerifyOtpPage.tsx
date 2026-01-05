@@ -10,6 +10,7 @@ export default function VerifyOtpPage() {
     const router = useRouter();
     const sp = useSearchParams();
     const phone = useMemo(() => sp.get('phone') ?? '', [sp]);
+    const fromWhatsApp = useMemo(() => sp.get('from') === 'whatsapp-setup', [sp]);
     const [token, setToken] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -36,6 +37,25 @@ export default function VerifyOtpPage() {
 
             // Обновляем серверные компоненты перед редиректом
             router.refresh();
+            
+            // Если это было подключение WhatsApp, обновляем телефон пользователя
+            if (fromWhatsApp) {
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                        // Телефон уже подтвержден через OTP, просто обновляем профиль
+                        await fetch('/api/user/update-phone', {
+                            method: 'POST',
+                            headers: { 'content-type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ phone }),
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Failed to update phone after OTP verification:', e);
+                }
+            }
+            
             // Успех — на главную (или обратно на ожидаемую страницу)
             router.push('/');
         } catch (e) {

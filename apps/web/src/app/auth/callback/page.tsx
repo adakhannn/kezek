@@ -7,12 +7,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, useCallback } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import { WhatsAppConnectPrompt } from '@/app/_components/WhatsAppConnectPrompt';
 import { supabase } from '@/lib/supabaseClient';
 
 function AuthCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
+    const [showWhatsAppPrompt, setShowWhatsAppPrompt] = useState(false);
 
     const fetchIsSuper = useCallback(async (): Promise<boolean> => {
         const { data, error } = await supabase.rpc('is_super_admin');
@@ -99,6 +101,16 @@ function AuthCallbackContent() {
                             throw error;
                         }
                         const { data: { user } } = await supabase.auth.getUser();
+                        
+                        // Проверяем, был ли вход через Google и нет ли телефона
+                        const fromGoogle = searchParams.get('from') === 'google';
+                        if (fromGoogle && user && !user.phone) {
+                            console.log('[callback] Google login without phone, showing WhatsApp prompt');
+                            setShowWhatsAppPrompt(true);
+                            setStatus('success');
+                            return;
+                        }
+                        
                         const targetPath = await decideRedirect(nextParam || '/', user?.id);
                         console.log('[callback] Session set from hash, redirecting to:', targetPath);
                         setStatus('success');
@@ -118,6 +130,16 @@ function AuthCallbackContent() {
                             const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
                             if (!exchangeError && sessionData?.session) {
                                 const { data: { user } } = await supabase.auth.getUser();
+                                
+                                // Проверяем, был ли вход через Google и нет ли телефона
+                                const fromGoogle = searchParams.get('from') === 'google';
+                                if (fromGoogle && user && !user.phone) {
+                                    console.log('[callback] Google login without phone, showing WhatsApp prompt');
+                                    setShowWhatsAppPrompt(true);
+                                    setStatus('success');
+                                    return;
+                                }
+                                
                                 const targetPath = await decideRedirect(nextParam || '/', user?.id);
                                 console.log('[callback] Code exchanged successfully, redirecting to:', targetPath);
                                 setStatus('success');
@@ -142,6 +164,16 @@ function AuthCallbackContent() {
                     
                     if (session && !sessionError) {
                         const { data: { user } } = await supabase.auth.getUser();
+                        
+                        // Проверяем, был ли вход через Google и нет ли телефона
+                        const fromGoogle = searchParams.get('from') === 'google';
+                        if (fromGoogle && user && !user.phone) {
+                            console.log('[callback] Google login without phone, showing WhatsApp prompt');
+                            setShowWhatsAppPrompt(true);
+                            setStatus('success');
+                            return;
+                        }
+                        
                         const targetPath = await decideRedirect(nextParam || '/', user?.id);
                         console.log('[callback] Session found, redirecting to:', targetPath);
                         setStatus('success');
@@ -186,6 +218,45 @@ function AuthCallbackContent() {
             checkSession();
         })();
     }, [router, searchParams, decideRedirect]);
+
+    if (showWhatsAppPrompt) {
+        return (
+            <>
+                <FullScreenStatus
+                    title="Авторизация завершена"
+                    subtitle="Настройте уведомления"
+                    message=""
+                    loading={false}
+                />
+                <WhatsAppConnectPrompt
+                    onDismiss={() => {
+                        setShowWhatsAppPrompt(false);
+                        // Редиректим после закрытия
+                        (async () => {
+                            const { data: { user } } = await supabase.auth.getUser();
+                            const nextParam = searchParams.get('next');
+                            const targetPath = await decideRedirect(nextParam || '/', user?.id);
+                            router.refresh();
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            window.location.href = targetPath;
+                        })();
+                    }}
+                    onSuccess={() => {
+                        setShowWhatsAppPrompt(false);
+                        // Редиректим после успешного подключения
+                        (async () => {
+                            const { data: { user } } = await supabase.auth.getUser();
+                            const nextParam = searchParams.get('next');
+                            const targetPath = await decideRedirect(nextParam || '/', user?.id);
+                            router.refresh();
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            window.location.href = targetPath;
+                        })();
+                    }}
+                />
+            </>
+        );
+    }
 
     if (status === 'error') {
         return (
