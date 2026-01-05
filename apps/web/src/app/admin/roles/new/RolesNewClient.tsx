@@ -3,6 +3,10 @@
 import {useRouter} from 'next/navigation';
 import {useState} from 'react';
 
+import {Button} from '@/components/ui/Button';
+import {Card} from '@/components/ui/Card';
+import {Input} from '@/components/ui/Input';
+
 type Props = { baseURL: string };
 
 export default function RolesNewClient({baseURL}: Props) {
@@ -48,51 +52,53 @@ export default function RolesNewClient({baseURL}: Props) {
     }
 
     return (
-        <form onSubmit={submit} className="max-w-xl space-y-4">
-            {err && <div className="text-red-600 text-sm">{err}</div>}
+        <Card className="p-6">
+            <form onSubmit={submit} className="space-y-6">
+                {err && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                        <p className="text-sm text-red-800 dark:text-red-300">{err}</p>
+                    </div>
+                )}
 
-            <label className="block">
-                <div className="text-sm text-gray-600 mb-1">Название *</div>
-                <input
-                    className="border rounded px-3 py-2 w-full"
+                <Input
+                    label="Название *"
+                    placeholder="Напр. Оператор филиала"
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    placeholder="Напр. Оператор филиала"
+                    required
                 />
-            </label>
 
-            <label className="block">
-                <div className="text-sm text-gray-600 mb-1">Системный ключ (slug) *</div>
-                <input
-                    className="border rounded px-3 py-2 w-full"
+                <Input
+                    label="Системный ключ (slug) *"
+                    placeholder="Напр. branch_operator"
                     value={key}
                     onChange={e => setKey(e.target.value)}
-                    placeholder="Напр. branch_operator"
+                    helperText="Только латиница/цифры/нижнее подчёркивание/дефис: a-z 0-9 _ -"
+                    required
                 />
-                <div className="text-xs text-gray-500 mt-1">
-                    Только латиница/цифры/нижнее подчёркивание/дефис: a-z 0-9 _ -
+
+                <div className="w-full">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Описание
+                    </label>
+                    <textarea
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 min-h-[100px]"
+                        value={description}
+                        onChange={e => setDescription(e.target.value)}
+                        placeholder="Кратко опишите назначение роли"
+                    />
                 </div>
-            </label>
 
-            <label className="block">
-                <div className="text-sm text-gray-600 mb-1">Описание</div>
-                <textarea
-                    className="border rounded px-3 py-2 w-full min-h-[90px]"
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    placeholder="Кратко опишите назначение роли"
-                />
-            </label>
-
-            <div className="flex gap-2">
-                <button
-                    disabled={loading}
-                    className="border rounded px-4 py-2 disabled:opacity-50"
-                    type="submit"
-                >
-                    {loading ? 'Создаём…' : 'Создать'}
-                </button>
-            </div>
-        </form>
+                <div className="flex items-center gap-3 pt-2">
+                    <Button
+                        type="submit"
+                        disabled={loading}
+                        isLoading={loading}
+                    >
+                        {loading ? 'Создаём…' : 'Создать роль'}
+                    </Button>
+                </div>
+            </form>
+        </Card>
     );
 }
