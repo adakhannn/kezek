@@ -5,6 +5,11 @@ import React, { useMemo, useState } from 'react';
 
 import BranchMapPickerYandex from './BranchMapPickerYandex';
 
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+
+
 type Props = {
     mode: 'create' | 'edit';
     bizId: string;
@@ -94,50 +99,86 @@ export function BranchForm({ mode, bizId, branchId, initial }: Props) {
     }
 
     return (
-        <form onSubmit={submit} className="space-y-3 max-w-xl">
-            <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Название филиала *"
+        <form onSubmit={submit} className="space-y-6 max-w-2xl">
+            <Input
+                label="Название филиала"
+                placeholder="Введите название филиала"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 name="branch_name"
+                error={err && !name.trim() ? 'Название филиала обязательно' : undefined}
             />
 
             {/* Карта Яндекса */}
-            <div className="grid gap-2">
-                <label className="text-sm">Метка на карте (кликните, чтобы поставить)</label>
-                <BranchMapPickerYandex
-                    lat={lat ?? undefined}
-                    lon={lon ?? undefined}
-                    onPick={(la, lo, addr) => {
-                        setLat(la);
-                        setLon(lo);
-                        if (addr && !address) setAddress(addr); // заполняем, если поле пустое
-                    }}
-                />
-                <div className="text-xs text-gray-500">Координаты: {lat ?? '—'}, {lon ?? '—'}</div>
+            <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Расположение на карте
+                </label>
+                <Card className="p-4">
+                    <BranchMapPickerYandex
+                        lat={lat ?? undefined}
+                        lon={lon ?? undefined}
+                        onPick={(la, lo, addr) => {
+                            setLat(la);
+                            setLon(lo);
+                            if (addr && !address) setAddress(addr); // заполняем, если поле пустое
+                        }}
+                    />
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Координаты: {lat ? lat.toFixed(6) : '—'}, {lon ? lon.toFixed(6) : '—'}
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Кликните на карте, чтобы установить метку. Адрес заполнится автоматически.
+                    </p>
+                </Card>
             </div>
 
-            <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder='Адрес (можно отредактировать вручную)'
+            <Input
+                label="Адрес"
+                placeholder="Адрес филиала (можно отредактировать вручную)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 name="branch_address"
                 autoComplete="street-address"
+                helperText="Адрес можно указать вручную или выбрать на карте"
             />
 
-            <label className="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-                Активен
-            </label>
+            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                <input
+                    type="checkbox"
+                    id="is_active"
+                    checked={isActive}
+                    onChange={(e) => setIsActive(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+                />
+                <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                    Филиал активен
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
+                    {isActive ? 'Филиал будет отображаться в публичном каталоге' : 'Филиал скрыт от пользователей'}
+                </p>
+            </div>
 
-            {err && <div className="text-red-600 text-sm">{err}</div>}
-            <button className="border rounded px-3 py-2" disabled={loading || (mode === 'edit' && !changed)} type="submit" aria-busy={loading}>
-                {loading ? 'Сохраняю…' : mode === 'create' ? 'Создать филиал' : 'Сохранить изменения'}
-            </button>
-            {mode === 'edit' && !changed && <span className="ml-2 text-xs text-gray-500">Нет изменений</span>}
+            {err && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-sm text-red-800 dark:text-red-300">{err}</p>
+                </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-4">
+                <Button
+                    type="submit"
+                    disabled={loading || (mode === 'edit' && !changed)}
+                    isLoading={loading}
+                    className="min-w-[160px]"
+                >
+                    {mode === 'create' ? 'Создать филиал' : 'Сохранить изменения'}
+                </Button>
+                {mode === 'edit' && !changed && (
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Нет изменений для сохранения</span>
+                )}
+            </div>
         </form>
     );
 }
