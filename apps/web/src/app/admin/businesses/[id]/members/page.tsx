@@ -70,27 +70,58 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
     const host = h.get('x-forwarded-host') ?? h.get('host')!;
     const baseURL = `${proto}://${host}`;
 
+    // Получаем информацию о бизнесе для заголовка
+    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const { createClient } = await import('@supabase/supabase-js');
+    const admin = createClient(URL, SERVICE);
+    const { data: biz } = await admin
+        .from('businesses')
+        .select('id,name')
+        .eq('id', id)
+        .maybeSingle();
+
     return (
-        <main className="space-y-6 p-4">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Участники бизнеса</h1>
-                <div className="flex gap-3 text-sm">
-                    <Link href={`/admin/businesses/${id}`} className="underline">
-                        ← К бизнесу
-                    </Link>
-                    {canManage && (
+        <div className="space-y-6">
+            {/* Заголовок */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                            Участники бизнеса
+                        </h1>
+                        {biz && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Бизнес: <span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                         <Link
-                            href={`/admin/businesses/${id}/members/new`}
-                            className="inline-flex items-center rounded border px-3 py-1.5 hover:bg-gray-50"
+                            href={`/admin/businesses/${id}`}
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
                         >
-                            + Добавить участника
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            К бизнесу
                         </Link>
-                    )}
+                        {canManage && (
+                            <Link
+                                href={`/admin/businesses/${id}/members/new`}
+                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-r from-indigo-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-200"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Добавить участника
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* MembersClient должен уважать canManage (прятать кнопки/действия) */}
+            {/* Список участников */}
             <MembersClient baseURL={baseURL} bizId={id} canManage={canManage} />
-        </main>
+        </div>
     );
 }
