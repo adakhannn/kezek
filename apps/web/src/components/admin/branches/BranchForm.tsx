@@ -122,7 +122,7 @@ export function BranchForm({ mode, bizId, branchId, initial }: Props) {
                         onPick={(la, lo, addr) => {
                             setLat(la);
                             setLon(lo);
-                            if (addr && !address) setAddress(addr); // заполняем, если поле пустое
+                            if (addr) setAddress(addr); // адрес заполняется только через карту
                         }}
                     />
                     <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -136,12 +136,12 @@ export function BranchForm({ mode, bizId, branchId, initial }: Props) {
 
             <Input
                 label="Адрес"
-                placeholder="Адрес филиала (можно отредактировать вручную)"
+                placeholder="Адрес будет заполнен автоматически при выборе на карте"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                readOnly
                 name="branch_address"
                 autoComplete="street-address"
-                helperText="Адрес можно указать вручную или выбрать на карте"
+                helperText="Адрес заполняется автоматически при выборе точки на карте"
             />
 
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
