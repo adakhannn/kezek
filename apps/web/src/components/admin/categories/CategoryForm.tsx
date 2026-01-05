@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
 type Props = {
     mode: 'create' | 'edit';
     categoryId?: string;
@@ -52,6 +55,7 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
     const [nameRu, setNameRu] = useState<string>(initial?.name_ru ?? '');
     const [slug, setSlug] = useState<string>(initial?.slug ?? '');
     const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
+    const [loading, setLoading] = useState(false);
 
     // если пользователь трогал slug руками — авто-генерацию выключаем
     const [slugDirty, setSlugDirty] = useState<boolean>(false);
@@ -96,6 +100,9 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
 
     async function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        setError(null);
+        setLoading(true);
+        
         const url =
             mode === 'create'
                 ? '/admin/api/categories/create'
@@ -149,68 +156,147 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
         } catch (e) {
             // мягко показываем ошибку
             setError(extractError(e));
+        } finally {
+            setLoading(false);
         }
     }
 
     const [error, setError] = useState<string | null>(null);
 
     return (
-        <form onSubmit={submit} className="space-y-3 max-w-xl">
-            <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Название (ru) *"
-                value={nameRu}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameRu(e.target.value)}
-                required
-            />
+        <form onSubmit={submit} className="space-y-6">
+            {/* Название */}
+            <div>
+                <Input
+                    label="Название категории"
+                    placeholder="Например: Парикмахерская"
+                    value={nameRu}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameRu(e.target.value)}
+                    required
+                    helperText="Название категории на русском языке"
+                />
+            </div>
 
-            <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Slug (латиница)"
-                value={slug}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setSlug(e.target.value);
-                    setSlugDirty(true); // пользователь начал править — отключаем авто
-                }}
-                onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-                    const v = e.target.value.trim();
-                    if (!v) {
-                        // очищено — снова включаем автогенерацию
-                        setSlugDirty(false);
-                        setSlug(makeSlug(nameRu));
-                    } else {
-                        setSlug(makeSlug(v)); // нормализуем вручную введённый slug
+            {/* Slug */}
+            <div>
+                <Input
+                    label="Slug (URL-идентификатор)"
+                    placeholder="Автоматически генерируется из названия"
+                    value={slug}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        setSlug(e.target.value);
+                        setSlugDirty(true); // пользователь начал править — отключаем авто
+                    }}
+                    onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                        const v = e.target.value.trim();
+                        if (!v) {
+                            // очищено — снова включаем автогенерацию
+                            setSlugDirty(false);
+                            setSlug(makeSlug(nameRu));
+                        } else {
+                            setSlug(makeSlug(v)); // нормализуем вручную введённый slug
+                        }
+                    }}
+                    helperText={
+                        slugDirty 
+                            ? "Slug будет автоматически нормализован (латиница, дефисы)"
+                            : "Slug генерируется автоматически из названия. Можно редактировать вручную."
                     }
-                }}
-            />
+                />
+                {slug && (
+                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Предпросмотр:</p>
+                        <code className="text-sm font-mono text-gray-900 dark:text-gray-100">
+                            /b/{makeSlug(slug)}
+                        </code>
+                    </div>
+                )}
+            </div>
 
-            <label className="inline-flex items-center gap-2 text-sm">
+            {/* Статус */}
+            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <input
                     type="checkbox"
+                    id="is_active"
                     checked={isActive}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsActive(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 focus:ring-2"
                 />
-                Активна
-            </label>
+                <label htmlFor="is_active" className="flex-1 cursor-pointer">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">Активна</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Активные категории доступны для выбора при создании бизнеса
+                    </div>
+                </label>
+            </div>
 
+            {/* Предупреждение для редактирования */}
             {mode === 'edit' && (
-                <p className="text-xs text-gray-500">
-                    Изменение slug (при отмеченной опции в API) может быть распространено на связанные бизнесы.
-                </p>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <div className="flex gap-3">
+                        <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div className="flex-1">
+                            <p className="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1">
+                                Изменение slug
+                            </p>
+                            <p className="text-xs text-amber-700 dark:text-amber-400">
+                                Изменение slug может быть распространено на связанные бизнесы (если опция включена в API).
+                            </p>
+                        </div>
+                    </div>
+                </div>
             )}
 
-            {error && <div className="text-red-600 text-sm">{error}</div>}
-
-            <button
-                className="border rounded px-3 py-2"
-                disabled={mode === 'edit' ? !changed : false}
-                type="submit"
-            >
-                {mode === 'create' ? 'Создать' : 'Сохранить'}
-            </button>
-            {mode === 'edit' && !changed && (
-                <span className="ml-2 text-xs text-gray-500">Нет изменений</span>
+            {/* Ошибка */}
+            {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div className="flex gap-3">
+                        <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="flex-1">
+                            <p className="text-sm font-medium text-red-800 dark:text-red-300">Ошибка</p>
+                            <p className="text-sm text-red-700 dark:text-red-400 mt-1">{error}</p>
+                        </div>
+                    </div>
+                </div>
             )}
+
+            {/* Кнопки */}
+            <div className="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Button
+                    type="submit"
+                    disabled={mode === 'edit' ? !changed : false}
+                    isLoading={loading}
+                    className="min-w-[140px]"
+                >
+                    {mode === 'create' ? (
+                        <>
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Создать
+                        </>
+                    ) : (
+                        <>
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Сохранить
+                        </>
+                    )}
+                </Button>
+                {mode === 'edit' && !changed && (
+                    <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Нет изменений
+                    </span>
+                )}
+            </div>
         </form>
     );
 }
