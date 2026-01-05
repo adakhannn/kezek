@@ -58,73 +58,53 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
     if (eBiz) return <div className="p-4">Ошибка: {eBiz.message}</div>;
     if (!biz) return <div className="p-4">Бизнес не найден</div>;
 
-    // 5) Список существующих пользователей через Admin API (только подтвержденные)
-    const { data: listResp, error: eUsers } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 200,
-    });
-
-    if (eUsers) {
-        return <div className="p-4">Ошибка загрузки пользователей: {eUsers.message}</div>;
-    }
-
-    const allUsers = listResp?.users ?? [];
-    
-    // Фильтруем только подтвержденных пользователей (email_confirmed_at или phone_confirmed_at не null)
-    const confirmedUsers = allUsers.filter((u) => {
-        const hasEmail = u.email && u.email_confirmed_at;
-        const hasPhone = (u as { phone?: string | null; phone_confirmed_at?: string | null }).phone && 
-                        (u as { phone_confirmed_at?: string | null }).phone_confirmed_at;
-        return hasEmail || hasPhone;
-    });
-
-    // Подтягиваем full_name из profiles
-    const userIds = confirmedUsers.map((u) => u.id);
-    const profiles: Record<string, { full_name: string | null }> = {};
-    if (userIds.length > 0) {
-        const { data: profRows } = await admin
-            .from('profiles')
-            .select('id,full_name')
-            .in('id', userIds);
-        for (const r of profRows ?? []) {
-            profiles[r.id] = { full_name: r.full_name };
+    // 5) Получаем информацию о текущем владельце (если есть)
+    let currentOwner: UserRow | null = null;
+    if (biz.owner_id) {
+        try {
+            const { data: ownerData, error: ownerErr } = await admin.auth.admin.getUserById(biz.owner_id);
+            if (!ownerErr && ownerData?.user) {
+                const { data: profile } = await admin
+                    .from('profiles')
+                    .select('full_name')
+                    .eq('id', biz.owner_id)
+                    .maybeSingle();
+                
+                currentOwner = {
+                    id: ownerData.user.id,
+                    email: ownerData.user.email ?? null,
+                    phone: (ownerData.user as { phone?: string | null }).phone ?? null,
+                    full_name: profile?.full_name ?? (ownerData.user.user_metadata?.full_name as string | undefined) ?? null,
+                    is_suspended: null, // Проверка блокировки будет на клиенте при необходимости
+                };
+            }
+        } catch (e) {
+            console.warn('Failed to fetch current owner:', e);
         }
     }
-
-    // Проверяем заблокированных пользователей
-    const userIdsForSuspension = confirmedUsers.map((u) => u.id);
-    const suspendedMap = new Set<string>();
-    if (userIdsForSuspension.length > 0) {
-        const { data: suspensions } = await admin
-            .from('user_suspensions')
-            .select('user_id')
-            .in('user_id', userIdsForSuspension);
-        for (const s of suspensions ?? []) {
-            suspendedMap.add(s.user_id);
-        }
-    }
-
-    // Преобразуем в нужный формат
-    const users: UserRow[] = confirmedUsers.map((u) => ({
-        id: u.id,
-        email: u.email ?? null,
-        phone: (u as { phone?: string | null }).phone ?? null,
-        full_name: profiles[u.id]?.full_name ?? (u.user_metadata?.full_name as string | undefined) ?? null,
-        is_suspended: suspendedMap.has(u.id) ? true : null,
-    }));
 
     return (
-        <div className="p-4 space-y-4">
-            <h1 className="text-2xl font-semibold">
-                Назначить владельца: {biz.name}
-            </h1>
-            <div className="border rounded p-3">
-                <OwnerForm
-                    bizId={biz.id}
-                    users={users ?? []}
-                    currentOwnerId={biz.owner_id}
-                />
+        <div className="space-y-6">
+            {/* Заголовок */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                            Назначить владельца
+                        </h1>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Бизнес: <span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
+                        </p>
+                    </div>
+                </div>
             </div>
+
+            {/* Форма */}
+            <OwnerForm
+                bizId={biz.id}
+                currentOwnerId={biz.owner_id}
+                currentOwner={currentOwner}
+            />
         </div>
     );
 }

@@ -1,54 +1,122 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 
 type UserRow = {
     id: string;
     email: string | null;
     phone: string | null;
     full_name: string | null;
-    is_suspended: boolean | null;
-    created_at?: string;
+    is_suspended?: boolean | null;
+};
+
+type SearchResult = {
+    id: string;
+    email: string | null;
+    phone: string | null;
+    full_name: string | null;
 };
 
 export function OwnerForm({
-                              bizId,
-                              users,
-                              currentOwnerId,
-                          }: {
+    bizId,
+    currentOwnerId,
+    currentOwner,
+}: {
     bizId: string;
-    users: UserRow[];
     currentOwnerId: string | null;
+    currentOwner?: UserRow | null;
 }) {
     const router = useRouter();
-
-    const options = useMemo(
-        () =>
-            users.map((u) => {
-                const parts: string[] = [];
-                if (u.full_name) parts.push(u.full_name);
-                if (u.email) parts.push(u.email);
-                if (u.phone) parts.push(u.phone);
-                const label = parts.length > 0 ? parts.join(' • ') : u.id;
-                return {
-                    id: u.id,
-                    label,
-                    full_name: u.full_name,
-                    email: u.email,
-                    phone: u.phone,
-                    suspended: !!u.is_suspended,
-                };
-            }),
-        [users]
-    );
-
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [searchLoading, setSearchLoading] = useState(false);
     const [selected, setSelected] = useState<string>(currentOwnerId ?? '');
     const [err, setErr] = useState<string | null>(null);
     const [ok, setOk] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+
+    // Debounce для поиска
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery.trim().length >= 2 || searchQuery.trim().length === 0) {
+                performSearch(searchQuery.trim());
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Загружаем первые результаты при монтировании
+    useEffect(() => {
+        performSearch('');
+    }, []);
+
+    async function performSearch(q: string) {
+        setSearchLoading(true);
+        try {
+            const url = new URL('/admin/api/users/search', window.location.origin);
+            if (q) {
+                url.searchParams.set('q', q);
+            }
+
+            const resp = await fetch(url.toString(), {
+                credentials: 'include',
+            });
+
+            if (!resp.ok) {
+                throw new Error(`HTTP ${resp.status}`);
+            }
+
+            const data = await resp.json();
+            if (!data.ok) {
+                throw new Error(data.error || 'Ошибка поиска');
+            }
+
+            setSearchResults(data.items || []);
+        } catch (e) {
+            console.error('Search error:', e);
+            setSearchResults([]);
+        } finally {
+            setSearchLoading(false);
+        }
+    }
+
+    // Объединяем результаты поиска с текущим владельцем
+    const options = useMemo(() => {
+        const results = [...searchResults];
+        
+        // Добавляем текущего владельца, если он есть и его нет в результатах
+        if (currentOwner && currentOwnerId) {
+            const exists = results.some((r) => r.id === currentOwnerId);
+            if (!exists) {
+                results.unshift({
+                    id: currentOwner.id,
+                    email: currentOwner.email,
+                    phone: currentOwner.phone,
+                    full_name: currentOwner.full_name,
+                });
+            }
+        }
+
+        return results.map((u) => {
+            const parts: string[] = [];
+            if (u.full_name) parts.push(u.full_name);
+            if (u.email) parts.push(u.email);
+            if (u.phone) parts.push(u.phone);
+            const label = parts.length > 0 ? parts.join(' • ') : u.id;
+            return {
+                id: u.id,
+                label,
+                full_name: u.full_name,
+                email: u.email,
+                phone: u.phone,
+            };
+        });
+    }, [searchResults, currentOwner, currentOwnerId]);
 
     const changed = (selected || '') !== (currentOwnerId || '');
 
@@ -57,13 +125,6 @@ export function OwnerForm({
         setOk(null);
         setLoading(true);
         try {
-            // Клиентская защита: не даём назначать заблокированного
-            const target = options.find((o) => o.id === selected);
-            if (target?.suspended) {
-                setErr('Этот пользователь заблокирован. Нельзя назначать владельцем.');
-                return;
-            }
-
             const resp = await fetch(`/admin/api/businesses/${bizId}/owner/save`, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
@@ -98,28 +159,52 @@ export function OwnerForm({
     return (
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Владелец бизнеса</h3>
-            <div className="flex flex-wrap items-center gap-3">
-                <select
-                    className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 min-w-[400px] text-sm"
-                    value={selected}
-                    onChange={(e) => setSelected(e.target.value)}
-                >
-                    <option value="">— Снять владельца —</option>
-                    {options.map((o) => (
-                        <option key={o.id} value={o.id} disabled={o.suspended}>
-                            {o.label}{o.suspended ? ' — заблокирован' : ''}
-                        </option>
-                    ))}
-                </select>
+            
+            <div className="space-y-4">
+                <div>
+                    <Input
+                        label="Поиск пользователя"
+                        placeholder="Введите email, телефон или имя (минимум 2 символа)"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        helperText={searchQuery.length > 0 && searchQuery.length < 2 ? 'Введите минимум 2 символа для поиска' : 'Начните вводить для поиска пользователя'}
+                    />
+                </div>
 
-                <Button
-                    onClick={save}
-                    disabled={loading || !changed}
-                    isLoading={loading}
-                >
-                    {loading ? 'Сохраняю…' : 'Сохранить'}
-                </Button>
-                {!changed && <span className="text-xs text-gray-500 dark:text-gray-400">Нет изменений</span>}
+                <div className="flex flex-wrap items-center gap-3">
+                    <select
+                        className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 min-w-[400px] text-sm"
+                        value={selected}
+                        onChange={(e) => setSelected(e.target.value)}
+                        disabled={searchLoading}
+                    >
+                        <option value="">— Снять владельца —</option>
+                        {options.length === 0 && !searchLoading && (
+                            <option value="" disabled>
+                                {searchQuery.length >= 2 ? 'Ничего не найдено' : 'Начните поиск'}
+                            </option>
+                        )}
+                        {searchLoading && (
+                            <option value="" disabled>
+                                Поиск...
+                            </option>
+                        )}
+                        {options.map((o) => (
+                            <option key={o.id} value={o.id}>
+                                {o.label}
+                            </option>
+                        ))}
+                    </select>
+
+                    <Button
+                        onClick={save}
+                        disabled={loading || !changed}
+                        isLoading={loading}
+                    >
+                        {loading ? 'Сохраняю…' : 'Сохранить'}
+                    </Button>
+                    {!changed && <span className="text-xs text-gray-500 dark:text-gray-400">Нет изменений</span>}
+                </div>
             </div>
 
             {err && (
@@ -133,7 +218,7 @@ export function OwnerForm({
                 </div>
             )}
             <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                Выберите существующего пользователя системы. Заблокированные не могут быть владельцами.
+                Используйте поиск для нахождения пользователя. Введите email, телефон или имя. Заблокированные пользователи не могут быть владельцами.
             </div>
         </div>
     );

@@ -20,9 +20,13 @@ export async function GET(req: Request) {
             cookies: { get: n => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
-        // доступ: только супер-админам или админам страниц (проверяется там, где зовут выдачу ролей)
+        // доступ: только супер-админам
         const { data: { user } } = await supa.auth.getUser();
         if (!user) return NextResponse.json({ ok:false, error:'auth' }, { status:401 });
+        
+        const { data: isSuper, error: superErr } = await supa.rpc('is_super_admin');
+        if (superErr) return NextResponse.json({ ok:false, error: superErr.message }, { status:400 });
+        if (!isSuper) return NextResponse.json({ ok:false, error:'forbidden' }, { status:403 });
 
         // читаем q
         const url = new globalThis.URL(req.url);
