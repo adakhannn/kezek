@@ -82,9 +82,13 @@ function formatTime(iso: string | null) {
     }
 }
 
+type TabKey = 'shift' | 'clients' | 'stats';
+
 export default function StaffFinanceView() {
     const [loading, setLoading] = useState(true);
     const [today, setToday] = useState<TodayResponse | null>(null);
+    const [activeTab, setActiveTab] = useState<TabKey>('shift');
+    const [showShiftDetails, setShowShiftDetails] = useState(false);
 
     const [items, setItems] = useState<ShiftItem[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
@@ -327,6 +331,44 @@ export default function StaffFinanceView() {
         year: 'numeric',
     });
 
+    // Компонент табов
+    const Tabs = () => (
+        <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+            <button
+                onClick={() => setActiveTab('shift')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    activeTab === 'shift'
+                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+            >
+                Текущая смена
+            </button>
+            <button
+                onClick={() => setActiveTab('clients')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    activeTab === 'clients'
+                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+            >
+                Клиенты {items.length > 0 && `(${items.length})`}
+            </button>
+            {stats && (
+                <button
+                    onClick={() => setActiveTab('stats')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                        activeTab === 'stats'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}
+                >
+                    Статистика
+                </button>
+            )}
+        </div>
+    );
+
     return (
         <main className="mx-auto max-w-4xl p-6 space-y-6">
             <div>
@@ -338,73 +380,92 @@ export default function StaffFinanceView() {
                 </p>
             </div>
 
-            <Card variant="elevated" className="p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    <div>
-                        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                            Текущая смена
-                        </div>
-                        <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {todayLabel} ({TZ})
-                        </div>
-                        {todayShift && (
-                            <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                                <div>Открыта: {formatTime(todayShift.opened_at)}</div>
-                                <div>
-                                    Плановый старт:{' '}
-                                    {todayShift.expected_start
-                                        ? formatTime(todayShift.expected_start)
-                                        : 'не задан'}
-                                </div>
-                                <div>
-                                    Опоздание:{' '}
-                                    {todayShift.late_minutes > 0
-                                        ? `${todayShift.late_minutes} мин`
-                                        : 'нет'}
-                                </div>
-                                {/* Показываем оплату за выход, если указана ставка за час */}
-                                {((isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null) ||
-                                    (isClosed && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined)) && (
-                                    <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                        <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Оплата за выход
-                                        </div>
-                                        <div className="space-y-1 text-sm">
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Отработано:</span>
-                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {isOpen
-                                                        ? currentHoursWorked?.toFixed(2) ?? '0.00'
-                                                        : todayShift.hours_worked?.toFixed(2) ?? '0.00'}{' '}
-                                                    ч
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Ставка:</span>
-                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {isOpen
-                                                        ? hourlyRate ?? 0
-                                                        : todayShift.hourly_rate ?? 0}{' '}
-                                                    сом/ч
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
-                                                <span className="font-medium text-green-600 dark:text-green-400">
-                                                    К получению за выход:
-                                                </span>
-                                                <span className="font-semibold text-green-600 dark:text-green-400">
-                                                    {isOpen
-                                                        ? currentGuaranteedAmount?.toFixed(2) ?? '0.00'
-                                                        : todayShift.guaranteed_amount?.toFixed(2) ?? '0.00'}{' '}
-                                                    сом
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+            <Tabs />
+
+            {/* Таб: Текущая смена */}
+            {activeTab === 'shift' && (
+                <Card variant="elevated" className="p-6 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div>
+                            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                Текущая смена
                             </div>
-                        )}
-                    </div>
+                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                {todayLabel} ({TZ})
+                            </div>
+                            {todayShift && (
+                                <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                                    <div>Открыта: {formatTime(todayShift.opened_at)}</div>
+                                    {showShiftDetails && (
+                                        <>
+                                            <div>
+                                                Плановый старт:{' '}
+                                                {todayShift.expected_start
+                                                    ? formatTime(todayShift.expected_start)
+                                                    : 'не задан'}
+                                            </div>
+                                            <div>
+                                                Опоздание:{' '}
+                                                {todayShift.late_minutes > 0
+                                                    ? `${todayShift.late_minutes} мин`
+                                                    : 'нет'}
+                                            </div>
+                                        </>
+                                    )}
+                                    {/* Показываем оплату за выход, если указана ставка за час */}
+                                    {((isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null) ||
+                                        (isClosed && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined)) && (
+                                        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Оплата за выход
+                                            </div>
+                                            <div className="space-y-1 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600 dark:text-gray-400">Отработано:</span>
+                                                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                        {isOpen
+                                                            ? currentHoursWorked?.toFixed(2) ?? '0.00'
+                                                            : todayShift.hours_worked?.toFixed(2) ?? '0.00'}{' '}
+                                                        ч
+                                                    </span>
+                                                </div>
+                                                {showShiftDetails && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-600 dark:text-gray-400">Ставка:</span>
+                                                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                            {isOpen
+                                                                ? hourlyRate ?? 0
+                                                                : todayShift.hourly_rate ?? 0}{' '}
+                                                            сом/ч
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
+                                                    <span className="font-medium text-green-600 dark:text-green-400">
+                                                        К получению за выход:
+                                                    </span>
+                                                    <span className="font-semibold text-green-600 dark:text-green-400">
+                                                        {isOpen
+                                                            ? currentGuaranteedAmount?.toFixed(2) ?? '0.00'
+                                                            : todayShift.guaranteed_amount?.toFixed(2) ?? '0.00'}{' '}
+                                                        сом
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {todayShift && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowShiftDetails(!showShiftDetails)}
+                                            className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1"
+                                        >
+                                            {showShiftDetails ? 'Скрыть детали' : 'Показать детали'}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     <div className="flex gap-2 items-center flex-wrap">
                          {!todayShift && (
                              <>
@@ -461,35 +522,36 @@ export default function StaffFinanceView() {
                     </div>
                 </div>
 
-                {/* Краткое резюме по деньгам за смену */}
-                {todayShift && (
-                    <div className="mt-4 grid sm:grid-cols-2 gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 px-4 py-3">
-                        <div className="space-y-1">
-                            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                Итого сотруднику за смену
+                    {/* Краткое резюме по деньгам за смену */}
+                    {todayShift && (
+                        <div className="mt-4 grid sm:grid-cols-2 gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 px-4 py-3">
+                            <div className="space-y-1">
+                                <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                    Итого сотруднику за смену
+                                </div>
+                                <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+                                    {mShare} сом
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Учитывает проценты и оплату за выход
+                                </div>
                             </div>
-                            <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
-                                {mShare} сом
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                Учитывает проценты и оплату за выход
+                            <div className="space-y-1">
+                                <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                    Итого бизнесу за смену
+                                </div>
+                                <div className="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
+                                    {sShare} сом
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Включая все расходники и возможные доплаты сотруднику
+                                </div>
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                Итого бизнесу за смену
-                            </div>
-                            <div className="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
-                                {sShare} сом
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                Включая все расходники и возможные доплаты сотруднику
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    )}
 
-                <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                    {showShiftDetails && (
+                        <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
                     <div className="space-y-3">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -653,11 +715,14 @@ export default function StaffFinanceView() {
                             </p>
                         </div>
                     </div>
-                </div>
-            </Card>
+                        </div>
+                    )}
+                </Card>
+            )}
 
-            {/* Таблица клиентов за смену */}
-            <Card variant="elevated" className="p-6 space-y-4">
+            {/* Таб: Клиенты */}
+            {activeTab === 'clients' && (
+                <Card variant="elevated" className="p-6 space-y-4">
                 <div className="flex items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         Клиенты за смену
@@ -935,8 +1000,10 @@ export default function StaffFinanceView() {
                     </div>
                 )}
             </Card>
+            )}
 
-            {stats && (
+            {/* Таб: Статистика */}
+            {activeTab === 'stats' && stats && (
                 <Card variant="elevated" className="p-6 space-y-3">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
