@@ -2,6 +2,9 @@
 
 import React, {useMemo, useState} from 'react';
 
+import {Button} from '@/components/ui/Button';
+import {Input} from '@/components/ui/Input';
+
 type ApiOk = { ok: true };
 type ApiErr = { ok: false; error?: string };
 type ApiResp = ApiOk | ApiErr;
@@ -93,49 +96,72 @@ export function UserBasicForm({
     }
 
     return (
-        <form onSubmit={submit} className="space-y-3 rounded border p-4">
-            <h3 className="font-semibold">Основные данные</h3>
+        <form onSubmit={submit} className="space-y-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4">
+                <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Основные данные
+            </h3>
 
-            <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Имя"
+            <Input
+                label="Имя"
+                placeholder="Введите имя"
                 value={fullName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
                 name="full_name"
                 autoComplete="name"
             />
 
-            <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Email"
+            <Input
+                label="Email"
+                placeholder="email@example.com"
+                type="email"
                 value={email}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                type="email"
                 name="email"
                 autoComplete="email"
             />
 
-            <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Телефон (+996…)"
+            <Input
+                label="Телефон"
+                placeholder="+996XXXXXXXXX"
+                type="tel"
                 value={phone}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
-                type="tel"
                 name="phone"
                 inputMode="tel"
-                // Мягкая подсказка для E.164
                 pattern="^\+[1-9]\d{7,14}$"
-                title="Формат E.164: +996XXXXXXXXX"
+                helperText="Формат E.164: +996XXXXXXXXX"
             />
 
-            <div className="flex items-center gap-2">
-                <button className="border rounded px-3 py-2" disabled={loading || !changed} type="submit"
-                        aria-busy={loading}>
+            <div className="flex items-center gap-3 pt-2">
+                <Button
+                    type="submit"
+                    disabled={loading || !changed}
+                    isLoading={loading}
+                >
                     {loading ? 'Сохраняю…' : 'Сохранить'}
-                </button>
-                {msg && <span className="text-green-600 text-sm">{msg}</span>}
-                {err && <span className="text-red-600 text-sm">{err}</span>}
-                {!changed && <span className="text-xs text-gray-500">Нет изменений</span>}
+                </Button>
+                {msg && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        {msg}
+                    </div>
+                )}
+                {err && (
+                    <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        {err}
+                    </div>
+                )}
+                {!changed && !msg && !err && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Нет изменений</span>
+                )}
             </div>
         </form>
     );
