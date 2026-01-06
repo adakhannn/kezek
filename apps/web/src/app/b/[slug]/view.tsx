@@ -163,8 +163,11 @@ export default function BizClient({ data }: { data: Data }) {
             return;
         }
         // Если выбранный мастер не подходит под новую услугу — сбрасываем выбор
-        if (staffId && !staffFiltered.find((m) => m.id === staffId)) {
-            setStaffId('');
+        if (staffId) {
+            const isStaffValid = staffFiltered.some((m) => m.id === staffId);
+            if (!isStaffValid) {
+                setStaffId('');
+            }
         }
     }, [serviceId, staffFiltered, staffId]);
 
@@ -358,6 +361,7 @@ export default function BizClient({ data }: { data: Data }) {
             if (parsed.serviceId && serviceIds.has(parsed.serviceId)) {
                 setServiceId(parsed.serviceId);
             }
+            // Восстанавливаем мастера только если он валиден (будет проверен в useEffect ниже)
             if (parsed.staffId && staffIds.has(parsed.staffId)) {
                 setStaffId(parsed.staffId);
             }
@@ -515,17 +519,20 @@ export default function BizClient({ data }: { data: Data }) {
         // Шаг 3 -> 4: должен быть выбран мастер И у мастера должны быть услуги для выбранной услуги
         if (step === 3) {
             if (!staffId || !serviceId) return false;
-            // Если есть данные о связи услуга-мастер, проверяем
+            // Проверяем, что мастер есть в отфильтрованном списке
+            const isStaffValid = staffFiltered.some((m) => m.id === staffId);
+            if (!isStaffValid) return false;
+            // Если есть данные о связи услуга-мастер, дополнительно проверяем
             if (serviceToStaffMap) {
                 const allowedStaff = serviceToStaffMap.get(serviceId);
                 return allowedStaff?.has(staffId) ?? false;
             }
-            // Если данных нет, разрешаем переход (но на шаге 4 будет проверка)
+            // Если данных нет, но мастер есть в отфильтрованном списке - разрешаем
             return true;
         }
         
         return true;
-    }, [step, branchId, serviceId, staffId, serviceToStaffMap, totalSteps]);
+    }, [step, branchId, serviceId, staffId, serviceToStaffMap, totalSteps, staffFiltered]);
     
     const canGoPrev = step > 1;
 
