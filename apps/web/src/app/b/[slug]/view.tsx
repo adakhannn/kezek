@@ -117,10 +117,17 @@ export default function BizClient({ data }: { data: Data }) {
     useEffect(() => {
         let ignore = false;
         (async () => {
+            // Загружаем только связи для мастеров этого бизнеса
+            const staffIds = staff.map((s) => s.id);
+            if (staffIds.length === 0) {
+                setServiceStaff([]);
+                return;
+            }
             const { data, error } = await supabase
                 .from('service_staff')
                 .select('service_id,staff_id,is_active')
-                .eq('is_active', true);
+                .eq('is_active', true)
+                .in('staff_id', staffIds);
             if (ignore) return;
             if (error) {
                 console.warn('[service_staff] read error:', error.message);
@@ -132,7 +139,7 @@ export default function BizClient({ data }: { data: Data }) {
         return () => {
             ignore = true;
         };
-    }, []);
+    }, [staff]);
 
     // мапка service_id -> Set(staff_id)
     const serviceToStaffMap = useMemo(() => {
@@ -155,7 +162,7 @@ export default function BizClient({ data }: { data: Data }) {
     const servicesFiltered = useMemo<Service[]>(() => {
         const base = servicesByBranch;
         if (!staffId) return []; // Если мастер не выбран, не показываем услуги
-        if (!serviceToStaffMap) return base; // нет данных — не режем по мастеру
+        if (!serviceToStaffMap) return []; // Если нет данных о связи услуга-мастер, не показываем услуги (безопаснее)
         // Находим все услуги, которые делает выбранный мастер
         const servicesForStaff = new Set<string>();
         for (const [serviceId, staffSet] of serviceToStaffMap.entries()) {
