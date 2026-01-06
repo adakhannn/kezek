@@ -158,7 +158,7 @@ export async function POST(req: Request) {
         }
 
         // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
-        let scheduleResult = { success: false, daysCreated: 0, error: 'not_called' };
+        let scheduleResult: Awaited<ReturnType<typeof initializeStaffSchedule>> = { success: false, daysCreated: 0 };
         if (staffId) {
             console.log(`[staff/create-from-user] Initializing schedule for new staff ${staffId}, branch ${body.branch_id}`);
             try {
@@ -178,7 +178,7 @@ export async function POST(req: Request) {
             id: staffId,
             schedule_initialized: scheduleResult.success,
             schedule_days_created: scheduleResult.daysCreated,
-            schedule_error: scheduleResult.error,
+            schedule_error: scheduleResult.error || null,
         });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
