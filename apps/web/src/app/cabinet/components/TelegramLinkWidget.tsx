@@ -35,6 +35,15 @@ export function TelegramLinkWidget({
     const router = useRouter();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(false);
+    
+    // Храним последние версии callback'ов в ref, чтобы не перезапускать useEffect
+    const onSuccessRef = useRef(onSuccess);
+    const onErrorRef = useRef(onError);
+    
+    useEffect(() => {
+        onSuccessRef.current = onSuccess;
+        onErrorRef.current = onError;
+    }, [onSuccess, onError]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -67,11 +76,11 @@ export function TelegramLinkWidget({
                 router.refresh();
                 await new Promise((resolve) => setTimeout(resolve, 100));
 
-                onSuccess?.();
+                onSuccessRef.current?.();
             } catch (e) {
                 const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
                 console.error('[TelegramLinkWidget] error:', e);
-                onError?.(msg);
+                onErrorRef.current?.(msg);
             } finally {
                 setLoading(false);
             }
@@ -94,7 +103,7 @@ export function TelegramLinkWidget({
             }
             delete w[callbackName];
         };
-    }, [size, onSuccess, onError, router]);
+    }, [size, router]); // Убрали onSuccess и onError из зависимостей
 
     return (
         <div className="relative">
