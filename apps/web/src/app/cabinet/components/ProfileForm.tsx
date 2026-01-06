@@ -54,6 +54,10 @@ export default function ProfileForm() {
                 return;
             }
 
+            const meta = (user.user_metadata ?? {}) as { telegram_id?: number | string | null };
+            const telegramFromProfile = !!data?.telegram_id && !!data?.telegram_verified;
+            const telegramFromMeta = !!meta.telegram_id;
+
             setProfile({
                 full_name: data?.full_name ?? null,
                 phone: data?.phone ?? null,
@@ -61,7 +65,7 @@ export default function ProfileForm() {
                 notify_whatsapp: data?.notify_whatsapp ?? true,
                 whatsapp_verified: data?.whatsapp_verified ?? false,
                 notify_telegram: data?.notify_telegram ?? true,
-                telegram_connected: !!data?.telegram_id && !!data?.telegram_verified,
+                telegram_connected: telegramFromProfile || telegramFromMeta,
             });
         } catch (e) {
             console.error('Error loading profile:', e);

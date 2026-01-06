@@ -53,22 +53,31 @@ export async function POST(req: Request) {
         const phoneChanged = currentProfile?.phone !== phone;
         const whatsapp_verified = phoneChanged || !phone ? false : (currentProfile?.whatsapp_verified ?? false);
 
+        // Берём telegram_id из user_metadata, если он есть
+        const meta = (user.user_metadata ?? {}) as { telegram_id?: number | string | null };
+        const upsertData: Record<string, unknown> = {
+            id: user.id,
+            full_name,
+            phone,
+            notify_email,
+            notify_sms,
+            notify_whatsapp,
+            whatsapp_verified,
+            notify_telegram,
+        };
+
+        if (meta.telegram_id != null) {
+            const tid = typeof meta.telegram_id === 'string' ? Number(meta.telegram_id) : meta.telegram_id;
+            if (!Number.isNaN(tid)) {
+                upsertData.telegram_id = tid;
+                upsertData.telegram_verified = true;
+            }
+        }
+
         // Обновляем профиль в таблице profiles
         const { error: profileError } = await supabase
             .from('profiles')
-            .upsert(
-                {
-                    id: user.id,
-                    full_name: full_name,
-                    phone: phone,
-                    notify_email: notify_email,
-                    notify_sms: notify_sms,
-                    notify_whatsapp: notify_whatsapp,
-                    whatsapp_verified: whatsapp_verified,
-                    notify_telegram: notify_telegram,
-                },
-                { onConflict: 'id' }
-            );
+            .upsert(upsertData, { onConflict: 'id' });
 
         if (profileError) {
             console.error('[profile/update] profile error:', profileError);
