@@ -38,6 +38,10 @@ export default function ServiceForm({
         branch_ids: initial.branch_ids ?? [],
     });
 
+    // Храним цены как строки для удобного редактирования
+    const [priceFromStr, setPriceFromStr] = useState<string>(initial.price_from === 0 ? '' : String(initial.price_from));
+    const [priceToStr, setPriceToStr] = useState<string>(initial.price_to === 0 ? '' : String(initial.price_to));
+
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState<string | null>(null);
 
@@ -89,8 +93,8 @@ export default function ServiceForm({
             const payload = {
                 name_ru: form.name_ru.trim(),
                 duration_min: Number(form.duration_min) || 0,
-                price_from: Number(form.price_from) || 0,
-                price_to: Number(form.price_to) || 0,
+                price_from: priceFromStr.trim() === '' ? 0 : Number(priceFromStr) || 0,
+                price_to: priceToStr.trim() === '' ? 0 : Number(priceToStr) || 0,
                 active: !!form.active,
                 ...(isEdit ? { service_id: form.id } : {}),
                 branch_ids: form.branch_ids ?? [],
@@ -143,17 +147,25 @@ export default function ServiceForm({
                     label="Цена от"
                     type="number"
                     min={0}
-                    value={form.price_from}
-                    onChange={(e) => setForm((f) => ({ ...f, price_from: Number(e.target.value) || 0 }))}
-                    required
+                    value={priceFromStr}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        setPriceFromStr(val);
+                        // Обновляем form для совместимости
+                        setForm((f) => ({ ...f, price_from: val === '' ? 0 : Number(val) || 0 }));
+                    }}
                 />
                 <Input
                     label="Цена до"
                     type="number"
                     min={0}
-                    value={form.price_to}
-                    onChange={(e) => setForm((f) => ({ ...f, price_to: Number(e.target.value) || 0 }))}
-                    required
+                    value={priceToStr}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        setPriceToStr(val);
+                        // Обновляем form для совместимости
+                        setForm((f) => ({ ...f, price_to: val === '' ? 0 : Number(val) || 0 }));
+                    }}
                 />
             </div>
 
