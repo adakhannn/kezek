@@ -134,8 +134,6 @@ export async function POST(req: Request) {
             .maybeSingle();
         if (!roleStaff?.id) return NextResponse.json({ ok: false, error: 'ROLE_STAFF_NOT_FOUND' }, { status: 400 });
 
-        const ZERO = '00000000-0000-0000-0000-000000000000';
-
         // upsert вручную: если записи нет — вставим
         const { data: existsRole } = await admin
             .from('user_roles')
@@ -152,7 +150,7 @@ export async function POST(req: Request) {
                     user_id: body.user_id,
                     role_id: roleStaff.id,
                     biz_id: bizId,
-                    biz_key: bizId ?? ZERO,
+                    // biz_key имеет DEFAULT значение, не вставляем явно
                 });
             if (eRole) return NextResponse.json({ ok: true, id: staffId, warn: 'ROLE_NOT_GRANTED', error: eRole.message });
         }

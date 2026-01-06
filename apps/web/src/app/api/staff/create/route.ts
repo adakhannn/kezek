@@ -38,7 +38,7 @@ async function addStaffRole(admin: ReturnType<typeof getServiceClient>, userId: 
                 user_id: userId,
                 biz_id: bizId,
                 role_id: roleStaff.id,
-                biz_key: bizId,
+                // biz_key имеет DEFAULT значение, не вставляем явно
             });
         if (eRole) {
             console.warn('Failed to add staff role:', eRole.message);
