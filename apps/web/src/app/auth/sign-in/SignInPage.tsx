@@ -100,6 +100,11 @@ export default function SignInPage() {
         [decideRedirect, router]
     );
 
+    // Мемоизируем обработчик ошибок для Telegram, чтобы виджет не пересоздавался при изменении email
+    const handleTelegramError = useCallback((err: string) => {
+        setError(err);
+    }, []);
+
     // Уже авторизован? — уводим сразу по новой схеме
     useEffect(() => {
         supabase.auth.getUser().then(({data}) => {
@@ -330,7 +335,7 @@ export default function SignInPage() {
                     {/* Telegram Login Widget */}
                     <TelegramLoginWidget
                         redirectTo={redirectParam || '/'}
-                        onError={(err) => setError(err)}
+                        onError={handleTelegramError}
                         size="large"
                     />
 

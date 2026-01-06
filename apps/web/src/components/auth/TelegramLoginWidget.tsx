@@ -3,7 +3,7 @@
 // apps/web/src/components/auth/TelegramLoginWidget.tsx
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'kezek_auth_bot';
 
@@ -32,7 +32,7 @@ type TelegramCallback = (user: TelegramUser) => void | Promise<void>;
  * Обёртка над официальным Telegram Login Widget.
  * Документация: https://core.telegram.org/widgets/login
  */
-export function TelegramLoginWidget({
+function TelegramLoginWidgetComponent({
     redirectTo = '/',
     onSuccess,
     onError,
@@ -43,6 +43,17 @@ export function TelegramLoginWidget({
     const router = useRouter();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(false);
+    
+    // Храним последние версии callback'ов в ref, чтобы не перезапускать useEffect
+    const onSuccessRef = useRef(onSuccess);
+    const onErrorRef = useRef(onError);
+    const redirectToRef = useRef(redirectTo);
+    
+    useEffect(() => {
+        onSuccessRef.current = onSuccess;
+        onErrorRef.current = onError;
+        redirectToRef.current = redirectTo;
+    }, [onSuccess, onError, redirectTo]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -88,12 +99,12 @@ export function TelegramLoginWidget({
                     await new Promise((resolve) => setTimeout(resolve, 100));
                 }
 
-                onSuccess?.();
-                router.push(data.redirect || redirectTo);
+                onSuccessRef.current?.();
+                router.push(data.redirect || redirectToRef.current);
             } catch (e) {
                 const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
                 console.error('[TelegramLoginWidget] error:', e);
-                onError?.(msg);
+                onErrorRef.current?.(msg);
             } finally {
                 setLoading(false);
             }
@@ -119,7 +130,7 @@ export function TelegramLoginWidget({
             }
             delete w[callbackName];
         };
-    }, [redirectTo, size, cornerRadius, requestAccess, onSuccess, onError, router]);
+    }, [size, cornerRadius, requestAccess, router]); // Убрали onSuccess, onError, redirectTo из зависимостей
 
     return (
         <div className="relative">
@@ -149,5 +160,8 @@ export function TelegramLoginWidget({
         </div>
     );
 }
+
+// Мемоизируем компонент, чтобы он не пересоздавался при изменении родительского состояния
+export const TelegramLoginWidget = memo(TelegramLoginWidgetComponent);
 
 
