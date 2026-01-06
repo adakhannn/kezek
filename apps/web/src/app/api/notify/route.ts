@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 
 import { buildIcs } from '@/lib/ics';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
+import { sendTelegram } from '@/lib/senders/telegram';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
@@ -179,6 +180,9 @@ export async function POST(req: Request) {
         let clientNotifyEmail = true;
         let clientNotifyWhatsapp = true;
         let clientWhatsappVerified = false;
+        let clientTelegramId: number | null = null;
+        let clientNotifyTelegram = true;
+        let clientTelegramVerified = false;
         if (raw.client_id) {
             const { data: au } = await supabase
                 .from('auth_users_view')
@@ -191,17 +195,20 @@ export async function POST(req: Request) {
             
             // Получаем данные из profiles (включая настройки уведомлений и статус верификации)
             try {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('phone, full_name, notify_email, notify_whatsapp, whatsapp_verified')
-                    .eq('id', raw.client_id)
-                    .maybeSingle<{ 
-                        phone: string | null; 
-                        full_name: string | null;
-                        notify_email: boolean | null;
-                        notify_whatsapp: boolean | null;
-                        whatsapp_verified: boolean | null;
-                    }>();
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('phone, full_name, notify_email, notify_whatsapp, whatsapp_verified, telegram_id, notify_telegram, telegram_verified')
+                        .eq('id', raw.client_id)
+                        .maybeSingle<{
+                            phone: string | null;
+                            full_name: string | null;
+                            notify_email: boolean | null;
+                            notify_whatsapp: boolean | null;
+                            whatsapp_verified: boolean | null;
+                            telegram_id: number | null;
+                            notify_telegram: boolean | null;
+                            telegram_verified: boolean | null;
+                        }>();
                 if (profile) {
                     // Если номер телефона не найден в auth_users_view, берем из profiles
                     if (!clientPhone && profile.phone) {
@@ -216,6 +223,9 @@ export async function POST(req: Request) {
                     clientNotifyEmail = profile.notify_email ?? true;
                     clientNotifyWhatsapp = profile.notify_whatsapp ?? true;
                     clientWhatsappVerified = profile.whatsapp_verified ?? false;
+                    clientTelegramId = profile.telegram_id ?? null;
+                    clientNotifyTelegram = profile.notify_telegram ?? true;
+                    clientTelegramVerified = profile.telegram_verified ?? false;
                 }
             } catch (e) {
                 console.error('[notify] failed to get client data from profiles:', e);
@@ -446,9 +456,16 @@ export async function POST(req: Request) {
 
         // SMS уведомления отключены - используем только Email и WhatsApp
 
-        // --- отправляем WhatsApp уведомления
+        // --- отправляем WhatsApp и Telegram уведомления
         const whatsappText = `${title}: ${bizName}\n\nУслуга: ${svcName}\nМастер: ${master}\nВремя: ${when}\nСтатус: ${statusRuText}\n\n${link}`;
+        const telegramText = `${title}: <b>${bizName}</b>\n\n` +
+            `<b>Услуга:</b> ${svcName}\n` +
+            `<b>Мастер:</b> ${master}\n` +
+            `<b>Время:</b> ${when} (${TZ})\n` +
+            `<b>Статус:</b> ${statusRuText}\n\n` +
+            `<a href="${link}">Открыть бронь</a>`;
         let whatsappSent = 0;
+        let telegramSent = 0;
 
         // Проверяем наличие переменных окружения для WhatsApp
         const hasWhatsAppConfig = !!process.env.WHATSAPP_ACCESS_TOKEN && !!process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -520,7 +537,31 @@ export async function POST(req: Request) {
             console.log('[notify] No owner phone for WhatsApp');
         }
 
-        return NextResponse.json({ ok: true, sent, whatsappSent });
+        // --- Telegram клиенту (если подключен и включены настройки)
+        const hasTelegramConfig = !!process.env.TELEGRAM_BOT_TOKEN;
+        if (!hasTelegramConfig) {
+            console.warn('[notify] Telegram not configured: missing TELEGRAM_BOT_TOKEN');
+        }
+
+        if (clientTelegramId && hasTelegramConfig && clientNotifyTelegram && clientTelegramVerified) {
+            try {
+                console.log('[notify] Sending Telegram to client:', clientTelegramId);
+                await sendTelegram({ chatId: clientTelegramId, text: telegramText });
+                telegramSent += 1;
+                console.log('[notify] Telegram to client sent successfully');
+            } catch (e) {
+                const errorMsg = e instanceof Error ? e.message : String(e);
+                console.error('[notify] Telegram to client failed:', errorMsg, { chatId: clientTelegramId });
+            }
+        } else if (clientTelegramId && !clientNotifyTelegram) {
+            console.log('[notify] Skipping Telegram to client: notifications disabled');
+        } else if (clientTelegramId && !clientTelegramVerified) {
+            console.log('[notify] Skipping Telegram to client: telegram not verified');
+        } else if (!clientTelegramId) {
+            console.log('[notify] No client telegram_id for Telegram');
+        }
+
+        return NextResponse.json({ ok: true, sent, whatsappSent, telegramSent });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[notify] error:', msg);
