@@ -89,7 +89,7 @@ export default function BizClient({ data }: { data: Data }) {
     }, []);
 
     /* ---------- выбор филиала/услуги/мастера ---------- */
-    const [branchId, setBranchId] = useState<string>(branches[0]?.id ?? '');
+    const [branchId, setBranchId] = useState<string>('');
 
     const servicesByBranch = useMemo(
         () => services.filter((s) => s.branch_id === branchId),
@@ -100,20 +100,17 @@ export default function BizClient({ data }: { data: Data }) {
         [staff, branchId]
     );
 
-    const [serviceId, setServiceId] = useState<string>(servicesByBranch[0]?.id ?? '');
-    const [staffId, setStaffId] = useState<string>(staffByBranch[0]?.id ?? '');
+    const [serviceId, setServiceId] = useState<string>('');
+    const [staffId, setStaffId] = useState<string>('');
     const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
-    // при смене филиала — сбрасываем выборы/слоты (если не восстановили состояние из localStorage)
+    // при смене филиала — сбрасываем выборы услуг и мастеров (если не восстановили состояние из localStorage)
     useEffect(() => {
         if (restoredFromStorage) return;
-        // Используем только branchId, чтобы избежать бесконечных ререндеров
-        const newServiceId = servicesByBranch[0]?.id ?? '';
-        const newStaffId = staffByBranch[0]?.id ?? '';
-        // Обновляем только если значения действительно изменились
-        setServiceId((prev) => (prev !== newServiceId ? newServiceId : prev));
-        setStaffId((prev) => (prev !== newStaffId ? newStaffId : prev));
-    }, [branchId, restoredFromStorage]); // Убрали servicesByBranch и staffByBranch из зависимостей
+        // Сбрасываем выборы при смене филиала
+        setServiceId('');
+        setStaffId('');
+    }, [branchId, restoredFromStorage]);
 
     /* ---------- сервисные навыки мастеров (service_staff) ---------- */
     const [serviceStaff, setServiceStaff] = useState<ServiceStaffRow[] | null>(null);
@@ -152,17 +149,22 @@ export default function BizClient({ data }: { data: Data }) {
     // итоговый список мастеров: по филиалу + по навыку (если есть данные)
     const staffFiltered = useMemo<Staff[]>(() => {
         const base = staffByBranch;
-        if (!serviceId) return base;
+        if (!serviceId) return []; // Если услуга не выбрана, не показываем мастеров
         if (!serviceToStaffMap) return base; // нет данных — не режем по навыку
         const allowed = serviceToStaffMap.get(serviceId);
         if (!allowed) return []; // услугу никто не умеет
         return base.filter((m) => allowed.has(m.id));
     }, [staffByBranch, serviceId, serviceToStaffMap]);
 
-    // если выбранный мастер не подходит под новую услугу — мягко переезжаем на первого доступного
+    // при смене услуги — сбрасываем выбор мастера, если текущий не подходит
     useEffect(() => {
-        if (!staffFiltered.find((m) => m.id === staffId)) {
-            setStaffId(staffFiltered[0]?.id ?? '');
+        if (!serviceId) {
+            setStaffId('');
+            return;
+        }
+        // Если выбранный мастер не подходит под новую услугу — сбрасываем выбор
+        if (staffId && !staffFiltered.find((m) => m.id === staffId)) {
+            setStaffId('');
         }
     }, [serviceId, staffFiltered, staffId]);
 
@@ -702,7 +704,11 @@ export default function BizClient({ data }: { data: Data }) {
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     Шаг 3. Мастер
                                 </h2>
-                                {staffFiltered.length === 0 ? (
+                                {!serviceId ? (
+                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                                        Сначала выберите услугу на шаге 2.
+                                    </div>
+                                ) : staffFiltered.length === 0 ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
                                         Для выбранной услуги пока нет мастеров.
                                     </div>
