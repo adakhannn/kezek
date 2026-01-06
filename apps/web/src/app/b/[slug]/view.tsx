@@ -184,6 +184,18 @@ export default function BizClient({ data }: { data: Data }) {
                 setSlots([]);
                 return;
             }
+            
+            // Проверка: если у сотрудника нет услуг для выбранной услуги, не загружаем слоты
+            if (serviceToStaffMap) {
+                const allowedStaff = serviceToStaffMap.get(serviceId);
+                if (!allowedStaff?.has(staffId)) {
+                    setSlots([]);
+                    setSlotsError('Выбранный мастер не выполняет эту услугу');
+                    setSlotsLoading(false);
+                    return;
+                }
+            }
+            
             setSlotsLoading(true);
             setSlotsError(null);
             try {
@@ -287,7 +299,7 @@ export default function BizClient({ data }: { data: Data }) {
         return () => {
             ignore = true;
         };
-    }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey]);
+    }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey, serviceToStaffMap]);
 
     // Обновляем список слотов при возврате на страницу (например, через кнопку "Назад")
     // Используем useRef для хранения предыдущих значений, чтобы избежать лишних обновлений
@@ -700,6 +712,30 @@ export default function BizClient({ data }: { data: Data }) {
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     Шаг 4. День и время
                                 </h2>
+                                
+                                {/* Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги */}
+                                {serviceId && staffId && serviceToStaffMap && (() => {
+                                    const allowedStaff = serviceToStaffMap.get(serviceId);
+                                    const hasService = allowedStaff?.has(staffId) ?? false;
+                                    if (!hasService) {
+                                        return (
+                                            <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                                                <div className="flex items-start gap-2">
+                                                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                    <div>
+                                                        <p className="font-medium">Выбранный мастер не выполняет эту услугу</p>
+                                                        <p className="mt-1 text-amber-700 dark:text-amber-300">
+                                                            Пожалуйста, вернитесь к шагу 3 и выберите другого мастера или выберите другую услугу.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
                                 <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
                                     <div className="flex-1 min-w-[200px]">
                                         <DatePickerPopover
