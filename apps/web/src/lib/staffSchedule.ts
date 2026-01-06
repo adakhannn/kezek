@@ -21,6 +21,8 @@ export async function initializeStaffSchedule(
     branchId: string
 ): Promise<void> {
     try {
+        console.log(`[initializeStaffSchedule] Starting for staff ${staffId}, biz ${bizId}, branch ${branchId}`);
+        
         const today = new Date();
         const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Понедельник
         
@@ -33,13 +35,15 @@ export async function initializeStaffSchedule(
             allDates.push(...dateStrings);
         }
 
+        console.log(`[initializeStaffSchedule] Generated ${allDates.length} dates: ${allDates[0]} to ${allDates[allDates.length - 1]}`);
+
         // Проверяем, какие даты уже есть в расписании
         const startDate = allDates[0];
         const lastDate = allDates[allDates.length - 1];
         const lastDateObj = new Date(lastDate + 'T12:00:00'); // Добавляем время для корректного парсинга
         const endDate = formatInTimeZone(addDays(lastDateObj, 1), TZ, 'yyyy-MM-dd');
 
-        const { data: existingRules } = await admin
+        const { data: existingRules, error: selectError } = await admin
             .from('staff_schedule_rules')
             .select('date_on')
             .eq('biz_id', bizId)
@@ -49,11 +53,19 @@ export async function initializeStaffSchedule(
             .gte('date_on', startDate)
             .lt('date_on', endDate);
 
+        if (selectError) {
+            console.error('[initializeStaffSchedule] Failed to check existing rules:', selectError);
+            throw new Error(`Failed to check existing schedule: ${selectError.message}`);
+        }
+
         const existingDates = new Set((existingRules ?? []).map((r) => r.date_on));
         const missingDates = allDates.filter((d) => !existingDates.has(d));
 
+        console.log(`[initializeStaffSchedule] Found ${existingDates.size} existing dates, ${missingDates.length} missing dates`);
+
         if (missingDates.length === 0) {
             // Расписание уже инициализировано
+            console.log(`[initializeStaffSchedule] Schedule already initialized for staff ${staffId}`);
             return;
         }
 
@@ -72,17 +84,20 @@ export async function initializeStaffSchedule(
             priority: 0,
         }));
 
+        console.log(`[initializeStaffSchedule] Inserting ${inserts.length} schedule rules...`);
+
         // Вставляем все отсутствующие правила
-        const { error: insertError } = await admin.from('staff_schedule_rules').insert(inserts);
+        const { data: insertedData, error: insertError } = await admin.from('staff_schedule_rules').insert(inserts).select('id');
 
         if (insertError) {
             console.error('[initializeStaffSchedule] Failed to insert schedule rules:', insertError);
             throw new Error(`Failed to initialize schedule: ${insertError.message}`);
         }
 
-        console.log(`[initializeStaffSchedule] Initialized schedule for staff ${staffId}: ${missingDates.length} days`);
+        console.log(`[initializeStaffSchedule] Successfully initialized schedule for staff ${staffId}: ${insertedData?.length || missingDates.length} days inserted`);
     } catch (error) {
-        console.error('[initializeStaffSchedule] Error:', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error(`[initializeStaffSchedule] Error for staff ${staffId}:`, errorMsg, error);
         // Не пробрасываем ошибку дальше, чтобы не сломать создание сотрудника
         // Расписание можно будет создать позже при первом открытии страницы
     }

@@ -159,7 +159,16 @@ export async function POST(req: Request) {
 
         // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
         if (staffId) {
-            await initializeStaffSchedule(admin, bizId, staffId, body.branch_id);
+            console.log(`[staff/create-from-user] Initializing schedule for new staff ${staffId}, branch ${body.branch_id}`);
+            try {
+                await initializeStaffSchedule(admin, bizId, staffId, body.branch_id);
+                console.log(`[staff/create-from-user] Schedule initialization completed for staff ${staffId}`);
+            } catch (scheduleError) {
+                console.error(`[staff/create-from-user] Schedule initialization failed for staff ${staffId}:`, scheduleError);
+                // Продолжаем, даже если расписание не создалось - можно будет создать позже
+            }
+        } else {
+            console.warn('[staff/create-from-user] No staff ID, cannot initialize schedule');
         }
 
         return NextResponse.json({ ok: true, id: staffId });
