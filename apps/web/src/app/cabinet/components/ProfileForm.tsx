@@ -210,16 +210,41 @@ export default function ProfileForm() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Телефон <span className="text-gray-500 text-xs">(для связи, не используется для входа)</span>
                     </label>
-                    <input
-                        type="tel"
-                        className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                        value={profile.phone || ''}
-                        onChange={(e) => setProfile({ ...profile, phone: e.target.value || null })}
-                        placeholder="+996XXXXXXXXX"
-                    />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Укажите номер телефона, чтобы мастера могли связаться с вами при необходимости
-                    </p>
+                    <div className="relative">
+                        <input
+                            type="tel"
+                            className={`w-full rounded border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 dark:text-gray-100 ${
+                                !profile.phone
+                                    ? 'border-amber-300 bg-amber-50/50 focus:border-amber-400 focus:ring-amber-400 dark:border-amber-700 dark:bg-amber-950/20'
+                                    : 'border-gray-300 bg-white focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800'
+                            }`}
+                            value={profile.phone || ''}
+                            onChange={(e) => setProfile({ ...profile, phone: e.target.value || null })}
+                            placeholder="+996555123456"
+                        />
+                        {!profile.phone && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                        )}
+                    </div>
+                    {!profile.phone ? (
+                        <div className="mt-1.5 flex items-start gap-2 rounded-lg bg-amber-50/80 border border-amber-200 px-2.5 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:border-amber-900/50 dark:text-amber-200">
+                            <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div>
+                                <p className="font-medium">Заполните номер телефона</p>
+                                <p className="mt-0.5 text-amber-700 dark:text-amber-300">Это нужно для подтверждения WhatsApp и связи с вами</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Укажите номер телефона, чтобы мастера могли связаться с вами при необходимости
+                        </p>
+                    )}
                 </div>
                 
                 {/* Настройки уведомлений */}
