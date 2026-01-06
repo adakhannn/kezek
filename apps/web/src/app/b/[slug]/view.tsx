@@ -104,12 +104,12 @@ export default function BizClient({ data }: { data: Data }) {
     const [staffId, setStaffId] = useState<string>('');
     const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
-    // при смене филиала — сбрасываем выборы услуг и мастеров (если не восстановили состояние из localStorage)
+    // при смене филиала — сбрасываем выборы мастеров и услуг (если не восстановили состояние из localStorage)
     useEffect(() => {
         if (restoredFromStorage) return;
         // Сбрасываем выборы при смене филиала
-        setServiceId('');
         setStaffId('');
+        setServiceId('');
     }, [branchId, restoredFromStorage]);
 
     /* ---------- сервисные навыки мастеров (service_staff) ---------- */
@@ -146,30 +146,40 @@ export default function BizClient({ data }: { data: Data }) {
         return map;
     }, [serviceStaff]);
 
-    // итоговый список мастеров: по филиалу + по навыку (если есть данные)
+    // Список мастеров: только по филиалу (без фильтрации по услуге)
     const staffFiltered = useMemo<Staff[]>(() => {
-        const base = staffByBranch;
-        if (!serviceId) return []; // Если услуга не выбрана, не показываем мастеров
-        if (!serviceToStaffMap) return base; // нет данных — не режем по навыку
-        const allowed = serviceToStaffMap.get(serviceId);
-        if (!allowed) return []; // услугу никто не умеет
-        return base.filter((m) => allowed.has(m.id));
-    }, [staffByBranch, serviceId, serviceToStaffMap]);
+        return staffByBranch;
+    }, [staffByBranch]);
 
-    // при смене услуги — сбрасываем выбор мастера, если текущий не подходит
-    useEffect(() => {
-        if (!serviceId) {
-            setStaffId('');
-            return;
-        }
-        // Если выбранный мастер не подходит под новую услугу — сбрасываем выбор
-        if (staffId) {
-            const isStaffValid = staffFiltered.some((m) => m.id === staffId);
-            if (!isStaffValid) {
-                setStaffId('');
+    // Список услуг: по филиалу + по мастеру (если мастер выбран)
+    const servicesFiltered = useMemo<Service[]>(() => {
+        const base = servicesByBranch;
+        if (!staffId) return []; // Если мастер не выбран, не показываем услуги
+        if (!serviceToStaffMap) return base; // нет данных — не режем по мастеру
+        // Находим все услуги, которые делает выбранный мастер
+        const servicesForStaff = new Set<string>();
+        for (const [serviceId, staffSet] of serviceToStaffMap.entries()) {
+            if (staffSet.has(staffId)) {
+                servicesForStaff.add(serviceId);
             }
         }
-    }, [serviceId, staffFiltered, staffId]);
+        return base.filter((s) => servicesForStaff.has(s.id));
+    }, [servicesByBranch, staffId, serviceToStaffMap]);
+
+    // при смене мастера — сбрасываем выбор услуги, если текущая не подходит
+    useEffect(() => {
+        if (!staffId) {
+            setServiceId('');
+            return;
+        }
+        // Если выбранная услуга не подходит под нового мастера — сбрасываем выбор
+        if (serviceId) {
+            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
+            if (!isServiceValid) {
+                setServiceId('');
+            }
+        }
+    }, [staffId, servicesFiltered, serviceId]);
 
     /* ---------- дата и слоты через RPC get_free_slots_service_day_v2 ---------- */
     const [day, setDay] = useState<Date>(todayTz());
@@ -501,8 +511,8 @@ export default function BizClient({ data }: { data: Data }) {
 
     const stepsMeta = [
         { id: 1, label: 'Филиал' },
-        { id: 2, label: 'Услуга' },
-        { id: 3, label: 'Мастер' },
+        { id: 2, label: 'Мастер' },
+        { id: 3, label: 'Услуга' },
         { id: 4, label: 'День и время' },
     ] as const;
 
@@ -513,26 +523,26 @@ export default function BizClient({ data }: { data: Data }) {
         // Шаг 1 -> 2: должен быть выбран филиал
         if (step === 1) return !!branchId;
         
-        // Шаг 2 -> 3: должна быть выбрана услуга
-        if (step === 2) return !!serviceId;
+        // Шаг 2 -> 3: должен быть выбран мастер
+        if (step === 2) return !!staffId;
         
-        // Шаг 3 -> 4: должен быть выбран мастер И у мастера должны быть услуги для выбранной услуги
+        // Шаг 3 -> 4: должна быть выбрана услуга И мастер должен делать эту услугу
         if (step === 3) {
-            if (!staffId || !serviceId) return false;
-            // Проверяем, что мастер есть в отфильтрованном списке
-            const isStaffValid = staffFiltered.some((m) => m.id === staffId);
-            if (!isStaffValid) return false;
+            if (!serviceId || !staffId) return false;
+            // Проверяем, что услуга есть в отфильтрованном списке
+            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
+            if (!isServiceValid) return false;
             // Если есть данные о связи услуга-мастер, дополнительно проверяем
             if (serviceToStaffMap) {
                 const allowedStaff = serviceToStaffMap.get(serviceId);
                 return allowedStaff?.has(staffId) ?? false;
             }
-            // Если данных нет, но мастер есть в отфильтрованном списке - разрешаем
+            // Если данных нет, но услуга есть в отфильтрованном списке - разрешаем
             return true;
         }
         
         return true;
-    }, [step, branchId, serviceId, staffId, serviceToStaffMap, totalSteps, staffFiltered]);
+    }, [step, branchId, serviceId, staffId, serviceToStaffMap, totalSteps, servicesFiltered]);
     
     const canGoPrev = step > 1;
 
@@ -633,136 +643,112 @@ export default function BizClient({ data }: { data: Data }) {
                             </section>
                         )}
 
-                        {/* Шаг 2: услуга */}
+                        {/* Шаг 2: мастер */}
                         {step === 2 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    Шаг 2. Услуга
+                                    Шаг 2. Мастер
                                 </h2>
-                                {servicesByBranch.length === 0 ? (
+                                {staffFiltered.length === 0 ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        В этом филиале пока нет активных услуг.
+                                        В этом филиале пока нет активных сотрудников.
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col gap-2">
-                                        {servicesByBranch.map((s) => {
-                                            const active = s.id === serviceId;
-                                            const hasRange =
-                                                typeof s.price_from === 'number' &&
-                                                (typeof s.price_to === 'number'
-                                                    ? s.price_to !== s.price_from
-                                                    : false);
+                                    <div className="flex flex-wrap gap-2">
+                                        {staffFiltered.map((m) => {
+                                            const active = m.id === staffId;
                                             return (
                                                 <button
-                                                    key={s.id}
+                                                    key={m.id}
                                                     type="button"
-                                                    onClick={() => setServiceId(s.id)}
-                                                    className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
+                                                    onClick={() => setStaffId(m.id)}
+                                                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                                                         active
-                                                            ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
-                                                            : 'border-gray-200 bg-white hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
+                                                            : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
                                                     }`}
                                                 >
-                                                    <div>
-                                                        <div className="font-semibold text-gray-900 dark:text-gray-100">
-                                                            {s.name_ru}
-                                                        </div>
-                                                        <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-                                                            {s.duration_min} мин
-                                                        </div>
-                                                    </div>
-                                                    {(typeof s.price_from === 'number' ||
-                                                        typeof s.price_to === 'number') && (
-                                                        <div className="whitespace-nowrap text-right text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                                            {s.price_from}
-                                                            {hasRange && s.price_to ? `–${s.price_to}` : ''}{' '}
-                                                            сом
-                                                        </div>
-                                                    )}
+                                                    {m.full_name}
                                                 </button>
                                             );
                                         })}
                                     </div>
                                 )}
-
-                                {serviceCurrent && (
-                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        Продолжительность: {serviceCurrent.duration_min} мин.
-                                        {serviceCurrent.price_from && (
-                                            <>
-                                                {' '}
-                                                Примерная стоимость:{' '}
-                                                {serviceCurrent.price_from}
-                                                {serviceCurrent.price_to &&
-                                                serviceCurrent.price_to !== serviceCurrent.price_from
-                                                    ? `–${serviceCurrent.price_to}`
-                                                    : ''}{' '}
-                                                сом.
-                                            </>
-                                        )}
-                                    </p>
-                                )}
                             </section>
                         )}
 
-                        {/* Шаг 3: мастер */}
+                        {/* Шаг 3: услуга */}
                         {step === 3 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    Шаг 3. Мастер
+                                    Шаг 3. Услуга
                                 </h2>
-                                {!serviceId ? (
+                                {!staffId ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        Сначала выберите услугу на шаге 2.
+                                        Сначала выберите мастера на шаге 2.
                                     </div>
-                                ) : staffFiltered.length === 0 ? (
+                                ) : servicesFiltered.length === 0 ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        Для выбранной услуги пока нет мастеров.
+                                        У выбранного мастера пока нет назначенных услуг.
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="flex flex-wrap gap-2">
-                                            {staffFiltered.map((m) => {
-                                                const active = m.id === staffId;
+                                        <div className="flex flex-col gap-2">
+                                            {servicesFiltered.map((s) => {
+                                                const active = s.id === serviceId;
+                                                const hasRange =
+                                                    typeof s.price_from === 'number' &&
+                                                    (typeof s.price_to === 'number'
+                                                        ? s.price_to !== s.price_from
+                                                        : false);
                                                 return (
                                                     <button
-                                                        key={m.id}
+                                                        key={s.id}
                                                         type="button"
-                                                        onClick={() => setStaffId(m.id)}
-                                                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                        onClick={() => setServiceId(s.id)}
+                                                        className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
                                                             active
-                                                                ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                                                : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                                ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
+                                                                : 'border-gray-200 bg-white hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
                                                         }`}
                                                     >
-                                                        {m.full_name}
+                                                        <div>
+                                                            <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                                                {s.name_ru}
+                                                            </div>
+                                                            <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                                                                {s.duration_min} мин
+                                                            </div>
+                                                        </div>
+                                                        {(typeof s.price_from === 'number' ||
+                                                            typeof s.price_to === 'number') && (
+                                                            <div className="whitespace-nowrap text-right text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                                {s.price_from}
+                                                                {hasRange && s.price_to ? `–${s.price_to}` : ''}{' '}
+                                                                сом
+                                                            </div>
+                                                        )}
                                                     </button>
                                                 );
                                             })}
                                         </div>
-                                        {/* Предупреждение, если выбран мастер без услуг для выбранной услуги */}
-                                        {serviceId && staffId && serviceToStaffMap && (() => {
-                                            const allowedStaff = serviceToStaffMap.get(serviceId);
-                                            const hasService = allowedStaff?.has(staffId) ?? false;
-                                            if (!hasService) {
-                                                return (
-                                                    <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
-                                                        <div className="flex items-start gap-2">
-                                                            <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                            </svg>
-                                                            <div>
-                                                                <p className="font-medium">Этот мастер не выполняет выбранную услугу</p>
-                                                                <p className="mt-1 text-amber-700 dark:text-amber-300">
-                                                                    Выберите другого мастера из списка выше или вернитесь к шагу 2 и выберите другую услугу.
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            }
-                                            return null;
-                                        })()}
+                                        {serviceCurrent && (
+                                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                                Продолжительность: {serviceCurrent.duration_min} мин.
+                                                {serviceCurrent.price_from && (
+                                                    <>
+                                                        {' '}
+                                                        Примерная стоимость:{' '}
+                                                        {serviceCurrent.price_from}
+                                                        {serviceCurrent.price_to &&
+                                                        serviceCurrent.price_to !== serviceCurrent.price_from
+                                                            ? `–${serviceCurrent.price_to}`
+                                                            : ''}{' '}
+                                                        сом.
+                                                    </>
+                                                )}
+                                            </p>
+                                        )}
                                     </>
                                 )}
                             </section>
@@ -899,7 +885,7 @@ export default function BizClient({ data }: { data: Data }) {
                             Ваша запись
                         </h2>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Шаги слева → выберите услугу, мастера, день и время. Здесь вы увидите итог перед
+                            Шаги слева → выберите мастера, услугу, день и время. Здесь вы увидите итог перед
                             подтверждением.
                         </p>
 
