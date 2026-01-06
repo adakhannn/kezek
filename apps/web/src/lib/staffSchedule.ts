@@ -13,13 +13,14 @@ type TimeRange = { start: string; end: string };
  * @param bizId - ID бизнеса
  * @param staffId - ID сотрудника
  * @param branchId - ID филиала
+ * @returns Объект с информацией о результате инициализации
  */
 export async function initializeStaffSchedule(
     admin: ReturnType<typeof getServiceClient>,
     bizId: string,
     staffId: string,
     branchId: string
-): Promise<void> {
+): Promise<{ success: boolean; daysCreated: number; error?: string }> {
     try {
         console.log(`[initializeStaffSchedule] Starting for staff ${staffId}, biz ${bizId}, branch ${branchId}`);
         
@@ -66,7 +67,7 @@ export async function initializeStaffSchedule(
         if (missingDates.length === 0) {
             // Расписание уже инициализировано
             console.log(`[initializeStaffSchedule] Schedule already initialized for staff ${staffId}`);
-            return;
+            return { success: true, daysCreated: 0 };
         }
 
         // Создаем правила для отсутствующих дней с дефолтным расписанием
@@ -94,12 +95,15 @@ export async function initializeStaffSchedule(
             throw new Error(`Failed to initialize schedule: ${insertError.message}`);
         }
 
-        console.log(`[initializeStaffSchedule] Successfully initialized schedule for staff ${staffId}: ${insertedData?.length || missingDates.length} days inserted`);
+        const daysCreated = insertedData?.length || missingDates.length;
+        console.log(`[initializeStaffSchedule] Successfully initialized schedule for staff ${staffId}: ${daysCreated} days inserted`);
+        return { success: true, daysCreated };
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         console.error(`[initializeStaffSchedule] Error for staff ${staffId}:`, errorMsg, error);
         // Не пробрасываем ошибку дальше, чтобы не сломать создание сотрудника
         // Расписание можно будет создать позже при первом открытии страницы
+        return { success: false, daysCreated: 0, error: errorMsg };
     }
 }
 

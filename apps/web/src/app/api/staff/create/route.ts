@@ -129,20 +129,29 @@ export async function POST(req: Request) {
         }
 
         // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
+        let scheduleResult = { success: false, daysCreated: 0, error: 'not_called' };
         if (data?.id) {
             console.log(`[staff/create] Initializing schedule for new staff ${data.id}, branch ${body.branch_id}`);
             try {
-                await initializeStaffSchedule(admin, bizId, data.id, body.branch_id);
-                console.log(`[staff/create] Schedule initialization completed for staff ${data.id}`);
+                scheduleResult = await initializeStaffSchedule(admin, bizId, data.id, body.branch_id);
+                console.log(`[staff/create] Schedule initialization completed for staff ${data.id}:`, scheduleResult);
             } catch (scheduleError) {
-                console.error(`[staff/create] Schedule initialization failed for staff ${data.id}:`, scheduleError);
-                // Продолжаем, даже если расписание не создалось - можно будет создать позже
+                const errorMsg = scheduleError instanceof Error ? scheduleError.message : String(scheduleError);
+                console.error(`[staff/create] Schedule initialization failed for staff ${data.id}:`, errorMsg);
+                scheduleResult = { success: false, daysCreated: 0, error: errorMsg };
             }
         } else {
             console.warn('[staff/create] No staff ID returned, cannot initialize schedule');
         }
 
-        return NextResponse.json({ok: true, id: data?.id, user_linked: !!linkedUserId});
+        return NextResponse.json({
+            ok: true,
+            id: data?.id,
+            user_linked: !!linkedUserId,
+            schedule_initialized: scheduleResult.success,
+            schedule_days_created: scheduleResult.daysCreated,
+            schedule_error: scheduleResult.error,
+        });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : 'UNKNOWN';
         return NextResponse.json({ok: false, error: msg}, {status: 500});

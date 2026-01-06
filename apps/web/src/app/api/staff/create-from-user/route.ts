@@ -158,20 +158,28 @@ export async function POST(req: Request) {
         }
 
         // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
+        let scheduleResult = { success: false, daysCreated: 0, error: 'not_called' };
         if (staffId) {
             console.log(`[staff/create-from-user] Initializing schedule for new staff ${staffId}, branch ${body.branch_id}`);
             try {
-                await initializeStaffSchedule(admin, bizId, staffId, body.branch_id);
-                console.log(`[staff/create-from-user] Schedule initialization completed for staff ${staffId}`);
+                scheduleResult = await initializeStaffSchedule(admin, bizId, staffId, body.branch_id);
+                console.log(`[staff/create-from-user] Schedule initialization completed for staff ${staffId}:`, scheduleResult);
             } catch (scheduleError) {
-                console.error(`[staff/create-from-user] Schedule initialization failed for staff ${staffId}:`, scheduleError);
-                // Продолжаем, даже если расписание не создалось - можно будет создать позже
+                const errorMsg = scheduleError instanceof Error ? scheduleError.message : String(scheduleError);
+                console.error(`[staff/create-from-user] Schedule initialization failed for staff ${staffId}:`, errorMsg);
+                scheduleResult = { success: false, daysCreated: 0, error: errorMsg };
             }
         } else {
             console.warn('[staff/create-from-user] No staff ID, cannot initialize schedule');
         }
 
-        return NextResponse.json({ ok: true, id: staffId });
+        return NextResponse.json({
+            ok: true,
+            id: staffId,
+            schedule_initialized: scheduleResult.success,
+            schedule_days_created: scheduleResult.daysCreated,
+            schedule_error: scheduleResult.error,
+        });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});

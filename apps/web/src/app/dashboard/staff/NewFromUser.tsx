@@ -55,6 +55,21 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
         if (!j.ok) {
             return alert(j.error ?? 'Не удалось создать сотрудника');
         }
+        
+        // Логируем результат инициализации расписания в консоль браузера
+        if (j.schedule_initialized !== undefined) {
+            console.log('[Staff Creation] Schedule initialization result:', {
+                success: j.schedule_initialized,
+                daysCreated: j.schedule_days_created,
+                error: j.schedule_error,
+            });
+            if (!j.schedule_initialized) {
+                console.warn('[Staff Creation] Schedule was NOT initialized!', j.schedule_error);
+            }
+        } else {
+            console.warn('[Staff Creation] No schedule initialization info in response');
+        }
+        
         r.push('/dashboard/staff');
     }
 
