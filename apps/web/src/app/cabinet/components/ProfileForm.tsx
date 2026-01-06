@@ -327,20 +327,20 @@ export default function ProfileForm() {
                             </div>
                             <input
                                 type="checkbox"
-                                checked={profile.notify_telegram && profile.telegram_connected}
-                                disabled={!profile.telegram_connected}
+                                checked={profile.notify_telegram}
                                 onChange={(e) =>
                                     setProfile({
                                         ...profile,
                                         notify_telegram: e.target.checked,
                                     })
                                 }
-                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 disabled:opacity-40"
+                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                             />
                         </label>
                         {!profile.telegram_connected && (
                             <p className="ml-7 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                Чтобы получать уведомления в Telegram, подключите Telegram через кнопку сверху.
+                                Чтобы получать уведомления в Telegram, подключите Telegram через баннер сверху. Пока Telegram не подключён,
+                                уведомления в Telegram отправляться не будут, даже если галочка включена.
                             </p>
                         )}
                     </div>
