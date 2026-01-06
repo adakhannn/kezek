@@ -1,9 +1,10 @@
 import Link from 'next/link';
 
-import ActionButtons from './ActionButtons';
+import StaffListClient from './StaffListClient';
 
 import FlashBanner from '@/app/dashboard/staff/FlashBanner';
 import { getBizContextForManagers } from '@/lib/authBiz';
+
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,55 +39,38 @@ export default async function Page({
 
     if (error) {
         return (
-            <main className="mx-auto max-w-5xl p-6">
-                <div className="text-red-600">Ошибка загрузки: {error.message}</div>
+            <main className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                    Ошибка загрузки: {error.message}
+                </div>
             </main>
         );
     }
 
     return (
-        <main className="mx-auto max-w-5xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Сотрудники</h1>
-                <Link className="border rounded px-3 py-1" href="/dashboard/staff/new">
-                    + Добавить
+        <main className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8 space-y-6">
+            {/* Заголовок и кнопка добавления */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Сотрудники</h1>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Управление сотрудниками и их услугами
+                    </p>
+                </div>
+                <Link
+                    href="/dashboard/staff/new"
+                    className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+                >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Добавить сотрудника
                 </Link>
             </div>
 
             <FlashBanner showInitially={showDismissed} text="Сотрудник уволен." />
 
-            <div className="border rounded overflow-x-auto">
-                <table className="min-w-full text-sm">
-                    <thead>
-                    <tr className="text-left">
-                        <th className="p-2">ФИО</th>
-                        <th className="p-2">Филиал</th>
-                        <th className="p-2">Статус</th>
-                        <th className="p-2">Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {(rows as unknown as Row[] | null)?.map((r) => (
-                        <tr key={r.id} className="border-t">
-                            <td className="p-2">{r.full_name}</td>
-                            <td className="p-2">{r.branches?.name ?? r.branch_id}</td>
-                            <td className="p-2">{r.is_active ? 'активен' : 'скрыт'}</td>
-                            <td className="p-2">
-                                <ActionButtons id={String(r.id)} isActive={!!r.is_active} />
-                            </td>
-                        </tr>
-                    ))}
-
-                    {(!rows || rows.length === 0) && (
-                        <tr className="border-t">
-                            <td className="p-2 text-gray-500" colSpan={4}>
-                                Пока нет сотрудников
-                            </td>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
-            </div>
+            <StaffListClient initialRows={(rows as unknown as Row[]) || []} />
         </main>
     );
 }
