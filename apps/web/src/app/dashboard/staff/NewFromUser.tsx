@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type Branch = { id: string; name: string };
 type FoundUser = { id: string; email: string | null; phone: string | null; full_name: string };
@@ -16,13 +16,16 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
     const [branchId, setBranchId] = useState<string>(branches[0]?.id ?? '');
     const [isActive, setIsActive] = useState(true);
     const [err, setErr] = useState<string | null>(null);
+    const [hasSearched, setHasSearched] = useState(false);
 
     async function doSearch(query: string) {
-        setLoading(true); setErr(null);
+        setLoading(true);
+        setErr(null);
+        setHasSearched(true);
         try {
             const res = await fetch('/api/users/search', {
                 method: 'POST',
-                headers: {'content-type': 'application/json'},
+                headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ q: query }),
             });
             const j = await res.json();
@@ -39,16 +42,13 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
         }
     }
 
-    // 👉 подгружаем первую страницу сразу при открытии (без запроса)
-    useEffect(() => { doSearch(''); }, []); // пустая строка → сервер вернёт первую страницу
-
     async function createStaff() {
         if (!selectedUserId) return alert('Выберите пользователя');
         if (!branchId) return alert('Выберите филиал');
 
         const res = await fetch('/api/staff/create-from-user', {
             method: 'POST',
-            headers: {'content-type': 'application/json'},
+            headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ user_id: selectedUserId, branch_id: branchId, is_active: isActive }),
         });
         const j = await res.json();
@@ -59,61 +59,111 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
     }
 
     return (
-        <div className="space-y-4">
-            {err && <div className="text-red-600 text-sm">{err}</div>}
+        <div className="space-y-6">
+            {err && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                    {err}
+                </div>
+            )}
 
-            <div className="border rounded p-3 space-y-2">
-                <label className="block text-sm text-gray-600">Поиск пользователя (email / телефон / ФИО)</label>
-                <div className="flex gap-2">
-                    <input className="border rounded px-3 py-2 w-full" value={q} onChange={e=>setQ(e.target.value)} placeholder="Например: +996, example@mail.com, Иван"/>
-                    <button onClick={() => doSearch(q)} className="border rounded px-3 py-2" disabled={loading}>{loading ? 'Ищем…' : 'Найти'}</button>
+            <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Поиск пользователя <span className="text-gray-500 text-xs">(email / телефон / ФИО)</span>
+                </label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                    <input
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        placeholder="Например: +996..., example@mail.com, Иван"
+                    />
+                    <button
+                        onClick={() => doSearch(q)}
+                        className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={loading}
+                    >
+                        {loading ? 'Ищем…' : 'Найти'}
+                    </button>
                 </div>
 
-                <div className="max-h-64 overflow-auto mt-2 border rounded">
+                <div className="mt-2 max-h-72 overflow-auto rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
                     <table className="min-w-full text-sm">
-                        <thead><tr className="text-left">
-                            <th className="p-2 w-10">#</th>
-                            <th className="p-2">Имя</th>
-                            <th className="p-2">Email</th>
-                            <th className="p-2">Телефон</th>
-                            <th className="p-2 w-24">Выбрать</th>
-                        </tr></thead>
-                        <tbody>
-                        {results.map((u, i) => (
-                            <tr key={u.id} className="border-t">
-                                <td className="p-2">{i+1}</td>
-                                <td className="p-2">{u.full_name}</td>
-                                <td className="p-2">{u.email ?? '—'}</td>
-                                <td className="p-2">{u.phone ?? '—'}</td>
-                                <td className="p-2">
-                                    <input
-                                        type="radio"
-                                        name="pick"
-                                        checked={selectedUserId === u.id}
-                                        onChange={()=>setSelectedUserId(u.id)}
-                                    />
-                                </td>
+                        <thead className="bg-gray-100 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                            <tr>
+                                <th className="px-3 py-2 w-10">#</th>
+                                <th className="px-3 py-2">Имя</th>
+                                <th className="px-3 py-2">Email</th>
+                                <th className="px-3 py-2">Телефон</th>
+                                <th className="px-3 py-2 w-24 text-center">Выбрать</th>
                             </tr>
-                        ))}
-                        {results.length === 0 && <tr><td className="p-2 text-gray-500" colSpan={5}>Ничего не найдено</td></tr>}
+                        </thead>
+                        <tbody>
+                            {results.map((u, i) => (
+                                <tr key={u.id} className="border-t border-gray-200 bg-white last:border-b dark:border-gray-800 dark:bg-gray-900">
+                                    <td className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">{i + 1}</td>
+                                    <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{u.full_name}</td>
+                                    <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">{u.email ?? '—'}</td>
+                                    <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">{u.phone ?? '—'}</td>
+                                    <td className="px-3 py-2 text-center">
+                                        <input
+                                            type="radio"
+                                            name="pick"
+                                            checked={selectedUserId === u.id}
+                                            onChange={() => setSelectedUserId(u.id)}
+                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600"
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                            {results.length === 0 && (
+                                <tr>
+                                    <td
+                                        className="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
+                                        colSpan={5}
+                                    >
+                                        {hasSearched
+                                            ? 'Ничего не найдено. Попробуйте изменить запрос.'
+                                            : 'Введите запрос и нажмите «Найти», чтобы увидеть пользователей.'}
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div className="border rounded p-3 grid sm:grid-cols-3 gap-3">
+            <div className="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 sm:grid-cols-3 dark:border-gray-800 dark:bg-gray-900">
                 <div>
-                    <label className="block text-sm text-gray-600 mb-1">Филиал</label>
-                    <select className="border rounded px-3 py-2 w-full" value={branchId} onChange={e=>setBranchId(e.target.value)}>
-                        {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Филиал</label>
+                    <select
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        value={branchId}
+                        onChange={(e) => setBranchId(e.target.value)}
+                    >
+                        {branches.map((b) => (
+                            <option key={b.id} value={b.id}>
+                                {b.name}
+                            </option>
+                        ))}
                     </select>
                 </div>
-                <div className="flex items-center gap-2 mt-6 sm:mt-0">
-                    <input id="is_active" type="checkbox" checked={isActive} onChange={e=>setIsActive(e.target.checked)} />
-                    <label htmlFor="is_active">Активен</label>
-                </div>
+                <label className="mt-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 sm:mt-7">
+                    <input
+                        id="is_active"
+                        type="checkbox"
+                        checked={isActive}
+                        onChange={(e) => setIsActive(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600"
+                    />
+                    <span>Активен (доступен для записи)</span>
+                </label>
                 <div className="flex items-end">
-                    <button onClick={createStaff} className="border rounded px-4 py-2 w-full">Добавить</button>
+                    <button
+                        onClick={createStaff}
+                        className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        Добавить сотрудника
+                    </button>
                 </div>
             </div>
         </div>
