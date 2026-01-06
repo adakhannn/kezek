@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 import { TelegramLinkWidget } from './TelegramLinkWidget';
@@ -18,6 +19,7 @@ type Profile = {
 };
 
 export default function ProfileForm() {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
@@ -103,6 +105,9 @@ export default function ProfileForm() {
 
             setMessage('Профиль обновлен');
             setTimeout(() => setMessage(null), 3000);
+            
+            // Обновляем страницу, чтобы обновить баннеры (NameReminderBanner и др.)
+            router.refresh();
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setError(msg);

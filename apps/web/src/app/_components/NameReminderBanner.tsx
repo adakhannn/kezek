@@ -60,16 +60,35 @@ export function NameReminderBanner() {
 
         // Подписываемся на изменения авторизации
         const {
-            data: { subscription },
+            data: { subscription: authSubscription },
         } = supabase.auth.onAuthStateChange(() => {
             if (mounted) {
                 checkName();
             }
         });
 
+        // Подписываемся на изменения в таблице profiles
+        const profileSubscription = supabase
+            .channel('profile-changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'profiles',
+                },
+                () => {
+                    if (mounted) {
+                        checkName();
+                    }
+                }
+            )
+            .subscribe();
+
         return () => {
             mounted = false;
-            subscription.unsubscribe();
+            authSubscription.unsubscribe();
+            profileSubscription.unsubscribe();
         };
     }, []);
 
