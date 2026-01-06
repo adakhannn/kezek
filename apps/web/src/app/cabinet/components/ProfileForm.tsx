@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
+import { TelegramLinkWidget } from './TelegramLinkWidget';
+
 import { supabase } from '@/lib/supabaseClient';
+
 
 type Profile = {
     full_name: string | null;
@@ -338,10 +341,25 @@ export default function ProfileForm() {
                             />
                         </label>
                         {!profile.telegram_connected && (
-                            <p className="ml-7 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                Чтобы получать уведомления в Telegram, подключите Telegram через баннер сверху. Пока Telegram не подключён,
-                                уведомления в Telegram отправляться не будут, даже если галочка включена.
-                            </p>
+                            <div className="ml-7 mt-2 space-y-2">
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Чтобы получать уведомления в Telegram, подключите Telegram аккаунт:
+                                </p>
+                                <div className="flex justify-start">
+                                    <TelegramLinkWidget
+                                        onSuccess={() => {
+                                            loadProfile();
+                                            setMessage('Telegram успешно подключен!');
+                                            setTimeout(() => setMessage(null), 3000);
+                                        }}
+                                        onError={(err) => {
+                                            setError(err);
+                                            setTimeout(() => setError(null), 5000);
+                                        }}
+                                        size="medium"
+                                    />
+                                </div>
+                            </div>
                         )}
                     </div>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
