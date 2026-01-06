@@ -11,6 +11,7 @@ type Body = {
     notify_email?: boolean;
     notify_sms?: boolean;
     notify_whatsapp?: boolean;
+    notify_telegram?: boolean;
 };
 
 export async function POST(req: Request) {
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
         const notify_email = body.notify_email ?? true;
         const notify_sms = body.notify_sms ?? true;
         const notify_whatsapp = body.notify_whatsapp ?? true;
+        const notify_telegram = body.notify_telegram ?? true;
 
         // Получаем текущий профиль, чтобы проверить, изменился ли номер телефона
         const { data: currentProfile } = await supabase
@@ -63,6 +65,7 @@ export async function POST(req: Request) {
                     notify_sms: notify_sms,
                     notify_whatsapp: notify_whatsapp,
                     whatsapp_verified: whatsapp_verified,
+                    notify_telegram: notify_telegram,
                 },
                 { onConflict: 'id' }
             );

@@ -10,6 +10,8 @@ type Profile = {
     notify_email: boolean;
     notify_whatsapp: boolean;
     whatsapp_verified: boolean;
+    notify_telegram: boolean;
+    telegram_connected: boolean;
 };
 
 export default function ProfileForm() {
@@ -23,6 +25,8 @@ export default function ProfileForm() {
         notify_email: true,
         notify_whatsapp: true,
         whatsapp_verified: false,
+        notify_telegram: true,
+        telegram_connected: false,
     });
     const [otpCode, setOtpCode] = useState('');
     const [otpSending, setOtpSending] = useState(false);
@@ -41,7 +45,7 @@ export default function ProfileForm() {
 
             const { data, error: fetchError } = await supabase
                 .from('profiles')
-                .select('full_name, phone, notify_email, notify_whatsapp, whatsapp_verified')
+                .select('full_name, phone, notify_email, notify_whatsapp, whatsapp_verified, notify_telegram, telegram_id, telegram_verified')
                 .eq('id', user.id)
                 .maybeSingle();
 
@@ -56,6 +60,8 @@ export default function ProfileForm() {
                 notify_email: data?.notify_email ?? true,
                 notify_whatsapp: data?.notify_whatsapp ?? true,
                 whatsapp_verified: data?.whatsapp_verified ?? false,
+                notify_telegram: data?.notify_telegram ?? true,
+                telegram_connected: !!data?.telegram_id && !!data?.telegram_verified,
             });
         } catch (e) {
             console.error('Error loading profile:', e);
@@ -79,6 +85,7 @@ export default function ProfileForm() {
                     phone: profile.phone || null,
                     notify_email: profile.notify_email,
                     notify_whatsapp: profile.notify_whatsapp,
+                    notify_telegram: profile.notify_telegram,
                 }),
             });
 
@@ -305,6 +312,33 @@ export default function ProfileForm() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Telegram */}
+                        <label className="flex items-center justify-between cursor-pointer">
+                            <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 0C5.371 0 0 5.371 0 12s5.371 12 12 12 12-5.371 12-12S18.629 0 12 0zm5.496 8.246l-1.89 8.91c-.143.637-.523.793-1.059.494l-2.93-2.162-1.414 1.362c-.156.156-.287.287-.586.287l.21-3.004 5.472-4.946c.238-.21-.051-.328-.369-.118l-6.768 4.263-2.91-.909c-.633-.197-.647-.633.133-.936l11.37-4.386c.523-.189.983.118.812.935z" />
+                                </svg>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Telegram</span>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={profile.notify_telegram && profile.telegram_connected}
+                                disabled={!profile.telegram_connected}
+                                onChange={(e) =>
+                                    setProfile({
+                                        ...profile,
+                                        notify_telegram: e.target.checked,
+                                    })
+                                }
+                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 disabled:opacity-40"
+                            />
+                        </label>
+                        {!profile.telegram_connected && (
+                            <p className="ml-7 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Чтобы получать уведомления в Telegram, подключите Telegram через кнопку сверху.
+                            </p>
+                        )}
                     </div>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         Выберите способы получения уведомлений о ваших бронированиях
