@@ -1,12 +1,13 @@
 'use client';
 
-import {useRouter} from 'next/navigation';
-import {useState} from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
+import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import {normalizePhoneToE164} from '@/lib/senders/sms';
-import {supabase} from '@/lib/supabaseClient';
+import { normalizePhoneToE164 } from '@/lib/senders/sms';
+import { supabase } from '@/lib/supabaseClient';
 
 type Mode = 'phone' | 'email';
 
@@ -185,6 +186,13 @@ export default function SignUpPage() {
                     </svg>
                     Продолжить с Google
                 </Button>
+
+                {/* Telegram Login Widget */}
+                <TelegramLoginWidget
+                    redirectTo="/auth/post-signup"
+                    size="large"
+                    onError={(err) => setError(err)}
+                />
             </div>
         </main>
     );
