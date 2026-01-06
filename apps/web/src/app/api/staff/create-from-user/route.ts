@@ -157,9 +157,9 @@ export async function POST(req: Request) {
             if (eRole) return NextResponse.json({ ok: true, id: staffId, warn: 'ROLE_NOT_GRANTED', error: eRole.message });
         }
 
-        // Инициализируем расписание для нового сотрудника
+        // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
         if (staffId) {
-            await initializeStaffSchedule(admin, bizId, staffId, body.branch_id, 4);
+            await initializeStaffSchedule(admin, bizId, staffId, body.branch_id);
         }
 
         return NextResponse.json({ ok: true, id: staffId });

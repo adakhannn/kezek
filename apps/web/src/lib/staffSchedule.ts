@@ -7,27 +7,26 @@ import { TZ } from './time';
 type TimeRange = { start: string; end: string };
 
 /**
- * Инициализирует расписание для нового сотрудника на ближайшие недели
+ * Инициализирует расписание для сотрудника на текущую и следующую недели.
+ * Функция идемпотентна: создаёт только отсутствующие дни.
  * @param admin - Supabase admin client
  * @param bizId - ID бизнеса
  * @param staffId - ID сотрудника
  * @param branchId - ID филиала
- * @param weeksAhead - Количество недель вперед для создания расписания (по умолчанию 4)
  */
 export async function initializeStaffSchedule(
     admin: ReturnType<typeof getServiceClient>,
     bizId: string,
     staffId: string,
-    branchId: string,
-    weeksAhead: number = 4
+    branchId: string
 ): Promise<void> {
     try {
         const today = new Date();
         const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Понедельник
         
-        // Создаем даты для всех недель вперед
+        // Создаем даты для текущей (0) и следующей (1) недель
         const allDates: string[] = [];
-        for (let weekOffset = 0; weekOffset < weeksAhead; weekOffset++) {
+        for (let weekOffset = 0; weekOffset < 2; weekOffset++) {
             const targetWeekStart = addWeeks(weekStart, weekOffset);
             const weekDates = Array.from({ length: 7 }, (_, i) => addDays(targetWeekStart, i));
             const dateStrings = weekDates.map((d) => formatInTimeZone(d, TZ, 'yyyy-MM-dd'));

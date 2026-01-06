@@ -128,9 +128,9 @@ export async function POST(req: Request) {
             await addStaffRole(admin, linkedUserId, bizId);
         }
 
-        // Инициализируем расписание для нового сотрудника
+        // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
         if (data?.id) {
-            await initializeStaffSchedule(admin, bizId, data.id, body.branch_id, 4);
+            await initializeStaffSchedule(admin, bizId, data.id, body.branch_id);
         }
 
         return NextResponse.json({ok: true, id: data?.id, user_linked: !!linkedUserId});
