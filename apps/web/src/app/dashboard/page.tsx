@@ -94,7 +94,7 @@ export default async function DashboardHome() {
                                 {staffActive}
                             </span>
                             <div className="leading-tight">
-                                <div className="font-medium">Активных мастеров</div>
+                                <div className="font-medium">Активных сотрудников</div>
                                 <div className="text-indigo-100/80">готовы принимать клиентов</div>
                             </div>
                         </div>
@@ -121,7 +121,7 @@ export default async function DashboardHome() {
                             <ul className="list-disc list-inside text-xs space-y-0.5">
                                 {branchesCount === 0 && <li>Создайте хотя бы один филиал, чтобы клиенты могли записываться.</li>}
                                 {servicesActive === 0 && <li>Добавьте услуги и укажите продолжительность и цену.</li>}
-                                {staffActive === 0 && <li>Пригласите мастеров и отметьте, кто оказывает какие услуги.</li>}
+                                {staffActive === 0 && <li>Добавьте сотрудников и укажите, кто оказывает какие услуги.</li>}
                                 {bookingsToday === 0 && (
                                     <li>Проверьте «Календарь» — первые бронирования появятся здесь автоматически.</li>
                                 )}
@@ -263,7 +263,7 @@ export default async function DashboardHome() {
                         >
                             <span>Добавить сотрудника</span>
                             <span className="mt-0.5 text-[11px] font-normal text-emerald-700/80 dark:text-emerald-200/90">
-                                пригласить мастера в систему
+                                добавить сотрудника в систему
                             </span>
                         </Link>
                         <Link
@@ -279,7 +279,7 @@ export default async function DashboardHome() {
                             href="/dashboard/staff"
                             className="flex flex-col rounded-xl border border-purple-100 bg-purple-50/60 px-3 py-2 text-xs font-medium text-purple-800 shadow-sm transition hover:border-purple-200 hover:bg-purple-50 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-100"
                         >
-                            <span>Назначить услуги мастеру</span>
+                            <span>Назначить услуги сотруднику</span>
                             <span className="mt-0.5 text-[11px] font-normal text-purple-700/80 dark:text-purple-200/90">
                                 распределить услуги по сотрудникам
                             </span>
