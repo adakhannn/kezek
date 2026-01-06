@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
@@ -9,11 +10,22 @@ import { supabase } from '@/lib/supabaseClient';
  * Висящее уведомление, напоминающее пользователю заполнить имя
  */
 export function NameReminderBanner() {
+    const pathname = usePathname();
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let mounted = true;
+
+        // Если пользователь уже находится в кабинете, баннер не показываем,
+        // чтобы он не мигал во время редактирования профиля.
+        if (pathname.startsWith('/cabinet')) {
+            setShow(false);
+            setLoading(false);
+            return () => {
+                mounted = false;
+            };
+        }
 
         const checkName = async () => {
             try {
@@ -90,7 +102,7 @@ export function NameReminderBanner() {
             authSubscription.unsubscribe();
             profileSubscription.unsubscribe();
         };
-    }, []);
+    }, [pathname]);
 
     if (loading || !show) {
         return null;
