@@ -11,7 +11,6 @@ export async function middleware(req: NextRequest) {
         pathname.startsWith('/api') ||
         pathname.startsWith('/auth/post-signup') ||
         pathname.startsWith('/auth/sign-in') ||
-        pathname.startsWith('/auth/sign-up') ||
         pathname.startsWith('/auth/whatsapp') ||
         pathname.startsWith('/auth/callback') ||
         pathname.startsWith('/auth/verify')

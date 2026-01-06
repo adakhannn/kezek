@@ -280,7 +280,7 @@ export default function VerifyPage() {
                         <Button
                             type="button"
                             variant="ghost"
-                            onClick={() => router.push(isSignUp ? '/auth/sign-up' : '/auth/sign-in')}
+                            onClick={() => router.push('/auth/sign-in')}
                             className="w-full text-sm text-gray-500 dark:text-gray-400"
                         >
                             ← Назад

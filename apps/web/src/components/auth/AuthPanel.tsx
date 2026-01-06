@@ -15,7 +15,6 @@ export default function AuthPanel() {
         return (
             <div className="flex gap-2">
                 <Link className="border px-3 py-1 rounded" href="/auth/sign-in">Войти</Link>
-                <Link className="border px-3 py-1 rounded" href="/auth/sign-up">Регистрация</Link>
             </div>
         );
     }
