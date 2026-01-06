@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { getServiceClient } from '@/lib/supabaseService';
 
 type Body = {
@@ -154,6 +155,11 @@ export async function POST(req: Request) {
                     biz_key: bizId ?? ZERO,
                 });
             if (eRole) return NextResponse.json({ ok: true, id: staffId, warn: 'ROLE_NOT_GRANTED', error: eRole.message });
+        }
+
+        // Инициализируем расписание для нового сотрудника
+        if (staffId) {
+            await initializeStaffSchedule(admin, bizId, staffId, body.branch_id, 4);
         }
 
         return NextResponse.json({ ok: true, id: staffId });

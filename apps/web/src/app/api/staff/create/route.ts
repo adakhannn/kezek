@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import {NextResponse} from 'next/server';
 
 import {getBizContextForManagers} from '@/lib/authBiz';
+import {initializeStaffSchedule} from '@/lib/staffSchedule';
 import {getServiceClient} from '@/lib/supabaseService';
 
 /**
@@ -125,6 +126,11 @@ export async function POST(req: Request) {
         // Если нашли пользователя, добавляем роль staff
         if (linkedUserId) {
             await addStaffRole(admin, linkedUserId, bizId);
+        }
+
+        // Инициализируем расписание для нового сотрудника
+        if (data?.id) {
+            await initializeStaffSchedule(admin, bizId, data.id, body.branch_id, 4);
         }
 
         return NextResponse.json({ok: true, id: data?.id, user_linked: !!linkedUserId});
