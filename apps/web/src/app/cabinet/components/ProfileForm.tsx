@@ -354,11 +354,30 @@ export default function ProfileForm() {
                                         }}
                                         onError={(err) => {
                                             setError(err);
-                                            setTimeout(() => setError(null), 5000);
+                                            setTimeout(() => setError(null), 10000);
                                         }}
                                         size="medium"
                                     />
                                 </div>
+                                {error && error.includes('уже привязан') && (
+                                    <div className="mt-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40">
+                                        <p className="text-xs text-amber-800 dark:text-amber-200 font-medium mb-2">
+                                            Этот Telegram аккаунт уже привязан к другому пользователю.
+                                        </p>
+                                        <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+                                            Чтобы использовать другой Telegram аккаунт:
+                                        </p>
+                                        <ol className="text-xs text-amber-700 dark:text-amber-300 list-decimal list-inside space-y-1 ml-2">
+                                            <li>Откройте <a href="https://web.telegram.org" target="_blank" rel="noopener noreferrer" className="underline">web.telegram.org</a> в новой вкладке</li>
+                                            <li>Выйдите из текущего Telegram аккаунта</li>
+                                            <li>Войдите в нужный Telegram аккаунт</li>
+                                            <li>Вернитесь на эту страницу и попробуйте снова</li>
+                                        </ol>
+                                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 italic">
+                                            Или используйте режим инкогнито браузера для входа в другой аккаунт.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
