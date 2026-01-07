@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import {useLanguage} from './_components/i18n/LanguageProvider';
+
 import { getSupabaseServer } from '@/lib/authBiz';
 
 const PAGE_SIZE = 9;
@@ -16,8 +18,8 @@ type Business = {
 };
 
 export default async function Home({
-                                       searchParams,
-                                   }: {
+    searchParams,
+}: {
     searchParams?: Promise<SearchParams>;
 }) {
     const {q = '', cat = '', page = '1'} = (await searchParams) ?? {};
@@ -63,19 +65,13 @@ export default async function Home({
         )
     ).sort();
 
+    // Home — серверный компонент, для текстов используем клиентский подкомпонент, чтобы читать язык из контекста
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-                <div className="text-center space-y-4 animate-fade-in">
-                    <h1 className="text-4xl sm:text-5xl font-bold">
-                        <span className="gradient-text">Найдите свой сервис</span>
-                    </h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                        Запись в салоны и студии города Ош за пару кликов — без звонков и переписок
-                    </p>
-                </div>
+                <HomeHero />
 
-                <Header q={q} cat={cat} categories={categoriesAvailable}/>
+                <Header q={q} cat={cat} categories={categoriesAvailable} />
 
                 <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {typedBusinesses.map((b, index) => (
@@ -131,11 +127,11 @@ export default async function Home({
                                 </div>
 
                                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
-                                    <Link 
+                                    <Link
                                         href={`/b/${b.slug}`} 
                                         className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 group"
                                     >
-                                        Записаться
+                                        <HomeBookButtonText />
                                         <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
@@ -146,11 +142,7 @@ export default async function Home({
                     ))}
                 </section>
 
-                {(!businesses || businesses.length === 0) && (
-                    <div className="text-center py-12">
-                        <p className="text-gray-500 dark:text-gray-400 text-lg">Ничего не найдено</p>
-                    </div>
-                )}
+                {(!businesses || businesses.length === 0) && <EmptyState />}
 
                 <Pagination q={q} cat={cat} page={pageNum} pages={pages}/>
             </div>
@@ -158,8 +150,32 @@ export default async function Home({
     );
 }
 
+/* ---------- hero / заголовок ---------- */
+function HomeHero() {
+    const {t} = useLanguage();
+    return (
+        <div className="animate-fade-in space-y-4 text-center">
+            <h1 className="text-4xl font-bold sm:text-5xl">
+                <span className="gradient-text">{t('home.title', 'Найдите свой сервис')}</span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-400">
+                {t(
+                    'home.subtitle',
+                    'Запись в салоны и студии города Ош за пару кликов — без звонков и переписок'
+                )}
+            </p>
+        </div>
+    );
+}
+
+function HomeBookButtonText() {
+    const {t} = useLanguage();
+    return <>{t('home.card.book', 'Записаться')}</>;
+}
+
 /* ---------- поиск/фильтры в шапке ---------- */
 function Header({q, cat, categories}: { q: string; cat: string; categories: string[] }) {
+    const {t} = useLanguage();
     return (
         <div className="max-w-4xl mx-auto space-y-3">
             <form className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -177,23 +193,23 @@ function Header({q, cat, categories}: { q: string; cat: string; categories: stri
                     <input
                         name="q"
                         defaultValue={q}
-                        placeholder="Поиск по названию или адресу..."
+                        placeholder={t('home.search.placeholder', 'Поиск по названию или адресу...')}
                         className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                     />
                 </div>
                 {cat && <input type="hidden" name="cat" value={cat}/>}
-                <button 
+                <button
                     type="submit"
                     className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                    Искать
+                    {t('home.search.submit', 'Искать')}
                 </button>
                 {q && (
                     <Link
                         href="/"
                         className="px-4 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                     >
-                        Сброс
+                        {t('home.search.reset', 'Сброс')}
                     </Link>
                 )}
             </form>
@@ -201,7 +217,7 @@ function Header({q, cat, categories}: { q: string; cat: string; categories: stri
             {categories.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap text-sm">
                     <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                        Популярные категории:
+                        {t('home.cats.title', 'Популярные категории:')}
                     </span>
                     <Link
                         href={q ? `/?q=${encodeURIComponent(q)}` : '/'}
@@ -211,7 +227,7 @@ function Header({q, cat, categories}: { q: string; cat: string; categories: stri
                                 : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400'
                         }`}
                     >
-                        Все
+                        {t('home.cats.all', 'Все')}
                     </Link>
                     {categories.map((c) => (
                         <Link
@@ -287,5 +303,14 @@ function Pagination({
                 </span>
             </Link>
         </nav>
+    );
+}
+
+function EmptyState() {
+    const {t} = useLanguage();
+    return (
+        <div className="py-12 text-center">
+            <p className="text-lg text-gray-500 dark:text-gray-400">{t('home.empty', 'Ничего не найдено')}</p>
+        </div>
     );
 }

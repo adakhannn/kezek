@@ -48,6 +48,17 @@ const dictionaries: Dictionaries = {
         'booking.tomorrow': 'Эртең',
         'booking.nav.back': '← Артка',
         'booking.nav.next': 'Улантуу →',
+
+        // Home page
+        'home.title': 'Кызматты табыңыз',
+        'home.subtitle': 'Ош шаарындагы салондорго жана студияларга бир нече клик менен жазылыңыз — чалуусуз жана жазышуусуз',
+        'home.search.placeholder': 'Аталышы же дареги боюнча издөө...',
+        'home.search.submit': 'Издөө',
+        'home.search.reset': 'Тазалоо',
+        'home.cats.title': 'Популярдуу категориялар:',
+        'home.cats.all': 'Баары',
+        'home.card.book': 'Жазылуу',
+        'home.empty': 'Эч нерсе табылган жок',
     },
     ru: {
         // Auth / sign-in
@@ -85,6 +96,17 @@ const dictionaries: Dictionaries = {
         'booking.tomorrow': 'Завтра',
         'booking.nav.back': '← Назад',
         'booking.nav.next': 'Далее →',
+
+        // Home page
+        'home.title': 'Найдите свой сервис',
+        'home.subtitle': 'Запись в салоны и студии города Ош за пару кликов — без звонков и переписок',
+        'home.search.placeholder': 'Поиск по названию или адресу...',
+        'home.search.submit': 'Искать',
+        'home.search.reset': 'Сброс',
+        'home.cats.title': 'Популярные категории:',
+        'home.cats.all': 'Все',
+        'home.card.book': 'Записаться',
+        'home.empty': 'Ничего не найдено',
     },
     en: {
         // Auth / sign-in
@@ -122,6 +144,17 @@ const dictionaries: Dictionaries = {
         'booking.tomorrow': 'Tomorrow',
         'booking.nav.back': '← Back',
         'booking.nav.next': 'Next →',
+
+        // Home page
+        'home.title': 'Find your service',
+        'home.subtitle': 'Book salons and studios in Osh in a few clicks — no calls or chats',
+        'home.search.placeholder': 'Search by name or address...',
+        'home.search.submit': 'Search',
+        'home.search.reset': 'Reset',
+        'home.cats.title': 'Popular categories:',
+        'home.cats.all': 'All',
+        'home.card.book': 'Book now',
+        'home.empty': 'Nothing found',
     },
 };
 
