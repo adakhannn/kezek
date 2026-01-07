@@ -110,15 +110,19 @@ const dictionaries: Dictionaries = {
 
         // Header
         'header.signIn': 'Кирүү',
+        'header.signInShort': 'Кир',
         'header.signOut': 'Чыгуу',
         'header.loading': 'Жүктөп жатабыз...',
         'header.account': 'аккаунт',
+        'header.language': 'Тил',
         'header.adminPanel': 'Админ-панель',
         'header.ownerCabinet': 'Ээсинин кабинети',
         'header.staffCabinet': 'Кызматкердин кабинети',
+        'header.staffCabinetShort': 'Кызматкер',
         'header.businessCabinet': 'Бизнес кабинети',
         'header.myBookings': 'Менин жазылыштарым',
         'header.personalCabinet': 'Жеке кабинет',
+        'header.cabinetShort': 'Кабинет',
     },
     ru: {
         // Auth / sign-in
@@ -218,15 +222,19 @@ const dictionaries: Dictionaries = {
 
         // Header
         'header.signIn': 'Войти',
+        'header.signInShort': 'Вход',
         'header.signOut': 'Выйти',
         'header.loading': 'Загрузка...',
         'header.account': 'аккаунт',
+        'header.language': 'Язык',
         'header.adminPanel': 'Админ-панель',
         'header.ownerCabinet': 'Кабинет владельца',
         'header.staffCabinet': 'Кабинет сотрудника',
+        'header.staffCabinetShort': 'Сотрудник',
         'header.businessCabinet': 'Кабинет бизнеса',
         'header.myBookings': 'Мои записи',
         'header.personalCabinet': 'Личный кабинет',
+        'header.cabinetShort': 'Кабинет',
     },
     en: {
         // Auth / sign-in
@@ -326,15 +334,19 @@ const dictionaries: Dictionaries = {
 
         // Header
         'header.signIn': 'Sign in',
+        'header.signInShort': 'Login',
         'header.signOut': 'Sign out',
         'header.loading': 'Loading...',
         'header.account': 'account',
+        'header.language': 'Language',
         'header.adminPanel': 'Admin panel',
         'header.ownerCabinet': 'Owner cabinet',
         'header.staffCabinet': 'Staff cabinet',
+        'header.staffCabinetShort': 'Staff',
         'header.businessCabinet': 'Business cabinet',
         'header.myBookings': 'My bookings',
         'header.personalCabinet': 'Personal cabinet',
+        'header.cabinetShort': 'Cabinet',
     },
 };
 

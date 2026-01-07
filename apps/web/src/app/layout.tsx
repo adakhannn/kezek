@@ -6,6 +6,7 @@ import './globals.css';
 import {AuthStatusServer} from './_components/AuthStatusServer';
 import {AuthStatusUpdater} from './_components/AuthStatusWrapper';
 import {Logo} from './_components/Logo';
+import {MobileHeaderMenu} from './_components/MobileHeaderMenu';
 import {ReminderBanners} from './_components/ReminderBanners';
 import {LanguageProvider} from './_components/i18n/LanguageProvider';
 import {LanguageSwitcher} from './_components/i18n/LanguageSwitcher';
@@ -44,12 +45,17 @@ export default function RootLayout({
         <LanguageProvider>
             <div className="flex flex-col min-h-screen">
                 <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="flex h-16 items-center justify-between gap-4">
+                    <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8">
+                        <div className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4">
                             <Logo />
-                            <div className="flex items-center gap-3">
-                                <LanguageSwitcher />
-                                <AuthStatusServer/>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="hidden sm:block">
+                                    <LanguageSwitcher />
+                                </div>
+                                <div className="hidden md:block">
+                                    <AuthStatusServer/>
+                                </div>
+                                <MobileHeaderMenu />
                             </div>
                             <AuthStatusUpdater/>
                         </div>
