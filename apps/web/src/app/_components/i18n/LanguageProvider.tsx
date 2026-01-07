@@ -34,6 +34,14 @@ const dictionaries: Dictionaries = {
             'Биринчи жолу келдиңизби? Каалаган кирүү ыкмасын тандаңыз — аккаунт автоматтык түрдө түзүлөт.',
         'auth.firstTime.subtitle':
             'Кийин «Жеке кабинет» бөлүмүндө почтаны, телефонуңузду жана билдирмелерди алуунун ыкмаларын өзгөртө аласыз.',
+        'auth.benefits.title': 'Тез жана коопсуз',
+        'auth.benefits.subtitle': 'Сыр сөзсүз кириңиз — e‑mail, Google, Telegram же WhatsApp колдонуңуз',
+        'auth.benefits.fast.title': 'Дараба кирүү',
+        'auth.benefits.fast.desc': 'Катталуусуз жана сыр сөзсүз — ыкманы тандаңыз жана секундада кириңиз',
+        'auth.benefits.secure.title': 'Коопсуздук',
+        'auth.benefits.secure.desc': 'Бардык маалыматтар корголгон, аккаунт биринчи киргенде автоматтык түрдө түзүлөт',
+        'auth.benefits.easy.title': 'Жөнөкөйлүк',
+        'auth.benefits.easy.desc': 'Бир баскыч — жана сиз ичиндесиз. Татаал формалар жана узун анкеталар жок',
 
         // Booking / public flow
         'booking.step.branch': 'Филиал',
@@ -82,6 +90,14 @@ const dictionaries: Dictionaries = {
             'Впервые здесь? Просто выберите любой способ входа — аккаунт создастся автоматически, без лишних полей.',
         'auth.firstTime.subtitle':
             'Вы всегда можете сменить почту, номер телефона и способы уведомлений в разделе «Личный кабинет».',
+        'auth.benefits.title': 'Быстро и безопасно',
+        'auth.benefits.subtitle': 'Войдите без пароля — используйте e‑mail, Google, Telegram или WhatsApp',
+        'auth.benefits.fast.title': 'Мгновенный вход',
+        'auth.benefits.fast.desc': 'Без регистрации и паролей — выберите способ и войдите за секунды',
+        'auth.benefits.secure.title': 'Безопасность',
+        'auth.benefits.secure.desc': 'Все данные защищены, аккаунт создаётся автоматически при первом входе',
+        'auth.benefits.easy.title': 'Простота',
+        'auth.benefits.easy.desc': 'Один клик — и вы уже внутри. Никаких сложных форм и длинных анкет',
 
         // Booking / public flow
         'booking.step.branch': 'Филиал',
@@ -129,7 +145,15 @@ const dictionaries: Dictionaries = {
         'auth.firstTime.title':
             'New here? Just choose any sign‑in method — we will create an account for you automatically.',
         'auth.firstTime.subtitle':
-            'Later you can change your e‑mail, phone number and notification channels in “My profile”.',
+            'Later you can change your e‑mail, phone number and notification channels in "My profile".',
+        'auth.benefits.title': 'Fast and secure',
+        'auth.benefits.subtitle': 'Sign in without a password — use e‑mail, Google, Telegram or WhatsApp',
+        'auth.benefits.fast.title': 'Instant access',
+        'auth.benefits.fast.desc': 'No registration or passwords — choose a method and sign in within seconds',
+        'auth.benefits.secure.title': 'Security',
+        'auth.benefits.secure.desc': 'All data is protected, account is created automatically on first sign‑in',
+        'auth.benefits.easy.title': 'Simplicity',
+        'auth.benefits.easy.desc': 'One click — and you are in. No complex forms or long questionnaires',
 
         // Booking / public flow
         'booking.step.branch': 'Branch',

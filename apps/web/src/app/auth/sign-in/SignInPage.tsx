@@ -199,8 +199,11 @@ export default function SignInPage() {
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30 flex items-center justify-center px-3 py-4">
-            <div className="w-full max-w-md">
-                <div className="bg-white dark:bg-gray-900 rounded-2xl px-5 py-6 sm:px-8 sm:py-8 shadow-xl border border-gray-200 dark:border-gray-800 space-y-5 sm:space-y-6">
+            <div className="w-full max-w-4xl">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <div className="grid md:grid-cols-2 gap-0">
+                        {/* Левая колонка - форма входа */}
+                        <div className="px-5 py-6 sm:px-8 sm:py-8 space-y-5 sm:space-y-6">
                     {/* Заголовок */}
                     <div className="text-center space-y-1.5">
                         <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-600 to-pink-600 rounded-2xl mb-3 shadow-lg">
@@ -382,9 +385,75 @@ export default function SignInPage() {
                         {t('auth.whatsapp', 'Войти через WhatsApp')}
                     </button>
 
-                    <div className="space-y-1 text-center text-[11px] text-gray-500 dark:text-gray-400">
-                        <p>{t('auth.firstTime.title')}</p>
-                        <p>{t('auth.firstTime.subtitle')}</p>
+                            <div className="space-y-1 text-center text-[11px] text-gray-500 dark:text-gray-400">
+                                <p>{t('auth.firstTime.title')}</p>
+                                <p>{t('auth.firstTime.subtitle')}</p>
+                            </div>
+                        </div>
+
+                        {/* Правая колонка - информация/преимущества */}
+                        <div className="hidden md:flex flex-col justify-center px-8 py-8 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-indigo-950/30 dark:to-pink-950/30 border-l border-gray-200 dark:border-gray-800">
+                            <div className="space-y-6">
+                                <div className="space-y-3">
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        {t('auth.benefits.title', 'Быстро и безопасно')}
+                                    </h2>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {t('auth.benefits.subtitle', 'Войдите без пароля — используйте e‑mail, Google, Telegram или WhatsApp')}
+                                    </p>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                                {t('auth.benefits.fast.title', 'Мгновенный вход')}
+                                            </h3>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                {t('auth.benefits.fast.desc', 'Без регистрации и паролей — выберите способ и войдите за секунды')}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                                {t('auth.benefits.secure.title', 'Безопасность')}
+                                            </h3>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                {t('auth.benefits.secure.desc', 'Все данные защищены, аккаунт создаётся автоматически при первом входе')}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                                {t('auth.benefits.easy.title', 'Простота')}
+                                            </h3>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                {t('auth.benefits.easy.desc', 'Один клик — и вы уже внутри. Никаких сложных форм и длинных анкет')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
