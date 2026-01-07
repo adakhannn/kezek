@@ -74,6 +74,7 @@ const dictionaries: Dictionaries = {
         'booking.summary.selectSlot': 'Слотту тандаңыз',
         'booking.summary.selectSlotFirst': 'Алгач бош слотту тандаңыз, андан кийин брондоону ырастай аласыз.',
         'booking.summary.estimatedPrice': 'Ориентирлүү баасы:',
+        'booking.currency': 'сом',
         'booking.needAuth':
             'Брондоо үчүн кирүү же катталуу керек. Барактын жогору жагындагы «Кирүү» баскычын басыңыз.',
         'booking.phoneLabel': 'Телефон:',
@@ -165,6 +166,7 @@ const dictionaries: Dictionaries = {
         'booking.summary.selectSlot': 'Выберите слот',
         'booking.summary.selectSlotFirst': 'Сначала выберите свободный слот, затем вы сможете подтвердить бронь.',
         'booking.summary.estimatedPrice': 'Ориентировочная стоимость:',
+        'booking.currency': 'сом',
         'booking.needAuth':
             'Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.',
         'booking.phoneLabel': 'Телефон:',
@@ -256,6 +258,7 @@ const dictionaries: Dictionaries = {
         'booking.summary.selectSlot': 'Select slot',
         'booking.summary.selectSlotFirst': 'First select an available slot, then you can confirm the booking.',
         'booking.summary.estimatedPrice': 'Estimated price:',
+        'booking.currency': 'KGS',
         'booking.needAuth':
             'To make a booking you need to sign in or sign up. Click the "Sign in" button at the top of the page.',
         'booking.phoneLabel': 'Phone:',

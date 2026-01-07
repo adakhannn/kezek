@@ -799,7 +799,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                             <div className="whitespace-nowrap text-right text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                                                                 {s.price_from}
                                                                 {hasRange && s.price_to ? `–${s.price_to}` : ''}{' '}
-                                                                сом
+                                                                {t('booking.currency', 'сом')}
                                                             </div>
                                                         )}
                                                     </button>
@@ -812,13 +812,13 @@ export default function BizClient({ data }: { data: Data }) {
                                                 {serviceCurrent.price_from && (
                                                     <>
                                                         {' '}
-                                                        Примерная стоимость:{' '}
+                                                        {t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}{' '}
                                                         {serviceCurrent.price_from}
                                                         {serviceCurrent.price_to &&
                                                         serviceCurrent.price_to !== serviceCurrent.price_from
                                                             ? `–${serviceCurrent.price_to}`
                                                             : ''}{' '}
-                                                        сом.
+                                                        {t('booking.currency', 'сом')}.
                                                     </>
                                                 )}
                                             </p>
@@ -1026,7 +1026,7 @@ export default function BizClient({ data }: { data: Data }) {
                                         serviceCurrent.price_to !== serviceCurrent.price_from
                                             ? `–${serviceCurrent.price_to}`
                                             : ''}{' '}
-                                        сом
+                                        {t('booking.currency', 'сом')}
                                     </span>
                                 </div>
                             )}
