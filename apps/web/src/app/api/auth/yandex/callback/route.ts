@@ -113,67 +113,54 @@ export async function GET(req: Request) {
             const email = yandexUser.default_email || `yandex_${yandexUser.id}@yandex.local`;
             const initialPassword = crypto.randomBytes(32).toString('hex');
 
-            // Проверяем, может быть пользователь уже существует с таким email
-            let authData;
-            let authError;
-            
-            // Сначала пытаемся найти существующего пользователя по email
-            if (yandexUser.default_email) {
-                const { data: existingUsers } = await admin.auth.admin.listUsers();
-                const existingUser = existingUsers?.users?.find(u => u.email === yandexUser.default_email);
-                
-                if (existingUser) {
-                    // Пользователь уже существует - используем его
-                    userId = existingUser.id;
-                    console.log('[yandex/callback] Found existing user by email:', userId);
-                } else {
-                    // Создаем нового пользователя
-                    const createResult = await admin.auth.admin.createUser({
-                        email,
-                        password: initialPassword,
-                        email_confirm: true,
-                        user_metadata: {
-                            yandex_id: String(yandexUser.id),
-                            yandex_username: yandexUser.login,
-                            auth_provider: 'yandex',
-                        },
-                    });
-                    authData = createResult.data;
-                    authError = createResult.error;
+            // Пытаемся создать пользователя
+            const { data: authData, error: authError } = await admin.auth.admin.createUser({
+                email,
+                password: initialPassword,
+                email_confirm: true,
+                user_metadata: {
+                    yandex_id: String(yandexUser.id),
+                    yandex_username: yandexUser.login,
+                    auth_provider: 'yandex',
+                },
+            });
+
+            if (authError) {
+                // Если пользователь уже существует (дубликат email), пытаемся найти его
+                if (authError.message?.includes('already registered') || authError.message?.includes('already exists')) {
+                    console.log('[yandex/callback] User already exists, trying to find by email');
                     
-                    if (authError || !authData?.user) {
-                        console.error('[yandex/callback] create user error:', authError);
-                        const errorMessage = authError?.message || 'Failed to create user';
+                    // Ищем пользователя по email через profiles
+                    const { data: profileByEmail } = await admin
+                        .from('profiles')
+                        .select('id')
+                        .eq('email', email)
+                        .maybeSingle();
+                    
+                    if (profileByEmail?.id) {
+                        userId = profileByEmail.id;
+                        console.log('[yandex/callback] Found existing user by email in profiles:', userId);
+                    } else {
+                        // Если не нашли, возвращаем ошибку
+                        console.error('[yandex/callback] User exists but not found in profiles:', authError);
                         return NextResponse.redirect(
-                            `${origin}/auth/sign-in?error=${encodeURIComponent(`Ошибка создания пользователя: ${errorMessage}`)}`
+                            `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
                         );
                     }
-                    
-                    userId = authData.user.id;
-                }
-            } else {
-                // Нет email - создаем с временным email
-                const createResult = await admin.auth.admin.createUser({
-                    email,
-                    password: initialPassword,
-                    email_confirm: true,
-                    user_metadata: {
-                        yandex_id: String(yandexUser.id),
-                        yandex_username: yandexUser.login,
-                        auth_provider: 'yandex',
-                    },
-                });
-                authData = createResult.data;
-                authError = createResult.error;
-                
-                if (authError || !authData?.user) {
+                } else {
+                    // Другая ошибка
                     console.error('[yandex/callback] create user error:', authError);
-                    const errorMessage = authError?.message || 'Failed to create user';
+                    const errorMessage = authError.message || 'Failed to create user';
                     return NextResponse.redirect(
                         `${origin}/auth/sign-in?error=${encodeURIComponent(`Ошибка создания пользователя: ${errorMessage}`)}`
                     );
                 }
-                
+            } else if (!authData?.user) {
+                console.error('[yandex/callback] create user returned no user data');
+                return NextResponse.redirect(
+                    `${origin}/auth/sign-in?error=${encodeURIComponent('Ошибка создания пользователя: нет данных пользователя')}`
+                );
+            } else {
                 userId = authData.user.id;
             }
 
