@@ -18,7 +18,7 @@ import { getServiceClient } from '@/lib/supabaseService';
 export async function POST(req: Request) {
     try {
         // Доступ сюда уже ограничен getBizContextForManagers (owner/admin/manager ИЛИ владелец по owner_id)
-        await getBizContextForManagers();
+        const { supabase, bizId } = await getBizContextForManagers();
 
         const { q, page = 1, perPage = 50 } = await req.json().catch(() => ({}));
         const query = (q ?? '').trim().toLowerCase();
@@ -32,16 +32,32 @@ export async function POST(req: Request) {
 
         const users = data.users ?? [];
 
+        // Получаем список user_id всех сотрудников текущего бизнеса
+        const { data: existingStaff } = await supabase
+            .from('staff')
+            .select('user_id')
+            .eq('biz_id', bizId)
+            .not('user_id', 'is', null);
+
+        const existingStaffUserIds = new Set(
+            (existingStaff ?? [])
+                .map(s => s.user_id)
+                .filter((id): id is string => typeof id === 'string' && id !== null)
+        );
+
         // маппинг и фильтрация
-        const mapped = users.map(u => {
-            const meta = (u.user_metadata ?? {});
-            return {
-                id: u.id,
-                email: u.email ?? null,
-                phone: u.phone ?? null,
-                full_name: meta.full_name ?? meta.fullName ?? u.email ?? 'Без имени',
-            };
-        });
+        const mapped = users
+            .map(u => {
+                const meta = (u.user_metadata ?? {});
+                return {
+                    id: u.id,
+                    email: u.email ?? null,
+                    phone: u.phone ?? null,
+                    full_name: meta.full_name ?? meta.fullName ?? u.email ?? 'Без имени',
+                };
+            })
+            // Исключаем пользователей, которые уже являются сотрудниками этого бизнеса
+            .filter(u => !existingStaffUserIds.has(u.id));
 
         const items = query
             ? mapped.filter(u =>
