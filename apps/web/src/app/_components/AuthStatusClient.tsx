@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { SignOutButton } from './SignOutButton';
+import { useLanguage } from './i18n/LanguageProvider';
 
 import { supabase } from '@/lib/supabaseClient';
 
@@ -21,12 +22,12 @@ type TargetPath = {
     isStaff?: boolean;
 };
 
-async function getTargetPath(userId: string): Promise<TargetPath> {
+async function getTargetPath(userId: string, t: (key: string, fallback?: string) => string): Promise<TargetPath> {
     try {
         // Проверяем, является ли пользователь супер-админом
         const { data: isSuperData } = await supabase.rpc('is_super_admin');
         if (isSuperData) {
-            return { href: '/admin', label: 'Админ-панель', isStaff: false };
+            return { href: '/admin', label: t('header.adminPanel', 'Админ-панель'), isStaff: false };
         }
 
         // Проверяем, владеет ли пользователь бизнесом
@@ -35,7 +36,7 @@ async function getTargetPath(userId: string): Promise<TargetPath> {
             .select('id', { count: 'exact', head: true })
             .eq('owner_id', userId);
         if ((count ?? 0) > 0) {
-            return { href: '/dashboard', label: 'Кабинет владельца', isStaff: false };
+            return { href: '/dashboard', label: t('header.ownerCabinet', 'Кабинет владельца'), isStaff: false };
         }
 
         // Проверяем, является ли пользователь сотрудником - ищем запись в staff (источник правды)
@@ -69,22 +70,22 @@ async function getTargetPath(userId: string): Promise<TargetPath> {
         }
         
         if (isStaff) {
-            return { href: '/staff', label: 'Кабинет сотрудника', isStaff: true };
+            return { href: '/staff', label: t('header.staffCabinet', 'Кабинет сотрудника'), isStaff: true };
         }
         
         // Проверяем другие роли через RPC
         const { data: roleKeys } = await supabase.rpc('my_role_keys');
         const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
         if (roles.some((r) => ['owner', 'admin', 'manager'].includes(r))) {
-            return { href: '/dashboard', label: 'Кабинет бизнеса', isStaff: false };
+            return { href: '/dashboard', label: t('header.businessCabinet', 'Кабинет бизнеса'), isStaff: false };
         }
 
         // По умолчанию — личный кабинет клиента
-        return { href: '/cabinet', label: 'Мои записи', isStaff: false };
+        return { href: '/cabinet', label: t('header.myBookings', 'Мои записи'), isStaff: false };
     } catch (error) {
         // В случае ошибки возвращаем кабинет по умолчанию
         console.warn('AuthStatusClient: error getting target path', error);
-        return { href: '/cabinet', label: 'Мои записи', isStaff: false };
+        return { href: '/cabinet', label: t('header.myBookings', 'Мои записи'), isStaff: false };
     }
 }
 
@@ -94,6 +95,7 @@ async function getTargetPath(userId: string): Promise<TargetPath> {
  */
 export function AuthStatusClient() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [user, setUser] = useState<User | null>(null);
     const [target, setTarget] = useState<TargetPath | null>(null);
     const [loading, setLoading] = useState(true);
@@ -126,7 +128,7 @@ export function AuthStatusClient() {
                 if (session?.user) {
                     setUser(session.user);
                     // Определяем путь для редиректа
-                    const path = await getTargetPath(session.user.id);
+                    const path = await getTargetPath(session.user.id, t);
                     if (mounted) {
                         setTarget(path);
                     }
@@ -144,7 +146,7 @@ export function AuthStatusClient() {
 
                     if (currentUser) {
                         setUser(currentUser);
-                        const path = await getTargetPath(currentUser.id);
+                        const path = await getTargetPath(currentUser.id, t);
                         if (mounted) {
                             setTarget(path);
                         }
@@ -182,7 +184,7 @@ export function AuthStatusClient() {
             if (session?.user) {
                 setUser(session.user);
                 // Определяем путь для редиректа
-                const path = await getTargetPath(session.user.id);
+                const path = await getTargetPath(session.user.id, t);
                 if (mounted) {
                     setTarget(path);
                 }
@@ -202,7 +204,7 @@ export function AuthStatusClient() {
             mounted = false;
             subscription.unsubscribe();
         };
-    }, [router]);
+    }, [router, t]);
 
     // Получаем имя из профиля
     useEffect(() => {
@@ -232,20 +234,20 @@ export function AuthStatusClient() {
                     href="/auth/sign-in" 
                     className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
                 >
-                    Войти
+                    {t('header.signIn', 'Войти')}
                 </Link>
             </div>
         );
     }
     
-    const label = profileName || user.email ?? user.phone ?? 'аккаунт';
+    const label = profileName || user.email ?? user.phone ?? t('header.account', 'аккаунт');
 
     // Если путь еще не определен, показываем загрузку
     if (!target) {
         return (
             <div className="flex items-center gap-3">
                 <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm animate-pulse">
-                    Загрузка...
+                    {t('header.loading', 'Загрузка...')}
                 </div>
             </div>
         );
@@ -264,7 +266,7 @@ export function AuthStatusClient() {
                     href="/staff" 
                     className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
                 >
-                    Кабинет сотрудника
+                    {t('header.staffCabinet', 'Кабинет сотрудника')}
                 </Link>
             )}
             <Link 
@@ -274,7 +276,7 @@ export function AuthStatusClient() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Личный кабинет
+                {t('header.personalCabinet', 'Личный кабинет')}
             </Link>
             <SignOutButton />
         </div>

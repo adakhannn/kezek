@@ -106,6 +106,18 @@ const dictionaries: Dictionaries = {
         'home.cats.all': 'Баары',
         'home.card.book': 'Жазылуу',
         'home.empty': 'Эч нерсе табылган жок',
+
+        // Header
+        'header.signIn': 'Кирүү',
+        'header.signOut': 'Чыгуу',
+        'header.loading': 'Жүктөп жатабыз...',
+        'header.account': 'аккаунт',
+        'header.adminPanel': 'Админ-панель',
+        'header.ownerCabinet': 'Ээсинин кабинети',
+        'header.staffCabinet': 'Кызматкердин кабинети',
+        'header.businessCabinet': 'Бизнес кабинети',
+        'header.myBookings': 'Менин жазылыштарым',
+        'header.personalCabinet': 'Жеке кабинет',
     },
     ru: {
         // Auth / sign-in
@@ -201,6 +213,18 @@ const dictionaries: Dictionaries = {
         'home.cats.all': 'Все',
         'home.card.book': 'Записаться',
         'home.empty': 'Ничего не найдено',
+
+        // Header
+        'header.signIn': 'Войти',
+        'header.signOut': 'Выйти',
+        'header.loading': 'Загрузка...',
+        'header.account': 'аккаунт',
+        'header.adminPanel': 'Админ-панель',
+        'header.ownerCabinet': 'Кабинет владельца',
+        'header.staffCabinet': 'Кабинет сотрудника',
+        'header.businessCabinet': 'Кабинет бизнеса',
+        'header.myBookings': 'Мои записи',
+        'header.personalCabinet': 'Личный кабинет',
     },
     en: {
         // Auth / sign-in
@@ -296,6 +320,18 @@ const dictionaries: Dictionaries = {
         'home.cats.all': 'All',
         'home.card.book': 'Book now',
         'home.empty': 'Nothing found',
+
+        // Header
+        'header.signIn': 'Sign in',
+        'header.signOut': 'Sign out',
+        'header.loading': 'Loading...',
+        'header.account': 'account',
+        'header.adminPanel': 'Admin panel',
+        'header.ownerCabinet': 'Owner cabinet',
+        'header.staffCabinet': 'Staff cabinet',
+        'header.businessCabinet': 'Business cabinet',
+        'header.myBookings': 'My bookings',
+        'header.personalCabinet': 'Personal cabinet',
     },
 };
 

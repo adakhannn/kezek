@@ -1,8 +1,11 @@
 'use client';
 
+import { useLanguage } from './i18n/LanguageProvider';
+
 import { supabase } from '@/lib/supabaseClient';
 
 export function SignOutButton({ className }: { className?: string }) {
+    const { t } = useLanguage();
     const handleSignOut = async () => {
         // Выполняем выход (не ждем завершения)
         supabase.auth.signOut().catch(console.error);
@@ -37,7 +40,7 @@ export function SignOutButton({ className }: { className?: string }) {
             className={className ?? 'px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 text-sm'}
             onClick={handleSignOut}
         >
-            Выйти
+            {t('header.signOut', 'Выйти')}
         </button>
     );
 }
