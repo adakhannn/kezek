@@ -84,21 +84,42 @@ function AuthCallbackContent() {
                     console.log('[callback] Attempt:', attempts + 1, 'URL:', window.location.href);
                     
                     // 1. Проверяем hash с токенами (старый способ)
-                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                    const hash = window.location.hash.substring(1);
+                    console.log('[callback] Hash:', hash ? hash.substring(0, 50) + '...' : 'empty');
+                    const hashParams = new URLSearchParams(hash);
                     const accessToken = hashParams.get('access_token');
                     const refreshToken = hashParams.get('refresh_token');
 
                     if (accessToken && refreshToken) {
                         console.log('[callback] Found tokens in hash, setting session');
-                        const { error } = await supabase.auth.setSession({
+                        console.log('[callback] Access token length:', accessToken.length);
+                        console.log('[callback] Refresh token length:', refreshToken.length);
+                        
+                        const { data: sessionData, error } = await supabase.auth.setSession({
                             access_token: accessToken,
                             refresh_token: refreshToken,
                         });
+                        
                         if (error) {
                             console.error('[callback] setSession error:', error);
                             throw error;
                         }
-                        const { data: { user } } = await supabase.auth.getUser();
+                        
+                        console.log('[callback] Session set successfully, session data:', sessionData?.session ? 'present' : 'missing');
+                        
+                        // Проверяем, что сессия действительно установлена
+                        const { data: { user }, error: userError } = await supabase.auth.getUser();
+                        if (userError) {
+                            console.error('[callback] getUser error after setSession:', userError);
+                            throw userError;
+                        }
+                        
+                        if (!user) {
+                            console.error('[callback] No user after setSession');
+                            throw new Error('No user after setting session');
+                        }
+                        
+                        console.log('[callback] User confirmed:', user.id);
                         
                         // Теперь используем постоянный баннер вместо модального окна
                         
@@ -108,7 +129,7 @@ function AuthCallbackContent() {
                         // Принудительно обновляем страницу для обновления хедера
                         router.refresh();
                         // Небольшая задержка для установки cookies
-                        await new Promise(resolve => setTimeout(resolve, 100));
+                        await new Promise(resolve => setTimeout(resolve, 200));
                         window.location.href = targetPath;
                         return;
                     }

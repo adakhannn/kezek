@@ -278,7 +278,15 @@ export async function GET(req: Request) {
         // Редиректим на callback с токенами в hash
         const redirectUrl = new URL('/auth/callback', origin);
         redirectUrl.searchParams.set('next', redirectTo);
-        redirectUrl.hash = `access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
+        
+        // Кодируем токены для безопасной передачи в hash
+        const encodedAccessToken = encodeURIComponent(session.access_token);
+        const encodedRefreshToken = encodeURIComponent(session.refresh_token);
+        redirectUrl.hash = `access_token=${encodedAccessToken}&refresh_token=${encodedRefreshToken}`;
+        
+        console.log('[yandex/callback] Redirecting to callback with tokens, userId:', userId);
+        console.log('[yandex/callback] Redirect URL:', redirectUrl.toString().replace(/access_token=[^&]+/, 'access_token=***').replace(/refresh_token=[^&]+/, 'refresh_token=***'));
+        
         return NextResponse.redirect(redirectUrl.toString());
     } catch (error) {
         console.error('[yandex/callback] Error:', error);
