@@ -787,7 +787,17 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
                         {items.map((item, idx) => {
                             const usedBookingIds = items.filter((it, i) => i !== idx && it.bookingId).map(it => it.bookingId);
-                            const availableBookings = bookings.filter(b => !usedBookingIds.includes(b.id));
+                            const now = new Date();
+                            // В выпадающем списке показываем только тех клиентов, чьё время уже наступило
+                            const availableBookings = bookings.filter((b) => {
+                                if (usedBookingIds.includes(b.id)) return false;
+                                try {
+                                    const start = new Date(b.start_at);
+                                    return start <= now;
+                                } catch {
+                                    return false;
+                                }
+                            });
                             const isExpanded = expandedItems.has(idx);
                             
                             // Компактная строка (свернутое состояние)
