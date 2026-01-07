@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -102,6 +102,27 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
     const [savingItems, setSavingItems] = useState(false);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const serviceOptions = useMemo(() => {
+        const set = new Set<string>();
+        // Услуги из сегодняшних записей
+        for (const b of bookings) {
+            if (b.services) {
+                const list = Array.isArray(b.services) ? b.services : [b.services];
+                for (const s of list) {
+                    if (s?.name_ru) {
+                        set.add(s.name_ru);
+                    }
+                }
+            }
+        }
+        // Учитываем уже введённые вручную названия услуг в строках смены
+        for (const it of items) {
+            if (it.serviceName?.trim()) {
+                set.add(it.serviceName.trim());
+            }
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b, 'ru'));
+    }, [bookings, items]);
 
     const load = async () => {
         setLoading(true);
@@ -942,23 +963,28 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     
                                     <div>
                                         <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                            Услуга / комментарий
+                                            Услуга
                                         </label>
-                                        <input
-                                            type="text"
-                                            placeholder="Услуга / комментарий"
-                                            className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm"
+                                        <select
+                                            className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                             value={item.serviceName}
                                             onChange={(e) => {
-                                                const v = e.target.value;
+                                                const value = e.target.value;
                                                 setItems((prev) =>
                                                     prev.map((it, i) =>
-                                                        i === idx ? { ...it, serviceName: v } : it
+                                                        i === idx ? { ...it, serviceName: value } : it
                                                     )
                                                 );
                                             }}
                                             disabled={!isOpen || isReadOnly}
-                                        />
+                                        >
+                                            <option value="">Выберите услугу...</option>
+                                            {serviceOptions.map((name) => (
+                                                <option key={name} value={name}>
+                                                    {name}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     
                                     <div className="grid grid-cols-2 gap-3">
