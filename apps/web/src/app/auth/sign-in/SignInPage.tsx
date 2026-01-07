@@ -152,13 +152,20 @@ export default function SignInPage() {
                 ? window.location.origin 
                 : (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg');
             
-            const redirectTo = `${origin}/auth/callback-yandex?redirect=${encodeURIComponent(redirectParam)}`;
+            // redirect_uri должен быть БЕЗ query параметров для Яндекс OAuth
+            const redirectUri = `${origin}/auth/callback-yandex`;
+            const redirectTo = `${redirectUri}?redirect=${encodeURIComponent(redirectParam)}`;
             
             // Формируем URL для OAuth Яндекс
             const yandexAuthUrl = new URL('https://oauth.yandex.ru/authorize');
             yandexAuthUrl.searchParams.set('response_type', 'code');
             yandexAuthUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_YANDEX_CLIENT_ID || '');
-            yandexAuthUrl.searchParams.set('redirect_uri', redirectTo);
+            yandexAuthUrl.searchParams.set('redirect_uri', redirectUri);
+            
+            // Сохраняем redirect параметр в sessionStorage для использования после callback
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem('yandex_redirect', redirectParam);
+            }
             
             // Редиректим на Яндекс
             window.location.href = yandexAuthUrl.toString();

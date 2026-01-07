@@ -13,17 +13,30 @@ function YandexCallbackContent() {
     useEffect(() => {
         const code = searchParams.get('code');
         const error = searchParams.get('error');
-        const redirect = searchParams.get('redirect') || '/';
+        
+        // Получаем redirect из sessionStorage или используем дефолтный
+        const redirect = typeof window !== 'undefined' 
+            ? (sessionStorage.getItem('yandex_redirect') || '/')
+            : '/';
 
         if (error) {
+            if (typeof window !== 'undefined') {
+                sessionStorage.removeItem('yandex_redirect');
+            }
             router.push(`/auth/sign-in?error=${encodeURIComponent(error)}`);
             return;
         }
 
         if (code) {
             // Редиректим на API endpoint для обработки
+            if (typeof window !== 'undefined') {
+                sessionStorage.removeItem('yandex_redirect');
+            }
             router.push(`/api/auth/yandex/callback?code=${code}&redirect=${encodeURIComponent(redirect)}`);
         } else {
+            if (typeof window !== 'undefined') {
+                sessionStorage.removeItem('yandex_redirect');
+            }
             router.push('/auth/sign-in?error=no_code');
         }
     }, [router, searchParams]);
