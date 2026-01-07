@@ -199,6 +199,10 @@ export default function BizClient({ data }: { data: Data }) {
     const [slotsError, setSlotsError] = useState<string | null>(null);
     const [slotsRefreshKey, setSlotsRefreshKey] = useState(0); // Ключ для принудительного обновления
 
+    // Брони клиента в этом бизнесе на выбранный день (для мягкого уведомления)
+    const [clientBookingsCount, setClientBookingsCount] = useState<number | null>(null);
+    const [clientBookingsLoading, setClientBookingsLoading] = useState(false);
+
     useEffect(() => {
         let ignore = false;
         (async () => {
@@ -322,6 +326,64 @@ export default function BizClient({ data }: { data: Data }) {
             ignore = true;
         };
     }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey, serviceToStaffMap]);
+
+    // Проверяем, есть ли уже записи клиента в этом бизнесе на выбранный день
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            if (!isAuthed) {
+                if (!ignore) {
+                    setClientBookingsCount(null);
+                    setClientBookingsLoading(false);
+                }
+                return;
+            }
+
+            setClientBookingsLoading(true);
+            try {
+                const { data: auth } = await supabase.auth.getUser();
+                const userId = auth.user?.id;
+                if (!userId) {
+                    if (!ignore) setClientBookingsCount(null);
+                    return;
+                }
+
+                // Ищем все брони клиента в этом бизнесе на выбранный день
+                const dayStartUTC = new Date(dayStr + 'T00:00:00Z');
+                const dayEndUTC = new Date(dayStr + 'T23:59:59.999Z');
+                const searchStart = new Date(dayStartUTC.getTime() - 12 * 60 * 60 * 1000);
+                const searchEnd = new Date(dayEndUTC.getTime() + 12 * 60 * 60 * 1000);
+
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select('id')
+                    .eq('biz_id', biz.id)
+                    .eq('client_id', userId)
+                    .in('status', ['hold', 'confirmed', 'paid'])
+                    .gte('start_at', searchStart.toISOString())
+                    .lte('start_at', searchEnd.toISOString());
+
+                if (ignore) return;
+                if (error) {
+                    console.warn('[client bookings warning] failed to load bookings:', error.message);
+                    setClientBookingsCount(null);
+                } else {
+                    setClientBookingsCount((data ?? []).length);
+                }
+            } catch (e) {
+                if (!ignore) {
+                    console.warn('[client bookings warning] unexpected error:', e);
+                    setClientBookingsCount(null);
+                }
+            } finally {
+                if (!ignore) setClientBookingsLoading(false);
+            }
+        })();
+
+        return () => {
+            ignore = true;
+        };
+    }, [isAuthed, biz.id, dayStr]);
 
     // Обновляем список слотов при возврате на страницу (например, через кнопку "Назад")
     // Используем useRef для хранения предыдущих значений, чтобы избежать лишних обновлений
@@ -767,7 +829,7 @@ export default function BizClient({ data }: { data: Data }) {
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     Шаг 4. День и время
                                 </h2>
-                                
+
                                 {/* Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги */}
                                 {serviceId && staffId && serviceToStaffMap && (() => {
                                     const allowedStaff = serviceToStaffMap.get(serviceId);
@@ -791,6 +853,31 @@ export default function BizClient({ data }: { data: Data }) {
                                     }
                                     return null;
                                 })()}
+
+                                {/* Уведомление, если у клиента уже есть запись в этом бизнесе на выбранный день */}
+                                {isAuthed && !clientBookingsLoading && clientBookingsCount && clientBookingsCount > 0 && (
+                                    <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                                        <div className="flex items-start gap-2">
+                                            <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                                />
+                                            </svg>
+                                            <div>
+                                                <p className="font-medium">
+                                                    У вас уже есть {clientBookingsCount === 1 ? 'одна активная запись' : `${clientBookingsCount} активных записей`}{' '}
+                                                    в этом заведении на выбранный день.
+                                                </p>
+                                                <p className="mt-1 text-amber-700 dark:text-amber-300">
+                                                    Вы всё равно можете оформить ещё одну запись, если это необходимо.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
                                     <div className="flex-1 min-w-[200px]">
                                         <DatePickerPopover
