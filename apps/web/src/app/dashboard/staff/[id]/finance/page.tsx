@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 
 import StaffFinanceStats from './components/StaffFinanceStats';
 
-import StaffFinanceView from '@/app/staff/StaffFinanceView';
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -54,14 +53,6 @@ export default async function StaffFinancePage({
                     Статистика
                 </h2>
                 <StaffFinanceStats staffId={id} />
-            </div>
-
-            {/* Детальная информация о текущей смене */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                    Текущая смена
-                </h2>
-                <StaffFinanceView staffId={id} />
             </div>
         </div>
     );
