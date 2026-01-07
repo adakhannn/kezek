@@ -767,18 +767,19 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     size="sm"
                                     onClick={() => {
                                         setItems((prev) => {
-                                            const next = [
-                                                {
-                                                    clientName: '',
-                                                    serviceName: '',
-                                                    serviceAmount: 0,
-                                                    consumablesAmount: 0,
-                                                    bookingId: null,
-                                                    note: '',
-                                                },
-                                                ...prev,
-                                            ];
-                                            // Открываем форму редактирования для только что добавленного клиента
+                                            // считаем следующий порядковый номер для анонимного клиента
+                                            const nextIndex =
+                                                prev.filter((it) => !it.bookingId).length + 1;
+                                            const newItem: ShiftItem = {
+                                                clientName: `Клиент ${nextIndex}`,
+                                                serviceName: '',
+                                                serviceAmount: 0,
+                                                consumablesAmount: 0,
+                                                bookingId: null,
+                                                note: '',
+                                            };
+                                            const next = [newItem, ...prev];
+                                            // сразу открываем форму редактирования для нового клиента
                                             setExpandedItems(new Set([0]));
                                             return next;
                                         });
@@ -910,18 +911,30 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             value={item.bookingId ?? ''}
                                             onChange={(e) => {
                                                 const bookingId = e.target.value || null;
-                                                const booking = bookingId ? bookings.find(b => b.id === bookingId) : null;
-                                                const service = booking?.services 
-                                                    ? (Array.isArray(booking.services) ? booking.services[0] : booking.services)
+                                                const booking = bookingId
+                                                    ? bookings.find((b) => b.id === bookingId)
+                                                    : null;
+                                                const service = booking?.services
+                                                    ? Array.isArray(booking.services)
+                                                        ? booking.services[0]
+                                                        : booking.services
                                                     : null;
                                                 setItems((prev) =>
                                                     prev.map((it, i) =>
-                                                        i === idx ? {
-                                                            ...it,
-                                                            bookingId,
-                                                            clientName: booking ? (booking.client_name || booking.client_phone || '') : it.clientName,
-                                                            serviceName: service ? service.name_ru : it.serviceName,
-                                                        } : it
+                                                        i === idx
+                                                            ? {
+                                                                  ...it,
+                                                                  bookingId,
+                                                                  clientName: booking
+                                                                      ? booking.client_name ||
+                                                                        booking.client_phone ||
+                                                                        it.clientName
+                                                                      : it.clientName,
+                                                                  serviceName: service
+                                                                      ? service.name_ru
+                                                                      : it.serviceName,
+                                                              }
+                                                            : it
                                                     )
                                                 );
                                             }}
@@ -929,12 +942,17 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                         >
                                             <option value="">Выберите клиента из записей...</option>
                                             {availableBookings.map((b) => {
-                                                const service = b.services 
-                                                    ? (Array.isArray(b.services) ? b.services[0] : b.services)
+                                                const service = b.services
+                                                    ? Array.isArray(b.services)
+                                                        ? b.services[0]
+                                                        : b.services
                                                     : null;
                                                 const clientLabel = b.client_name || b.client_phone || 'Клиент';
                                                 const serviceLabel = service?.name_ru || '';
-                                                const time = new Date(b.start_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                                                const time = new Date(b.start_at).toLocaleTimeString('ru-RU', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                });
                                                 return (
                                                     <option key={b.id} value={b.id}>
                                                         {clientLabel} - {serviceLabel} ({time})
@@ -943,21 +961,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             })}
                                         </select>
                                         {!item.bookingId && (
-                                            <input
-                                                type="text"
-                                                placeholder="Или введите имя клиента"
-                                                className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs"
-                                                value={item.clientName}
-                                                onChange={(e) => {
-                                                    const v = e.target.value;
-                                                    setItems((prev) =>
-                                                        prev.map((it, i) =>
-                                                            i === idx ? { ...it, clientName: v, bookingId: null } : it
-                                                        )
-                                                    );
-                                                }}
-                                                disabled={!isOpen || isReadOnly}
-                                            />
+                                            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                                Для клиентов «с улицы» имя будет сохранено автоматически как «
+                                                {item.clientName}».
+                                            </p>
                                         )}
                                     </div>
                                     
