@@ -148,6 +148,15 @@ export default async function Page({
                                 </svg>
                                 Свободные слоты
                             </Link>
+                            <Link
+                                className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                                href={`/dashboard/staff/${staff.id}/finance`}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h4v11H3zM10 3h4v18h-4zM17 8h4v13h-4z" />
+                                </svg>
+                                Финансы
+                            </Link>
                             {activeBranches.length > 1 && (
                                 <TransferStaffDialog
                                     staffId={String(staff.id)}

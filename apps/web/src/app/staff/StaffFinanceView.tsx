@@ -84,7 +84,7 @@ function formatTime(iso: string | null) {
 
 type TabKey = 'shift' | 'clients' | 'stats';
 
-export default function StaffFinanceView() {
+export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [loading, setLoading] = useState(true);
     const [today, setToday] = useState<TodayResponse | null>(null);
     const [activeTab, setActiveTab] = useState<TabKey>('shift');
@@ -106,7 +106,11 @@ export default function StaffFinanceView() {
     const load = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/staff/shift/today', { cache: 'no-store' });
+            // Если передан staffId, используем endpoint для владельца бизнеса
+            const apiUrl = staffId 
+                ? `/api/dashboard/staff/${staffId}/finance`
+                : '/api/staff/shift/today';
+            const res = await fetch(apiUrl, { cache: 'no-store' });
             const json: TodayResponse = await res.json();
             setToday(json);
             if (json.ok && json.today.exists && json.today.shift) {
@@ -194,9 +198,11 @@ export default function StaffFinanceView() {
     const isClosed = todayShift && todayShift.status === 'closed';
 
     // Автосохранение клиентов при изменении (debounce)
+    // Отключаем для владельца бизнеса (readonly режим)
+    const isReadOnly = !!staffId;
     useEffect(() => {
-        // Не сохраняем при первой загрузке или если смена закрыта
-        if (isInitialLoad || !isOpen) return;
+        // Не сохраняем при первой загрузке, если смена закрыта, или в режиме просмотра
+        if (isInitialLoad || !isOpen || isReadOnly) return;
         
         const timeoutId = setTimeout(async () => {
             setSavingItems(true);
@@ -218,7 +224,7 @@ export default function StaffFinanceView() {
         }, 1000); // сохраняем через 1 секунду после последнего изменения
 
         return () => clearTimeout(timeoutId);
-    }, [items, isOpen, isInitialLoad]);
+    }, [items, isOpen, isInitialLoad, isReadOnly]);
 
     // Автообновление часов работы для открытой смены (каждую минуту)
     useEffect(() => {
@@ -734,19 +740,21 @@ export default function StaffFinanceView() {
                                     Сохранение...
                                 </span>
                             )}
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                    setItems((prev) => [
-                                        { clientName: '', serviceName: '', serviceAmount: 0, consumablesAmount: 0, bookingId: null, note: '' },
-                                        ...prev,
-                                    ])
-                                }
-                                disabled={saving || savingItems}
-                            >
-                                Добавить клиента
-                            </Button>
+                            {!isReadOnly && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        setItems((prev) => [
+                                            { clientName: '', serviceName: '', serviceAmount: 0, consumablesAmount: 0, bookingId: null, note: '' },
+                                            ...prev,
+                                        ])
+                                    }
+                                    disabled={saving || savingItems}
+                                >
+                                    Добавить клиента
+                                </Button>
+                            )}
                         </div>
                     )}
                 </div>
@@ -767,8 +775,8 @@ export default function StaffFinanceView() {
                                 return (
                                     <div
                                         key={item.id ?? idx}
-                                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                                        onClick={() => isOpen && setExpandedItems((prev) => new Set(prev).add(idx))}
+                                        className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 ${isOpen && !isReadOnly ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors' : ''}`}
+                                        onClick={() => isOpen && !isReadOnly && setExpandedItems((prev) => new Set(prev).add(idx))}
                                     >
                                         <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 items-center">
                                             <div className="font-medium text-gray-900 dark:text-gray-100">
@@ -784,7 +792,7 @@ export default function StaffFinanceView() {
                                                 {item.consumablesAmount > 0 ? `${item.consumablesAmount} сом` : '—'}
                                             </div>
                                         </div>
-                                        {isOpen && (
+                                        {isOpen && !isReadOnly && (
                                             <div className="flex items-center gap-2 ml-4">
                                                 <button
                                                     type="button"
@@ -862,7 +870,7 @@ export default function StaffFinanceView() {
                                                     )
                                                 );
                                             }}
-                                            disabled={!isOpen}
+                                            disabled={!isOpen || isReadOnly}
                                         >
                                             <option value="">Выберите клиента из записей...</option>
                                             {availableBookings.map((b) => {
@@ -893,7 +901,7 @@ export default function StaffFinanceView() {
                                                         )
                                                     );
                                                 }}
-                                                disabled={!isOpen}
+                                                disabled={!isOpen || isReadOnly}
                                             />
                                         )}
                                     </div>
@@ -915,7 +923,7 @@ export default function StaffFinanceView() {
                                                     )
                                                 );
                                             }}
-                                            disabled={!isOpen}
+                                            disabled={!isOpen || isReadOnly}
                                         />
                                     </div>
                                     
@@ -938,7 +946,7 @@ export default function StaffFinanceView() {
                                                         )
                                                     );
                                                 }}
-                                                disabled={!isOpen}
+                                                disabled={!isOpen || isReadOnly}
                                             />
                                         </div>
                                         <div>
@@ -959,12 +967,12 @@ export default function StaffFinanceView() {
                                                         )
                                                     );
                                                 }}
-                                                disabled={!isOpen}
+                                                disabled={!isOpen || isReadOnly}
                                             />
                                         </div>
                                     </div>
                                     
-                                    {isOpen && (
+                                    {isOpen && !isReadOnly && (
                                         <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                                             <button
                                                 type="button"
