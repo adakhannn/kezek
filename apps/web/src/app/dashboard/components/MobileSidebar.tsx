@@ -84,7 +84,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             {/* Кнопка открытия сайдбара (только на мобильных) */}
             <button
                 onClick={() => setIsOpen(true)}
-                className="lg:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="lg:hidden fixed top-4 left-4 z-[100] p-2.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 aria-label="Открыть меню"
             >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,7 +95,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             {/* Overlay (только на мобильных) */}
             {isOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-black/50 z-40"
+                    className="lg:hidden fixed inset-0 bg-black/50 z-[90]"
                     onClick={() => setIsOpen(false)}
                     aria-hidden="true"
                 />
@@ -103,7 +103,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
 
             {/* Сайдбар */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 lg:w-[280px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-lg lg:shadow-sm transform transition-transform duration-300 ease-in-out ${
+                className={`fixed lg:static inset-y-0 left-0 z-[95] w-64 lg:w-[280px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-lg lg:shadow-sm transform transition-transform duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                 }`}
             >

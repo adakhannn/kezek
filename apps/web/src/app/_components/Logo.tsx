@@ -12,16 +12,16 @@ export function Logo() {
     const [imageError, setImageError] = useState(false);
 
     return (
-        <Link href="/" className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
             {!imageError ? (
                 // Пытаемся загрузить изображение логотипа (сначала PNG, потом SVG)
-                <div className="relative h-12 sm:h-14 w-auto">
+                <div className="relative h-8 sm:h-12 md:h-14 w-auto">
                     <Image
                         src="/logo.png"
                         alt="КЕЗЕК CRM СИСТЕМА"
                         width={200}
                         height={56}
-                        className="h-12 sm:h-14 w-auto object-contain"
+                        className="h-8 sm:h-12 md:h-14 w-auto object-contain"
                         priority
                         onError={() => {
                             // Если PNG не загрузился, пробуем SVG
@@ -37,9 +37,9 @@ export function Logo() {
                 </div>
             ) : (
                 // Текстовый вариант (показывается если изображение не загрузилось)
-                <div className="relative flex items-center gap-2">
+                <div className="relative flex items-center gap-1.5 sm:gap-2">
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-pink-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                    <span className="relative text-2xl font-bold gradient-text">Kezek</span>
+                    <span className="relative text-xl sm:text-2xl font-bold gradient-text">Kezek</span>
                 </div>
             )}
         </Link>
