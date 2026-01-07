@@ -1035,7 +1035,7 @@ export default function BizClient({ data }: { data: Data }) {
                             </div>
                         )}
 
-                        {holding && (
+                        {holding && leftSec > 0 && (
                             <div className="space-y-2 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-100">
                                 <div className="flex items-center justify-between">
                                     <span>
