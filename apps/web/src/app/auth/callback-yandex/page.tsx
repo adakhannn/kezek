@@ -29,15 +29,16 @@ function YandexCallbackContent() {
 
         if (code) {
             // Редиректим на API endpoint для обработки
+            // Используем window.location.href вместо router.push для правильного редиректа на API route
             if (typeof window !== 'undefined') {
                 sessionStorage.removeItem('yandex_redirect');
+                window.location.href = `/api/auth/yandex/callback?code=${code}&redirect=${encodeURIComponent(redirect)}`;
             }
-            router.push(`/api/auth/yandex/callback?code=${code}&redirect=${encodeURIComponent(redirect)}`);
         } else {
             if (typeof window !== 'undefined') {
                 sessionStorage.removeItem('yandex_redirect');
+                router.push('/auth/sign-in?error=no_code');
             }
-            router.push('/auth/sign-in?error=no_code');
         }
     }, [router, searchParams]);
 
