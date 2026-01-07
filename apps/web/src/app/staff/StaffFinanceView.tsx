@@ -744,12 +744,24 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() =>
-                                        setItems((prev) => [
-                                            { clientName: '', serviceName: '', serviceAmount: 0, consumablesAmount: 0, bookingId: null, note: '' },
-                                            ...prev,
-                                        ])
-                                    }
+                                    onClick={() => {
+                                        setItems((prev) => {
+                                            const next = [
+                                                {
+                                                    clientName: '',
+                                                    serviceName: '',
+                                                    serviceAmount: 0,
+                                                    consumablesAmount: 0,
+                                                    bookingId: null,
+                                                    note: '',
+                                                },
+                                                ...prev,
+                                            ];
+                                            // Открываем форму редактирования для только что добавленного клиента
+                                            setExpandedItems(new Set([0]));
+                                            return next;
+                                        });
+                                    }}
                                     disabled={saving || savingItems}
                                 >
                                     Добавить клиента
