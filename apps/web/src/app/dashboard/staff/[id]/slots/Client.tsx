@@ -4,8 +4,17 @@ import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
+
+// Helper для конвертации Date в YYYY-MM-DD
+function toYmdLocal(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+}
 
 type Service = { id: string; name: string; duration_min: number; branch_id: string };
 type Branch  = { id: string; name: string };
@@ -154,11 +163,10 @@ export default function Client({
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Дата
                         </label>
-                        <input
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                            type="date"
+                        <DatePickerPopover
                             value={date}
-                            onChange={e => setDate(e.target.value)}
+                            onChange={setDate}
+                            min={toYmdLocal(new Date())}
                         />
                     </div>
                 </div>
@@ -202,23 +210,30 @@ export default function Client({
                 )}
 
                 {!loading && !err && uniq.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                        {uniq.map(s => {
-                            const label = `${formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}–${formatInTimeZone(new Date(s.end_at), TZ, 'HH:mm')}`;
-                            return (
-                                <button
-                                    key={s.start_at}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm transition hover:border-indigo-400 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-950/60"
-                                    onClick={() => createBooking(s.start_at)}
-                                    title="Создать запись в этот слот"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {label}
-                                </button>
-                            );
-                        })}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Найдено свободных слотов: <span className="font-semibold text-gray-900 dark:text-gray-100">{uniq.length}</span>
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2.5">
+                            {uniq.map(s => {
+                                const label = `${formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}–${formatInTimeZone(new Date(s.end_at), TZ, 'HH:mm')}`;
+                                return (
+                                    <button
+                                        key={s.start_at}
+                                        className="group inline-flex items-center gap-2 rounded-xl border-2 border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition-all hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md active:scale-95 dark:border-indigo-800 dark:bg-gray-800 dark:text-indigo-300 dark:hover:border-indigo-600 dark:hover:bg-indigo-950/40"
+                                        onClick={() => createBooking(s.start_at)}
+                                        title="Создать запись в этот слот"
+                                    >
+                                        <svg className="w-4 h-4 flex-shrink-0 text-indigo-500 group-hover:text-indigo-600 dark:text-indigo-400 dark:group-hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>{label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
             </div>
