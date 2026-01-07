@@ -86,7 +86,7 @@ const dictionaries: Dictionaries = {
         'booking.existingBookings.warning.one':
             'Сизде бул кызматта тандалган күндө бир активдүү жазылыш бар.',
         'booking.existingBookings.warning.many':
-            'Сизде бул кызматта тандалган күндө {count} активдүү жазылыштар бар.',
+            'Сизде бул кызматта тандалган күндө активдүү жазылыштар бар.',
         'booking.existingBookings.hint':
             'Керек болсо, дагы бир жазылышты каттасаңыз болот.',
         'booking.nav.back': '← Артка',
@@ -177,7 +177,7 @@ const dictionaries: Dictionaries = {
         'booking.existingBookings.warning.one':
             'У вас уже есть одна активная запись в этом заведении на выбранный день.',
         'booking.existingBookings.warning.many':
-            'У вас уже есть {count} активных записей в этом заведении на выбранный день.',
+            'У вас уже есть активных записей в этом заведении на выбранный день.',
         'booking.existingBookings.hint':
             'Вы всё равно можете оформить ещё одну запись, если это необходимо.',
         'booking.nav.back': '← Назад',
@@ -268,7 +268,7 @@ const dictionaries: Dictionaries = {
         'booking.existingBookings.warning.one':
             'You already have one active booking in this business on the selected day.',
         'booking.existingBookings.warning.many':
-            'You already have {count} active bookings in this business on the selected day.',
+            'You already have active bookings in this business on the selected day.',
         'booking.existingBookings.hint':
             'You can still make another booking if needed.',
         'booking.nav.back': '← Back',
