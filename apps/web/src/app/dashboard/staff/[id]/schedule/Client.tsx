@@ -68,18 +68,18 @@ function SingleTimeRange({
     }
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
             <input
                 type="time"
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 min-w-0 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 value={start}
                 onChange={handleStartChange}
                 disabled={disabled}
             />
-            <span className="text-sm text-gray-500 dark:text-gray-400">—</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">—</span>
             <input
                 type="time"
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 min-w-0 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 value={end}
                 onChange={handleEndChange}
                 disabled={disabled}
@@ -145,19 +145,19 @@ function DayRow({
     const isToday = dateStr === formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
     
     return (
-        <div className={`rounded-xl border p-4 space-y-3 transition-all ${
+        <div className={`flex flex-col rounded-xl border p-4 space-y-3 transition-all min-w-0 ${
             isPastDate 
                 ? 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50 opacity-75' 
                 : isToday
                 ? 'border-indigo-300 bg-indigo-50/50 dark:border-indigo-700 dark:bg-indigo-950/40 shadow-sm'
                 : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 hover:border-indigo-300 hover:shadow-sm dark:hover:border-indigo-700'
         }`}>
-            <div className="flex items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-2">
+            <div className="flex items-start justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-gray-900 dark:text-gray-100">{DOW[dow]}</span>
                         {isToday && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">
                                 <span className="inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
                                 Сегодня
                             </span>
@@ -168,7 +168,7 @@ function DayRow({
                     </div>
                 </div>
                 <button
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-600 bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600 whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-600 bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600 whitespace-nowrap flex-shrink-0"
                     disabled={saving || isPastDate}
                     onClick={handleSave}
                 >
@@ -178,36 +178,36 @@ function DayRow({
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
-                            <span>Сохранение...</span>
+                            <span className="hidden sm:inline">Сохранение...</span>
                         </>
                     ) : (
                         <>
                             <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            <span>Сохранить</span>
+                            <span className="hidden sm:inline">Сохранить</span>
                         </>
                     )}
                 </button>
             </div>
-            <div className="space-y-3">
-                <label className={`flex items-center gap-2.5 ${isPastDate ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+            <div className="space-y-3 min-w-0">
+                <label className={`flex items-center gap-2.5 min-w-0 ${isPastDate ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                     <input
                         type="checkbox"
                         checked={isDayOff}
                         onChange={handleDayOffChange}
                         disabled={saving || isPastDate}
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 flex-shrink-0"
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0">
                         Выходной день
                     </span>
                     {isPastDate && (
-                        <span className="text-xs text-gray-400 dark:text-gray-500">(недоступно для прошедших дат)</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">(недоступно для прошедших дат)</span>
                     )}
                 </label>
                 {!isDayOff && (
-                    <div>
+                    <div className="min-w-0">
                         <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Рабочее время</div>
                         <SingleTimeRange 
                             value={interval} 
@@ -421,7 +421,7 @@ export default function Client({
                         {formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}
                     </p>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
                     {currentWeekDates.map((date) => {
                         const dow = date.getDay(); // 0-6 (0=воскресенье)
                         const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
@@ -456,7 +456,7 @@ export default function Client({
                         {formatInTimeZone(nextWeekDates[6], TZ, 'dd.MM.yyyy')}
                     </p>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
                     {nextWeekDates.map((date) => {
                         const dow = date.getDay(); // 0-6 (0=воскресенье)
                         const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
