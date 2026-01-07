@@ -4,6 +4,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
+import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -14,6 +15,7 @@ export default function SignInPage() {
     const router = useRouter();
 
     const redirectParam = sp.get('redirect') || '/';
+    const {t} = useLanguage();
     // Временно отключен вход по телефону - используем только email
     const initialMode: Mode = 'email';
 
@@ -206,12 +208,15 @@ export default function SignInPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Kezek</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('auth.title', 'Kezek')}</h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            Войдите или создайте аккаунт за пару кликов — без пароля и сложных форм
+                            {t('auth.subtitle', 'Войдите или создайте аккаунт за пару кликов — без пароля и сложных форм')}
                         </p>
                         <p className="text-xs text-gray-400 dark:text-gray-500">
-                            1) Выберите способ входа · 2) Подтвердите e‑mail или аккаунт · 3) Мы автоматически создадим профиль
+                            {t(
+                                'auth.stepsHint',
+                                '1) Выберите способ входа · 2) Подтвердите e‑mail или аккаунт · 3) Мы автоматически создадим профиль'
+                            )}
                         </p>
                     </div>
 
@@ -222,16 +227,19 @@ export default function SignInPage() {
                         <div className="space-y-1">
                             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
                                 <span className="inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                                <span>Вариант 1 — вход по e‑mail</span>
+                                <span>{t('auth.variantEmail', 'Вариант 1 — вход по e‑mail')}</span>
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Укажите почту, мы пришлём на неё безопасную ссылку/код для входа. Пароль придумывать не нужно.
+                                {t(
+                                    'auth.variantEmailHint',
+                                    'Укажите почту, мы пришлём на неё безопасную ссылку/код для входа. Пароль придумывать не нужно.'
+                                )}
                             </p>
                         </div>
                         {mode === 'phone' ? (
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                    Номер телефона
+                                    {t('auth.phone.label', 'Номер телефона')}
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -247,12 +255,14 @@ export default function SignInPage() {
                                         required
                                     />
                                 </div>
-                                <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Мы отправим код подтверждения на этот номер</p>
+                                <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                    {t('auth.phone.help', 'Мы отправим код подтверждения на этот номер')}
+                                </p>
                             </div>
                         ) : (
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                    E-mail адрес
+                                    {t('auth.email.label', 'E-mail адрес')}
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -270,7 +280,7 @@ export default function SignInPage() {
                                     />
                                 </div>
                                 <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                                    На эту почту придёт одноразовая ссылка или код для входа.
+                                    {t('auth.email.help', 'На эту почту придёт одноразовая ссылка или код для входа.')}
                                 </p>
                             </div>
                         )}
@@ -297,11 +307,11 @@ export default function SignInPage() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Отправляю...
+                                    {t('auth.submit.sending', 'Отправляю...')}
                                 </>
                             ) : (
                                 <>
-                                    Отправить код
+                                    {t('auth.submit.idle', 'Отправить код')}
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                     </svg>
@@ -317,7 +327,7 @@ export default function SignInPage() {
                         </div>
                         <div className="relative flex justify-center text-sm">
                             <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                                или выберите быстрый вход
+                                {t('auth.otherMethodsTitle', 'или выберите быстрый вход')}
                             </span>
                         </div>
                     </div>
@@ -347,7 +357,7 @@ export default function SignInPage() {
                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                             />
                         </svg>
-                        Продолжить с Google
+                        {t('auth.google', 'Продолжить с Google')}
                     </button>
 
                     {/* Вариант 3. Вход через Telegram */}
@@ -367,14 +377,12 @@ export default function SignInPage() {
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
                         </svg>
-                        Войти через WhatsApp
+                        {t('auth.whatsapp', 'Войти через WhatsApp')}
                     </button>
 
                     <div className="text-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                        <p>
-                            Впервые здесь? Просто выберите любой способ входа — аккаунт создастся автоматически, без лишних полей.
-                        </p>
-                        <p>Вы всегда можете сменить почту, номер телефона и способы уведомлений в разделе «Личный кабинет».</p>
+                        <p>{t('auth.firstTime.title')}</p>
+                        <p>{t('auth.firstTime.subtitle')}</p>
                     </div>
                 </div>
             </div>

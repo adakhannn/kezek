@@ -5,6 +5,7 @@ import { addDays, addMinutes, format } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
@@ -70,6 +71,7 @@ function fmtErr(e: unknown): string {
 
 export default function BizClient({ data }: { data: Data }) {
     const { biz, branches, services, staff } = data;
+    const {t} = useLanguage();
 
     /* ---------- auth ---------- */
     const [isAuthed, setIsAuthed] = useState<boolean>(false);
@@ -579,10 +581,10 @@ export default function BizClient({ data }: { data: Data }) {
     const totalSteps = 4;
 
     const stepsMeta = [
-        { id: 1, label: 'Филиал' },
-        { id: 2, label: 'Мастер' },
-        { id: 3, label: 'Услуга' },
-        { id: 4, label: 'День и время' },
+        { id: 1, label: t('booking.step.branch', 'Филиал') },
+        { id: 2, label: t('booking.step.master', 'Мастер') },
+        { id: 3, label: t('booking.step.service', 'Услуга') },
+        { id: 4, label: t('booking.step.dayTime', 'День и время') },
     ] as const;
 
     // Валидация для перехода к следующему шагу
@@ -628,14 +630,17 @@ export default function BizClient({ data }: { data: Data }) {
                     )}
                     {biz.phones?.length ? (
                         <p className="text-xs text-gray-500 dark:text-gray-500">
-                            Телефон: {biz.phones.join(', ')}
+                            {t('booking.phoneLabel', 'Телефон:')} {biz.phones.join(', ')}
                         </p>
                     ) : null}
                 </div>
 
                 {!isAuthed && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
-                        Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.
+                        {t(
+                            'booking.needAuth',
+                            'Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.'
+                        )}
                     </div>
                 )}
 
@@ -895,14 +900,14 @@ export default function BizClient({ data }: { data: Data }) {
                                         className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
                                         onClick={() => setDay(todayTz())}
                                     >
-                                        Сегодня
+                                        {t('booking.today', 'Сегодня')}
                                     </button>
                                     <button
                                         type="button"
                                         className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
                                         onClick={() => setDay(addDays(todayTz(), 1))}
                                     >
-                                        Завтра
+                                        {t('booking.tomorrow', 'Завтра')}
                                     </button>
                                 </div>
 
@@ -956,7 +961,7 @@ export default function BizClient({ data }: { data: Data }) {
                                         : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
                                 }`}
                             >
-                                ← Назад
+                                {t('booking.nav.back', '← Назад')}
                             </button>
                             <button
                                 type="button"
@@ -968,7 +973,9 @@ export default function BizClient({ data }: { data: Data }) {
                                         : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
                                 }`}
                             >
-                                {step === totalSteps - 1 ? 'К выбору времени →' : 'Далее →'}
+                                {step === totalSteps - 1
+                                    ? t('booking.nav.next', 'К выбору времени →')
+                                    : t('booking.nav.next', 'Далее →')}
                             </button>
                         </div>
                     </div>
