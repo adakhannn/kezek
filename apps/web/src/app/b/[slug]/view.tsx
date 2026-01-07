@@ -913,11 +913,11 @@ export default function BizClient({ data }: { data: Data }) {
                                 </div>
 
                                 <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                    Свободные слоты
+                                    {t('booking.freeSlots', 'Свободные слоты')}
                                 </h3>
                                 {slotsLoading && (
                                     <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                        Загружаем свободные слоты...
+                                        {t('booking.loadingSlots', 'Загружаем свободные слоты...')}
                                     </div>
                                 )}
                                 {!slotsLoading && slotsError && (
