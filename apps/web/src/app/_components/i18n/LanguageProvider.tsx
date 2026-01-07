@@ -177,7 +177,7 @@ const dictionaries: Dictionaries = {
 
         // Home page
         'home.title': 'Find your service',
-        'home.subtitle': 'Book salons and studios in Osh in a few clicks — no calls or chats',
+        'home.subtitle': 'Book any service in a few clicks — no calls or chats',
         'home.search.placeholder': 'Search by name or address...',
         'home.search.submit': 'Search',
         'home.search.reset': 'Reset',
