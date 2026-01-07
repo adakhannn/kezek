@@ -199,7 +199,7 @@ export default function SignInPage() {
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30 flex items-center justify-center px-3 py-4">
-            <div className="w-full max-w-4xl">
+            <div className="w-full max-w-6xl">
                 <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
                     <div className="grid md:grid-cols-2 gap-0">
                         {/* Левая колонка - форма входа */}
