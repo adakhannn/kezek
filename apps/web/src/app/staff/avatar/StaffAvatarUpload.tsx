@@ -1,8 +1,59 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
-import { Button } from '@/components/ui/Button';
+import {Button} from '@/components/ui/Button';
+
+async function createImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = (err) => reject(err);
+        img.src = src;
+    });
+}
+
+async function getCenteredSquareBlob(file: File): Promise<{blob: Blob; dataUrl: string}> {
+    const reader = new FileReader();
+    const dataUrl: string = await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+    });
+
+    const image = await createImage(dataUrl);
+    const size = Math.min(image.width, image.height);
+    const offsetX = (image.width - size) / 2;
+    const offsetY = (image.height - size) / 2;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        throw new Error('Canvas not supported');
+    }
+    canvas.width = size;
+    canvas.height = size;
+    ctx.drawImage(image, offsetX, offsetY, size, size, 0, 0, size, size);
+
+    const blob: Blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+            (b) => {
+                if (b) resolve(b);
+                else reject(new Error('Failed to create cropped image'));
+            },
+            'image/jpeg',
+            0.9
+        );
+    });
+
+    const croppedDataUrl: string = await new Promise((resolve) => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result as string);
+        r.readAsDataURL(blob);
+    });
+
+    return {blob, dataUrl: croppedDataUrl};
+}
 
 export default function StaffAvatarUpload({
     staffId,
@@ -16,11 +67,7 @@ export default function StaffAvatarUpload({
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(currentAvatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // Обновляем preview при изменении currentAvatarUrl
-    useEffect(() => {
-        setPreview(currentAvatarUrl);
-    }, [currentAvatarUrl]);
+    const [croppedFile, setCroppedFile] = useState<File | null>(null);
 
     // Обновляем preview при изменении currentAvatarUrl
     useEffect(() => {
@@ -31,33 +78,34 @@ export default function StaffAvatarUpload({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Проверяем тип файла
         if (!file.type.startsWith('image/')) {
             alert('Пожалуйста, выберите изображение');
             return;
         }
 
-        // Проверяем размер (макс 5MB)
         if (file.size > 5 * 1024 * 1024) {
             alert('Размер файла не должен превышать 5MB');
             return;
         }
 
-        // Создаем preview
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setPreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+        getCenteredSquareBlob(file)
+            .then(({blob, dataUrl}) => {
+                const cropped = new File([blob], `avatar-${staffId}.jpg`, {type: 'image/jpeg'});
+                setCroppedFile(cropped);
+                setPreview(dataUrl);
+            })
+            .catch((error) => {
+                console.error('Crop error:', error);
+                alert('Не удалось обработать изображение. Попробуйте другое фото.');
+            });
     };
 
     const handleUpload = async () => {
-        const file = fileInputRef.current?.files?.[0];
+        const file = croppedFile;
         if (!file) return;
 
         setUploading(true);
         try {
-            // Используем API endpoint для загрузки (обходит RLS через service role)
             const formData = new FormData();
             formData.append('file', file);
 
@@ -73,6 +121,10 @@ export default function StaffAvatarUpload({
             }
 
             setPreview(result.url);
+            setCroppedFile(null);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
             onUploaded?.(result.url);
         } catch (error) {
             console.error('Error uploading avatar:', error);
@@ -88,7 +140,6 @@ export default function StaffAvatarUpload({
 
         setUploading(true);
         try {
-            // Используем API endpoint для удаления
             const response = await fetch('/api/staff/avatar/remove', {
                 method: 'POST',
             });
@@ -100,6 +151,10 @@ export default function StaffAvatarUpload({
             }
 
             setPreview(null);
+            setCroppedFile(null);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
             onUploaded?.('');
         } catch (error) {
             console.error('Error removing avatar:', error);
@@ -112,20 +167,20 @@ export default function StaffAvatarUpload({
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-4">
-                <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600">
+                <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-gray-300 bg-gray-200 dark:border-gray-600 dark:bg-gray-700">
                     {preview ? (
                         <img
                             src={preview}
                             alt="Аватар"
-                            className="w-full h-full object-cover"
+                            className="h-full w-full object-cover"
                             onError={(e) => {
                                 console.error('Error loading avatar image:', preview);
                                 e.currentTarget.style.display = 'none';
                             }}
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
-                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="flex h-full w-full items-center justify-center text-gray-400 dark:text-gray-500">
+                            <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </div>
@@ -154,7 +209,7 @@ export default function StaffAvatarUpload({
                                 variant="outline"
                                 size="sm"
                                 onClick={handleUpload}
-                                disabled={uploading}
+                                disabled={uploading || !croppedFile}
                                 isLoading={uploading}
                             >
                                 Сохранить
@@ -164,6 +219,7 @@ export default function StaffAvatarUpload({
                                 size="sm"
                                 onClick={() => {
                                     setPreview(currentAvatarUrl);
+                                    setCroppedFile(null);
                                     if (fileInputRef.current) {
                                         fileInputRef.current.value = '';
                                     }
@@ -189,9 +245,10 @@ export default function StaffAvatarUpload({
                 </div>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-                Рекомендуемый размер: 200x200px. Максимальный размер файла: 5MB
+                Рекомендуемый размер: квадратное изображение (например, 200x200px). Максимальный размер файла: 5MB
             </p>
         </div>
     );
 }
+
 
