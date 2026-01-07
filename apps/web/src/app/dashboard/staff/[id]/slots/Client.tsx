@@ -238,20 +238,6 @@ export default function Client({
                 )}
             </div>
 
-            {/* Информационный блок */}
-            <div className="rounded-xl border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40 px-4 py-3">
-                <div className="flex items-start gap-2">
-                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="text-xs text-blue-800 dark:text-blue-200">
-                        <p className="font-medium mb-1">Как рассчитываются слоты</p>
-                        <p className="text-blue-700 dark:text-blue-300">
-                            Слоты рассчитываются RPC <code className="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40">get_free_slots_service_day_v2</code> с учётом правил расписания, родного филиала и существующих броней.
-                        </p>
-                    </div>
-                </div>
-            </div>
         </section>
     );
 }
