@@ -61,7 +61,7 @@ const dictionaries: Dictionaries = {
 
         // Home page
         'home.title': 'Кызматты табыңыз',
-        'home.subtitle': 'Ош шаарындагы салондорго жана студияларга бир нече клик менен жазылыңыз — чалуусуз жана жазышуусуз',
+        'home.subtitle': 'Кызматтарга бир нече клик менен жазылыңыз — чалуусуз жана жазышуусуз',
         'home.search.placeholder': 'Аталышы же дареги боюнча издөө...',
         'home.search.submit': 'Издөө',
         'home.search.reset': 'Тазалоо',
@@ -119,7 +119,7 @@ const dictionaries: Dictionaries = {
 
         // Home page
         'home.title': 'Найдите свой сервис',
-        'home.subtitle': 'Запись в салоны и студии города Ош за пару кликов — без звонков и переписок',
+        'home.subtitle': 'Запись в любые сервисы за пару кликов — без звонков и переписок',
         'home.search.placeholder': 'Поиск по названию или адресу...',
         'home.search.submit': 'Искать',
         'home.search.reset': 'Сброс',
