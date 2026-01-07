@@ -218,7 +218,7 @@ export default function BizClient({ data }: { data: Data }) {
                 const allowedStaff = serviceToStaffMap.get(serviceId);
                 if (!allowedStaff?.has(staffId)) {
                     setSlots([]);
-                    setSlotsError('Выбранный мастер не выполняет эту услугу');
+                    setSlotsError(t('booking.step4.masterNoService', 'Выбранный мастер не выполняет эту услугу'));
                     setSlotsLoading(false);
                     return;
                 }
@@ -687,11 +687,11 @@ export default function BizClient({ data }: { data: Data }) {
                         {step === 1 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    Шаг 1. Выберите филиал
+                                    {t('booking.step1.title', 'Шаг 1. Выберите филиал')}
                                 </h2>
                                 {branches.length === 0 ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        Нет активных филиалов.
+                                        {t('booking.step1.noBranches', 'Нет активных филиалов.')}
                                     </div>
                                 ) : (
                                     <div className="flex flex-wrap gap-2">
@@ -721,11 +721,11 @@ export default function BizClient({ data }: { data: Data }) {
                         {step === 2 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    Шаг 2. Мастер
+                                    {t('booking.step2.title', 'Шаг 2. Мастер')}
                                 </h2>
                                 {staffFiltered.length === 0 ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        В этом филиале пока нет активных сотрудников.
+                                        {t('booking.step2.noStaff', 'В этом филиале пока нет активных сотрудников.')}
                                     </div>
                                 ) : (
                                     <div className="flex flex-wrap gap-2">
@@ -755,15 +755,15 @@ export default function BizClient({ data }: { data: Data }) {
                         {step === 3 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    Шаг 3. Услуга
+                                    {t('booking.step3.title', 'Шаг 3. Услуга')}
                                 </h2>
                                 {!staffId ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        Сначала выберите мастера на шаге 2.
+                                        {t('booking.step3.selectMasterFirst', 'Сначала выберите мастера на шаге 2.')}
                                     </div>
                                 ) : servicesFiltered.length === 0 ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        У выбранного мастера пока нет назначенных услуг.
+                                        {t('booking.step3.noServices', 'У выбранного мастера пока нет назначенных услуг.')}
                                     </div>
                                 ) : (
                                     <>
@@ -791,7 +791,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                                 {s.name_ru}
                                                             </div>
                                                             <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-                                                                {s.duration_min} мин
+                                                                {s.duration_min} {t('booking.duration.min', 'мин')}
                                                             </div>
                                                         </div>
                                                         {(typeof s.price_from === 'number' ||
@@ -808,7 +808,7 @@ export default function BizClient({ data }: { data: Data }) {
                                         </div>
                                         {serviceCurrent && (
                                             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                                Продолжительность: {serviceCurrent.duration_min} мин.
+                                                {t('booking.duration.label', 'Продолжительность:')} {serviceCurrent.duration_min} {t('booking.duration.min', 'мин')}.
                                                 {serviceCurrent.price_from && (
                                                     <>
                                                         {' '}
@@ -832,7 +832,7 @@ export default function BizClient({ data }: { data: Data }) {
                         {step === 4 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    Шаг 4. День и время
+                                    {t('booking.step4.title', 'Шаг 4. День и время')}
                                 </h2>
 
                                 {/* Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги */}
@@ -847,9 +847,9 @@ export default function BizClient({ data }: { data: Data }) {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                     </svg>
                                                     <div>
-                                                        <p className="font-medium">Выбранный мастер не выполняет эту услугу</p>
+                                                        <p className="font-medium">{t('booking.step4.masterNoService', 'Выбранный мастер не выполняет эту услугу')}</p>
                                                         <p className="mt-1 text-amber-700 dark:text-amber-300">
-                                                            Пожалуйста, вернитесь к шагу 3 и выберите другого мастера или выберите другую услугу.
+                                                            {t('booking.step4.masterNoServiceHint', 'Пожалуйста, вернитесь к шагу 3 и выберите другого мастера или выберите другую услугу.')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -873,11 +873,12 @@ export default function BizClient({ data }: { data: Data }) {
                                             </svg>
                                             <div>
                                                 <p className="font-medium">
-                                                    У вас уже есть {clientBookingsCount === 1 ? 'одна активная запись' : `${clientBookingsCount} активных записей`}{' '}
-                                                    в этом заведении на выбранный день.
+                                                    {clientBookingsCount === 1
+                                                        ? t('booking.existingBookings.warning.one', 'У вас уже есть одна активная запись в этом заведении на выбранный день.')
+                                                        : t('booking.existingBookings.warning.many', `У вас уже есть ${clientBookingsCount} активных записей в этом заведении на выбранный день.`)}
                                                 </p>
                                                 <p className="mt-1 text-amber-700 dark:text-amber-300">
-                                                    Вы всё равно можете оформить ещё одну запись, если это необходимо.
+                                                    {t('booking.existingBookings.hint', 'Вы всё равно можете оформить ещё одну запись, если это необходимо.')}
                                                 </p>
                                             </div>
                                         </div>
@@ -926,7 +927,7 @@ export default function BizClient({ data }: { data: Data }) {
                                 )}
                                 {!slotsLoading && !slotsError && slots.length === 0 && (
                                     <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                        Нет свободных окон на этот день. Попробуйте выбрать другой день или мастера.
+                                        {t('booking.noSlots', 'Нет свободных окон на этот день. Попробуйте выбрать другой день или мастера.')}
                                     </div>
                                 )}
                                 {!slotsLoading && !slotsError && slots.length > 0 && (
@@ -983,43 +984,42 @@ export default function BizClient({ data }: { data: Data }) {
                     {/* Корзина / итог */}
                     <aside className="space-y-3 rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                         <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Ваша запись
+                            {t('booking.summary.title', 'Ваша запись')}
                         </h2>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Шаги слева → выберите мастера, услугу, день и время. Здесь вы увидите итог перед
-                            подтверждением.
+                            {t('booking.summary.hint', 'Шаги слева → выберите мастера, услугу, день и время. Здесь вы увидите итог перед подтверждением.')}
                         </p>
 
                         <div className="mt-2 space-y-1 rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-gray-950 dark:text-gray-200">
                             <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">Филиал:</span>
-                                <span className="font-medium">{branch ? branch.name : 'Не выбран'}</span>
+                                <span className="text-gray-500">{t('booking.summary.branch', 'Филиал:')}</span>
+                                <span className="font-medium">{branch ? branch.name : t('booking.summary.notSelected', 'Не выбран')}</span>
                             </div>
                             <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">Услуга:</span>
+                                <span className="text-gray-500">{t('booking.summary.service', 'Услуга:')}</span>
                                 <span className="text-right font-medium">
-                                    {serviceCurrent ? serviceCurrent.name_ru : 'Не выбрана'}
+                                    {serviceCurrent ? serviceCurrent.name_ru : t('booking.summary.notSelectedFem', 'Не выбрана')}
                                 </span>
                             </div>
                             <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">Мастер:</span>
+                                <span className="text-gray-500">{t('booking.summary.master', 'Мастер:')}</span>
                                 <span className="text-right font-medium">
-                                    {staffCurrent ? staffCurrent.full_name : 'Не выбран'}
+                                    {staffCurrent ? staffCurrent.full_name : t('booking.summary.notSelected', 'Не выбран')}
                                 </span>
                             </div>
                             <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">День:</span>
+                                <span className="text-gray-500">{t('booking.summary.day', 'День:')}</span>
                                 <span className="text-right font-medium">{dayLabel}</span>
                             </div>
                             <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">Время:</span>
+                                <span className="text-gray-500">{t('booking.summary.time', 'Время:')}</span>
                                 <span className="text-right font-medium">
-                                    {holding ? holding.slotLabel : 'Выберите слот'}
+                                    {holding ? holding.slotLabel : t('booking.summary.selectSlot', 'Выберите слот')}
                                 </span>
                             </div>
                             {serviceCurrent?.price_from && (
                                 <div className="mt-1 flex justify-between gap-2 border-t border-dashed border-gray-300 pt-1 dark:border-gray-700">
-                                    <span className="text-gray-500">Ориентировочная стоимость:</span>
+                                    <span className="text-gray-500">{t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}</span>
                                     <span className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
                                         {serviceCurrent.price_from}
                                         {serviceCurrent.price_to &&
@@ -1035,9 +1035,9 @@ export default function BizClient({ data }: { data: Data }) {
                         {!holding && (
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                                 {!isAuthed ? (
-                                    <span>Для бронирования необходимо войти. Нажмите кнопку «Войти» вверху страницы.</span>
+                                    <span>{t('booking.needAuth', 'Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.')}</span>
                                 ) : (
-                                    <span>Сначала выберите свободный слот, затем вы сможете подтвердить бронь.</span>
+                                    <span>{t('booking.summary.selectSlotFirst', 'Сначала выберите свободный слот, затем вы сможете подтвердить бронь.')}</span>
                                 )}
                             </div>
                         )}
