@@ -2,11 +2,11 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
 
-export default function YandexCallback() {
+function YandexCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -35,6 +35,22 @@ export default function YandexCallback() {
             message="Пожалуйста, не закрывайте эту вкладку — вы будете автоматически перенаправлены."
             loading
         />
+    );
+}
+
+export default function YandexCallback() {
+    return (
+        <Suspense
+            fallback={
+                <FullScreenStatus
+                    title="Загрузка…"
+                    subtitle="Готовим страницу авторизации"
+                    loading
+                />
+            }
+        >
+            <YandexCallbackContent />
+        </Suspense>
     );
 }
 
