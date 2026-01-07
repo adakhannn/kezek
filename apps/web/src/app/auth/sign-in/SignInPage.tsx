@@ -254,7 +254,7 @@ export default function SignInPage() {
                                     </div>
                                     <input
                                         className="w-full pl-11 pr-3 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                                        placeholder="+996555123456"
+                                        placeholder={t('auth.phone.placeholder', '+996555123456')}
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         required
@@ -277,7 +277,7 @@ export default function SignInPage() {
                                     </div>
                                     <input
                                         className="w-full pl-11 pr-3 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                                        placeholder="you@example.com"
+                                        placeholder={t('auth.email.placeholder', 'you@example.com')}
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
