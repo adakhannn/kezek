@@ -765,6 +765,14 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     </p>
                 ) : (
                     <div className="space-y-2 text-sm">
+                        {/* Заголовок колонок (для понимания структуры) */}
+                        <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            <span>Клиент</span>
+                            <span>Услуга / комментарий</span>
+                            <span className="text-right">Сумма</span>
+                            <span className="text-right">Расходники</span>
+                        </div>
+
                         {items.map((item, idx) => {
                             const usedBookingIds = items.filter((it, i) => i !== idx && it.bookingId).map(it => it.bookingId);
                             const availableBookings = bookings.filter(b => !usedBookingIds.includes(b.id));
@@ -786,10 +794,14 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                 {item.serviceName || '—'}
                                             </div>
                                             <div className="text-right font-medium text-gray-900 dark:text-gray-100">
-                                                {item.serviceAmount > 0 ? `${item.serviceAmount} сом` : '—'}
+                                                {(item.serviceAmount ?? 0) === 0 && !item.serviceName
+                                                    ? '—'
+                                                    : `${item.serviceAmount ?? 0} сом`}
                                             </div>
                                             <div className="text-right font-medium text-gray-900 dark:text-gray-100">
-                                                {item.consumablesAmount > 0 ? `${item.consumablesAmount} сом` : '—'}
+                                                {(item.consumablesAmount ?? 0) === 0
+                                                    ? '0 сом'
+                                                    : `${item.consumablesAmount} сом`}
                                             </div>
                                         </div>
                                         {isOpen && !isReadOnly && (
