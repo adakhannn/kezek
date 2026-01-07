@@ -113,31 +113,103 @@ export async function GET(req: Request) {
             const email = yandexUser.default_email || `yandex_${yandexUser.id}@yandex.local`;
             const initialPassword = crypto.randomBytes(32).toString('hex');
 
-            const { data: authData, error: authError } = await admin.auth.admin.createUser({
-                email,
-                password: initialPassword,
-                email_confirm: true,
-            });
-
-            if (authError || !authData.user) {
-                console.error('[yandex/callback] create user error:', authError);
-                throw new Error('Failed to create user');
+            // Проверяем, может быть пользователь уже существует с таким email
+            let authData;
+            let authError;
+            
+            // Сначала пытаемся найти существующего пользователя по email
+            if (yandexUser.default_email) {
+                const { data: existingUsers } = await admin.auth.admin.listUsers();
+                const existingUser = existingUsers?.users?.find(u => u.email === yandexUser.default_email);
+                
+                if (existingUser) {
+                    // Пользователь уже существует - используем его
+                    userId = existingUser.id;
+                    console.log('[yandex/callback] Found existing user by email:', userId);
+                } else {
+                    // Создаем нового пользователя
+                    const createResult = await admin.auth.admin.createUser({
+                        email,
+                        password: initialPassword,
+                        email_confirm: true,
+                        user_metadata: {
+                            yandex_id: String(yandexUser.id),
+                            yandex_username: yandexUser.login,
+                            auth_provider: 'yandex',
+                        },
+                    });
+                    authData = createResult.data;
+                    authError = createResult.error;
+                    
+                    if (authError || !authData?.user) {
+                        console.error('[yandex/callback] create user error:', authError);
+                        const errorMessage = authError?.message || 'Failed to create user';
+                        return NextResponse.redirect(
+                            `${origin}/auth/sign-in?error=${encodeURIComponent(`Ошибка создания пользователя: ${errorMessage}`)}`
+                        );
+                    }
+                    
+                    userId = authData.user.id;
+                }
+            } else {
+                // Нет email - создаем с временным email
+                const createResult = await admin.auth.admin.createUser({
+                    email,
+                    password: initialPassword,
+                    email_confirm: true,
+                    user_metadata: {
+                        yandex_id: String(yandexUser.id),
+                        yandex_username: yandexUser.login,
+                        auth_provider: 'yandex',
+                    },
+                });
+                authData = createResult.data;
+                authError = createResult.error;
+                
+                if (authError || !authData?.user) {
+                    console.error('[yandex/callback] create user error:', authError);
+                    const errorMessage = authError?.message || 'Failed to create user';
+                    return NextResponse.redirect(
+                        `${origin}/auth/sign-in?error=${encodeURIComponent(`Ошибка создания пользователя: ${errorMessage}`)}`
+                    );
+                }
+                
+                userId = authData.user.id;
             }
 
-            userId = authData.user.id;
+            // Проверяем, есть ли уже профиль
+            const { data: existingProfile } = await admin
+                .from('profiles')
+                .select('id')
+                .eq('id', userId)
+                .maybeSingle();
 
-            // Создаем профиль
-            const { error: profileInsertError } = await admin.from('profiles').insert({
-                id: userId,
-                full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
-                email: yandexUser.default_email || null,
-                yandex_id: String(yandexUser.id),
-                yandex_username: yandexUser.login || null,
-            });
+            if (!existingProfile) {
+                // Создаем профиль только если его нет
+                const { error: profileInsertError } = await admin.from('profiles').insert({
+                    id: userId,
+                    full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
+                    email: yandexUser.default_email || null,
+                    yandex_id: String(yandexUser.id),
+                    yandex_username: yandexUser.login || null,
+                });
 
-            if (profileInsertError) {
-                console.error('[yandex/callback] profile insert error:', profileInsertError);
-                // Продолжаем, даже если профиль не создался
+                if (profileInsertError) {
+                    console.error('[yandex/callback] profile insert error:', profileInsertError);
+                    // Продолжаем, даже если профиль не создался - можно обновить позже
+                }
+            } else {
+                // Обновляем существующий профиль
+                await admin
+                    .from('profiles')
+                    .update({
+                        full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
+                        email: yandexUser.default_email || null,
+                        yandex_id: String(yandexUser.id),
+                        yandex_username: yandexUser.login || null,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', userId);
             }
         }
 
