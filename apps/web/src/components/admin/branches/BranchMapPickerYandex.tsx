@@ -230,5 +230,21 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
         };
     }, [lat, lon]); // onPick не включаем в зависимости, чтобы карта не пересоздавалась при каждом рендере
 
-    return <div ref={boxRef} className="w-full h-72 rounded border" />;
+    return (
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div
+                ref={boxRef}
+                className="w-full h-72 sm:h-80"
+            />
+            <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-gray-50 text-[11px] text-gray-500 dark:border-gray-800 dark:bg-gray-900/80 dark:text-gray-400">
+                <span>Переместите метку или выберите адрес через поиск на карте.</span>
+                <span className="hidden sm:inline-flex items-center gap-1">
+                    <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                    </svg>
+                    Яндекс Карты
+                </span>
+            </div>
+        </div>
+    );
 }
