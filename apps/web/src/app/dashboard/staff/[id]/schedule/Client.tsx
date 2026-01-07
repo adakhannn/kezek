@@ -68,18 +68,18 @@ function SingleTimeRange({
     }
 
     return (
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <input
                 type="time"
-                className="flex-1 min-w-0 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 min-w-0 rounded-md sm:rounded-lg border border-gray-300 bg-white px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 value={start}
                 onChange={handleStartChange}
                 disabled={disabled}
             />
-            <span className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">—</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">—</span>
             <input
                 type="time"
-                className="flex-1 min-w-0 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 min-w-0 rounded-md sm:rounded-lg border border-gray-300 bg-white px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 value={end}
                 onChange={handleEndChange}
                 disabled={disabled}
@@ -145,7 +145,7 @@ function DayRow({
     const isToday = dateStr === formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
     
     return (
-        <div className={`flex flex-col rounded-xl border p-4 space-y-3 transition-all min-w-0 ${
+        <div className={`flex flex-col rounded-lg sm:rounded-xl border p-3 sm:p-4 space-y-2 sm:space-y-3 transition-all min-w-0 ${
             isPastDate 
                 ? 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50 opacity-75' 
                 : isToday
@@ -154,21 +154,21 @@ function DayRow({
         }`}>
             <div className="flex items-start justify-between gap-2 min-w-0">
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">{DOW[dow]}</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">{DOW[dow]}</span>
                         {isToday && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">
-                                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">
+                                <span className="inline-flex h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-indigo-500" />
                                 Сегодня
                             </span>
                         )}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {formatInTimeZone(date, TZ, 'dd.MM.yyyy')}
                     </div>
                 </div>
                 <button
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-600 bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600 whitespace-nowrap flex-shrink-0"
+                    className="inline-flex items-center gap-1 rounded-md sm:rounded-lg border border-indigo-600 bg-indigo-600 px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600 whitespace-nowrap flex-shrink-0"
                     disabled={saving || isPastDate}
                     onClick={handleSave}
                 >
@@ -190,25 +190,25 @@ function DayRow({
                     )}
                 </button>
             </div>
-            <div className="space-y-3 min-w-0">
-                <label className={`flex items-center gap-2.5 min-w-0 ${isPastDate ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
+            <div className="space-y-2 sm:space-y-3 min-w-0">
+                <label className={`flex items-center gap-2 sm:gap-2.5 min-w-0 ${isPastDate ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                     <input
                         type="checkbox"
                         checked={isDayOff}
                         onChange={handleDayOffChange}
                         disabled={saving || isPastDate}
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 flex-shrink-0"
+                        className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 flex-shrink-0"
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0">
+                    <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0">
                         Выходной день
                     </span>
                     {isPastDate && (
-                        <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">(недоступно для прошедших дат)</span>
+                        <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap hidden sm:inline">(недоступно для прошедших дат)</span>
                     )}
                 </label>
                 {!isDayOff && (
                     <div className="min-w-0">
-                        <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Рабочее время</div>
+                        <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">Рабочее время</div>
                         <SingleTimeRange 
                             value={interval} 
                             onChange={(v) => {
@@ -407,23 +407,23 @@ export default function Client({
     }
 
     return (
-        <section className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <section className="space-y-4 sm:space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+                <div className="mb-4 sm:mb-6">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Текущая неделя
+                        <span>Текущая неделя</span>
                     </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {formatInTimeZone(currentWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
                         {formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}
                     </p>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                     {/* Первая строка: 4 карточки */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                         {currentWeekDates.slice(0, 4).map((date) => {
                             const dow = date.getDay(); // 0-6 (0=воскресенье)
                             const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
@@ -441,7 +441,7 @@ export default function Client({
                         })}
                     </div>
                     {/* Вторая строка: 3 карточки */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                         {currentWeekDates.slice(4, 7).map((date) => {
                             const dow = date.getDay(); // 0-6 (0=воскресенье)
                             const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
@@ -461,22 +461,22 @@ export default function Client({
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+                <div className="mb-4 sm:mb-6">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Следующая неделя
+                        <span>Следующая неделя</span>
                     </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {formatInTimeZone(nextWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
                         {formatInTimeZone(nextWeekDates[6], TZ, 'dd.MM.yyyy')}
                     </p>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                     {/* Первая строка: 4 карточки */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
                         {nextWeekDates.slice(0, 4).map((date) => {
                             const dow = date.getDay(); // 0-6 (0=воскресенье)
                             const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
@@ -494,7 +494,7 @@ export default function Client({
                         })}
                     </div>
                     {/* Вторая строка: 3 карточки */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                         {nextWeekDates.slice(4, 7).map((date) => {
                             const dow = date.getDay(); // 0-6 (0=воскресенье)
                             const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
