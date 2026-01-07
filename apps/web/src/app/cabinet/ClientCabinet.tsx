@@ -10,15 +10,20 @@ type Booking = {
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
     start_at: string;
     end_at: string;
-    services?: { name_ru: string; duration_min: number }[] | { name_ru: string; duration_min: number } | null;
-    staff?: { full_name: string }[] | { full_name: string } | null;
-    branches?: { name: string; lat: number | null; lon: number | null; address: string | null }[] | {
+    service_id?: string | null;
+    staff_id?: string | null;
+    branch_id?: string | null;
+    biz_id?: string | null;
+    services?: { id: string; name_ru: string; duration_min: number }[] | { id: string; name_ru: string; duration_min: number } | null;
+    staff?: { id: string; full_name: string }[] | { id: string; full_name: string } | null;
+    branches?: { id: string; name: string; lat: number | null; lon: number | null; address: string | null }[] | {
+        id: string;
         name: string;
         lat: number | null;
         lon: number | null;
         address: string | null
     } | null;
-    businesses?: { name: string; slug: string }[] | { name: string; slug: string } | null;
+    businesses?: { id: string; name: string; slug: string }[] | { id: string; name: string; slug: string } | null;
     reviews?: { id: string; rating: number; comment: string | null }[] | null;
 };
 
@@ -106,21 +111,31 @@ export default function ClientCabinet({
                                 </a>
                             </div>
                         ) : (
-                            upcoming.map(b => (
-                                <BookingCard
-                                    key={b.id}
-                                    bookingId={b.id}
-                                    status={b.status}
-                                    start_at={b.start_at}
-                                    end_at={b.end_at}
-                                    service={first(b.services)}
-                                    staff={first(b.staff)}
-                                    branch={first(b.branches)}
-                                    business={first(b.businesses)}
-                                    review={extractReview(b.reviews)}
-                                    canCancel
-                                />
-                            ))
+                            upcoming.map((b) => {
+                                const service = first(b.services);
+                                const staff = first(b.staff);
+                                const branch = first(b.branches);
+                                const business = first(b.businesses);
+                                return (
+                                    <BookingCard
+                                        key={b.id}
+                                        bookingId={b.id}
+                                        status={b.status}
+                                        start_at={b.start_at}
+                                        end_at={b.end_at}
+                                        service={service ? { id: service.id, name_ru: service.name_ru, duration_min: service.duration_min } : null}
+                                        staff={staff ? { id: staff.id, full_name: staff.full_name } : null}
+                                        branch={branch ? { id: branch.id, name: branch.name, lat: branch.lat, lon: branch.lon, address: branch.address } : null}
+                                        business={business ? { id: business.id, name: business.name, slug: business.slug } : null}
+                                        serviceId={b.service_id ?? service?.id}
+                                        staffId={b.staff_id ?? staff?.id}
+                                        branchId={b.branch_id ?? branch?.id}
+                                        bizId={b.biz_id ?? business?.id}
+                                        review={extractReview(b.reviews)}
+                                        canCancel
+                                    />
+                                );
+                            })
                         )}
                     </section>
                 )}
@@ -138,21 +153,31 @@ export default function ClientCabinet({
                                 <p className="text-gray-500 dark:text-gray-400">Здесь будут отображаться ваши завершённые записи</p>
                             </div>
                         ) : (
-                            past.map(b => (
-                                <BookingCard
-                                    key={b.id}
-                                    bookingId={b.id}
-                                    status={b.status}
-                                    start_at={b.start_at}
-                                    end_at={b.end_at}
-                                    service={first(b.services)}
-                                    staff={first(b.staff)}
-                                    branch={first(b.branches)}
-                                    business={first(b.businesses)}
-                                    review={extractReview(b.reviews)}
-                                    canCancel={false}
-                                />
-                            ))
+                            past.map((b) => {
+                                const service = first(b.services);
+                                const staff = first(b.staff);
+                                const branch = first(b.branches);
+                                const business = first(b.businesses);
+                                return (
+                                    <BookingCard
+                                        key={b.id}
+                                        bookingId={b.id}
+                                        status={b.status}
+                                        start_at={b.start_at}
+                                        end_at={b.end_at}
+                                        service={service ? { id: service.id, name_ru: service.name_ru, duration_min: service.duration_min } : null}
+                                        staff={staff ? { id: staff.id, full_name: staff.full_name } : null}
+                                        branch={branch ? { id: branch.id, name: branch.name, lat: branch.lat, lon: branch.lon, address: branch.address } : null}
+                                        business={business ? { id: business.id, name: business.name, slug: business.slug } : null}
+                                        serviceId={b.service_id ?? service?.id}
+                                        staffId={b.staff_id ?? staff?.id}
+                                        branchId={b.branch_id ?? branch?.id}
+                                        bizId={b.biz_id ?? business?.id}
+                                        review={extractReview(b.reviews)}
+                                        canCancel={false}
+                                    />
+                                );
+                            })
                         )}
                     </section>
                 )}

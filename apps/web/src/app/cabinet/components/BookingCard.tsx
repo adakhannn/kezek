@@ -10,8 +10,18 @@ import ReviewDialog from './ReviewDialog';
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 export default function BookingCard({
-                                        bookingId, status, start_at, end_at,
-                                        service, staff, branch, business,
+                                        bookingId,
+                                        status,
+                                        start_at,
+                                        end_at,
+                                        service,
+                                        staff,
+                                        branch,
+                                        business,
+                                        serviceId,
+                                        staffId,
+                                        branchId,
+                                        bizId,
                                         canCancel,
                                         review: initialReview,
                                     }: {
@@ -19,10 +29,14 @@ export default function BookingCard({
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
     start_at: string;
     end_at: string;
-    service: { name_ru: string; duration_min: number } | null;
-    staff: { full_name: string } | null;
-    branch: { name: string; lat: number | null; lon: number | null; address: string | null } | null;
-    business: { name: string; slug: string } | null;
+    service: { id: string; name_ru: string; duration_min: number } | null;
+    staff: { id: string; full_name: string } | null;
+    branch: { id: string; name: string; lat: number | null; lon: number | null; address: string | null } | null;
+    business: { id: string; name: string; slug: string } | null;
+    serviceId?: string | null;
+    staffId?: string | null;
+    branchId?: string | null;
+    bizId?: string | null;
     canCancel: boolean;
     review?: { id: string; rating: number; comment: string | null } | null;
 }) {
@@ -33,6 +47,32 @@ export default function BookingCard({
     const [review, setReview] = useState(initialReview);
     // Флаг для блокировки повторных кликов
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+    const effectiveServiceId = serviceId ?? service?.id ?? null;
+    const effectiveStaffId = staffId ?? staff?.id ?? null;
+    const effectiveBranchId = branchId ?? branch?.id ?? null;
+    const effectiveBizId = bizId ?? business?.id ?? null;
+
+    function repeatBooking() {
+        if (!business) return;
+        try {
+            if (typeof window !== 'undefined' && effectiveBizId && effectiveBranchId && effectiveServiceId && effectiveStaffId) {
+                const key = `booking_state_${effectiveBizId}`;
+                const dayStr = formatInTimeZone(new Date(start_at), TZ, 'yyyy-MM-dd');
+                const payload = {
+                    branchId: effectiveBranchId,
+                    serviceId: effectiveServiceId,
+                    staffId: effectiveStaffId,
+                    day: dayStr,
+                    step: 4,
+                };
+                window.localStorage.setItem(key, JSON.stringify(payload));
+            }
+        } catch (e) {
+            console.error('repeatBooking: failed to save state', e);
+        }
+        window.location.href = `/b/${business.slug}`;
+    }
 
     // Синхронизируем состояние отзыва при изменении пропсов
     useEffect(() => {
@@ -209,15 +249,16 @@ export default function BookingCard({
                     </button>
                 )}
                 {service && business && (
-                    <a
+                    <button
+                        type="button"
+                        onClick={repeatBooking}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white rounded-lg hover:from-indigo-700 hover:to-pink-700 transition-all text-sm font-medium shadow-sm hover:shadow-md"
-                        href={`/b/${business.slug}?svc=${encodeURIComponent(service.name_ru)}`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                         Повторить
-                    </a>
+                    </button>
                 )}
             </div>
 

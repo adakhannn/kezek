@@ -53,10 +53,11 @@ export default async function BookingsPage() {
         .from('bookings')
         .select(`
       id, status, start_at, end_at,
-      services:services!bookings_service_id_fkey ( name_ru, duration_min ),
-      staff:staff!bookings_staff_id_fkey ( full_name ),
-      branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
-      businesses:businesses!bookings_biz_id_fkey ( name, slug ),
+      service_id, staff_id, branch_id, biz_id,
+      services:services!bookings_service_id_fkey ( id, name_ru, duration_min ),
+      staff:staff!bookings_staff_id_fkey ( id, full_name ),
+      branches:branches!bookings_branch_id_fkey ( id, name, lat, lon, address ),
+      businesses:businesses!bookings_biz_id_fkey ( id, name, slug ),
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)
@@ -68,10 +69,11 @@ export default async function BookingsPage() {
         .from('bookings')
         .select(`
       id, status, start_at, end_at,
-      services:services!bookings_service_id_fkey ( name_ru, duration_min ),
-      staff:staff!bookings_staff_id_fkey ( full_name ),
-      branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
-      businesses:businesses!bookings_biz_id_fkey ( name, slug ),
+      service_id, staff_id, branch_id, biz_id,
+      services:services!bookings_service_id_fkey ( id, name_ru, duration_min ),
+      staff:staff!bookings_staff_id_fkey ( id, full_name ),
+      branches:branches!bookings_branch_id_fkey ( id, name, lat, lon, address ),
+      businesses:businesses!bookings_biz_id_fkey ( id, name, slug ),
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)
