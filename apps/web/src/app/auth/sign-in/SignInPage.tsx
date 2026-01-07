@@ -148,13 +148,12 @@ export default function SignInPage() {
         setSending(true);
         setError(null);
         try {
-            const origin = typeof window !== 'undefined' 
-                ? window.location.origin 
-                : (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg');
+            // ВАЖНО: используем NEXT_PUBLIC_SITE_ORIGIN для redirect_uri, чтобы всегда использовать продакшн домен
+            // Это нужно, потому что Яндекс требует точного совпадения redirect_uri с настройками приложения
+            const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
             
             // redirect_uri должен быть БЕЗ query параметров для Яндекс OAuth
             const redirectUri = `${origin}/auth/callback-yandex`;
-            const redirectTo = `${redirectUri}?redirect=${encodeURIComponent(redirectParam)}`;
             
             // Формируем URL для OAuth Яндекс
             const yandexAuthUrl = new URL('https://oauth.yandex.ru/authorize');
