@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import BranchForm from '../BranchForm';
 import DeleteBranchButton from '../DeleteBranchButton';
 
-import BranchAdminsPanel from "@/app/dashboard/branches/[id]/BranchAdminsPanel";
+// Временно скрыто
+// import BranchAdminsPanel from "@/app/dashboard/branches/[id]/BranchAdminsPanel";
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -49,9 +50,10 @@ export default async function EditBranchPage({
                 />
             </div>
 
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+            {/* Временно скрыто */}
+            {/* <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
                 <BranchAdminsPanel branchId={String(branch.id)} />
-            </div>
+            </div> */}
 
             <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 shadow-lg space-y-4">
                 <div className="flex items-center gap-3">
