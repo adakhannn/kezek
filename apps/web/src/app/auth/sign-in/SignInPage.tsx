@@ -144,6 +144,30 @@ export default function SignInPage() {
         }
     }
 
+    async function signInWithYandex() {
+        setSending(true);
+        setError(null);
+        try {
+            const origin = typeof window !== 'undefined' 
+                ? window.location.origin 
+                : (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg');
+            
+            const redirectTo = `${origin}/auth/callback-yandex?redirect=${encodeURIComponent(redirectParam)}`;
+            
+            // Формируем URL для OAuth Яндекс
+            const yandexAuthUrl = new URL('https://oauth.yandex.ru/authorize');
+            yandexAuthUrl.searchParams.set('response_type', 'code');
+            yandexAuthUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_YANDEX_CLIENT_ID || '');
+            yandexAuthUrl.searchParams.set('redirect_uri', redirectTo);
+            
+            // Редиректим на Яндекс
+            window.location.href = yandexAuthUrl.toString();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : String(err));
+            setSending(false);
+        }
+    }
+
 
     async function sendOtp(e: React.FormEvent) {
         e.preventDefault();
@@ -363,6 +387,19 @@ export default function SignInPage() {
                             />
                         </svg>
                         {t('auth.google', 'Продолжить с Google')}
+                    </button>
+
+                    {/* Вариант 2.5. Вход через Яндекс */}
+                    <button
+                        type="button"
+                        onClick={signInWithYandex}
+                        disabled={sending}
+                        className="w-full px-5 py-3 bg-[#FC3F1D] dark:bg-[#FC3F1D] text-sm text-white font-semibold rounded-lg hover:bg-[#E6391A] dark:hover:bg-[#E6391A] shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                    >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12.5 0C5.596 0 0 5.596 0 12.5S5.596 25 12.5 25 25 19.404 25 12.5 19.404 0 12.5 0zm0 4.167c3.24 0 5.833 2.593 5.833 5.833S15.74 15.833 12.5 15.833 6.667 13.24 6.667 10s2.593-5.833 5.833-5.833z"/>
+                        </svg>
+                        {t('auth.yandex', 'Войти через Яндекс')}
                     </button>
 
                     {/* Вариант 3. Вход через Telegram */}

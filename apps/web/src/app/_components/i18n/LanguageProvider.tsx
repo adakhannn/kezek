@@ -31,6 +31,7 @@ const dictionaries: Dictionaries = {
         'auth.submit.idle': 'Кодду жөнөтүү',
         'auth.otherMethodsTitle': 'же тез кирүү ыкмасын тандаңыз',
         'auth.google': 'Google аркылуу улантуу',
+        'auth.yandex': 'Яндекс менен кирүү',
         'auth.whatsapp': 'WhatsApp аркылуу кирүү',
         'auth.firstTime.title':
             'Биринчи жолу келдиңизби? Каалаган кирүү ыкмасын тандаңыз — аккаунт автоматтык түрдө түзүлөт.',
@@ -138,6 +139,7 @@ const dictionaries: Dictionaries = {
         'auth.submit.idle': 'Отправить код',
         'auth.otherMethodsTitle': 'или выберите быстрый вход',
         'auth.google': 'Продолжить с Google',
+        'auth.yandex': 'Войти через Яндекс',
         'auth.whatsapp': 'Войти через WhatsApp',
         'auth.firstTime.title':
             'Впервые здесь? Просто выберите любой способ входа — аккаунт создастся автоматически, без лишних полей.',
@@ -245,6 +247,7 @@ const dictionaries: Dictionaries = {
         'auth.submit.idle': 'Send code',
         'auth.otherMethodsTitle': 'or choose a quick sign‑in option',
         'auth.google': 'Continue with Google',
+        'auth.yandex': 'Sign in with Yandex',
         'auth.whatsapp': 'Sign in with WhatsApp',
         'auth.firstTime.title':
             'New here? Just choose any sign‑in method — we will create an account for you automatically.',
