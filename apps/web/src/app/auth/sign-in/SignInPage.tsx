@@ -402,8 +402,9 @@ export default function SignInPage() {
                         disabled={sending}
                         className="w-full px-5 py-3 bg-[#FC3F1D] dark:bg-[#FC3F1D] text-sm text-white font-semibold rounded-lg hover:bg-[#E6391A] dark:hover:bg-[#E6391A] shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                     >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12.5 0C5.596 0 0 5.596 0 12.5S5.596 25 12.5 25 25 19.404 25 12.5 19.404 0 12.5 0zm0 4.167c3.24 0 5.833 2.593 5.833 5.833S15.74 15.833 12.5 15.833 6.667 13.24 6.667 10s2.593-5.833 5.833-5.833z"/>
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                            <path d="M9.5 8h5v1.5h-2v6h-1v-6h-2V8zm5.5 0h1.5v7.5H15V8z" fill="white"/>
                         </svg>
                         {t('auth.yandex', 'Войти через Яндекс')}
                     </button>
