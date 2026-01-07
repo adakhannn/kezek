@@ -89,34 +89,101 @@ export default function ReviewDialog({
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-xl w-[90vw] max-w-md p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                    <div className="font-medium">{existingReview ? 'Редактировать отзыв' : 'Оставить отзыв'}</div>
-                    <button className="text-sm underline" onClick={onClose}>Закрыть</button>
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 sm:px-6">
+            {/* Клик по фону закрывает модалку */}
+            <div
+                className="absolute inset-0"
+                onClick={onClose}
+                aria-hidden="true"
+            />
+
+            <div className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900 space-y-4">
+                {/* Заголовок */}
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {existingReview ? 'Редактировать отзыв' : 'Оставить отзыв'}
+                        </h2>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Оцените визит и, при желании, напишите пару слов для владельца.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="inline-flex items-center justify-center rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                        aria-label="Закрыть"
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
 
-                {err && <div className="text-red-600 text-sm">{err}</div>}
+                {err && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+                        {err}
+                    </div>
+                )}
 
-                <label className="block text-sm">Оценка</label>
-                <select className="border rounded px-2 py-1 w-full"
+                {/* Оценка */}
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
+                        Оценка
+                    </label>
+                    <select
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         value={rating}
-                        onChange={e => setRating(Number(e.target.value))}>
-                    {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} ★</option>)}
-                </select>
+                        onChange={(e) => setRating(Number(e.target.value))}
+                    >
+                        {[5, 4, 3, 2, 1].map((n) => (
+                            <option key={n} value={n}>
+                                {n} ★
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-                <label className="block text-sm">Комментарий (опционально)</label>
-                <textarea
-                    className="border rounded px-2 py-1 w-full min-h-24"
-                    value={comment}
-                    onChange={e => setComment(e.target.value)}
-                    placeholder="Что понравилось/что улучшить?"
-                />
+                {/* Комментарий */}
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
+                        Комментарий <span className="text-gray-400 text-xs">(опционально)</span>
+                    </label>
+                    <textarea
+                        className="min-h-[96px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Что понравилось, что можно улучшить?"
+                    />
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                        Комментарий увидит только владелец заведения. Он помогает улучшать сервис.
+                    </p>
+                </div>
 
-                <button disabled={busy} className="border rounded px-3 py-1"
-                        onClick={submit}>
-                    {busy ? (existingReview ? 'Обновляю…' : 'Отправляю…') : (existingReview ? 'Обновить' : 'Отправить')}
-                </button>
+                {/* Кнопки */}
+                <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        type="button"
+                        disabled={busy}
+                        onClick={submit}
+                        className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {busy
+                            ? existingReview
+                                ? 'Обновляю…'
+                                : 'Отправляю…'
+                            : existingReview
+                            ? 'Обновить отзыв'
+                            : 'Отправить отзыв'}
+                    </button>
+                </div>
             </div>
         </div>
     );
