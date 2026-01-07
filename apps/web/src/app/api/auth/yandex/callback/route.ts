@@ -234,48 +234,51 @@ export async function GET(req: Request) {
             }
         }
 
-        // Создаем сессию для пользователя через magic link
-        const { data: sessionData, error: sessionError } = await admin.auth.admin.generateLink({
-            type: 'magiclink',
-            email: yandexUser.default_email || `yandex_${yandexUser.id}@yandex.local`,
+        // Получаем информацию о пользователе из Supabase Auth, чтобы узнать его email
+        const { data: currentUser, error: getUserError } = await admin.auth.admin.getUserById(userId);
+        if (getUserError) {
+            console.error('[yandex/callback] getUserById error:', getUserError);
+            throw new Error('Failed to get user info');
+        }
+
+        const userEmail = currentUser?.user?.email || yandexUser.default_email || `yandex_${yandexUser.id}@yandex.local`;
+
+        // Если у пользователя нет email, устанавливаем его
+        if (!currentUser?.user?.email && yandexUser.default_email) {
+            await admin.auth.admin.updateUserById(userId, {
+                email: yandexUser.default_email,
+                email_confirm: true,
+            });
+        }
+
+        // Создаем сессию через временный пароль (более надежный способ)
+        const tempPassword = crypto.randomBytes(32).toString('hex');
+        
+        // Обновляем пароль пользователя
+        const { error: passwordError } = await admin.auth.admin.updateUserById(userId, {
+            password: tempPassword,
         });
 
-        if (sessionError || !sessionData) {
-            console.error('[yandex/callback] generate link error:', sessionError);
-            // Пробуем альтернативный способ - используем admin API для создания сессии
-            const tempPassword = crypto.randomBytes(32).toString('hex');
-            
-            // Обновляем пароль пользователя
-            await admin.auth.admin.updateUserById(userId, {
-                password: tempPassword,
-            });
-
-            // Создаем сессию через admin API
-            const { data: { session }, error: signInError } = await admin.auth.signInWithPassword({
-                email: yandexUser.default_email || `yandex_${yandexUser.id}@yandex.local`,
-                password: tempPassword,
-            });
-
-            if (signInError || !session) {
-                throw new Error('Failed to create session');
-            }
-
-            // Редиректим на callback с токенами в hash
-            const redirectUrl = new URL('/auth/callback', origin);
-            redirectUrl.searchParams.set('next', redirectTo);
-            redirectUrl.hash = `access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
-            return NextResponse.redirect(redirectUrl.toString());
+        if (passwordError) {
+            console.error('[yandex/callback] update password error:', passwordError);
+            throw new Error('Failed to set password for session');
         }
 
-        // Редиректим на callback страницу
+        // Создаем сессию через admin API
+        const { data: { session }, error: signInError } = await admin.auth.signInWithPassword({
+            email: userEmail,
+            password: tempPassword,
+        });
+
+        if (signInError || !session) {
+            console.error('[yandex/callback] signInWithPassword error:', signInError);
+            throw new Error('Failed to create session');
+        }
+
+        // Редиректим на callback с токенами в hash
         const redirectUrl = new URL('/auth/callback', origin);
         redirectUrl.searchParams.set('next', redirectTo);
-        
-        // Если есть токены в properties, используем их
-        if (sessionData.properties?.hashed_token) {
-            redirectUrl.hash = `access_token=${sessionData.properties.hashed_token}&refresh_token=${sessionData.properties.hashed_token}`;
-        }
-
+        redirectUrl.hash = `access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
         return NextResponse.redirect(redirectUrl.toString());
     } catch (error) {
         console.error('[yandex/callback] Error:', error);
