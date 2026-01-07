@@ -75,6 +75,47 @@ export async function GET(
             );
         }
 
+        // Получаем позиции (клиентов) для всех смен
+        const shiftIds = (shifts || []).map(s => s.id);
+        const shiftItemsMap: Record<string, Array<{
+            id: string;
+            client_name: string | null;
+            service_name: string | null;
+            service_amount: number;
+            consumables_amount: number;
+            note: string | null;
+            booking_id: string | null;
+        }>> = {};
+        
+        if (shiftIds.length > 0) {
+            const { data: itemsData, error: itemsError } = await supabase
+                .from('staff_shift_items')
+                .select('id, shift_id, client_name, service_name, service_amount, consumables_amount, note, booking_id')
+                .in('shift_id', shiftIds)
+                .order('created_at', { ascending: true });
+
+            if (itemsError) {
+                console.error('Error loading shift items:', itemsError);
+            } else {
+                // Группируем по shift_id
+                for (const item of itemsData || []) {
+                    const shiftId = item.shift_id;
+                    if (!shiftItemsMap[shiftId]) {
+                        shiftItemsMap[shiftId] = [];
+                    }
+                    shiftItemsMap[shiftId].push({
+                        id: item.id,
+                        client_name: item.client_name,
+                        service_name: item.service_name,
+                        service_amount: Number(item.service_amount ?? 0),
+                        consumables_amount: Number(item.consumables_amount ?? 0),
+                        note: item.note,
+                        booking_id: item.booking_id,
+                    });
+                }
+            }
+        }
+
         // Считаем статистику
         const closedShifts = shifts?.filter(s => s.status === 'closed') || [];
         const openShifts = shifts?.filter(s => s.status === 'open') || [];
@@ -92,6 +133,10 @@ export async function GET(
             totalSalon: 0, // Доля бизнеса
             totalConsumables: 0, // Расходники
             totalLateMinutes: 0,
+            totalClients: Object.values(shiftItemsMap).reduce(
+                (sum, items) => sum + items.length,
+                0
+            ),
             shifts: shifts?.map(s => ({
                 id: s.id,
                 shift_date: s.shift_date,
@@ -103,6 +148,15 @@ export async function GET(
                 master_share: Number(s.master_share ?? 0),
                 salon_share: Number(s.salon_share ?? 0),
                 late_minutes: Number(s.late_minutes ?? 0),
+                items: (shiftItemsMap[s.id] || []).map((item) => ({
+                    id: item.id,
+                    client_name: item.client_name || '',
+                    service_name: item.service_name || '',
+                    service_amount: item.service_amount,
+                    consumables_amount: item.consumables_amount,
+                    note: item.note || null,
+                    booking_id: item.booking_id || null,
+                })),
             })) || [],
         };
 

@@ -20,6 +20,7 @@ type Stats = {
     totalSalon: number;
     totalConsumables: number;
     totalLateMinutes: number;
+    totalClients: number;
     shifts: Array<{
         id: string;
         shift_date: string;
@@ -31,6 +32,15 @@ type Stats = {
         master_share: number;
         salon_share: number;
         late_minutes: number;
+        items: Array<{
+            id: string;
+            client_name: string;
+            service_name: string;
+            service_amount: number;
+            consumables_amount: number;
+            note: string | null;
+            booking_id: string | null;
+        }>;
     }>;
 };
 
@@ -252,7 +262,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
             </div>
 
             {/* Дополнительная информация */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
                         Количество смен
@@ -290,6 +300,15 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                     </div>
                     <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                         {stats.totalLateMinutes} мин
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
+                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+                        Клиентов
+                    </div>
+                    <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        {stats.totalClients}
                     </div>
                 </div>
             </div>
