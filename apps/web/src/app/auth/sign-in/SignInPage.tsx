@@ -208,14 +208,26 @@ export default function SignInPage() {
                         </div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Kezek</h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            Войти или создать аккаунт — выберите удобный способ
+                            Войдите или создайте аккаунт за пару кликов — без пароля и сложных форм
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
+                            1) Выберите способ входа · 2) Подтвердите e‑mail или аккаунт · 3) Мы автоматически создадим профиль
                         </p>
                     </div>
 
                     {/* Переключатель режима временно скрыт - используется только email */}
 
-                    {/* Форма */}
+                    {/* Вариант 1. Вход по e‑mail */}
                     <form onSubmit={sendOtp} className="space-y-4">
+                        <div className="space-y-1">
+                            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
+                                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                                <span>Вариант 1 — вход по e‑mail</span>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Укажите почту, мы пришлём на неё безопасную ссылку/код для входа. Пароль придумывать не нужно.
+                            </p>
+                        </div>
                         {mode === 'phone' ? (
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -257,7 +269,9 @@ export default function SignInPage() {
                                         required
                                     />
                                 </div>
-                                <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Мы отправим код подтверждения на этот адрес</p>
+                                <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                    На эту почту придёт одноразовая ссылка или код для входа.
+                                </p>
                             </div>
                         )}
 
@@ -296,17 +310,19 @@ export default function SignInPage() {
                         </button>
                     </form>
 
-                    {/* Разделитель */}
+                    {/* Разделитель и подпись для других способов */}
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">или</span>
+                            <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                                или выберите быстрый вход
+                            </span>
                         </div>
                     </div>
 
-                    {/* Кнопка Google */}
+                    {/* Вариант 2. Вход через Google */}
                     <button
                         type="button"
                         onClick={signInWithGoogle}
@@ -334,14 +350,14 @@ export default function SignInPage() {
                         Продолжить с Google
                     </button>
 
-                    {/* Telegram Login Widget */}
+                    {/* Вариант 3. Вход через Telegram */}
                     <TelegramLoginWidget
                         redirectTo={redirectParam || '/'}
                         onError={handleTelegramError}
                         size="large"
                     />
 
-                    {/* Кнопка WhatsApp */}
+                    {/* Вариант 4. Вход через WhatsApp */}
                     <button
                         type="button"
                         onClick={() => router.push(`/auth/whatsapp?redirect=${encodeURIComponent(redirectParam)}`)}
@@ -354,8 +370,11 @@ export default function SignInPage() {
                         Войти через WhatsApp
                     </button>
 
-                    <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-                        Впервые здесь? Просто выберите любой способ входа — мы автоматически создадим аккаунт для вас.
+                    <div className="text-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                        <p>
+                            Впервые здесь? Просто выберите любой способ входа — аккаунт создастся автоматически, без лишних полей.
+                        </p>
+                        <p>Вы всегда можете сменить почту, номер телефона и способы уведомлений в разделе «Личный кабинет».</p>
                     </div>
                 </div>
             </div>
