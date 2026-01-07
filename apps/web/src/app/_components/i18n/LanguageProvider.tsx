@@ -75,6 +75,8 @@ const dictionaries: Dictionaries = {
         'booking.summary.selectSlotFirst': 'Алгач бош слотту тандаңыз, андан кийин брондоону ырастай аласыз.',
         'booking.summary.estimatedPrice': 'Ориентирлүү баасы:',
         'booking.currency': 'сом',
+        'booking.error.masterNotAssigned':
+            'Тандалган күнгө кызматкер бул филиалга байланышкан эмес. Башка күндү же кызматкерди тандаңыз.',
         'booking.needAuth':
             'Брондоо үчүн кирүү же катталуу керек. Барактын жогору жагындагы «Кирүү» баскычын басыңыз.',
         'booking.phoneLabel': 'Телефон:',
@@ -167,6 +169,8 @@ const dictionaries: Dictionaries = {
         'booking.summary.selectSlotFirst': 'Сначала выберите свободный слот, затем вы сможете подтвердить бронь.',
         'booking.summary.estimatedPrice': 'Ориентировочная стоимость:',
         'booking.currency': 'сом',
+        'booking.error.masterNotAssigned':
+            'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.',
         'booking.needAuth':
             'Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.',
         'booking.phoneLabel': 'Телефон:',
@@ -259,6 +263,8 @@ const dictionaries: Dictionaries = {
         'booking.summary.selectSlotFirst': 'First select an available slot, then you can confirm the booking.',
         'booking.summary.estimatedPrice': 'Estimated price:',
         'booking.currency': 'KGS',
+        'booking.error.masterNotAssigned':
+            'On the selected date, the master is not assigned to this branch. Try selecting another day or master.',
         'booking.needAuth':
             'To make a booking you need to sign in or sign up. Click the "Sign in" button at the top of the page.',
         'booking.phoneLabel': 'Phone:',

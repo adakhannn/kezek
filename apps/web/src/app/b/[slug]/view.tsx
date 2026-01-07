@@ -41,14 +41,14 @@ type Slot = {
     end_at: string;
 };
 
-function fmtErr(e: unknown): string {
+function fmtErr(e: unknown, t?: (key: string, fallback?: string) => string): string {
     if (e && typeof e === 'object') {
         const any = e as { message?: string; details?: string; hint?: string; code?: string };
         const rawMessage = any.message || '';
 
         // Пользовательский текст для частых бизнес-ошибок
         if (rawMessage.includes('is not assigned to branch')) {
-            return 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
+            return t?.('booking.error.masterNotAssigned', 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.') || 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
         }
 
         if (any.message) {
@@ -319,7 +319,7 @@ export default function BizClient({ data }: { data: Data }) {
                 if (ignore) return;
                 console.error('[get_free_slots_service_day_v2] catch:', e);
                 setSlots([]);
-                setSlotsError(fmtErr(e));
+                setSlotsError(fmtErr(e, t));
             } finally {
                 if (!ignore) setSlotsLoading(false);
             }
@@ -471,7 +471,7 @@ export default function BizClient({ data }: { data: Data }) {
         [servicesByBranch, serviceId]
     );
 
-    async function hold(t: Date) {
+    async function hold(slotTime: Date) {
         if (!service) return alert('Выбери услугу');
         if (!staffId) return alert('Выбери мастера');
         if (!branchId) return alert('Выбери филиал');
@@ -484,7 +484,7 @@ export default function BizClient({ data }: { data: Data }) {
 
         setLoading(true);
         try {
-            const startISO = formatInTimeZone(t, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+            const startISO = formatInTimeZone(slotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
             const { data, error } = await supabase.rpc('hold_slot', {
                 p_biz_id: biz.id,
                 p_branch_id: branchId,
@@ -495,12 +495,12 @@ export default function BizClient({ data }: { data: Data }) {
 
             if (error) {
                 console.error('[hold_slot] error:', error);
-                alert(fmtErr(error));
+                alert(fmtErr(error, t));
                 return;
             }
 
             const bookingId = String(data);
-            setHolding({ bookingId, until: Date.now() + 120_000, slotLabel: toLabel(t) });
+            setHolding({ bookingId, until: Date.now() + 120_000, slotLabel: toLabel(slotTime) });
 
             fetch('/api/notify', {
                 method: 'POST',
@@ -509,7 +509,7 @@ export default function BizClient({ data }: { data: Data }) {
             }).catch(() => {});
         } catch (e) {
             console.error('[hold_slot] catch:', e);
-            alert(fmtErr(e));
+            alert(fmtErr(e, t));
         } finally {
             setLoading(false);
         }
@@ -522,7 +522,7 @@ export default function BizClient({ data }: { data: Data }) {
             const { error } = await supabase.rpc('confirm_booking', { p_booking_id: holding.bookingId });
             if (error) {
                 console.error('[confirm_booking] error:', error);
-                alert(fmtErr(error));
+                alert(fmtErr(error, t));
                 return;
             }
 
@@ -535,7 +535,7 @@ export default function BizClient({ data }: { data: Data }) {
             location.href = `/booking/${holding.bookingId}`;
         } catch (e) {
             console.error('[confirm_booking] catch:', e);
-            alert(fmtErr(e));
+            alert(fmtErr(e, t));
         } finally {
             setLoading(false);
         }
