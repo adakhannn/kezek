@@ -84,43 +84,78 @@ export default async function Page({
         .filter((r): r is NonNullable<typeof r> => r !== null);
 
     return (
-        <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Редактирование сотрудника</h1>
-                        <div className="flex items-center gap-3 flex-wrap">
-                            <p className="text-gray-600 dark:text-gray-400">Управление данными сотрудника</p>
-                            {currentBranch && (
-                                <>
-                                    <span className="text-gray-400 dark:text-gray-500">•</span>
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Филиал: <span className="text-indigo-600 dark:text-indigo-400">{currentBranch.name}</span>
-                                        </span>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6">
+            {/* Заголовок с информацией о сотруднике */}
+            <div className="rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 text-white shadow-lg">
+                <div className="px-6 py-6 lg:px-8 lg:py-7">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    href="/dashboard/staff"
+                                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                                    title="Назад к списку сотрудников"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                    </svg>
+                                </Link>
+                                <div>
+                                    <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">{staff.full_name}</h1>
+                                    <div className="flex items-center gap-3 flex-wrap mt-2">
+                                        <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium">
+                                            {staff.is_active ? (
+                                                <>
+                                                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                                                    Активен
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-gray-400" />
+                                                    Неактивен
+                                                </>
+                                            )}
+                                        </div>
+                                        {currentBranch && (
+                                            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium">
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                {currentBranch.name}
+                                            </div>
+                                        )}
                                     </div>
-                                </>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Link
+                                className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                                href={`/dashboard/staff/${staff.id}/schedule`}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Расписание
+                            </Link>
+                            <Link
+                                className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                                href={`/dashboard/staff/${staff.id}/slots`}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Свободные слоты
+                            </Link>
+                            {activeBranches.length > 1 && (
+                                <TransferStaffDialog
+                                    staffId={String(staff.id)}
+                                    currentBranchId={String(staff.branch_id)}
+                                    branches={activeBranches.map(b => ({id: String(b.id), name: String(b.name)}))}
+                                />
                             )}
                         </div>
-                    </div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <Link className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200" href={`/dashboard/staff/${staff.id}/schedule`}>
-                            Расписание
-                        </Link>
-                        <Link className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200" href={`/dashboard/staff/${staff.id}/slots`}>
-                            Свободные слоты
-                        </Link>
-                        {activeBranches.length > 1 && (
-                            <TransferStaffDialog
-                                staffId={String(staff.id)}
-                                currentBranchId={String(staff.branch_id)}
-                                branches={activeBranches.map(b => ({id: String(b.id), name: String(b.name)}))}
-                            />
-                        )}
                     </div>
                 </div>
             </div>
@@ -139,7 +174,17 @@ export default async function Page({
                 </div>
             )}
 
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+            {/* Основная информация */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Основная информация
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Личные данные и контакты сотрудника</p>
+                </div>
                 <StaffForm
                     initial={{
                         id: String(staff.id),
@@ -156,7 +201,17 @@ export default async function Page({
                 />
             </div>
 
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+            {/* Компетенции */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Компетенции
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Услуги, которые выполняет этот сотрудник</p>
+                </div>
                 <StaffServicesEditor
                     staffId={String(staff.id)}
                     staffBranchId={String(staff.branch_id)}
@@ -164,13 +219,22 @@ export default async function Page({
             </div>
 
             {/* Отзывы */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Отзывы</h2>
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                            <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                            Отзывы
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Отзывы клиентов о работе сотрудника</p>
+                    </div>
                     {reviews.length > 0 && (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Всего: {reviews.length}
-                        </span>
+                        <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1.5">
+                            <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">{reviews.length}</span>
+                            <span className="text-xs text-indigo-600 dark:text-indigo-400">отзывов</span>
+                        </div>
                     )}
                 </div>
                 {reviews.length === 0 ? (
