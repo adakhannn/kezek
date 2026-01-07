@@ -16,6 +16,10 @@ type Branch = {
 export default async function BranchesListPage() {
     const { supabase, bizId } = await getBizContextForManagers();
 
+    // Проверяем, является ли пользователь суперадмином
+    const { data: isSuper } = await supabase.rpc('is_super_admin');
+    const isSuperAdmin = !!isSuper;
+
     const { data: branches, error } = await supabase
         .from('branches')
         .select('id,name,address,is_active')
@@ -34,15 +38,17 @@ export default async function BranchesListPage() {
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Филиалы</h1>
                         <p className="text-gray-600 dark:text-gray-400">Управление филиалами бизнеса</p>
                     </div>
-                    <Link
-                        href="/dashboard/branches/new"
-                        className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
-                    >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Добавить филиал
-                    </Link>
+                    {isSuperAdmin && (
+                        <Link
+                            href="/dashboard/branches/new"
+                            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
+                        >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Добавить филиал
+                        </Link>
+                    )}
                 </div>
             </div>
 

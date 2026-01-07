@@ -10,7 +10,14 @@ import { getServiceClient } from '@/lib/supabaseService';
 export async function POST(_req: Request, context: unknown) {
     try {
         const branchId = await getRouteParamRequired(context, 'id');
-        const { bizId } = await getBizContextForManagers();
+        const { supabase, bizId } = await getBizContextForManagers();
+        
+        // Проверяем, является ли пользователь суперадмином
+        const { data: isSuper } = await supabase.rpc('is_super_admin');
+        if (!isSuper) {
+            return NextResponse.json({ ok: false, error: 'FORBIDDEN', message: 'Только суперадмин может удалять филиалы' }, { status: 403 });
+        }
+        
         const admin = getServiceClient();
 
         // 1) филиал наш?

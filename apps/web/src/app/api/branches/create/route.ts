@@ -17,7 +17,14 @@ type Body = {
 
 export async function POST(req: Request) {
     try {
-        const { bizId } = await getBizContextForManagers();
+        const { supabase, bizId } = await getBizContextForManagers();
+        
+        // Проверяем, является ли пользователь суперадмином
+        const { data: isSuper } = await supabase.rpc('is_super_admin');
+        if (!isSuper) {
+            return NextResponse.json({ ok: false, error: 'FORBIDDEN', message: 'Только суперадмин может создавать филиалы' }, { status: 403 });
+        }
+        
         const admin = getServiceClient();
 
         const body = await req.json().catch(() => ({} as Body));
