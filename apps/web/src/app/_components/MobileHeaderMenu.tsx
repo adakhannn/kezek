@@ -79,10 +79,6 @@ export function MobileHeaderMenu() {
                 </>
             )}
 
-            {/* Десктопная версия - показываем на md и выше */}
-            <div className="hidden md:flex items-center gap-3">
-                <LanguageSwitcher />
-            </div>
         </>
     );
 }

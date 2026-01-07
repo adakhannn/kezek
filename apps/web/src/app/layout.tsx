@@ -48,13 +48,13 @@ export default function RootLayout({
                     <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8">
                         <div className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4">
                             <Logo />
-                            <div className="flex items-center gap-2 sm:gap-3">
-                                <div className="hidden sm:block">
-                                    <LanguageSwitcher />
-                                </div>
-                                <div className="hidden md:block">
-                                    <AuthStatusServer/>
-                                </div>
+                            {/* Десктопная версия - показываем на md и выше */}
+                            <div className="hidden md:flex items-center gap-3">
+                                <LanguageSwitcher />
+                                <AuthStatusServer/>
+                            </div>
+                            {/* Мобильная версия - показываем только на md и ниже */}
+                            <div className="md:hidden relative">
                                 <MobileHeaderMenu />
                             </div>
                             <AuthStatusUpdater/>
