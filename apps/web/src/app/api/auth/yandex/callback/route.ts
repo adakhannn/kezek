@@ -127,8 +127,10 @@ export async function GET(req: Request) {
 
             if (authError) {
                 // Если пользователь уже существует (дубликат email), пытаемся найти его
-                if (authError.message?.includes('already registered') || authError.message?.includes('already exists')) {
-                    console.log('[yandex/callback] User already exists, trying to find by email');
+                if (authError.message?.includes('already registered') || 
+                    authError.message?.includes('already exists') ||
+                    authError.message?.includes('email address has already been registered')) {
+                    console.log('[yandex/callback] User already exists, trying to find by email:', email);
                     
                     // Ищем пользователя по email через profiles
                     const { data: profileByEmail } = await admin
@@ -141,11 +143,43 @@ export async function GET(req: Request) {
                         userId = profileByEmail.id;
                         console.log('[yandex/callback] Found existing user by email in profiles:', userId);
                     } else {
-                        // Если не нашли, возвращаем ошибку
-                        console.error('[yandex/callback] User exists but not found in profiles:', authError);
-                        return NextResponse.redirect(
-                            `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
-                        );
+                        // Если не нашли в profiles, пытаемся найти через auth.users
+                        // Используем getUserByEmail через admin API
+                        try {
+                            const { data: { users } } = await admin.auth.admin.listUsers();
+                            const existingUser = users?.find(u => u.email === email);
+                            
+                            if (existingUser) {
+                                userId = existingUser.id;
+                                console.log('[yandex/callback] Found existing user by email in auth:', userId);
+                                
+                                // Создаем профиль, если его нет
+                                const { data: existingProfile } = await admin
+                                    .from('profiles')
+                                    .select('id')
+                                    .eq('id', userId)
+                                    .maybeSingle();
+                                
+                                if (!existingProfile) {
+                                    await admin.from('profiles').insert({
+                                        id: userId,
+                                        email: yandexUser.default_email || null,
+                                        full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
+                                    });
+                                }
+                            } else {
+                                // Если не нашли, возвращаем ошибку
+                                console.error('[yandex/callback] User exists but not found:', authError);
+                                return NextResponse.redirect(
+                                    `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
+                                );
+                            }
+                        } catch (listError) {
+                            console.error('[yandex/callback] Error listing users:', listError);
+                            return NextResponse.redirect(
+                                `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
+                            );
+                        }
                     }
                 } else {
                     // Другая ошибка
