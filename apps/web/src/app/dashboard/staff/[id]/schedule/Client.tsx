@@ -421,25 +421,43 @@ export default function Client({
                         {formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}
                     </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
-                    {currentWeekDates.map((date) => {
-                        const dow = date.getDay(); // 0-6 (0=воскресенье)
-                        const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                        const intervals = rulesByDate.get(dateStr);
-                        // Если правила нет - null (рабочий день по умолчанию)
-                        // Если правило есть с пустыми интервалами - [] (выходной день)
-                        // Если правило есть с интервалами - массив интервалов (рабочий день)
-                        return (
-                            <DayRow
-                                key={dateStr}
-                                date={date}
-                                dow={dow}
-                                intervals={intervals !== undefined ? intervals : null}
-                                saving={saving}
-                                onSave={saveDay}
-                            />
-                        );
-                    })}
+                <div className="space-y-3">
+                    {/* Первая строка: 4 карточки */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {currentWeekDates.slice(0, 4).map((date) => {
+                            const dow = date.getDay(); // 0-6 (0=воскресенье)
+                            const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                            const intervals = rulesByDate.get(dateStr);
+                            return (
+                                <DayRow
+                                    key={dateStr}
+                                    date={date}
+                                    dow={dow}
+                                    intervals={intervals !== undefined ? intervals : null}
+                                    saving={saving}
+                                    onSave={saveDay}
+                                />
+                            );
+                        })}
+                    </div>
+                    {/* Вторая строка: 3 карточки */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {currentWeekDates.slice(4, 7).map((date) => {
+                            const dow = date.getDay(); // 0-6 (0=воскресенье)
+                            const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                            const intervals = rulesByDate.get(dateStr);
+                            return (
+                                <DayRow
+                                    key={dateStr}
+                                    date={date}
+                                    dow={dow}
+                                    intervals={intervals !== undefined ? intervals : null}
+                                    saving={saving}
+                                    onSave={saveDay}
+                                />
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
@@ -456,25 +474,43 @@ export default function Client({
                         {formatInTimeZone(nextWeekDates[6], TZ, 'dd.MM.yyyy')}
                     </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
-                    {nextWeekDates.map((date) => {
-                        const dow = date.getDay(); // 0-6 (0=воскресенье)
-                        const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                        const intervals = rulesByDate.get(dateStr);
-                        // Если правила нет - null (рабочий день по умолчанию)
-                        // Если правило есть с пустыми интервалами - [] (выходной день)
-                        // Если правило есть с интервалами - массив интервалов (рабочий день)
-                        return (
-                            <DayRow
-                                key={dateStr}
-                                date={date}
-                                dow={dow}
-                                intervals={intervals !== undefined ? intervals : null}
-                                saving={saving}
-                                onSave={saveDay}
-                            />
-                        );
-                    })}
+                <div className="space-y-3">
+                    {/* Первая строка: 4 карточки */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {nextWeekDates.slice(0, 4).map((date) => {
+                            const dow = date.getDay(); // 0-6 (0=воскресенье)
+                            const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                            const intervals = rulesByDate.get(dateStr);
+                            return (
+                                <DayRow
+                                    key={dateStr}
+                                    date={date}
+                                    dow={dow}
+                                    intervals={intervals !== undefined ? intervals : null}
+                                    saving={saving}
+                                    onSave={saveDay}
+                                />
+                            );
+                        })}
+                    </div>
+                    {/* Вторая строка: 3 карточки */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {nextWeekDates.slice(4, 7).map((date) => {
+                            const dow = date.getDay(); // 0-6 (0=воскресенье)
+                            const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                            const intervals = rulesByDate.get(dateStr);
+                            return (
+                                <DayRow
+                                    key={dateStr}
+                                    date={date}
+                                    dow={dow}
+                                    intervals={intervals !== undefined ? intervals : null}
+                                    saving={saving}
+                                    onSave={saveDay}
+                                />
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
