@@ -14,6 +14,7 @@ export async function GET(req: Request) {
         const redirectTo = searchParams.get('redirect') || '/';
 
         const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
+        const redirectUri = `${origin}/auth/callback-yandex`;
 
         if (error) {
             return NextResponse.redirect(
@@ -28,6 +29,7 @@ export async function GET(req: Request) {
         }
 
         // Обмениваем code на access_token
+        // ВАЖНО: redirect_uri должен точно совпадать с тем, что был указан при запросе авторизации
         const tokenResponse = await fetch('https://oauth.yandex.ru/token', {
             method: 'POST',
             headers: {
@@ -38,6 +40,7 @@ export async function GET(req: Request) {
                 code: code,
                 client_id: process.env.YANDEX_OAUTH_CLIENT_ID!,
                 client_secret: process.env.YANDEX_OAUTH_CLIENT_SECRET!,
+                redirect_uri: redirectUri,
             }),
         });
 
