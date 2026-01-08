@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { PersonalCabinetButton } from './PersonalCabinetButton';
+import { SignInButton } from './SignInButton';
 import { SignOutButton } from './SignOutButton';
 
 export const dynamic = 'force-dynamic';
@@ -70,12 +71,7 @@ export async function AuthStatusServer() {
     if (!user) {
         return (
             <div className="hidden md:flex items-center gap-3">
-                <Link 
-                    href="/auth/sign-in" 
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
-                >
-                    Войти
-                </Link>
+                <SignInButton />
             </div>
         );
     }
