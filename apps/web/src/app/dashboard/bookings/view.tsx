@@ -90,10 +90,17 @@ function BookingPill({ id, startISO, endISO, status }: { id: string; startISO: s
     );
 }
 
-function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
+function CalendarDay({ bizId, staff, branches }: { bizId: string; staff: StaffRow[]; branches: BranchRow[] }) {
     const { t } = useLanguage();
     const [date, setDate] = useState<string>(() => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
+    const [selectedBranchId, setSelectedBranchId] = useState<string>('all');
     const [items, setItems] = useState<{ id: string; staff_id: string; start_at: string; end_at: string; status: BookingItem['status'] }[]>([]);
+    
+    // Фильтруем мастеров по филиалу
+    const filteredStaff = useMemo(() => {
+        if (selectedBranchId === 'all') return staff;
+        return staff.filter(s => s.branch_id === selectedBranchId);
+    }, [staff, selectedBranchId]);
 
     function exportCsv() {
         const rows = items.map(r => ({
@@ -139,16 +146,28 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
     const hours = hourRange(9, 21);
     const byStaff = useMemo(() => {
         const map = new Map<string, { id: string; staff_id: string; start_at: string; end_at: string; status: BookingItem['status'] }[]>();
-        for (const s of staff) map.set(s.id, []);
+        for (const s of filteredStaff) map.set(s.id, []);
         for (const it of items) { if (!map.has(it.staff_id)) map.set(it.staff_id, []); map.get(it.staff_id)!.push(it); }
         return map;
-    }, [items, staff]);
+    }, [items, filteredStaff]);
 
     return (
         <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.calendar.title', 'Календарь на день')}</h2>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                    {branches.length > 1 && (
+                        <select 
+                            className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm"
+                            value={selectedBranchId}
+                            onChange={(e) => setSelectedBranchId(e.target.value)}
+                        >
+                            <option value="all">{t('bookings.calendar.allBranches', 'Все филиалы')}</option>
+                            {branches.map(b => (
+                                <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                        </select>
+                    )}
                     <input className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                     <button className="px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 text-sm flex items-center gap-2" onClick={exportCsv}>
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,17 +180,24 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
 
             <div className="overflow-x-auto">
                 <table className="min-w-full">
-                    <thead>
+                    <thead className="sticky top-0 z-[96]">
                     <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-24">{t('bookings.calendar.time', 'Время')}</th>
-                        {staff.map(s => (<th key={s.id} className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{s.full_name}</th>))}
+                        {filteredStaff.length === 0 ? (
+                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{t('bookings.calendar.noStaff', 'Нет мастеров')}</th>
+                        ) : (
+                            filteredStaff.map(s => (<th key={s.id} className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{s.full_name}</th>))
+                        )}
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {hours.map(h => (
                         <tr key={h} className="align-top">
                             <td className="p-4 text-sm font-medium text-gray-600 dark:text-gray-400">{`${String(h).padStart(2, '0')}:00`}</td>
-                            {staff.map(s => {
+                            {filteredStaff.length === 0 ? (
+                                <td className="p-4 text-sm text-gray-400 dark:text-gray-500">{t('bookings.calendar.noStaffInBranch', '—')}</td>
+                            ) : (
+                                filteredStaff.map(s => {
                                 const events = (byStaff.get(s.id) ?? []).filter(ev => Math.floor(minutesFromMidnight(new Date(ev.start_at)) / 60) === h);
                                 return (
                                     <td key={cellKey(s.id, h)} className="p-4">
@@ -183,7 +209,7 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
                                         ))}
                                     </td>
                                 );
-                            })}
+                            }))}
                         </tr>
                     ))}
                     </tbody>
@@ -217,22 +243,61 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
 }
 
 // ---------------- List ----------------
-function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }) {
+function ListTable({ bizId, initial, branches }: { bizId: string; initial: BookingItem[]; branches: BranchRow[] }) {
     const { t } = useLanguage();
     const [list, setList] = useState<BookingItem[]>(initial);
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [branchFilter, setBranchFilter] = useState<string>('all');
+    const [searchQuery, setSearchQuery] = useState<string>('');
 
     async function refresh() {
-        const now = new Date().toISOString();
         // Загружаем прошедшие брони (для отметки посещения) и будущие
-        const { data } = await supabase
+        let query = supabase
             .from('bookings')
-            .select('id,status,start_at,end_at,services(name_ru),staff(full_name)')
-            .eq('biz_id', bizId)
-            .neq('status', 'cancelled')
+            .select('id,status,start_at,end_at,branch_id,services(name_ru),staff(full_name),client_name,client_phone')
+            .eq('biz_id', bizId);
+        
+        if (statusFilter !== 'all') {
+            if (statusFilter === 'active') {
+                query = query.in('status', ['hold', 'confirmed']);
+            } else {
+                query = query.eq('status', statusFilter);
+            }
+        } else {
+            query = query.neq('status', 'cancelled');
+        }
+        
+        if (branchFilter !== 'all') {
+            query = query.eq('branch_id', branchFilter);
+        }
+        
+        const { data } = await query
             .order('start_at', { ascending: false })
-            .limit(50);
-        setList(data || []);
+            .limit(100);
+        
+        // Фильтруем по поисковому запросу на клиенте
+        let filtered = data || [];
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            filtered = filtered.filter(b => {
+                const service = Array.isArray(b.services) ? b.services[0] : b.services;
+                const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
+                return (
+                    (service?.name_ru?.toLowerCase().includes(q)) ||
+                    (master?.full_name?.toLowerCase().includes(q)) ||
+                    (b.client_name?.toLowerCase().includes(q)) ||
+                    (b.client_phone?.includes(q)) ||
+                    (String(b.id).toLowerCase().includes(q))
+                );
+            });
+        }
+        
+        setList(filtered);
     }
+    
+    useEffect(() => {
+        refresh();
+    }, [statusFilter, branchFilter]);
 
     async function confirm(id: string) {
         const { error } = await supabase.rpc('confirm_booking', { p_booking_id: id });
@@ -288,8 +353,8 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
 
     return (
         <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.list.title', 'Последние 30 броней')}</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.list.title', 'Брони')}</h2>
                 <button className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 flex items-center gap-2" onClick={refresh}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -297,9 +362,48 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
                     {t('bookings.list.refresh', 'Обновить')}
                 </button>
             </div>
+            
+            {/* Фильтры и поиск */}
+            <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                    type="text"
+                    placeholder={t('bookings.list.searchPlaceholder', 'Поиск: услуга, мастер, клиент, ID...')}
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        // Debounce будет через useEffect
+                    }}
+                    className="flex-1 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                />
+                {branches.length > 1 && (
+                    <select
+                        value={branchFilter}
+                        onChange={(e) => setBranchFilter(e.target.value)}
+                        className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    >
+                        <option value="all">{t('bookings.list.allBranches', 'Все филиалы')}</option>
+                        {branches.map(b => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                    </select>
+                )}
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                >
+                    <option value="all">{t('bookings.list.allStatuses', 'Все статусы')}</option>
+                    <option value="active">{t('bookings.list.active', 'Активные')}</option>
+                    <option value="hold">{t('bookings.list.hold', 'В ожидании')}</option>
+                    <option value="confirmed">{t('bookings.list.confirmed', 'Подтвержденные')}</option>
+                    <option value="paid">{t('bookings.list.paid', 'Оплаченные')}</option>
+                    <option value="no_show">{t('bookings.list.noShow', 'Не пришли')}</option>
+                </select>
+            </div>
+            
             <div className="overflow-x-auto">
                 <table className="min-w-full">
-                    <thead>
+                    <thead className="sticky top-0 z-[96]">
                     <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">#</th>
                         <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{t('bookings.list.service', 'Услуга')}</th>
@@ -675,8 +779,8 @@ export default function AdminBookingsView({
                 </div>
             </div>
 
-            {tab === 'calendar' && <CalendarDay bizId={bizId} staff={staff} />}
-            {tab === 'list'     && <ListTable   bizId={bizId} initial={initial} />}
+            {tab === 'calendar' && <CalendarDay bizId={bizId} staff={staff} branches={branches} />}
+            {tab === 'list'     && <ListTable   bizId={bizId} initial={initial} branches={branches} />}
             {tab === 'desk'     && <QuickDesk   bizId={bizId} services={services} staff={staff} branches={branches} />}
         </div>
     );
