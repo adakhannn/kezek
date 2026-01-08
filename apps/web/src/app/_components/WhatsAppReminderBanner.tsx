@@ -94,7 +94,7 @@ export function WhatsAppReminderBanner() {
 
     return (
         <>
-            <div className="sticky top-14 sm:top-16 z-[35] bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg">
+            <div className="sticky top-14 sm:top-16 z-[99] bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg">
                 <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8 py-2.5 sm:py-3">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                         <div className="flex items-start sm:items-center gap-2 flex-1 min-w-0">
