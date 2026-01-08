@@ -38,7 +38,7 @@ export default async function Page() {
         // 2) Последние брони (для вкладки «Список»)
         const { data: bookings } = await supabase
             .from('bookings')
-            .select('id,status,start_at,end_at,services(name_ru),staff(full_name)')
+            .select('id,status,start_at,end_at,services(name_ru,name_ky),staff(full_name)')
             .eq('biz_id', bizId)
             .order('start_at', { ascending: false })
             .limit(30);

@@ -18,7 +18,7 @@ type BookingItem = {
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled' | 'no_show';
     start_at: string;
     end_at: string;
-    services?: { name_ru: string }[];
+    services?: { name_ru: string; name_ky?: string | null }[];
     staff?: { full_name: string }[];
 };
 
@@ -234,17 +234,24 @@ function CalendarDay({ bizId, staff, branches }: { bizId: string; staff: StaffRo
 
 // ---------------- List ----------------
 function ListTable({ bizId, initial, branches }: { bizId: string; initial: BookingItem[]; branches: BranchRow[] }) {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
     const [list, setList] = useState<BookingItem[]>(initial);
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [branchFilter, setBranchFilter] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
 
+    // Функция для получения названия услуги в зависимости от языка
+    const getServiceName = (service: { name_ru: string; name_ky?: string | null } | undefined): string => {
+        if (!service) return '';
+        if (locale === 'ky' && service.name_ky) return service.name_ky;
+        return service.name_ru;
+    };
+
     async function refresh() {
         // Загружаем прошедшие брони (для отметки посещения) и будущие
         let query = supabase
             .from('bookings')
-            .select('id,status,start_at,end_at,branch_id,services(name_ru),staff(full_name),client_name,client_phone')
+            .select('id,status,start_at,end_at,branch_id,services(name_ru,name_ky),staff(full_name),client_name,client_phone')
             .eq('biz_id', bizId);
         
         if (statusFilter !== 'all') {
@@ -413,7 +420,7 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
                         return (
                             <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                 <td className="p-4 text-sm font-mono text-gray-600 dark:text-gray-400">{String(b.id).slice(0, 8)}</td>
-                                <td className="p-4 text-sm font-medium text-gray-900 dark:text-gray-100">{service?.name_ru}</td>
+                                <td className="p-4 text-sm font-medium text-gray-900 dark:text-gray-100">{getServiceName(service)}</td>
                                 <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{master?.full_name}</td>
                                 <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
                                 <td className="p-4">
