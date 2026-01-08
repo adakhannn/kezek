@@ -511,7 +511,7 @@ function QuickDesk({
 
         const bookingId = String(data);
         await notify('confirm', bookingId);
-        alert(t('bookings.desk.created', `Создана запись #${bookingId.slice(0, 8)}`));
+        alert(`${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`);
     }
 
     return (
