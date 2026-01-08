@@ -15,6 +15,12 @@ type DashboardHomeClientProps = {
     needOnboarding: boolean;
 };
 
+const localeMap: Record<string, string> = {
+    ky: 'ky-KG',
+    ru: 'ru-RU',
+    en: 'en-US',
+};
+
 export function DashboardHomeClient({
     bizName,
     bizCity,
@@ -25,7 +31,16 @@ export function DashboardHomeClient({
     branchesCount,
     needOnboarding,
 }: DashboardHomeClientProps) {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
+    
+    // Форматируем дату с учетом текущей локали
+    const today = new Date(formattedDate);
+    const formatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+    });
+    const formattedDateLocalized = formatter.format(today);
 
     return (
         <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-8 space-y-8">
@@ -40,7 +55,7 @@ export function DashboardHomeClient({
                         <div>
                             <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">{bizName}</h1>
                             <p className="mt-1 text-sm lg:text-base text-indigo-100/90">
-                                {formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1)}
+                                {formattedDateLocalized.charAt(0).toUpperCase() + formattedDateLocalized.slice(1)}
                                 {bizCity ? ` · ${bizCity}` : ''}
                             </p>
                         </div>
