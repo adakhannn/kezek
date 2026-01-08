@@ -68,7 +68,7 @@ export async function AuthStatusServer() {
 
     if (!user) {
         return (
-            <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
                 <Link 
                     href="/auth/sign-in" 
                     className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
@@ -120,8 +120,8 @@ export async function AuthStatusServer() {
     }
 
     return (
-        <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
+        <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-gray-700 dark:text-gray-300">
                     <span className="font-medium">{label}</span>
