@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 type DashboardHomeClientProps = {
-    bizName: string;
+    bizName: string | null;
     bizCity: string | null;
     formattedDate: string;
     bookingsToday: number;
@@ -41,6 +41,9 @@ export function DashboardHomeClient({
         month: 'long',
     });
     const formattedDateLocalized = formatter.format(today);
+    
+    // Используем переведенное дефолтное значение, если имя бизнеса не задано
+    const displayBizName = bizName || t('dashboard.header.defaultBizName', 'Ваш бизнес в Kezek');
 
     return (
         <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-8 space-y-8">
@@ -53,7 +56,7 @@ export function DashboardHomeClient({
                             {t('dashboard.header.badge', 'Кабинет владельца бизнеса')}
                         </div>
                         <div>
-                            <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">{bizName}</h1>
+                            <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">{displayBizName}</h1>
                             <p className="mt-1 text-sm lg:text-base text-indigo-100/90">
                                 {formattedDateLocalized.charAt(0).toUpperCase() + formattedDateLocalized.slice(1)}
                                 {bizCity ? ` · ${bizCity}` : ''}

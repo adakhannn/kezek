@@ -126,6 +126,7 @@ const dictionaries: Dictionaries = {
 
         // Dashboard
         'dashboard.header.badge': 'Бизнес ээсинин кабинети',
+        'dashboard.header.defaultBizName': 'Сиздин бизнесиңиз Kezekте',
         'dashboard.stats.bookingsToday': 'Бүгүнкү брондоолор',
         'dashboard.stats.bookingsTodayHint': 'календарда жазылыштар',
         'dashboard.stats.activeStaff': 'Активдүү кызматкерлер',
@@ -283,6 +284,7 @@ const dictionaries: Dictionaries = {
 
         // Dashboard
         'dashboard.header.badge': 'Кабинет владельца бизнеса',
+        'dashboard.header.defaultBizName': 'Ваш бизнес в Kezek',
         'dashboard.stats.bookingsToday': 'Брони сегодня',
         'dashboard.stats.bookingsTodayHint': 'в календаре записи',
         'dashboard.stats.activeStaff': 'Активных сотрудников',
@@ -440,6 +442,7 @@ const dictionaries: Dictionaries = {
 
         // Dashboard
         'dashboard.header.badge': 'Business owner cabinet',
+        'dashboard.header.defaultBizName': 'Your business in Kezek',
         'dashboard.stats.bookingsToday': 'Bookings today',
         'dashboard.stats.bookingsTodayHint': 'in booking calendar',
         'dashboard.stats.activeStaff': 'Active staff',

@@ -49,7 +49,7 @@ export default async function DashboardHome() {
             .maybeSingle<{ name: string | null; city: string | null; slug: string | null }>(),
     ]);
 
-    const bizName = biz?.name || 'Ваш бизнес в Kezek';
+    const bizName = biz?.name || null; // Передаем null, чтобы перевести на клиенте
     const bizCity = biz?.city || null;
 
     // Передаем ISO строку, форматирование будет на клиенте с учетом локали
