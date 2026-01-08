@@ -9,7 +9,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 
-type ServiceRow = { id: string; name_ru: string; duration_min: number; branch_id: string };
+type ServiceRow = { id: string; name_ru: string; name_ky?: string | null; duration_min: number; branch_id: string };
 type StaffRow   = { id: string; full_name: string; branch_id: string };
 type BranchRow  = { id: string; name: string };
 
@@ -470,9 +470,16 @@ function QuickDesk({
     staff: StaffRow[];
     branches: BranchRow[];
 }) {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
     // выбранный филиал (начинаем с пустого, как в публичной версии)
     const [branchId, setBranchId] = useState<string>('');
+
+    // Функция для получения названия услуги в зависимости от языка
+    const getServiceName = (service: ServiceRow): string => {
+        if (locale === 'ky' && service.name_ky) return service.name_ky;
+        if (locale === 'en') return service.name_ru; // fallback на русский для английского
+        return service.name_ru;
+    };
 
     // фильтры по филиалу
     const servicesByBranch = useMemo(
@@ -496,7 +503,7 @@ function QuickDesk({
     const [creating, setCreating] = useState(false);
 
     // ====== Клиент ======
-    type ClientMode = 'none' | 'existing' | 'new';
+    type ClientMode = 'none' | 'existing';
     const [clientMode, setClientMode] = useState<ClientMode>('none');
 
     // существующий клиент (поиск)
@@ -524,10 +531,6 @@ function QuickDesk({
             setSearchLoading(false);
         }
     }
-
-    // новый клиент (быстрая запись без аккаунта)
-    const [newClientName, setNewClientName]   = useState('');
-    const [newClientPhone, setNewClientPhone] = useState('');
 
     // при смене филиала — сбрасываем выбор и слоты (как в публичной версии)
     useEffect(() => {
@@ -600,12 +603,6 @@ function QuickDesk({
         if (clientMode === 'existing') {
             if (!selectedClientId) return alert(t('bookings.desk.errors.selectClient', 'Выбери клиента из поиска'));
             p_client_id = selectedClientId;
-        } else if (clientMode === 'new') {
-            if (!newClientName.trim() && !newClientPhone.trim()) {
-                return alert(t('bookings.desk.errors.clientNameOrPhone', 'Укажи имя или телефон нового клиента'));
-            }
-            p_client_name  = newClientName.trim() || null;
-            p_client_phone = newClientPhone.trim() || null;
         }
 
         setCreating(true);
@@ -637,8 +634,6 @@ function QuickDesk({
             setSlots([]);
             setClientMode('none');
             setSelectedClientId('');
-            setNewClientName('');
-            setNewClientPhone('');
             setSearchQ('');
             setFoundUsers([]);
         } finally {
@@ -648,9 +643,7 @@ function QuickDesk({
 
     // Проверка готовности к созданию записи
     const canCreate = branchId && serviceId && staffId && slotStartISO && 
-        (clientMode === 'none' || 
-         (clientMode === 'existing' && selectedClientId) || 
-         (clientMode === 'new' && (newClientName.trim() || newClientPhone.trim())));
+        (clientMode === 'none' || (clientMode === 'existing' && selectedClientId));
 
     const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
     const tomorrow = formatInTimeZone(addDays(new Date(), 1), TZ, 'yyyy-MM-dd');
@@ -685,7 +678,7 @@ function QuickDesk({
                         <select className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={serviceId} onChange={(e) => setServiceId(e.target.value)} disabled={!branchId}>
                             <option value="">{branchId ? t('bookings.desk.selectService', 'Выберите услугу') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
                             {servicesByBranch.map(s => (
-                                <option key={s.id} value={s.id}>{s.name_ru} ({s.duration_min}м)</option>
+                                <option key={s.id} value={s.id}>{getServiceName(s)} ({s.duration_min}м)</option>
                             ))}
                             {branchId && servicesByBranch.length === 0 && <option value="">{t('bookings.desk.noServices', 'Нет услуг в филиале')}</option>}
                         </select>
@@ -790,10 +783,6 @@ function QuickDesk({
                         <input type="radio" name="clientMode" checked={clientMode==='existing'} onChange={()=>setClientMode('existing')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
                         <span className="text-sm text-gray-700 dark:text-gray-300">{t('bookings.desk.clientExisting', 'Существующий')}</span>
                     </label>
-                    <label className="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="clientMode" checked={clientMode==='new'} onChange={()=>setClientMode('new')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">{t('bookings.desk.clientNew', 'Новый (быстрый)')}</span>
-                    </label>
                 </div>
 
                 {clientMode === 'existing' && (
@@ -853,17 +842,6 @@ function QuickDesk({
                     </div>
                 )}
 
-                {clientMode === 'new' && (
-                    <div className="grid sm:grid-cols-2 gap-3">
-                        <input className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder={t('bookings.desk.newClientNamePlaceholder', 'Имя (необязательно)')}
-                               value={newClientName} onChange={e=>setNewClientName(e.target.value)} />
-                        <input className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder={t('bookings.desk.newClientPhonePlaceholder', 'Телефон (желательно)')}
-                               value={newClientPhone} onChange={e=>setNewClientPhone(e.target.value)} />
-                        <div className="sm:col-span-2 text-xs text-gray-500 dark:text-gray-400">
-                            {t('bookings.desk.newClientHint', 'Эти данные сохранятся только в брони (без создания аккаунта).')}
-                        </div>
-                    </div>
-                )}
             </div>
 
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
