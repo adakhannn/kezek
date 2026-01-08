@@ -9,6 +9,8 @@ import { getServiceClient } from '@/lib/supabaseService';
 
 type Body = {
     name_ru: string;
+    name_ky?: string | null;
+    name_en?: string | null;
     duration_min: number;
     price_from: number;
     price_to: number;
@@ -77,10 +79,14 @@ export async function POST(req: Request) {
 
         // ---- готовим мульти-вставку
         const active = body.active ?? true;
+        const name_ky = body.name_ky?.trim() || null;
+        const name_en = body.name_en?.trim() || null;
         const rows = branchIds.map((branch_id) => ({
             biz_id: bizId,
             branch_id,
             name_ru: name,
+            name_ky,
+            name_en,
             duration_min: duration,
             price_from,
             price_to,

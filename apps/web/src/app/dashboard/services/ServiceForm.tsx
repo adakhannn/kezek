@@ -12,6 +12,8 @@ type Branch = { id: string; name: string };
 type Initial = {
     id?: string;             // если есть — режим редактирования
     name_ru: string;
+    name_ky?: string | null;
+    name_en?: string | null;
     duration_min: number;
     price_from: number;
     price_to: number;
@@ -92,6 +94,8 @@ export default function ServiceForm({
             // - edit:   шлём branch_ids: string[] (теперь тоже множественный выбор)
             const payload = {
                 name_ru: form.name_ru.trim(),
+                name_ky: form.name_ky?.trim() || null,
+                name_en: form.name_en?.trim() || null,
                 duration_min: Number(form.duration_min) || 0,
                 price_from: priceFromStr.trim() === '' ? 0 : Number(priceFromStr) || 0,
                 price_to: priceToStr.trim() === '' ? 0 : Number(priceToStr) || 0,
@@ -127,12 +131,27 @@ export default function ServiceForm({
                 </div>
             )}
 
-            <Input
-                label="Название"
-                value={form.name_ru}
-                onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
-                required
-            />
+            <div className="space-y-4">
+                <Input
+                    label="Название (русский) *"
+                    value={form.name_ru}
+                    onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
+                    required
+                    placeholder="Взрослая стрижка"
+                />
+                <Input
+                    label="Название (кыргызский)"
+                    value={form.name_ky || ''}
+                    onChange={(e) => setForm((f) => ({ ...f, name_ky: e.target.value || null }))}
+                    placeholder="Чоңдордун чач кесуү"
+                />
+                <Input
+                    label="Название (английский)"
+                    value={form.name_en || ''}
+                    onChange={(e) => setForm((f) => ({ ...f, name_en: e.target.value || null }))}
+                    placeholder="Adult haircut"
+                />
+            </div>
 
             <div className="grid sm:grid-cols-3 gap-4">
                 <Input

@@ -9,7 +9,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 
-type ServiceRow = { id: string; name_ru: string; name_ky?: string | null; duration_min: number; branch_id: string };
+type ServiceRow = { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number; branch_id: string };
 type StaffRow   = { id: string; full_name: string; branch_id: string };
 type BranchRow  = { id: string; name: string };
 
@@ -484,7 +484,7 @@ function QuickDesk({
     // Функция для получения названия услуги в зависимости от языка
     const getServiceName = (service: ServiceRow): string => {
         if (locale === 'ky' && service.name_ky) return service.name_ky;
-        if (locale === 'en') return service.name_ru; // fallback на русский для английского
+        if (locale === 'en' && service.name_en) return service.name_en;
         return service.name_ru;
     };
 

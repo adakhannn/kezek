@@ -9,6 +9,8 @@ import { getServiceClient } from '@/lib/supabaseService';
 
 type Body = {
     name_ru: string;
+    name_ky?: string | null;
+    name_en?: string | null;
     duration_min: number;
     price_from: number;
     price_to: number;
@@ -79,10 +81,14 @@ export async function POST(req: Request, context: unknown) {
 
         // Обновляем существующие записи
         if (toUpdate.length > 0) {
+            const name_ky = body.name_ky?.trim() || null;
+            const name_en = body.name_en?.trim() || null;
             const { error: eUpd } = await admin
                 .from('services')
                 .update({
                     name_ru: body.name_ru.trim(),
+                    name_ky,
+                    name_en,
                     duration_min: body.duration_min,
                     price_from: body.price_from ?? 0,
                     price_to: body.price_to ?? 0,
@@ -97,10 +103,14 @@ export async function POST(req: Request, context: unknown) {
 
         // Создаём новые записи для добавленных филиалов
         if (toAdd.length > 0) {
+            const name_ky = body.name_ky?.trim() || null;
+            const name_en = body.name_en?.trim() || null;
             const rows = toAdd.map((branch_id) => ({
                 biz_id: bizId,
                 branch_id,
                 name_ru: body.name_ru.trim(),
+                name_ky,
+                name_en,
                 duration_min: body.duration_min,
                 price_from: body.price_from ?? 0,
                 price_to: body.price_to ?? 0,

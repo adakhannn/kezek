@@ -22,6 +22,8 @@ export default async function NewServicePage() {
             <ServiceForm
                 initial={{
                     name_ru: '',
+                    name_ky: null,
+                    name_en: null,
                     duration_min: 60,
                     price_from: 0,
                     price_to: 0,

@@ -19,7 +19,7 @@ export default async function EditServicePage({
     const [{ data: svc }, { data: branches }] = await Promise.all([
         supabase
             .from('services')
-            .select('id,name_ru,duration_min,price_from,price_to,active,branch_id,biz_id')
+            .select('id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id,biz_id')
             .eq('id', id)
             .maybeSingle(),
         supabase
@@ -60,6 +60,8 @@ export default async function EditServicePage({
                     initial={{
                         id: String(svc.id),
                         name_ru: String(svc.name_ru),
+                        name_ky: svc.name_ky || null,
+                        name_en: svc.name_en || null,
                         duration_min: Number(svc.duration_min),
                         price_from: Number(svc.price_from),
                         price_to: Number(svc.price_to),
