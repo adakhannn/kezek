@@ -22,7 +22,7 @@ type BookingItem = {
     staff?: { full_name: string }[];
 };
 
-type RpcSlot = { staff_id: string; start_at: string; end_at: string };
+type RpcSlot = { staff_id: string; branch_id: string; start_at: string; end_at: string };
 
 // ---------------- utils/notify ----------------
 async function notify(type: 'hold' | 'confirm' | 'cancel', bookingId: string) {
@@ -550,24 +550,26 @@ function QuickDesk({
         let ignore = false;
         (async () => {
             if (!serviceId || !date) { setSlots([]); setSlotStartISO(''); return; }
-            const { data, error } = await supabase.rpc('get_free_slots_service_day', {
+            const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                 p_biz_id: bizId,
                 p_service_id: serviceId,
                 p_day: date,
-                p_per_staff: 200,
+                p_per_staff: 400,
                 p_step_min: 15,
-                p_tz: TZ,
             });
             if (ignore) return;
             if (error) {
-                console.error('[QuickDesk] get_free_slots_service_day error:', error.message || error);
+                console.error('[QuickDesk] get_free_slots_service_day_v2 error:', error.message || error);
                 setSlots([]); setSlotStartISO('');
                 return;
             }
             const raw = (data || []) as RpcSlot[];
             const now = new Date();
             const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
-            const filtered = (staffId ? raw.filter(s => s.staff_id === staffId) : raw)
+            // Фильтруем по филиалу, мастеру (если выбран) и времени
+            const filtered = raw
+                .filter(s => s.branch_id === branchId)
+                .filter(s => staffId ? s.staff_id === staffId : true)
                 .filter(s => new Date(s.start_at) > minTime);
 
             // dedupe по start_at
@@ -576,7 +578,7 @@ function QuickDesk({
             setSlotStartISO(prev => (prev && uniq.some(u => u.start_at === prev)) ? prev : (uniq[0]?.start_at || ''));
         })();
         return () => { ignore = true; };
-    }, [bizId, serviceId, staffId, date]);
+    }, [bizId, serviceId, staffId, date, branchId]);
 
     async function quickCreate() {
         const svc = servicesByBranch.find(s => s.id === serviceId);
@@ -748,7 +750,7 @@ function QuickDesk({
                 </button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t('bookings.desk.slotsHint', 'Слоты считаются по `get_free_slots_service_day` с учётом расписания и занятых броней.')}
+                {t('bookings.desk.slotsHint', 'Слоты считаются по `get_free_slots_service_day_v2` с учётом расписания и занятых броней.')}
             </p>
         </section>
     );
