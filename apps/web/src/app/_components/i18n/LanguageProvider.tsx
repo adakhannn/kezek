@@ -176,6 +176,11 @@ const dictionaries: Dictionaries = {
         'dashboard.nav.staff': 'Кызматкерлер',
         'dashboard.nav.services': 'Кызматтар',
         'dashboard.nav.branches': 'Филиалдар',
+        // Footer
+        'footer.rights': 'Бардык укуктар корголгон.',
+        'footer.privacy': 'Купуялык саясаты',
+        'footer.terms': 'Пайдалануучу келишими',
+        'footer.dataDeletion': 'Маалыматтарды өчүрүү',
     },
     ru: {
         // Auth / sign-in
@@ -341,6 +346,11 @@ const dictionaries: Dictionaries = {
         'dashboard.nav.staff': 'Сотрудники',
         'dashboard.nav.services': 'Услуги',
         'dashboard.nav.branches': 'Филиалы',
+        // Footer
+        'footer.rights': 'Все права защищены.',
+        'footer.privacy': 'Политика конфиденциальности',
+        'footer.terms': 'Пользовательское соглашение',
+        'footer.dataDeletion': 'Удаление данных',
     },
     en: {
         // Auth / sign-in
@@ -499,6 +509,11 @@ const dictionaries: Dictionaries = {
         'dashboard.nav.staff': 'Staff',
         'dashboard.nav.services': 'Services',
         'dashboard.nav.branches': 'Branches',
+        // Footer
+        'footer.rights': 'All rights reserved.',
+        'footer.privacy': 'Privacy policy',
+        'footer.terms': 'Terms of service',
+        'footer.dataDeletion': 'Data deletion',
     },
 };
 

@@ -1,10 +1,10 @@
 import type {Metadata} from 'next';
 import {Geist, Geist_Mono} from 'next/font/google';
-import Link from 'next/link';
 
 import './globals.css';
 import {AuthStatusServer} from './_components/AuthStatusServer';
 import {AuthStatusUpdater} from './_components/AuthStatusWrapper';
+import {Footer} from './_components/Footer';
 import {Logo} from './_components/Logo';
 import {MobileHeaderMenu} from './_components/MobileHeaderMenu';
 import {ReminderBanners} from './_components/ReminderBanners';
@@ -70,36 +70,8 @@ export default function RootLayout({
                 <main className="flex-1">
                     {children}
                 </main>
-                
-                <footer className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 mt-auto">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                © {new Date().getFullYear()} Kezek. Все права защищены.
-                            </p>
-                            <div className="flex items-center gap-6 flex-wrap">
-                                <Link 
-                                    href="/privacy" 
-                                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                                >
-                                    Политика конфиденциальности
-                                </Link>
-                                <Link
-                                    href="/terms"
-                                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                                >
-                                    Пользовательское соглашение
-                                </Link>
-                                <Link
-                                    href="/data-deletion"
-                                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                                >
-                                    Удаление данных
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
+
+                <Footer />
             </div>
         </LanguageProvider>
         </body>
