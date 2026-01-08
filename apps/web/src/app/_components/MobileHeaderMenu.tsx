@@ -53,12 +53,12 @@ export function MobileHeaderMenu() {
                 <>
                     {/* Overlay для закрытия меню */}
                     <div
-                        className="fixed inset-0 bg-black/20 z-40 md:hidden"
+                        className="fixed inset-0 bg-black/20 z-[45] md:hidden"
                         onClick={() => setIsOpen(false)}
                     />
                     
                     {/* Меню */}
-                    <div className="absolute top-full right-0 mt-2 mr-3 w-64 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 z-50 md:hidden">
+                    <div className="absolute top-full right-0 mt-2 mr-3 w-64 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 z-[60] md:hidden">
                         <div className="p-4 space-y-4">
                             {/* Переключатель языка */}
                             <div>

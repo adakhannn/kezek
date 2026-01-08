@@ -109,7 +109,7 @@ export function NameReminderBanner() {
     }
 
     return (
-        <div className="sticky top-16 z-40 bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-lg">
+        <div className="sticky top-14 sm:top-16 z-[35] bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-lg">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2 flex-1">
