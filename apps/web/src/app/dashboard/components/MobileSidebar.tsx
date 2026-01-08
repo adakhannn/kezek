@@ -101,9 +101,9 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
                 />
             )}
 
-            {/* Сайдбар */}
+            {/* Сайдбар - выезжает слева */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-[95] w-64 lg:w-[280px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-lg lg:shadow-sm transform transition-transform duration-300 ease-in-out ${
+                className={`fixed lg:static inset-y-0 left-0 z-[95] w-64 lg:w-[280px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-xl lg:shadow-sm transform transition-transform duration-300 ease-out ${
                     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                 }`}
             >
