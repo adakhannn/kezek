@@ -20,7 +20,7 @@ export function MobileHeaderMenu() {
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="md:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="md:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
                 aria-label="Меню"
             >
                 <svg
@@ -28,6 +28,7 @@ export function MobileHeaderMenu() {
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    style={{ width: '24px', height: '24px' }}
                 >
                     {isOpen ? (
                         <path
