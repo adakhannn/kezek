@@ -481,22 +481,22 @@ function QuickDesk({
     branches: BranchRow[];
 }) {
     const { t } = useLanguage();
-    // выбранный филиал
-    const [branchId, setBranchId] = useState<string>(branches[0]?.id || '');
+    // выбранный филиал (начинаем с пустого, как в публичной версии)
+    const [branchId, setBranchId] = useState<string>('');
 
     // фильтры по филиалу
     const servicesByBranch = useMemo(
-        () => services.filter(s => s.branch_id === branchId),
+        () => branchId ? services.filter(s => s.branch_id === branchId) : [],
         [services, branchId],
     );
     const staffByBranch = useMemo(
-        () => staff.filter(s => s.branch_id === branchId),
+        () => branchId ? staff.filter(s => s.branch_id === branchId) : [],
         [staff, branchId],
     );
 
-    // выбранные значения
-    const [serviceId, setServiceId]   = useState<string>(servicesByBranch[0]?.id || '');
-    const [staffId, setStaffId]       = useState<string>(staffByBranch[0]?.id || '');
+    // выбранные значения (начинаем с пустых, как в публичной версии)
+    const [serviceId, setServiceId]   = useState<string>('');
+    const [staffId, setStaffId]       = useState<string>('');
     const [date, setDate]             = useState<string>(() => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
 
     // слоты
@@ -537,13 +537,13 @@ function QuickDesk({
     const [newClientName, setNewClientName]   = useState('');
     const [newClientPhone, setNewClientPhone] = useState('');
 
-    // при смене филиала — сбрасываем выбор и слоты
+    // при смене филиала — сбрасываем выбор и слоты (как в публичной версии)
     useEffect(() => {
-        setServiceId(servicesByBranch[0]?.id || '');
-        setStaffId(staffByBranch[0]?.id || '');
+        setServiceId('');
+        setStaffId('');
         setSlots([]);
         setSlotStartISO('');
-    }, [branchId, servicesByBranch, staffByBranch]);
+    }, [branchId]);
 
     // загрузка слотов
     useEffect(() => {
@@ -633,21 +633,24 @@ function QuickDesk({
             <div className="grid sm:grid-cols-5 gap-3">
                 {/* Филиал */}
                 <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+                    <option value="">{t('bookings.desk.selectBranch', 'Выберите филиал')}</option>
                     {branches.map(b => (<option key={b.id} value={b.id}>{b.name}</option>))}
                 </select>
 
                 {/* Услуга */}
-                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
+                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={serviceId} onChange={(e) => setServiceId(e.target.value)} disabled={!branchId}>
+                    <option value="">{branchId ? t('bookings.desk.selectService', 'Выберите услугу') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
                     {servicesByBranch.map(s => (
                         <option key={s.id} value={s.id}>{s.name_ru} ({s.duration_min}м)</option>
                     ))}
-                    {servicesByBranch.length === 0 && <option value="">{t('bookings.desk.noServices', 'Нет услуг в филиале')}</option>}
+                    {branchId && servicesByBranch.length === 0 && <option value="">{t('bookings.desk.noServices', 'Нет услуг в филиале')}</option>}
                 </select>
 
                 {/* Мастер */}
-                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={staffId} onChange={(e) => setStaffId(e.target.value)}>
+                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={staffId} onChange={(e) => setStaffId(e.target.value)} disabled={!branchId}>
+                    <option value="">{branchId ? t('bookings.desk.selectMaster', 'Выберите мастера') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
                     {staffByBranch.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
-                    {staffByBranch.length === 0 && <option value="">{t('bookings.desk.noMasters', 'Нет мастеров в филиале')}</option>}
+                    {branchId && staffByBranch.length === 0 && <option value="">{t('bookings.desk.noMasters', 'Нет мастеров в филиале')}</option>}
                 </select>
 
                 {/* Дата */}
