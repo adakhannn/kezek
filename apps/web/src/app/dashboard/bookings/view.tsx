@@ -1,6 +1,6 @@
 'use client';
 
-import { addMinutes } from 'date-fns';
+import { addDays, addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
@@ -61,16 +61,6 @@ function Tabs({ value, onChange }: { value: TabKey; onChange: (v: TabKey) => voi
 function hourRange(start: number, end: number) { const a: number[] = []; for (let h = start; h <= end; h++) a.push(h); return a; }
 function minutesFromMidnight(d: Date) { return d.getHours() * 60 + d.getMinutes(); }
 function cellKey(staffId: string, hour: number) { return `${staffId}-${hour}`; }
-function statusClasses(s: BookingItem['status']) {
-    switch (s) {
-        case 'hold': return 'bg-yellow-50 border-yellow-300 text-yellow-800';
-        case 'confirmed': return 'bg-blue-50 border-blue-300 text-blue-800';
-        case 'paid': return 'bg-green-50 border-green-300 text-green-800';
-        case 'cancelled': return 'bg-gray-50 border-gray-300 text-gray-600 line-through';
-        case 'no_show': return 'bg-red-50 border-red-300 text-red-800';
-        default: return 'bg-gray-50 border-gray-300 text-gray-700';
-    }
-}
 function BookingPill({ id, startISO, endISO, status }: { id: string; startISO: string; endISO: string; status: BookingItem['status'] }) {
     const { t } = useLanguage();
     const start = new Date(startISO);
@@ -502,6 +492,8 @@ function QuickDesk({
     // слоты
     const [slots, setSlots] = useState<RpcSlot[]>([]);
     const [slotStartISO, setSlotStartISO] = useState<string>('');
+    const [slotsLoading, setSlotsLoading] = useState(false);
+    const [creating, setCreating] = useState(false);
 
     // ====== Клиент ======
     type ClientMode = 'none' | 'existing' | 'new';
@@ -549,7 +541,8 @@ function QuickDesk({
     useEffect(() => {
         let ignore = false;
         (async () => {
-            if (!branchId || !serviceId || !date) { setSlots([]); setSlotStartISO(''); return; }
+            if (!branchId || !serviceId || !date) { setSlots([]); setSlotStartISO(''); setSlotsLoading(false); return; }
+            setSlotsLoading(true);
             const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                 p_biz_id: bizId,
                 p_service_id: serviceId,
@@ -560,7 +553,7 @@ function QuickDesk({
             if (ignore) return;
             if (error) {
                 console.error('[QuickDesk] get_free_slots_service_day_v2 error:', error.message || error);
-                setSlots([]); setSlotStartISO('');
+                setSlots([]); setSlotStartISO(''); setSlotsLoading(false);
                 return;
             }
             const raw = (data || []) as RpcSlot[];
@@ -576,9 +569,22 @@ function QuickDesk({
             const uniq = Array.from(new Map(filtered.map(s => [s.start_at, s])).values());
             setSlots(uniq);
             setSlotStartISO(prev => (prev && uniq.some(u => u.start_at === prev)) ? prev : (uniq[0]?.start_at || ''));
+            setSlotsLoading(false);
         })();
         return () => { ignore = true; };
     }, [bizId, serviceId, staffId, date, branchId]);
+
+    // Debounce для поиска клиентов
+    useEffect(() => {
+        if (!searchQ.trim() || clientMode !== 'existing') {
+            setFoundUsers([]);
+            return;
+        }
+        const timer = setTimeout(() => {
+            searchUsers(searchQ);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQ, clientMode, searchUsers]);
 
     async function quickCreate() {
         const svc = servicesByBranch.find(s => s.id === serviceId);
@@ -602,69 +608,173 @@ function QuickDesk({
             p_client_phone = newClientPhone.trim() || null;
         }
 
-        const { data, error } = await supabase.rpc('create_internal_booking', {
-            p_biz_id: bizId,
-            p_branch_id: branchId,
-            p_service_id: serviceId,
-            p_staff_id: staffId,
-            p_start: slotStartISO,
-            p_minutes: svc.duration_min,
-            p_client_id,
-            p_client_name,
-            p_client_phone,
-        });
-        if (error) return alert(error.message);
+        setCreating(true);
+        try {
+            const { data, error } = await supabase.rpc('create_internal_booking', {
+                p_biz_id: bizId,
+                p_branch_id: branchId,
+                p_service_id: serviceId,
+                p_staff_id: staffId,
+                p_start: slotStartISO,
+                p_minutes: svc.duration_min,
+                p_client_id,
+                p_client_name,
+                p_client_phone,
+            });
+            if (error) {
+                alert(error.message);
+                return;
+            }
 
-        const bookingId = String(data);
-        await notify('confirm', bookingId);
-        alert(`${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`);
+            const bookingId = String(data);
+            await notify('confirm', bookingId);
+            alert(`${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`);
+            
+            // Автосброс формы после успешного создания
+            setServiceId('');
+            setStaffId('');
+            setSlotStartISO('');
+            setSlots([]);
+            setClientMode('none');
+            setSelectedClientId('');
+            setNewClientName('');
+            setNewClientPhone('');
+            setSearchQ('');
+            setFoundUsers([]);
+        } finally {
+            setCreating(false);
+        }
     }
+
+    // Проверка готовности к созданию записи
+    const canCreate = branchId && serviceId && staffId && slotStartISO && 
+        (clientMode === 'none' || 
+         (clientMode === 'existing' && selectedClientId) || 
+         (clientMode === 'new' && (newClientName.trim() || newClientPhone.trim())));
+
+    const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const tomorrow = formatInTimeZone(addDays(new Date(), 1), TZ, 'yyyy-MM-dd');
 
     return (
         <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                {t('bookings.desk.title', 'Быстрая запись (стойка)')}
-            </h2>
+            <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    {t('bookings.desk.title', 'Быстрая запись (стойка)')}
+                </h2>
+            </div>
 
             {/* Параметры записи */}
-            <div className="grid sm:grid-cols-5 gap-3">
-                {/* Филиал */}
-                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-                    <option value="">{t('bookings.desk.selectBranch', 'Выберите филиал')}</option>
-                    {branches.map(b => (<option key={b.id} value={b.id}>{b.name}</option>))}
-                </select>
+            <div className="space-y-4">
+                {/* Первая строка: Филиал, Услуга, Мастер */}
+                <div className="grid sm:grid-cols-3 gap-3">
+                    {/* Филиал */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.branch', 'Филиал')}</label>
+                        <select className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+                            <option value="">{t('bookings.desk.selectBranch', 'Выберите филиал')}</option>
+                            {branches.map(b => (<option key={b.id} value={b.id}>{b.name}</option>))}
+                        </select>
+                    </div>
 
-                {/* Услуга */}
-                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={serviceId} onChange={(e) => setServiceId(e.target.value)} disabled={!branchId}>
-                    <option value="">{branchId ? t('bookings.desk.selectService', 'Выберите услугу') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
-                    {servicesByBranch.map(s => (
-                        <option key={s.id} value={s.id}>{s.name_ru} ({s.duration_min}м)</option>
-                    ))}
-                    {branchId && servicesByBranch.length === 0 && <option value="">{t('bookings.desk.noServices', 'Нет услуг в филиале')}</option>}
-                </select>
+                    {/* Услуга */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.service', 'Услуга')}</label>
+                        <select className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={serviceId} onChange={(e) => setServiceId(e.target.value)} disabled={!branchId}>
+                            <option value="">{branchId ? t('bookings.desk.selectService', 'Выберите услугу') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
+                            {servicesByBranch.map(s => (
+                                <option key={s.id} value={s.id}>{s.name_ru} ({s.duration_min}м)</option>
+                            ))}
+                            {branchId && servicesByBranch.length === 0 && <option value="">{t('bookings.desk.noServices', 'Нет услуг в филиале')}</option>}
+                        </select>
+                    </div>
 
-                {/* Мастер */}
-                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={staffId} onChange={(e) => setStaffId(e.target.value)} disabled={!branchId}>
-                    <option value="">{branchId ? t('bookings.desk.selectMaster', 'Выберите мастера') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
-                    {staffByBranch.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
-                    {branchId && staffByBranch.length === 0 && <option value="">{t('bookings.desk.noMasters', 'Нет мастеров в филиале')}</option>}
-                </select>
+                    {/* Мастер */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.master', 'Мастер')}</label>
+                        <select className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={staffId} onChange={(e) => setStaffId(e.target.value)} disabled={!branchId}>
+                            <option value="">{branchId ? t('bookings.desk.selectMaster', 'Выберите мастера') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
+                            {staffByBranch.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
+                            {branchId && staffByBranch.length === 0 && <option value="">{t('bookings.desk.noMasters', 'Нет мастеров в филиале')}</option>}
+                        </select>
+                    </div>
+                </div>
 
-                {/* Дата */}
-                <input className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                {/* Вторая строка: Дата и время */}
+                <div className="space-y-2">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">{t('bookings.desk.date', 'Дата')}</label>
+                    <div className="flex gap-2 items-center">
+                        <button
+                            type="button"
+                            onClick={() => setDate(today)}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                                date === today
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            {t('bookings.desk.today', 'Сегодня')}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setDate(tomorrow)}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                                date === tomorrow
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            {t('bookings.desk.tomorrow', 'Завтра')}
+                        </button>
+                        <input 
+                            className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                            type="date" 
+                            value={date} 
+                            onChange={(e) => setDate(e.target.value)} 
+                        />
+                    </div>
+                </div>
 
-                {/* Слоты */}
-                <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={slotStartISO} onChange={(e) => setSlotStartISO(e.target.value)}>
-                    {slots.length === 0 && <option value="">{t('bookings.desk.noSlots', 'Нет свободных слотов')}</option>}
-                    {slots.map((s, i) => (
-                        <option key={`${s.staff_id}-${s.start_at}-${i}`} value={s.start_at}>
-                            {formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}
-                        </option>
-                    ))}
-                </select>
+                {/* Слоты времени */}
+                <div className="space-y-2">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">{t('bookings.desk.time', 'Время')}</label>
+                    {slotsLoading ? (
+                        <div className="flex items-center justify-center py-8 text-gray-500 dark:text-gray-400">
+                            <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            {t('bookings.desk.loadingSlots', 'Загрузка слотов...')}
+                        </div>
+                    ) : slots.length === 0 ? (
+                        <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                            {branchId && serviceId ? t('bookings.desk.noSlots', 'Нет свободных слотов') : t('bookings.desk.selectParamsFirst', 'Выберите филиал, услугу и мастера')}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                            {slots.map((s, i) => {
+                                const timeStr = formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm');
+                                const isSelected = slotStartISO === s.start_at;
+                                return (
+                                    <button
+                                        key={`${s.staff_id}-${s.start_at}-${i}`}
+                                        type="button"
+                                        onClick={() => setSlotStartISO(s.start_at)}
+                                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                                            isSelected
+                                                ? 'bg-indigo-600 text-white shadow-md'
+                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700'
+                                        }`}
+                                    >
+                                        {timeStr}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Блок клиента */}
@@ -688,12 +798,21 @@ function QuickDesk({
 
                 {clientMode === 'existing' && (
                     <div className="space-y-3">
-                        <div className="flex gap-3">
-                            <input className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder={t('bookings.desk.searchPlaceholder', 'Поиск: +996..., email, ФИО')}
-                                   value={searchQ} onChange={e => setSearchQ(e.target.value)} />
-                            <button className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50" onClick={()=>searchUsers(searchQ)} disabled={searchLoading}>
-                                {searchLoading ? t('bookings.desk.searching', 'Ищем…') : t('bookings.desk.search', 'Найти')}
-                            </button>
+                        <div className="relative">
+                            <input 
+                                className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 pr-10" 
+                                placeholder={t('bookings.desk.searchPlaceholder', 'Поиск: +996..., email, ФИО')}
+                                value={searchQ} 
+                                onChange={e => setSearchQ(e.target.value)} 
+                            />
+                            {searchLoading && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <svg className="animate-spin h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                            )}
                         </div>
                         {searchErr && <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">{searchErr}</div>}
                         <div className="max-h-48 overflow-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -747,14 +866,32 @@ function QuickDesk({
                 )}
             </div>
 
-            <div className="pt-2">
-                <button className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-bold rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200" onClick={quickCreate}>
-                    {t('bookings.desk.create', 'Создать запись')}
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button 
+                    className={`w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+                        !canCreate || creating ? 'opacity-50 cursor-not-allowed' : 'hover:from-indigo-700 hover:to-pink-700'
+                    }`}
+                    onClick={quickCreate}
+                    disabled={!canCreate || creating}
+                >
+                    {creating ? (
+                        <>
+                            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            {t('bookings.desk.creating', 'Создание...')}
+                        </>
+                    ) : (
+                        <>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            {t('bookings.desk.create', 'Создать запись')}
+                        </>
+                    )}
                 </button>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t('bookings.desk.slotsHint', 'Слоты считаются по `get_free_slots_service_day_v2` с учётом расписания и занятых броней.')}
-            </p>
         </section>
     );
 }
