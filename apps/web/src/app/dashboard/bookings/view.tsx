@@ -697,7 +697,7 @@ function QuickDesk({
                                 <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                                     <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-10">#</th>
                                     <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">{t('bookings.desk.clientName', 'Имя')}</th>
-                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Email</th>
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">{t('bookings.desk.email', 'Email')}</th>
                                     <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">{t('bookings.desk.clientPhone', 'Телефон')}</th>
                                     <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-24">{t('bookings.desk.select', 'Выбрать')}</th>
                                 </tr>
