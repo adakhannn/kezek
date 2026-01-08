@@ -549,7 +549,7 @@ function QuickDesk({
     useEffect(() => {
         let ignore = false;
         (async () => {
-            if (!serviceId || !date) { setSlots([]); setSlotStartISO(''); return; }
+            if (!branchId || !serviceId || !date) { setSlots([]); setSlotStartISO(''); return; }
             const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                 p_biz_id: bizId,
                 p_service_id: serviceId,
