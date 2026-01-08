@@ -5,6 +5,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 
@@ -39,7 +40,8 @@ async function notify(type: 'hold' | 'confirm' | 'cancel', bookingId: string) {
 // ---------------- Tabs ----------------
 type TabKey = 'calendar' | 'list' | 'desk';
 function Tabs({ value, onChange }: { value: TabKey; onChange: (v: TabKey) => void }) {
-    const btn = (key: TabKey, label: string) => (
+    const { t } = useLanguage();
+    const btn = (key: TabKey, labelKey: string) => (
         <button
             key={key}
             onClick={() => onChange(key)}
@@ -49,10 +51,10 @@ function Tabs({ value, onChange }: { value: TabKey; onChange: (v: TabKey) => voi
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
         >
-            {label}
+            {t(labelKey, '')}
         </button>
     );
-    return <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">{btn('calendar', 'Календарь')}{btn('list', 'Список')}{btn('desk', 'Стойка')}</div>;
+    return <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">{btn('calendar', 'bookings.tabs.calendar')}{btn('list', 'bookings.tabs.list')}{btn('desk', 'bookings.tabs.desk')}</div>;
 }
 
 // ---------------- Calendar ----------------
@@ -70,6 +72,7 @@ function statusClasses(s: BookingItem['status']) {
     }
 }
 function BookingPill({ id, startISO, endISO, status }: { id: string; startISO: string; endISO: string; status: BookingItem['status'] }) {
+    const { t } = useLanguage();
     const start = new Date(startISO);
     const end   = new Date(endISO);
     const label = `${formatInTimeZone(start, TZ, 'HH:mm')}–${formatInTimeZone(end, TZ, 'HH:mm')}`;
@@ -81,13 +84,14 @@ function BookingPill({ id, startISO, endISO, status }: { id: string; startISO: s
         no_show: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-800',
     };
     return (
-        <Link href={`/booking/${id}`} className={`inline-block text-xs px-2 py-1 border rounded-lg font-medium ${statusStyles[status]} hover:opacity-90 transition-opacity`} title={`Открыть бронь #${id.slice(0, 8)}`}>
+        <Link href={`/booking/${id}`} className={`inline-block text-xs px-2 py-1 border rounded-lg font-medium ${statusStyles[status]} hover:opacity-90 transition-opacity`} title={`${t('bookings.calendar.openBooking', 'Открыть бронь')} #${id.slice(0, 8)}`}>
             {label}
         </Link>
     );
 }
 
 function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
+    const { t } = useLanguage();
     const [date, setDate] = useState<string>(() => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
     const [items, setItems] = useState<{ id: string; staff_id: string; start_at: string; end_at: string; status: BookingItem['status'] }[]>([]);
 
@@ -143,15 +147,15 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
     return (
         <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Календарь на день</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.calendar.title', 'Календарь на день')}</h2>
                 <div className="flex items-center gap-3">
                     <input className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                     <button className="px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 text-sm flex items-center gap-2" onClick={exportCsv}>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Экспорт CSV
-                    </button>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            {t('bookings.calendar.exportCsv', 'Экспорт CSV')}
+                        </button>
                 </div>
             </div>
 
@@ -159,7 +163,7 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
                 <table className="min-w-full">
                     <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-24">Время</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-24">{t('bookings.calendar.time', 'Время')}</th>
                         {staff.map(s => (<th key={s.id} className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{s.full_name}</th>))}
                     </tr>
                     </thead>
@@ -189,23 +193,23 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
             <div className="flex flex-wrap gap-4 text-xs pt-2 border-t border-gray-200 dark:border-gray-700">
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800" />
-                    hold
+                    {t('bookings.status.hold', 'hold')}
                 </span>
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-800" />
-                    confirmed
+                    {t('bookings.status.confirmed', 'confirmed')}
                 </span>
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800" />
-                    paid / пришел
+                    {t('bookings.status.paid', 'paid / пришел')}
                 </span>
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800" />
-                    no_show / не пришел
+                    {t('bookings.status.noShow', 'no_show / не пришел')}
                 </span>
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700" />
-                    cancelled
+                    {t('bookings.status.cancelled', 'cancelled')}
                 </span>
             </div>
         </section>
@@ -214,6 +218,7 @@ function CalendarDay({ bizId, staff }: { bizId: string; staff: StaffRow[] }) {
 
 // ---------------- List ----------------
 function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }) {
+    const { t } = useLanguage();
     const [list, setList] = useState<BookingItem[]>(initial);
 
     async function refresh() {
@@ -269,7 +274,7 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
             body: JSON.stringify({ attended }),
         });
         const j = await res.json();
-        if (!j.ok) return alert(j.error || 'Не удалось обновить статус');
+        if (!j.ok) return alert(j.error || t('bookings.list.markAttendanceError', 'Не удалось обновить статус'));
         await refresh();
     }
 
@@ -284,12 +289,12 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
     return (
         <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Последние 30 броней</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.list.title', 'Последние 30 броней')}</h2>
                 <button className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 flex items-center gap-2" onClick={refresh}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Обновить
+                    {t('bookings.list.refresh', 'Обновить')}
                 </button>
             </div>
             <div className="overflow-x-auto">
@@ -297,11 +302,11 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
                     <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">#</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Услуга</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Мастер</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Начало</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Статус</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">Действия</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{t('bookings.list.service', 'Услуга')}</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{t('bookings.list.master', 'Мастер')}</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{t('bookings.list.start', 'Начало')}</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{t('bookings.list.status', 'Статус')}</th>
+                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{t('bookings.list.actions', 'Действия')}</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -319,7 +324,7 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
                                 <td className="p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
                                 <td className="p-4">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
-                                        {b.status === 'no_show' ? 'не пришел' : b.status === 'paid' && isPast ? 'пришел' : b.status}
+                                        {b.status === 'no_show' ? t('bookings.status.noShowShort', 'не пришел') : b.status === 'paid' && isPast ? t('bookings.status.attended', 'пришел') : t(`bookings.status.${b.status}`, b.status)}
                                     </span>
                                 </td>
                                 <td className="p-4">
@@ -330,24 +335,24 @@ function ListTable({ bizId, initial }: { bizId: string; initial: BookingItem[] }
                                                     className="px-3 py-1.5 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" 
                                                     onClick={() => markAttendance(b.id, true)}
                                                 >
-                                                    Пришел
+                                                    {t('bookings.actions.attended', 'Пришел')}
                                                 </button>
                                                 <button 
                                                     className="px-3 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" 
                                                     onClick={() => markAttendance(b.id, false)}
                                                 >
-                                                    Не пришел
+                                                    {t('bookings.actions.noShow', 'Не пришел')}
                                                 </button>
                                             </>
                                         )}
                                         {!isPast && b.status !== 'cancelled' && (
                                             <button className="px-3 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" onClick={() => cancel(b.id)}>
-                                                Отменить
+                                                {t('bookings.actions.cancel', 'Отменить')}
                                             </button>
                                         )}
                                         {!isPast && b.status === 'hold' && (
                                             <button className="px-3 py-1.5 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" onClick={() => confirm(b.id)}>
-                                                Подтвердить
+                                                {t('bookings.actions.confirm', 'Подтвердить')}
                                             </button>
                                         )}
                                     </div>
@@ -371,6 +376,7 @@ function QuickDesk({
     staff: StaffRow[];
     branches: BranchRow[];
 }) {
+    const { t } = useLanguage();
     // выбранный филиал
     const [branchId, setBranchId] = useState<string>(branches[0]?.id || '');
 
@@ -470,9 +476,9 @@ function QuickDesk({
 
     async function quickCreate() {
         const svc = servicesByBranch.find(s => s.id === serviceId);
-        if (!svc) return alert('Выбери услугу');
-        if (!slotStartISO) return alert('Нет свободных слотов на выбранные параметры');
-        if (!staffId) return alert('Выбери мастера');
+        if (!svc) return alert(t('bookings.desk.errors.selectService', 'Выбери услугу'));
+        if (!slotStartISO) return alert(t('bookings.desk.errors.noSlots', 'Нет свободных слотов на выбранные параметры'));
+        if (!staffId) return alert(t('bookings.desk.errors.selectMaster', 'Выбери мастера'));
 
         // валидация клиента
         let p_client_id: string | null = null;
@@ -480,11 +486,11 @@ function QuickDesk({
         let p_client_phone: string | null = null;
 
         if (clientMode === 'existing') {
-            if (!selectedClientId) return alert('Выбери клиента из поиска');
+            if (!selectedClientId) return alert(t('bookings.desk.errors.selectClient', 'Выбери клиента из поиска'));
             p_client_id = selectedClientId;
         } else if (clientMode === 'new') {
             if (!newClientName.trim() && !newClientPhone.trim()) {
-                return alert('Укажи имя или телефон нового клиента');
+                return alert(t('bookings.desk.errors.clientNameOrPhone', 'Укажи имя или телефон нового клиента'));
             }
             p_client_name  = newClientName.trim() || null;
             p_client_phone = newClientPhone.trim() || null;
@@ -505,7 +511,7 @@ function QuickDesk({
 
         const bookingId = String(data);
         await notify('confirm', bookingId);
-        alert(`Создана запись #${bookingId.slice(0, 8)}`);
+        alert(t('bookings.desk.created', `Создана запись #${bookingId.slice(0, 8)}`));
     }
 
     return (
@@ -514,7 +520,7 @@ function QuickDesk({
                 <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Быстрая запись (стойка)
+                {t('bookings.desk.title', 'Быстрая запись (стойка)')}
             </h2>
 
             {/* Параметры записи */}
@@ -529,13 +535,13 @@ function QuickDesk({
                     {servicesByBranch.map(s => (
                         <option key={s.id} value={s.id}>{s.name_ru} ({s.duration_min}м)</option>
                     ))}
-                    {servicesByBranch.length === 0 && <option value="">Нет услуг в филиале</option>}
+                    {servicesByBranch.length === 0 && <option value="">{t('bookings.desk.noServices', 'Нет услуг в филиале')}</option>}
                 </select>
 
                 {/* Мастер */}
                 <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={staffId} onChange={(e) => setStaffId(e.target.value)}>
                     {staffByBranch.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
-                    {staffByBranch.length === 0 && <option value="">Нет мастеров в филиале</option>}
+                    {staffByBranch.length === 0 && <option value="">{t('bookings.desk.noMasters', 'Нет мастеров в филиале')}</option>}
                 </select>
 
                 {/* Дата */}
@@ -543,7 +549,7 @@ function QuickDesk({
 
                 {/* Слоты */}
                 <select className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={slotStartISO} onChange={(e) => setSlotStartISO(e.target.value)}>
-                    {slots.length === 0 && <option value="">Нет свободных слотов</option>}
+                    {slots.length === 0 && <option value="">{t('bookings.desk.noSlots', 'Нет свободных слотов')}</option>}
                     {slots.map((s, i) => (
                         <option key={`${s.staff_id}-${s.start_at}-${i}`} value={s.start_at}>
                             {formatInTimeZone(new Date(s.start_at), TZ, 'HH:mm')}
@@ -554,30 +560,30 @@ function QuickDesk({
 
             {/* Блок клиента */}
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-4">
-                <div className="font-semibold text-gray-900 dark:text-gray-100">Клиент</div>
+                <div className="font-semibold text-gray-900 dark:text-gray-100">{t('bookings.desk.client', 'Клиент')}</div>
 
                 <div className="flex flex-wrap gap-4">
                     <label className="inline-flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="clientMode" checked={clientMode==='none'} onChange={()=>setClientMode('none')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Без клиента (walk-in)</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{t('bookings.desk.clientNone', 'Без клиента (walk-in)')}</span>
                     </label>
                     <label className="inline-flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="clientMode" checked={clientMode==='existing'} onChange={()=>setClientMode('existing')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Существующий</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{t('bookings.desk.clientExisting', 'Существующий')}</span>
                     </label>
                     <label className="inline-flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="clientMode" checked={clientMode==='new'} onChange={()=>setClientMode('new')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Новый (быстрый)</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{t('bookings.desk.clientNew', 'Новый (быстрый)')}</span>
                     </label>
                 </div>
 
                 {clientMode === 'existing' && (
                     <div className="space-y-3">
                         <div className="flex gap-3">
-                            <input className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder="Поиск: +996..., email, ФИО"
+                            <input className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder={t('bookings.desk.searchPlaceholder', 'Поиск: +996..., email, ФИО')}
                                    value={searchQ} onChange={e => setSearchQ(e.target.value)} />
                             <button className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50" onClick={()=>searchUsers(searchQ)} disabled={searchLoading}>
-                                {searchLoading ? 'Ищем…' : 'Найти'}
+                                {searchLoading ? t('bookings.desk.searching', 'Ищем…') : t('bookings.desk.search', 'Найти')}
                             </button>
                         </div>
                         {searchErr && <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">{searchErr}</div>}
@@ -586,10 +592,10 @@ function QuickDesk({
                                 <thead>
                                 <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                                     <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-10">#</th>
-                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Имя</th>
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">{t('bookings.desk.clientName', 'Имя')}</th>
                                     <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Email</th>
-                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Телефон</th>
-                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-24">Выбрать</th>
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">{t('bookings.desk.clientPhone', 'Телефон')}</th>
+                                    <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-24">{t('bookings.desk.select', 'Выбрать')}</th>
                                 </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -611,7 +617,7 @@ function QuickDesk({
                                     </tr>
                                 ))}
                                 {foundUsers.length === 0 && (
-                                    <tr><td className="p-4 text-center text-gray-500 dark:text-gray-400" colSpan={5}>Ничего не найдено</td></tr>
+                                    <tr><td className="p-4 text-center text-gray-500 dark:text-gray-400" colSpan={5}>{t('bookings.desk.noResults', 'Ничего не найдено')}</td></tr>
                                 )}
                                 </tbody>
                             </table>
@@ -621,12 +627,12 @@ function QuickDesk({
 
                 {clientMode === 'new' && (
                     <div className="grid sm:grid-cols-2 gap-3">
-                        <input className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder="Имя (необязательно)"
+                        <input className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder={t('bookings.desk.newClientNamePlaceholder', 'Имя (необязательно)')}
                                value={newClientName} onChange={e=>setNewClientName(e.target.value)} />
-                        <input className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder="Телефон (желательно)"
+                        <input className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" placeholder={t('bookings.desk.newClientPhonePlaceholder', 'Телефон (желательно)')}
                                value={newClientPhone} onChange={e=>setNewClientPhone(e.target.value)} />
                         <div className="sm:col-span-2 text-xs text-gray-500 dark:text-gray-400">
-                            Эти данные сохранятся только в брони (без создания аккаунта).
+                            {t('bookings.desk.newClientHint', 'Эти данные сохранятся только в брони (без создания аккаунта).')}
                         </div>
                     </div>
                 )}
@@ -634,11 +640,11 @@ function QuickDesk({
 
             <div className="pt-2">
                 <button className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-bold rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200" onClick={quickCreate}>
-                    Создать запись
+                    {t('bookings.desk.create', 'Создать запись')}
                 </button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-                Слоты считаются по `get_free_slots_service_day` с учётом расписания и занятых броней.
+                {t('bookings.desk.slotsHint', 'Слоты считаются по `get_free_slots_service_day` с учётом расписания и занятых броней.')}
             </p>
         </section>
     );
@@ -655,14 +661,15 @@ export default function AdminBookingsView({
     branches: BranchRow[];
     initial: BookingItem[];
 }) {
+    const { t } = useLanguage();
     const [tab, setTab] = useState<TabKey>('calendar');
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Брони</h1>
-                        <p className="text-gray-600 dark:text-gray-400">Управление бронированиями</p>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('bookings.title', 'Брони')}</h1>
+                        <p className="text-gray-600 dark:text-gray-400">{t('bookings.subtitle', 'Управление бронированиями')}</p>
                     </div>
                     <Tabs value={tab} onChange={setTab} />
                 </div>
