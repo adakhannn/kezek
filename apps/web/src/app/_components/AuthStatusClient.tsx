@@ -244,7 +244,7 @@ export function AuthStatusClient() {
         );
     }
     
-    const label = profileName || user.email ?? user.phone ?? t('header.account', 'аккаунт');
+    const label = profileName || user.email || (user.phone as string | undefined) || t('header.account', 'аккаунт');
 
     // Если путь еще не определен, показываем загрузку
     if (!target) {
