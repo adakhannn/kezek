@@ -1,7 +1,7 @@
 // apps/web/src/app/dashboard/layout.tsx
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { DashboardLayoutClient } from './components/DashboardLayoutClient';
 import { MobileSidebar } from './components/MobileSidebar';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -29,33 +29,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
             }
             // Нет доступа к бизнесу → показываем сообщение
             if (e.message === 'NO_BIZ_ACCESS') {
-                return (
-                    <main className="p-6">
-                        <h1 className="text-xl font-semibold mb-2">Нет доступа к кабинету</h1>
-                        <p className="text-sm text-gray-600">
-                            У вашей учётной записи нет ролей <code>owner / admin / manager</code> ни в одном бизнесе.
-                        </p>
-                        <div className="mt-4">
-                            <Link className="underline" href="/b/kezek">Перейти на публичную витрину</Link>
-                        </div>
-                    </main>
-                );
+                return <DashboardLayoutClient errorType="NO_BIZ_ACCESS" />;
             }
         }
         // Другие ошибки → показываем общее сообщение
         return (
-            <main className="p-6">
-                <h1 className="text-xl font-semibold mb-2 text-red-600">Ошибка</h1>
-                <p className="text-sm text-gray-600">
-                    Произошла ошибка при загрузке кабинета. Пожалуйста, попробуйте обновить страницу.
-                </p>
-                {e instanceof Error && (
-                    <p className="text-xs text-gray-500 mt-2">Детали: {e.message}</p>
-                )}
-                <div className="mt-4">
-                    <Link className="underline" href="/b/kezek">Перейти на публичную витрину</Link>
-                </div>
-            </main>
+            <DashboardLayoutClient 
+                errorType="GENERAL" 
+                errorMessage={e instanceof Error ? e.message : undefined}
+            />
         );
     }
 }
