@@ -160,6 +160,14 @@ const dictionaries: Dictionaries = {
         'dashboard.error.generalDesc': 'Кабинетти жүктөөдө ката кетти. Сураныч, баракты жаңылаңыз.',
         'dashboard.error.details': 'Деталдар:',
         'dashboard.error.goToPublic': 'Жалпы көрүнүшкө өтүү',
+        'dashboard.sidebar.title': 'Бизнес кабинети',
+        'dashboard.sidebar.openMenu': 'Менюну ачуу',
+        'dashboard.sidebar.closeMenu': 'Менюну жабуу',
+        'dashboard.nav.home': 'Башкы',
+        'dashboard.nav.bookings': 'Брондоолор',
+        'dashboard.nav.staff': 'Кызматкерлер',
+        'dashboard.nav.services': 'Кызматтар',
+        'dashboard.nav.branches': 'Филиалдар',
     },
     ru: {
         // Auth / sign-in
@@ -309,6 +317,14 @@ const dictionaries: Dictionaries = {
         'dashboard.error.generalDesc': 'Произошла ошибка при загрузке кабинета. Пожалуйста, попробуйте обновить страницу.',
         'dashboard.error.details': 'Детали:',
         'dashboard.error.goToPublic': 'Перейти на публичную витрину',
+        'dashboard.sidebar.title': 'Кабинет бизнеса',
+        'dashboard.sidebar.openMenu': 'Открыть меню',
+        'dashboard.sidebar.closeMenu': 'Закрыть меню',
+        'dashboard.nav.home': 'Главная',
+        'dashboard.nav.bookings': 'Брони',
+        'dashboard.nav.staff': 'Сотрудники',
+        'dashboard.nav.services': 'Услуги',
+        'dashboard.nav.branches': 'Филиалы',
     },
     en: {
         // Auth / sign-in
@@ -458,6 +474,14 @@ const dictionaries: Dictionaries = {
         'dashboard.error.generalDesc': 'An error occurred while loading the cabinet. Please try refreshing the page.',
         'dashboard.error.details': 'Details:',
         'dashboard.error.goToPublic': 'Go to public showcase',
+        'dashboard.sidebar.title': 'Business cabinet',
+        'dashboard.sidebar.openMenu': 'Open menu',
+        'dashboard.sidebar.closeMenu': 'Close menu',
+        'dashboard.nav.home': 'Home',
+        'dashboard.nav.bookings': 'Bookings',
+        'dashboard.nav.staff': 'Staff',
+        'dashboard.nav.services': 'Services',
+        'dashboard.nav.branches': 'Branches',
     },
 };
 

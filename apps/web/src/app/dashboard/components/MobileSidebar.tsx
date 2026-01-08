@@ -4,16 +4,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type NavItem = {
     href: string;
-    label: string;
+    labelKey: string;
     icon: React.ReactNode;
 };
 
 const navItems: NavItem[] = [
     {
         href: '/dashboard',
-        label: 'Главная',
+        labelKey: 'dashboard.nav.home',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -22,7 +24,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/dashboard/bookings',
-        label: 'Брони',
+        labelKey: 'dashboard.nav.bookings',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -31,7 +33,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/dashboard/staff',
-        label: 'Сотрудники',
+        labelKey: 'dashboard.nav.staff',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -40,7 +42,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/dashboard/services',
-        label: 'Услуги',
+        labelKey: 'dashboard.nav.services',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -49,7 +51,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/dashboard/branches',
-        label: 'Филиалы',
+        labelKey: 'dashboard.nav.branches',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -59,6 +61,7 @@ const navItems: NavItem[] = [
 ];
 
 export function MobileSidebar({ bizId }: { bizId: string }) {
+    const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const pathname = usePathname();
 
@@ -85,7 +88,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             <button
                 onClick={() => setIsOpen(true)}
                 className="lg:hidden fixed top-4 left-4 z-[100] p-2.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                aria-label="Открыть меню"
+                aria-label={t('dashboard.sidebar.openMenu', 'Открыть меню')}
             >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -112,13 +115,13 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
                         {/* Заголовок с кнопкой закрытия на мобильных */}
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">Кабинет бизнеса</h2>
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">{t('dashboard.sidebar.title', 'Кабинет бизнеса')}</h2>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">ID: {bizId.slice(0, 8)}...</p>
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="lg:hidden p-1 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                aria-label="Закрыть меню"
+                                aria-label={t('dashboard.sidebar.closeMenu', 'Закрыть меню')}
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -142,7 +145,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
                                         onClick={() => setIsOpen(false)}
                                     >
                                         {item.icon}
-                                        {item.label}
+                                        {t(item.labelKey, '')}
                                     </Link>
                                 );
                             })}
