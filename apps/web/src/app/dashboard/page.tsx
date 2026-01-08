@@ -52,12 +52,8 @@ export default async function DashboardHome() {
     const bizName = biz?.name || 'Ваш бизнес в Kezek';
     const bizCity = biz?.city || null;
 
-    const formatter = new Intl.DateTimeFormat('ru-RU', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-    });
-    const formattedDate = formatter.format(today);
+    // Передаем ISO строку, форматирование будет на клиенте с учетом локали
+    const formattedDate = today.toISOString();
 
     const needOnboarding =
         bookingsToday === 0 || staffActive === 0 || servicesActive === 0 || branchesCount === 0;
