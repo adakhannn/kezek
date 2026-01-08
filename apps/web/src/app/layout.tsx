@@ -46,15 +46,18 @@ export default function RootLayout({
             <div className="flex flex-col min-h-screen">
                 <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
                     <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8">
-                        <div className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4">
-                            <Logo />
+                        <div className="flex h-14 sm:h-16 items-center gap-2 sm:gap-4">
+                            {/* Логотип - с ограничением ширины на мобильных, центрируется */}
+                            <div className="flex-1 md:flex-none min-w-0 flex justify-center md:justify-start">
+                                <Logo />
+                            </div>
                             {/* Десктопная версия - показываем на md и выше */}
-                            <div className="hidden md:flex items-center gap-3">
+                            <div className="hidden md:flex items-center gap-3 flex-shrink-0 ml-auto">
                                 <LanguageSwitcher />
                                 <AuthStatusServer/>
                             </div>
                             {/* Мобильная версия - показываем только на md и ниже */}
-                            <div className="md:hidden relative">
+                            <div className="md:hidden relative flex-shrink-0">
                                 <MobileHeaderMenu />
                             </div>
                             <AuthStatusUpdater/>
