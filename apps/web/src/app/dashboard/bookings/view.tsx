@@ -597,8 +597,6 @@ function QuickDesk({
 
         // валидация клиента
         let p_client_id: string | null = null;
-        let p_client_name: string | null = null;
-        let p_client_phone: string | null = null;
 
         if (clientMode === 'existing') {
             if (!selectedClientId) return alert(t('bookings.desk.errors.selectClient', 'Выбери клиента из поиска'));
@@ -615,8 +613,8 @@ function QuickDesk({
                 p_start: slotStartISO,
                 p_minutes: svc.duration_min,
                 p_client_id,
-                p_client_name,
-                p_client_phone,
+                p_client_name: null,
+                p_client_phone: null,
             });
             if (error) {
                 alert(error.message);
