@@ -106,6 +106,7 @@ export default function BizClient({ data }: { data: Data }) {
     const [staffId, setStaffId] = useState<string>('');
     const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
+
     // при смене филиала — сбрасываем выборы мастеров и услуг (если не восстановили состояние из localStorage)
     useEffect(() => {
         if (restoredFromStorage) return;
@@ -155,10 +156,27 @@ export default function BizClient({ data }: { data: Data }) {
         return map;
     }, [serviceStaff]);
 
-    // Список мастеров: только по филиалу (без фильтрации по услуге)
+    /* ---------- временные переводы сотрудников (staff_schedule_rules) ---------- */
+    const [temporaryTransfers, setTemporaryTransfers] = useState<Array<{ staff_id: string; branch_id: string; date: string }>>([]);
+
+    // Список мастеров: по филиалу + временные переводы
     const staffFiltered = useMemo<Staff[]>(() => {
-        return staffByBranch;
-    }, [staffByBranch]);
+        if (!branchId) return [];
+        
+        // Основные сотрудники филиала
+        const mainStaff = staffByBranch;
+        const mainStaffIds = new Set(mainStaff.map(s => s.id));
+        
+        // Показываем всех, кто имеет хотя бы один временный перевод в этот филиал
+        // (даже если дата еще не выбрана, чтобы пользователь мог выбрать мастера)
+        const tempStaffIds = new Set(temporaryTransfers.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
+        
+        // Объединяем основных сотрудников и временно переведенных
+        const allStaffIds = new Set([...mainStaffIds, ...tempStaffIds]);
+        
+        // Возвращаем сотрудников, которые либо основные в этом филиале, либо временно переведены
+        return staff.filter(s => allStaffIds.has(s.id));
+    }, [staffByBranch, staff, branchId, temporaryTransfers]);
 
     // Список услуг: по филиалу + по мастеру (если мастер выбран)
     const servicesFiltered = useMemo<Service[]>(() => {
@@ -195,6 +213,44 @@ export default function BizClient({ data }: { data: Data }) {
     const dayStr = formatInTimeZone(day, TZ, 'yyyy-MM-dd');
     const todayStr = formatInTimeZone(todayTz(), TZ, 'yyyy-MM-dd');
     const maxStr = formatInTimeZone(addDays(todayTz(), 60), TZ, 'yyyy-MM-dd');
+
+    // Загружаем временные переводы для выбранного филиала
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            if (!branchId || !biz.id) {
+                setTemporaryTransfers([]);
+                return;
+            }
+            
+            // Загружаем временные переводы для выбранного филиала
+            // Загружаем для всех будущих дат (в пределах 60 дней), чтобы показывать сотрудников
+            // даже если дата еще не выбрана
+            const now = new Date();
+            const maxDate = addDays(now, 60);
+            const minDateStr = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+            const maxDateStr = formatInTimeZone(maxDate, TZ, 'yyyy-MM-dd');
+            
+            const { data, error } = await supabase
+                .from('staff_schedule_rules')
+                .select('staff_id, branch_id, date')
+                .eq('branch_id', branchId)
+                .eq('is_temporary_transfer', true)
+                .gte('date', minDateStr)
+                .lte('date', maxDateStr);
+            
+            if (ignore) return;
+            if (error) {
+                console.warn('[staff_schedule_rules] read error:', error.message);
+                setTemporaryTransfers([]);
+            } else {
+                setTemporaryTransfers((data ?? []) as Array<{ staff_id: string; branch_id: string; date: string }>);
+            }
+        })();
+        return () => {
+            ignore = true;
+        };
+    }, [branchId, biz.id]);
 
     const [slots, setSlots] = useState<Slot[]>([]);
     const [slotsLoading, setSlotsLoading] = useState(false);
