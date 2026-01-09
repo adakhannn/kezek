@@ -47,7 +47,10 @@ export default function BookingLayoutClient({ id, serviceName, masterName, start
 
     const statusLabel = getStatusLabel(status);
     const shortId = id.slice(0, 8);
-    const formattedDate = formatInTimeZone(startAt, TZ, 'dd.MM.yyyy HH:mm');
+    
+    // Format date based on locale
+    const dateFormat = locale === 'en' ? 'MM/dd/yyyy HH:mm' : 'dd.MM.yyyy HH:mm';
+    const formattedDate = formatInTimeZone(startAt, TZ, dateFormat);
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center px-4">
