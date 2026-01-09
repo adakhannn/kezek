@@ -21,13 +21,17 @@ export default function BranchesListClient({
 }) {
     const { t, locale } = useLanguage();
 
+    function formatText(text: string): string {
+        // Транслитерируем текст для английского языка
+        if (locale === 'en') {
+            return transliterate(text);
+        }
+        return text;
+    }
+
     function formatAddress(address: string | null): string {
         if (!address) return '—';
-        // Транслитерируем адрес для английского языка
-        if (locale === 'en') {
-            return transliterate(address);
-        }
-        return address;
+        return formatText(address);
     }
 
     return (
@@ -92,7 +96,7 @@ export default function BranchesListClient({
                                     className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                 >
                                     <td className="p-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {b.name}
+                                        {formatText(b.name)}
                                     </td>
                                     <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
                                         {formatAddress(b.address)}
