@@ -1,6 +1,5 @@
 'use client';
 
-import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -33,8 +32,40 @@ export default function StaffBookingsView({
     const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
 
     function formatDateTime(iso: string): string {
-        const dateFormat = locale === 'en' ? 'MM/dd/yyyy HH:mm' : 'dd.MM.yyyy HH:mm';
-        return formatInTimeZone(new Date(iso), TZ, dateFormat);
+        const date = new Date(iso);
+        const localeMap: Record<string, string> = {
+            ky: 'ru-KG',
+            ru: 'ru-RU',
+            en: 'en-US',
+        };
+        
+        const dateFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: TZ,
+        });
+        
+        return dateFormatter.format(date);
+    }
+
+    function formatTime(iso: string): string {
+        const date = new Date(iso);
+        const localeMap: Record<string, string> = {
+            ky: 'ru-KG',
+            ru: 'ru-RU',
+            en: 'en-US',
+        };
+        
+        const timeFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: TZ,
+        });
+        
+        return timeFormatter.format(date);
     }
 
     function getServiceName(service: { name_ru: string; name_ky?: string | null; name_en?: string | null } | null): string {

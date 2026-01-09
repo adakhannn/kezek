@@ -1,6 +1,5 @@
 'use client';
 
-import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -57,9 +56,23 @@ export default function BookingLayoutClient({ id, service, masterName, startAt, 
     const statusLabel = getStatusLabel(status);
     const shortId = id.slice(0, 8);
     
-    // Format date based on locale
-    const dateFormat = locale === 'en' ? 'MM/dd/yyyy HH:mm' : 'dd.MM.yyyy HH:mm';
-    const formattedDate = formatInTimeZone(startAt, TZ, dateFormat);
+    // Format date in human-readable format
+    const localeMap: Record<string, string> = {
+        ky: 'ru-KG',
+        ru: 'ru-RU',
+        en: 'en-US',
+    };
+    
+    const dateFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: TZ,
+    });
+    
+    const formattedDate = dateFormatter.format(startAt);
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center px-4">

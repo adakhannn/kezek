@@ -102,7 +102,30 @@ export default function BookingCard({
         }
     }
 
-    const when = `${formatInTimeZone(new Date(start_at), TZ, 'dd.MM.yyyy HH:mm')} — ${formatInTimeZone(new Date(end_at), TZ, 'HH:mm')}`;
+    const localeMap: Record<string, string> = {
+        ky: 'ru-KG',
+        ru: 'ru-RU',
+        en: 'en-US',
+    };
+    
+    const dateFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: TZ,
+    });
+    
+    const timeFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: TZ,
+    });
+    
+    const startDate = new Date(start_at);
+    const endDate = new Date(end_at);
+    const when = `${dateFormatter.format(startDate)} — ${timeFormatter.format(endDate)}`;
     
     const statusColors = {
         hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
