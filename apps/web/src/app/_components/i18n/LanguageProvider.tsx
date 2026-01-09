@@ -530,6 +530,8 @@ const dictionaries: Dictionaries = {
         'footer.privacy': 'Купуялык саясаты',
         'footer.terms': 'Пайдалануучу келишими',
         'footer.dataDeletion': 'Маалыматтарды өчүрүү',
+        // Common
+        'common.editShort': 'Редакт.',
     },
     ru: {
         // Auth / sign-in
@@ -1042,6 +1044,8 @@ const dictionaries: Dictionaries = {
         'footer.privacy': 'Политика конфиденциальности',
         'footer.terms': 'Пользовательское соглашение',
         'footer.dataDeletion': 'Удаление данных',
+        // Common
+        'common.editShort': 'Редакт.',
     },
     en: {
         // Auth / sign-in
@@ -1560,6 +1564,8 @@ const dictionaries: Dictionaries = {
         'footer.privacy': 'Privacy policy',
         'footer.terms': 'Terms of service',
         'footer.dataDeletion': 'Data deletion',
+        // Common
+        'common.editShort': 'Edit',
     },
 };
 
