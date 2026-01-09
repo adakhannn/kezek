@@ -700,6 +700,8 @@ const dictionaries: Dictionaries = {
         'staff.layout.noAccess.title': 'Кызматкердин кабинетине кирүүгө мүмкүнчүлүк жок',
         'staff.layout.noAccess.desc': 'Сиздин аккаунтуңузда эч кандай бизнесте <code>staff</code> ролу жок.',
         'staff.layout.noAccess.goHome': 'Башкы баракка өтүү',
+        'staff.sidebar.openMenu': 'Менюну ачуу',
+        'staff.sidebar.closeMenu': 'Менюну жабуу',
         // Booking Detail Page
         'booking.title': 'Bron #{id}',
         'booking.subtitle': 'Zapisanyn ыrastoo жана негизги деталдар',
