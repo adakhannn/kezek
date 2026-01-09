@@ -1,5 +1,4 @@
 // apps/web/src/app/dashboard/branches/page.tsx  (или ваш путь)
-import { LanguageProvider } from '@/app/_components/i18n/LanguageProvider';
 import BranchesListClient from '@/app/dashboard/branches/BranchesListClient';
 import { getBizContextForManagers } from '@/lib/authBiz';
 
@@ -31,8 +30,6 @@ export default async function BranchesListPage() {
     }
 
     return (
-        <LanguageProvider>
-            <BranchesListClient branches={(branches ?? []) as Branch[]} isSuperAdmin={isSuperAdmin} />
-        </LanguageProvider>
+        <BranchesListClient branches={(branches ?? []) as Branch[]} isSuperAdmin={isSuperAdmin} />
     );
 }
