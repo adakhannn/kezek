@@ -58,14 +58,22 @@ export default function ClientCabinet({
     const getSubtitle = () => {
         if (tab === 'upcoming') {
             const count = upcoming.length;
-            if (count === 1) return t('cabinet.bookings.subtitle.upcoming', 'У вас {count} предстоящая запись').replace('{count}', String(count));
-            if (count < 5) return t('cabinet.bookings.subtitle.upcoming', 'У вас {count} предстоящие записи').replace('{count}', String(count));
-            return t('cabinet.bookings.subtitle.upcoming', 'У вас {count} предстоящих записей').replace('{count}', String(count));
+            if (count === 1) {
+                return t('cabinet.bookings.subtitle.upcoming.one', 'У вас 1 предстоящая запись');
+            } else if (count < 5) {
+                return t('cabinet.bookings.subtitle.upcoming.few', 'У вас {count} предстоящие записи').replace('{count}', String(count));
+            } else {
+                return t('cabinet.bookings.subtitle.upcoming.many', 'У вас {count} предстоящих записей').replace('{count}', String(count));
+            }
         } else {
             const count = past.length;
-            if (count === 1) return t('cabinet.bookings.subtitle.past', 'У вас {count} прошедшая запись').replace('{count}', String(count));
-            if (count < 5) return t('cabinet.bookings.subtitle.past', 'У вас {count} прошедшие записи').replace('{count}', String(count));
-            return t('cabinet.bookings.subtitle.past', 'У вас {count} прошедших записей').replace('{count}', String(count));
+            if (count === 1) {
+                return t('cabinet.bookings.subtitle.past.one', 'У вас 1 прошедшая запись');
+            } else if (count < 5) {
+                return t('cabinet.bookings.subtitle.past.few', 'У вас {count} прошедшие записи').replace('{count}', String(count));
+            } else {
+                return t('cabinet.bookings.subtitle.past.many', 'У вас {count} прошедших записей').replace('{count}', String(count));
+            }
         }
     };
 
