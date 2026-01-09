@@ -60,6 +60,14 @@ type TodayResponse =
               | { exists: true; status: 'open' | 'closed'; shift: Shift; items: ShiftItem[] };
           bookings?: Booking[];
           services?: string[];
+          allShifts?: Array<{
+              shift_date: string;
+              status: string;
+              total_amount: number;
+              master_share: number;
+              salon_share: number;
+              late_minutes: number;
+          }>;
           staffPercentMaster?: number;
           staffPercentSalon?: number;
           hourlyRate?: number | null;
