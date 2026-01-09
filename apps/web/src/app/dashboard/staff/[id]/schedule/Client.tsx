@@ -220,37 +220,54 @@ function DayRow({
                     )}
                 </label>
                 {!isDayOff && (
-                    <>
-                        <div className="min-w-0">
-                            <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">Рабочее время</div>
-                            <SingleTimeRange 
-                                value={interval} 
-                                onChange={(v) => {
-                                    if (v && v.start && v.end) {
-                                        setInterval(v);
-                                    }
-                                }} 
-                                disabled={saving || isDayOff || isPastDate}
-                            />
+                    <div className="min-w-0">
+                        <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">Рабочее время</div>
+                        <SingleTimeRange 
+                            value={interval} 
+                            onChange={(v) => {
+                                if (v && v.start && v.end) {
+                                    setInterval(v);
+                                }
+                            }} 
+                            disabled={saving || isDayOff || isPastDate}
+                        />
+                    </div>
+                )}
+                {branches.length > 1 && (
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
+                            <svg className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400">Филиал</span>
+                            {selectedBranchId !== homeBranchId && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    </svg>
+                                    Временный перевод
+                                </span>
+                            )}
                         </div>
-                        {branches.length > 1 && (
-                            <div className="min-w-0">
-                                <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">Филиал</div>
-                                <select
-                                    className="w-full rounded-md sm:rounded-lg border border-gray-300 bg-white px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    value={selectedBranchId}
-                                    onChange={(e) => setSelectedBranchId(e.target.value)}
-                                    disabled={saving || isPastDate}
-                                >
-                                    {branches.map((b) => (
-                                        <option key={b.id} value={b.id}>
-                                            {b.name} {b.id === homeBranchId ? '(основной)' : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                        <select
+                            className="w-full rounded-md sm:rounded-lg border border-gray-300 bg-white px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            value={selectedBranchId}
+                            onChange={(e) => setSelectedBranchId(e.target.value)}
+                            disabled={saving || isPastDate}
+                        >
+                            {branches.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                    {b.name} {b.id === homeBranchId ? '(основной)' : ''}
+                                </option>
+                            ))}
+                        </select>
+                        {selectedBranchId !== homeBranchId && !isPastDate && (
+                            <p className="mt-1.5 text-[10px] text-indigo-600 dark:text-indigo-400">
+                                Сотрудник будет временно переведен в этот филиал на этот день
+                            </p>
                         )}
-                    </>
+                    </div>
                 )}
             </div>
         </div>
@@ -651,9 +668,10 @@ export default function Client({
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-blue-700 dark:text-blue-300">
                             <li>По умолчанию все дни рабочие (09:00-21:00)</li>
                             <li>Отметьте чекбокс "Выходной день", чтобы сделать день нерабочим</li>
-                            <li>Выберите филиал для каждого дня для временного перевода сотрудника</li>
+                            <li><strong>Временный перевод:</strong> Выберите филиал в выпадающем списке "Филиал" для любого дня, чтобы временно перевести сотрудника в другой филиал. Основной филиал отмечен как "(основной)".</li>
                             <li>Можно управлять расписанием только на текущую и следующую неделю</li>
                             <li>Прошедшие даты недоступны для редактирования</li>
+                            <li>Все временные переводы отображаются во вкладке "Временные переводы"</li>
                         </ul>
                     </div>
                 </div>
