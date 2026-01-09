@@ -3,6 +3,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TZ } from '@/lib/time';
@@ -79,11 +80,12 @@ type TodayResponse =
       }
     | { ok: false; error: string };
 
-function formatTime(iso: string | null) {
+function formatTime(iso: string | null, locale: string) {
     if (!iso) return '—';
     try {
         const d = new Date(iso);
-        return d.toLocaleTimeString('ru-RU', {
+        const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
+        return d.toLocaleTimeString(localeMap[locale] || 'ru-RU', {
             hour: '2-digit',
             minute: '2-digit',
         });
@@ -96,6 +98,7 @@ type TabKey = 'shift' | 'clients' | 'stats';
 type PeriodKey = 'day' | 'week' | 'month' | 'all';
 
 export default function StaffFinanceView({ staffId }: { staffId?: string }) {
+    const { t, locale } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [today, setToday] = useState<TodayResponse | null>(null);
     const [activeTab, setActiveTab] = useState<TabKey>('shift');
@@ -233,7 +236,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             }
         } catch (e) {
             console.error('Error loading today shift:', e);
-            setToday({ ok: false, error: 'Не удалось загрузить данные смены' });
+            setToday({ ok: false, error: t('staff.finance.error.loading', 'Не удалось загрузить данные смены') });
         } finally {
             setLoading(false);
             setIsInitialLoad(false);
@@ -295,12 +298,12 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             const res = await fetch('/api/staff/shift/open', { method: 'POST' });
             const json = await res.json();
             if (!json.ok) {
-                alert(json.error || 'Не удалось открыть смену');
+                alert(json.error || t('staff.finance.error.openShift', 'Не удалось открыть смену'));
             }
             await load();
         } catch (e) {
             console.error('Error opening shift:', e);
-            alert('Ошибка при открытии смены');
+            alert(t('staff.finance.error.openShift', 'Ошибка при открытии смены'));
         } finally {
             setSaving(false);
         }
@@ -318,12 +321,12 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             });
             const json = await res.json();
             if (!json.ok) {
-                alert(json.error || 'Не удалось закрыть смену');
+                alert(json.error || t('staff.finance.error.closeShift', 'Не удалось закрыть смену'));
             }
             await load();
         } catch (e) {
             console.error('Error closing shift:', e);
-            alert('Ошибка при закрытии смены');
+            alert(t('staff.finance.error.closeShift', 'Ошибка при закрытии смены'));
         } finally {
             setSaving(false);
         }
@@ -421,7 +424,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         }
     }
 
-    const todayLabel = new Date().toLocaleDateString('ru-RU', {
+    const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
+    const todayLabel = new Date().toLocaleDateString(localeMap[locale] || 'ru-RU', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -438,7 +442,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
             >
-                Текущая смена
+                {t('staff.finance.tabs.shift', 'Текущая смена')}
             </button>
             <button
                 onClick={() => setActiveTab('clients')}
@@ -448,7 +452,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
             >
-                Клиенты {items.length > 0 && `(${items.length})`}
+                {t('staff.finance.tabs.clients', 'Клиенты')} {items.length > 0 && `(${items.length})`}
             </button>
             {stats && (
                 <button
@@ -459,7 +463,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                             : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                 >
-                    Статистика
+                    {t('staff.finance.tabs.stats', 'Статистика')}
                 </button>
             )}
         </div>
@@ -469,10 +473,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         <main className="mx-auto max-w-4xl p-6 space-y-6">
             <div>
                 <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                    Финансы
+                    {t('staff.finance.title', 'Финансы')}
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Управление сменой, клиентами и тем, сколько получает сотрудник и бизнес
+                    {t('staff.finance.subtitle', 'Управление сменой, клиентами и тем, сколько получает сотрудник и бизнес')}
                 </p>
             </div>
 
@@ -484,27 +488,27 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div>
                             <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                Текущая смена
+                                {t('staff.finance.shift.current', 'Текущая смена')}
                             </div>
                             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 {todayLabel} ({TZ})
                             </div>
                             {todayShift && (
                                 <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                                    <div>Открыта: {formatTime(todayShift.opened_at)}</div>
+                                    <div>{t('staff.finance.shift.opened', 'Открыта')}: {formatTime(todayShift.opened_at, locale)}</div>
                                     {showShiftDetails && (
                                         <>
                                             <div>
-                                                Плановый старт:{' '}
+                                                {t('staff.finance.shift.expectedStart', 'Плановый старт')}:{' '}
                                                 {todayShift.expected_start
-                                                    ? formatTime(todayShift.expected_start)
-                                                    : 'не задан'}
+                                                    ? formatTime(todayShift.expected_start, locale)
+                                                    : t('staff.finance.shift.notSet', 'не задан')}
                                             </div>
                                             <div>
-                                                Опоздание:{' '}
+                                                {t('staff.finance.shift.late', 'Опоздание')}:{' '}
                                                 {todayShift.late_minutes > 0
-                                                    ? `${todayShift.late_minutes} мин`
-                                                    : 'нет'}
+                                                    ? `${todayShift.late_minutes} ${t('staff.finance.shift.minutes', 'мин')}`
+                                                    : t('staff.finance.shift.no', 'нет')}
                                             </div>
                                         </>
                                     )}
@@ -513,38 +517,38 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                         (isClosed && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined)) && (
                                         <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                                             <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Оплата за выход
+                                                {t('staff.finance.shift.guaranteedPayment', 'Оплата за выход')}
                                             </div>
                                             <div className="space-y-1 text-sm">
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-600 dark:text-gray-400">Отработано:</span>
+                                                    <span className="text-gray-600 dark:text-gray-400">{t('staff.finance.shift.hoursWorked', 'Отработано')}:</span>
                                                     <span className="font-medium text-gray-900 dark:text-gray-100">
                                                         {isOpen
                                                             ? currentHoursWorked?.toFixed(2) ?? '0.00'
                                                             : todayShift.hours_worked?.toFixed(2) ?? '0.00'}{' '}
-                                                        ч
+                                                        {t('staff.finance.shift.hours', 'ч')}
                                                     </span>
                                                 </div>
                                                 {showShiftDetails && (
                                                     <div className="flex justify-between">
-                                                        <span className="text-gray-600 dark:text-gray-400">Ставка:</span>
+                                                        <span className="text-gray-600 dark:text-gray-400">{t('staff.finance.shift.rate', 'Ставка')}:</span>
                                                         <span className="font-medium text-gray-900 dark:text-gray-100">
                                                             {isOpen
                                                                 ? hourlyRate ?? 0
                                                                 : todayShift.hourly_rate ?? 0}{' '}
-                                                            сом/ч
+                                                            {t('staff.finance.shift.somPerHour', 'сом/ч')}
                                                         </span>
                                                     </div>
                                                 )}
                                                 <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
                                                     <span className="font-medium text-green-600 dark:text-green-400">
-                                                        К получению за выход:
+                                                        {t('staff.finance.shift.toReceive', 'К получению за выход')}:
                                                     </span>
                                                     <span className="font-semibold text-green-600 dark:text-green-400">
                                                         {isOpen
                                                             ? currentGuaranteedAmount?.toFixed(2) ?? '0.00'
                                                             : todayShift.guaranteed_amount?.toFixed(2) ?? '0.00'}{' '}
-                                                        сом
+                                                        {t('staff.finance.shift.som', 'сом')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -556,7 +560,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             onClick={() => setShowShiftDetails(!showShiftDetails)}
                                             className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1"
                                         >
-                                            {showShiftDetails ? 'Скрыть детали' : 'Показать детали'}
+                                            {showShiftDetails ? t('staff.finance.shift.hideDetails', 'Скрыть детали') : t('staff.finance.shift.showDetails', 'Показать детали')}
                                         </button>
                                     )}
                                 </div>
@@ -567,7 +571,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                              <>
                                  {isDayOff ? (
                                      <div className="text-sm text-amber-600 dark:text-amber-400 font-medium px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
-                                         Сегодня у вас выходной день. Нельзя открыть смену.
+                                         {t('staff.finance.shift.dayOff', 'Сегодня у вас выходной день. Нельзя открыть смену.')}
                                      </div>
                                  ) : (
                                      <Button
@@ -576,7 +580,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                          disabled={loading || saving || isDayOff}
                                          isLoading={saving}
                                      >
-                                         Открыть смену
+                                         {t('staff.finance.shift.open', 'Открыть смену')}
                                      </Button>
                                  )}
                              </>
@@ -588,7 +592,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                      onClick={load}
                                      disabled={loading || saving}
                                  >
-                                     Обновить
+                                     {t('staff.finance.shift.refresh', 'Обновить')}
                                  </Button>
                                  <Button
                                      variant="primary"
@@ -596,14 +600,14 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                      disabled={saving}
                                      isLoading={saving}
                                  >
-                                     Закрыть смену
+                                     {t('staff.finance.shift.close', 'Закрыть смену')}
                                  </Button>
                              </>
                          )}
                          {isClosed && (
                              <>
                                  <div className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                     Смена закрыта
+                                     {t('staff.finance.shift.closed', 'Смена закрыта')}
                                  </div>
                                  <Button
                                      variant="outline"
@@ -611,7 +615,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                      disabled={saving}
                                      isLoading={saving}
                                  >
-                                     Переоткрыть смену
+                                     {t('staff.finance.shift.reopen', 'Переоткрыть смену')}
                                  </Button>
                              </>
                          )}
@@ -623,24 +627,24 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         <div className="mt-4 grid sm:grid-cols-2 gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 px-4 py-3">
                             <div className="space-y-1">
                                 <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                    Итого сотруднику за смену
+                                    {t('staff.finance.summary.toStaff', 'Итого сотруднику за смену')}
                                 </div>
                                 <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
-                                    {mShare} сом
+                                    {mShare} {t('staff.finance.shift.som', 'сом')}
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Учитывает проценты и оплату за выход
+                                    {t('staff.finance.summary.includesPercent', 'Учитывает проценты и оплату за выход')}
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                    Итого бизнесу за смену
+                                    {t('staff.finance.summary.toBusiness', 'Итого бизнесу за смену')}
                                 </div>
                                 <div className="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
-                                    {sShare} сом
+                                    {sShare} {t('staff.finance.shift.som', 'сом')}
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Включая все расходники и возможные доплаты сотруднику
+                                    {t('staff.finance.summary.includesConsumables', 'Включая все расходники и возможные доплаты сотруднику')}
                                 </div>
                             </div>
                         </div>
@@ -651,24 +655,24 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     <div className="space-y-3">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Сумма за услуги (сом)
+                                {t('staff.finance.details.serviceAmount', 'Сумма за услуги (сом)')}
                             </label>
                             <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-right font-semibold text-gray-900 dark:text-gray-100">
-                                {totalAmount} сом
+                                {totalAmount} {t('staff.finance.shift.som', 'сом')}
                             </div>
                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                Считается автоматически по списку клиентов ниже
+                                {t('staff.finance.details.autoCalculated', 'Считается автоматически по списку клиентов ниже')}
                             </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Расходники (сом)
+                                {t('staff.finance.details.consumables', 'Расходники (сом)')}
                             </label>
                             <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-right font-semibold text-gray-900 dark:text-gray-100">
-                                {finalConsumables} сом
+                                {finalConsumables} {t('staff.finance.shift.som', 'сом')}
                             </div>
                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                Считается автоматически по списку клиентов ниже
+                                {t('staff.finance.details.autoCalculated', 'Считается автоматически по списку клиентов ниже')}
                             </p>
                         </div>
                     </div>
@@ -677,24 +681,24 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Доля сотрудника (%)
+                                    {t('staff.finance.details.staffShare', 'Доля сотрудника (%)')}
                                 </label>
                                 <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-center font-semibold text-gray-900 dark:text-gray-100">
                                     {staffPercentMaster}%
                                 </div>
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    Из настроек сотрудника
+                                    {t('staff.finance.details.fromSettings', 'Из настроек сотрудника')}
                                 </p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Доля бизнеса (%)
+                                    {t('staff.finance.details.businessShare', 'Доля бизнеса (%)')}
                                 </label>
                                 <div className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-3 py-2 text-sm text-center font-semibold text-gray-900 dark:text-gray-100">
                                     {staffPercentSalon}%
                                 </div>
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    Из настроек сотрудника
+                                    {t('staff.finance.details.fromSettings', 'Из настроек сотрудника')}
                                 </p>
                             </div>
                         </div>
@@ -702,18 +706,18 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         <div className="mt-2 space-y-1 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">
-                                    Доля сотрудника
+                                    {t('staff.finance.details.staffShareAmount', 'Доля сотрудника')}
                                 </span>
                                 <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                    {mShare} сом
+                                    {mShare} {t('staff.finance.shift.som', 'сом')}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">
-                                    Доля бизнеса (включая расходники)
+                                    {t('staff.finance.details.businessShareAmount', 'Доля бизнеса (включая расходники)')}
                                 </span>
                                 <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                    {sShare} сом
+                                    {sShare} {t('staff.finance.shift.som', 'сом')}
                                 </span>
                             </div>
                             {/* Показываем оплату за выход для открытой смены */}
@@ -721,31 +725,31 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                 <>
                                     <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                         <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Оплата за выход
+                                            {t('staff.finance.shift.guaranteedPayment', 'Оплата за выход')}
                                         </div>
                                         <div className="space-y-1 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600 dark:text-gray-400">
-                                                    Отработано часов
+                                                    {t('staff.finance.shift.hoursWorked', 'Отработано часов')}
                                                 </span>
                                                 <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                                    {currentHoursWorked.toFixed(2)} ч
+                                                    {currentHoursWorked.toFixed(2)} {t('staff.finance.shift.hours', 'ч')}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600 dark:text-gray-400">
-                                                    Ставка за час
+                                                    {t('staff.finance.shift.rate', 'Ставка за час')}
                                                 </span>
                                                 <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                                    {hourlyRate} сом/ч
+                                                    {hourlyRate} {t('staff.finance.shift.somPerHour', 'сом/ч')}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
                                                 <span className="text-green-600 dark:text-green-400 font-medium">
-                                                    К получению за выход:
+                                                    {t('staff.finance.shift.toReceive', 'К получению за выход')}:
                                                 </span>
                                                 <span className="font-semibold text-green-600 dark:text-green-400">
-                                                    {currentGuaranteedAmount.toFixed(2)} сом
+                                                    {currentGuaranteedAmount.toFixed(2)} {t('staff.finance.shift.som', 'сом')}
                                                 </span>
                                             </div>
                                         </div>
@@ -778,28 +782,28 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600 dark:text-gray-400">
-                                                    Гарантированная сумма за выход
+                                                    {t('staff.finance.details.guaranteedAmount', 'Гарантированная сумма за выход')}
                                                 </span>
                                                 <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                                    {todayShift.guaranteed_amount?.toFixed(2) ?? '0.00'} сом
+                                                    {todayShift.guaranteed_amount?.toFixed(2) ?? '0.00'} {t('staff.finance.shift.som', 'сом')}
                                                 </span>
                                             </div>
                                             {todayShift.topup_amount && todayShift.topup_amount > 0 && (
                                                 <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
                                                     <span className="text-amber-600 dark:text-amber-400 font-medium">
-                                                        Доплата владельца
+                                                        {t('staff.finance.details.ownerTopup', 'Доплата владельца')}
                                                     </span>
                                                     <span className="font-semibold text-amber-600 dark:text-amber-400">
-                                                        +{todayShift.topup_amount.toFixed(2)} сом
+                                                        +{todayShift.topup_amount.toFixed(2)} {t('staff.finance.shift.som', 'сом')}
                                                     </span>
                                                 </div>
                                             )}
                                             <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700 mt-1">
                                                 <span className="text-green-600 dark:text-green-400 font-medium">
-                                                    Итого к получению
+                                                    {t('staff.finance.details.totalToReceive', 'Итого к получению')}
                                                 </span>
                                                 <span className="font-semibold text-green-600 dark:text-green-400">
-                                                    {((todayShift.guaranteed_amount ?? 0) + (todayShift.topup_amount ?? 0)).toFixed(2)} сом
+                                                    {((todayShift.guaranteed_amount ?? 0) + (todayShift.topup_amount ?? 0)).toFixed(2)} {t('staff.finance.shift.som', 'сом')}
                                                 </span>
                                             </div>
                                         </div>
@@ -807,7 +811,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                 </>
                             )}
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                Примечание: расходники 100% идут бизнесу
+                                {t('staff.finance.details.note', 'Примечание: расходники 100% идут бизнесу')}
                             </p>
                         </div>
                     </div>
@@ -821,13 +825,13 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                 <Card variant="elevated" className="p-6 space-y-4">
                 <div className="flex items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        Клиенты за смену
+                        {t('staff.finance.clients.title', 'Клиенты за смену')}
                     </h2>
                     {isOpen && (
                         <div className="flex items-center gap-2">
                             {savingItems && (
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Сохранение...
+                                    {t('staff.finance.clients.saving', 'Сохранение...')}
                                 </span>
                             )}
                             {!isReadOnly && (
@@ -840,7 +844,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             const nextIndex =
                                                 prev.filter((it) => !it.bookingId).length + 1;
                                             const newItem: ShiftItem = {
-                                                clientName: `Клиент ${nextIndex}`,
+                                                clientName: `${t('staff.finance.clients.client', 'Клиент')} ${nextIndex}`,
                                                 serviceName: '',
                                                 serviceAmount: 0,
                                                 consumablesAmount: 0,
@@ -855,7 +859,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     }}
                                     disabled={saving || savingItems}
                                 >
-                                    Добавить клиента
+                                    {t('staff.finance.clients.add', 'Добавить клиента')}
                                 </Button>
                             )}
                         </div>
@@ -864,16 +868,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
                 {items.length === 0 ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Пока нет добавленных клиентов. Добавьте клиента из записей или введите вручную, укажите суммы за услугу и расходники.
+                        {t('staff.finance.clients.empty', 'Пока нет добавленных клиентов. Добавьте клиента из записей или введите вручную, укажите суммы за услугу и расходники.')}
                     </p>
                 ) : (
                     <div className="space-y-2 text-sm">
                         {/* Заголовок колонок (для понимания структуры) */}
                         <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                            <span>Клиент</span>
-                            <span>Услуга / комментарий</span>
-                            <span className="text-right">Сумма</span>
-                            <span className="text-right">Расходники</span>
+                            <span>{t('staff.finance.clients.client', 'Клиент')}</span>
+                            <span>{t('staff.finance.clients.service', 'Услуга / комментарий')}</span>
+                            <span className="text-right">{t('staff.finance.clients.amount', 'Сумма')}</span>
+                            <span className="text-right">{t('staff.finance.clients.consumables', 'Расходники')}</span>
                         </div>
 
                         {items.map((item, idx) => {
@@ -901,7 +905,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     >
                                         <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 items-center">
                                             <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                {item.clientName || 'Клиент не указан'}
+                                                {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
                                             </div>
                                             <div className="text-gray-600 dark:text-gray-400">
                                                 {item.serviceName || '—'}
@@ -909,12 +913,12 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             <div className="text-right font-medium text-gray-900 dark:text-gray-100">
                                                 {(item.serviceAmount ?? 0) === 0 && !item.serviceName
                                                     ? '—'
-                                                    : `${item.serviceAmount ?? 0} сом`}
+                                                    : `${item.serviceAmount ?? 0} ${t('staff.finance.shift.som', 'сом')}`}
                                             </div>
                                             <div className="text-right font-medium text-gray-900 dark:text-gray-100">
                                                 {(item.consumablesAmount ?? 0) === 0
-                                                    ? '0 сом'
-                                                    : `${item.consumablesAmount} сом`}
+                                                    ? `0 ${t('staff.finance.shift.som', 'сом')}`
+                                                    : `${item.consumablesAmount} ${t('staff.finance.shift.som', 'сом')}`}
                                             </div>
                                         </div>
                                         {isOpen && !isReadOnly && (
@@ -927,7 +931,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                         setExpandedItems((prev) => new Set(prev).add(idx));
                                                     }}
                                                 >
-                                                    Редактировать
+                                                    {t('staff.finance.clients.edit', 'Редактировать')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -942,7 +946,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                         });
                                                     }}
                                                 >
-                                                    Удалить
+                                                    {t('staff.finance.clients.delete', 'Удалить')}
                                                 </button>
                                             </div>
                                         )}
@@ -957,7 +961,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3"
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <h3 className="font-medium text-gray-900 dark:text-gray-100">Редактирование клиента</h3>
+                                        <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('staff.finance.clients.editing', 'Редактирование клиента')}</h3>
                                         <button
                                             type="button"
                                             className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -967,13 +971,13 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                 return next;
                                             })}
                                         >
-                                            Свернуть
+                                            {t('staff.finance.clients.collapse', 'Свернуть')}
                                         </button>
                                     </div>
                                     
                                     <div>
                                         <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                            Клиент
+                                            {t('staff.finance.clients.client', 'Клиент')}
                                         </label>
                                         <select
                                             className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm"
@@ -1009,16 +1013,17 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             }}
                                             disabled={!isOpen || isReadOnly}
                                         >
-                                            <option value="">Выберите клиента из записей...</option>
+                                            <option value="">{t('staff.finance.clients.selectFromBookings', 'Выберите клиента из записей...')}</option>
                                             {availableBookings.map((b) => {
                                                 const service = b.services
                                                     ? Array.isArray(b.services)
                                                         ? b.services[0]
                                                         : b.services
                                                     : null;
-                                                const clientLabel = b.client_name || b.client_phone || 'Клиент';
+                                                const clientLabel = b.client_name || b.client_phone || t('staff.finance.clients.client', 'Клиент');
                                                 const serviceLabel = service?.name_ru || '';
-                                                const time = new Date(b.start_at).toLocaleTimeString('ru-RU', {
+                                                const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
+                                                const time = new Date(b.start_at).toLocaleTimeString(localeMap[locale] || 'ru-RU', {
                                                     hour: '2-digit',
                                                     minute: '2-digit',
                                                 });
@@ -1031,15 +1036,14 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                         </select>
                                         {!item.bookingId && (
                                             <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                                Для клиентов «с улицы» имя будет сохранено автоматически как «
-                                                {item.clientName}».
+                                                {t('staff.finance.clients.walkInHint', 'Для клиентов «с улицы» имя будет сохранено автоматически как «{name}».').replace('{name}', item.clientName)}
                                             </p>
                                         )}
                                     </div>
                                     
                                     <div>
                                         <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                            Услуга
+                                            {t('staff.finance.clients.service', 'Услуга')}
                                         </label>
                                         <select
                                             className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -1054,7 +1058,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             }}
                                             disabled={!isOpen || isReadOnly}
                                         >
-                                            <option value="">Выберите услугу...</option>
+                                            <option value="">{t('staff.finance.clients.selectService', 'Выберите услугу...')}</option>
                                             {serviceOptions.map((name) => (
                                                 <option key={name} value={name}>
                                                     {name}
@@ -1066,7 +1070,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                Цена за услугу (сом)
+                                                {t('staff.finance.clients.servicePrice', 'Цена за услугу (сом)')}
                                             </label>
                                             <input
                                                 type="number"
@@ -1087,7 +1091,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                Расходники (сом)
+                                                {t('staff.finance.clients.consumablesAmount', 'Расходники (сом)')}
                                             </label>
                                             <input
                                                 type="number"
@@ -1121,7 +1125,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                     });
                                                 }}
                                             >
-                                                Отмена
+                                                {t('staff.finance.clients.cancel', 'Отмена')}
                                             </button>
                                             <button
                                                 type="button"
@@ -1134,7 +1138,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                     });
                                                 }}
                                             >
-                                                Сохранить
+                                                {t('staff.finance.clients.save', 'Сохранить')}
                                             </button>
                                         </div>
                                     )}
@@ -1151,10 +1155,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                 <Card variant="elevated" className="p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            Общая статистика по сменам
+                            {t('staff.finance.stats.title', 'Общая статистика по сменам')}
                         </h2>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Всего закрытых смен: {stats.shiftsCount}
+                            {t('staff.finance.stats.totalShifts', 'Всего закрытых смен')}: {stats.shiftsCount}
                         </div>
                     </div>
                     
@@ -1169,7 +1173,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                             }`}
                         >
-                            День
+                            {t('staff.finance.stats.period.day', 'День')}
                         </button>
                         <button
                             type="button"
@@ -1180,7 +1184,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                             }`}
                         >
-                            Неделя
+                            {t('staff.finance.stats.period.week', 'Неделя')}
                         </button>
                         <button
                             type="button"
@@ -1191,7 +1195,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                             }`}
                         >
-                            Месяц
+                            {t('staff.finance.stats.period.month', 'Месяц')}
                         </button>
                         <button
                             type="button"
@@ -1202,31 +1206,31 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                             }`}
                         >
-                            Все время
+                            {t('staff.finance.stats.period.all', 'Все время')}
                         </button>
                     </div>
                     <div className="grid sm:grid-cols-3 gap-4 text-sm">
                         <div className="space-y-1">
-                            <div className="text-gray-600 dark:text-gray-400">Общая выручка</div>
+                            <div className="text-gray-600 dark:text-gray-400">{t('staff.finance.stats.totalRevenue', 'Общая выручка')}</div>
                             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                {stats.totalAmount} сом
+                                {stats.totalAmount} {t('staff.finance.shift.som', 'сом')}
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-gray-600 dark:text-gray-400">Сумма сотрудника</div>
+                            <div className="text-gray-600 dark:text-gray-400">{t('staff.finance.stats.staffAmount', 'Сумма сотрудника')}</div>
                             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                {stats.totalMaster} сом
+                                {stats.totalMaster} {t('staff.finance.shift.som', 'сом')}
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-gray-600 dark:text-gray-400">Сумма бизнеса</div>
+                            <div className="text-gray-600 dark:text-gray-400">{t('staff.finance.stats.businessAmount', 'Сумма бизнеса')}</div>
                             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                {stats.totalSalon} сом
+                                {stats.totalSalon} {t('staff.finance.shift.som', 'сом')}
                             </div>
                         </div>
                     </div>
                     <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                        Суммарное опоздание: {stats.totalLateMinutes} минут
+                        {t('staff.finance.stats.totalLate', 'Суммарное опоздание')}: {stats.totalLateMinutes} {t('staff.finance.shift.minutes', 'минут')}
                     </div>
                 </Card>
             )}
