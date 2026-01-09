@@ -573,20 +573,68 @@ function QuickDesk({
         return service.name_ru;
     };
 
-    // фильтры по филиалу
-    const servicesByBranch = useMemo(
-        () => branchId ? services.filter(s => s.branch_id === branchId) : [],
-        [services, branchId],
-    );
-    const staffByBranch = useMemo(
-        () => branchId ? staff.filter(s => s.branch_id === branchId) : [],
-        [staff, branchId],
-    );
-
     // выбранные значения (начинаем с пустых, как в публичной версии)
     const [serviceId, setServiceId]   = useState<string>('');
     const [staffId, setStaffId]       = useState<string>('');
     const [date, setDate]             = useState<string>(() => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
+
+    // Временные переводы для выбранной даты
+    const [temporaryTransfers, setTemporaryTransfers] = useState<Map<string, string>>(new Map());
+    
+    // Загрузка временных переводов для выбранной даты
+    useEffect(() => {
+        if (!branchId || !date) {
+            setTemporaryTransfers(new Map());
+            return;
+        }
+        let ignore = false;
+        (async () => {
+            const { data, error } = await supabase
+                .from('staff_schedule_rules')
+                .select('staff_id, branch_id')
+                .eq('kind', 'date')
+                .eq('date', date)
+                .eq('branch_id', branchId);
+            
+            if (ignore) return;
+            if (error) {
+                console.error('[QuickDesk] Error loading temporary transfers:', error);
+                setTemporaryTransfers(new Map());
+                return;
+            }
+            
+            // Создаем Map: staff_id -> branch_id (для временно переведенных мастеров)
+            const transfers = new Map<string, string>();
+            (data || []).forEach((rule: { staff_id: string; branch_id: string }) => {
+                transfers.set(rule.staff_id, rule.branch_id);
+            });
+            setTemporaryTransfers(transfers);
+        })();
+        return () => { ignore = true; };
+    }, [branchId, date]);
+
+    // фильтры по филиалу (с учетом временных переводов)
+    const servicesByBranch = useMemo(
+        () => branchId ? services.filter(s => s.branch_id === branchId) : [],
+        [services, branchId],
+    );
+    const staffByBranch = useMemo(() => {
+        if (!branchId) return [];
+        
+        // Мастера с основным филиалом = branchId
+        const regularStaff = staff.filter(s => s.branch_id === branchId);
+        
+        // Мастера, временно переведенные в branchId на выбранную дату
+        const transferredStaff = staff.filter(s => 
+            temporaryTransfers.has(s.id) && temporaryTransfers.get(s.id) === branchId
+        );
+        
+        // Объединяем и убираем дубликаты
+        const allStaff = [...regularStaff, ...transferredStaff];
+        const uniqueStaff = Array.from(new Map(allStaff.map(s => [s.id, s])).values());
+        
+        return uniqueStaff;
+    }, [staff, branchId, temporaryTransfers]);
 
     // слоты
     const [slots, setSlots] = useState<RpcSlot[]>([]);
