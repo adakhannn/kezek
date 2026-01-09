@@ -4,13 +4,12 @@ import { startOfWeek, addDays, addWeeks } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 
 type Branch = { id: string; name: string };
 type TimeRange = { start: string; end: string };
-
-const DOW = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 // Получаем даты текущей и следующей недели
 function getWeekDates(weekOffset: number): Date[] {
@@ -108,10 +107,21 @@ function DayRow({
     saving: boolean;
     onSave: (date: string, interval: TimeRange | null, branchId: string) => void;
 }) {
+    const { t } = useLanguage();
     const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
     // Проверяем, является ли дата прошедшей (сравниваем только дату, без времени)
     const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
     const isPastDate = dateStr < todayStr;
+
+    const DOW = [
+        t('staff.schedule.dayOfWeek.sunday', 'Вс'),
+        t('staff.schedule.dayOfWeek.monday', 'Пн'),
+        t('staff.schedule.dayOfWeek.tuesday', 'Вт'),
+        t('staff.schedule.dayOfWeek.wednesday', 'Ср'),
+        t('staff.schedule.dayOfWeek.thursday', 'Чт'),
+        t('staff.schedule.dayOfWeek.friday', 'Пт'),
+        t('staff.schedule.dayOfWeek.saturday', 'Сб'),
+    ];
     
     // Если правила нет в БД или интервалы пустые - день выходной
     // Если правила нет - день рабочий по умолчанию
@@ -172,7 +182,7 @@ function DayRow({
                         {isToday && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">
                                 <span className="inline-flex h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-indigo-500" />
-                                Сегодня
+                                {t('staff.schedule.today', 'Сегодня')}
                             </span>
                         )}
                     </div>
@@ -191,14 +201,14 @@ function DayRow({
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
-                            <span className="hidden sm:inline">Сохранение...</span>
+                            <span className="hidden sm:inline">{t('staff.schedule.saving', 'Сохранение...')}</span>
                         </>
                     ) : (
                         <>
                             <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            <span className="hidden sm:inline">Сохранить</span>
+                            <span className="hidden sm:inline">{t('staff.schedule.save', 'Сохранить')}</span>
                         </>
                     )}
                 </button>
@@ -213,15 +223,19 @@ function DayRow({
                         className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 flex-shrink-0"
                     />
                     <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0">
-                        Выходной день
+                        {t('staff.schedule.dayOff', 'Выходной день')}
                     </span>
                     {isPastDate && (
-                        <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap hidden sm:inline">(недоступно для прошедших дат)</span>
+                        <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap hidden sm:inline">
+                            ({t('staff.schedule.pastDateUnavailable', 'недоступно для прошедших дат')})
+                        </span>
                     )}
                 </label>
                 {!isDayOff && (
                     <div className="min-w-0">
-                        <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">Рабочее время</div>
+                        <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">
+                            {t('staff.schedule.workingHours', 'Рабочее время')}
+                        </div>
                         <SingleTimeRange 
                             value={interval} 
                             onChange={(v) => {
@@ -240,13 +254,15 @@ function DayRow({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span className="text-[10px] sm:text-xs font-semibold text-gray-700 dark:text-gray-300">Временный перевод в филиал</span>
+                            <span className="text-[10px] sm:text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                {t('staff.schedule.temporaryTransfer', 'Временный перевод в филиал')}
+                            </span>
                             {selectedBranchId !== homeBranchId && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 animate-pulse">
                                     <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                     </svg>
-                                    Активен
+                                    {t('staff.schedule.active', 'Активен')}
                                 </span>
                             )}
                         </div>
@@ -262,27 +278,27 @@ function DayRow({
                         >
                             {branches.map((b) => (
                                 <option key={b.id} value={b.id}>
-                                    {b.name} {b.id === homeBranchId ? '(основной)' : ''}
+                                    {b.name} {b.id === homeBranchId ? `(${t('staff.schedule.homeBranch', 'основной')})` : ''}
                                 </option>
                             ))}
                         </select>
                         {selectedBranchId !== homeBranchId && !isPastDate && (
                             <div className="mt-1.5 p-2 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
                                 <p className="text-[10px] text-indigo-700 dark:text-indigo-300 font-medium">
-                                    ✓ Сотрудник будет временно переведен в филиал "{branches.find(b => b.id === selectedBranchId)?.name}" на этот день
+                                    ✓ {t('staff.schedule.transferHint', 'Сотрудник будет временно переведен в филиал "{branch}" на этот день').replace('{branch}', branches.find(b => b.id === selectedBranchId)?.name || '')}
                                 </p>
                             </div>
                         )}
                         {selectedBranchId === homeBranchId && !isPastDate && (
                             <p className="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400">
-                                Выберите другой филиал для временного перевода на этот день
+                                {t('staff.schedule.selectBranchForTransfer', 'Выберите другой филиал для временного перевода на этот день')}
                             </p>
                         )}
                     </div>
                 ) : (
                     <div className="min-w-0 border-t border-gray-200 dark:border-gray-700 pt-2 sm:pt-3 mt-2 sm:mt-3">
                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                            Для временного перевода нужно добавить хотя бы один дополнительный филиал в настройках бизнеса
+                            {t('staff.schedule.noBranchesForTransfer', 'Для временного перевода нужно добавить хотя бы один дополнительный филиал в настройках бизнеса')}
                         </p>
                     </div>
                 )}
@@ -302,6 +318,7 @@ export default function Client({
     branches: Branch[];
     homeBranchId: string;
 }) {
+    const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState<'schedule' | 'transfers'>('schedule');
     const [saving, setSaving] = useState(false);
     const [rules, setRules] = useState<
@@ -521,7 +538,7 @@ export default function Client({
             );
         } catch (error) {
             console.error('Error saving schedule:', error);
-            alert('Ошибка при сохранении расписания');
+            alert(t('staff.schedule.saveError', 'Ошибка при сохранении расписания'));
         } finally {
             setSaving(false);
         }
@@ -540,7 +557,7 @@ export default function Client({
                                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                         }`}
                     >
-                        Расписание
+                        {t('staff.schedule.tab.schedule', 'Расписание')}
                     </button>
                     <button
                         onClick={() => setActiveTab('transfers')}
@@ -550,7 +567,7 @@ export default function Client({
                                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                         }`}
                     >
-                        Временные переводы
+                        {t('staff.schedule.tab.transfers', 'Временные переводы')}
                     </button>
                 </nav>
             </div>
@@ -563,7 +580,7 @@ export default function Client({
                         <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span>Текущая неделя</span>
+                        <span>{t('staff.schedule.week.current', 'Текущая неделя')}</span>
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {formatInTimeZone(currentWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
@@ -622,7 +639,7 @@ export default function Client({
                         <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span>Следующая неделя</span>
+                        <span>{t('staff.schedule.week.next', 'Следующая неделя')}</span>
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {formatInTimeZone(nextWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
@@ -681,14 +698,14 @@ export default function Client({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                        <p className="font-medium">Как работает расписание</p>
+                        <p className="font-medium">{t('staff.schedule.instructions.title', 'Как работает расписание')}</p>
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-blue-700 dark:text-blue-300">
-                            <li>По умолчанию все дни рабочие (09:00-21:00)</li>
-                            <li>Отметьте чекбокс "Выходной день", чтобы сделать день нерабочим</li>
-                            <li><strong>Временный перевод:</strong> Выберите филиал в выпадающем списке "Филиал" для любого дня, чтобы временно перевести сотрудника в другой филиал. Основной филиал отмечен как "(основной)".</li>
-                            <li>Можно управлять расписанием только на текущую и следующую неделю</li>
-                            <li>Прошедшие даты недоступны для редактирования</li>
-                            <li>Все временные переводы отображаются во вкладке "Временные переводы"</li>
+                            <li>{t('staff.schedule.instructions.default', 'По умолчанию все дни рабочие (09:00-21:00)')}</li>
+                            <li>{t('staff.schedule.instructions.dayOff', 'Отметьте чекбокс "Выходной день", чтобы сделать день нерабочим')}</li>
+                            <li dangerouslySetInnerHTML={{ __html: t('staff.schedule.instructions.transfer', '<strong>Временный перевод:</strong> Выберите филиал в выпадающем списке "Филиал" для любого дня, чтобы временно перевести сотрудника в другой филиал. Основной филиал отмечен как "(основной)".') }} />
+                            <li>{t('staff.schedule.instructions.weeks', 'Можно управлять расписанием только на текущую и следующую неделю')}</li>
+                            <li>{t('staff.schedule.instructions.past', 'Прошедшие даты недоступны для редактирования')}</li>
+                            <li>{t('staff.schedule.instructions.transfersTab', 'Все временные переводы отображаются во вкладке "Временные переводы"')}</li>
                         </ul>
                     </div>
                 </div>
@@ -720,6 +737,7 @@ function TransfersTab({
     branches: Branch[];
     homeBranchId: string;
 }) {
+    const { t } = useLanguage();
     const [transfers, setTransfers] = useState<
         Array<{
             id: string;
@@ -759,10 +777,10 @@ function TransfersTab({
                         id: r.id,
                         date_on: r.date_on,
                         branch_id: r.branch_id,
-                        branch_name: branch?.name || 'Неизвестный филиал',
+                        branch_name: branch?.name || t('staff.schedule.transfers.unknownBranch', 'Неизвестный филиал'),
                     };
                 })
-                .filter((t) => t.branch_name !== 'Неизвестный филиал');
+                .filter((transfer) => transfer.branch_name !== t('staff.schedule.transfers.unknownBranch', 'Неизвестный филиал'));
 
             setTransfers(transfersData);
             setLoading(false);
@@ -773,7 +791,7 @@ function TransfersTab({
     }, [bizId, staffId, homeBranchId, branches]);
 
     const homeBranch = branches.find((b) => b.id === homeBranchId);
-    const homeBranchName = homeBranch?.name || 'Основной филиал';
+    const homeBranchName = homeBranch?.name || t('staff.schedule.transfers.homeBranchDefault', 'Основной филиал');
 
     if (loading) {
         return (
@@ -783,7 +801,7 @@ function TransfersTab({
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Загрузка переводов...
+                    {t('staff.schedule.transfers.loading', 'Загрузка переводов...')}
                 </div>
             </div>
         );
@@ -792,15 +810,15 @@ function TransfersTab({
     return (
         <div className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
-                    <span>Временные переводы</span>
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                    Список дней, когда сотрудник временно переведен на другой филиал
-                </p>
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <span>{t('staff.schedule.transfers.title', 'Временные переводы')}</span>
+                    </h2>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                        {t('staff.schedule.transfers.subtitle', 'Список дней, когда сотрудник временно переведен на другой филиал')}
+                    </p>
             </div>
 
             {transfers.length === 0 ? (
@@ -810,16 +828,18 @@ function TransfersTab({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                         </svg>
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 mb-1">Нет временных переводов</p>
+                    <p className="text-gray-500 dark:text-gray-400 mb-1">
+                        {t('staff.schedule.transfers.empty.title', 'Нет временных переводов')}
+                    </p>
                     <p className="text-xs text-gray-400 dark:text-gray-500">
-                        Временные переводы настраиваются в разделе «Расписание» при выборе филиала для дня
+                        {t('staff.schedule.transfers.empty.desc', 'Временные переводы настраиваются в разделе «Расписание» при выборе филиала для дня')}
                     </p>
                 </div>
             ) : (
                 <div className="space-y-3">
                     <div className="mb-4 p-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
                         <p className="text-xs sm:text-sm text-indigo-800 dark:text-indigo-200">
-                            <span className="font-medium">Основной филиал:</span> {homeBranchName}
+                            <span className="font-medium">{t('staff.schedule.transfers.homeBranch', 'Основной филиал:')}</span> {homeBranchName}
                         </p>
                     </div>
                     <div className="space-y-2">
@@ -847,12 +867,12 @@ function TransfersTab({
                                             {isToday && (
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">
                                                     <span className="inline-flex h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-indigo-500" />
-                                                    Сегодня
+                                                    {t('staff.schedule.today', 'Сегодня')}
                                                 </span>
                                             )}
                                             {isPast && (
                                                 <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                                                    Прошлое
+                                                    {t('staff.schedule.transfers.past', 'Прошлое')}
                                                 </span>
                                             )}
                                         </div>
@@ -865,7 +885,7 @@ function TransfersTab({
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                        <span className="hidden sm:inline">Переведен</span>
+                                        <span className="hidden sm:inline">{t('staff.schedule.transfers.transferred', 'Переведен')}</span>
                                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
@@ -883,12 +903,12 @@ function TransfersTab({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                        <p className="font-medium">Как работают временные переводы</p>
+                        <p className="font-medium">{t('staff.schedule.transfers.instructions.title', 'Как работают временные переводы')}</p>
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-blue-700 dark:text-blue-300">
-                            <li>Временные переводы настраиваются в разделе «Расписание»</li>
-                            <li>Выберите филиал для конкретного дня при редактировании расписания</li>
-                            <li>Перевод действует только на выбранный день</li>
-                            <li>В остальные дни сотрудник работает в основном филиале</li>
+                            <li>{t('staff.schedule.transfers.instructions.setup', 'Временные переводы настраиваются в разделе «Расписание»')}</li>
+                            <li>{t('staff.schedule.transfers.instructions.select', 'Выберите филиал для конкретного дня при редактировании расписания')}</li>
+                            <li>{t('staff.schedule.transfers.instructions.oneDay', 'Перевод действует только на выбранный день')}</li>
+                            <li>{t('staff.schedule.transfers.instructions.otherDays', 'В остальные дни сотрудник работает в основном филиале')}</li>
                         </ul>
                     </div>
                 </div>
