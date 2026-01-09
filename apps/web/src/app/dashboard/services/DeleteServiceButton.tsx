@@ -50,6 +50,7 @@ export default function DeleteServiceButton({ id }: { id: string }) {
             onClick={onDelete}
             disabled={loading}
             isLoading={loading}
+            className="w-full sm:w-auto"
         >
             {loading ? 'Удаляем…' : 'Удалить'}
         </Button>
