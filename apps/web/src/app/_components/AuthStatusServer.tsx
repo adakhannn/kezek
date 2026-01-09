@@ -3,11 +3,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { unstable_noStore as noStore } from 'next/cache';
 import { cookies } from 'next/headers';
-import Link from 'next/link';
 
 import { PersonalCabinetButton } from './PersonalCabinetButton';
 import { SignInButton } from './SignInButton';
 import { SignOutButton } from './SignOutButton';
+import { StaffCabinetButton } from './StaffCabinetButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -124,14 +124,7 @@ export async function AuthStatusServer() {
                     <span className="font-medium">{label}</span>
                 </span>
             </div>
-            {isStaff && (
-                <Link 
-                    href="/staff" 
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
-                >
-                    Кабинет сотрудника
-                </Link>
-            )}
+            {isStaff && <StaffCabinetButton />}
             <PersonalCabinetButton />
             <SignOutButton />
         </div>
