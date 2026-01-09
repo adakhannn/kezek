@@ -4,13 +4,17 @@ import { startOfWeek, addDays, addWeeks } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Card } from '@/components/ui/Card';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
+import { transliterate } from '@/lib/transliterate';
 
 type TimeRange = { start: string; end: string };
 
-const DOW = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const DOW_RU = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const DOW_KY = ['Жк', 'Дү', 'Шй', 'Шр', 'Бй', 'Жм', 'Иш'];
+const DOW_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // Получаем даты текущей и следующей недели
 function getWeekDates(weekOffset: number): Date[] {
@@ -32,13 +36,17 @@ export default function ViewSchedule({
     homeBranchId: string;
 }) {
     const [loading, setLoading] = useState(true);
+    const { t, locale } = useLanguage();
     const [rules, setRules] = useState<
         Array<{
             id: string;
             date_on: string;
             intervals: TimeRange[];
+            branch_id: string | null;
         }>
     >([]);
+    
+    const DOW = locale === 'ky' ? DOW_KY : locale === 'en' ? DOW_EN : DOW_RU;
 
     // Получаем даты текущей и следующей недели
     const currentWeekDates = useMemo(() => getWeekDates(0), []);
@@ -54,7 +62,7 @@ export default function ViewSchedule({
 
             const { data } = await supabase
                 .from('staff_schedule_rules')
-                .select('id, date_on, intervals')
+                .select('id, date_on, intervals, branch_id')
                 .eq('biz_id', bizId)
                 .eq('staff_id', staffId)
                 .eq('kind', 'date')
@@ -69,6 +77,7 @@ export default function ViewSchedule({
                     id: r.id,
                     date_on: r.date_on,
                     intervals: (r.intervals ?? []) as TimeRange[],
+                    branch_id: r.branch_id,
                 }))
             );
             setLoading(false);
@@ -80,28 +89,33 @@ export default function ViewSchedule({
 
     // Создаем карту правил по датам
     const rulesByDate = useMemo(() => {
-        const map = new Map<string, TimeRange[]>();
+        const map = new Map<string, { intervals: TimeRange[]; branch_id: string | null }>();
         for (const r of rules) {
-            map.set(r.date_on, r.intervals);
+            map.set(r.date_on, { intervals: r.intervals, branch_id: r.branch_id });
         }
         return map;
     }, [rules]);
+    
+    function formatBranchName(name: string): string {
+        if (locale === 'en') return transliterate(name);
+        return name;
+    }
 
     function formatTimeRange(intervals: TimeRange[] | null | undefined): string {
         if (!intervals || intervals.length === 0) {
-            return 'Выходной';
+            return t('staff.schedule.dayOff', 'Выходной');
         }
         if (intervals.length > 0) {
             const first = intervals[0];
             return `${first.start} - ${first.end}`;
         }
-        return 'Выходной';
+        return t('staff.schedule.dayOff', 'Выходной');
     }
 
     if (loading) {
         return (
             <div className="text-center py-8">
-                <p className="text-gray-600 dark:text-gray-400">Загрузка расписания...</p>
+                <p className="text-gray-600 dark:text-gray-400">{t('staff.schedule.loading', 'Загрузка расписания...')}</p>
             </div>
         );
     }
@@ -109,7 +123,7 @@ export default function ViewSchedule({
     return (
         <section className="space-y-6">
             <div>
-                <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Текущая неделя</h2>
+                <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('staff.schedule.currentWeek', 'Текущая неделя')}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     {formatInTimeZone(currentWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
                     {formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}
@@ -118,9 +132,14 @@ export default function ViewSchedule({
                     {currentWeekDates.map((date) => {
                         const dow = date.getDay(); // 0-6 (0=воскресенье)
                         const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                        const intervals = rulesByDate.get(dateStr);
+                        const rule = rulesByDate.get(dateStr);
+                        const intervals = rule?.intervals;
+                        const branchId = rule?.branch_id;
                         const isDayOff = intervals !== undefined && intervals.length === 0;
                         const isWorking = intervals !== undefined && intervals.length > 0;
+                        const isTemporaryTransfer = branchId && branchId !== homeBranchId;
+                        const branch = branchId ? branches.find(b => b.id === branchId) : null;
+                        const homeBranch = branches.find(b => b.id === homeBranchId);
 
                         return (
                             <Card
@@ -171,7 +190,7 @@ export default function ViewSchedule({
             </div>
 
             <div>
-                <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Следующая неделя</h2>
+                <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('staff.schedule.nextWeek', 'Следующая неделя')}</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     {formatInTimeZone(nextWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
                     {formatInTimeZone(nextWeekDates[6], TZ, 'dd.MM.yyyy')}
@@ -180,9 +199,14 @@ export default function ViewSchedule({
                     {nextWeekDates.map((date) => {
                         const dow = date.getDay(); // 0-6 (0=воскресенье)
                         const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                        const intervals = rulesByDate.get(dateStr);
+                        const rule = rulesByDate.get(dateStr);
+                        const intervals = rule?.intervals;
+                        const branchId = rule?.branch_id;
                         const isDayOff = intervals !== undefined && intervals.length === 0;
                         const isWorking = intervals !== undefined && intervals.length > 0;
+                        const isTemporaryTransfer = branchId && branchId !== homeBranchId;
+                        const branch = branchId ? branches.find(b => b.id === branchId) : null;
+                        const homeBranch = branches.find(b => b.id === homeBranchId);
 
                         return (
                             <Card
@@ -233,8 +257,8 @@ export default function ViewSchedule({
             </div>
 
             <div className="text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p>• Расписание управляется владельцем бизнеса</p>
-                <p>• Если для дня не указано специальное расписание, действует расписание по умолчанию (09:00-21:00)</p>
+                <p>• {t('staff.schedule.managedByOwner', 'Расписание управляется владельцем бизнеса')}</p>
+                <p>• {t('staff.schedule.defaultScheduleHint', 'Если для дня не указано специальное расписание, действует расписание по умолчанию (09:00-21:00)')}</p>
             </div>
         </section>
     );

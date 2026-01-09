@@ -1,7 +1,7 @@
 // apps/web/src/app/staff/schedule/page.tsx
 import { notFound } from 'next/navigation';
 
-import ViewSchedule from './ViewSchedule';
+import StaffSchedulePageClient from './StaffSchedulePageClient';
 
 import { getStaffContext } from '@/lib/authBiz';
 
@@ -39,19 +39,12 @@ export default async function StaffSchedulePage() {
     const activeBranches: Branch[] = (branches ?? []).filter((b) => b.is_active);
 
     return (
-        <main className="mx-auto max-w-5xl p-6 space-y-4">
-            <div>
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Моё расписание</h1>
-                <p className="text-gray-600 dark:text-gray-400">Просмотр вашего рабочего расписания</p>
-            </div>
-
-            <ViewSchedule
-                bizId={String(bizId)}
-                staffId={String(staff.id)}
-                branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
-                homeBranchId={String(staff.branch_id)}
-            />
-        </main>
+        <StaffSchedulePageClient
+            bizId={String(bizId)}
+            staffId={String(staff.id)}
+            branches={activeBranches.map((b) => ({ id: b.id, name: b.name }))}
+            homeBranchId={String(staff.branch_id)}
+        />
     );
 }
 
