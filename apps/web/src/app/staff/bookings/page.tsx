@@ -23,7 +23,7 @@ export default async function StaffBookingsPage() {
             .from('bookings')
             .select(`
                 id, status, start_at, end_at, client_name, client_phone,
-                services:services!bookings_service_id_fkey ( name_ru, duration_min ),
+                services:services!bookings_service_id_fkey ( name_ru, name_ky, name_en, duration_min ),
                 branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
                 businesses:businesses!bookings_biz_id_fkey ( name, slug )
             `)
@@ -36,7 +36,7 @@ export default async function StaffBookingsPage() {
             .from('bookings')
             .select(`
                 id, status, start_at, end_at, client_name, client_phone,
-                services:services!bookings_service_id_fkey ( name_ru, duration_min ),
+                services:services!bookings_service_id_fkey ( name_ru, name_ky, name_en, duration_min ),
                 branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
                 businesses:businesses!bookings_biz_id_fkey ( name, slug )
             `)

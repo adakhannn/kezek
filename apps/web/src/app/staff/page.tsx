@@ -45,6 +45,8 @@ export default async function Page() {
                 services:services (
                     id,
                     name_ru,
+                    name_ky,
+                    name_en,
                     duration_min,
                     price_from,
                     price_to,
@@ -58,7 +60,7 @@ export default async function Page() {
             .from('bookings')
             .select(`
                 id, status, start_at, end_at, client_name, client_phone,
-                services:services!bookings_service_id_fkey ( name_ru, duration_min ),
+                services:services!bookings_service_id_fkey ( name_ru, name_ky, name_en, duration_min ),
                 branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
                 businesses:businesses!bookings_biz_id_fkey ( name, slug )
             `)
@@ -71,7 +73,7 @@ export default async function Page() {
             .from('bookings')
             .select(`
                 id, status, start_at, end_at, client_name, client_phone,
-                services:services!bookings_service_id_fkey ( name_ru, duration_min ),
+                services:services!bookings_service_id_fkey ( name_ru, name_ky, name_en, duration_min ),
                 branches:branches!bookings_branch_id_fkey ( name, lat, lon, address ),
                 businesses:businesses!bookings_biz_id_fkey ( name, slug )
             `)
@@ -87,21 +89,20 @@ export default async function Page() {
     const past = pastResult.data ?? [];
 
     // Извлекаем услуги из service_staff (только активные услуги)
-    const services = servicesData
+    type ServiceType = { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number; price_from: number | null; price_to: number | null; active: boolean };
+    const services: ServiceType[] = servicesData
         .filter(ss => ss.is_active && ss.services)
         .map(ss => {
             const svc = Array.isArray(ss.services) ? ss.services[0] : ss.services;
-            return svc;
+            return svc as ServiceType;
         })
-        .filter((svc): svc is { id: string; name_ru: string; duration_min: number; price_from: number | null; price_to: number | null; active: boolean } => 
-            svc !== null && typeof svc === 'object' && 'id' in svc && svc.active === true
-        );
+        .filter(svc => svc && typeof svc === 'object' && 'id' in svc && 'name_ru' in svc && svc.active === true);
 
     return (
         <StaffCabinet
             userId={userId}
             staffId={staffId}
-            staffName={staff?.full_name ?? 'Сотрудник'}
+            staffName={staff?.full_name ?? ''}
             avatarUrl={staff?.avatar_url ?? null}
             branch={branch ? { id: branch.id, name: branch.name, address: branch.address } : null}
             services={services}
