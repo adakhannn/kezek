@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react';
 
 import ActionButtons from './ActionButtons';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type StaffRow = {
     id: string;
     full_name: string;
@@ -18,6 +20,7 @@ type Props = {
 };
 
 export default function StaffListClient({ initialRows }: Props) {
+    const { t } = useLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
 
@@ -51,16 +54,16 @@ export default function StaffListClient({ initialRows }: Props) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-sm dark:bg-emerald-950/30">
-                        <span className="font-medium text-emerald-700 dark:text-emerald-300">Активных:</span>
+                        <span className="font-medium text-emerald-700 dark:text-emerald-300">{t('staff.stats.active', 'Активных:')}</span>
                         <span className="font-semibold text-emerald-900 dark:text-emerald-100">{activeCount}</span>
                     </div>
                     <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-1.5 text-sm dark:bg-gray-800">
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Всего:</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{t('staff.stats.total', 'Всего:')}</span>
                         <span className="font-semibold text-gray-900 dark:text-gray-100">{totalCount}</span>
                     </div>
                     {inactiveCount > 0 && (
                         <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1.5 text-sm dark:bg-amber-950/30">
-                            <span className="font-medium text-amber-700 dark:text-amber-300">Неактивных:</span>
+                            <span className="font-medium text-amber-700 dark:text-amber-300">{t('staff.stats.inactive', 'Неактивных:')}</span>
                             <span className="font-semibold text-amber-900 dark:text-amber-100">{inactiveCount}</span>
                         </div>
                     )}
@@ -84,7 +87,7 @@ export default function StaffListClient({ initialRows }: Props) {
                         </svg>
                         <input
                             type="text"
-                            placeholder="Поиск по имени..."
+                            placeholder={t('staff.search.placeholder', 'Поиск по имени...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 sm:w-64"
@@ -101,7 +104,7 @@ export default function StaffListClient({ initialRows }: Props) {
                                     : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
                             }`}
                         >
-                            Все
+                            {t('staff.filter.all', 'Все')}
                         </button>
                         <button
                             type="button"
@@ -112,7 +115,7 @@ export default function StaffListClient({ initialRows }: Props) {
                                     : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
                             }`}
                         >
-                            Активные
+                            {t('staff.filter.active', 'Активные')}
                         </button>
                         <button
                             type="button"
@@ -123,7 +126,7 @@ export default function StaffListClient({ initialRows }: Props) {
                                     : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
                             }`}
                         >
-                            Неактивные
+                            {t('staff.filter.inactive', 'Неактивные')}
                         </button>
                     </div>
                 </div>
@@ -147,13 +150,13 @@ export default function StaffListClient({ initialRows }: Props) {
                     </svg>
                     <p className="mt-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                         {searchQuery || filterStatus !== 'all'
-                            ? 'Сотрудники не найдены'
-                            : 'Пока нет сотрудников'}
+                            ? t('staff.empty.notFound', 'Сотрудники не найдены')
+                            : t('staff.empty.noStaff', 'Пока нет сотрудников')}
                     </p>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         {searchQuery || filterStatus !== 'all'
-                            ? 'Попробуйте изменить параметры поиска или фильтры'
-                            : 'Добавьте первого сотрудника, чтобы начать работу'}
+                            ? t('staff.empty.notFoundDesc', 'Попробуйте изменить параметры поиска или фильтры')
+                            : t('staff.empty.noStaffDesc', 'Добавьте первого сотрудника, чтобы начать работу')}
                     </p>
                     {!searchQuery && filterStatus === 'all' && (
                         <Link
@@ -163,7 +166,7 @@ export default function StaffListClient({ initialRows }: Props) {
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
-                            Добавить сотрудника
+                            {t('staff.empty.addStaff', 'Добавить сотрудника')}
                         </Link>
                     )}
                 </div>
@@ -194,7 +197,7 @@ export default function StaffListClient({ initialRows }: Props) {
                                                 {staff.full_name}
                                             </h3>
                                             <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
-                                                {staff.branches?.name ?? 'Филиал не указан'}
+                                                {staff.branches?.name ?? t('staff.card.branchNotSet', 'Филиал не указан')}
                                             </p>
                                         </div>
                                     </div>
@@ -204,12 +207,12 @@ export default function StaffListClient({ initialRows }: Props) {
                                     {staff.is_active ? (
                                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                            Активен
+                                            {t('staff.card.status.active', 'Активен')}
                                         </span>
                                     ) : (
                                         <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
                                             <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                                            Скрыт
+                                            {t('staff.card.status.inactive', 'Скрыт')}
                                         </span>
                                     )}
                                 </div>
@@ -220,7 +223,7 @@ export default function StaffListClient({ initialRows }: Props) {
                                     href={`/dashboard/staff/${staff.id}`}
                                     className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-center text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                                 >
-                                    Открыть
+                                    {t('staff.card.open', 'Открыть')}
                                 </Link>
                                 <ActionButtons id={String(staff.id)} isActive={!!staff.is_active} />
                             </div>
