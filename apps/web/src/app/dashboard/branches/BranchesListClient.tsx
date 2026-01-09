@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { transliterate } from '@/lib/transliterate';
 
 type Branch = {
     id: string;
@@ -18,7 +19,16 @@ export default function BranchesListClient({
     branches: Branch[];
     isSuperAdmin: boolean;
 }) {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
+
+    function formatAddress(address: string | null): string {
+        if (!address) return '—';
+        // Транслитерируем адрес для английского языка
+        if (locale === 'en') {
+            return transliterate(address);
+        }
+        return address;
+    }
 
     return (
         <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -85,7 +95,7 @@ export default function BranchesListClient({
                                         {b.name}
                                     </td>
                                     <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
-                                        {b.address ?? '—'}
+                                        {formatAddress(b.address)}
                                     </td>
                                     <td className="p-4">
                                         <span
