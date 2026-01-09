@@ -223,6 +223,11 @@ const dictionaries: Dictionaries = {
         'finance.staffStats.clients': 'Кардарлар',
         'finance.staffStats.shiftsPeriod': 'Период боюнча сменалар',
         'finance.staffStats.openedAt': 'Ачылган',
+        'staff.slots.filters.title': 'Эркин слоттор үчүн фильтрлер',
+        'staff.slots.noSlotsHint':
+            'Тандалган параметрлер боюнча эркин слоттор жок. Башка күндү же кызматты тандап көрүңүз.',
+        'staff.slots.found': 'Табылган эркин слоттор:',
+        'staff.slots.createInSlot': 'Бул слотко жазылыш түзүү',
         // Staff New Page
         'staff.new.title': 'Колдонуучулардан кызматкерди кошуу',
         'staff.new.noAccess': 'Кирүү мүмкүн эмес:',
@@ -685,6 +690,11 @@ const dictionaries: Dictionaries = {
         'finance.staffStats.clients': 'Клиенты',
         'finance.staffStats.shiftsPeriod': 'Смены за период',
         'finance.staffStats.openedAt': 'Открыта',
+        'staff.slots.filters.title': 'Фильтры свободных слотов',
+        'staff.slots.noSlotsHint':
+            'Нет свободных слотов на выбранные параметры. Попробуйте выбрать другой день или услугу.',
+        'staff.slots.found': 'Найдено свободных слотов:',
+        'staff.slots.createInSlot': 'Создать запись в этот слот',
         // Staff New Page
         'staff.new.title': 'Добавить сотрудника из пользователей',
         'staff.new.noAccess': 'Нет доступа:',
@@ -1140,6 +1150,11 @@ const dictionaries: Dictionaries = {
         'finance.staffStats.clients': 'Clients',
         'finance.staffStats.shiftsPeriod': 'Shifts for the period',
         'finance.staffStats.openedAt': 'Opened at',
+        'staff.slots.filters.title': 'Filters for free slots',
+        'staff.slots.noSlotsHint':
+            'No free slots for the selected parameters. Try choosing another day or service.',
+        'staff.slots.found': 'Free slots found:',
+        'staff.slots.createInSlot': 'Create booking in this slot',
         // Staff New Page
         'staff.new.title': 'Add staff from users',
         'staff.new.noAccess': 'No access:',

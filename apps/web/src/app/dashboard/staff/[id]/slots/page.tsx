@@ -1,6 +1,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import Client from '@/app/dashboard/staff/[id]/slots/Client';
 import { getBizContextForManagers } from '@/lib/authBiz';
 
@@ -23,7 +24,11 @@ export default async function StaffSlotsPage({
         .maybeSingle();
 
     if (!staff || String(staff.biz_id) !== String(bizId)) {
-        return <main className="p-6 text-red-600">Сотрудник не найден или нет доступа</main>;
+        return (
+            <main className="p-6 text-red-600">
+                Сотрудник не найден или нет доступа
+            </main>
+        );
     }
 
     // 2) активные филиалы бизнеса
@@ -59,7 +64,11 @@ export default async function StaffSlotsPage({
         .order('name_ru');
 
     if (svcErr) {
-        return <main className="p-6 text-red-600">Ошибка загрузки услуг: {svcErr.message}</main>;
+        return (
+            <main className="p-6 text-red-600">
+                Ошибка загрузки услуг: {svcErr.message}
+            </main>
+        );
     }
 
     // нормализуем под Client
@@ -73,56 +82,69 @@ export default async function StaffSlotsPage({
 
     const today = formatInTimeZone(new Date(), 'Asia/Bishkek', 'yyyy-MM-dd');
 
-    return (
-        <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6">
-            {/* Заголовок */}
-            <div className="rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 text-white shadow-lg">
-                <div className="px-6 py-6 lg:px-8 lg:py-7">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                                <Link
-                                    href={`/dashboard/staff/${staff.id}`}
-                                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                                    title="Назад к карточке сотрудника"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                    </svg>
-                                </Link>
-                                <div>
-                                    <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">Свободные слоты</h1>
-                                    <p className="text-sm lg:text-base text-indigo-100/90 mt-1">{staff.full_name}</p>
+    const SlotsPageContent = () => {
+        const { t } = useLanguage();
+
+        return (
+            <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6">
+                {/* Заголовок */}
+                <div className="rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 text-white shadow-lg">
+                    <div className="px-6 py-6 lg:px-8 lg:py-7">
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3">
+                                    <Link
+                                        href={`/dashboard/staff/${staff.id}`}
+                                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                                        title={t('staff.detail.back.title', 'Вернуться к списку сотрудников')}
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                        </svg>
+                                    </Link>
+                                    <div>
+                                        <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">
+                                            {t('staff.detail.nav.slots', 'Свободные слоты')}
+                                        </h1>
+                                        <p className="text-sm lg:text-base text-indigo-100/90 mt-1">{staff.full_name}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {services.length === 0 && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 px-4 py-3">
-                    <div className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <div>
-                            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Этому сотруднику пока не назначены услуги</p>
-                            <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
-                                Назначьте услуги на странице сотрудника (раздел «Компетенции»), чтобы видеть свободные слоты.
-                            </p>
+                {services.length === 0 && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 px-4 py-3">
+                        <div className="flex items-start gap-2">
+                            <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div>
+                                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                                    {t('staff.services.empty.title', 'Этому сотруднику пока не назначены услуги')}
+                                </p>
+                                <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                                    {t(
+                                        'staff.services.empty.desc',
+                                        'Назначьте услуги на странице сотрудника (раздел «Компетенции»), чтобы видеть свободные слоты.',
+                                    )}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            <Client
-                bizId={bizId}
-                staffId={staff.id}
-                services={services}
-                branches={(branches ?? []).map((b) => ({ id: String(b.id), name: String(b.name) }))}
-                defaultDate={today}
-            />
-        </main>
-    );
+                <Client
+                    bizId={bizId}
+                    staffId={staff.id}
+                    services={services}
+                    branches={(branches ?? []).map((b) => ({ id: String(b.id), name: String(b.name) }))}
+                    defaultDate={today}
+                />
+            </main>
+        );
+    };
+
+    return <SlotsPageContent />;
 }

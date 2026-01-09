@@ -4,6 +4,7 @@ import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
@@ -41,6 +42,8 @@ export default function Client({
     defaultDate: string; // yyyy-MM-dd
 }) {
     // фильтр по филиалу → список услуг этого филиала
+    const { t, locale } = useLanguage();
+
     const [branchId, setBranchId] = useState<string>(branches[0]?.id || '');
     const servicesByBranch = useMemo(
         () => services.filter(s => s.branch_id === branchId),
@@ -96,7 +99,7 @@ export default function Client({
 
     async function createBooking(startISO: string) {
         const svc = services.find(s => s.id === serviceId);
-        if (!svc) return alert('Не найдена услуга');
+        if (!svc) return alert(t('bookings.desk.errors.selectService', 'Не найдена услуга'));
         const { data, error } = await supabase.rpc('create_internal_booking', {
             p_biz_id: bizId,
             p_branch_id: branchId,
@@ -108,7 +111,7 @@ export default function Client({
         });
         if (error) return alert(error.message);
         const id = String(data);
-        alert(`Создана запись #${id.slice(0,8)}`);
+        alert(`${t('bookings.desk.created', 'Создана запись')} #${id.slice(0, 8)}`);
     }
 
 
@@ -121,12 +124,12 @@ export default function Client({
                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
-                    Фильтры
+                    {t('staff.slots.filters.title', 'Фильтры свободных слотов')}
                 </h2>
                 <div className="grid sm:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Филиал
+                            {t('bookings.desk.branch', 'Филиал')}
                         </label>
                         <select
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -142,7 +145,7 @@ export default function Client({
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Услуга
+                            {t('bookings.desk.service', 'Услуга')}
                         </label>
                         <select
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -151,17 +154,22 @@ export default function Client({
                         >
                             {servicesByBranch.map(s => (
                                 <option key={s.id} value={s.id}>
-                                    {s.name} ({s.duration_min} мин)
+                                    {s.name}{' '}
+                                    {locale === 'en'
+                                        ? `(${s.duration_min} min)`
+                                        : `(${s.duration_min} мин)`}
                                 </option>
                             ))}
                             {servicesByBranch.length === 0 && (
-                                <option value="">Нет услуг в филиале</option>
+                                <option value="">
+                                    {t('bookings.desk.noServices', 'Нет услуг в филиале')}
+                                </option>
                             )}
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Дата
+                            {t('bookings.desk.date', 'Дата')}
                         </label>
                         <DatePickerPopover
                             value={date}
@@ -178,7 +186,7 @@ export default function Client({
                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Свободные слоты
+                    {t('booking.freeSlots', 'Свободные слоты')}
                 </h3>
                 
                 {loading && (
@@ -187,13 +195,15 @@ export default function Client({
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Загружаем свободные слоты...
+                        {t('booking.loadingSlots', 'Загружаем свободные слоты...')}
                     </div>
                 )}
                 
                 {err && (
                     <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 px-4 py-3">
-                        <p className="text-sm text-red-600 dark:text-red-400">Ошибка: {err}</p>
+                        <p className="text-sm text-red-600 dark:text-red-400">
+                            {t('staff.error', 'Ошибка загрузки:')} {err}
+                        </p>
                     </div>
                 )}
 
@@ -202,9 +212,14 @@ export default function Client({
                         <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Нет свободных слотов</p>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                            {t('booking.noSlots', 'Нет свободных слотов')}
+                        </p>
                         <p className="text-xs text-gray-500 dark:text-gray-500">
-                            Нет свободных слотов на выбранные параметры. Попробуйте выбрать другой день или услугу.
+                            {t(
+                                'staff.slots.noSlotsHint',
+                                'Нет свободных слотов на выбранные параметры. Попробуйте выбрать другой день или услугу.',
+                            )}
                         </p>
                     </div>
                 )}
@@ -213,7 +228,10 @@ export default function Client({
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Найдено свободных слотов: <span className="font-semibold text-gray-900 dark:text-gray-100">{uniq.length}</span>
+                                {t('staff.slots.found', 'Найдено свободных слотов:')}{' '}
+                                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                    {uniq.length}
+                                </span>
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2.5">
@@ -224,7 +242,7 @@ export default function Client({
                                         key={s.start_at}
                                         className="group inline-flex items-center gap-2 rounded-xl border-2 border-indigo-200 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition-all hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md active:scale-95 dark:border-indigo-800 dark:bg-gray-800 dark:text-indigo-300 dark:hover:border-indigo-600 dark:hover:bg-indigo-950/40"
                                         onClick={() => createBooking(s.start_at)}
-                                        title="Создать запись в этот слот"
+                                        title={t('staff.slots.createInSlot', 'Создать запись в этот слот')}
                                     >
                                         <svg className="w-4 h-4 flex-shrink-0 text-indigo-500 group-hover:text-indigo-600 dark:text-indigo-400 dark:group-hover:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
