@@ -1389,6 +1389,8 @@ const dictionaries: Dictionaries = {
         'staff.layout.noAccess.title': 'Нет доступа к кабинету сотрудника',
         'staff.layout.noAccess.desc': 'У вашей учётной записи нет роли <code>staff</code> ни в одном бизнесе.',
         'staff.layout.noAccess.goHome': 'Перейти на главную',
+        'staff.sidebar.openMenu': 'Открыть меню',
+        'staff.sidebar.closeMenu': 'Закрыть меню',
         // Booking Detail Page
         'booking.title': 'Бронь #{id}',
         'booking.subtitle': 'Подтверждение записи и основные детали визита',
@@ -2091,6 +2093,8 @@ const dictionaries: Dictionaries = {
         'staff.layout.noAccess.title': 'No access to staff cabinet',
         'staff.layout.noAccess.desc': 'Your account does not have <code>staff</code> role in any business.',
         'staff.layout.noAccess.goHome': 'Go to home',
+        'staff.sidebar.openMenu': 'Open menu',
+        'staff.sidebar.closeMenu': 'Close menu',
         // Booking Detail Page
         'booking.title': 'Booking #{id}',
         'booking.subtitle': 'Booking confirmation and visit details',
