@@ -1983,6 +1983,7 @@ const dictionaries: Dictionaries = {
         'staff.cabinet.bookings.card.serviceDefault': 'Service',
         'staff.cabinet.bookings.card.branchDefault': 'Branch',
         'staff.cabinet.bookings.card.businessDefault': 'Business',
+        'staff.cabinet.bookings.viewAll': 'View all bookings',
         'staff.cabinet.status.hold': 'Hold',
         'staff.cabinet.status.confirmed': 'Confirmed',
         'staff.cabinet.status.paid': 'Paid',
