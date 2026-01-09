@@ -16,7 +16,7 @@ export default async function EditServicePage({
     const { id } = await params;
     const { supabase, bizId } = await getBizContextForManagers();
 
-    const [{ data: svc }, { data: branches }] = await Promise.all([
+    const [{ data: svc, error: svcError }, { data: branches, error: branchesError }] = await Promise.all([
         supabase
             .from('services')
             .select('id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id,biz_id')
@@ -30,7 +30,32 @@ export default async function EditServicePage({
             .order('name'),
     ]);
 
-    if (!svc || String(svc.biz_id) !== String(bizId)) return notFound();
+    // Логируем ошибки для отладки
+    if (svcError) {
+        console.error('[EditServicePage] Error loading service:', svcError);
+        return notFound();
+    }
+
+    if (branchesError) {
+        console.error('[EditServicePage] Error loading branches:', branchesError);
+        // Не возвращаем 404, т.к. это не критично
+    }
+
+    // Проверяем, найдена ли услуга
+    if (!svc) {
+        console.error('[EditServicePage] Service not found:', id);
+        return notFound();
+    }
+
+    // Проверяем, принадлежит ли услуга текущему бизнесу
+    if (String(svc.biz_id) !== String(bizId)) {
+        console.error('[EditServicePage] Service belongs to different business:', {
+            serviceBizId: svc.biz_id,
+            currentBizId: bizId,
+            serviceId: id,
+        });
+        return notFound();
+    }
 
     // Находим все активные услуги с таким же названием в этом бизнесе (это "копии" услуги в разных филиалах)
     // Неактивные услуги (мягко удаленные) не должны показываться
