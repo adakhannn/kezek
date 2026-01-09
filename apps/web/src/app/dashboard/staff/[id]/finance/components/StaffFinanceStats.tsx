@@ -3,6 +3,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { useCallback, useEffect, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { TZ } from '@/lib/time';
 
 type Period = 'day' | 'month' | 'year';
@@ -45,6 +46,7 @@ type Stats = {
 };
 
 export default function StaffFinanceStats({ staffId }: { staffId: string }) {
+    const { t, locale } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState<Period>('day');
     const [date, setDate] = useState(formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
@@ -56,12 +58,12 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
         setError(null);
         try {
             const res = await fetch(
-                `/api/dashboard/staff/${staffId}/finance/stats?period=${period}&date=${date}`,
+                `/api/dashboard/finance/${staffId}/stats?period=${period}&date=${date}`,
                 { cache: 'no-store' }
             );
             const json = await res.json();
             if (!json.ok) {
-                throw new Error(json.error || 'Не удалось загрузить статистику');
+                throw new Error(json.error || t('finance.loading', 'Не удалось загрузить статистику'));
             }
             setStats(json.stats);
         } catch (e) {
@@ -79,7 +81,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
 
     const formatDate = (dateStr: string) => {
         try {
-            return new Date(dateStr + 'T12:00:00').toLocaleDateString('ru-RU', {
+            return new Date(dateStr + 'T12:00:00').toLocaleDateString(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -94,7 +96,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
             return formatDate(date);
         } else if (period === 'month') {
             const [year, month] = date.split('-');
-            return new Date(`${year}-${month}-01`).toLocaleDateString('ru-RU', {
+            return new Date(`${year}-${month}-01`).toLocaleDateString(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU', {
                 month: 'long',
                 year: 'numeric',
             });
@@ -106,7 +108,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
     if (loading && !stats) {
         return (
             <div className="flex items-center justify-center py-12">
-                <div className="text-gray-500 dark:text-gray-400">Загрузка...</div>
+                <div className="text-gray-500 dark:text-gray-400">{t('finance.loading', 'Загрузка...')}</div>
             </div>
         );
     }
@@ -136,7 +138,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                     >
-                        День
+                        {t('finance.period.day', 'День')}
                     </button>
                     <button
                         onClick={() => setPeriod('month')}
@@ -146,7 +148,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                     >
-                        Месяц
+                        {t('finance.period.month', 'Месяц')}
                     </button>
                     <button
                         onClick={() => setPeriod('year')}
@@ -156,7 +158,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                     >
-                        Год
+                        {t('finance.period.year', 'Год')}
                     </button>
                 </div>
                 <div className="flex items-center gap-2">
@@ -177,7 +179,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                         disabled={loading}
                         className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? 'Загрузка...' : 'Обновить'}
+                        {loading ? t('finance.loading', 'Загрузка...') : t('finance.update', 'Обновить')}
                     </button>
                 </div>
             </div>
@@ -188,28 +190,28 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                 {period === 'day' && (
                     <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
                         <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                            Статус смены
+                            {t('finance.shifts', 'Смен')}
                         </div>
                         <div className="flex items-center gap-2">
                             {stats.openShiftsCount > 0 ? (
                                 <>
                                     <span className="inline-flex h-3 w-3 rounded-full bg-green-500"></span>
                                     <span className="text-lg font-semibold text-green-600 dark:text-green-400">
-                                        Смена открыта
+                                        {t('finance.staffStats.status.open', 'Смена открыта')}
                                     </span>
                                 </>
                             ) : stats.closedShiftsCount > 0 ? (
                                 <>
                                     <span className="inline-flex h-3 w-3 rounded-full bg-gray-400"></span>
                                     <span className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-                                        Смена закрыта
+                                        {t('finance.staffStats.status.closed', 'Смена закрыта')}
                                     </span>
                                 </>
                             ) : (
                                 <>
                                     <span className="inline-flex h-3 w-3 rounded-full bg-amber-400"></span>
                                     <span className="text-lg font-semibold text-amber-600 dark:text-amber-400">
-                                        Смена не открыта
+                                        {t('finance.staffStats.status.noShift', 'Смена не открыта')}
                                     </span>
                                 </>
                             )}
@@ -220,10 +222,15 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                 {/* Оборот */}
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                        Оборот за {period === 'day' ? 'день' : period === 'month' ? 'месяц' : 'год'}
+                        {t('finance.staffStats.turnover', 'Оборот')}{' '}
+                        {period === 'day'
+                            ? t('finance.period.day', 'День').toLowerCase()
+                            : period === 'month'
+                            ? t('finance.period.month', 'Месяц').toLowerCase()
+                            : t('finance.period.year', 'Год').toLowerCase()}
                     </div>
                     <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {stats.totalAmount.toLocaleString('ru-RU')} сом
+                        {stats.totalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {formatPeriodLabel()}
@@ -233,10 +240,10 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                 {/* Доля сотрудника */}
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                        Доля сотрудника
+                        {t('finance.staffStats.toEmployee', 'Доля сотрудника')}
                     </div>
                     <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                        {stats.totalMaster.toLocaleString('ru-RU')} сом
+                        {stats.totalMaster.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {stats.totalAmount > 0
@@ -248,10 +255,10 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                 {/* Доля бизнеса */}
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                        Доля бизнеса
+                        {t('finance.staffStats.toBusiness', 'Доля бизнеса')}
                     </div>
                     <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                        {stats.totalSalon.toLocaleString('ru-RU')} сом
+                        {stats.totalSalon.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {stats.totalAmount > 0
@@ -265,7 +272,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
-                        Количество смен
+                        {t('finance.staffStats.shifts', 'Количество смен')}
                     </div>
                     <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                         {stats.shiftsCount}
@@ -273,13 +280,15 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {stats.openShiftsCount > 0 && (
                             <span className="text-green-600 dark:text-green-400">
-                                {stats.openShiftsCount} открыта
+                                {stats.openShiftsCount}{' '}
+                                {t('finance.shifts.open', 'открыта')}
                             </span>
                         )}
                         {stats.openShiftsCount > 0 && stats.closedShiftsCount > 0 && ' • '}
                         {stats.closedShiftsCount > 0 && (
                             <span className="text-gray-600 dark:text-gray-400">
-                                {stats.closedShiftsCount} закрыта
+                                {stats.closedShiftsCount}{' '}
+                                {t('finance.shifts.closed', 'закрыта')}
                             </span>
                         )}
                     </div>
@@ -287,16 +296,16 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
 
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
-                        Расходники
+                        {t('finance.staffStats.consumables', 'Расходники')}
                     </div>
                     <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                        {stats.totalConsumables.toLocaleString('ru-RU')} сом
+                        {stats.totalConsumables.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                     </div>
                 </div>
 
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
-                        Опоздания
+                        {t('finance.staffStats.late', 'Опоздания')}
                     </div>
                     <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                         {stats.totalLateMinutes} мин
@@ -305,7 +314,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
 
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
-                        Клиентов
+                        {t('finance.staffStats.clients', 'Клиентов')}
                     </div>
                     <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                         {stats.totalClients}
@@ -317,7 +326,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
             {stats.shifts.length > 0 && (
                 <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                        Смены за период
+                        {t('finance.staffStats.shiftsPeriod', 'Смены за период')}
                     </h3>
                     <div className="space-y-3">
                         {stats.shifts.map((shift) => (
@@ -337,13 +346,16 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                                                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                                             }`}
                                         >
-                                            {shift.status === 'open' ? 'Открыта' : 'Закрыта'}
+                                            {shift.status === 'open'
+                                                ? t('finance.staffStats.status.open', 'Открыта')
+                                                : t('finance.staffStats.status.closed', 'Закрыта')}
                                         </span>
                                     </div>
                                     {shift.opened_at && (
                                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            Открыта:{' '}
-                                            {new Date(shift.opened_at).toLocaleTimeString('ru-RU', {
+                                            {t('finance.staffStats.openedAt', 'Открыта')}
+                                            {': '}
+                                            {new Date(shift.opened_at).toLocaleTimeString(locale === 'en' ? 'en-US' : 'ru-RU', {
                                                 hour: '2-digit',
                                                 minute: '2-digit',
                                             })}
@@ -352,13 +364,15 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                                 </div>
                                 <div className="text-right space-y-1">
                                     <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {shift.total_amount.toLocaleString('ru-RU')} сом
+                                        {shift.total_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Сотрудник: {shift.master_share.toLocaleString('ru-RU')} сом
+                                        {t('finance.staffStats.toEmployee', 'Сотруднику')}:{' '}
+                                        {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Бизнес: {shift.salon_share.toLocaleString('ru-RU')} сом
+                                        {t('finance.staffStats.toBusiness', 'Бизнесу')}:{' '}
+                                        {shift.salon_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                                     </div>
                                 </div>
                             </div>
