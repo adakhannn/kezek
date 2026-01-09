@@ -7,6 +7,7 @@ import StaffAvatarUpload from './avatar/StaffAvatarUpload';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { transliterate } from '@/lib/transliterate';
 
 
 type BranchInfo = {
@@ -49,7 +50,14 @@ export default function StaffCabinet({
     function getServiceName(service: ServiceInfo): string {
         if (locale === 'ky' && service.name_ky) return service.name_ky;
         if (locale === 'en' && service.name_en) return service.name_en;
+        if (locale === 'en') return transliterate(service.name_ru);
         return service.name_ru;
+    }
+
+    function formatText(text: string | null | undefined): string {
+        if (!text) return '';
+        if (locale === 'en') return transliterate(text);
+        return text;
     }
 
     return (
@@ -87,9 +95,9 @@ export default function StaffCabinet({
                                     {t('staff.cabinet.branch', 'Филиал')}
                                 </h2>
                                 <div className="pl-7 space-y-1">
-                                    <p className="font-medium text-gray-900 dark:text-gray-100">{branch.name}</p>
+                                    <p className="font-medium text-gray-900 dark:text-gray-100">{formatText(branch.name)}</p>
                                     {branch.address && (
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">{branch.address}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">{formatText(branch.address)}</p>
                                     )}
                                 </div>
                             </div>
