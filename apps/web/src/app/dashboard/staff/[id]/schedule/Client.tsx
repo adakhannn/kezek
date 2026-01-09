@@ -93,14 +93,20 @@ function DayRow({
     date,
     dow,
     intervals,
+    branchId,
+    branches,
+    homeBranchId,
     saving,
     onSave,
 }: {
     date: Date;
     dow: number;
     intervals: TimeRange[] | null;
+    branchId: string | null;
+    branches: Branch[];
+    homeBranchId: string;
     saving: boolean;
-    onSave: (date: string, interval: TimeRange | null) => void;
+    onSave: (date: string, interval: TimeRange | null, branchId: string) => void;
 }) {
     const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
     // Проверяем, является ли дата прошедшей (сравниваем только дату, без времени)
@@ -119,6 +125,7 @@ function DayRow({
         }
         return defaultInterval;
     });
+    const [selectedBranchId, setSelectedBranchId] = useState<string>(branchId || homeBranchId);
 
     useEffect(() => {
         // Если правила нет (null) - день рабочий по умолчанию
@@ -130,7 +137,13 @@ function DayRow({
         } else {
             setInterval(defaultInterval);
         }
-    }, [intervals]);
+        // Обновляем выбранный филиал
+        if (branchId) {
+            setSelectedBranchId(branchId);
+        } else {
+            setSelectedBranchId(homeBranchId);
+        }
+    }, [intervals, branchId, homeBranchId]);
 
     function handleDayOffChange(e: React.ChangeEvent<HTMLInputElement>) {
         setIsDayOff(e.target.checked);
@@ -139,7 +152,7 @@ function DayRow({
     function handleSave() {
         // Если день выходной, передаем null (будет сохранено с пустыми интервалами)
         // Если день рабочий, передаем интервал
-        onSave(dateStr, isDayOff ? null : interval);
+        onSave(dateStr, isDayOff ? null : interval, selectedBranchId);
     }
 
     const isToday = dateStr === formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
@@ -207,18 +220,37 @@ function DayRow({
                     )}
                 </label>
                 {!isDayOff && (
-                    <div className="min-w-0">
-                        <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">Рабочее время</div>
-                        <SingleTimeRange 
-                            value={interval} 
-                            onChange={(v) => {
-                                if (v && v.start && v.end) {
-                                    setInterval(v);
-                                }
-                            }} 
-                            disabled={saving || isDayOff || isPastDate}
-                        />
-                    </div>
+                    <>
+                        <div className="min-w-0">
+                            <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">Рабочее время</div>
+                            <SingleTimeRange 
+                                value={interval} 
+                                onChange={(v) => {
+                                    if (v && v.start && v.end) {
+                                        setInterval(v);
+                                    }
+                                }} 
+                                disabled={saving || isDayOff || isPastDate}
+                            />
+                        </div>
+                        {branches.length > 1 && (
+                            <div className="min-w-0">
+                                <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">Филиал</div>
+                                <select
+                                    className="w-full rounded-md sm:rounded-lg border border-gray-300 bg-white px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    value={selectedBranchId}
+                                    onChange={(e) => setSelectedBranchId(e.target.value)}
+                                    disabled={saving || isPastDate}
+                                >
+                                    {branches.map((b) => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.name} {b.id === homeBranchId ? '(основной)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
@@ -242,6 +274,7 @@ export default function Client({
             id: string;
             date_on: string;
             intervals: TimeRange[];
+            branch_id: string;
         }>
     >([]);
 
@@ -258,7 +291,7 @@ export default function Client({
 
             const { data } = await supabase
                 .from('staff_schedule_rules')
-                .select('id, date_on, intervals')
+                .select('id, date_on, intervals, branch_id')
                 .eq('biz_id', bizId)
                 .eq('staff_id', staffId)
                 .eq('kind', 'date')
@@ -272,6 +305,7 @@ export default function Client({
                 id: r.id,
                 date_on: r.date_on,
                 intervals: (r.intervals ?? []) as TimeRange[],
+                branch_id: r.branch_id || homeBranchId,
             }));
             setRules(loadedRules);
 
@@ -305,7 +339,7 @@ export default function Client({
                 // Перезагружаем правила
                 const { data: reloadedData } = await supabase
                     .from('staff_schedule_rules')
-                    .select('id, date_on, intervals')
+                    .select('id, date_on, intervals, branch_id')
                     .eq('biz_id', bizId)
                     .eq('staff_id', staffId)
                     .eq('kind', 'date')
@@ -320,6 +354,7 @@ export default function Client({
                             id: r.id,
                             date_on: r.date_on,
                             intervals: (r.intervals ?? []) as TimeRange[],
+                            branch_id: r.branch_id || homeBranchId,
                         }))
                     );
                 }
@@ -332,14 +367,14 @@ export default function Client({
 
     // Создаем карту правил по датам
     const rulesByDate = useMemo(() => {
-        const map = new Map<string, TimeRange[]>();
+        const map = new Map<string, { intervals: TimeRange[]; branch_id: string }>();
         for (const r of rules) {
-            map.set(r.date_on, r.intervals);
+            map.set(r.date_on, { intervals: r.intervals, branch_id: r.branch_id });
         }
         return map;
     }, [rules]);
 
-    async function saveDay(date: string, interval: TimeRange | null) {
+    async function saveDay(date: string, interval: TimeRange | null, branchId: string) {
         setSaving(true);
         try {
             const existing = rules.find((r) => r.date_on === date);
@@ -355,6 +390,7 @@ export default function Client({
                     .update({
                         intervals: intervalsToSave,
                         breaks: [],
+                        branch_id: branchId,
                         is_active: true,
                     })
                     .eq('id', existing.id)
@@ -367,7 +403,7 @@ export default function Client({
                     staff_id: staffId,
                     kind: 'date',
                     date_on: date,
-                    branch_id: homeBranchId,
+                    branch_id: branchId,
                     tz: TZ,
                     intervals: intervalsToSave,
                     breaks: [],
@@ -382,7 +418,7 @@ export default function Client({
 
             const { data } = await supabase
                 .from('staff_schedule_rules')
-                .select('id, date_on, intervals')
+                .select('id, date_on, intervals, branch_id')
                 .eq('biz_id', bizId)
                 .eq('staff_id', staffId)
                 .eq('kind', 'date')
@@ -396,6 +432,7 @@ export default function Client({
                     id: r.id,
                     date_on: r.date_on,
                     intervals: (r.intervals ?? []) as TimeRange[],
+                    branch_id: r.branch_id || homeBranchId,
                 }))
             );
         } catch (error) {
@@ -427,13 +464,16 @@ export default function Client({
                         {currentWeekDates.slice(0, 4).map((date) => {
                             const dow = date.getDay(); // 0-6 (0=воскресенье)
                             const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                            const intervals = rulesByDate.get(dateStr);
+                            const ruleData = rulesByDate.get(dateStr);
                             return (
                                 <DayRow
                                     key={dateStr}
                                     date={date}
                                     dow={dow}
-                                    intervals={intervals !== undefined ? intervals : null}
+                                    intervals={ruleData !== undefined ? ruleData.intervals : null}
+                                    branchId={ruleData?.branch_id || null}
+                                    branches={branches}
+                                    homeBranchId={homeBranchId}
                                     saving={saving}
                                     onSave={saveDay}
                                 />
@@ -445,13 +485,16 @@ export default function Client({
                         {currentWeekDates.slice(4, 7).map((date) => {
                             const dow = date.getDay(); // 0-6 (0=воскресенье)
                             const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                            const intervals = rulesByDate.get(dateStr);
+                            const ruleData = rulesByDate.get(dateStr);
                             return (
                                 <DayRow
                                     key={dateStr}
                                     date={date}
                                     dow={dow}
-                                    intervals={intervals !== undefined ? intervals : null}
+                                    intervals={ruleData !== undefined ? ruleData.intervals : null}
+                                    branchId={ruleData?.branch_id || null}
+                                    branches={branches}
+                                    homeBranchId={homeBranchId}
                                     saving={saving}
                                     onSave={saveDay}
                                 />
@@ -480,13 +523,16 @@ export default function Client({
                         {nextWeekDates.slice(0, 4).map((date) => {
                             const dow = date.getDay(); // 0-6 (0=воскресенье)
                             const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                            const intervals = rulesByDate.get(dateStr);
+                            const ruleData = rulesByDate.get(dateStr);
                             return (
                                 <DayRow
                                     key={dateStr}
                                     date={date}
                                     dow={dow}
-                                    intervals={intervals !== undefined ? intervals : null}
+                                    intervals={ruleData !== undefined ? ruleData.intervals : null}
+                                    branchId={ruleData?.branch_id || null}
+                                    branches={branches}
+                                    homeBranchId={homeBranchId}
                                     saving={saving}
                                     onSave={saveDay}
                                 />
@@ -498,13 +544,16 @@ export default function Client({
                         {nextWeekDates.slice(4, 7).map((date) => {
                             const dow = date.getDay(); // 0-6 (0=воскресенье)
                             const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-                            const intervals = rulesByDate.get(dateStr);
+                            const ruleData = rulesByDate.get(dateStr);
                             return (
                                 <DayRow
                                     key={dateStr}
                                     date={date}
                                     dow={dow}
-                                    intervals={intervals !== undefined ? intervals : null}
+                                    intervals={ruleData !== undefined ? ruleData.intervals : null}
+                                    branchId={ruleData?.branch_id || null}
+                                    branches={branches}
+                                    homeBranchId={homeBranchId}
                                     saving={saving}
                                     onSave={saveDay}
                                 />
@@ -524,6 +573,7 @@ export default function Client({
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-blue-700 dark:text-blue-300">
                             <li>По умолчанию все дни рабочие (09:00-21:00)</li>
                             <li>Отметьте чекбокс "Выходной день", чтобы сделать день нерабочим</li>
+                            <li>Выберите филиал для каждого дня для временного перевода сотрудника</li>
                             <li>Можно управлять расписанием только на текущую и следующую неделю</li>
                             <li>Прошедшие даты недоступны для редактирования</li>
                         </ul>
