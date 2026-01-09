@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { transliterate } from '@/lib/transliterate';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
@@ -55,6 +56,9 @@ export default function BookingLayoutClient({ id, service, masterName, startAt, 
 
     const statusLabel = getStatusLabel(status);
     const shortId = id.slice(0, 8);
+    
+    // Format master name with transliteration for English locale
+    const formattedMasterName = locale === 'en' ? transliterate(masterName) : masterName;
     
     // Format date in human-readable format
     const localeMap: Record<string, string> = {
@@ -119,7 +123,7 @@ export default function BookingLayoutClient({ id, service, masterName, startAt, 
                                 {t('booking.master', 'Master')}
                             </dt>
                             <dd className="font-medium text-gray-900 dark:text-gray-100 text-right">
-                                {masterName}
+                                {formattedMasterName}
                             </dd>
                         </div>
                         <div className="flex items-start justify-between gap-3">

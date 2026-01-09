@@ -60,6 +60,12 @@ export default function StaffCabinet({
         return text;
     }
 
+    function formatStaffName(name: string | null | undefined): string {
+        if (!name) return '';
+        if (locale === 'en') return transliterate(name);
+        return name;
+    }
+
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -78,7 +84,7 @@ export default function StaffCabinet({
                         </div>
                         <div className="flex-1">
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                                {staffName || t('staff.cabinet.title', 'Кабинет сотрудника')}
+                                {formatStaffName(staffName) || t('staff.cabinet.title', 'Кабинет сотрудника')}
                             </h1>
                         </div>
                     </div>

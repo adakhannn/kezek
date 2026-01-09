@@ -8,6 +8,7 @@ import MapDialog from './MapDialog';
 import ReviewDialog from './ReviewDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { transliterate } from '@/lib/transliterate';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
@@ -56,6 +57,12 @@ export default function BookingCard({
         if (locale === 'ky' && svc.name_ky) return svc.name_ky;
         if (locale === 'en' && svc.name_en) return svc.name_en;
         return svc.name_ru;
+    };
+
+    const formatStaffName = (name: string | null | undefined): string => {
+        if (!name) return t('cabinet.bookings.card.masterNotSet', 'Мастер не указан');
+        if (locale === 'en') return transliterate(name);
+        return name;
     };
 
     const effectiveServiceId = serviceId ?? service?.id ?? null;
@@ -165,7 +172,7 @@ export default function BookingCard({
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
-                            {staff?.full_name || t('cabinet.bookings.card.masterNotSet', 'Мастер не указан')}
+                            {formatStaffName(staff?.full_name)}
                         </span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
