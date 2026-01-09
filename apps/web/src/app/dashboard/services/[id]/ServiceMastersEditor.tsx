@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { supabase } from '@/lib/supabaseClient';
 
 type Staff = { id: string; full_name: string; branch_id: string; is_active: boolean | null };
@@ -13,6 +14,7 @@ export default function ServiceMastersEditor({
     serviceId: string;
     serviceBranchId: string;
 }) {
+    const { t } = useLanguage();
     const [staff, setStaff] = useState<Staff[]>([]);
     const [allowed, setAllowed] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
@@ -71,13 +73,30 @@ export default function ServiceMastersEditor({
         }
     }
 
-    if (loading) return <div className="text-sm text-gray-500">Загрузка…</div>;
-    if (err) return <div className="text-sm text-red-600">Ошибка: {err}</div>;
-    if (activeStaff.length === 0) return <div className="text-sm text-gray-500">В этом филиале нет активных сотрудников.</div>;
+    if (loading) {
+        return (
+            <div className="text-sm text-gray-500">
+                {t('services.masters.loading', 'Загрузка…')}
+            </div>
+        );
+    }
+    if (err) {
+        return (
+            <div className="text-sm text-red-600">
+                {t('services.masters.error', 'Ошибка:')} {err}
+            </div>
+        );
+    }
+    if (activeStaff.length === 0) {
+        return (
+            <div className="text-sm text-gray-500">
+                {t('services.masters.empty', 'В этом филиале нет активных сотрудников.')}
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-2">
-            <div className="font-medium mb-1">Кто выполняет эту услугу</div>
             {activeStaff.map(s => (
                 <label key={s.id} className="flex items-center gap-2">
                     <input
