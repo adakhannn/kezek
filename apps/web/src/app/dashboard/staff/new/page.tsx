@@ -1,4 +1,4 @@
-import NewFromUser from '../NewFromUser';
+import NewStaffPageClient from './NewStaffPageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 
@@ -15,14 +15,13 @@ export default async function NewStaffPage() {
             .eq('biz_id', bizId)
             .order('name');
 
-        return (
-            <main className="mx-auto max-w-3xl p-6 space-y-4">
-                <h1 className="text-2xl font-semibold">Добавить сотрудника из пользователей</h1>
-                <NewFromUser branches={branches || []} />
-            </main>
-        );
+        return <NewStaffPageClient branches={branches || []} />;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-        return <main className="p-6 text-red-600">Нет доступа: {e?.message}</main>;
+        return (
+            <main className="p-6 text-red-600">
+                {e?.message || 'Нет доступа'}
+            </main>
+        );
     }
 }
