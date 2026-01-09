@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type Branch = { id: string; name: string };
 
 export default function TransferStaffDialog({
@@ -14,6 +16,7 @@ export default function TransferStaffDialog({
     currentBranchId: string;
     branches: Branch[];
 }) {
+    const { t } = useLanguage();
     const router = useRouter();
     const [open, setOpen] = useState(false);
     const [target, setTarget] = useState<string>('');
@@ -26,7 +29,7 @@ export default function TransferStaffDialog({
     async function submit() {
         setLoading(true); setErr(null);
         try {
-            if (!target) { setErr('Выберите филиал'); setLoading(false); return; }
+            if (!target) { setErr(t('staff.transfer.errors.selectBranch', 'Выберите филиал')); setLoading(false); return; }
 
             const res = await fetch(`/api/staff/${encodeURIComponent(staffId)}/transfer`, {
                 method: 'POST',
@@ -48,28 +51,28 @@ export default function TransferStaffDialog({
 
     return (
         <div>
-            <button className="border rounded px-3 py-1.5" onClick={()=>setOpen(true)} type="button">
-                Перевести сотрудника
+            <button className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors" onClick={()=>setOpen(true)} type="button">
+                {t('staff.transfer.button', 'Перевести сотрудника')}
             </button>
 
             {open && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/30" onClick={()=>!loading && setOpen(false)} />
                     <div className="relative bg-white dark:bg-zinc-900 w-full max-w-md rounded shadow p-4 space-y-3">
-                        <h3 className="font-semibold text-lg">Перевод сотрудника</h3>
+                        <h3 className="font-semibold text-lg">{t('staff.transfer.title', 'Перевод сотрудника')}</h3>
 
                         <div className="text-sm">
-                            Текущий филиал: <b>{branches.find(b=>b.id===currentBranchId)?.name ?? '—'}</b>
+                            {t('staff.transfer.current', 'Текущий филиал:')} <b>{branches.find(b=>b.id===currentBranchId)?.name ?? '—'}</b>
                         </div>
 
                         <div className="space-y-1">
-                            <label className="block text-sm text-gray-600">Новый филиал *</label>
+                            <label className="block text-sm text-gray-600">{t('staff.transfer.target.label', 'Новый филиал *')}</label>
                             <select
                                 className="border rounded px-3 py-2 w-full"
                                 value={target}
                                 onChange={e=>setTarget(e.target.value)}
                             >
-                                <option value="">— выбрать —</option>
+                                <option value="">{t('staff.transfer.target.select', '— выбрать —')}</option>
                                 {otherBranches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                             </select>
                         </div>
@@ -80,22 +83,22 @@ export default function TransferStaffDialog({
                                 checked={copySchedule}
                                 onChange={e=>setCopySchedule(e.target.checked)}
                             />
-                            Скопировать шаблон расписания из старого филиала
+                            {t('staff.transfer.copySchedule', 'Скопировать шаблон расписания из старого филиала')}
                         </label>
 
                         {!!err && <div className="text-sm text-red-600">{err}</div>}
 
                         <div className="flex gap-2 justify-end">
                             <button className="border rounded px-3 py-1.5" disabled={loading} onClick={()=>setOpen(false)} type="button">
-                                Отменить
+                                {t('staff.transfer.cancel', 'Отменить')}
                             </button>
                             <button className="border rounded px-3 py-1.5" disabled={loading} onClick={submit} type="button">
-                                {loading ? 'Перевожу…' : 'Перевести'}
+                                {loading ? t('staff.transfer.processing', 'Перевожу…') : t('staff.transfer.submit', 'Перевести')}
                             </button>
                         </div>
 
                         <div className="text-xs text-gray-500">
-                            Перевод выполняется сразу. Будущие брони не трогаем (перенос — отдельной задачей).
+                            {t('staff.transfer.note', 'Перевод выполняется сразу. Будущие брони не трогаем (перенос — отдельной задачей).')}
                         </div>
                     </div>
                 </div>

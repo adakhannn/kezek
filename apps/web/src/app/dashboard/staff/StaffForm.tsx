@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type Staff = {
     id?: string;
     full_name: string;
@@ -22,6 +24,7 @@ export default function StaffForm({
     initial: Staff;
     apiBase: string; // '/api/staff'
 }) {
+    const { t } = useLanguage();
     const r = useRouter();
     const [form, setForm] = useState<Staff>(initial);
     const [saving, setSaving] = useState(false);
@@ -41,7 +44,7 @@ export default function StaffForm({
             
             // Проверяем, что все обязательные поля присутствуют
             if (!form.full_name || !form.branch_id) {
-                setErr('Заполните все обязательные поля');
+                setErr(t('staff.form.errors.required', 'Заполните все обязательные поля'));
                 setSaving(false);
                 return;
             }
@@ -84,13 +87,13 @@ export default function StaffForm({
             <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        ФИО <span className="text-red-500">*</span>
+                        {t('staff.form.fullName.label', 'ФИО')} <span className="text-red-500">*</span>
                     </label>
                     <input
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-indigo-400"
                         value={form.full_name}
                         onChange={e => set('full_name', e.target.value)}
-                        placeholder="Иванов Иван Иванович"
+                        placeholder={t('staff.form.fullName.placeholder', 'Иванов Иван Иванович')}
                         required
                     />
                 </div>
@@ -103,17 +106,17 @@ export default function StaffForm({
                             onChange={e => set('is_active', e.target.checked)}
                             className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
                         />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Активен</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('staff.form.active.label', 'Активен')}</span>
                     </label>
                     {form.is_active ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Работает
+                            {t('staff.form.active.working', 'Работает')}
                         </span>
                     ) : (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
                             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-gray-400" />
-                            Неактивен
+                            {t('staff.form.active.inactive', 'Неактивен')}
                         </span>
                     )}
                 </div>
@@ -122,25 +125,25 @@ export default function StaffForm({
             <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        E-mail
+                        {t('staff.form.email.label', 'E-mail')}
                     </label>
                     <input
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-indigo-400"
                         value={form.email ?? ''}
                         onChange={e => set('email', e.target.value || null)}
                         type="email"
-                        placeholder="ivan@example.com"
+                        placeholder={t('staff.form.email.placeholder', 'ivan@example.com')}
                     />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Телефон
+                        {t('staff.form.phone.label', 'Телефон')}
                     </label>
                     <input
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-indigo-400"
                         value={form.phone ?? ''}
                         onChange={e => set('phone', e.target.value || null)}
-                        placeholder="+996555123456"
+                        placeholder={t('staff.form.phone.placeholder', '+996555123456')}
                     />
                 </div>
             </div>
@@ -150,13 +153,13 @@ export default function StaffForm({
                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Распределение доходов
+                    {t('staff.form.income.title', 'Распределение доходов')}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Проценты распределяются от чистой суммы (после вычета расходников). Расходники 100% идут салону.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{t('staff.form.income.desc', 'Проценты распределяются от чистой суммы (после вычета расходников). Расходники 100% идут салону.')}</p>
                 <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Доля мастера (%)
+                            {t('staff.form.income.master.label', 'Доля мастера (%)')}
                         </label>
                         <div className="relative">
                             <input
@@ -178,7 +181,7 @@ export default function StaffForm({
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Доля салона (%)
+                            {t('staff.form.income.salon.label', 'Доля салона (%)')}
                         </label>
                         <div className="relative">
                             <input
@@ -206,12 +209,12 @@ export default function StaffForm({
                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Оплата за выход
+                    {t('staff.form.hourly.title', 'Оплата за выход')}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Если указана ставка, сотрудник получает оплату за выход. Если сумма за выход больше доли от выручки, владелец доплачивает разницу.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{t('staff.form.hourly.desc', 'Если указана ставка, сотрудник получает оплату за выход. Если сумма за выход больше доли от выручки, владелец доплачивает разницу.')}</p>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Ставка за час (сом/час)
+                        {t('staff.form.hourly.rate.label', 'Ставка за час (сом/час)')}
                     </label>
                     <input
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-indigo-400"
@@ -223,7 +226,7 @@ export default function StaffForm({
                             const val = e.target.value.trim();
                             set('hourly_rate', val === '' ? null : Number(val) || null);
                         }}
-                        placeholder="Не указано (сотрудник получает только процент от выручки)"
+                        placeholder={t('staff.form.hourly.rate.placeholder', 'Не указано (сотрудник получает только процент от выручки)')}
                     />
                 </div>
             </div>
@@ -239,14 +242,14 @@ export default function StaffForm({
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
-                            Сохранение...
+                            {t('staff.form.save.saving', 'Сохранение...')}
                         </>
                     ) : (
                         <>
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            Сохранить изменения
+                            {t('staff.form.save.button', 'Сохранить изменения')}
                         </>
                     )}
                 </button>
