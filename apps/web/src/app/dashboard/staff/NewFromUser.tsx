@@ -3,10 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type Branch = { id: string; name: string };
 type FoundUser = { id: string; email: string | null; phone: string | null; full_name: string };
 
 export default function NewFromUser({ branches }: { branches: Branch[] }) {
+    const { t } = useLanguage();
     const r = useRouter();
 
     const [q, setQ] = useState('');
@@ -43,8 +46,8 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
     }
 
     async function createStaff() {
-        if (!selectedUserId) return alert('Выберите пользователя');
-        if (!branchId) return alert('Выберите филиал');
+        if (!selectedUserId) return alert(t('staff.new.errors.selectUser', 'Выберите пользователя'));
+        if (!branchId) return alert(t('staff.new.errors.selectBranch', 'Выберите филиал'));
 
         const res = await fetch('/api/staff/create-from-user', {
             method: 'POST',
@@ -53,7 +56,7 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
         });
         const j = await res.json();
         if (!j.ok) {
-            return alert(j.error ?? 'Не удалось создать сотрудника');
+            return alert(j.error ?? t('staff.new.errors.createFailed', 'Не удалось создать сотрудника'));
         }
         
         // Логируем результат инициализации расписания в консоль браузера
@@ -83,21 +86,21 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
 
             <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Поиск пользователя <span className="text-gray-500 text-xs">(email / телефон / ФИО)</span>
+                    {t('staff.new.search.label', 'Поиск пользователя')} <span className="text-gray-500 text-xs">({t('staff.new.search.hint', 'email / телефон / ФИО')})</span>
                 </label>
                 <div className="flex flex-col gap-2 sm:flex-row">
                     <input
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
-                        placeholder="Например: +996..., example@mail.com, Иван"
+                        placeholder={t('staff.new.search.placeholder', 'Например: +996..., example@mail.com, Иван')}
                     />
                     <button
                         onClick={() => doSearch(q)}
                         className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
                         disabled={loading}
                     >
-                        {loading ? 'Ищем…' : 'Найти'}
+                        {loading ? t('staff.new.search.searching', 'Ищем…') : t('staff.new.search.button', 'Найти')}
                     </button>
                 </div>
 
@@ -105,11 +108,11 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                     <table className="min-w-full text-sm">
                         <thead className="bg-gray-100 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                             <tr>
-                                <th className="px-3 py-2 w-10">#</th>
-                                <th className="px-3 py-2">Имя</th>
-                                <th className="px-3 py-2">Email</th>
-                                <th className="px-3 py-2">Телефон</th>
-                                <th className="px-3 py-2 w-24 text-center">Выбрать</th>
+                                <th className="px-3 py-2 w-10">{t('staff.new.table.number', '#')}</th>
+                                <th className="px-3 py-2">{t('staff.new.table.name', 'Имя')}</th>
+                                <th className="px-3 py-2">{t('staff.new.table.email', 'Email')}</th>
+                                <th className="px-3 py-2">{t('staff.new.table.phone', 'Телефон')}</th>
+                                <th className="px-3 py-2 w-24 text-center">{t('staff.new.table.select', 'Выбрать')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,8 +140,8 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                                         colSpan={5}
                                     >
                                         {hasSearched
-                                            ? 'Ничего не найдено. Попробуйте изменить запрос.'
-                                            : 'Введите запрос и нажмите «Найти», чтобы увидеть пользователей.'}
+                                            ? t('staff.new.table.empty.noResults', 'Ничего не найдено. Попробуйте изменить запрос.')
+                                            : t('staff.new.table.empty.enterQuery', 'Введите запрос и нажмите «Найти», чтобы увидеть пользователей.')}
                                     </td>
                                 </tr>
                             )}
@@ -149,7 +152,7 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
 
             <div className="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 sm:grid-cols-3 dark:border-gray-800 dark:bg-gray-900">
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Филиал</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('staff.new.branch.label', 'Филиал')}</label>
                     <select
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         value={branchId}
@@ -170,14 +173,14 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                         onChange={(e) => setIsActive(e.target.checked)}
                         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600"
                     />
-                    <span>Активен (доступен для записи)</span>
+                    <span>{t('staff.new.active.label', 'Активен (доступен для записи)')}</span>
                 </label>
                 <div className="flex items-end">
                     <button
                         onClick={createStaff}
                         className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        Добавить сотрудника
+                        {t('staff.new.create.button', 'Добавить сотрудника')}
                     </button>
                 </div>
             </div>
