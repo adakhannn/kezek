@@ -2,6 +2,7 @@
 
 import React, {useEffect, useRef, useState} from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import {Button} from '@/components/ui/Button';
 
 async function createImage(src: string): Promise<HTMLImageElement> {
@@ -64,6 +65,7 @@ export default function StaffAvatarUpload({
     currentAvatarUrl: string | null;
     onUploaded?: (url: string) => void;
 }) {
+    const { t } = useLanguage();
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(currentAvatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -79,12 +81,12 @@ export default function StaffAvatarUpload({
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            alert('Пожалуйста, выберите изображение');
+            alert(t('staff.avatar.error.selectImage', 'Please select an image'));
             return;
         }
 
         if (file.size > 5 * 1024 * 1024) {
-            alert('Размер файла не должен превышать 5MB');
+            alert(t('staff.avatar.error.fileSize', 'File size must not exceed 5MB'));
             return;
         }
 
@@ -96,7 +98,7 @@ export default function StaffAvatarUpload({
             })
             .catch((error) => {
                 console.error('Crop error:', error);
-                alert('Не удалось обработать изображение. Попробуйте другое фото.');
+                alert(t('staff.avatar.error.process', 'Failed to process image. Try another photo.'));
             });
     };
 
@@ -117,7 +119,7 @@ export default function StaffAvatarUpload({
             const result = await response.json();
 
             if (!result.ok) {
-                throw new Error(result.error || 'Ошибка при загрузке');
+                throw new Error(result.error || t('staff.avatar.error.upload', 'Upload error'));
             }
 
             setPreview(result.url);
@@ -128,8 +130,8 @@ export default function StaffAvatarUpload({
             onUploaded?.(result.url);
         } catch (error) {
             console.error('Error uploading avatar:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-            alert(`Ошибка при загрузке аватарки: ${errorMessage}`);
+            const errorMessage = error instanceof Error ? error.message : t('staff.avatar.error.unknown', 'Unknown error');
+            alert(t('staff.avatar.error.uploadFailed', 'Error uploading avatar: {error}').replace('{error}', errorMessage));
         } finally {
             setUploading(false);
         }
@@ -147,7 +149,7 @@ export default function StaffAvatarUpload({
             const result = await response.json();
 
             if (!result.ok) {
-                throw new Error(result.error || 'Ошибка при удалении');
+                throw new Error(result.error || t('staff.avatar.error.remove', 'Remove error'));
             }
 
             setPreview(null);
@@ -158,7 +160,7 @@ export default function StaffAvatarUpload({
             onUploaded?.('');
         } catch (error) {
             console.error('Error removing avatar:', error);
-            alert('Ошибка при удалении аватарки. Попробуйте еще раз.');
+            alert(t('staff.avatar.error.removeFailed', 'Error removing avatar. Please try again.'));
         } finally {
             setUploading(false);
         }
@@ -171,7 +173,7 @@ export default function StaffAvatarUpload({
                     {preview ? (
                         <img
                             src={preview}
-                            alt="Аватар"
+                            alt={t('staff.avatar.alt', 'Avatar')}
                             className="h-full w-full object-cover"
                             onError={(e) => {
                                 console.error('Error loading avatar image:', preview);
@@ -201,7 +203,10 @@ export default function StaffAvatarUpload({
                         disabled={uploading}
                         onClick={() => fileInputRef.current?.click()}
                     >
-                        {preview && preview !== currentAvatarUrl ? 'Изменить фото' : 'Загрузить фото'}
+                        {preview && preview !== currentAvatarUrl 
+                            ? t('staff.avatar.change', 'Change photo')
+                            : t('staff.avatar.upload', 'Upload photo')
+                        }
                     </Button>
                     {preview && preview !== currentAvatarUrl && (
                         <div className="flex gap-2">
@@ -212,7 +217,7 @@ export default function StaffAvatarUpload({
                                 disabled={uploading || !croppedFile}
                                 isLoading={uploading}
                             >
-                                Сохранить
+                                {t('staff.avatar.save', 'Save')}
                             </Button>
                             <Button
                                 variant="outline"
@@ -226,7 +231,7 @@ export default function StaffAvatarUpload({
                                 }}
                                 disabled={uploading}
                             >
-                                Отмена
+                                {t('staff.avatar.cancel', 'Cancel')}
                             </Button>
                         </div>
                     )}
@@ -239,13 +244,13 @@ export default function StaffAvatarUpload({
                             isLoading={uploading}
                             className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                         >
-                            Удалить фото
+                            {t('staff.avatar.remove', 'Remove photo')}
                         </Button>
                     )}
                 </div>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-                Рекомендуемый размер: квадратное изображение (например, 200x200px). Максимальный размер файла: 5MB
+                {t('staff.avatar.hint', 'Recommended size: square image (e.g., 200x200px). Maximum file size: 5MB')}
             </p>
         </div>
     );
