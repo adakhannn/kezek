@@ -1125,6 +1125,8 @@ const dictionaries: Dictionaries = {
         'staff.schedule.pastDateUnavailable': '(недоступно для прошедших дат)',
         'staff.schedule.workingHours': 'Рабочее время',
         'staff.schedule.branch': 'Филиал',
+        'staff.schedule.temporary': 'Временный филиал',
+        'staff.schedule.mainBranch': 'Основной филиал',
         'staff.schedule.temporaryTransfer': 'Временный перевод в филиал',
         'staff.schedule.active': 'Активен',
         'staff.schedule.homeBranch': 'основной',
