@@ -384,6 +384,9 @@ export default function Client({
             // Если interval есть, значит день рабочий - сохраняем с интервалом
             const intervalsToSave = interval ? [interval] : [];
 
+            // Если филиал отличается от основного - это временный перевод
+            const isTemporaryTransfer = branchId !== homeBranchId;
+
             if (existing?.id) {
                 // Обновляем существующее правило
                 await supabase
@@ -397,6 +400,41 @@ export default function Client({
                     .eq('id', existing.id)
                     .eq('biz_id', bizId)
                     .eq('staff_id', staffId);
+
+                // Если это временный перевод, создаем или обновляем запись в staff_branch_assignments
+                if (isTemporaryTransfer) {
+                    // Проверяем, есть ли уже запись для этой даты
+                    const { data: existingAssign } = await supabase
+                        .from('staff_branch_assignments')
+                        .select('id')
+                        .eq('biz_id', bizId)
+                        .eq('staff_id', staffId)
+                        .eq('branch_id', branchId)
+                        .eq('valid_from', date)
+                        .eq('valid_to', date)
+                        .maybeSingle();
+
+                    if (!existingAssign) {
+                        // Создаем временное назначение только на этот день
+                        await supabase.from('staff_branch_assignments').insert({
+                            biz_id: bizId,
+                            staff_id: staffId,
+                            branch_id: branchId,
+                            valid_from: date,
+                            valid_to: date,
+                        });
+                    }
+                } else if (existing.branch_id !== homeBranchId) {
+                    // Если филиал вернулся к основному, удаляем временное назначение для этой даты
+                    await supabase
+                        .from('staff_branch_assignments')
+                        .delete()
+                        .eq('biz_id', bizId)
+                        .eq('staff_id', staffId)
+                        .eq('branch_id', existing.branch_id)
+                        .eq('valid_from', date)
+                        .eq('valid_to', date);
+                }
             } else {
                 // Создаем новое правило (даже для выходного дня, чтобы пометить его явно)
                 await supabase.from('staff_schedule_rules').insert({
@@ -411,6 +449,17 @@ export default function Client({
                     is_active: true,
                     priority: 0,
                 });
+
+                // Если это временный перевод, создаем запись в staff_branch_assignments
+                if (isTemporaryTransfer) {
+                    await supabase.from('staff_branch_assignments').insert({
+                        biz_id: bizId,
+                        staff_id: staffId,
+                        branch_id: branchId,
+                        valid_from: date,
+                        valid_to: date,
+                    });
+                }
             }
 
             // Перезагружаем правила
