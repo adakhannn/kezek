@@ -4,6 +4,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -32,6 +33,7 @@ export default function ServiceForm({
     apiBase: string; // '/api/services'
 }) {
     const r = useRouter();
+    const { t } = useLanguage();
 
     const isEdit = !!initial.id;
 
@@ -79,14 +81,22 @@ export default function ServiceForm({
 
             // валидация
             if (!form.name_ru.trim()) {
-                throw new Error('Название обязательно');
+                throw new Error(t('services.form.error.nameRequired', 'Название обязательно'));
             }
             if (!isEdit) {
                 const ids = form.branch_ids ?? [];
-                if (ids.length === 0) throw new Error('Выберите хотя бы один филиал');
+                if (ids.length === 0) {
+                    throw new Error(
+                        t('services.form.error.branchRequired', 'Выберите хотя бы один филиал'),
+                    );
+                }
             } else {
                 const ids = form.branch_ids ?? [];
-                if (ids.length === 0) throw new Error('Выберите хотя бы один филиал');
+                if (ids.length === 0) {
+                    throw new Error(
+                        t('services.form.error.branchRequired', 'Выберите хотя бы один филиал'),
+                    );
+                }
             }
 
             // готовим тело запроса:
@@ -133,29 +143,29 @@ export default function ServiceForm({
 
             <div className="space-y-4">
                 <Input
-                    label="Название (русский) *"
+                    label={t('services.form.nameRu', 'Название (русский) *')}
                     value={form.name_ru}
                     onChange={(e) => setForm((f) => ({ ...f, name_ru: e.target.value }))}
                     required
-                    placeholder="Взрослая стрижка"
+                    placeholder={t('services.form.nameRuPlaceholder', 'Взрослая стрижка')}
                 />
                 <Input
-                    label="Название (кыргызский)"
+                    label={t('services.form.nameKy', 'Название (кыргызский)')}
                     value={form.name_ky || ''}
                     onChange={(e) => setForm((f) => ({ ...f, name_ky: e.target.value || null }))}
-                    placeholder="Чоңдордун чач кесуү"
+                    placeholder={t('services.form.nameKyPlaceholder', 'Чоңдордун чач кесуү')}
                 />
                 <Input
-                    label="Название (английский)"
+                    label={t('services.form.nameEn', 'Название (английский)')}
                     value={form.name_en || ''}
                     onChange={(e) => setForm((f) => ({ ...f, name_en: e.target.value || null }))}
-                    placeholder="Adult haircut"
+                    placeholder={t('services.form.nameEnPlaceholder', 'Adult haircut')}
                 />
             </div>
 
             <div className="grid sm:grid-cols-3 gap-4">
                 <Input
-                    label="Длительность (мин)"
+                    label={t('services.form.duration', 'Длительность (мин)')}
                     type="number"
                     min={1}
                     value={form.duration_min}
@@ -163,7 +173,7 @@ export default function ServiceForm({
                     required
                 />
                 <Input
-                    label="Цена от"
+                    label={t('services.form.priceFrom', 'Цена от')}
                     type="number"
                     min={0}
                     value={priceFromStr}
@@ -175,7 +185,7 @@ export default function ServiceForm({
                     }}
                 />
                 <Input
-                    label="Цена до"
+                    label={t('services.form.priceTo', 'Цена до')}
                     type="number"
                     min={0}
                     value={priceToStr}
@@ -191,13 +201,17 @@ export default function ServiceForm({
             {/* Мультивыбор филиалов (для создания и редактирования) */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Филиалы *</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {t('services.form.branches', 'Филиалы *')}
+                    </label>
                     <button
                         type="button"
                         className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
                         onClick={toggleAll}
                     >
-                        {allSelected ? 'Снять все' : 'Выбрать все'}
+                        {allSelected
+                            ? t('services.form.branchesClearAll', 'Снять все')
+                            : t('services.form.branchesSelectAll', 'Выбрать все')}
                     </button>
                 </div>
 
@@ -217,7 +231,9 @@ export default function ServiceForm({
                         );
                     })}
                     {branches.length === 0 && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 p-2">Нет активных филиалов</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 p-2">
+                            {t('services.form.noBranches', 'Нет активных филиалов')}
+                        </div>
                     )}
                 </div>
             </div>
@@ -231,13 +247,15 @@ export default function ServiceForm({
                     className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                 />
                 <label htmlFor="active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                    Активна (доступна для записи)
+                    {t('services.form.activeLabel', 'Активна (доступна для записи)')}
                 </label>
             </div>
 
             <div className="pt-2">
                 <Button type="submit" disabled={saving} isLoading={saving}>
-                    {saving ? 'Сохраняем…' : 'Сохранить'}
+                    {saving
+                        ? t('services.form.saving', 'Сохраняем…')
+                        : t('services.form.save', 'Сохранить')}
                 </Button>
             </div>
         </form>

@@ -1,6 +1,7 @@
 // apps/web/src/app/dashboard/services/new/page.tsx  (или твой путь)
 import ServiceForm from '../ServiceForm';
 
+import { LanguageProvider, useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -17,8 +18,20 @@ export default async function NewServicePage() {
         .order('name');
 
     return (
+        <LanguageProvider>
+            <NewServicePageInner branches={branches || []} />
+        </LanguageProvider>
+    );
+}
+
+function NewServicePageInner({ branches }: { branches: { id: string; name: string }[] }) {
+    const { t } = useLanguage();
+
+    return (
         <main className="mx-auto max-w-3xl p-6 space-y-4">
-            <h1 className="text-2xl font-semibold">Новая услуга</h1>
+            <h1 className="text-2xl font-semibold">
+                {t('services.form.titleNew', 'Новая услуга')}
+            </h1>
             <ServiceForm
                 initial={{
                     name_ru: '',
@@ -28,10 +41,10 @@ export default async function NewServicePage() {
                     price_from: 0,
                     price_to: 0,
                     active: true,
-                    branch_id: '',          // для edit-режима (игнорится в create)
-                    branch_ids: [],         // ← мультивыбор при создании
+                    branch_id: '',
+                    branch_ids: [],
                 }}
-                branches={branches || []}
+                branches={branches}
                 apiBase="/api/services"
             />
         </main>
