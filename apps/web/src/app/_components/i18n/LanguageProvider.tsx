@@ -691,6 +691,20 @@ const dictionaries: Dictionaries = {
         'staff.layout.noAccess.title': 'Кызматкердин кабинетине кирүүгө мүмкүнчүлүк жок',
         'staff.layout.noAccess.desc': 'Сиздин аккаунтуңузда эч кандай бизнесте <code>staff</code> ролу жок.',
         'staff.layout.noAccess.goHome': 'Башкы баракка өтүү',
+        // Booking Detail Page
+        'booking.title': 'Bron #{id}',
+        'booking.subtitle': 'Zapisanyn ыrastoo жана негизги деталдар',
+        'booking.status': 'Status',
+        'booking.service': 'Kызмат',
+        'booking.master': 'Master',
+        'booking.dateTime': 'Daty жана ubakyt',
+        'booking.contactHint': 'Eger sizge zapisany ozgortuu же jokko chygaruu kerek bolso, salon менен telefon аркылуу же biznes betindegi байланыш kanaly аркылуу байланышыңыз.',
+        'booking.goHome': 'Bashkы betke',
+        'booking.notFound': 'Bron tabyлgan jok',
+        'booking.status.confirmed': 'Ыrastalgan',
+        'booking.status.paid': 'Tolongan',
+        'booking.status.hold': 'Ыrastoonu kutuudо',
+        'booking.status.cancelled': 'Jokko chygarylgan',
     },
     ru: {
         // Auth / sign-in
@@ -1364,6 +1378,20 @@ const dictionaries: Dictionaries = {
         'staff.layout.noAccess.title': 'Нет доступа к кабинету сотрудника',
         'staff.layout.noAccess.desc': 'У вашей учётной записи нет роли <code>staff</code> ни в одном бизнесе.',
         'staff.layout.noAccess.goHome': 'Перейти на главную',
+        // Booking Detail Page
+        'booking.title': 'Bron #{id}',
+        'booking.subtitle': 'Podtverzhdenie zapisi i osnovnye detali vizita',
+        'booking.status': 'Status',
+        'booking.service': 'Usluga',
+        'booking.master': 'Master',
+        'booking.dateTime': 'Data i vremya',
+        'booking.contactHint': 'Esli vam nuzhno izmenit ili otmenit zapis, svyazhites s salonom po telefonu ili cherez tot kanal svyazi, kotoryy ukazan na stranitse biznesa.',
+        'booking.goHome': 'Na glavnuyu',
+        'booking.notFound': 'Bron ne naydena',
+        'booking.status.confirmed': 'Podtverzhdena',
+        'booking.status.paid': 'Oplachena',
+        'booking.status.hold': 'Ozhidaet podtverzhdeniya',
+        'booking.status.cancelled': 'Otmenena',
     },
     en: {
         // Auth / sign-in
@@ -2043,6 +2071,20 @@ const dictionaries: Dictionaries = {
         'staff.layout.noAccess.title': 'No access to staff cabinet',
         'staff.layout.noAccess.desc': 'Your account does not have <code>staff</code> role in any business.',
         'staff.layout.noAccess.goHome': 'Go to home',
+        // Booking Detail Page
+        'booking.title': 'Booking #{id}',
+        'booking.subtitle': 'Booking confirmation and visit details',
+        'booking.status': 'Status',
+        'booking.service': 'Service',
+        'booking.master': 'Master',
+        'booking.dateTime': 'Date and time',
+        'booking.contactHint': 'If you need to change or cancel your booking, contact the salon by phone or through the contact channel specified on the business page.',
+        'booking.goHome': 'Go to home',
+        'booking.notFound': 'Booking not found',
+        'booking.status.confirmed': 'Confirmed',
+        'booking.status.paid': 'Paid',
+        'booking.status.hold': 'Awaiting confirmation',
+        'booking.status.cancelled': 'Cancelled',
     },
 };
 
