@@ -1,5 +1,6 @@
 'use client';
 
+import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
@@ -328,7 +329,45 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         }
     };
 
-    const stats: Stats | null = today && today.ok ? today.stats : null;
+    // Вычисляем статистику в зависимости от выбранного периода
+    const filteredStats = useMemo(() => {
+        const closedShifts = allShifts.filter((s) => s.status === 'closed');
+        
+        let filtered: typeof closedShifts = [];
+        const now = new Date();
+        const todayStr = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        
+        if (statsPeriod === 'day') {
+            filtered = closedShifts.filter((s) => s.shift_date === todayStr);
+        } else if (statsPeriod === 'week') {
+            const weekAgo = new Date(now);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekAgoStr = formatInTimeZone(weekAgo, TZ, 'yyyy-MM-dd');
+            filtered = closedShifts.filter((s) => s.shift_date >= weekAgoStr && s.shift_date <= todayStr);
+        } else if (statsPeriod === 'month') {
+            const monthAgo = new Date(now);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            const monthAgoStr = formatInTimeZone(monthAgo, TZ, 'yyyy-MM-dd');
+            filtered = closedShifts.filter((s) => s.shift_date >= monthAgoStr && s.shift_date <= todayStr);
+        } else {
+            filtered = closedShifts;
+        }
+        
+        const totalAmount = filtered.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
+        const totalMaster = filtered.reduce((sum, s) => sum + Number(s.master_share || 0), 0);
+        const totalSalon = filtered.reduce((sum, s) => sum + Number(s.salon_share || 0), 0);
+        const totalLateMinutes = filtered.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
+        
+        return {
+            totalAmount,
+            totalMaster,
+            totalSalon,
+            totalLateMinutes,
+            shiftsCount: filtered.length,
+        };
+    }, [allShifts, statsPeriod]);
+    
+    const stats: Stats | null = filteredStats;
 
     // Сумма услуг = сумма всех serviceAmount
     const totalServiceFromItems = items.reduce(
