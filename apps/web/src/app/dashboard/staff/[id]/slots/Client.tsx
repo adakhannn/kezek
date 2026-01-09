@@ -44,33 +44,38 @@ export default function Client({
     // фильтр по филиалу → список услуг этого филиала
     const { t, locale } = useLanguage();
 
-    const [branchId, setBranchId] = useState<string>(branches[0]?.id || '');
+    // изначально ничего не выбрано — как в QuickDesk
+    const [branchId, setBranchId] = useState<string>('');
     const servicesByBranch = useMemo(
-        () => services.filter(s => s.branch_id === branchId),
-        [services, branchId]
+        () => (branchId ? services.filter((s) => s.branch_id === branchId) : []),
+        [services, branchId],
     );
 
     // выбранные сервис/дата
-    const [serviceId, setServiceId] = useState<string>(servicesByBranch[0]?.id || '');
+    const [serviceId, setServiceId] = useState<string>('');
     const [date, setDate] = useState<string>(defaultDate);
 
     // слоты именно этого сотрудника
     const [slots, setSlots] = useState<Slot[]>([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
-    const uniq = Array.from(new Map(slots.map(s => [s.start_at, s])).values());
+    const uniq = Array.from(new Map(slots.map((s) => [s.start_at, s])).values());
 
-
-    // когда переключаем филиал — подстроим выбранную услугу
+    // при смене филиала сбрасываем услугу и слоты
     useEffect(() => {
-        setServiceId(prev => servicesByBranch.some(s => s.id === prev) ? prev : (servicesByBranch[0]?.id || ''));
-    }, [servicesByBranch]);
+        setServiceId('');
+        setSlots([]);
+        setErr(null);
+    }, [branchId]);
 
     // загрузка слотов от RPC v2 (на уровне сервиса и даты), затем фильтрация по staffId
     useEffect(() => {
         let ignore = false;
         (async () => {
-            if (!serviceId || !date) { setSlots([]); return; }
+            if (!branchId || !serviceId || !date) {
+                setSlots([]);
+                return;
+            }
             setLoading(true); setErr(null);
             try {
                 const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
@@ -86,10 +91,11 @@ export default function Client({
                 const now = new Date();
                 const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
                 // конкретный сотрудник + на нужный филиал (совпадает с филиалом услуги) + только будущие слоты (минимум через 30 минут)
-                const filtered = all.filter(s => 
-                    s.staff_id === staffId && 
-                    s.branch_id === branchId &&
-                    new Date(s.start_at) > minTime
+                const filtered = all.filter(
+                    (s) =>
+                        s.staff_id === staffId &&
+                        s.branch_id === branchId &&
+                        new Date(s.start_at) > minTime,
                 );
                 setSlots(filtered);
             } finally { if (!ignore) setLoading(false); }
@@ -136,7 +142,10 @@ export default function Client({
                             value={branchId}
                             onChange={e => setBranchId(e.target.value)}
                         >
-                            {branches.map(b => (
+                            <option value="">
+                                {t('bookings.desk.selectBranch', 'Выберите филиал')}
+                            </option>
+                            {branches.map((b) => (
                                 <option key={b.id} value={b.id}>
                                     {b.name}
                                 </option>
@@ -149,10 +158,16 @@ export default function Client({
                         </label>
                         <select
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                            disabled={!branchId}
                             value={serviceId}
                             onChange={e => setServiceId(e.target.value)}
                         >
-                            {servicesByBranch.map(s => (
+                            <option value="">
+                                {!branchId
+                                    ? t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')
+                                    : t('bookings.desk.selectService', 'Выберите услугу')}
+                            </option>
+                            {servicesByBranch.map((s) => (
                                 <option key={s.id} value={s.id}>
                                     {s.name}{' '}
                                     {locale === 'en'
@@ -160,7 +175,7 @@ export default function Client({
                                         : `(${s.duration_min} мин)`}
                                 </option>
                             ))}
-                            {servicesByBranch.length === 0 && (
+                            {branchId && servicesByBranch.length === 0 && (
                                 <option value="">
                                     {t('bookings.desk.noServices', 'Нет услуг в филиале')}
                                 </option>
