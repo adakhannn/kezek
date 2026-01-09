@@ -54,7 +54,11 @@ export default async function BookingPage({
         <LanguageProvider>
             <BookingLayoutClient
                 id={String(data.id)}
-                serviceName={service?.name_ru ?? '—'}
+                service={service ? {
+                    name_ru: service.name_ru,
+                    name_ky: service.name_ky ?? null,
+                    name_en: service.name_en ?? null,
+                } : null}
                 masterName={master?.full_name ?? '—'}
                 startAt={new Date(data.start_at)}
                 status={data.status}
@@ -87,7 +91,11 @@ async function FallbackBooking({ id }: { id: string }) {
         <LanguageProvider>
             <BookingLayoutClient
                 id={String(row.id)}
-                serviceName={row.service_name}
+                service={row.service_name ? {
+                    name_ru: row.service_name,
+                    name_ky: null,
+                    name_en: null,
+                } : null}
                 masterName={row.staff_name}
                 startAt={new Date(row.start_at)}
                 status={row.status}

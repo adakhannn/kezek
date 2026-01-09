@@ -9,14 +9,23 @@ const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 type BookingLayoutProps = {
     id: string;
-    serviceName: string;
+    service: { name_ru: string; name_ky: string | null; name_en: string | null } | null;
     masterName: string;
     startAt: Date;
     status: string;
 };
 
-export default function BookingLayoutClient({ id, serviceName, masterName, startAt, status }: BookingLayoutProps) {
+export default function BookingLayoutClient({ id, service, masterName, startAt, status }: BookingLayoutProps) {
     const { t, locale } = useLanguage();
+
+    function getServiceName(): string {
+        if (!service) return '—';
+        if (locale === 'ky' && service.name_ky) return service.name_ky;
+        if (locale === 'en' && service.name_en) return service.name_en;
+        return service.name_ru;
+    }
+
+    const serviceName = getServiceName();
 
     function getStatusLabel(status: string): { text: string; className: string } {
         const statusMap: Record<string, { textKey: string; className: string }> = {
