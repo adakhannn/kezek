@@ -155,13 +155,13 @@ export default function ViewSchedule({
                                     <div className="space-y-1">
                                         {isDayOff && (
                                             <div className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                                Выходной день
+                                                {t('staff.schedule.dayOff', 'Выходной день')}
                                             </div>
                                         )}
                                         {isWorking && intervals && intervals.length > 0 && (
                                             <div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                    Рабочее время
+                                                    {t('staff.schedule.workingHours', 'Рабочее время')}
                                                 </div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                     {formatTimeRange(intervals)}
@@ -171,14 +171,43 @@ export default function ViewSchedule({
                                         {!isDayOff && !isWorking && (
                                             <div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                    Рабочее время
+                                                    {t('staff.schedule.workingHours', 'Рабочее время')}
                                                 </div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                     09:00 - 21:00
                                                 </div>
                                                 <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                                    (по умолчанию)
+                                                    ({t('staff.schedule.default', 'по умолчанию')})
                                                 </div>
+                                            </div>
+                                        )}
+                                        {/* Отображение филиала */}
+                                        {!isDayOff && (
+                                            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                {isTemporaryTransfer && branch ? (
+                                                    <div className="space-y-1">
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {t('staff.schedule.temporary', 'Временный филиал')}:
+                                                        </div>
+                                                        <div className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                                                            {formatBranchName(branch.name)}
+                                                        </div>
+                                                        {homeBranch && (
+                                                            <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                                {t('staff.schedule.mainBranch', 'Основной')}: {formatBranchName(homeBranch.name)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : homeBranch ? (
+                                                    <div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {t('staff.schedule.mainBranch', 'Основной филиал')}:
+                                                        </div>
+                                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                            {formatBranchName(homeBranch.name)}
+                                                        </div>
+                                                    </div>
+                                                ) : null}
                                             </div>
                                         )}
                                     </div>
@@ -222,13 +251,13 @@ export default function ViewSchedule({
                                     <div className="space-y-1">
                                         {isDayOff && (
                                             <div className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                                Выходной день
+                                                {t('staff.schedule.dayOff', 'Выходной день')}
                                             </div>
                                         )}
                                         {isWorking && intervals && intervals.length > 0 && (
                                             <div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                    Рабочее время
+                                                    {t('staff.schedule.workingHours', 'Рабочее время')}
                                                 </div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                     {formatTimeRange(intervals)}
@@ -238,14 +267,43 @@ export default function ViewSchedule({
                                         {!isDayOff && !isWorking && (
                                             <div>
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                    Рабочее время
+                                                    {t('staff.schedule.workingHours', 'Рабочее время')}
                                                 </div>
                                                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                     09:00 - 21:00
                                                 </div>
                                                 <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                                    (по умолчанию)
+                                                    ({t('staff.schedule.default', 'по умолчанию')})
                                                 </div>
+                                            </div>
+                                        )}
+                                        {/* Отображение филиала */}
+                                        {!isDayOff && (
+                                            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                {isTemporaryTransfer && branch ? (
+                                                    <div className="space-y-1">
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {t('staff.schedule.temporary', 'Временный филиал')}:
+                                                        </div>
+                                                        <div className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                                                            {formatBranchName(branch.name)}
+                                                        </div>
+                                                        {homeBranch && (
+                                                            <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                                {t('staff.schedule.mainBranch', 'Основной')}: {formatBranchName(homeBranch.name)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : homeBranch ? (
+                                                    <div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {t('staff.schedule.mainBranch', 'Основной филиал')}:
+                                                        </div>
+                                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                            {formatBranchName(homeBranch.name)}
+                                                        </div>
+                                                    </div>
+                                                ) : null}
                                             </div>
                                         )}
                                     </div>
