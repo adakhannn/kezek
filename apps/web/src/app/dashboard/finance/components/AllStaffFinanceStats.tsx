@@ -106,13 +106,13 @@ export default function AllStaffFinanceStats() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {/* Фильтры */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
                     <button
                         onClick={() => setPeriod('day')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                             period === 'day'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -122,7 +122,7 @@ export default function AllStaffFinanceStats() {
                     </button>
                     <button
                         onClick={() => setPeriod('month')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                             period === 'month'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -132,7 +132,7 @@ export default function AllStaffFinanceStats() {
                     </button>
                     <button
                         onClick={() => setPeriod('year')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                             period === 'year'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -152,12 +152,12 @@ export default function AllStaffFinanceStats() {
                                 setDate(e.target.value);
                             }
                         }}
-                        className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
+                        className="flex-1 sm:flex-none px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
                     />
                     <button
                         onClick={loadStats}
                         disabled={loading}
-                        className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                         {loading ? t('finance.loading', 'Загрузка...') : t('finance.update', 'Обновить')}
                     </button>
@@ -166,22 +166,22 @@ export default function AllStaffFinanceStats() {
 
             {/* Общая статистика */}
             {totalStats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
                         <div className="text-xs uppercase tracking-wide text-indigo-100 mb-2">
                             {t('finance.totalTurnover', 'Общий оборот')}
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl sm:text-2xl font-bold">
                             {totalStats.totalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                         </div>
                         <div className="text-xs text-indigo-100 mt-1">{formatPeriodLabel()}</div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl p-6 text-white shadow-lg">
+                    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
                         <div className="text-xs uppercase tracking-wide text-emerald-100 mb-2">
                             {t('finance.toEmployees', 'Сотрудникам')}
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl sm:text-2xl font-bold">
                             {totalStats.totalMaster.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                         </div>
                         <div className="text-xs text-emerald-100 mt-1">
@@ -191,11 +191,11 @@ export default function AllStaffFinanceStats() {
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
                         <div className="text-xs uppercase tracking-wide text-blue-100 mb-2">
                             {t('finance.toBusiness', 'Бизнесу')}
                         </div>
-                        <div className="text-2xl font-bold">
+                        <div className="text-xl sm:text-2xl font-bold">
                             {totalStats.totalSalon.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                         </div>
                         <div className="text-xs text-blue-100 mt-1">
@@ -205,11 +205,11 @@ export default function AllStaffFinanceStats() {
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl p-6 text-white shadow-lg">
+                    <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
                         <div className="text-xs uppercase tracking-wide text-gray-100 mb-2">
                             {t('finance.shifts', 'Смен')}
                         </div>
-                        <div className="text-2xl font-bold">{totalStats.totalShifts}</div>
+                        <div className="text-xl sm:text-2xl font-bold">{totalStats.totalShifts}</div>
                         <div className="text-xs text-gray-100 mt-1">
                             {totalStats.totalOpenShifts > 0 && (
                                 <span>
@@ -231,14 +231,135 @@ export default function AllStaffFinanceStats() {
 
             {/* Таблица сотрудников */}
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-800">
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {t('finance.staffStats.title', 'Статистика по сотрудникам')}
                     </h2>
                 </div>
-                <div className="overflow-x-auto">
+                
+                {/* Мобильный вид (карточки) */}
+                <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-800">
+                    {staffStats.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                            {t('finance.staffStats.noData', 'Нет данных за выбранный период')}
+                        </div>
+                    ) : (
+                        staffStats.map((stat) => (
+                            <div
+                                key={stat.staffId}
+                                className="p-4 space-y-3"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                                            <span className="text-indigo-600 dark:text-indigo-400 font-medium text-sm">
+                                                {stat.staffName.charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                {stat.staffName}
+                                            </div>
+                                            {period === 'day' && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    {stat.openShiftsCount > 0 ? (
+                                                        <>
+                                                            <span className="inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                                                            <span className="text-xs text-green-600 dark:text-green-400">
+                                                                {t('finance.staffStats.status.open', 'Открыта')}
+                                                            </span>
+                                                        </>
+                                                    ) : stat.closedShiftsCount > 0 ? (
+                                                        <>
+                                                            <span className="inline-flex h-2 w-2 rounded-full bg-gray-400"></span>
+                                                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                                {t('finance.staffStats.status.closed', 'Закрыта')}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="inline-flex h-2 w-2 rounded-full bg-amber-400"></span>
+                                                            <span className="text-xs text-amber-600 dark:text-amber-400">
+                                                                {t('finance.staffStats.status.noShift', 'Нет смены')}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {period !== 'day' && (
+                                                <span
+                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                                                        stat.isActive
+                                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                                    }`}
+                                                >
+                                                    {stat.isActive
+                                                        ? t('finance.staffStats.status.active', 'Активен')
+                                                        : t('finance.staffStats.status.inactive', 'Неактивен')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                            {t('finance.staffStats.turnover', 'Оборот')}
+                                        </div>
+                                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                            {stat.totalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                            {t('finance.staffStats.shifts', 'Смен')}
+                                        </div>
+                                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                                            {stat.shiftsCount}
+                                            {stat.openShiftsCount > 0 && (
+                                                <span className="text-xs text-green-600 dark:text-green-400 ml-1">
+                                                    ({stat.openShiftsCount} {t('finance.shifts.open', 'открыта')})
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                            {t('finance.staffStats.toEmployee', 'Сотруднику')}
+                                        </div>
+                                        <div className="font-medium text-emerald-600 dark:text-emerald-400">
+                                            {stat.totalMaster.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                            {t('finance.staffStats.toBusiness', 'Бизнесу')}
+                                        </div>
+                                        <div className="font-medium text-indigo-600 dark:text-indigo-400">
+                                            {stat.totalSalon.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="pt-2">
+                                    <Link
+                                        href={`/dashboard/staff/${stat.staffId}/finance`}
+                                        className="block w-full text-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+                                    >
+                                        {t('finance.staffStats.details', 'Детали →')}
+                                    </Link>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+                
+                {/* Десктопный вид (таблица) */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-800/50">
+                        <thead className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-[96]">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                     {t('finance.staffStats.employee', 'Сотрудник')}
