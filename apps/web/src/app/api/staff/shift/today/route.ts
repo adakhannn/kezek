@@ -128,6 +128,25 @@ export async function GET() {
             console.error('Error loading today bookings:', bookingsError);
         }
 
+        // Услуги сотрудника для выпадающего списка
+        const { data: staffServices, error: servicesError } = await supabase
+            .from('service_staff')
+            .select('services:services!inner (name_ru)')
+            .eq('staff_id', staffId)
+            .eq('is_active', true)
+            .eq('services.active', true);
+
+        if (servicesError) {
+            console.error('Error loading staff services:', servicesError);
+        }
+
+        const availableServices = (staffServices ?? [])
+            .map((ss: { services: { name_ru: string } | { name_ru: string }[] | null }) => {
+                const svc = Array.isArray(ss.services) ? ss.services[0] : ss.services;
+                return svc?.name_ru;
+            })
+            .filter((name: string | undefined): name is string => !!name);
+
         // Расчет текущих часов работы и суммы за выход для открытой смены
         let currentHoursWorked: number | null = null;
         let currentGuaranteedAmount: number | null = null;
@@ -182,6 +201,7 @@ export async function GET() {
             currentHoursWorked: currentHoursWorked,
             currentGuaranteedAmount: currentGuaranteedAmount,
             bookings: todayBookings ?? [],
+            services: availableServices,
             isDayOff: isDayOff,
             stats: {
                 totalAmount,

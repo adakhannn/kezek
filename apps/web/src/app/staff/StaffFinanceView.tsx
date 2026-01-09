@@ -59,6 +59,7 @@ type TodayResponse =
               | { exists: false; status: 'none'; shift: null; items: ShiftItem[] }
               | { exists: true; status: 'open' | 'closed'; shift: Shift; items: ShiftItem[] };
           bookings?: Booking[];
+          services?: string[];
           staffPercentMaster?: number;
           staffPercentSalon?: number;
           hourlyRate?: number | null;
@@ -92,6 +93,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
     const [items, setItems] = useState<ShiftItem[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
+    const [availableServices, setAvailableServices] = useState<string[]>([]);
     const [staffPercentMaster, setStaffPercentMaster] = useState(60);
     const [staffPercentSalon, setStaffPercentSalon] = useState(40);
     const [hourlyRate, setHourlyRate] = useState<number | null>(null);
@@ -104,6 +106,12 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const serviceOptions = useMemo(() => {
         const set = new Set<string>();
+        // Услуги сотрудника из настроек
+        for (const name of availableServices) {
+            if (name?.trim()) {
+                set.add(name.trim());
+            }
+        }
         // Услуги из сегодняшних записей
         for (const b of bookings) {
             if (b.services) {
@@ -122,7 +130,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             }
         }
         return Array.from(set).sort((a, b) => a.localeCompare(b, 'ru'));
-    }, [bookings, items]);
+    }, [availableServices, bookings, items]);
 
     const load = async () => {
         setLoading(true);
@@ -180,6 +188,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             // Записи за сегодня для выбора клиентов
             if (json.ok && 'bookings' in json && Array.isArray(json.bookings)) {
                 setBookings(json.bookings);
+            }
+            // Услуги сотрудника для выпадающего списка
+            if (json.ok && 'services' in json && Array.isArray(json.services)) {
+                setAvailableServices(json.services);
             }
             // Проценты из настроек сотрудника (не из смены)
             if (json.ok && 'staffPercentMaster' in json && 'staffPercentSalon' in json) {
