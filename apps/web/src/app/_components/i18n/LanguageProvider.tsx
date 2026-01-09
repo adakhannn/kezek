@@ -199,6 +199,7 @@ const dictionaries: Dictionaries = {
         'dashboard.nav.home': 'Башкы',
         'dashboard.nav.bookings': 'Брондоолор',
         'dashboard.nav.staff': 'Кызматкерлер',
+        'dashboard.nav.finance': 'Финансы',
         'dashboard.nav.services': 'Кызматтар',
         'dashboard.nav.branches': 'Филиалдар',
         // Bookings
@@ -475,6 +476,7 @@ const dictionaries: Dictionaries = {
         'dashboard.nav.home': 'Главная',
         'dashboard.nav.bookings': 'Брони',
         'dashboard.nav.staff': 'Сотрудники',
+        'dashboard.nav.finance': 'Финансы',
         'dashboard.nav.services': 'Услуги',
         'dashboard.nav.branches': 'Филиалы',
         // Bookings
@@ -751,6 +753,7 @@ const dictionaries: Dictionaries = {
         'dashboard.nav.home': 'Home',
         'dashboard.nav.bookings': 'Bookings',
         'dashboard.nav.staff': 'Staff',
+        'dashboard.nav.finance': 'Finance',
         'dashboard.nav.services': 'Services',
         'dashboard.nav.branches': 'Branches',
         // Bookings

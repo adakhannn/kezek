@@ -41,6 +41,15 @@ const navItems: NavItem[] = [
         ),
     },
     {
+        href: '/dashboard/finance',
+        labelKey: 'dashboard.nav.finance',
+        icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h4v11H3zM10 3h4v18h-4zM17 8h4v13h-4z" />
+            </svg>
+        ),
+    },
+    {
         href: '/dashboard/services',
         labelKey: 'dashboard.nav.services',
         icon: (
