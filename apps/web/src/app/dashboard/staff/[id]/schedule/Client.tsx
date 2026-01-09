@@ -233,25 +233,29 @@ function DayRow({
                         />
                     </div>
                 )}
-                {branches.length > 1 && (
-                    <div className="min-w-0">
+                {branches.length > 1 ? (
+                    <div className="min-w-0 border-t border-gray-200 dark:border-gray-700 pt-2 sm:pt-3 mt-2 sm:mt-3">
                         <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-                            <svg className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400">Филиал</span>
+                            <span className="text-[10px] sm:text-xs font-semibold text-gray-700 dark:text-gray-300">Временный перевод в филиал</span>
                             {selectedBranchId !== homeBranchId && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 animate-pulse">
                                     <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                     </svg>
-                                    Временный перевод
+                                    Активен
                                 </span>
                             )}
                         </div>
                         <select
-                            className="w-full rounded-md sm:rounded-lg border border-gray-300 bg-white px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`w-full rounded-md sm:rounded-lg border px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
+                                selectedBranchId !== homeBranchId
+                                    ? 'border-indigo-400 bg-indigo-50 text-indigo-900 focus:border-indigo-500 focus:ring-indigo-500/20 dark:border-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-100'
+                                    : 'border-gray-300 bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100'
+                            }`}
                             value={selectedBranchId}
                             onChange={(e) => setSelectedBranchId(e.target.value)}
                             disabled={saving || isPastDate}
@@ -263,10 +267,23 @@ function DayRow({
                             ))}
                         </select>
                         {selectedBranchId !== homeBranchId && !isPastDate && (
-                            <p className="mt-1.5 text-[10px] text-indigo-600 dark:text-indigo-400">
-                                Сотрудник будет временно переведен в этот филиал на этот день
+                            <div className="mt-1.5 p-2 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                                <p className="text-[10px] text-indigo-700 dark:text-indigo-300 font-medium">
+                                    ✓ Сотрудник будет временно переведен в филиал "{branches.find(b => b.id === selectedBranchId)?.name}" на этот день
+                                </p>
+                            </div>
+                        )}
+                        {selectedBranchId === homeBranchId && !isPastDate && (
+                            <p className="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400">
+                                Выберите другой филиал для временного перевода на этот день
                             </p>
                         )}
+                    </div>
+                ) : (
+                    <div className="min-w-0 border-t border-gray-200 dark:border-gray-700 pt-2 sm:pt-3 mt-2 sm:mt-3">
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                            Для временного перевода нужно добавить хотя бы один дополнительный филиал в настройках бизнеса
+                        </p>
                     </div>
                 )}
             </div>
