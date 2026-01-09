@@ -8,6 +8,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TZ } from '@/lib/time';
+import { transliterate } from '@/lib/transliterate';
 
 type Booking = {
     id: string;
@@ -32,14 +33,22 @@ export default function StaffBookingsView({
     const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
 
     function formatDateTime(iso: string): string {
-        return formatInTimeZone(new Date(iso), TZ, 'dd.MM.yyyy HH:mm');
+        const dateFormat = locale === 'en' ? 'MM/dd/yyyy HH:mm' : 'dd.MM.yyyy HH:mm';
+        return formatInTimeZone(new Date(iso), TZ, dateFormat);
     }
 
     function getServiceName(service: { name_ru: string; name_ky?: string | null; name_en?: string | null } | null): string {
         if (!service) return t('staff.cabinet.bookings.card.serviceDefault', 'Услуга');
         if (locale === 'ky' && service.name_ky) return service.name_ky;
         if (locale === 'en' && service.name_en) return service.name_en;
+        if (locale === 'en') return transliterate(service.name_ru);
         return service.name_ru;
+    }
+
+    function formatText(text: string | null | undefined, defaultText: string): string {
+        if (!text) return defaultText;
+        if (locale === 'en') return transliterate(text);
+        return text;
     }
 
     function getStatusBadge(status: string) {
@@ -117,8 +126,12 @@ export default function StaffBookingsView({
                             const branch = Array.isArray(booking.branches) ? booking.branches[0] : booking.branches;
                             const business = Array.isArray(booking.businesses) ? booking.businesses[0] : booking.businesses;
                             const serviceName = getServiceName(service);
-                            const branchName = branch?.name || t('staff.cabinet.bookings.card.branchDefault', 'Филиал');
-                            const businessName = business?.name || t('staff.cabinet.bookings.card.businessDefault', 'Бизнес');
+                            const branchName = branch?.name 
+                                ? formatText(branch.name, t('staff.cabinet.bookings.card.branchDefault', 'Филиал'))
+                                : t('staff.cabinet.bookings.card.branchDefault', 'Филиал');
+                            const businessName = business?.name 
+                                ? formatText(business.name, t('staff.cabinet.bookings.card.businessDefault', 'Бизнес'))
+                                : t('staff.cabinet.bookings.card.businessDefault', 'Бизнес');
 
                             return (
                                 <Card key={booking.id} variant="elevated" className="p-6 hover:shadow-lg transition-shadow">
