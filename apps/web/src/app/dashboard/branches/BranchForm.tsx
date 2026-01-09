@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import BranchMapPickerYandex from '@/components/admin/branches/BranchMapPickerYandex';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -24,6 +25,7 @@ export default function BranchForm({
     apiBase: string; // '/api/branches'
 }) {
     const r = useRouter();
+    const { t } = useLanguage();
     const [form, setForm] = useState<Initial>(initial);
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export default function BranchForm({
             )}
 
             <Input
-                label="Название"
+                label={t('branches.form.name', 'Название')}
                 value={form.name}
                 onChange={(e)=>setForm(f=>({...f, name: e.target.value }))}
                 required
@@ -80,14 +82,16 @@ export default function BranchForm({
             {/* Карта Яндекса для выбора адреса */}
             <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Адрес и местоположение
+                    {t('branches.form.addressLabel', 'Адрес и местоположение')}
                 </label>
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-2">
-                    <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-1">Как выбрать адрес:</p>
+                    <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-1">
+                        {t('branches.form.addressHint', 'Как выбрать адрес:')}
+                    </p>
                     <ul className="text-xs text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
-                        <li>Используйте поиск в верхнем левом углу карты для поиска адреса</li>
-                        <li>Или кликните по карте в нужном месте — адрес определится автоматически</li>
-                        <li>Метку можно перетаскивать для уточнения местоположения</li>
+                        <li>{t('branches.form.addressHint1', 'Используйте поиск в верхнем левом углу карты для поиска адреса')}</li>
+                        <li>{t('branches.form.addressHint2', 'Или кликните по карте в нужном месте — адрес определится автоматически')}</li>
+                        <li>{t('branches.form.addressHint3', 'Метку можно перетаскивать для уточнения местоположения')}</li>
                     </ul>
                 </div>
                 <BranchMapPickerYandex
@@ -102,15 +106,15 @@ export default function BranchForm({
                     }}
                 />
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Координаты: {lat ? lat.toFixed(6) : '—'}, {lon ? lon.toFixed(6) : '—'}
+                    {t('branches.form.coordinates', 'Координаты:')} {lat ? lat.toFixed(6) : '—'}, {lon ? lon.toFixed(6) : '—'}
                 </div>
             </div>
 
             <Input
-                label="Адрес"
+                label={t('branches.form.address', 'Адрес')}
                 value={form.address ?? ''}
                 onChange={(e)=>setForm(f=>({...f, address: e.target.value || null }))}
-                placeholder="Адрес будет определен автоматически при выборе на карте"
+                placeholder={t('branches.form.addressPlaceholder', 'Адрес будет определен автоматически при выборе на карте')}
                 readOnly
                 className="bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
             />
@@ -124,13 +128,13 @@ export default function BranchForm({
                     className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                 />
                 <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                    Активен (отображается клиентам)
+                    {t('branches.form.active', 'Активен (отображается клиентам)')}
                 </label>
             </div>
 
             <div className="pt-2">
                 <Button type="submit" disabled={saving} isLoading={saving}>
-                    {saving ? 'Сохраняем…' : 'Сохранить'}
+                    {saving ? t('branches.form.saving', 'Сохраняем…') : t('branches.form.save', 'Сохранить')}
                 </Button>
             </div>
         </form>

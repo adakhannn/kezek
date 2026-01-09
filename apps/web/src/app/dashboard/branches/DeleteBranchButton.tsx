@@ -3,14 +3,16 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 
 export default function DeleteBranchButton({ id }: { id: string }) {
     const r = useRouter();
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
 
     async function onDelete() {
-        if (!confirm('Удалить филиал? Будет отказано, если есть сотрудники/брони.')) return;
+        if (!confirm(t('branches.delete.confirm', 'Удалить филиал? Будет отказано, если есть сотрудники/брони.'))) return;
         try {
             setLoading(true);
             const res = await fetch(`/api/branches/${encodeURIComponent(id)}/delete`, { method: 'POST' });
@@ -23,16 +25,16 @@ export default function DeleteBranchButton({ id }: { id: string }) {
                 // Если есть детали о бронях, добавляем их к сообщению
                 if (payload.details && payload.error === 'HAS_BOOKINGS') {
                     const { total, active, cancelled, bookings } = payload.details;
-                    errorMessage += `\n\nВсего броней: ${total}`;
-                    if (active > 0) errorMessage += `\nАктивных: ${active}`;
-                    if (cancelled > 0) errorMessage += `\nОтменённых: ${cancelled}`;
+                    errorMessage += `\n\n${t('branches.delete.error.totalBookings', 'Всего броней:')} ${total}`;
+                    if (active > 0) errorMessage += `\n${t('branches.delete.error.activeBookings', 'Активных:')} ${active}`;
+                    if (cancelled > 0) errorMessage += `\n${t('branches.delete.error.cancelledBookings', 'Отменённых:')} ${cancelled}`;
                     if (bookings && bookings.length > 0) {
-                        errorMessage += `\n\nПримеры броней:`;
+                        errorMessage += `\n\n${t('branches.delete.error.examples', 'Примеры броней:')}`;
                         bookings.forEach((b: { id: string; status: string; client_name?: string }) => {
-                            errorMessage += `\n- Бронь #${b.id.slice(0, 8)} (${b.status})${b.client_name ? ` - ${b.client_name}` : ''}`;
+                            errorMessage += `\n- ${t('branches.delete.error.bookingExample', 'Бронь #')}${b.id.slice(0, 8)} (${b.status})${b.client_name ? ` - ${b.client_name}` : ''}`;
                         });
                     }
-                    errorMessage += `\n\nСначала отмените или удалите все брони, связанные с этим филиалом.`;
+                    errorMessage += `\n\n${t('branches.delete.error.firstCancel', 'Сначала отмените или удалите все брони, связанные с этим филиалом.')}`;
                 }
                 
                 alert(errorMessage);
@@ -54,7 +56,7 @@ export default function DeleteBranchButton({ id }: { id: string }) {
             disabled={loading}
             isLoading={loading}
         >
-            {loading ? 'Удаляем…' : 'Удалить'}
+            {loading ? t('branches.delete.deleting', 'Удаляем…') : t('branches.delete.button', 'Удалить')}
         </Button>
     );
 }
