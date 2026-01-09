@@ -7,6 +7,8 @@ import {useState, useEffect} from 'react';
 import MapDialog from './MapDialog';
 import ReviewDialog from './ReviewDialog';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 export default function BookingCard({
@@ -29,7 +31,7 @@ export default function BookingCard({
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
     start_at: string;
     end_at: string;
-    service: { id: string; name_ru: string; duration_min: number } | null;
+    service: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number } | null;
     staff: { id: string; full_name: string } | null;
     branch: { id: string; name: string; lat: number | null; lon: number | null; address: string | null } | null;
     business: { id: string; name: string; slug: string } | null;
@@ -47,6 +49,14 @@ export default function BookingCard({
     const [review, setReview] = useState(initialReview);
     // Флаг для блокировки повторных кликов
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    const { t, locale } = useLanguage();
+
+    const getServiceName = (svc: typeof service): string => {
+        if (!svc) return t('cabinet.bookings.card.service', 'Услуга');
+        if (locale === 'ky' && svc.name_ky) return svc.name_ky;
+        if (locale === 'en' && svc.name_en) return svc.name_en;
+        return svc.name_ru;
+    };
 
     const effectiveServiceId = serviceId ?? service?.id ?? null;
     const effectiveStaffId = staffId ?? staff?.id ?? null;
@@ -80,12 +90,12 @@ export default function BookingCard({
     }, [initialReview]);
 
     async function cancelBooking() {
-        if (!confirm('Отменить запись?')) return;
+        if (!confirm(t('cabinet.bookings.card.cancelConfirm', 'Отменить запись?'))) return;
         setBusy(true);
         try {
             const r = await fetch(`/api/bookings/${bookingId}/cancel`, {method: 'POST'});
             const j = await r.json();
-            if (!j.ok) return alert(j.error || 'Не удалось отменить');
+            if (!j.ok) return alert(j.error || t('cabinet.bookings.card.cancelError', 'Не удалось отменить'));
             location.reload();
         } finally {
             setBusy(false);
@@ -102,10 +112,10 @@ export default function BookingCard({
     };
 
     const statusLabels = {
-        hold: 'Ожидает подтверждения',
-        confirmed: 'Подтверждена',
-        paid: 'Оплачена',
-        cancelled: 'Отменена',
+        hold: t('cabinet.bookings.card.status.hold', 'Ожидает подтверждения'),
+        confirmed: t('cabinet.bookings.card.status.confirmed', 'Подтверждена'),
+        paid: t('cabinet.bookings.card.status.paid', 'Оплачена'),
+        cancelled: t('cabinet.bookings.card.status.cancelled', 'Отменена'),
     };
 
     return (
@@ -125,14 +135,14 @@ export default function BookingCard({
                         </div>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                        {service?.name_ru || 'Услуга'}
+                        {getServiceName(service)}
                     </h3>
                     <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <span className="flex items-center gap-1">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
-                            {staff?.full_name || 'Мастер не указан'}
+                            {staff?.full_name || t('cabinet.bookings.card.masterNotSet', 'Мастер не указан')}
                         </span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
@@ -178,7 +188,9 @@ export default function BookingCard({
                                         </svg>
                                     ))}
                                 </div>
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Ваш отзыв: {review.rating}★</span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {t('cabinet.bookings.card.review.title', 'Ваш отзыв: {rating}★').replace('{rating}', String(review.rating))}
+                                </span>
                             </div>
                             {review.comment && (
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">{review.comment}</p>
@@ -198,7 +210,7 @@ export default function BookingCard({
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    Открыть
+                    {t('cabinet.bookings.card.actions.open', 'Открыть')}
                 </a>
                 <button
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
@@ -208,7 +220,7 @@ export default function BookingCard({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    На карте
+                    {t('cabinet.bookings.card.actions.onMap', 'На карте')}
                 </button>
                 {canCancel && (
                     <button
@@ -219,7 +231,7 @@ export default function BookingCard({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        {busy ? 'Отмена...' : 'Отменить'}
+                        {busy ? t('cabinet.bookings.card.actions.cancelling', 'Отмена...') : t('cabinet.bookings.card.actions.cancel', 'Отменить')}
                     </button>
                 )}
                 {!canCancel && !review && status !== 'cancelled' && (
@@ -234,7 +246,7 @@ export default function BookingCard({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                         </svg>
-                        Оставить отзыв
+                        {t('cabinet.bookings.card.actions.review', 'Оставить отзыв')}
                     </button>
                 )}
                 {!canCancel && review && status !== 'cancelled' && (
@@ -245,7 +257,7 @@ export default function BookingCard({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        Редактировать отзыв ({review.rating}★)
+                        {t('cabinet.bookings.card.actions.editReview', 'Редактировать отзыв ({rating}★)').replace('{rating}', String(review.rating))}
                     </button>
                 )}
                 {service && business && (
@@ -257,7 +269,7 @@ export default function BookingCard({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        Повторить
+                        {t('cabinet.bookings.card.actions.repeat', 'Повторить')}
                     </button>
                 )}
             </div>
