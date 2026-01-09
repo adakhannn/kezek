@@ -4,6 +4,7 @@ import ServiceForm from '../ServiceForm';
 
 import ServiceMastersEditor from "@/app/dashboard/services/[id]/ServiceMastersEditor";
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -14,15 +15,17 @@ export default async function EditServicePage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const { supabase, bizId } = await getBizContextForManagers();
+    const { bizId } = await getBizContextForManagers();
+    // Используем service client для обхода RLS, т.к. доступ уже проверен через getBizContextForManagers
+    const admin = getServiceClient();
 
     const [{ data: svc, error: svcError }, { data: branches, error: branchesError }] = await Promise.all([
-        supabase
+        admin
             .from('services')
             .select('id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id,biz_id')
             .eq('id', id)
             .maybeSingle(),
-        supabase
+        admin
             .from('branches')
             .select('id,name')
             .eq('biz_id', bizId)
@@ -59,7 +62,7 @@ export default async function EditServicePage({
 
     // Находим все активные услуги с таким же названием в этом бизнесе (это "копии" услуги в разных филиалах)
     // Неактивные услуги (мягко удаленные) не должны показываться
-    const { data: allServiceBranches } = await supabase
+    const { data: allServiceBranches } = await admin
         .from('services')
         .select('branch_id')
         .eq('biz_id', bizId)
