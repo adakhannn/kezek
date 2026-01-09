@@ -25,7 +25,7 @@ export default function StaffLayoutClient({ staffId, children }: { staffId: stri
                         <nav className="space-y-1">
                             <Link 
                                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                                    pathname === '/staff'
+                                    pathname === '/staff' || pathname === '/staff/'
                                         ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
                                 }`}
@@ -38,7 +38,7 @@ export default function StaffLayoutClient({ staffId, children }: { staffId: stri
                             </Link>
                             <Link 
                                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                                    pathname === '/staff/bookings'
+                                    pathname.startsWith('/staff/bookings')
                                         ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
                                 }`}
@@ -51,7 +51,7 @@ export default function StaffLayoutClient({ staffId, children }: { staffId: stri
                             </Link>
                             <Link 
                                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                                    pathname === '/staff/schedule'
+                                    pathname.startsWith('/staff/schedule')
                                         ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
                                 }`}
@@ -64,7 +64,7 @@ export default function StaffLayoutClient({ staffId, children }: { staffId: stri
                             </Link>
                             <Link 
                                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                                    pathname === '/staff/finance'
+                                    pathname.startsWith('/staff/finance')
                                         ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
                                 }`}
