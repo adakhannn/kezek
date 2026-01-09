@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -228,6 +229,84 @@ export async function POST(req: Request) {
                     .insert(cleanItems);
                 if (insError) {
                     console.error('Error inserting shift items:', insError);
+                }
+
+                // Обновляем статус записей на "пришел" (paid), если они были добавлены в смену
+                const admin = getServiceClient();
+                const bookingIds = cleanItems
+                    .map((it: { booking_id: string | null }) => it.booking_id)
+                    .filter((id: string | null): id is string => !!id);
+
+                if (bookingIds.length > 0) {
+                    for (const bookingId of bookingIds) {
+                        try {
+                            const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
+                                p_booking_id: bookingId,
+                                p_new_status: 'paid',
+                            });
+                            if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+                                await admin
+                                    .from('bookings')
+                                    .update({ status: 'paid' })
+                                    .eq('id', bookingId);
+                            }
+                        } catch (e) {
+                            console.error(`Error updating booking ${bookingId} status:`, e);
+                        }
+                    }
+                }
+            }
+        }
+
+        // После закрытия смены: находим все записи сотрудника за этот день,
+        // которые не были добавлены в список позиций смены, и устанавливаем им статус "не пришел" (no_show)
+        const admin = getServiceClient();
+        const todayStart = `${ymd}T00:00:00`;
+        const todayEnd = `${ymd}T23:59:59`;
+
+        // Получаем все записи сотрудника за сегодня
+        const { data: todayBookings, error: bookingsError } = await admin
+            .from('bookings')
+            .select('id, status')
+            .eq('staff_id', staffId)
+            .gte('start_at', todayStart)
+            .lte('start_at', todayEnd)
+            .neq('status', 'cancelled');
+
+        if (!bookingsError && todayBookings) {
+            // Получаем список booking_id из позиций смены
+            const { data: shiftItems } = await supabase
+                .from('staff_shift_items')
+                .select('booking_id')
+                .eq('shift_id', updated.id)
+                .not('booking_id', 'is', null);
+
+            const addedBookingIds = new Set(
+                (shiftItems ?? [])
+                    .map((it: { booking_id: string | null }) => it.booking_id)
+                    .filter((id: string | null): id is string => !!id)
+            );
+
+            // Находим записи, которые не были добавлены в смену
+            const notAddedBookings = todayBookings.filter(
+                (b) => !addedBookingIds.has(b.id) && b.status !== 'no_show' && b.status !== 'paid'
+            );
+
+            // Устанавливаем статус "не пришел" для записей, которые не были добавлены
+            for (const booking of notAddedBookings) {
+                try {
+                    const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
+                        p_booking_id: booking.id,
+                        p_new_status: 'no_show',
+                    });
+                    if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+                        await admin
+                            .from('bookings')
+                            .update({ status: 'no_show' })
+                            .eq('id', booking.id);
+                    }
+                } catch (e) {
+                    console.error(`Error updating booking ${booking.id} status to no_show:`, e);
                 }
             }
         }

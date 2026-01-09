@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -113,6 +114,33 @@ export async function POST(req: Request) {
                         { ok: false, error: 'Не удалось сохранить позиции' },
                         { status: 500 }
                     );
+                }
+
+                // Обновляем статус записей на "пришел" (paid), если они были добавлены в смену
+                const admin = getServiceClient();
+                const bookingIds = cleanItems
+                    .map((it: { booking_id: string | null }) => it.booking_id)
+                    .filter((id: string | null): id is string => !!id);
+
+                if (bookingIds.length > 0) {
+                    // Используем RPC функцию для обновления статуса
+                    for (const bookingId of bookingIds) {
+                        try {
+                            const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
+                                p_booking_id: bookingId,
+                                p_new_status: 'paid',
+                            });
+                            if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+                                // Если RPC не работает, используем прямой update
+                                await admin
+                                    .from('bookings')
+                                    .update({ status: 'paid' })
+                                    .eq('id', bookingId);
+                            }
+                        } catch (e) {
+                            console.error(`Error updating booking ${bookingId} status:`, e);
+                        }
+                    }
                 }
             }
         }
