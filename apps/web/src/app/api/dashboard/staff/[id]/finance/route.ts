@@ -169,6 +169,19 @@ export async function GET(
             console.error('Error loading stats:', statsError);
         }
 
+        // Загружаем все закрытые смены для статистики
+        const { data: allShifts, error: allShiftsError } = await supabase
+            .from('staff_shifts')
+            .select('shift_date, status, total_amount, master_share, salon_share, late_minutes')
+            .eq('biz_id', bizId)
+            .eq('staff_id', staffId)
+            .eq('status', 'closed')
+            .order('shift_date', { ascending: false });
+
+        if (allShiftsError) {
+            console.error('Error loading all shifts:', allShiftsError);
+        }
+
         const stats = {
             totalAmount: 0,
             totalMaster: 0,
@@ -222,6 +235,14 @@ export async function GET(
                   },
             bookings: todayBookings ?? [],
             services: availableServices,
+            allShifts: (allShifts ?? []).map((s) => ({
+                shift_date: s.shift_date,
+                status: s.status,
+                total_amount: s.total_amount,
+                master_share: s.master_share,
+                salon_share: s.salon_share,
+                late_minutes: s.late_minutes,
+            })),
             staffPercentMaster,
             staffPercentSalon,
             hourlyRate,

@@ -84,11 +84,21 @@ function formatTime(iso: string | null) {
 }
 
 type TabKey = 'shift' | 'clients' | 'stats';
+type PeriodKey = 'day' | 'week' | 'month' | 'all';
 
 export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [loading, setLoading] = useState(true);
     const [today, setToday] = useState<TodayResponse | null>(null);
     const [activeTab, setActiveTab] = useState<TabKey>('shift');
+    const [statsPeriod, setStatsPeriod] = useState<PeriodKey>('all');
+    const [allShifts, setAllShifts] = useState<Array<{
+        shift_date: string;
+        status: string;
+        total_amount: number;
+        master_share: number;
+        salon_share: number;
+        late_minutes: number;
+    }>>([]);
     const [showShiftDetails, setShowShiftDetails] = useState(false);
 
     const [items, setItems] = useState<ShiftItem[]>([]);
@@ -1091,7 +1101,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
             {/* Таб: Статистика */}
             {activeTab === 'stats' && stats && (
-                <Card variant="elevated" className="p-6 space-y-3">
+                <Card variant="elevated" className="p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             Общая статистика по сменам
@@ -1099,6 +1109,54 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                             Всего закрытых смен: {stats.shiftsCount}
                         </div>
+                    </div>
+                    
+                    {/* Фильтры по периодам */}
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setStatsPeriod('day')}
+                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                statsPeriod === 'day'
+                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            День
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setStatsPeriod('week')}
+                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                statsPeriod === 'week'
+                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            Неделя
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setStatsPeriod('month')}
+                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                statsPeriod === 'month'
+                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            Месяц
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setStatsPeriod('all')}
+                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                statsPeriod === 'all'
+                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            Все время
+                        </button>
                     </div>
                     <div className="grid sm:grid-cols-3 gap-4 text-sm">
                         <div className="space-y-1">

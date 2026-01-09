@@ -181,6 +181,14 @@ export async function GET() {
         const totalLateMinutes = closed.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
 
         return NextResponse.json({
+            allShifts: (allShifts ?? []).map((s) => ({
+                shift_date: s.shift_date,
+                status: s.status,
+                total_amount: s.total_amount,
+                master_share: s.master_share,
+                salon_share: s.salon_share,
+                late_minutes: s.late_minutes,
+            })),
             ok: true,
             today: shift
                 ? {
