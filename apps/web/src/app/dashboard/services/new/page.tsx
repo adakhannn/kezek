@@ -2,9 +2,7 @@
 
 import NewServicePageClient from './NewServicePageClient';
 
-import { LanguageProvider } from '@/app/_components/i18n/LanguageProvider';
 import { getBizContextForManagers } from '@/lib/authBiz';
-
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -20,8 +18,6 @@ export default async function NewServicePage() {
         .order('name');
 
     return (
-        <LanguageProvider>
-            <NewServicePageClient branches={branches || []} />
-        </LanguageProvider>
+        <NewServicePageClient branches={branches || []} />
     );
 }
