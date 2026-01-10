@@ -79,6 +79,7 @@ type TodayResponse =
               master_share: number;
               salon_share: number;
               late_minutes: number;
+              guaranteed_amount?: number;
               topup_amount?: number;
           }>;
           staffPercentMaster?: number;
@@ -124,6 +125,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         master_share: number;
         salon_share: number;
         late_minutes: number;
+        guaranteed_amount?: number;
         topup_amount?: number;
     }>>([]);
     const [showShiftDetails, setShowShiftDetails] = useState(false);
@@ -448,9 +450,20 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         }
         
         const totalAmount = filtered.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
-        // Учитываем доплату владельца (topup_amount) при расчете общей суммы сотрудника
-        const totalMaster = filtered.reduce((sum, s) => sum + Number(s.master_share || 0) + Number(s.topup_amount || 0), 0);
-        const totalSalon = filtered.reduce((sum, s) => sum + Number(s.salon_share || 0), 0);
+        // Итоговая сумма сотрудника = гарантированная сумма (если есть и больше базовой доли) или базовая доля
+        const totalMaster = filtered.reduce((sum, s) => {
+            const guaranteed = Number(s.guaranteed_amount || 0);
+            const masterShare = Number(s.master_share || 0);
+            // Если есть гарантированная сумма и она больше базовой доли, используем гарантию
+            // Иначе используем базовую долю
+            return sum + (guaranteed > masterShare ? guaranteed : masterShare);
+        }, 0);
+        // Бизнес получает долю от выручки, но вычитает доплату владельца
+        const totalSalon = filtered.reduce((sum, s) => {
+            const salonShare = Number(s.salon_share || 0);
+            const topup = Number(s.topup_amount || 0);
+            return sum + salonShare - topup;
+        }, 0);
         const totalLateMinutes = filtered.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
         
         // Отладочная информация
@@ -542,14 +555,22 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         }
     }
 
-    // Для закрытой смены используем сохранённые значения guaranteed_amount и topup_amount
+    // Для закрытой смены используем сохранённые значения guaranteed_amount
+    // Если есть гарантированная сумма, она и является итоговой суммой к получению
+    // topup_amount - это доплата владельца (разница между гарантией и базовой долей)
     if (isClosed && todayShift) {
         const guaranteed = todayShift.guaranteed_amount ?? null;
-        const topup = todayShift.topup_amount ?? 0;
-        if (guaranteed !== null && guaranteed > baseStaffShare) {
-            const diff = Math.round(topup * 100) / 100 || Math.round((guaranteed - baseStaffShare) * 100) / 100;
-            mShare = baseStaffShare + diff;
-            sShare = baseBizShare - diff;
+        if (guaranteed !== null && guaranteed > 0) {
+            // Итоговая сумма сотрудника = гарантированная сумма
+            mShare = Math.round(guaranteed * 100) / 100;
+            // Бизнес получает долю от выручки, но доплачивает разницу (topup_amount), если гарантия больше базовой доли
+            const topup = todayShift.topup_amount ?? 0;
+            // sShare = доля бизнеса от выручки - доплата владельца
+            sShare = baseBizShare - topup;
+        } else if (guaranteed !== null && guaranteed === 0) {
+            // Если гарантированная сумма = 0, используем базовую долю
+            mShare = baseStaffShare;
+            sShare = baseBizShare;
         }
     }
 
@@ -932,7 +953,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                     {t('staff.finance.details.totalToReceive', 'Итого к получению')}
                                                 </span>
                                                 <span className="font-semibold text-green-600 dark:text-green-400">
-                                                    {((todayShift.guaranteed_amount ?? 0) + (todayShift.topup_amount ?? 0)).toFixed(2)} {t('staff.finance.shift.som', 'сом')}
+                                                    {(todayShift.guaranteed_amount ?? 0).toFixed(2)} {t('staff.finance.shift.som', 'сом')}
                                                 </span>
                                             </div>
                                         </div>

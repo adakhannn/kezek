@@ -162,7 +162,7 @@ export async function GET() {
         // Общая статистика по всем закрытым сменам сотрудника
         const { data: allShifts, error: statsError } = await supabase
             .from('staff_shifts')
-            .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, topup_amount')
+            .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
             .eq('staff_id', staffId)
             .order('shift_date', { ascending: false });
 
@@ -176,9 +176,23 @@ export async function GET() {
 
         const closed = (allShifts ?? []).filter((s) => s.status === 'closed');
         const totalAmount = closed.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
-        // Учитываем доплату владельца (topup_amount) при расчете общей суммы сотрудника
-        const totalMaster = closed.reduce((sum, s) => sum + Number(s.master_share || 0) + Number(s.topup_amount || 0), 0);
-        const totalSalon = closed.reduce((sum, s) => sum + Number(s.salon_share || 0), 0);
+        // Итоговая сумма сотрудника = гарантированная сумма (если есть) или базовая доля
+        // guaranteed_amount уже учитывает topup_amount, если он был (гарантия >= базовая доля)
+        const totalMaster = closed.reduce((sum, s) => {
+            const guaranteed = Number(s.guaranteed_amount || 0);
+            const masterShare = Number(s.master_share || 0);
+            // Если есть гарантированная сумма и она больше базовой доли, используем гарантию
+            // Иначе используем базовую долю
+            return sum + (guaranteed > masterShare ? guaranteed : masterShare);
+        }, 0);
+        const totalSalon = closed.reduce((sum, s) => {
+            const guaranteed = Number(s.guaranteed_amount || 0);
+            const masterShare = Number(s.master_share || 0);
+            const salonShare = Number(s.salon_share || 0);
+            const topup = Number(s.topup_amount || 0);
+            // Бизнес получает долю от выручки, но вычитает доплату владельца, если она была
+            return sum + salonShare - topup;
+        }, 0);
         const totalLateMinutes = closed.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
 
         return NextResponse.json({
@@ -189,6 +203,7 @@ export async function GET() {
                 master_share: Number(s.master_share ?? 0),
                 salon_share: Number(s.salon_share ?? 0),
                 late_minutes: Number(s.late_minutes ?? 0),
+                guaranteed_amount: Number(s.guaranteed_amount ?? 0),
                 topup_amount: Number(s.topup_amount ?? 0),
             })),
             ok: true,
