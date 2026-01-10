@@ -1322,10 +1322,15 @@ export default function BizClient({ data }: { data: Data }) {
                                 )}
 
                                 {/* Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги */}
-                                {serviceId && staffId && serviceToStaffMap && (() => {
-                                    const allowedStaff = serviceToStaffMap.get(serviceId);
-                                    const hasService = allowedStaff?.has(staffId) ?? false;
-                                    if (!hasService) {
+                                {/* Используем servicesFiltered, который уже учитывает временные переводы и похожие услуги */}
+                                {serviceId && staffId && (() => {
+                                    // Проверяем, есть ли услуга в servicesFiltered (это значит, что мастер может её выполнять)
+                                    // servicesFiltered уже учитывает временные переводы и связи service_staff (включая похожие услуги)
+                                    const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
+                                    
+                                    // Показываем ошибку только если услуга не валидна И serviceStaff загружен (не null)
+                                    // Если serviceStaff еще загружается (null), не показываем ошибку, так как проверка еще не завершена
+                                    if (serviceStaff !== null && !isServiceValid) {
                                         return (
                                             <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
                                                 <div className="flex items-start gap-2">
