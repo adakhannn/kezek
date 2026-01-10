@@ -100,6 +100,14 @@ export default function BizClient({ data }: { data: Data }) {
         // Для русского и кыргызского (если name_ky нет) используем name_ru
         return service.name_ru;
     };
+    
+    const formatStaffName = (name: string): string => {
+        // Транслитерируем имя мастера для английского языка
+        if (locale === 'en') {
+            return transliterate(name);
+        }
+        return name;
+    };
 
     /* ---------- auth ---------- */
     const [isAuthed, setIsAuthed] = useState<boolean>(false);
@@ -1212,7 +1220,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                             : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
                                                     }`}
                                                 >
-                                                    {m.full_name}
+                                                    {formatStaffName(m.full_name)}
                                                 </button>
                                             );
                                         })}
@@ -1455,7 +1463,7 @@ export default function BizClient({ data }: { data: Data }) {
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">{t('booking.summary.master', 'Мастер:')}</span>
                                 <span className="text-right font-medium">
-                                    {staffCurrent ? staffCurrent.full_name : t('booking.summary.notSelected', 'Не выбран')}
+                                    {staffCurrent ? formatStaffName(staffCurrent.full_name) : t('booking.summary.notSelected', 'Не выбран')}
                                 </span>
                             </div>
                             <div className="flex justify-between gap-2">
