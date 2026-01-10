@@ -1224,7 +1224,7 @@ export default function BizClient({ data }: { data: Data }) {
                                         {t('booking.step3.noStaff', 'На выбранную дату в этом филиале нет доступных мастеров.')}
                                     </div>
                                 ) : (
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {staffFiltered.map((m) => {
                                             const active = m.id === staffId;
                                             return (
@@ -1232,7 +1232,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                     key={m.id}
                                                     type="button"
                                                     onClick={() => setStaffId(m.id)}
-                                                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                    className={`flex items-center gap-3 rounded-lg border p-3 text-sm font-medium transition ${
                                                         active
                                                             ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
                                                             : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
@@ -1242,18 +1242,18 @@ export default function BizClient({ data }: { data: Data }) {
                                                         <img
                                                             src={m.avatar_url}
                                                             alt={formatStaffName(m.full_name)}
-                                                            className="h-6 w-6 rounded-full object-cover"
+                                                            className="h-12 w-12 rounded-full object-cover flex-shrink-0"
                                                             onError={(e) => {
                                                                 // Скрываем изображение, если оно не загрузилось
                                                                 e.currentTarget.style.display = 'none';
                                                             }}
                                                         />
                                                     ) : (
-                                                        <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                                                        <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-base font-semibold text-gray-500 dark:text-gray-400 flex-shrink-0">
                                                             {formatStaffName(m.full_name).charAt(0).toUpperCase()}
                                                         </div>
                                                     )}
-                                                    <span>{formatStaffName(m.full_name)}</span>
+                                                    <span className="text-left">{formatStaffName(m.full_name)}</span>
                                                 </button>
                                             );
                                         })}
