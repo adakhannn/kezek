@@ -406,10 +406,44 @@ export default function BizClient({ data }: { data: Data }) {
                     }
                 }
                 
+                // Проверяем, есть ли у мастера расписание на эту дату во временном филиале
+                // Это важно, так как RPC может не учитывать временные переводы
+                if (isTemporaryTransfer && dayStr && targetBranchId) {
+                    const { data: scheduleRule, error: scheduleError } = await supabase
+                        .from('staff_schedule_rules')
+                        .select('id, intervals, branch_id, is_active')
+                        .eq('biz_id', biz.id)
+                        .eq('staff_id', staffId)
+                        .eq('kind', 'date')
+                        .eq('date_on', dayStr)
+                        .eq('branch_id', targetBranchId)
+                        .eq('is_active', true)
+                        .maybeSingle();
+                    
+                    console.log('[Booking] Checking schedule for temporary transfer:', { 
+                        staffId, 
+                        date: dayStr, 
+                        tempBranch: targetBranchId,
+                        hasSchedule: !!scheduleRule,
+                        scheduleError: scheduleError?.message,
+                        intervals: scheduleRule?.intervals,
+                        scheduleBranchId: scheduleRule?.branch_id
+                    });
+                    
+                    if (scheduleError) {
+                        console.warn('[Booking] Error checking schedule:', scheduleError);
+                    }
+                    
+                    if (!scheduleRule || !scheduleRule.intervals || (Array.isArray(scheduleRule.intervals) && scheduleRule.intervals.length === 0)) {
+                        console.warn('[Booking] No schedule found for temporary transfer. Master may not have working hours set for this date in temporary branch.');
+                        // Не прерываем выполнение - возможно, есть еженедельное расписание
+                    }
+                }
+                
                 // Вызываем RPC для получения слотов
                 // Для временно переведенного мастера RPC должен вернуть слоты с branch_id временного филиала
                 // Но RPC может проверять staff.branch_id, поэтому может вернуть пустой массив
-                console.log('[Booking] Calling RPC with params:', { biz_id: biz.id, service_id: serviceId, day: dayStr, targetBranchId, homeBranchId });
+                console.log('[Booking] Calling RPC with params:', { biz_id: biz.id, service_id: serviceId, day: dayStr, targetBranchId, homeBranchId, isTemporaryTransfer });
                 const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                     p_biz_id: biz.id,
                     p_service_id: serviceId,
@@ -428,7 +462,20 @@ export default function BizClient({ data }: { data: Data }) {
                 const now = new Date();
                 const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
                 
-                console.log('[Booking] RPC returned slots:', { total: all.length, slots: all.map(s => ({ staff_id: s.staff_id, branch_id: s.branch_id, start_at: s.start_at })) });
+                console.log('[Booking] RPC returned slots:', { 
+                    total: all.length, 
+                    slots: all.map(s => ({ staff_id: s.staff_id, branch_id: s.branch_id, start_at: s.start_at })),
+                    isTemporaryTransfer,
+                    targetBranchId,
+                    homeBranchId
+                });
+                
+                // Если RPC вернул пустой массив для временно переведенного мастера, это может быть проблема в RPC
+                if (all.length === 0 && isTemporaryTransfer) {
+                    console.warn('[Booking] RPC returned empty slots for temporary transfer. This may indicate that RPC does not account for temporary transfers.');
+                    console.warn('[Booking] Expected: slots for branch', targetBranchId, 'on date', dayStr);
+                    console.warn('[Booking] RPC may be filtering by staff.branch_id =', homeBranchId, 'instead of checking staff_schedule_rules');
+                }
                 
                 // Фильтруем слоты по мастеру и филиалу
                 // Для временно переведенного мастера принимаем слоты из обоих филиалов (домашнего и временного)
@@ -479,6 +526,10 @@ export default function BizClient({ data }: { data: Data }) {
                 if (filtered.length === 0 && isTemporaryTransfer && all.length > 0) {
                     console.warn('[Booking] No slots after filtering for temporary transfer. RPC may not be accounting for temporary transfers.');
                     console.warn('[Booking] All slots from RPC:', all);
+                } else if (filtered.length === 0 && isTemporaryTransfer && all.length === 0) {
+                    console.warn('[Booking] RPC returned 0 slots for temporary transfer. This likely means RPC does not account for temporary transfers.');
+                    console.warn('[Booking] RPC may be checking staff.branch_id =', homeBranchId, 'but master is temporarily transferred to', targetBranchId);
+                    console.warn('[Booking] Solution: RPC needs to check staff_schedule_rules for temporary transfers on date', dayStr);
                 }
                 
                 // Дополнительная проверка: исключаем слоты, которые уже забронированы
