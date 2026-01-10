@@ -19,7 +19,6 @@ type ShiftItem = {
     serviceAmount: number;
     consumablesAmount: number;
     bookingId?: string | null;
-    note?: string;
 };
 
 type ServiceName = {
@@ -230,7 +229,6 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     consumables_amount?: number; // из БД / для обратной совместимости
                     bookingId?: string | null;
                     booking_id?: string | null; // для обратной совместимости
-                    note?: string;
                 }) => ({
                     id: it.id,
                     clientName: it.clientName ?? it.client_name ?? '',
@@ -252,7 +250,6 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                 0
                         ) || 0,
                     bookingId: it.bookingId ?? it.booking_id ?? null,
-                    note: it.note,
                 }));
                 setItems(loadedItems);
             } else {
@@ -991,15 +988,26 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     onClick={() => {
                                         setItems((prev) => {
                                             // считаем следующий порядковый номер для анонимного клиента
-                                            const nextIndex =
-                                                prev.filter((it) => !it.bookingId).length + 1;
+                                            // на основе существующих клиентов без bookingId
+                                            const clientLabel = t('staff.finance.clients.client', 'Клиент');
+                                            const existingClients = prev.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
+                                            const existingIndices = existingClients
+                                                .map((it) => {
+                                                    // Используем динамический regex на основе перевода
+                                                    const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                                    const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
+                                                    const match = it.clientName?.match(regex);
+                                                    return match ? Number(match[1]) : 0;
+                                                })
+                                                .filter((n) => n > 0);
+                                            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+                                            const nextIndex = maxIndex + 1;
                                             const newItem: ShiftItem = {
-                                                clientName: `${t('staff.finance.clients.client', 'Клиент')} ${nextIndex}`,
+                                                clientName: `${clientLabel} ${nextIndex}`,
                                                 serviceName: '',
                                                 serviceAmount: 0,
                                                 consumablesAmount: 0,
                                                 bookingId: null,
-                                                note: '',
                                             };
                                             const next = [newItem, ...prev];
                                             // сразу открываем форму редактирования для нового клиента
@@ -1062,11 +1070,6 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                                                     {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
                                                 </div>
-                                                {item.note && (
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5" title={item.note}>
-                                                        💬 {item.note}
-                                                    </div>
-                                                )}
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
@@ -1175,6 +1178,29 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                                 ? booking.services[0]
                                                                 : booking.services
                                                             : null;
+                                                        
+                                                        // Если bookingId убран, генерируем автоматическое имя "Клиент N"
+                                                        let newClientName = item.clientName;
+                                                        if (!bookingId && !booking) {
+                                                            // Считаем порядковый номер для автоматического имени
+                                                            // на основе существующих клиентов без bookingId (кроме текущего)
+                                                            const clientLabel = t('staff.finance.clients.client', 'Клиент');
+                                                            const existingClients = items
+                                                                .filter((it, i) => i !== idx && !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
+                                                            const existingIndices = existingClients
+                                                                .map((it) => {
+                                                                    // Используем динамический regex на основе перевода
+                                                                    const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                                                    const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
+                                                                    const match = it.clientName?.match(regex);
+                                                                    return match ? Number(match[1]) : 0;
+                                                                })
+                                                                .filter((n) => n > 0);
+                                                            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+                                                            const nextIndex = maxIndex + 1;
+                                                            newClientName = `${clientLabel} ${nextIndex}`;
+                                                        }
+                                                        
                                                         setItems((prev) =>
                                                             prev.map((it, i) =>
                                                                 i === idx
@@ -1185,7 +1211,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                                               ? booking.client_name ||
                                                                                 booking.client_phone ||
                                                                                 it.clientName
-                                                                              : it.clientName,
+                                                                              : newClientName,
                                                                           serviceName: service
                                                                               ? service.name_ru
                                                                               : it.serviceName,
@@ -1215,22 +1241,11 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                 </select>
                                                 {!item.bookingId && (
                                                     <div className="mt-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder={t('staff.finance.clients.clientNamePlaceholder', 'Имя клиента (для клиентов «с улицы»)')}
-                                                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors"
-                                                            value={item.clientName}
-                                                            onChange={(e) => {
-                                                                setItems((prev) =>
-                                                                    prev.map((it, i) =>
-                                                                        i === idx ? { ...it, clientName: e.target.value } : it
-                                                                    )
-                                                                );
-                                                            }}
-                                                            disabled={!isOpen || isReadOnly}
-                                                        />
+                                                        <div className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 text-sm text-gray-700 dark:text-gray-400">
+                                                            {item.clientName || `${t('staff.finance.clients.client', 'Клиент')} 1`}
+                                                        </div>
                                                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                            {t('staff.finance.clients.walkInHint', 'Для клиентов «с улицы» введите имя вручную')}
+                                                            {t('staff.finance.clients.walkInHint', 'Имя формируется автоматически для клиентов «с улицы»')}
                                                         </p>
                                                     </div>
                                                 )}
@@ -1327,26 +1342,6 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                                    {t('staff.finance.clients.note', 'Комментарий')}
-                                                    <span className="text-gray-400 font-normal ml-1">({t('staff.finance.clients.optional', 'необязательно')})</span>
-                                                </label>
-                                                <textarea
-                                                    rows={2}
-                                                    placeholder={t('staff.finance.clients.notePlaceholder', 'Дополнительная информация...')}
-                                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors resize-none"
-                                                    value={item.note || ''}
-                                                    onChange={(e) => {
-                                                        setItems((prev) =>
-                                                            prev.map((it, i) =>
-                                                                i === idx ? { ...it, note: e.target.value } : it
-                                                            )
-                                                        );
-                                                    }}
-                                                    disabled={!isOpen || isReadOnly}
-                                                />
-                                            </div>
                                         </div>
                                     </div>
                                     

@@ -122,7 +122,6 @@ export async function POST(req: Request) {
                     consumables_amount?: number;
                     bookingId?: string | null;
                     booking_id?: string | null;
-                    note?: string;
                 }) => ({
                     shift_id: shiftId,
                     client_name: (it.clientName ?? it.client_name ?? '').trim() || null,
@@ -130,7 +129,6 @@ export async function POST(req: Request) {
                     service_amount: Number(it.serviceAmount ?? it.amount ?? 0) || 0,
                     consumables_amount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
                     booking_id: it.bookingId ?? it.booking_id ?? null,
-                    note: it.note?.trim() || null,
                 }))
                 .filter((it: { service_amount: number; consumables_amount: number; booking_id: string | null }) => 
                     // Сохраняем в БД только если есть сумма ИЛИ booking_id (чтобы сохранить связь с записью)
