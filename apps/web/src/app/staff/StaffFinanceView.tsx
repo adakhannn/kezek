@@ -1176,11 +1176,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                     : null;
                                                 const clientLabel = b.client_name || b.client_phone || t('staff.finance.clients.client', 'Клиент');
                                                 const serviceLabel = service ? getServiceName(service) : '';
-                                                const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
-                                                const time = new Date(b.start_at).toLocaleTimeString(localeMap[locale] || 'ru-RU', {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                });
+                                                // Форматируем время в часовом поясе бизнеса (Asia/Bishkek), а не в локальном времени браузера
+                                                const time = formatInTimeZone(new Date(b.start_at), TZ, 'HH:mm');
                                                 return (
                                                     <option key={b.id} value={b.id}>
                                                         {clientLabel} - {serviceLabel} ({time})
