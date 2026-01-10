@@ -751,6 +751,7 @@ const dictionaries: Dictionaries = {
         'staff.finance.clients.title': 'Смена үчүн кардарлар',
         'staff.finance.clients.add': 'Кардар кошуу',
         'staff.finance.clients.empty': 'Азырынча кошулган кардарлар жок. Кардарды жазылыштардан кошуңуз же кол менен киргизиңиз, кызмат жана чыгымдар үчүн суммаларды көрсөтүңүз.',
+        'staff.finance.clients.shiftNotOpen': 'Кардарларды кошуу үчүн алгач «Учурдагы смена» вкладкасында сменаны ачуу керек.',
         'staff.finance.clients.client': 'Кардар',
         'staff.finance.clients.service': 'Кызмат / комментарий',
         'staff.finance.clients.amount': 'Сумма',

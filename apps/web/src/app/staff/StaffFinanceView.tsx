@@ -866,7 +866,11 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     )}
                 </div>
 
-                {items.length === 0 ? (
+                {!todayShift || !isOpen ? (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+                        {t('staff.finance.clients.shiftNotOpen', 'Чтобы добавлять клиентов, необходимо сначала открыть смену на вкладке «Текущая смена».')}
+                    </div>
+                ) : items.length === 0 ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                         {t('staff.finance.clients.empty', 'Пока нет добавленных клиентов. Добавьте клиента из записей или введите вручную, укажите суммы за услугу и расходники.')}
                     </p>
