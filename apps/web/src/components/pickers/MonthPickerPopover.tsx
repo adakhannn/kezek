@@ -78,14 +78,15 @@ export default function MonthPickerPopover({
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
             >
-                <span>{displayValue}</span>
+                {/* Иконка календаря */}
                 <svg
-                    className="w-4 h-4 text-gray-500 dark:text-gray-400"
+                    className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
                 >
                     <path
                         strokeLinecap="round"
@@ -94,13 +95,20 @@ export default function MonthPickerPopover({
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                 </svg>
+                <span className="flex-1 text-left">{displayValue}</span>
+                {/* Стрелка вниз */}
                 <svg
-                    className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                 >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                    />
                 </svg>
             </button>
 
@@ -108,7 +116,7 @@ export default function MonthPickerPopover({
             {isOpen && (
                 <div
                     ref={popoverRef}
-                    className="absolute left-0 top-full z-50 mt-2 border rounded p-2 bg-white dark:bg-[#0b0b0d] shadow-lg sm:left-auto sm:right-0"
+                    className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-[#0b0b0d] sm:left-auto sm:right-0"
                 >
                     <DayPicker
                         mode="single"
@@ -147,17 +155,26 @@ export default function MonthPickerPopover({
                             root: 'w-full',
                             months: 'w-full',
                             month: 'w-full',
-                            caption: 'font-semibold text-sm px-2 py-1',
-                            caption_dropdowns: 'flex items-center justify-center gap-2',
-                            dropdown: 'px-2 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
-                            dropdown_month: 'mr-2',
-                            dropdown_year: 'ml-2',
-                            head_cell: 'text-[11px] text-gray-500 dark:text-gray-400',
-                            table: 'w-full',
-                            cell: 'p-0',
-                            day: 'text-[12px] px-2 py-1 m-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer',
-                            day_selected: 'bg-indigo-600 text-white hover:bg-indigo-700',
-                            day_today: 'ring-1 ring-indigo-500',
+                            caption: 'mb-4 flex items-center justify-center',
+                            caption_dropdowns: 'flex items-center justify-center gap-3',
+                            dropdown: 'px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-indigo-500 dark:hover:border-indigo-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors cursor-pointer',
+                            dropdown_month: 'min-w-[120px]',
+                            dropdown_year: 'min-w-[80px]',
+                            nav: 'hidden', // Скрываем навигационные стрелки, так как используем dropdown
+                            nav_button: 'hidden',
+                            nav_button_previous: 'hidden',
+                            nav_button_next: 'hidden',
+                            table: 'w-full mt-2',
+                            head_row: 'mb-1',
+                            head_cell: 'text-[10px] font-medium text-gray-400 dark:text-gray-500 pb-1.5 w-[36px]',
+                            row: '',
+                            cell: 'p-0.5',
+                            day: 'text-[11px] h-7 w-7 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer opacity-60',
+                            day_selected: 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 font-medium opacity-100',
+                            day_today: 'ring-1 ring-indigo-500/30 dark:ring-indigo-400/30 opacity-80',
+                            day_disabled: 'opacity-20 cursor-not-allowed hover:bg-transparent',
+                            day_outside: 'text-gray-300 dark:text-gray-700 opacity-40',
+                            day_hidden: 'invisible',
                         }}
                     />
                 </div>
