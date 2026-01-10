@@ -425,18 +425,20 @@ export default function BizClient({ data }: { data: Data }) {
             
             // Проверка: если услуга не в servicesFiltered, значит мастер не выполняет её (или она не из правильного филиала)
             // servicesFiltered уже учитывает временные переводы и связи service_staff (включая похожие услуги)
-            // НО: если serviceToStaffMap еще не загружен (null), servicesFiltered будет пустым массивом,
+            // НО: если serviceStaff еще загружается (null), servicesFiltered будет пустым массивом из-за проверки на строке 172,
             // поэтому в этом случае пропускаем проверку и позволяем RPC проверить валидность
-            // Если serviceToStaffMap загружен (не null, даже если пустой), проверяем через servicesFiltered
-            if (serviceToStaffMap !== null) {
-                // serviceToStaffMap загружен, проверяем валидность услуги через servicesFiltered
+            // Если serviceStaff загружен (не null, даже если пустой массив), проверяем через servicesFiltered
+            if (serviceStaff !== null) {
+                // serviceStaff загружен (может быть пустым массивом, если нет связей), проверяем валидность услуги через servicesFiltered
                 const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
                 if (!isServiceValid) {
                     console.log('[Booking] Slots loading: service not in servicesFiltered, skipping RPC call', { 
                         serviceId, 
                         staffId,
                         servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru })),
-                        serviceToStaffMapSize: serviceToStaffMap.size,
+                        serviceStaffLoaded: true,
+                        serviceStaffCount: serviceStaff.length,
+                        serviceToStaffMapSize: serviceToStaffMap?.size ?? 0,
                         temporaryTransfersCount: temporaryTransfers.length,
                         isTemporaryTransfer: temporaryTransfers.some(t => t.staff_id === staffId && t.date === dayStr)
                     });
@@ -447,11 +449,11 @@ export default function BizClient({ data }: { data: Data }) {
                 }
                 console.log('[Booking] Slots loading: service is valid (in servicesFiltered), proceeding with RPC call', { serviceId, staffId });
             } else {
-                // serviceToStaffMap еще не загружен (null), пропускаем проверку и позволяем RPC проверить
-                console.log('[Booking] Slots loading: serviceToStaffMap not loaded yet, proceeding with RPC call (will check validity)', {
+                // serviceStaff еще не загружен (null), пропускаем проверку и позволяем RPC проверить
+                console.log('[Booking] Slots loading: serviceStaff not loaded yet, proceeding with RPC call (will check validity)', {
                     serviceId,
                     staffId,
-                    hasServiceToStaffMap: false
+                    serviceStaffLoaded: false
                 });
             }
             
