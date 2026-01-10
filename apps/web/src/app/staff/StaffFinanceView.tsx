@@ -1054,53 +1054,74 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                 return (
                                     <div
                                         key={item.id ?? idx}
-                                        className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 ${isOpen && !isReadOnly ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors' : ''}`}
+                                        className={`group flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all ${isOpen && !isReadOnly ? 'cursor-pointer hover:shadow-sm' : ''}`}
                                         onClick={() => isOpen && !isReadOnly && setExpandedItems((prev) => new Set(prev).add(idx))}
                                     >
-                                        <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 items-center">
-                                            <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
+                                        <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 items-center min-w-0">
+                                            <div className="min-w-0">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                                    {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
+                                                </div>
+                                                {item.note && (
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5" title={item.note}>
+                                                        💬 {item.note}
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="text-gray-600 dark:text-gray-400">
-                                                {item.serviceName || '—'}
+                                            <div className="min-w-0">
+                                                <div className="text-gray-700 dark:text-gray-300 truncate">
+                                                    {item.serviceName || <span className="text-gray-400">—</span>}
+                                                </div>
                                             </div>
-                                            <div className="text-right font-medium text-gray-900 dark:text-gray-100">
-                                                {(item.serviceAmount ?? 0) === 0 && !item.serviceName
-                                                    ? '—'
-                                                    : `${item.serviceAmount ?? 0} ${t('staff.finance.shift.som', 'сом')}`}
+                                            <div className="text-right">
+                                                <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                                    {(item.serviceAmount ?? 0) === 0 && !item.serviceName
+                                                        ? <span className="text-gray-400">—</span>
+                                                        : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${t('staff.finance.shift.som', 'сом')}`}
+                                                </div>
                                             </div>
-                                            <div className="text-right font-medium text-gray-900 dark:text-gray-100">
-                                                {(item.consumablesAmount ?? 0) === 0
-                                                    ? `0 ${t('staff.finance.shift.som', 'сом')}`
-                                                    : `${item.consumablesAmount} ${t('staff.finance.shift.som', 'сом')}`}
+                                            <div className="text-right">
+                                                <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                                    {(item.consumablesAmount ?? 0) === 0
+                                                        ? <span className="text-gray-400">0</span>
+                                                        : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {t('staff.finance.shift.som', 'сом')}
+                                                </div>
                                             </div>
                                         </div>
                                         {isOpen && !isReadOnly && (
-                                            <div className="flex items-center gap-2 ml-4">
+                                            <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     type="button"
-                                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                                    className="p-1.5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setExpandedItems((prev) => new Set(prev).add(idx));
                                                     }}
+                                                    title={t('staff.finance.clients.edit', 'Редактировать')}
                                                 >
-                                                    {t('staff.finance.clients.edit', 'Редактировать')}
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                                                    className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setItems((prev) => prev.filter((_, i) => i !== idx));
-                                                        setExpandedItems((prev) => {
-                                                            const next = new Set(prev);
-                                                            next.delete(idx);
-                                                            return next;
-                                                        });
+                                                        if (confirm(t('staff.finance.clients.confirmDelete', 'Удалить этого клиента?'))) {
+                                                            setItems((prev) => prev.filter((_, i) => i !== idx));
+                                                            setExpandedItems((prev) => {
+                                                                const next = new Set(prev);
+                                                                next.delete(idx);
+                                                                return next;
+                                                            });
+                                                        }
                                                     }}
+                                                    title={t('staff.finance.clients.delete', 'Удалить')}
                                                 >
-                                                    {t('staff.finance.clients.delete', 'Удалить')}
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
                                                 </button>
                                             </div>
                                         )}
@@ -1112,166 +1133,228 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                             return (
                                 <div
                                     key={item.id ?? idx}
-                                    className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3"
+                                    className="p-4 bg-white dark:bg-gray-900 rounded-lg border-2 border-indigo-200 dark:border-indigo-800 shadow-md space-y-4"
                                 >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('staff.finance.clients.editing', 'Редактирование клиента')}</h3>
+                                    <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
+                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                            {t('staff.finance.clients.editing', 'Редактирование клиента')}
+                                        </h3>
                                         <button
                                             type="button"
-                                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                                            className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                                             onClick={() => setExpandedItems((prev) => {
                                                 const next = new Set(prev);
                                                 next.delete(idx);
                                                 return next;
                                             })}
+                                            title={t('staff.finance.clients.collapse', 'Свернуть')}
                                         >
-                                            {t('staff.finance.clients.collapse', 'Свернуть')}
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
                                         </button>
                                     </div>
                                     
-                                    <div>
-                                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                            {t('staff.finance.clients.client', 'Клиент')}
-                                        </label>
-                                        <select
-                                            className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm"
-                                            value={item.bookingId ?? ''}
-                                            onChange={(e) => {
-                                                const bookingId = e.target.value || null;
-                                                const booking = bookingId
-                                                    ? bookings.find((b) => b.id === bookingId)
-                                                    : null;
-                                                const service = booking?.services
-                                                    ? Array.isArray(booking.services)
-                                                        ? booking.services[0]
-                                                        : booking.services
-                                                    : null;
-                                                setItems((prev) =>
-                                                    prev.map((it, i) =>
-                                                        i === idx
-                                                            ? {
-                                                                  ...it,
-                                                                  bookingId,
-                                                                  clientName: booking
-                                                                      ? booking.client_name ||
-                                                                        booking.client_phone ||
-                                                                        it.clientName
-                                                                      : it.clientName,
-                                                                  serviceName: service
-                                                                      ? service.name_ru
-                                                                      : it.serviceName,
-                                                              }
-                                                            : it
-                                                    )
-                                                );
-                                            }}
-                                            disabled={!isOpen || isReadOnly}
-                                        >
-                                            <option value="">{t('staff.finance.clients.selectFromBookings', 'Выберите клиента из записей...')}</option>
-                                            {availableBookings.map((b) => {
-                                                const service = b.services
-                                                    ? Array.isArray(b.services)
-                                                        ? b.services[0]
-                                                        : b.services
-                                                    : null;
-                                                const clientLabel = b.client_name || b.client_phone || t('staff.finance.clients.client', 'Клиент');
-                                                const serviceLabel = service ? getServiceName(service) : '';
-                                                // Форматируем время в часовом поясе бизнеса (Asia/Bishkek), а не в локальном времени браузера
-                                                const time = formatInTimeZone(new Date(b.start_at), TZ, 'HH:mm');
-                                                return (
-                                                    <option key={b.id} value={b.id}>
-                                                        {clientLabel} - {serviceLabel} ({time})
-                                                    </option>
-                                                );
-                                            })}
-                                        </select>
-                                        {!item.bookingId && (
-                                            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                                {t('staff.finance.clients.walkInHint', 'Для клиентов «с улицы» имя будет сохранено автоматически как «{name}».').replace('{name}', item.clientName)}
-                                            </p>
-                                        )}
-                                    </div>
-                                    
-                                    <div>
-                                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                            {t('staff.finance.clients.service', 'Услуга')}
-                                        </label>
-                                        <select
-                                            className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                            value={item.serviceName}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setItems((prev) =>
-                                                    prev.map((it, i) =>
-                                                        i === idx ? { ...it, serviceName: value } : it
-                                                    )
-                                                );
-                                            }}
-                                            disabled={!isOpen || isReadOnly}
-                                        >
-                                            <option value="">{t('staff.finance.clients.selectService', 'Выберите услугу...')}</option>
-                                            {serviceOptions.map((svc) => {
-                                                const displayName = getServiceName(svc);
-                                                const value = svc.name_ru; // Сохраняем name_ru как значение
-                                                return (
-                                                    <option key={value} value={value}>
-                                                        {displayName}
-                                                    </option>
-                                                );
-                                            })}
-                                        </select>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                {t('staff.finance.clients.servicePrice', 'Цена за услугу (сом)')}
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                placeholder="0"
-                                                className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm text-right"
-                                                value={item.serviceAmount || ''}
-                                                onChange={(e) => {
-                                                    const v = Number(e.target.value || 0);
-                                                    setItems((prev) =>
-                                                        prev.map((it, i) =>
-                                                            i === idx ? { ...it, serviceAmount: v } : it
-                                                        )
-                                                    );
-                                                }}
-                                                disabled={!isOpen || isReadOnly}
-                                            />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Левая колонка */}
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                                    {t('staff.finance.clients.client', 'Клиент')}
+                                                </label>
+                                                <select
+                                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors"
+                                                    value={item.bookingId ?? ''}
+                                                    onChange={(e) => {
+                                                        const bookingId = e.target.value || null;
+                                                        const booking = bookingId
+                                                            ? bookings.find((b) => b.id === bookingId)
+                                                            : null;
+                                                        const service = booking?.services
+                                                            ? Array.isArray(booking.services)
+                                                                ? booking.services[0]
+                                                                : booking.services
+                                                            : null;
+                                                        setItems((prev) =>
+                                                            prev.map((it, i) =>
+                                                                i === idx
+                                                                    ? {
+                                                                          ...it,
+                                                                          bookingId,
+                                                                          clientName: booking
+                                                                              ? booking.client_name ||
+                                                                                booking.client_phone ||
+                                                                                it.clientName
+                                                                              : it.clientName,
+                                                                          serviceName: service
+                                                                              ? service.name_ru
+                                                                              : it.serviceName,
+                                                                      }
+                                                                    : it
+                                                            )
+                                                        );
+                                                    }}
+                                                    disabled={!isOpen || isReadOnly}
+                                                >
+                                                    <option value="">{t('staff.finance.clients.selectFromBookings', 'Выберите клиента из записей...')}</option>
+                                                    {availableBookings.map((b) => {
+                                                        const service = b.services
+                                                            ? Array.isArray(b.services)
+                                                                ? b.services[0]
+                                                                : b.services
+                                                            : null;
+                                                        const clientLabel = b.client_name || b.client_phone || t('staff.finance.clients.client', 'Клиент');
+                                                        const serviceLabel = service ? getServiceName(service) : '';
+                                                        const time = formatInTimeZone(new Date(b.start_at), TZ, 'HH:mm');
+                                                        return (
+                                                            <option key={b.id} value={b.id}>
+                                                                {clientLabel} - {serviceLabel} ({time})
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                                {!item.bookingId && (
+                                                    <div className="mt-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder={t('staff.finance.clients.clientNamePlaceholder', 'Имя клиента (для клиентов «с улицы»)')}
+                                                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors"
+                                                            value={item.clientName}
+                                                            onChange={(e) => {
+                                                                setItems((prev) =>
+                                                                    prev.map((it, i) =>
+                                                                        i === idx ? { ...it, clientName: e.target.value } : it
+                                                                    )
+                                                                );
+                                                            }}
+                                                            disabled={!isOpen || isReadOnly}
+                                                        />
+                                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                            {t('staff.finance.clients.walkInHint', 'Для клиентов «с улицы» введите имя вручную')}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                                    {t('staff.finance.clients.service', 'Услуга')}
+                                                </label>
+                                                <select
+                                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors"
+                                                    value={item.serviceName}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        setItems((prev) =>
+                                                            prev.map((it, i) =>
+                                                                i === idx ? { ...it, serviceName: value } : it
+                                                            )
+                                                        );
+                                                    }}
+                                                    disabled={!isOpen || isReadOnly}
+                                                >
+                                                    <option value="">{t('staff.finance.clients.selectService', 'Выберите услугу...')}</option>
+                                                    {serviceOptions.map((svc) => {
+                                                        const displayName = getServiceName(svc);
+                                                        const value = svc.name_ru;
+                                                        return (
+                                                            <option key={value} value={value}>
+                                                                {displayName}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                {t('staff.finance.clients.consumablesAmount', 'Расходники (сом)')}
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                placeholder="0"
-                                                className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-sm text-right"
-                                                value={item.consumablesAmount || ''}
-                                                onChange={(e) => {
-                                                    const v = Number(e.target.value || 0);
-                                                    setItems((prev) =>
-                                                        prev.map((it, i) =>
-                                                            i === idx ? { ...it, consumablesAmount: v } : it
-                                                        )
-                                                    );
-                                                }}
-                                                disabled={!isOpen || isReadOnly}
-                                            />
+
+                                        {/* Правая колонка */}
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                                    {t('staff.finance.clients.servicePrice', 'Цена за услугу')}
+                                                    <span className="text-gray-500 ml-1">(сом)</span>
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        step="50"
+                                                        placeholder="0"
+                                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 pr-8 text-sm text-right font-medium text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors"
+                                                        value={item.serviceAmount || ''}
+                                                        onChange={(e) => {
+                                                            const v = Number(e.target.value || 0);
+                                                            setItems((prev) =>
+                                                                prev.map((it, i) =>
+                                                                    i === idx ? { ...it, serviceAmount: v } : it
+                                                                )
+                                                            );
+                                                        }}
+                                                        disabled={!isOpen || isReadOnly}
+                                                    />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
+                                                        сом
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                                    {t('staff.finance.clients.consumablesAmount', 'Расходники')}
+                                                    <span className="text-gray-500 ml-1">(сом)</span>
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        step="10"
+                                                        placeholder="0"
+                                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 pr-8 text-sm text-right font-medium text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors"
+                                                        value={item.consumablesAmount || ''}
+                                                        onChange={(e) => {
+                                                            const v = Number(e.target.value || 0);
+                                                            setItems((prev) =>
+                                                                prev.map((it, i) =>
+                                                                    i === idx ? { ...it, consumablesAmount: v } : it
+                                                                )
+                                                            );
+                                                        }}
+                                                        disabled={!isOpen || isReadOnly}
+                                                    />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
+                                                        сом
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                                    {t('staff.finance.clients.note', 'Комментарий')}
+                                                    <span className="text-gray-400 font-normal ml-1">({t('staff.finance.clients.optional', 'необязательно')})</span>
+                                                </label>
+                                                <textarea
+                                                    rows={2}
+                                                    placeholder={t('staff.finance.clients.notePlaceholder', 'Дополнительная информация...')}
+                                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors resize-none"
+                                                    value={item.note || ''}
+                                                    onChange={(e) => {
+                                                        setItems((prev) =>
+                                                            prev.map((it, i) =>
+                                                                i === idx ? { ...it, note: e.target.value } : it
+                                                            )
+                                                        );
+                                                    }}
+                                                    disabled={!isOpen || isReadOnly}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     
                                     {isOpen && !isReadOnly && (
-                                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                        <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                             <button
                                                 type="button"
-                                                className="px-3 py-1 text-sm border rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                                 onClick={() => {
                                                     setExpandedItems((prev) => {
                                                         const next = new Set(prev);
@@ -1284,7 +1367,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             </button>
                                             <button
                                                 type="button"
-                                                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                                 onClick={() => {
                                                     setExpandedItems((prev) => {
                                                         const next = new Set(prev);
