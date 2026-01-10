@@ -231,7 +231,8 @@ export async function POST(req: Request) {
                     console.error('Error inserting shift items:', insError);
                 }
 
-                // Обновляем статус записей на "пришел" (paid), если они были добавлены в смену
+                // Обновляем статус записей на "выполнено" (paid), если они были добавлены в смену
+                // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
                 const admin = getServiceClient();
                 const bookingIds = cleanItems
                     .map((it: { booking_id: string | null }) => it.booking_id)

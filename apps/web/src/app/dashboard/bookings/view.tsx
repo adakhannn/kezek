@@ -217,7 +217,7 @@ function CalendarDay({ bizId, staff, branches }: { bizId: string; staff: StaffRo
                 </span>
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800" />
-                    {t('bookings.status.paid', 'paid / пришел')}
+                    {t('bookings.status.paid', 'Выполнено')}
                 </span>
                 <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <span className="inline-block w-3 h-3 rounded-full bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800" />

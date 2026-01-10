@@ -457,7 +457,7 @@ function BookingStatusBadge({status}: { status: string }) {
         confirmed: { label: 'Подтверждено', color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700' },
         hold: { label: 'Ожидание', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
         canceled: { label: 'Отменено', color: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700' },
-        paid: { label: 'Оплачено', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-700' },
+        paid: { label: 'Выполнено', color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700' },
     };
     const { label, color } = config[status as keyof typeof config] || { label: status, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-700' };
     

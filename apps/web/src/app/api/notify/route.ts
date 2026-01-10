@@ -93,7 +93,7 @@ function statusRu(status: string): string {
         case 'confirmed':
             return 'Подтверждена';
         case 'paid':
-            return 'Оплачена';
+            return 'Выполнена';
         case 'cancelled':
             return 'Отменена';
         default:

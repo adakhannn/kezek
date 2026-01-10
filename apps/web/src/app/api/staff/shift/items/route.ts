@@ -76,13 +76,14 @@ export async function POST(req: Request) {
         }
 
         // Собираем booking_id из всех items (даже если суммы еще не заполнены)
-        // для обновления статуса записей на "пришел" (paid)
+        // для обновления статуса записей на "выполнено" (paid)
         const allBookingIds = items
             .map((it: { bookingId?: string | null; booking_id?: string | null }) => it.bookingId ?? it.booking_id ?? null)
             .filter((id: string | null): id is string => !!id);
 
-        // Обновляем статус записей на "пришел" (paid), если они были добавлены в смену
+        // Обновляем статус записей на "выполнено" (paid), если они были добавлены в смену
         // Делаем это сразу при добавлении записи в список, даже если суммы еще не заполнены
+        // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
         const admin = getServiceClient();
         if (allBookingIds.length > 0) {
             for (const bookingId of allBookingIds) {

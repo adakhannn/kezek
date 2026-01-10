@@ -50,7 +50,8 @@ export async function POST(req: Request, context: unknown) {
             }, { status: 400 });
         }
 
-        // Обновляем статус: attended = true -> paid, attended = false -> no_show
+        // Обновляем статус: attended = true -> paid (выполнено/пришел), attended = false -> no_show
+        // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
         const newStatus = attended ? 'paid' : 'no_show';
 
         // Сначала пробуем использовать специальную RPC функцию (если она есть)
