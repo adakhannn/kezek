@@ -1,0 +1,186 @@
+-- ============================================================================
+-- ОБНОВЛЕНИЕ get_free_slots_service_day_v2 ДЛЯ УЧЕТА ВРЕМЕННЫХ ПЕРЕВОДОВ
+-- ============================================================================
+-- 
+-- ПРОБЛЕМА: Функция проверяет v_sched.branch_id <> v_service.branch_id,
+-- но не учитывает, что мастер может быть временно переведен в филиал услуги
+-- через staff_schedule_rules.
+--
+-- РЕШЕНИЕ: Обновить проверку филиала, чтобы учитывать временные переводы.
+-- Если мастер временно переведен в филиал услуги, разрешить бронирование.
+--
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.get_free_slots_service_day_v2(
+    p_biz_id uuid, 
+    p_service_id uuid, 
+    p_day date, 
+    p_per_staff integer DEFAULT 200, 
+    p_step_min integer DEFAULT 15
+)
+RETURNS TABLE(
+    staff_id uuid, 
+    branch_id uuid, 
+    start_at timestamp with time zone, 
+    end_at timestamp with time zone
+)
+LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_service record;
+  v_staff record;
+  v_sched record;
+  v_dur_min int;
+  v_biz_tz text;
+  v_is_temp_transfer boolean;
+BEGIN
+  -- 1) сервис и его филиал
+  SELECT s.id, s.biz_id, s.branch_id, s.duration_min
+  INTO v_service
+  FROM public.services s
+  WHERE s.id = p_service_id AND s.biz_id = p_biz_id AND s.active;
+
+  IF v_service.id IS NULL THEN
+    RAISE EXCEPTION 'SERVICE_NOT_FOUND_OR_INACTIVE';
+  END IF;
+
+  v_dur_min := v_service.duration_min;
+
+  -- tz бизнеса
+  SELECT b.tz INTO v_biz_tz FROM public.businesses b WHERE b.id = p_biz_id;
+  IF v_biz_tz IS NULL THEN v_biz_tz := 'Asia/Bishkek'; END IF;
+
+  -- 2) перебираем активных сотрудников бизнеса
+  FOR v_staff IN
+    SELECT st.id AS staff_id, st.branch_id AS home_branch_id
+    FROM public.staff st
+    WHERE st.biz_id = p_biz_id
+      AND st.is_active
+  LOOP
+    -- график на дату
+    SELECT * INTO v_sched FROM public.resolve_staff_day(v_staff.staff_id, p_day);
+    IF NOT FOUND THEN CONTINUE; END IF;
+
+    -- Определяем, является ли мастер временно переведенным в филиал услуги
+    -- Проверяем staff_schedule_rules для временного перевода на эту дату
+    SELECT EXISTS (
+      SELECT 1
+      FROM public.staff_schedule_rules ssr
+      WHERE ssr.biz_id = p_biz_id
+        AND ssr.staff_id = v_staff.staff_id
+        AND ssr.kind = 'date'
+        AND ssr.date_on = p_day
+        AND ssr.is_active = true
+        AND ssr.branch_id IS NOT NULL
+        AND ssr.branch_id = v_service.branch_id  -- временно переведен в филиал услуги
+    ) INTO v_is_temp_transfer;
+
+    -- Проверяем филиал: либо мастер работает в филиале услуги (основной филиал),
+    -- либо мастер временно переведен в филиал услуги
+    IF v_sched.branch_id IS NULL THEN 
+      CONTINUE; 
+    END IF;
+
+    -- Если мастер работает в другом филиале (не основном филиале услуги),
+    -- но временно переведен в филиал услуги - разрешаем
+    IF v_sched.branch_id <> v_service.branch_id AND NOT v_is_temp_transfer THEN
+      CONTINUE;
+    END IF;
+
+    -- Если мастер временно переведен, используем branch_id из staff_schedule_rules,
+    -- иначе используем branch_id из расписания
+    DECLARE
+      v_effective_branch_id uuid;
+    BEGIN
+      IF v_is_temp_transfer THEN
+        -- Используем branch_id из staff_schedule_rules (временный филиал)
+        SELECT ssr.branch_id INTO v_effective_branch_id
+        FROM public.staff_schedule_rules ssr
+        WHERE ssr.biz_id = p_biz_id
+          AND ssr.staff_id = v_staff.staff_id
+          AND ssr.kind = 'date'
+          AND ssr.date_on = p_day
+          AND ssr.is_active = true
+          AND ssr.branch_id IS NOT NULL
+          AND ssr.branch_id = v_service.branch_id
+        LIMIT 1;
+      ELSE
+        -- Используем branch_id из расписания (основной филиал)
+        v_effective_branch_id := v_sched.branch_id;
+      END IF;
+
+      -- генерим сетку слотов в локальном времени бизнеса → переводим в timestamptz
+      RETURN QUERY
+      WITH
+        raw_intervals AS (
+          SELECT jsonb_array_elements(v_sched.intervals) AS j
+        ),
+        work AS (
+          SELECT
+            -- локальный старт/финиш (ts without tz), собранные из p_day + 'HH:MM'
+            ( (p_day::text || ' ' || (j->>'start'))::timestamp ) AS begin_local,
+            ( (p_day::text || ' ' || (j->>'end'))::timestamp )   AS end_local
+          FROM raw_intervals
+        ),
+        timeline AS (
+          SELECT
+            generate_series(
+              w.begin_local,
+              w.end_local - make_interval(mins => v_dur_min),
+              make_interval(mins => p_step_min)
+            ) AS slot_local_start
+          FROM work w
+          WHERE w.end_local > w.begin_local
+        ),
+        slots_local AS (
+          SELECT
+            t.slot_local_start,
+            t.slot_local_start + make_interval(mins => v_dur_min) AS slot_local_end
+          FROM timeline t
+        ),
+        -- убираем перерывы
+        breaks_local AS (
+          SELECT
+            ( (p_day::text || ' ' || (j->>'start'))::timestamp ) AS b_start_local,
+            ( (p_day::text || ' ' || (j->>'end'))::timestamp )   AS b_end_local
+          FROM jsonb_array_elements(v_sched.breaks) AS j
+        ),
+        slots_no_breaks AS (
+          SELECT s.*
+          FROM slots_local s
+          WHERE NOT EXISTS (
+            SELECT 1
+            FROM breaks_local b
+            WHERE tstzrange((s.slot_local_start AT TIME ZONE v_biz_tz), (s.slot_local_end AT TIME ZONE v_biz_tz), '[)')
+                  && tstzrange((b.b_start_local AT TIME ZONE v_biz_tz), (b.b_end_local AT TIME ZONE v_biz_tz), '[)')
+          )
+        ),
+        slots_tz AS (
+          SELECT
+            -- приводим «локальное» время бизнеса к timestamptz (UTC)
+            (s.slot_local_start AT TIME ZONE v_biz_tz) AS slot_start,
+            (s.slot_local_end   AT TIME ZONE v_biz_tz) AS slot_end
+          FROM slots_no_breaks s
+        ),
+        free AS (
+          SELECT stz.slot_start, stz.slot_end
+          FROM slots_tz stz
+          WHERE NOT EXISTS (
+            SELECT 1
+            FROM public.bookings bk
+            WHERE bk.biz_id = p_biz_id
+              AND bk.staff_id = v_staff.staff_id
+              AND bk.status <> 'cancelled'
+              AND tstzrange(bk.start_at, bk.end_at, '[)') && tstzrange(stz.slot_start, stz.slot_end, '[)')
+          )
+          ORDER BY stz.slot_start
+          LIMIT p_per_staff
+        )
+      SELECT v_staff.staff_id, v_effective_branch_id, f.slot_start, f.slot_end
+      FROM free f;
+    END;
+  END LOOP;
+
+  RETURN;
+END$function$;
+
