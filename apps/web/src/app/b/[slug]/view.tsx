@@ -960,15 +960,26 @@ export default function BizClient({ data }: { data: Data }) {
         // Шаг 4 -> 5: должна быть выбрана услуга И мастер должен делать эту услугу
         if (step === 4) {
             if (!serviceId || !staffId) return false;
+            
             // Проверяем, что услуга есть в отфильтрованном списке
+            // Это основная проверка - если услуга есть в servicesFiltered, значит она валидна
+            // servicesFiltered уже учитывает:
+            // - временные переводы (показывает услуги из филиала временного перевода)
+            // - связи service_staff (проверяет прямые связи или похожие услуги для временных переводов)
+            // - правильный филиал услуги
             const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            if (!isServiceValid) return false;
-            // Если есть данные о связи услуга-мастер, дополнительно проверяем
-            if (serviceToStaffMap) {
-                const allowedStaff = serviceToStaffMap.get(serviceId);
-                return allowedStaff?.has(staffId) ?? false;
+            if (!isServiceValid) {
+                console.log('[Booking] canGoNext: service not in servicesFiltered', { 
+                    serviceId, 
+                    servicesFiltered: servicesFiltered.map(s => s.id),
+                    servicesFilteredNames: servicesFiltered.map(s => s.name_ru)
+                });
+                return false;
             }
-            // Если данных нет, но услуга есть в отфильтрованном списке - разрешаем
+            
+            // Если услуга есть в servicesFiltered, она уже прошла все проверки (включая временные переводы)
+            // Дополнительная проверка через serviceToStaffMap не нужна, так как servicesFiltered уже это учитывает
+            console.log('[Booking] canGoNext: service is valid (in servicesFiltered)', { serviceId });
             return true;
         }
         
