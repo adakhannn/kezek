@@ -425,17 +425,34 @@ export default function BizClient({ data }: { data: Data }) {
             
             // Проверка: если услуга не в servicesFiltered, значит мастер не выполняет её (или она не из правильного филиала)
             // servicesFiltered уже учитывает временные переводы и связи service_staff (включая похожие услуги)
-            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            if (!isServiceValid) {
-                console.log('[Booking] Slots loading: service not in servicesFiltered, skipping RPC call', { 
-                    serviceId, 
+            // НО: если serviceToStaffMap еще не загружен (null), servicesFiltered будет пустым массивом,
+            // поэтому в этом случае пропускаем проверку и позволяем RPC проверить валидность
+            // Если serviceToStaffMap загружен (не null, даже если пустой), проверяем через servicesFiltered
+            if (serviceToStaffMap !== null) {
+                // serviceToStaffMap загружен, проверяем валидность услуги через servicesFiltered
+                const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
+                if (!isServiceValid) {
+                    console.log('[Booking] Slots loading: service not in servicesFiltered, skipping RPC call', { 
+                        serviceId, 
+                        staffId,
+                        servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru })),
+                        serviceToStaffMapSize: serviceToStaffMap.size,
+                        temporaryTransfersCount: temporaryTransfers.length,
+                        isTemporaryTransfer: temporaryTransfers.some(t => t.staff_id === staffId && t.date === dayStr)
+                    });
+                    setSlots([]);
+                    setSlotsError(t('booking.step4.masterNoService', 'Выбранный мастер не выполняет эту услугу'));
+                    setSlotsLoading(false);
+                    return;
+                }
+                console.log('[Booking] Slots loading: service is valid (in servicesFiltered), proceeding with RPC call', { serviceId, staffId });
+            } else {
+                // serviceToStaffMap еще не загружен (null), пропускаем проверку и позволяем RPC проверить
+                console.log('[Booking] Slots loading: serviceToStaffMap not loaded yet, proceeding with RPC call (will check validity)', {
+                    serviceId,
                     staffId,
-                    servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru }))
+                    hasServiceToStaffMap: false
                 });
-                setSlots([]);
-                setSlotsError(t('booking.step4.masterNoService', 'Выбранный мастер не выполняет эту услугу'));
-                setSlotsLoading(false);
-                return;
             }
             
             // Если услуга валидна (есть в servicesFiltered), можно загружать слоты
