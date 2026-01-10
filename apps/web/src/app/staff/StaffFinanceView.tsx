@@ -453,11 +453,38 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         // Отладочная информация
         console.log('[StaffFinanceView] All shifts:', allShifts.length, 'Closed:', closedShifts.length, 'Filtered:', filtered.length);
         if (filtered.length > 0) {
-            console.log('[StaffFinanceView] Filtered shifts:', filtered);
-            console.log('[StaffFinanceView] Stats:', { totalAmount, totalMaster, totalSalon, totalLateMinutes });
+            console.log('[StaffFinanceView] Filtered shifts with amounts:', filtered.map(s => ({
+                shift_date: s.shift_date,
+                total_amount: s.total_amount,
+                master_share: s.master_share,
+                salon_share: s.salon_share,
+                late_minutes: s.late_minutes
+            })));
+            console.log('[StaffFinanceView] Calculated stats:', { totalAmount, totalMaster, totalSalon, totalLateMinutes });
+            
+            // Проверяем, все ли суммы равны 0
+            if (totalAmount === 0 && totalMaster === 0 && totalSalon === 0) {
+                console.warn('[StaffFinanceView] All amounts are 0! Check if shifts have valid data in database.');
+                filtered.forEach(s => {
+                    console.warn('[StaffFinanceView] Shift data:', {
+                        shift_date: s.shift_date,
+                        total_amount: s.total_amount,
+                        master_share: s.master_share,
+                        salon_share: s.salon_share,
+                        raw_total_amount: s.total_amount,
+                        raw_master_share: s.master_share,
+                        raw_salon_share: s.salon_share
+                    });
+                });
+            }
         } else if (closedShifts.length > 0) {
             console.log('[StaffFinanceView] No shifts match filter. Period:', statsPeriod);
-            console.log('[StaffFinanceView] All closed shifts:', closedShifts.map(s => ({ shift_date: s.shift_date, total_amount: s.total_amount, master_share: s.master_share })));
+            console.log('[StaffFinanceView] All closed shifts:', closedShifts.map(s => ({ 
+                shift_date: s.shift_date, 
+                total_amount: s.total_amount, 
+                master_share: s.master_share,
+                salon_share: s.salon_share
+            })));
         }
         
         return {
