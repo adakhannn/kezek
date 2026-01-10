@@ -299,6 +299,8 @@ export default function BizClient({ data }: { data: Data }) {
             }
             
             // Загружаем все правила расписания для всех сотрудников этого бизнеса на нужный период
+            // Важно: загружаем для ВСЕХ филиалов, а не только для выбранного, чтобы корректно определить временные переводы
+            // Например, если пользователь выбрал филиал A, а мастер временно переведен в филиал B, нужно загрузить правило для филиала B
             const staffIds = Array.from(staffHomeBranches.keys());
             
             const { data, error } = await supabase
@@ -308,7 +310,8 @@ export default function BizClient({ data }: { data: Data }) {
                 .in('staff_id', staffIds)
                 .eq('kind', 'date')
                 .eq('is_active', true)
-                .eq('branch_id', branchId) // Только правила для выбранного филиала
+                // Убираем фильтр по branch_id, чтобы загрузить ВСЕ временные переводы
+                // Клиентская фильтрация определит, какой перевод актуален для выбранного филиала и даты
                 .gte('date_on', minDateStr)
                 .lte('date_on', maxDateStr);
             
@@ -496,7 +499,8 @@ export default function BizClient({ data }: { data: Data }) {
                 }
                 
                 // Фильтруем слоты по мастеру и филиалу
-                // Для временно переведенного мастера принимаем слоты из обоих филиалов (домашнего и временного)
+                // Для временно переведенного мастера принимаем слоты только из филиала временного перевода
+                // (так как функция RPC уже учитывает временные переводы и возвращает слоты с правильным branch_id)
                 let filtered = all.filter((s) => {
                     if (s.staff_id !== staffId) {
                         console.log('[Booking] Slot filtered (wrong staff):', { slot_staff: s.staff_id, selected_staff: staffId });
@@ -507,15 +511,21 @@ export default function BizClient({ data }: { data: Data }) {
                         return false;
                     }
                     
-                    // Для временно переведенного мастера принимаем слоты из обоих филиалов
-                    if (isTemporaryTransfer) {
-                        const matchesBranch = s.branch_id === branchId || s.branch_id === targetBranchId || s.branch_id === homeBranchId;
+                    // Для временно переведенного мастера принимаем слоты только из филиала временного перевода
+                    // Функция RPC уже должна возвращать слоты с правильным branch_id (филиал временного перевода)
+                    if (isTemporaryTransfer && targetBranchId) {
+                        const matchesBranch = s.branch_id === targetBranchId;
                         if (!matchesBranch) {
-                            console.log('[Booking] Slot filtered (wrong branch for transfer):', { 
+                            console.log('[Booking] Slot filtered (wrong branch for temporary transfer):', { 
                                 slot_branch: s.branch_id, 
-                                selected_branch: branchId, 
-                                temp_branch: targetBranchId,
+                                expected_branch: targetBranchId,
+                                selected_branch: branchId,
                                 home_branch: homeBranchId
+                            });
+                        } else {
+                            console.log('[Booking] Slot accepted (temporary transfer):', { 
+                                slot_branch: s.branch_id, 
+                                start_at: s.start_at 
                             });
                         }
                         return matchesBranch;
