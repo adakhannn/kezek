@@ -55,7 +55,7 @@ export default async function Page() {
             `)
             .eq('staff_id', staffId)
             .eq('is_active', true),
-        // Предстоящие брони (исключаем отменённые)
+        // Предстоящие брони (исключаем отменённые) - записи, которые еще не закончились (end_at >= now)
         supabase
             .from('bookings')
             .select(`
@@ -66,9 +66,9 @@ export default async function Page() {
             `)
             .eq('staff_id', staffId)
             .neq('status', 'cancelled')
-            .gte('start_at', nowISO)
+            .gte('end_at', nowISO)
             .order('start_at', { ascending: true }),
-        // Прошедшие брони
+        // Прошедшие брони - записи, которые уже закончились (end_at < now)
         supabase
             .from('bookings')
             .select(`
@@ -78,7 +78,7 @@ export default async function Page() {
                 businesses:businesses!bookings_biz_id_fkey ( name, slug )
             `)
             .eq('staff_id', staffId)
-            .lt('start_at', nowISO)
+            .lt('end_at', nowISO)
             .order('start_at', { ascending: false }),
     ]);
 
