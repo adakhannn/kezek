@@ -39,32 +39,32 @@ SELECT * FROM resolve_staff_day(
   '2026-01-10'::date
 );
 
--- 6. Проверить, есть ли временный перевод в филиал услуги
-WITH biz_id AS (
-  SELECT id FROM businesses WHERE slug = 'manly' LIMIT 1
-),
-staff_id_val AS (
-  SELECT '9d87bc31-e7e6-44f7-8b64-0d0481f9443'::uuid as id
-)
+-- 6. Проверить, есть ли временный перевод в филиал услуги (ИСПРАВЛЕНО - без прямого UUID)
 SELECT 
   ssr.id as rule_id,
   ssr.staff_id,
+  s.full_name as staff_name,
   ssr.branch_id as temp_branch_id,
+  b1.name as temp_branch_name,
   svc.id as service_id,
+  svc.name_ru as service_name,
   svc.branch_id as service_branch_id,
+  b2.name as service_branch_name,
   (ssr.branch_id = svc.branch_id) as matches_service_branch,
   ssr.date_on,
   ssr.is_active,
   ssr.intervals
 FROM staff_schedule_rules ssr
+JOIN staff s ON s.id = ssr.staff_id
+JOIN branches b1 ON b1.id = ssr.branch_id
 CROSS JOIN services svc
-CROSS JOIN biz_id
-WHERE ssr.biz_id = biz_id.id
-  AND ssr.staff_id = (SELECT id FROM staff_id_val)
+JOIN branches b2 ON b2.id = svc.branch_id
+WHERE ssr.biz_id = (SELECT id FROM businesses WHERE slug = 'manly' LIMIT 1)
+  AND s.full_name LIKE '%Мастер 1%'
   AND ssr.date_on = '2026-01-10'::date
   AND ssr.is_active = true
   AND ssr.kind = 'date'
   AND ssr.branch_id IS NOT NULL
   AND svc.name_ru = 'Взрослая стрижка'
-  AND svc.biz_id = biz_id.id;
+  AND svc.biz_id = (SELECT id FROM businesses WHERE slug = 'manly' LIMIT 1);
 
