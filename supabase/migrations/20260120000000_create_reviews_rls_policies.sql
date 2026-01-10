@@ -18,15 +18,15 @@ CREATE POLICY "Users can insert own reviews"
     FOR INSERT
     TO authenticated
     WITH CHECK (
+        -- Проверяем, что client_id совпадает с текущим пользователем
+        client_id = auth.uid()
         -- Проверяем, что booking_id принадлежит текущему пользователю
-        EXISTS (
+        AND EXISTS (
             SELECT 1
             FROM public.bookings b
             WHERE b.id = reviews.booking_id
               AND b.client_id = auth.uid()
         )
-        -- Проверяем, что client_id совпадает с текущим пользователем
-        AND reviews.client_id = auth.uid()
     );
 
 -- Политика для SELECT: пользователи могут читать свои отзывы
