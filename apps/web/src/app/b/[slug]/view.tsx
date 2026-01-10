@@ -373,7 +373,32 @@ export default function BizClient({ data }: { data: Data }) {
             setSlotsLoading(true);
             setSlotsError(null);
             try {
-                // Добавляем timestamp для предотвращения кэширования
+                // Определяем, является ли мастер временно переведенным
+                const isTemporaryTransfer = dayStr && temporaryTransfers.some((t: { staff_id: string; branch_id: string; date: string }) => 
+                    t.staff_id === staffId && t.date === dayStr
+                );
+                
+                // Для временно переведенного мастера нужно получить слоты для временного филиала
+                // RPC может возвращать слоты только для основного филиала мастера (staff.branch_id)
+                // Поэтому для временного перевода вызываем RPC для временного филиала
+                let targetBranchId = branchId;
+                const staffCurrent = staff.find((m) => m.id === staffId);
+                const homeBranchId = staffCurrent?.branch_id;
+                
+                if (isTemporaryTransfer && dayStr) {
+                    const tempTransfer = temporaryTransfers.find((t: { staff_id: string; branch_id: string; date: string }) => 
+                        t.staff_id === staffId && t.date === dayStr
+                    );
+                    if (tempTransfer) {
+                        targetBranchId = tempTransfer.branch_id;
+                        console.log('[Booking] Temporary transfer found:', { staffId, date: dayStr, tempBranch: tempTransfer.branch_id, homeBranch: homeBranchId, selectedBranch: branchId });
+                    }
+                }
+                
+                // Вызываем RPC для получения слотов
+                // Для временно переведенного мастера RPC должен вернуть слоты с branch_id временного филиала
+                // Но RPC может проверять staff.branch_id, поэтому может вернуть пустой массив
+                console.log('[Booking] Calling RPC with params:', { biz_id: biz.id, service_id: serviceId, day: dayStr, targetBranchId, homeBranchId });
                 const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                     p_biz_id: biz.id,
                     p_service_id: serviceId,
@@ -392,54 +417,58 @@ export default function BizClient({ data }: { data: Data }) {
                 const now = new Date();
                 const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
                 
-                // Определяем правильный branch_id для фильтрации слотов
-                // Для временно переведенного мастера используем branch_id из временного перевода
-                // В temporaryTransfers хранятся записи где branch_id - это временный филиал, куда переведен мастер
-                let targetBranchId = branchId;
-                if (dayStr) {
-                    const tempTransfer = temporaryTransfers.find((t: { staff_id: string; branch_id: string; date: string }) => 
-                        t.staff_id === staffId && t.date === dayStr
-                    );
-                    if (tempTransfer) {
-                        // Для временно переведенного мастера используем branch_id временного филиала
-                        // tempTransfer.branch_id - это филиал, куда временно переведен мастер
-                        targetBranchId = tempTransfer.branch_id;
-                        console.log('[Booking] Temporary transfer found:', { staffId, date: dayStr, tempBranch: tempTransfer.branch_id, selectedBranch: branchId });
-                    }
-                }
+                console.log('[Booking] RPC returned slots:', { total: all.length, slots: all.map(s => ({ staff_id: s.staff_id, branch_id: s.branch_id, start_at: s.start_at })) });
                 
-                console.log('[Booking] Loading slots:', { staffId, serviceId, dayStr, targetBranchId, branchId, allSlotsFromRPC: all.length });
-                console.log('[Booking] All slots from RPC:', all.map(s => ({ staff_id: s.staff_id, branch_id: s.branch_id, start_at: s.start_at })));
-                
-                // Определяем, является ли мастер временно переведенным
-                const isTemporaryTransfer = dayStr && temporaryTransfers.some((t: { staff_id: string; branch_id: string; date: string }) => 
-                    t.staff_id === staffId && t.date === dayStr
-                );
-                
-                // Для временно переведенного мастера показываем слоты из обоих филиалов (основной и временный)
-                // Для обычного мастера показываем только слоты из выбранного филиала
+                // Фильтруем слоты по мастеру и филиалу
+                // Для временно переведенного мастера принимаем слоты из обоих филиалов (домашнего и временного)
                 let filtered = all.filter((s) => {
-                    if (s.staff_id !== staffId) return false;
-                    if (new Date(s.start_at) <= minTime) return false;
+                    if (s.staff_id !== staffId) {
+                        console.log('[Booking] Slot filtered (wrong staff):', { slot_staff: s.staff_id, selected_staff: staffId });
+                        return false;
+                    }
+                    if (new Date(s.start_at) <= minTime) {
+                        console.log('[Booking] Slot filtered (too early):', { start_at: s.start_at, minTime: minTime.toISOString() });
+                        return false;
+                    }
                     
-                    // Если мастер временно переведен, принимаем слоты из любого филиала (RPC может вернуть слоты с branch_id основного филиала)
+                    // Для временно переведенного мастера принимаем слоты из обоих филиалов
                     if (isTemporaryTransfer) {
-                        // Проверяем, что branch_id соответствует либо выбранному филиалу, либо временному филиалу
-                        return s.branch_id === branchId || s.branch_id === targetBranchId;
+                        const matchesBranch = s.branch_id === branchId || s.branch_id === targetBranchId || s.branch_id === homeBranchId;
+                        if (!matchesBranch) {
+                            console.log('[Booking] Slot filtered (wrong branch for transfer):', { 
+                                slot_branch: s.branch_id, 
+                                selected_branch: branchId, 
+                                temp_branch: targetBranchId,
+                                home_branch: homeBranchId
+                            });
+                        }
+                        return matchesBranch;
                     }
                     
                     // Для обычного мастера показываем только слоты из выбранного филиала
-                    return s.branch_id === branchId;
+                    const matchesBranch = s.branch_id === branchId;
+                    if (!matchesBranch) {
+                        console.log('[Booking] Slot filtered (wrong branch):', { slot_branch: s.branch_id, selected_branch: branchId });
+                    }
+                    return matchesBranch;
                 });
                 
-                console.log('[Booking] Filtered slots:', { 
+                console.log('[Booking] Filtered slots result:', { 
                     beforeFilter: all.length, 
                     afterFilter: filtered.length, 
                     targetBranchId, 
                     branchId, 
+                    homeBranchId,
                     isTemporaryTransfer,
                     filteredSlots: filtered.map(s => ({ branch_id: s.branch_id, start_at: s.start_at }))
                 });
+                
+                // Если для временно переведенного мастера нет слотов, возможно RPC не учитывает временные переводы
+                // В этом случае нужно вызвать RPC для временного филиала или изменить логику RPC
+                if (filtered.length === 0 && isTemporaryTransfer && all.length > 0) {
+                    console.warn('[Booking] No slots after filtering for temporary transfer. RPC may not be accounting for temporary transfers.');
+                    console.warn('[Booking] All slots from RPC:', all);
+                }
                 
                 // Дополнительная проверка: исключаем слоты, которые уже забронированы
                 // (на случай, если RPC не учитывает все статусы)
@@ -657,8 +686,23 @@ export default function BizClient({ data }: { data: Data }) {
     const [loading, setLoading] = useState(false);
 
     const service = useMemo(
-        () => servicesByBranch.find((s) => s.id === serviceId) ?? null,
-        [servicesByBranch, serviceId]
+        () => {
+            // Ищем услугу сначала в отфильтрованных услугах (для временно переведенного мастера)
+            // Если не найдена, ищем во всех услугах филиала
+            // Если не найдена, ищем во всех услугах
+            const found = servicesFiltered.find((s) => s.id === serviceId) 
+                ?? servicesByBranch.find((s) => s.id === serviceId)
+                ?? services.find((s) => s.id === serviceId);
+            console.log('[Booking] Finding service:', { 
+                serviceId, 
+                found: found ? found.name_ru : null, 
+                foundInFiltered: !!servicesFiltered.find((s) => s.id === serviceId),
+                foundInBranch: !!servicesByBranch.find((s) => s.id === serviceId),
+                foundInAll: !!services.find((s) => s.id === serviceId)
+            });
+            return found ?? null;
+        },
+        [servicesFiltered, servicesByBranch, services, serviceId]
     );
 
     async function hold(slotTime: Date) {
