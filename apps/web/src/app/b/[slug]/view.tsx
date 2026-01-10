@@ -732,7 +732,9 @@ export default function BizClient({ data }: { data: Data }) {
                     // Игнорируем ошибку, используем данные от RPC
                 }
                 
+                // Устанавливаем слоты и очищаем ошибку после успешной загрузки
                 setSlots(filtered);
+                setSlotsError(null);
             } catch (e) {
                 if (ignore) return;
                 console.error('[get_free_slots_service_day_v2] catch:', e);
