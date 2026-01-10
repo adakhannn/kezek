@@ -23,8 +23,12 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Install deps
+      - name: Install deps (root)
         run: pnpm install --frozen-lockfile
+
+      - name: Install deps (apps/web)
+        run: pnpm install --frozen-lockfile
+        working-directory: apps/web
 
       - name: ESLint
         run: pnpm lint
