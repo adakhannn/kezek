@@ -579,62 +579,213 @@ function QuickDesk({
     const [date, setDate]             = useState<string>(() => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
 
     // Временные переводы для выбранной даты
-    const [temporaryTransfers, setTemporaryTransfers] = useState<Map<string, string>>(new Map());
+    // Загружаем для всех филиалов, чтобы корректно определить временные переводы независимо от выбранного филиала
+    const [temporaryTransfers, setTemporaryTransfers] = useState<Array<{ staff_id: string; branch_id: string; date: string }>>([]);
     
-    // Загрузка временных переводов для выбранной даты
+    // Загрузка временных переводов для выбранной даты (для всех филиалов)
     useEffect(() => {
-        if (!branchId || !date) {
-            setTemporaryTransfers(new Map());
+        if (!date || !bizId || staff.length === 0) {
+            setTemporaryTransfers([]);
             return;
         }
         let ignore = false;
         (async () => {
+            // Создаем мапку staff_id -> home branch_id для определения временных переводов
+            const staffHomeBranches = new Map<string, string>();
+            for (const s of staff) {
+                staffHomeBranches.set(s.id, s.branch_id);
+            }
+            
+            const staffIds = Array.from(staffHomeBranches.keys());
+            
+            // Загружаем все правила расписания для всех сотрудников на выбранную дату
+            // Убираем фильтр по branch_id, чтобы загрузить ВСЕ временные переводы
             const { data, error } = await supabase
                 .from('staff_schedule_rules')
-                .select('staff_id, branch_id')
+                .select('staff_id, branch_id, date_on')
+                .eq('biz_id', bizId)
+                .in('staff_id', staffIds)
                 .eq('kind', 'date')
-                .eq('date', date)
-                .eq('branch_id', branchId);
+                .eq('is_active', true)
+                .eq('date_on', date);
             
             if (ignore) return;
             if (error) {
                 console.error('[QuickDesk] Error loading temporary transfers:', error);
-                setTemporaryTransfers(new Map());
+                setTemporaryTransfers([]);
                 return;
             }
             
-            // Создаем Map: staff_id -> branch_id (для временно переведенных мастеров)
-            const transfers = new Map<string, string>();
-            (data || []).forEach((rule: { staff_id: string; branch_id: string }) => {
-                transfers.set(rule.staff_id, rule.branch_id);
-            });
+            // Фильтруем: временный перевод = branch_id в правиле отличается от домашнего филиала сотрудника
+            const transfers = (data ?? [])
+                .filter((rule: { staff_id: string; branch_id: string; date_on: string }) => {
+                    const homeBranchId = staffHomeBranches.get(rule.staff_id);
+                    return homeBranchId && rule.branch_id !== homeBranchId;
+                })
+                .map((rule: { staff_id: string; branch_id: string; date_on: string }) => ({
+                    staff_id: rule.staff_id,
+                    branch_id: rule.branch_id,
+                    date: rule.date_on,
+                }));
+            
             setTemporaryTransfers(transfers);
         })();
         return () => { ignore = true; };
-    }, [branchId, date]);
+    }, [date, bizId, staff]);
 
-    // фильтры по филиалу (с учетом временных переводов)
-    const servicesByBranch = useMemo(
-        () => branchId ? services.filter(s => s.branch_id === branchId) : [],
-        [services, branchId],
-    );
+    /* ---------- сервисные навыки мастеров (service_staff) ---------- */
+    const [serviceStaff, setServiceStaff] = useState<Array<{ service_id: string; staff_id: string; is_active: boolean }> | null>(null);
+    useEffect(() => {
+        let ignore = false;
+        (async () => {
+            // Загружаем только связи для мастеров этого бизнеса
+            const staffIds = staff.map((s) => s.id);
+            if (staffIds.length === 0) {
+                setServiceStaff([]);
+                return;
+            }
+            const { data, error } = await supabase
+                .from('service_staff')
+                .select('service_id,staff_id,is_active')
+                .eq('is_active', true)
+                .in('staff_id', staffIds);
+            if (ignore) return;
+            if (error) {
+                console.warn('[QuickDesk] service_staff read error:', error.message);
+                setServiceStaff(null); // нет доступа — UI живёт без фильтра по навыкам
+            } else {
+                setServiceStaff((data ?? []) as Array<{ service_id: string; staff_id: string; is_active: boolean }>);
+            }
+        })();
+        return () => {
+            ignore = true;
+        };
+    }, [staff]);
+
+    // мапка service_id -> Set(staff_id)
+    const serviceToStaffMap = useMemo(() => {
+        if (!serviceStaff || serviceStaff.length === 0) return null;
+        const map = new Map<string, Set<string>>();
+        for (const row of serviceStaff) {
+            if (!row.is_active) continue;
+            if (!map.has(row.service_id)) map.set(row.service_id, new Set());
+            map.get(row.service_id)!.add(row.staff_id);
+        }
+        return map;
+    }, [serviceStaff]);
+
+    // Список мастеров: по филиалу + временные переводы В этот филиал на выбранную дату
+    // Исключаем мастеров, которые временно переведены В ДРУГОЙ филиал на эту дату
     const staffByBranch = useMemo(() => {
+        if (!branchId || !date) return [];
+        
+        // Основные сотрудники филиала
+        const mainStaff = staff.filter(s => s.branch_id === branchId);
+        const mainStaffIds = new Set(mainStaff.map(s => s.id));
+        
+        // Временно переведенные В выбранный филиал на эту дату
+        const transfersToThisBranch = temporaryTransfers.filter((t: { staff_id: string; branch_id: string; date: string }) => 
+            t.date === date && t.branch_id === branchId
+        );
+        const tempStaffIdsToThisBranch = new Set(transfersToThisBranch.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
+        
+        // Мастера, временно переведенные В ДРУГОЙ филиал на эту дату (их нужно исключить из основного филиала)
+        const transfersToOtherBranch = temporaryTransfers.filter((t: { staff_id: string; branch_id: string; date: string }) => 
+            t.date === date && t.branch_id !== branchId
+        );
+        const tempStaffIdsToOtherBranch = new Set(transfersToOtherBranch.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
+        
+        // Объединяем основных сотрудников и временно переведенных В этот филиал
+        const allStaffIds = new Set([...mainStaffIds, ...tempStaffIdsToThisBranch]);
+        
+        // Исключаем мастеров, которые временно переведены В ДРУГОЙ филиал
+        return staff.filter(s => {
+            const isIncluded = allStaffIds.has(s.id);
+            const isTransferredToOther = tempStaffIdsToOtherBranch.has(s.id);
+            
+            // Показываем мастера, если он включен (основной в филиале или переведен в этот филиал)
+            // И не переведен в другой филиал
+            return isIncluded && !isTransferredToOther;
+        });
+    }, [staff, branchId, temporaryTransfers, date]);
+
+    // Фильтрация услуг: для временно переведенного мастера показываем услуги из филиала временного перевода
+    // Для обычного мастера показываем услуги из выбранного филиала
+    const servicesByBranch = useMemo(() => {
         if (!branchId) return [];
         
-        // Мастера с основным филиалом = branchId
-        const regularStaff = staff.filter(s => s.branch_id === branchId);
+        // Если мастер не выбран или дата не выбрана, показываем услуги выбранного филиала
+        if (!staffId || !date) {
+            return services.filter(s => s.branch_id === branchId);
+        }
         
-        // Мастера, временно переведенные в branchId на выбранную дату
-        const transferredStaff = staff.filter(s => 
-            temporaryTransfers.has(s.id) && temporaryTransfers.get(s.id) === branchId
+        // Проверяем, является ли мастер временно переведенным
+        const tempTransfer = temporaryTransfers.find((t: { staff_id: string; branch_id: string; date: string }) => 
+            t.staff_id === staffId && t.date === date
         );
         
-        // Объединяем и убираем дубликаты
-        const allStaff = [...regularStaff, ...transferredStaff];
-        const uniqueStaff = Array.from(new Map(allStaff.map(s => [s.id, s])).values());
+        // Если мастер временно переведен, используем филиал временного перевода
+        // Иначе используем выбранный филиал
+        const targetBranchId = tempTransfer ? tempTransfer.branch_id : branchId;
         
-        return uniqueStaff;
-    }, [staff, branchId, temporaryTransfers]);
+        // Фильтруем услуги по целевому филиалу (временному или выбранному)
+        let filteredServices = services.filter(s => s.branch_id === targetBranchId);
+        
+        // Если есть serviceToStaffMap, дополнительно фильтруем по навыкам мастера
+        // Для временно переведенного мастера проверяем похожие услуги (с тем же названием и длительностью)
+        if (serviceToStaffMap) {
+            // Находим все услуги, которые делает выбранный мастер
+            const servicesForStaff = new Set<string>();
+            for (const [serviceId, staffSet] of serviceToStaffMap.entries()) {
+                if (staffSet.has(staffId)) {
+                    servicesForStaff.add(serviceId);
+                }
+            }
+            
+            // Если мастер временно переведен, проверяем похожие услуги
+            if (tempTransfer) {
+                filteredServices = filteredServices.filter(s => {
+                    // Проверяем, есть ли прямая связь с этой услугой
+                    if (servicesForStaff.has(s.id)) {
+                        return true;
+                    }
+                    
+                    // Для временно переведенного мастера: если услуга в целевом филиале, но нет прямой связи service_staff,
+                    // проверяем, есть ли у мастера связь с услугой с таким же названием в другом филиале
+                    const hasSimilarServiceLink = services.some(svc => 
+                        svc.name_ru === s.name_ru && 
+                        svc.duration_min === s.duration_min && 
+                        svc.id !== s.id &&
+                        servicesForStaff.has(svc.id)
+                    );
+                    
+                    // Если есть похожая услуга, которую мастер делает - показываем её
+                    return hasSimilarServiceLink;
+                });
+            } else {
+                // Для обычного мастера показываем только услуги, которые он делает
+                filteredServices = filteredServices.filter(s => servicesForStaff.has(s.id));
+            }
+        }
+        
+        return filteredServices;
+    }, [services, branchId, staffId, date, temporaryTransfers, serviceToStaffMap]);
+
+    // при смене мастера или даты — сбрасываем выбор услуги, если текущая не подходит
+    useEffect(() => {
+        if (!staffId || !date) {
+            if (!staffId) setServiceId('');
+            return;
+        }
+        // Если выбранная услуга не подходит под нового мастера или дату — сбрасываем выбор услуги
+        if (serviceId) {
+            const isServiceValid = servicesByBranch.some((s) => s.id === serviceId);
+            if (!isServiceValid) {
+                console.log('[QuickDesk] Service is not valid for current staff/date, clearing serviceId', { serviceId, staffId, date, servicesByBranch: servicesByBranch.map(s => s.id) });
+                setServiceId('');
+            }
+        }
+    }, [staffId, date, servicesByBranch, serviceId]);
 
     // слоты
     const [slots, setSlots] = useState<RpcSlot[]>([]);
@@ -685,6 +836,19 @@ function QuickDesk({
         let ignore = false;
         (async () => {
             if (!branchId || !serviceId || !date) { setSlots([]); setSlotStartISO(''); setSlotsLoading(false); return; }
+            
+            // Определяем целевой филиал: для временно переведенного мастера используем филиал временного перевода
+            let targetBranchId = branchId;
+            if (staffId && date) {
+                const tempTransfer = temporaryTransfers.find((t: { staff_id: string; branch_id: string; date: string }) => 
+                    t.staff_id === staffId && t.date === date
+                );
+                if (tempTransfer) {
+                    targetBranchId = tempTransfer.branch_id;
+                    console.log('[QuickDesk] Temporary transfer found for slots loading:', { staffId, date, tempBranch: tempTransfer.branch_id, selectedBranch: branchId });
+                }
+            }
+            
             setSlotsLoading(true);
             const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                 p_biz_id: bizId,
@@ -702,9 +866,18 @@ function QuickDesk({
             const raw = (data || []) as RpcSlot[];
             const now = new Date();
             const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
-            // Фильтруем по филиалу, мастеру (если выбран) и времени
+            
+            // Фильтруем по целевому филиалу (временному или выбранному), мастеру (если выбран) и времени
+            // Для временно переведенного мастера принимаем слоты только из филиала временного перевода
             const filtered = raw
-                .filter(s => s.branch_id === branchId)
+                .filter(s => {
+                    // Для временно переведенного мастера принимаем слоты только из филиала временного перевода
+                    if (staffId && targetBranchId !== branchId) {
+                        return s.branch_id === targetBranchId;
+                    }
+                    // Для обычного мастера показываем только слоты из выбранного филиала
+                    return s.branch_id === branchId;
+                })
                 .filter(s => staffId ? s.staff_id === staffId : true)
                 .filter(s => new Date(s.start_at) > minTime);
 
@@ -715,7 +888,7 @@ function QuickDesk({
             setSlotsLoading(false);
         })();
         return () => { ignore = true; };
-    }, [bizId, serviceId, staffId, date, branchId]);
+    }, [bizId, serviceId, staffId, date, branchId, temporaryTransfers]);
 
     // Debounce для поиска клиентов
     useEffect(() => {
