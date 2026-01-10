@@ -397,7 +397,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         // Нормализуем shift_date - обрезаем время, если оно есть (формат YYYY-MM-DD)
         const normalizedShifts = allShifts.map((s) => ({
             ...s,
-            shift_date: s.shift_date.split('T')[0], // Берем только дату, без времени
+            shift_date: s.shift_date.includes('T') ? s.shift_date.split('T')[0] : s.shift_date, // Берем только дату, без времени
         }));
         
         const closedShifts = normalizedShifts.filter((s) => s.status === 'closed');
