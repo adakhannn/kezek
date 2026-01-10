@@ -676,6 +676,7 @@ function QuickDesk({
 
     // Список мастеров: по филиалу + временные переводы В этот филиал на выбранную дату
     // Исключаем мастеров, которые временно переведены В ДРУГОЙ филиал на эту дату
+    // Мастера показываются только после выбора филиала и даты
     const staffByBranch = useMemo(() => {
         if (!branchId || !date) return [];
         
@@ -711,13 +712,9 @@ function QuickDesk({
 
     // Фильтрация услуг: для временно переведенного мастера показываем услуги из филиала временного перевода
     // Для обычного мастера показываем услуги из выбранного филиала
+    // Услуги показываются только после выбора филиала, даты и мастера
     const servicesByBranch = useMemo(() => {
-        if (!branchId) return [];
-        
-        // Если мастер не выбран или дата не выбрана, показываем услуги выбранного филиала
-        if (!staffId || !date) {
-            return services.filter(s => s.branch_id === branchId);
-        }
+        if (!branchId || !date || !staffId) return [];
         
         // Проверяем, является ли мастер временно переведенным
         const tempTransfer = temporaryTransfers.find((t: { staff_id: string; branch_id: string; date: string }) => 
@@ -772,18 +769,15 @@ function QuickDesk({
     }, [services, branchId, staffId, date, temporaryTransfers, serviceToStaffMap]);
 
     // при смене мастера или даты — сбрасываем выбор услуги, если текущая не подходит
+    // (этот useEffect уже не нужен, так как мы сбрасываем serviceId в useEffect выше при смене staffId)
+    // Но оставляем для валидации, если услуга была выбрана до смены мастера/даты
     useEffect(() => {
-        if (!staffId || !date) {
-            if (!staffId) setServiceId('');
-            return;
-        }
-        // Если выбранная услуга не подходит под нового мастера или дату — сбрасываем выбор услуги
-        if (serviceId) {
-            const isServiceValid = servicesByBranch.some((s) => s.id === serviceId);
-            if (!isServiceValid) {
-                console.log('[QuickDesk] Service is not valid for current staff/date, clearing serviceId', { serviceId, staffId, date, servicesByBranch: servicesByBranch.map(s => s.id) });
-                setServiceId('');
-            }
+        if (!staffId || !date || !serviceId) return;
+        // Если выбранная услуга не подходит под текущего мастера или дату — сбрасываем выбор услуги
+        const isServiceValid = servicesByBranch.some((s) => s.id === serviceId);
+        if (!isServiceValid) {
+            console.log('[QuickDesk] Service is not valid for current staff/date, clearing serviceId', { serviceId, staffId, date, servicesByBranch: servicesByBranch.map(s => s.id) });
+            setServiceId('');
         }
     }, [staffId, date, servicesByBranch, serviceId]);
 
@@ -825,11 +819,27 @@ function QuickDesk({
 
     // при смене филиала — сбрасываем выбор и слоты (как в публичной версии)
     useEffect(() => {
+        setDate(formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd')); // Сбрасываем дату на сегодня
         setServiceId('');
         setStaffId('');
         setSlots([]);
         setSlotStartISO('');
     }, [branchId]);
+    
+    // при смене даты — сбрасываем выбор мастера, услуги и слотов
+    useEffect(() => {
+        setStaffId('');
+        setServiceId('');
+        setSlots([]);
+        setSlotStartISO('');
+    }, [date]);
+    
+    // при смене мастера — сбрасываем выбор услуги и слотов
+    useEffect(() => {
+        setServiceId('');
+        setSlots([]);
+        setSlotStartISO('');
+    }, [staffId]);
 
     // загрузка слотов
     useEffect(() => {
@@ -985,7 +995,7 @@ function QuickDesk({
 
             {/* Параметры записи */}
             <div className="space-y-3 sm:space-y-4">
-                {/* Первая строка: Филиал, Услуга, Мастер */}
+                {/* Первая строка: Филиал, Дата, Мастер */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* Филиал */}
                     <div>
@@ -996,62 +1006,65 @@ function QuickDesk({
                         </select>
                     </div>
 
-                    {/* Услуга */}
+                    {/* Дата */}
                     <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.service', 'Услуга')}</label>
-                        <select className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={serviceId} onChange={(e) => setServiceId(e.target.value)} disabled={!branchId}>
-                            <option value="">{branchId ? t('bookings.desk.selectService', 'Выберите услугу') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
-                            {servicesByBranch.map(s => (
-                                <option key={s.id} value={s.id}>{getServiceName(s)} ({s.duration_min}м)</option>
-                            ))}
-                            {branchId && servicesByBranch.length === 0 && <option value="">{t('bookings.desk.noServices', 'Нет услуг в филиале')}</option>}
-                        </select>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.date', 'Дата')}</label>
+                        <div className="flex gap-2 items-center">
+                            <button
+                                type="button"
+                                onClick={() => setDate(today)}
+                                className={`px-2 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                                    date === today
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                }`}
+                                disabled={!branchId}
+                            >
+                                {t('bookings.desk.today', 'Сегодня')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setDate(tomorrow)}
+                                className={`px-2 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                                    date === tomorrow
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                }`}
+                                disabled={!branchId}
+                            >
+                                {t('bookings.desk.tomorrow', 'Завтра')}
+                            </button>
+                            <input 
+                                className="flex-1 px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                type="date" 
+                                value={date} 
+                                onChange={(e) => setDate(e.target.value)}
+                                disabled={!branchId}
+                            />
+                        </div>
                     </div>
 
                     {/* Мастер */}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.master', 'Мастер')}</label>
-                        <select className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={staffId} onChange={(e) => setStaffId(e.target.value)} disabled={!branchId}>
-                            <option value="">{branchId ? t('bookings.desk.selectMaster', 'Выберите мастера') : t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал')}</option>
+                        <select className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={staffId} onChange={(e) => setStaffId(e.target.value)} disabled={!branchId || !date}>
+                            <option value="">{!branchId ? t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал') : !date ? t('bookings.desk.selectDateFirst', 'Сначала выберите дату') : t('bookings.desk.selectMaster', 'Выберите мастера')}</option>
                             {staffByBranch.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
-                            {branchId && staffByBranch.length === 0 && <option value="">{t('bookings.desk.noMasters', 'Нет мастеров в филиале')}</option>}
+                            {branchId && date && staffByBranch.length === 0 && <option value="">{t('bookings.desk.noMasters', 'Нет мастеров в филиале')}</option>}
                         </select>
                     </div>
                 </div>
 
-                {/* Вторая строка: Дата и время */}
-                <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">{t('bookings.desk.date', 'Дата')}</label>
-                    <div className="flex gap-2 items-center">
-                        <button
-                            type="button"
-                            onClick={() => setDate(today)}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                                date === today
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            {t('bookings.desk.today', 'Сегодня')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setDate(tomorrow)}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                                date === tomorrow
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            {t('bookings.desk.tomorrow', 'Завтра')}
-                        </button>
-                        <input 
-                            className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
-                            type="date" 
-                            value={date} 
-                            onChange={(e) => setDate(e.target.value)} 
-                        />
-                    </div>
+                {/* Вторая строка: Услуга */}
+                <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.service', 'Услуга')}</label>
+                    <select className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={serviceId} onChange={(e) => setServiceId(e.target.value)} disabled={!branchId || !date || !staffId}>
+                        <option value="">{!branchId ? t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал') : !date ? t('bookings.desk.selectDateFirst', 'Сначала выберите дату') : !staffId ? t('bookings.desk.selectMasterFirst', 'Сначала выберите мастера') : t('bookings.desk.selectService', 'Выберите услугу')}</option>
+                        {servicesByBranch.map(s => (
+                            <option key={s.id} value={s.id}>{getServiceName(s)} ({s.duration_min}м)</option>
+                        ))}
+                        {branchId && date && staffId && servicesByBranch.length === 0 && <option value="">{t('bookings.desk.noServices', 'Нет услуг в филиале')}</option>}
+                    </select>
                 </div>
 
                 {/* Слоты времени */}
@@ -1067,7 +1080,7 @@ function QuickDesk({
                         </div>
                     ) : slots.length === 0 ? (
                         <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                            {branchId && serviceId ? t('bookings.desk.noSlots', 'Нет свободных слотов') : t('bookings.desk.selectParamsFirst', 'Выберите филиал, услугу и мастера')}
+                            {branchId && date && staffId && serviceId ? t('bookings.desk.noSlots', 'Нет свободных слотов') : t('bookings.desk.selectParamsFirst', 'Выберите филиал, дату, мастера и услугу')}
                         </div>
                     ) : (
                         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
