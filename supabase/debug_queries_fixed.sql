@@ -40,17 +40,31 @@ SELECT * FROM resolve_staff_day(
 );
 
 -- 6. Проверить, есть ли временный перевод в филиал услуги
+WITH biz_id AS (
+  SELECT id FROM businesses WHERE slug = 'manly' LIMIT 1
+),
+staff_id_val AS (
+  SELECT '9d87bc31-e7e6-44f7-8b64-0d0481f9443'::uuid as id
+)
 SELECT 
+  ssr.id as rule_id,
+  ssr.staff_id,
   ssr.branch_id as temp_branch_id,
+  svc.id as service_id,
   svc.branch_id as service_branch_id,
-  ssr.branch_id = svc.branch_id as matches_service_branch
+  (ssr.branch_id = svc.branch_id) as matches_service_branch,
+  ssr.date_on,
+  ssr.is_active,
+  ssr.intervals
 FROM staff_schedule_rules ssr
 CROSS JOIN services svc
-WHERE ssr.biz_id = (SELECT id FROM businesses WHERE slug = 'manly' LIMIT 1)
-  AND ssr.staff_id = '9d87bc31-e7e6-44f7-8b64-0d0481f9443'::uuid
+CROSS JOIN biz_id
+WHERE ssr.biz_id = biz_id.id
+  AND ssr.staff_id = (SELECT id FROM staff_id_val)
   AND ssr.date_on = '2026-01-10'::date
   AND ssr.is_active = true
   AND ssr.kind = 'date'
+  AND ssr.branch_id IS NOT NULL
   AND svc.name_ru = 'Взрослая стрижка'
-  AND svc.biz_id = (SELECT id FROM businesses WHERE slug = 'manly' LIMIT 1);
+  AND svc.biz_id = biz_id.id;
 
