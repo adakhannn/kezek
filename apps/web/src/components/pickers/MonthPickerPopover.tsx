@@ -159,12 +159,15 @@ export default function MonthPickerPopover({
                             day_selected: 'bg-indigo-600 text-white hover:bg-indigo-700',
                             day_today: 'ring-1 ring-indigo-500',
                         }}
-                        // Визуально выделяем все дни выбранного месяца
+                        // Выделяем все дни выбранного месяца визуально через кастомный модификатор
                         modifiers={{
-                            selected: selected ? (date) => {
+                            monthSelected: selected ? (date) => {
                                 return date.getMonth() === selected.getMonth() && 
                                        date.getFullYear() === selected.getFullYear();
                             } : undefined,
+                        }}
+                        modifiersClassNames={{
+                            monthSelected: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-100',
                         }}
                     />
                 </div>
