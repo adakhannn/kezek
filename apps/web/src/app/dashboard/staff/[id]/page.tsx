@@ -62,29 +62,29 @@ export default async function Page({
                 .select('id, rating, comment, created_at, booking_id')
                 .in('booking_id', bookingIds)
                 .order('created_at', { ascending: false })
-            : { data: [], error: null },
+            : Promise.resolve({ data: [], error: null }),
         // Загружаем информацию об услугах
         bookingIds.length > 0
             ? admin
                 .from('bookings')
                 .select('id, service_id, services:services!bookings_service_id_fkey(name_ru, name_ky, name_en)')
                 .in('id', bookingIds)
-            : { data: [], error: null },
+            : Promise.resolve({ data: [], error: null }),
     ]);
 
     // Создаем мапу booking_id -> service для быстрого поиска
     const serviceMap = new Map<string, { name_ru: string; name_ky?: string | null; name_en?: string | null }>();
-    (servicesData ?? []).forEach(booking => {
+    (servicesData ?? []).forEach((booking: { id: string; service_id?: string | null; services?: unknown }) => {
         if (!booking.service_id) return;
         const service = Array.isArray(booking.services) ? booking.services[0] : booking.services;
-        if (service && typeof service === 'object' && 'name_ru' in service) {
+        if (service && typeof service === 'object' && service !== null && 'name_ru' in service) {
             serviceMap.set(booking.id, service as { name_ru: string; name_ky?: string | null; name_en?: string | null });
         }
     });
 
     // Создаем мапу booking_id -> booking для быстрого поиска
     const bookingMap = new Map<string, { start_at: string; end_at: string; client_name: string | null; client_phone: string | null }>();
-    (bookingsData ?? []).forEach(booking => {
+    (bookingsData ?? []).forEach((booking: { id: string; start_at: string; end_at: string; client_name: string | null; client_phone: string | null }) => {
         bookingMap.set(booking.id, {
             start_at: booking.start_at,
             end_at: booking.end_at,
@@ -94,8 +94,21 @@ export default async function Page({
     });
 
     // Обрабатываем отзывы: объединяем данные из reviews и bookings
-    const reviews = (reviewsData ?? [])
-        .map(review => {
+    type ReviewData = {
+        id: string;
+        rating: number;
+        comment: string | null;
+        created_at: string;
+        booking_id: string;
+        service_name: string | null;
+        start_at: string;
+        end_at: string;
+        client_name: string | null;
+        client_phone: string | null;
+    };
+    
+    const reviews: ReviewData[] = (reviewsData ?? [])
+        .map((review: { id: string; rating: number; comment: string | null; created_at: string; booking_id: string }) => {
             if (!review || !review.booking_id) return null;
             
             // Получаем booking из мапы
@@ -128,7 +141,7 @@ export default async function Page({
                 client_phone: booking.client_phone,
             };
         })
-        .filter((r): r is NonNullable<typeof r> => r !== null);
+        .filter((r): r is ReviewData => r !== null);
 
     const activeBranches = (branches ?? []).filter(b => b.is_active);
 
