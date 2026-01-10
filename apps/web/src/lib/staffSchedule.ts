@@ -59,7 +59,7 @@ export async function initializeStaffSchedule(
             throw new Error(`Failed to check existing schedule: ${selectError.message}`);
         }
 
-        const existingDates = new Set((existingRules ?? []).map((r) => r.date_on));
+        const existingDates = new Set((existingRules ?? []).map((r: { date_on: string }) => r.date_on));
         const missingDates = allDates.filter((d) => !existingDates.has(d));
 
         console.log(`[initializeStaffSchedule] Found ${existingDates.size} existing dates, ${missingDates.length} missing dates`);

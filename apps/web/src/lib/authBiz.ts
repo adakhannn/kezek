@@ -17,7 +17,7 @@ export async function getSupabaseServer() {
 
     return createServerClient(url, anon, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value,
+            get: (n: string) => cookieStore.get(n)?.value,
             set: () => {},
             remove: () => {},
         },
@@ -78,8 +78,8 @@ export async function getBizContextForManagers() {
         ]);
 
         if (ur && roleRows) {
-            const rolesMap = new Map<string, string>(roleRows.map(r => [String(r.id), String(r.key)]));
-            const eligible = ur.find(r => ROLE_KEYS_ALLOWED.has(rolesMap.get(String(r.role_id)) || ''));
+            const rolesMap = new Map<string, string>(roleRows.map((r: { id: string | number; key: string }) => [String(r.id), String(r.key)]));
+            const eligible = ur.find((r: { role_id: string | number; biz_id?: string | null }) => ROLE_KEYS_ALLOWED.has(rolesMap.get(String(r.role_id)) || ''));
             if (eligible?.biz_id) bizId = String(eligible.biz_id);
         }
 
