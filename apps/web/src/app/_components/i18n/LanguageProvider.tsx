@@ -64,6 +64,8 @@ const dictionaries: Dictionaries = {
         'booking.step4.noServices': 'Тандалган кызматкерде азырынча ыйгарылган кызматтар жок.',
         'booking.step5.title': 'Кадам 5. Убакытты тандаңыз',
         'booking.step5.selectedDate': 'Тандалган күн:',
+        'booking.step5.masterNoService': 'Тандалган кызматкер бул кызматты аткарбайт',
+        'booking.step5.masterNoServiceHint': 'Сураныч, 4-кадамга кайтып, башка кызматкерди же башка кызматты тандаңыз.',
         'booking.step4.masterNoService': 'Тандалган кызматкер бул кызматты аткарбайт',
         'booking.step4.masterNoServiceHint':
             'Сураныч, 3-кадамга кайтып, башка кызматкерди же башка кызматты тандаңыз.',
@@ -851,6 +853,8 @@ const dictionaries: Dictionaries = {
         'booking.step4.noServices': 'У выбранного мастера пока нет назначенных услуг.',
         'booking.step5.title': 'Шаг 5. Выберите время',
         'booking.step5.selectedDate': 'Выбранная дата:',
+        'booking.step5.masterNoService': 'Выбранный мастер не выполняет эту услугу',
+        'booking.step5.masterNoServiceHint': 'Пожалуйста, вернитесь к шагу 4 и выберите другого мастера или выберите другую услугу.',
         'booking.step4.masterNoService': 'Выбранный мастер не выполняет эту услугу',
         'booking.step4.masterNoServiceHint':
             'Пожалуйста, вернитесь к шагу 3 и выберите другого мастера или выберите другую услугу.',
@@ -1626,6 +1630,8 @@ const dictionaries: Dictionaries = {
         'booking.step4.noServices': 'The selected master has no assigned services yet.',
         'booking.step5.title': 'Step 5. Select a time',
         'booking.step5.selectedDate': 'Selected date:',
+        'booking.step5.masterNoService': 'The selected master does not perform this service',
+        'booking.step5.masterNoServiceHint': 'Please go back to step 4 and select another master or select another service.',
         'booking.step4.masterNoService': 'The selected master does not perform this service',
         'booking.step4.masterNoServiceHint':
             'Please go back to step 3 and select another master or select another service.',

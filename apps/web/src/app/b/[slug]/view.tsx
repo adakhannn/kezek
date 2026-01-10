@@ -959,9 +959,9 @@ export default function BizClient({ data }: { data: Data }) {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                     </svg>
                                                     <div>
-                                                        <p className="font-medium">{t('booking.step4.masterNoService', 'Выбранный мастер не выполняет эту услугу')}</p>
+                                                        <p className="font-medium">{t('booking.step5.masterNoService', 'Выбранный мастер не выполняет эту услугу')}</p>
                                                         <p className="mt-1 text-amber-700 dark:text-amber-300">
-                                                            {t('booking.step4.masterNoServiceHint', 'Пожалуйста, вернитесь к шагу 3 и выберите другого мастера или выберите другую услугу.')}
+                                                            {t('booking.step5.masterNoServiceHint', 'Пожалуйста, вернитесь к шагу 4 и выберите другого мастера или выберите другую услугу.')}
                                                         </p>
                                                     </div>
                                                 </div>
