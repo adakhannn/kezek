@@ -75,7 +75,39 @@ export async function POST(req: Request) {
             );
         }
 
-        // Вставляем новые позиции
+        // Собираем booking_id из всех items (даже если суммы еще не заполнены)
+        // для обновления статуса записей на "пришел" (paid)
+        const allBookingIds = items
+            .map((it: { bookingId?: string | null; booking_id?: string | null }) => it.bookingId ?? it.booking_id ?? null)
+            .filter((id: string | null): id is string => !!id);
+
+        // Обновляем статус записей на "пришел" (paid), если они были добавлены в смену
+        // Делаем это сразу при добавлении записи в список, даже если суммы еще не заполнены
+        const admin = getServiceClient();
+        if (allBookingIds.length > 0) {
+            for (const bookingId of allBookingIds) {
+                try {
+                    const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
+                        p_booking_id: bookingId,
+                        p_new_status: 'paid',
+                    });
+                    if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+                        // Если RPC не работает, используем прямой update
+                        const { error: updateError } = await admin
+                            .from('bookings')
+                            .update({ status: 'paid' })
+                            .eq('id', bookingId);
+                        if (updateError) {
+                            console.error(`Error updating booking ${bookingId} status:`, updateError);
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Error updating booking ${bookingId} status:`, e);
+                }
+            }
+        }
+
+        // Вставляем новые позиции (фильтруем только для сохранения в БД)
         if (items.length > 0) {
             const cleanItems = items
                 .map((it: {
@@ -99,8 +131,9 @@ export async function POST(req: Request) {
                     booking_id: it.bookingId ?? it.booking_id ?? null,
                     note: it.note?.trim() || null,
                 }))
-                .filter((it: { service_amount: number; consumables_amount: number }) => 
-                    it.service_amount > 0 || it.consumables_amount > 0
+                .filter((it: { service_amount: number; consumables_amount: number; booking_id: string | null }) => 
+                    // Сохраняем в БД только если есть сумма ИЛИ booking_id (чтобы сохранить связь с записью)
+                    it.service_amount > 0 || it.consumables_amount > 0 || it.booking_id !== null
                 );
 
             if (cleanItems.length > 0) {
@@ -114,33 +147,6 @@ export async function POST(req: Request) {
                         { ok: false, error: 'Не удалось сохранить позиции' },
                         { status: 500 }
                     );
-                }
-
-                // Обновляем статус записей на "пришел" (paid), если они были добавлены в смену
-                const admin = getServiceClient();
-                const bookingIds = cleanItems
-                    .map((it: { booking_id: string | null }) => it.booking_id)
-                    .filter((id: string | null): id is string => !!id);
-
-                if (bookingIds.length > 0) {
-                    // Используем RPC функцию для обновления статуса
-                    for (const bookingId of bookingIds) {
-                        try {
-                            const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
-                                p_booking_id: bookingId,
-                                p_new_status: 'paid',
-                            });
-                            if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
-                                // Если RPC не работает, используем прямой update
-                                await admin
-                                    .from('bookings')
-                                    .update({ status: 'paid' })
-                                    .eq('id', bookingId);
-                            }
-                        } catch (e) {
-                            console.error(`Error updating booking ${bookingId} status:`, e);
-                        }
-                    }
                 }
             }
         }
