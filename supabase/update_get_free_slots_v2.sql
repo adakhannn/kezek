@@ -33,6 +33,7 @@ DECLARE
   v_dur_min int;
   v_biz_tz text;
   v_effective_branch_id uuid;
+  v_temp_transfer_branch_id uuid;
 BEGIN
   -- 1) сервис и его филиал
   SELECT s.id, s.biz_id, s.branch_id, s.duration_min
@@ -76,29 +77,25 @@ BEGIN
     IF v_effective_branch_id IS NULL OR v_effective_branch_id <> v_service.branch_id THEN
       -- Дополнительная проверка: возможно мастер временно переведен в филиал услуги
       -- (resolve_staff_day может вернуть branch_id из основного филиала, а не из временного перевода)
-      DECLARE
-        v_temp_transfer_branch_id uuid;
-      BEGIN
-        -- Проверяем, есть ли временный перевод мастера в филиал услуги на эту дату
-        SELECT ssr.branch_id INTO v_temp_transfer_branch_id
-        FROM public.staff_schedule_rules ssr
-        WHERE ssr.biz_id = p_biz_id
-          AND ssr.staff_id = v_staff.staff_id
-          AND ssr.kind = 'date'
-          AND ssr.date_on = p_day
-          AND ssr.is_active = true
-          AND ssr.branch_id IS NOT NULL
-          AND ssr.branch_id = v_service.branch_id
-        LIMIT 1;
+      -- Проверяем, есть ли временный перевод мастера в филиал услуги на эту дату
+      SELECT ssr.branch_id INTO v_temp_transfer_branch_id
+      FROM public.staff_schedule_rules ssr
+      WHERE ssr.biz_id = p_biz_id
+        AND ssr.staff_id = v_staff.staff_id
+        AND ssr.kind = 'date'
+        AND ssr.date_on = p_day
+        AND ssr.is_active = true
+        AND ssr.branch_id IS NOT NULL
+        AND ssr.branch_id = v_service.branch_id
+      LIMIT 1;
 
-        -- Если нет временного перевода в филиал услуги, пропускаем мастера
-        IF v_temp_transfer_branch_id IS NULL THEN
-          CONTINUE;
-        END IF;
+      -- Если нет временного перевода в филиал услуги, пропускаем мастера
+      IF v_temp_transfer_branch_id IS NULL THEN
+        CONTINUE;
+      END IF;
 
-        -- Если есть временный перевод в филиал услуги, используем branch_id из временного перевода
-        v_effective_branch_id := v_temp_transfer_branch_id;
-      END;
+      -- Если есть временный перевод в филиал услуги, используем branch_id из временного перевода
+      v_effective_branch_id := v_temp_transfer_branch_id;
     END IF;
 
     -- генерим сетку слотов в локальном времени бизнеса → переводим в timestamptz
