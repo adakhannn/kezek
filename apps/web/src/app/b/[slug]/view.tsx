@@ -675,7 +675,7 @@ export default function BizClient({ data }: { data: Data }) {
         return () => {
             ignore = true;
         };
-    }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey, serviceToStaffMap, temporaryTransfers]);
+    }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey, serviceToStaffMap, temporaryTransfers, servicesFiltered, t]);
 
     // Проверяем, есть ли уже записи клиента в этом бизнесе на выбранный день
     useEffect(() => {
