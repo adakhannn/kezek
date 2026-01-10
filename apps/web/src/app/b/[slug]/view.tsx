@@ -371,7 +371,8 @@ export default function BizClient({ data }: { data: Data }) {
         };
     }, [branchId, biz.id, staff]);
 
-    // Список мастеров: по филиалу + временные переводы на выбранную дату
+    // Список мастеров: по филиалу + временные переводы В этот филиал на выбранную дату
+    // Исключаем мастеров, которые временно переведены В ДРУГОЙ филиал на эту дату
     const staffFiltered = useMemo<Staff[]>(() => {
         if (!branchId) return [];
         
@@ -379,23 +380,37 @@ export default function BizClient({ data }: { data: Data }) {
         const mainStaff = staffByBranch;
         const mainStaffIds = new Set(mainStaff.map(s => s.id));
         
-        // Если дата выбрана, показываем только тех, кто переведен на эту дату
-        // Если дата не выбрана, показываем всех с временными переводами (для совместимости)
-        let tempStaffIds = new Set<string>();
+        // Если дата выбрана, проверяем временные переводы
         if (dayStr) {
-            // Дата выбрана - показываем только тех, кто переведен на эту дату
-            const transfersForDay = temporaryTransfers.filter((t: { staff_id: string; branch_id: string; date: string }) => t.date === dayStr);
-            tempStaffIds = new Set(transfersForDay.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
-        } else {
-            // Дата не выбрана - показываем всех, кто имеет хотя бы один временный перевод
-            tempStaffIds = new Set(temporaryTransfers.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
+            // Временно переведенные В выбранный филиал на эту дату
+            const transfersToThisBranch = temporaryTransfers.filter((t: { staff_id: string; branch_id: string; date: string }) => 
+                t.date === dayStr && t.branch_id === branchId
+            );
+            const tempStaffIdsToThisBranch = new Set(transfersToThisBranch.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
+            
+            // Мастера, временно переведенные В ДРУГОЙ филиал на эту дату (их нужно исключить из основного филиала)
+            const transfersToOtherBranch = temporaryTransfers.filter((t: { staff_id: string; branch_id: string; date: string }) => 
+                t.date === dayStr && t.branch_id !== branchId
+            );
+            const tempStaffIdsToOtherBranch = new Set(transfersToOtherBranch.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
+            
+            // Объединяем основных сотрудников и временно переведенных В этот филиал
+            const allStaffIds = new Set([...mainStaffIds, ...tempStaffIdsToThisBranch]);
+            
+            // Исключаем мастеров, которые временно переведены В ДРУГОЙ филиал
+            return staff.filter(s => {
+                const isIncluded = allStaffIds.has(s.id);
+                const isTransferredToOther = tempStaffIdsToOtherBranch.has(s.id);
+                
+                // Показываем мастера, если он включен (основной в филиале или переведен в этот филиал)
+                // И не переведен в другой филиал
+                return isIncluded && !isTransferredToOther;
+            });
         }
         
-        // Объединяем основных сотрудников и временно переведенных
-        const allStaffIds = new Set([...mainStaffIds, ...tempStaffIds]);
-        
-        // Возвращаем сотрудников, которые либо основные в этом филиале, либо временно переведены на выбранную дату
-        return staff.filter(s => allStaffIds.has(s.id));
+        // Дата не выбрана - показываем только основных сотрудников филиала
+        // (не показываем временно переведенных, так как не знаем дату)
+        return mainStaff;
     }, [staffByBranch, staff, branchId, temporaryTransfers, dayStr]);
 
     // при смене даты — сбрасываем выборы мастеров и услуг, так как список мастеров может измениться
