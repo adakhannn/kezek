@@ -16,6 +16,8 @@ type Branch = { id: string; name: string };
 type Service = {
     id: string;
     name_ru: string;
+    name_ky?: string | null;
+    name_en?: string | null;
     duration_min: number;
     price_from?: number | null;
     price_to?: number | null;
@@ -74,19 +76,29 @@ export default function BizClient({ data }: { data: Data }) {
     const { biz, branches, services, staff } = data;
     const {t, locale} = useLanguage();
     
-    // Функции для форматирования названий (транслитерация для английского)
+    // Функции для форматирования названий (используем нужный язык, если доступен)
     const formatBranchName = (name: string): string => {
+        // Для филиалов используется транслитерация, так как нет отдельных полей для языков
         if (locale === 'en') {
             return transliterate(name);
         }
         return name;
     };
     
-    const formatServiceName = (name: string): string => {
-        if (locale === 'en') {
-            return transliterate(name);
+    const formatServiceName = (service: Service): string => {
+        // Используем поле для выбранного языка, если оно заполнено
+        if (locale === 'en' && service.name_en) {
+            return service.name_en;
         }
-        return name;
+        if (locale === 'ky' && service.name_ky) {
+            return service.name_ky;
+        }
+        // Если поля для выбранного языка нет, используем транслитерацию для английского
+        if (locale === 'en') {
+            return transliterate(service.name_ru);
+        }
+        // Для русского и кыргызского (если name_ky нет) используем name_ru
+        return service.name_ru;
     };
 
     /* ---------- auth ---------- */
@@ -1249,7 +1261,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                     >
                                                         <div>
                                                             <div className="font-semibold text-gray-900 dark:text-gray-100">
-                                                                {formatServiceName(s.name_ru)}
+                                                                {formatServiceName(s)}
                                                             </div>
                                                             <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                                                                 {s.duration_min} {t('booking.duration.min', 'мин')}
@@ -1437,7 +1449,7 @@ export default function BizClient({ data }: { data: Data }) {
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">{t('booking.summary.service', 'Услуга:')}</span>
                                 <span className="text-right font-medium">
-                                    {serviceCurrent ? formatServiceName(serviceCurrent.name_ru) : t('booking.summary.notSelectedFem', 'Не выбрана')}
+                                    {serviceCurrent ? formatServiceName(serviceCurrent) : t('booking.summary.notSelectedFem', 'Не выбрана')}
                                 </span>
                             </div>
                             <div className="flex justify-between gap-2">

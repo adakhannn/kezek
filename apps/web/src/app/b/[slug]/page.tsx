@@ -28,7 +28,7 @@ async function getData(slug: string) {
 
     // все активные услуги бизнеса (дальше фильтруем по филиалу)
     const services = await q(
-        `services?select=id,name_ru,duration_min,price_from,price_to,active,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`
+        `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`
     );
 
     // активные мастера с их "родным" филиалом
