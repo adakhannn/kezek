@@ -57,33 +57,7 @@ BEGIN
     WHERE st.biz_id = p_biz_id
       AND st.is_active
   LOOP
-    -- Сначала проверяем, есть ли временный перевод мастера в филиал услуги на эту дату
-    -- Это нужно сделать ДО вызова resolve_staff_day, чтобы знать, что мастер работает в филиале услуги
-    SELECT ssr.branch_id INTO v_effective_branch_id
-    FROM public.staff_schedule_rules ssr
-    WHERE ssr.biz_id = p_biz_id
-      AND ssr.staff_id = v_staff.staff_id
-      AND ssr.kind = 'date'
-      AND ssr.date_on = p_day
-      AND ssr.is_active = true
-      AND ssr.branch_id IS NOT NULL
-      AND ssr.branch_id = v_service.branch_id  -- временно переведен в филиал услуги
-    LIMIT 1;
-
-    -- Если нет временного перевода в филиал услуги, проверяем основной филиал мастера
-    IF v_effective_branch_id IS NULL THEN
-      SELECT st.branch_id INTO v_effective_branch_id
-      FROM public.staff st
-      WHERE st.id = v_staff.staff_id;
-    END IF;
-
-    -- Проверяем филиал: мастер должен работать в филиале услуги
-    -- (либо основной филиал, либо временный перевод в филиал услуги)
-    IF v_effective_branch_id IS NULL OR v_effective_branch_id <> v_service.branch_id THEN
-      CONTINUE;
-    END IF;
-
-    -- Теперь получаем расписание на дату (resolve_staff_day уже учитывает временные переводы)
+    -- Получаем расписание на дату (resolve_staff_day уже учитывает временные переводы)
     SELECT * INTO v_sched FROM public.resolve_staff_day(v_staff.staff_id, p_day);
     IF NOT FOUND THEN CONTINUE; END IF;
 
@@ -92,8 +66,40 @@ BEGIN
       CONTINUE;
     END IF;
 
-    -- Используем branch_id из расписания (resolve_staff_day уже вернул правильный branch_id)
+    -- Определяем эффективный филиал мастера на эту дату:
+    -- resolve_staff_day уже вернул правильный branch_id (из временного перевода или основного)
     v_effective_branch_id := v_sched.branch_id;
+
+    -- Проверяем филиал: мастер должен работать в филиале услуги
+    -- Если branch_id из resolve_staff_day не совпадает с филиалом услуги,
+    -- проверяем, есть ли временный перевод мастера в филиал услуги
+    IF v_effective_branch_id IS NULL OR v_effective_branch_id <> v_service.branch_id THEN
+      -- Дополнительная проверка: возможно мастер временно переведен в филиал услуги
+      -- (resolve_staff_day может вернуть branch_id из основного филиала, а не из временного перевода)
+      DECLARE
+        v_temp_transfer_branch_id uuid;
+      BEGIN
+        -- Проверяем, есть ли временный перевод мастера в филиал услуги на эту дату
+        SELECT ssr.branch_id INTO v_temp_transfer_branch_id
+        FROM public.staff_schedule_rules ssr
+        WHERE ssr.biz_id = p_biz_id
+          AND ssr.staff_id = v_staff.staff_id
+          AND ssr.kind = 'date'
+          AND ssr.date_on = p_day
+          AND ssr.is_active = true
+          AND ssr.branch_id IS NOT NULL
+          AND ssr.branch_id = v_service.branch_id
+        LIMIT 1;
+
+        -- Если нет временного перевода в филиал услуги, пропускаем мастера
+        IF v_temp_transfer_branch_id IS NULL THEN
+          CONTINUE;
+        END IF;
+
+        -- Если есть временный перевод в филиал услуги, используем branch_id из временного перевода
+        v_effective_branch_id := v_temp_transfer_branch_id;
+      END;
+    END IF;
 
     -- генерим сетку слотов в локальном времени бизнеса → переводим в timestamptz
     RETURN QUERY
