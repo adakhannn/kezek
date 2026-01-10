@@ -1025,9 +1025,9 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         {t('staff.finance.clients.empty', 'Пока нет добавленных клиентов. Добавьте клиента из записей или введите вручную, укажите суммы за услугу и расходники.')}
                     </p>
                 ) : (
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1.5 text-sm">
                         {/* Заголовок колонок (для понимания структуры) */}
-                        <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 px-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr] gap-2 px-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             <span>{t('staff.finance.clients.client', 'Клиент')}</span>
                             <span>{t('staff.finance.clients.service', 'Услуга / комментарий')}</span>
                             <span className="text-right">{t('staff.finance.clients.amount', 'Сумма')}</span>
@@ -1054,12 +1054,12 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                 return (
                                     <div
                                         key={item.id ?? idx}
-                                        className={`group flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all ${isOpen && !isReadOnly ? 'cursor-pointer hover:shadow-sm' : ''}`}
+                                        className={`group flex items-center justify-between py-2 px-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all ${isOpen && !isReadOnly ? 'cursor-pointer hover:shadow-sm' : ''}`}
                                         onClick={() => isOpen && !isReadOnly && setExpandedItems((prev) => new Set(prev).add(idx))}
                                     >
-                                        <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr] gap-4 items-center min-w-0">
+                                        <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr] gap-2 items-center min-w-0">
                                             <div className="min-w-0">
-                                                <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                                                     {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
                                                 </div>
                                                 {item.note && (
@@ -1069,19 +1069,19 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                 )}
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="text-gray-700 dark:text-gray-300 truncate">
+                                                <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
                                                     {item.serviceName || <span className="text-gray-400">—</span>}
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                                     {(item.serviceAmount ?? 0) === 0 && !item.serviceName
                                                         ? <span className="text-gray-400">—</span>
                                                         : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${t('staff.finance.shift.som', 'сом')}`}
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                                     {(item.consumablesAmount ?? 0) === 0
                                                         ? <span className="text-gray-400">0</span>
                                                         : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {t('staff.finance.shift.som', 'сом')}
@@ -1089,23 +1089,23 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             </div>
                                         </div>
                                         {isOpen && !isReadOnly && (
-                                            <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     type="button"
-                                                    className="p-1.5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
+                                                    className="p-1 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded transition-colors"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setExpandedItems((prev) => new Set(prev).add(idx));
                                                     }}
                                                     title={t('staff.finance.clients.edit', 'Редактировать')}
                                                 >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                     </svg>
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
+                                                    className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         if (confirm(t('staff.finance.clients.confirmDelete', 'Удалить этого клиента?'))) {
@@ -1119,7 +1119,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                     }}
                                                     title={t('staff.finance.clients.delete', 'Удалить')}
                                                 >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
                                                 </button>
