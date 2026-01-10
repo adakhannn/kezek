@@ -159,24 +159,6 @@ export default function BizClient({ data }: { data: Data }) {
     /* ---------- временные переводы сотрудников (staff_schedule_rules) ---------- */
     const [temporaryTransfers, setTemporaryTransfers] = useState<Array<{ staff_id: string; branch_id: string; date: string }>>([]);
 
-    // Список мастеров: по филиалу + временные переводы
-    const staffFiltered = useMemo<Staff[]>(() => {
-        if (!branchId) return [];
-        
-        // Основные сотрудники филиала
-        const mainStaff = staffByBranch;
-        const mainStaffIds = new Set(mainStaff.map(s => s.id));
-        
-        // Показываем всех, кто имеет хотя бы один временный перевод в этот филиал
-        // (даже если дата еще не выбрана, чтобы пользователь мог выбрать мастера)
-        const tempStaffIds = new Set(temporaryTransfers.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
-        
-        // Объединяем основных сотрудников и временно переведенных
-        const allStaffIds = new Set([...mainStaffIds, ...tempStaffIds]);
-        
-        // Возвращаем сотрудников, которые либо основные в этом филиале, либо временно переведены
-        return staff.filter(s => allStaffIds.has(s.id));
-    }, [staffByBranch, staff, branchId, temporaryTransfers]);
 
     // Список услуг: по филиалу + по мастеру (если мастер выбран)
     const servicesFiltered = useMemo<Service[]>(() => {
@@ -251,6 +233,41 @@ export default function BizClient({ data }: { data: Data }) {
             ignore = true;
         };
     }, [branchId, biz.id]);
+
+    // Список мастеров: по филиалу + временные переводы на выбранную дату
+    const staffFiltered = useMemo<Staff[]>(() => {
+        if (!branchId) return [];
+        
+        // Основные сотрудники филиала
+        const mainStaff = staffByBranch;
+        const mainStaffIds = new Set(mainStaff.map(s => s.id));
+        
+        // Если дата выбрана, показываем только тех, кто переведен на эту дату
+        // Если дата не выбрана, показываем всех с временными переводами (для совместимости)
+        let tempStaffIds = new Set<string>();
+        if (dayStr) {
+            // Дата выбрана - показываем только тех, кто переведен на эту дату
+            const transfersForDay = temporaryTransfers.filter((t: { staff_id: string; branch_id: string; date: string }) => t.date === dayStr);
+            tempStaffIds = new Set(transfersForDay.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
+        } else {
+            // Дата не выбрана - показываем всех, кто имеет хотя бы один временный перевод
+            tempStaffIds = new Set(temporaryTransfers.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
+        }
+        
+        // Объединяем основных сотрудников и временно переведенных
+        const allStaffIds = new Set([...mainStaffIds, ...tempStaffIds]);
+        
+        // Возвращаем сотрудников, которые либо основные в этом филиале, либо временно переведены на выбранную дату
+        return staff.filter(s => allStaffIds.has(s.id));
+    }, [staffByBranch, staff, branchId, temporaryTransfers, dayStr]);
+
+    // при смене даты — сбрасываем выборы мастеров и услуг, так как список мастеров может измениться
+    useEffect(() => {
+        if (restoredFromStorage) return;
+        // Сбрасываем выборы при смене даты
+        setStaffId('');
+        setServiceId('');
+    }, [dayStr, restoredFromStorage]);
 
     const [slots, setSlots] = useState<Slot[]>([]);
     const [slotsLoading, setSlotsLoading] = useState(false);
@@ -634,13 +651,14 @@ export default function BizClient({ data }: { data: Data }) {
 
     /* ---------- пошаговый визард ---------- */
     const [step, setStep] = useState<number>(1);
-    const totalSteps = 4;
+    const totalSteps = 5;
 
     const stepsMeta = [
         { id: 1, label: t('booking.step.branch', 'Филиал') },
-        { id: 2, label: t('booking.step.master', 'Мастер') },
-        { id: 3, label: t('booking.step.service', 'Услуга') },
-        { id: 4, label: t('booking.step.dayTime', 'День и время') },
+        { id: 2, label: t('booking.step.day', 'День') },
+        { id: 3, label: t('booking.step.master', 'Мастер') },
+        { id: 4, label: t('booking.step.service', 'Услуга') },
+        { id: 5, label: t('booking.step.time', 'Время') },
     ] as const;
 
     // Валидация для перехода к следующему шагу
@@ -650,11 +668,14 @@ export default function BizClient({ data }: { data: Data }) {
         // Шаг 1 -> 2: должен быть выбран филиал
         if (step === 1) return !!branchId;
         
-        // Шаг 2 -> 3: должен быть выбран мастер
-        if (step === 2) return !!staffId;
+        // Шаг 2 -> 3: должна быть выбрана дата
+        if (step === 2) return !!dayStr;
         
-        // Шаг 3 -> 4: должна быть выбрана услуга И мастер должен делать эту услугу
-        if (step === 3) {
+        // Шаг 3 -> 4: должен быть выбран мастер
+        if (step === 3) return !!staffId;
+        
+        // Шаг 4 -> 5: должна быть выбрана услуга И мастер должен делать эту услугу
+        if (step === 4) {
             if (!serviceId || !staffId) return false;
             // Проверяем, что услуга есть в отфильтрованном списке
             const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
@@ -669,7 +690,7 @@ export default function BizClient({ data }: { data: Data }) {
         }
         
         return true;
-    }, [step, branchId, serviceId, staffId, serviceToStaffMap, totalSteps, servicesFiltered]);
+    }, [step, branchId, dayStr, serviceId, staffId, serviceToStaffMap, totalSteps, servicesFiltered]);
     
     const canGoPrev = step > 1;
 
@@ -773,15 +794,45 @@ export default function BizClient({ data }: { data: Data }) {
                             </section>
                         )}
 
-                        {/* Шаг 2: мастер */}
+                        {/* Шаг 2: день */}
                         {step === 2 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    {t('booking.step2.title', 'Шаг 2. Мастер')}
+                                    {t('booking.step2.title', 'Шаг 2. Выберите день')}
                                 </h2>
-                                {staffFiltered.length === 0 ? (
+                                <div className="space-y-3">
+                                    <DatePickerPopover
+                                        value={dayStr}
+                                        onChange={(val) => {
+                                            if (val) {
+                                                setDay(dateAtTz(val, '00:00'));
+                                            }
+                                        }}
+                                        min={todayStr}
+                                        max={maxStr}
+                                    />
+                                    {dayStr && (
+                                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                                            {t('booking.step2.selectedDate', 'Выбранная дата:')} {dayLabel}
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Шаг 3: мастер */}
+                        {step === 3 && (
+                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                    {t('booking.step3.title', 'Шаг 3. Выберите мастера')}
+                                </h2>
+                                {!dayStr ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        {t('booking.step2.noStaff', 'В этом филиале пока нет активных сотрудников.')}
+                                        {t('booking.step3.selectDayFirst', 'Сначала выберите день на шаге 2.')}
+                                    </div>
+                                ) : staffFiltered.length === 0 ? (
+                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                                        {t('booking.step3.noStaff', 'На выбранную дату в этом филиале нет доступных мастеров.')}
                                     </div>
                                 ) : (
                                     <div className="flex flex-wrap gap-2">
@@ -807,19 +858,19 @@ export default function BizClient({ data }: { data: Data }) {
                             </section>
                         )}
 
-                        {/* Шаг 3: услуга */}
-                        {step === 3 && (
+                        {/* Шаг 4: услуга */}
+                        {step === 4 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    {t('booking.step3.title', 'Шаг 3. Услуга')}
+                                    {t('booking.step4.title', 'Шаг 4. Выберите услугу')}
                                 </h2>
                                 {!staffId ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        {t('booking.step3.selectMasterFirst', 'Сначала выберите мастера на шаге 2.')}
+                                        {t('booking.step4.selectMasterFirst', 'Сначала выберите мастера на шаге 3.')}
                                     </div>
                                 ) : servicesFiltered.length === 0 ? (
                                     <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        {t('booking.step3.noServices', 'У выбранного мастера пока нет назначенных услуг.')}
+                                        {t('booking.step4.noServices', 'У выбранного мастера пока нет назначенных услуг.')}
                                     </div>
                                 ) : (
                                     <>
@@ -884,12 +935,17 @@ export default function BizClient({ data }: { data: Data }) {
                             </section>
                         )}
 
-                        {/* Шаг 4: день и время */}
-                        {step === 4 && (
+                        {/* Шаг 5: время */}
+                        {step === 5 && (
                             <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    {t('booking.step4.title', 'Шаг 4. День и время')}
+                                    {t('booking.step5.title', 'Шаг 5. Выберите время')}
                                 </h2>
+                                {dayStr && (
+                                    <div className="mb-3 text-xs text-gray-600 dark:text-gray-400">
+                                        {t('booking.step5.selectedDate', 'Выбранная дата:')} {dayLabel}
+                                    </div>
+                                )}
 
                                 {/* Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги */}
                                 {serviceId && staffId && serviceToStaffMap && (() => {
@@ -940,33 +996,6 @@ export default function BizClient({ data }: { data: Data }) {
                                         </div>
                                     </div>
                                 )}
-                                <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-                                    <div className="flex-1 min-w-[200px]">
-                                        <DatePickerPopover
-                                            value={dayStr}
-                                            min={todayStr}
-                                            max={maxStr}
-                                            onChange={(v) => {
-                                                if (!v) return;
-                                                setDay(dateAtTz(v, '00:00'));
-                                            }}
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
-                                        onClick={() => setDay(todayTz())}
-                                    >
-                                        {t('booking.today', 'Сегодня')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
-                                        onClick={() => setDay(addDays(todayTz(), 1))}
-                                    >
-                                        {t('booking.tomorrow', 'Завтра')}
-                                    </button>
-                                </div>
 
                                 <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                     {t('booking.freeSlots', 'Свободные слоты')}
@@ -1030,8 +1059,8 @@ export default function BizClient({ data }: { data: Data }) {
                                         : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
                                 }`}
                             >
-                                {step === totalSteps - 1
-                                    ? t('booking.nav.next', 'К выбору времени →')
+                                {step === totalSteps
+                                    ? t('booking.nav.selectTime', 'Выбрать время')
                                     : t('booking.nav.next', 'Далее →')}
                             </button>
                         </div>
