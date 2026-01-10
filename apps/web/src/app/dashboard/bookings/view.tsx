@@ -908,6 +908,18 @@ function QuickDesk({
         if (!slotStartISO) return alert(t('bookings.desk.errors.noSlots', 'Нет свободных слотов на выбранные параметры'));
         if (!staffId) return alert(t('bookings.desk.errors.selectMaster', 'Выбери мастера'));
 
+        // Определяем целевой филиал для создания брони: для временно переведенного мастера используем филиал временного перевода
+        let targetBranchId = branchId;
+        if (date) {
+            const tempTransfer = temporaryTransfers.find((t: { staff_id: string; branch_id: string; date: string }) => 
+                t.staff_id === staffId && t.date === date
+            );
+            if (tempTransfer) {
+                targetBranchId = tempTransfer.branch_id;
+                console.log('[QuickDesk] Creating booking with temporary branch:', { staffId, date, tempBranch: tempTransfer.branch_id, selectedBranch: branchId });
+            }
+        }
+
         // валидация клиента
         let p_client_id: string | null = null;
 
@@ -920,7 +932,7 @@ function QuickDesk({
         try {
             const { data, error } = await supabase.rpc('create_internal_booking', {
                 p_biz_id: bizId,
-                p_branch_id: branchId,
+                p_branch_id: targetBranchId, // Используем целевой филиал (временный или выбранный)
                 p_service_id: serviceId,
                 p_staff_id: staffId,
                 p_start: slotStartISO,
