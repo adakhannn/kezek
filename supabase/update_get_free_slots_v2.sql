@@ -33,7 +33,6 @@ DECLARE
   v_dur_min int;
   v_biz_tz text;
   v_effective_branch_id uuid;
-  v_is_temp_transfer boolean;
 BEGIN
   -- 1) сервис и его филиал
   SELECT s.id, s.biz_id, s.branch_id, s.duration_min
@@ -89,8 +88,8 @@ BEGIN
       CONTINUE;
     END IF;
 
-      -- генерим сетку слотов в локальном времени бизнеса → переводим в timestamptz
-      RETURN QUERY
+    -- генерим сетку слотов в локальном времени бизнеса → переводим в timestamptz
+    RETURN QUERY
       WITH
         raw_intervals AS (
           SELECT jsonb_array_elements(v_sched.intervals) AS j
