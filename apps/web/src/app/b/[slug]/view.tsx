@@ -2,6 +2,8 @@
 'use client';
 
 import { addDays, addMinutes, format } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { enGB } from 'date-fns/locale';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -108,6 +110,16 @@ export default function BizClient({ data }: { data: Data }) {
         }
         return name;
     };
+
+    // Получаем локаль для форматирования дат
+    const dateLocale = useMemo(() => {
+        if (locale === 'en') {
+            return enGB;
+        }
+        // Для русского и кыргызского используем русскую локаль
+        // (в date-fns нет встроенной киргизской локали)
+        return ru;
+    }, [locale]);
 
     /* ---------- auth ---------- */
     const [isAuthed, setIsAuthed] = useState<boolean>(false);
@@ -1009,7 +1021,11 @@ export default function BizClient({ data }: { data: Data }) {
         window.location.href = `/auth/sign-in?mode=phone&redirect=${redirect}`;
     }
 
-    const dayLabel = `${format(day, 'dd.MM.yyyy')} (${format(day, 'EEEE')})`;
+    const dayLabel = useMemo(() => {
+        const dateStr = format(day, 'dd.MM.yyyy', { locale: dateLocale });
+        const weekdayStr = format(day, 'EEEE', { locale: dateLocale });
+        return `${dateStr} (${weekdayStr})`;
+    }, [day, dateLocale]);
 
     /* ---------- пошаговый визард ---------- */
     const [step, setStep] = useState<number>(1);
