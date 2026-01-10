@@ -365,22 +365,52 @@ export default function BizClient({ data }: { data: Data }) {
                 
                 // Определяем правильный branch_id для фильтрации слотов
                 // Для временно переведенного мастера используем branch_id из временного перевода
+                // В temporaryTransfers хранятся записи где branch_id - это временный филиал, куда переведен мастер
                 let targetBranchId = branchId;
                 if (dayStr) {
                     const tempTransfer = temporaryTransfers.find((t: { staff_id: string; branch_id: string; date: string }) => 
-                        t.staff_id === staffId && t.branch_id === branchId && t.date === dayStr
+                        t.staff_id === staffId && t.date === dayStr
                     );
                     if (tempTransfer) {
                         // Для временно переведенного мастера используем branch_id временного филиала
+                        // tempTransfer.branch_id - это филиал, куда временно переведен мастер
                         targetBranchId = tempTransfer.branch_id;
+                        console.log('[Booking] Temporary transfer found:', { staffId, date: dayStr, tempBranch: tempTransfer.branch_id, selectedBranch: branchId });
                     }
                 }
                 
-                let filtered = all.filter(
-                    (s) => s.staff_id === staffId && 
-                           s.branch_id === targetBranchId &&
-                           new Date(s.start_at) > minTime
+                console.log('[Booking] Loading slots:', { staffId, serviceId, dayStr, targetBranchId, branchId, allSlotsFromRPC: all.length });
+                console.log('[Booking] All slots from RPC:', all.map(s => ({ staff_id: s.staff_id, branch_id: s.branch_id, start_at: s.start_at })));
+                
+                // Определяем, является ли мастер временно переведенным
+                const isTemporaryTransfer = dayStr && temporaryTransfers.some((t: { staff_id: string; branch_id: string; date: string }) => 
+                    t.staff_id === staffId && t.date === dayStr
                 );
+                
+                // Для временно переведенного мастера показываем слоты из обоих филиалов (основной и временный)
+                // Для обычного мастера показываем только слоты из выбранного филиала
+                let filtered = all.filter((s) => {
+                    if (s.staff_id !== staffId) return false;
+                    if (new Date(s.start_at) <= minTime) return false;
+                    
+                    // Если мастер временно переведен, принимаем слоты из любого филиала (RPC может вернуть слоты с branch_id основного филиала)
+                    if (isTemporaryTransfer) {
+                        // Проверяем, что branch_id соответствует либо выбранному филиалу, либо временному филиалу
+                        return s.branch_id === branchId || s.branch_id === targetBranchId;
+                    }
+                    
+                    // Для обычного мастера показываем только слоты из выбранного филиала
+                    return s.branch_id === branchId;
+                });
+                
+                console.log('[Booking] Filtered slots:', { 
+                    beforeFilter: all.length, 
+                    afterFilter: filtered.length, 
+                    targetBranchId, 
+                    branchId, 
+                    isTemporaryTransfer,
+                    filteredSlots: filtered.map(s => ({ branch_id: s.branch_id, start_at: s.start_at }))
+                });
                 
                 // Дополнительная проверка: исключаем слоты, которые уже забронированы
                 // (на случай, если RPC не учитывает все статусы)
