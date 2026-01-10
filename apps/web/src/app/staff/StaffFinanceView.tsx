@@ -1,9 +1,11 @@
 'use client';
 
+import { startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TZ } from '@/lib/time';
@@ -102,7 +104,7 @@ function formatTime(iso: string | null, locale: string) {
 }
 
 type TabKey = 'shift' | 'clients' | 'stats';
-type PeriodKey = 'day' | 'week' | 'month' | 'all';
+type PeriodKey = 'day' | 'month' | 'year' | 'all';
 
 export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const { t, locale } = useLanguage();
@@ -110,6 +112,9 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [today, setToday] = useState<TodayResponse | null>(null);
     const [activeTab, setActiveTab] = useState<TabKey>('shift');
     const [statsPeriod, setStatsPeriod] = useState<PeriodKey>('all');
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [allShifts, setAllShifts] = useState<Array<{
         shift_date: string;
         status: string;
@@ -387,21 +392,18 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         const closedShifts = allShifts.filter((s) => s.status === 'closed');
         
         let filtered: typeof closedShifts = [];
-        const now = new Date();
-        const todayStr = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
         
         if (statsPeriod === 'day') {
-            filtered = closedShifts.filter((s) => s.shift_date === todayStr);
-        } else if (statsPeriod === 'week') {
-            const weekAgo = new Date(now);
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            const weekAgoStr = formatInTimeZone(weekAgo, TZ, 'yyyy-MM-dd');
-            filtered = closedShifts.filter((s) => s.shift_date >= weekAgoStr && s.shift_date <= todayStr);
+            const dayStr = formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd');
+            filtered = closedShifts.filter((s) => s.shift_date === dayStr);
         } else if (statsPeriod === 'month') {
-            const monthAgo = new Date(now);
-            monthAgo.setMonth(monthAgo.getMonth() - 1);
-            const monthAgoStr = formatInTimeZone(monthAgo, TZ, 'yyyy-MM-dd');
-            filtered = closedShifts.filter((s) => s.shift_date >= monthAgoStr && s.shift_date <= todayStr);
+            const monthStart = formatInTimeZone(startOfMonth(selectedMonth), TZ, 'yyyy-MM-dd');
+            const monthEnd = formatInTimeZone(endOfMonth(selectedMonth), TZ, 'yyyy-MM-dd');
+            filtered = closedShifts.filter((s) => s.shift_date >= monthStart && s.shift_date <= monthEnd);
+        } else if (statsPeriod === 'year') {
+            const yearStart = formatInTimeZone(startOfYear(new Date(selectedYear, 0, 1)), TZ, 'yyyy-MM-dd');
+            const yearEnd = formatInTimeZone(endOfYear(new Date(selectedYear, 11, 31)), TZ, 'yyyy-MM-dd');
+            filtered = closedShifts.filter((s) => s.shift_date >= yearStart && s.shift_date <= yearEnd);
         } else {
             filtered = closedShifts;
         }
@@ -418,7 +420,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             totalLateMinutes,
             shiftsCount: filtered.length,
         };
-    }, [allShifts, statsPeriod]);
+    }, [allShifts, statsPeriod, selectedDate, selectedMonth, selectedYear]);
     
     const stats: Stats | null = filteredStats;
 
@@ -1221,51 +1223,108 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     </div>
                     
                     {/* Фильтры по периодам */}
-                    <div className="flex flex-wrap gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setStatsPeriod('day')}
-                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                statsPeriod === 'day'
-                                    ? 'bg-indigo-600 text-white border-indigo-600'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            {t('staff.finance.stats.period.day', 'День')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setStatsPeriod('week')}
-                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                statsPeriod === 'week'
-                                    ? 'bg-indigo-600 text-white border-indigo-600'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            {t('staff.finance.stats.period.week', 'Неделя')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setStatsPeriod('month')}
-                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                statsPeriod === 'month'
-                                    ? 'bg-indigo-600 text-white border-indigo-600'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            {t('staff.finance.stats.period.month', 'Месяц')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setStatsPeriod('all')}
-                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                statsPeriod === 'all'
-                                    ? 'bg-indigo-600 text-white border-indigo-600'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            {t('staff.finance.stats.period.all', 'Все время')}
-                        </button>
+                    <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setStatsPeriod('day')}
+                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                    statsPeriod === 'day'
+                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                }`}
+                            >
+                                {t('staff.finance.stats.period.day', 'День')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setStatsPeriod('month')}
+                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                    statsPeriod === 'month'
+                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                }`}
+                            >
+                                {t('staff.finance.stats.period.month', 'Месяц')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setStatsPeriod('year')}
+                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                    statsPeriod === 'year'
+                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                }`}
+                            >
+                                {t('staff.finance.stats.period.year', 'Год')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setStatsPeriod('all')}
+                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                    statsPeriod === 'all'
+                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                }`}
+                            >
+                                {t('staff.finance.stats.period.all', 'Все время')}
+                            </button>
+                        </div>
+                        
+                        {/* Фильтры для выбранного периода */}
+                        {statsPeriod === 'day' && (
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-gray-600 dark:text-gray-400">
+                                    {t('staff.finance.stats.selectDate', 'Выберите дату')}:
+                                </label>
+                                <DatePickerPopover
+                                    value={formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd')}
+                                    onChange={(dateStr) => {
+                                        const [year, month, day] = dateStr.split('-').map(Number);
+                                        setSelectedDate(new Date(year, month - 1, day));
+                                    }}
+                                    className="inline-block"
+                                />
+                            </div>
+                        )}
+                        
+                        {statsPeriod === 'month' && (
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-gray-600 dark:text-gray-400">
+                                    {t('staff.finance.stats.selectMonth', 'Выберите месяц')}:
+                                </label>
+                                <DatePickerPopover
+                                    value={formatInTimeZone(selectedMonth, TZ, 'yyyy-MM-dd')}
+                                    onChange={(dateStr) => {
+                                        const [year, month, day] = dateStr.split('-').map(Number);
+                                        setSelectedMonth(new Date(year, month - 1, 1));
+                                    }}
+                                    className="inline-block"
+                                />
+                            </div>
+                        )}
+                        
+                        {statsPeriod === 'year' && (
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-gray-600 dark:text-gray-400">
+                                    {t('staff.finance.stats.selectYear', 'Выберите год')}:
+                                </label>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                    className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                >
+                                    {Array.from({ length: 10 }, (_, i) => {
+                                        const year = new Date().getFullYear() - 5 + i;
+                                        return (
+                                            <option key={year} value={year}>
+                                                {year}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+                        )}
                     </div>
                     <div className="grid sm:grid-cols-3 gap-4 text-sm">
                         <div className="space-y-1">
