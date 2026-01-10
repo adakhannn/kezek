@@ -24,7 +24,7 @@ CREATE POLICY "Users can insert own reviews"
         AND EXISTS (
             SELECT 1
             FROM public.bookings b
-            WHERE b.id = reviews.booking_id
+            WHERE b.id = booking_id
               AND b.client_id = auth.uid()
         )
     );
