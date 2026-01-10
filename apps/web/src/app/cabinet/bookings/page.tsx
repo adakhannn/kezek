@@ -35,6 +35,7 @@ export default async function BookingsPage() {
 
     // Берём только свои брони (client_id = текущий пользователь)
     // Исключаем отменённые из предстоящих
+    // Предстоящие брони - записи, которые еще не закончились (end_at >= now)
     const { data: upcoming } = await supabase
         .from('bookings')
         .select(`
@@ -48,9 +49,10 @@ export default async function BookingsPage() {
     `)
         .eq('client_id', userId)
         .neq('status', 'cancelled')
-        .gte('start_at', nowISO)
+        .gte('end_at', nowISO)
         .order('start_at', { ascending: true });
 
+    // Прошедшие брони - записи, которые уже закончились (end_at < now)
     const { data: past } = await supabase
         .from('bookings')
         .select(`
@@ -63,7 +65,7 @@ export default async function BookingsPage() {
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)
-        .lt('start_at', nowISO)
+        .lt('end_at', nowISO)
         .order('start_at', { ascending: false });
 
     return (
