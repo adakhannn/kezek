@@ -423,16 +423,23 @@ export default function BizClient({ data }: { data: Data }) {
                 return;
             }
             
-            // Проверка: если у сотрудника нет услуг для выбранной услуги, не загружаем слоты
-            if (serviceToStaffMap) {
-                const allowedStaff = serviceToStaffMap.get(serviceId);
-                if (!allowedStaff?.has(staffId)) {
-                    setSlots([]);
-                    setSlotsError(t('booking.step4.masterNoService', 'Выбранный мастер не выполняет эту услугу'));
-                    setSlotsLoading(false);
-                    return;
-                }
+            // Проверка: если услуга не в servicesFiltered, значит мастер не выполняет её (или она не из правильного филиала)
+            // servicesFiltered уже учитывает временные переводы и связи service_staff (включая похожие услуги)
+            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
+            if (!isServiceValid) {
+                console.log('[Booking] Slots loading: service not in servicesFiltered, skipping RPC call', { 
+                    serviceId, 
+                    staffId,
+                    servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru }))
+                });
+                setSlots([]);
+                setSlotsError(t('booking.step4.masterNoService', 'Выбранный мастер не выполняет эту услугу'));
+                setSlotsLoading(false);
+                return;
             }
+            
+            // Если услуга валидна (есть в servicesFiltered), можно загружать слоты
+            console.log('[Booking] Slots loading: service is valid, proceeding with RPC call', { serviceId, staffId });
             
             setSlotsLoading(true);
             setSlotsError(null);
