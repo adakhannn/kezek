@@ -9,6 +9,7 @@ import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
+import { transliterate } from '@/lib/transliterate';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[] };
 type Branch = { id: string; name: string };
@@ -71,7 +72,15 @@ function fmtErr(e: unknown, t?: (key: string, fallback?: string) => string): str
 
 export default function BizClient({ data }: { data: Data }) {
     const { biz, branches, services, staff } = data;
-    const {t} = useLanguage();
+    const {t, locale} = useLanguage();
+    
+    // Функция для форматирования названия филиала (транслитерация для английского)
+    const formatBranchName = (name: string): string => {
+        if (locale === 'en') {
+            return transliterate(name);
+        }
+        return name;
+    };
 
     /* ---------- auth ---------- */
     const [isAuthed, setIsAuthed] = useState<boolean>(false);
@@ -1120,7 +1129,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                             : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
                                                     }`}
                                                 >
-                                                    {b.name}
+                                                    {formatBranchName(b.name)}
                                                 </button>
                                             );
                                         })}
@@ -1416,7 +1425,7 @@ export default function BizClient({ data }: { data: Data }) {
                         <div className="mt-2 space-y-1 rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-gray-950 dark:text-gray-200">
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">{t('booking.summary.branch', 'Филиал:')}</span>
-                                <span className="font-medium">{branch ? branch.name : t('booking.summary.notSelected', 'Не выбран')}</span>
+                                <span className="font-medium">{branch ? formatBranchName(branch.name) : t('booking.summary.notSelected', 'Не выбран')}</span>
                             </div>
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">{t('booking.summary.service', 'Услуга:')}</span>
