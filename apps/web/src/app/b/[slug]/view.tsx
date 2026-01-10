@@ -194,8 +194,10 @@ export default function BizClient({ data }: { data: Data }) {
             temporaryTransfersCount: temporaryTransfers.length,
             temporaryTransfers: temporaryTransfers.filter(t => t.staff_id === staffId),
             servicesForStaffCount: servicesForStaff.size,
+            servicesForStaffIds: Array.from(servicesForStaff),
             servicesByBranchCount: servicesByBranch.length,
-            allServicesCount: services.length
+            allServicesCount: services.length,
+            serviceToStaffMapSize: serviceToStaffMap ? serviceToStaffMap.size : 0
         });
         
         // Для временно переведенного мастера показываем услуги из филиала временного перевода
@@ -212,9 +214,39 @@ export default function BizClient({ data }: { data: Data }) {
         }
         
         // Фильтруем услуги: только услуги из целевого филиала (временного перевода или выбранного)
+        // Для временно переведенного мастера: если связь service_staff есть для ЛЮБОЙ услуги с таким же названием,
+        // то показываем услугу из филиала временного перевода (так как мастер умеет делать эту услугу, просто в другом филиале)
         const filtered = services.filter((s) => {
-            // Услуга должна быть доступна мастеру
-            if (!servicesForStaff.has(s.id)) {
+            // Проверяем, есть ли у мастера связь с этой услугой
+            const hasServiceStaffLink = servicesForStaff.has(s.id);
+            
+            // Для временно переведенного мастера: если услуга в целевом филиале, но нет прямой связи service_staff,
+            // проверяем, есть ли у мастера связь с услугой с таким же названием в другом филиале
+            if (!hasServiceStaffLink && isTemporaryTransfer) {
+                // Ищем услугу с таким же названием, для которой есть связь service_staff
+                const hasSimilarServiceLink = services.some(svc => 
+                    svc.name_ru === s.name_ru && 
+                    svc.duration_min === s.duration_min && 
+                    servicesForStaff.has(svc.id)
+                );
+                if (hasSimilarServiceLink) {
+                    console.log('[Booking] Service included (temporary transfer, similar service found):', {
+                        service_id: s.id,
+                        service_name: s.name_ru,
+                        branch: s.branch_id,
+                        target_branch: targetBranchId
+                    });
+                } else {
+                    console.log('[Booking] Service filtered out (not for staff, no similar service):', s.id, s.name_ru);
+                }
+                // Если услуга в целевом филиале и есть похожая услуга, которую мастер делает - показываем её
+                if (s.branch_id === targetBranchId && hasSimilarServiceLink) {
+                    return true;
+                }
+            }
+            
+            // Обычная проверка: услуга должна быть доступна мастеру
+            if (!hasServiceStaffLink) {
                 console.log('[Booking] Service filtered out (not for staff):', s.id, s.name_ru);
                 return false;
             }
