@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
+import MonthPickerPopover from '@/components/pickers/MonthPickerPopover';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TZ } from '@/lib/time';
@@ -1293,10 +1294,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                 <label className="text-sm text-gray-600 dark:text-gray-400">
                                     {t('staff.finance.stats.selectMonth', 'Выберите месяц')}:
                                 </label>
-                                <DatePickerPopover
+                                <MonthPickerPopover
                                     value={formatInTimeZone(selectedMonth, TZ, 'yyyy-MM-dd')}
                                     onChange={(dateStr) => {
-                                        const [year, month, day] = dateStr.split('-').map(Number);
+                                        const [year, month] = dateStr.split('-').map(Number);
                                         setSelectedMonth(new Date(year, month - 1, 1));
                                     }}
                                     className="inline-block"
