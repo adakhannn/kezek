@@ -57,15 +57,8 @@ BEGIN
     WHERE st.biz_id = p_biz_id
       AND st.is_active
   LOOP
-    -- график на дату
-    SELECT * INTO v_sched FROM public.resolve_staff_day(v_staff.staff_id, p_day);
-    IF NOT FOUND THEN CONTINUE; END IF;
-
-    -- Определяем эффективный филиал мастера на эту дату:
-    -- 1. Если есть временный перевод через staff_schedule_rules в филиал услуги - используем его
-    -- 2. Иначе используем branch_id из расписания (v_sched.branch_id)
-    
-    -- Проверяем, есть ли временный перевод мастера в филиал услуги на эту дату
+    -- Сначала проверяем, есть ли временный перевод мастера в филиал услуги на эту дату
+    -- Это нужно сделать ДО вызова resolve_staff_day, чтобы знать, что мастер работает в филиале услуги
     SELECT ssr.branch_id INTO v_effective_branch_id
     FROM public.staff_schedule_rules ssr
     WHERE ssr.biz_id = p_biz_id
@@ -77,16 +70,30 @@ BEGIN
       AND ssr.branch_id = v_service.branch_id  -- временно переведен в филиал услуги
     LIMIT 1;
 
-    -- Если нет временного перевода в филиал услуги, используем branch_id из расписания
+    -- Если нет временного перевода в филиал услуги, проверяем основной филиал мастера
     IF v_effective_branch_id IS NULL THEN
-      v_effective_branch_id := v_sched.branch_id;
+      SELECT st.branch_id INTO v_effective_branch_id
+      FROM public.staff st
+      WHERE st.id = v_staff.staff_id;
     END IF;
 
     -- Проверяем филиал: мастер должен работать в филиале услуги
-    -- (либо основной филиал из расписания, либо временный перевод в филиал услуги)
+    -- (либо основной филиал, либо временный перевод в филиал услуги)
     IF v_effective_branch_id IS NULL OR v_effective_branch_id <> v_service.branch_id THEN
       CONTINUE;
     END IF;
+
+    -- Теперь получаем расписание на дату (resolve_staff_day уже учитывает временные переводы)
+    SELECT * INTO v_sched FROM public.resolve_staff_day(v_staff.staff_id, p_day);
+    IF NOT FOUND THEN CONTINUE; END IF;
+
+    -- Проверяем, что в расписании есть интервалы работы
+    IF v_sched.intervals IS NULL OR jsonb_array_length(v_sched.intervals) = 0 THEN
+      CONTINUE;
+    END IF;
+
+    -- Используем branch_id из расписания (resolve_staff_day уже вернул правильный branch_id)
+    v_effective_branch_id := v_sched.branch_id;
 
     -- генерим сетку слотов в локальном времени бизнеса → переводим в timestamptz
     RETURN QUERY
