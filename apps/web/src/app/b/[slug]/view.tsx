@@ -1325,14 +1325,20 @@ export default function BizClient({ data }: { data: Data }) {
 
                                 {/* Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги */}
                                 {/* Используем servicesFiltered, который уже учитывает временные переводы и похожие услуги */}
-                                {serviceId && staffId && (() => {
+                                {/* Показываем ошибку только если:
+                                    1. Услуга не валидна (не в servicesFiltered)
+                                    2. serviceStaff загружен (не null) - проверка завершена
+                                    3. Слоты не загружаются (не loading)
+                                    4. Слотов нет (slots.length === 0) - если слоты есть, значит услуга валидна */}
+                                {serviceId && staffId && !slotsLoading && slots.length === 0 && (() => {
                                     // Проверяем, есть ли услуга в servicesFiltered (это значит, что мастер может её выполнять)
                                     // servicesFiltered уже учитывает временные переводы и связи service_staff (включая похожие услуги)
                                     const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
                                     
                                     // Показываем ошибку только если услуга не валидна И serviceStaff загружен (не null)
                                     // Если serviceStaff еще загружается (null), не показываем ошибку, так как проверка еще не завершена
-                                    if (serviceStaff !== null && !isServiceValid) {
+                                    // Также не показываем ошибку, если есть ошибка загрузки слотов (slotsError) - там будет своё сообщение
+                                    if (serviceStaff !== null && !isServiceValid && !slotsError) {
                                         return (
                                             <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
                                                 <div className="flex items-start gap-2">
