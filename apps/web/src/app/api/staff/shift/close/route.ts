@@ -190,8 +190,27 @@ export async function POST(req: Request) {
         }
 
         // Перезаписываем позиции смены, если они были переданы
+        // Важно: используем позиции из запроса для обновления, сохраняя booking_id даже если суммы = 0
+        const shiftId = updated.id;
+        const admin = getServiceClient();
+        
+        // Сначала получаем существующие позиции из БД (которые могли быть сохранены через автсохранение)
+        const { data: existingItems } = await supabase
+            .from('staff_shift_items')
+            .select('booking_id')
+            .eq('shift_id', shiftId)
+            .not('booking_id', 'is', null);
+
+        const existingBookingIds = new Set(
+            (existingItems ?? [])
+                .map((it: { booking_id: string | null }) => it.booking_id)
+                .filter((id: string | null): id is string => !!id)
+        );
+
+        // Собираем все booking_id (из существующих и из переданных items)
+        const allBookingIdsForStatusUpdate = new Set<string>(existingBookingIds);
+
         if (items.length > 0) {
-            const shiftId = updated.id;
             const cleanItems = items
                 .map((it: {
                     clientName?: string;
@@ -214,8 +233,22 @@ export async function POST(req: Request) {
                     booking_id: it.bookingId ?? it.booking_id ?? null,
                     note: it.note ?? null,
                 }))
-                .filter((it: { service_amount: number; consumables_amount: number }) => it.service_amount > 0 || it.consumables_amount > 0);
+                // Сохраняем позиции, если есть суммы ИЛИ booking_id (чтобы сохранить связь с записью, даже если суммы еще не заполнены)
+                .filter((it: { service_amount: number; consumables_amount: number; booking_id: string | null }) => 
+                    it.service_amount > 0 || it.consumables_amount > 0 || it.booking_id !== null
+                );
 
+            // Собираем booking_id из переданных items
+            const newBookingIds = cleanItems
+                .map((it: { booking_id: string | null }) => it.booking_id)
+                .filter((id: string | null): id is string => !!id);
+            
+            // Добавляем новые booking_id к существующим
+            for (const id of newBookingIds) {
+                allBookingIdsForStatusUpdate.add(id);
+            }
+
+            // Удаляем все старые позиции (они будут пересозданы с обновленными данными)
             const { error: delError } = await supabase
                 .from('staff_shift_items')
                 .delete()
@@ -230,38 +263,33 @@ export async function POST(req: Request) {
                 if (insError) {
                     console.error('Error inserting shift items:', insError);
                 }
-
-                // Обновляем статус записей на "выполнено" (paid), если они были добавлены в смену
-                // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
-                const admin = getServiceClient();
-                const bookingIds = cleanItems
-                    .map((it: { booking_id: string | null }) => it.booking_id)
-                    .filter((id: string | null): id is string => !!id);
-
-                if (bookingIds.length > 0) {
-                    for (const bookingId of bookingIds) {
-                        try {
-                            const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
-                                p_booking_id: bookingId,
-                                p_new_status: 'paid',
-                            });
-                            if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
-                                await admin
-                                    .from('bookings')
-                                    .update({ status: 'paid' })
-                                    .eq('id', bookingId);
-                            }
-                        } catch (e) {
-                            console.error(`Error updating booking ${bookingId} status:`, e);
-                        }
+            }
+        }
+        
+        // Обновляем статус записей на "выполнено" (paid) для всех booking_id (из существующих и из переданных items)
+        // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
+        if (allBookingIdsForStatusUpdate.size > 0) {
+            for (const bookingId of allBookingIdsForStatusUpdate) {
+                try {
+                    const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
+                        p_booking_id: bookingId,
+                        p_new_status: 'paid',
+                    });
+                    if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+                        await admin
+                            .from('bookings')
+                            .update({ status: 'paid' })
+                            .eq('id', bookingId);
                     }
+                } catch (e) {
+                    console.error(`Error updating booking ${bookingId} status:`, e);
                 }
             }
         }
 
         // После закрытия смены: находим все записи сотрудника за этот день,
         // которые не были добавлены в список позиций смены, и устанавливаем им статус "не пришел" (no_show)
-        const admin = getServiceClient();
+        // Используем allBookingIdsForStatusUpdate (из существующих и переданных items) для определения добавленных записей
         const todayStart = `${ymd}T00:00:00`;
         const todayEnd = `${ymd}T23:59:59`;
 
@@ -275,25 +303,15 @@ export async function POST(req: Request) {
             .neq('status', 'cancelled');
 
         if (!bookingsError && todayBookings) {
-            // Получаем список booking_id из позиций смены
-            const { data: shiftItems } = await supabase
-                .from('staff_shift_items')
-                .select('booking_id')
-                .eq('shift_id', updated.id)
-                .not('booking_id', 'is', null);
-
-            const addedBookingIds = new Set(
-                (shiftItems ?? [])
-                    .map((it: { booking_id: string | null }) => it.booking_id)
-                    .filter((id: string | null): id is string => !!id)
-            );
-
             // Находим записи, которые не были добавлены в смену
+            // Используем allBookingIdsForStatusUpdate (все booking_id, которые были в смене) для проверки
+            // Важно: не трогаем записи, которые уже имеют статус "paid" (выполнено) или "confirmed" - они уже были обработаны
             const notAddedBookings = todayBookings.filter(
-                (b) => !addedBookingIds.has(b.id) && b.status !== 'no_show' && b.status !== 'paid'
+                (b) => !allBookingIdsForStatusUpdate.has(b.id) && b.status !== 'no_show' && b.status !== 'paid' && b.status !== 'confirmed'
             );
 
-            // Устанавливаем статус "не пришел" для записей, которые не были добавлены
+            // Устанавливаем статус "не пришел" только для записей, которые действительно не были добавлены
+            // и еще не имеют финального статуса (paid, no_show, confirmed)
             for (const booking of notAddedBookings) {
                 try {
                     const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
