@@ -7,6 +7,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TZ } from '@/lib/time';
+import { transliterate } from '@/lib/transliterate';
 
 type ShiftItem = {
     id?: string;
@@ -18,12 +19,18 @@ type ShiftItem = {
     note?: string;
 };
 
+type ServiceName = {
+    name_ru: string;
+    name_ky?: string | null;
+    name_en?: string | null;
+};
+
 type Booking = {
     id: string;
     client_name: string | null;
     client_phone: string | null;
     start_at: string;
-    services: { name_ru: string } | { name_ru: string }[] | null;
+    services: ServiceName | ServiceName[] | null;
 };
 
 type Shift = {
@@ -61,7 +68,7 @@ type TodayResponse =
               | { exists: false; status: 'none'; shift: null; items: ShiftItem[] }
               | { exists: true; status: 'open' | 'closed'; shift: Shift; items: ShiftItem[] };
           bookings?: Booking[];
-          services?: string[];
+          services?: ServiceName[] | string[]; // Поддержка старого (string[]) и нового (ServiceName[]) форматов
           allShifts?: Array<{
               shift_date: string;
               status: string;
@@ -115,7 +122,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
     const [items, setItems] = useState<ShiftItem[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
-    const [availableServices, setAvailableServices] = useState<string[]>([]);
+    const [availableServices, setAvailableServices] = useState<ServiceName[]>([]);
     const [staffPercentMaster, setStaffPercentMaster] = useState(60);
     const [staffPercentSalon, setStaffPercentSalon] = useState(40);
     const [hourlyRate, setHourlyRate] = useState<number | null>(null);
@@ -126,12 +133,31 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
     const [savingItems, setSavingItems] = useState(false);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    
+    // Функция для получения правильного названия услуги с учетом языка
+    function getServiceName(service: ServiceName | string): string {
+        if (typeof service === 'string') {
+            // Если это строка (вручную введенное название), используем транслитерацию для английского
+            if (locale === 'en') return transliterate(service);
+            return service;
+        }
+        
+        if (locale === 'ky' && service.name_ky) return service.name_ky;
+        if (locale === 'en' && service.name_en) return service.name_en;
+        if (locale === 'en') return transliterate(service.name_ru);
+        return service.name_ru;
+    }
+
     const serviceOptions = useMemo(() => {
         const set = new Set<string>();
+        const serviceMap = new Map<string, ServiceName>();
+        
         // Услуги сотрудника из настроек
-        for (const name of availableServices) {
-            if (name?.trim()) {
-                set.add(name.trim());
+        for (const svc of availableServices) {
+            if (svc?.name_ru?.trim()) {
+                const key = svc.name_ru.trim();
+                set.add(key);
+                serviceMap.set(key, svc);
             }
         }
         // Услуги из сегодняшних записей
@@ -139,8 +165,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             if (b.services) {
                 const list = Array.isArray(b.services) ? b.services : [b.services];
                 for (const s of list) {
-                    if (s?.name_ru) {
-                        set.add(s.name_ru);
+                    if (s?.name_ru?.trim()) {
+                        const key = s.name_ru.trim();
+                        set.add(key);
+                        serviceMap.set(key, s);
                     }
                 }
             }
@@ -148,11 +176,24 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         // Учитываем уже введённые вручную названия услуг в строках смены
         for (const it of items) {
             if (it.serviceName?.trim()) {
-                set.add(it.serviceName.trim());
+                const key = it.serviceName.trim();
+                set.add(key);
+                // Если это не было в списке услуг, создаем объект только с name_ru
+                if (!serviceMap.has(key)) {
+                    serviceMap.set(key, { name_ru: key });
+                }
             }
         }
-        return Array.from(set).sort((a, b) => a.localeCompare(b, 'ru'));
-    }, [availableServices, bookings, items]);
+        
+        // Возвращаем массив объектов ServiceName, отсортированный по переведенному названию
+        return Array.from(set)
+            .map(key => serviceMap.get(key)!)
+            .sort((a, b) => {
+                const nameA = getServiceName(a);
+                const nameB = getServiceName(b);
+                return nameA.localeCompare(nameB, locale === 'ru' ? 'ru' : locale === 'ky' ? 'ky' : 'en');
+            });
+    }, [availableServices, bookings, items, locale]);
 
     const load = async () => {
         setLoading(true);
@@ -213,7 +254,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             }
             // Услуги сотрудника для выпадающего списка
             if (json.ok && 'services' in json && Array.isArray(json.services)) {
-                setAvailableServices(json.services);
+                // API может возвращать либо строки (старый формат), либо объекты ServiceName (новый формат)
+                const services = json.services.map((svc: string | ServiceName) => {
+                    if (typeof svc === 'string') {
+                        // Старый формат - строка, преобразуем в объект
+                        return { name_ru: svc };
+                    }
+                    // Новый формат - объект ServiceName
+                    return svc;
+                });
+                setAvailableServices(services);
             }
             // Проценты из настроек сотрудника (не из смены)
             if (json.ok && 'staffPercentMaster' in json && 'staffPercentSalon' in json) {
@@ -1025,7 +1075,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                         : b.services
                                                     : null;
                                                 const clientLabel = b.client_name || b.client_phone || t('staff.finance.clients.client', 'Клиент');
-                                                const serviceLabel = service?.name_ru || '';
+                                                const serviceLabel = service ? getServiceName(service) : '';
                                                 const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
                                                 const time = new Date(b.start_at).toLocaleTimeString(localeMap[locale] || 'ru-RU', {
                                                     hour: '2-digit',
@@ -1063,11 +1113,15 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             disabled={!isOpen || isReadOnly}
                                         >
                                             <option value="">{t('staff.finance.clients.selectService', 'Выберите услугу...')}</option>
-                                            {serviceOptions.map((name) => (
-                                                <option key={name} value={name}>
-                                                    {name}
-                                                </option>
-                                            ))}
+                                            {serviceOptions.map((svc) => {
+                                                const displayName = getServiceName(svc);
+                                                const value = svc.name_ru; // Сохраняем name_ru как значение
+                                                return (
+                                                    <option key={value} value={value}>
+                                                        {displayName}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
                                     

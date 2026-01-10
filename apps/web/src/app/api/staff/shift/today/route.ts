@@ -117,7 +117,7 @@ export async function GET() {
         const todayEnd = `${ymd}T23:59:59`;
         const { data: todayBookings, error: bookingsError } = await supabase
             .from('bookings')
-            .select('id, client_name, client_phone, start_at, services:services!bookings_service_id_fkey (name_ru)')
+            .select('id, client_name, client_phone, start_at, services:services!bookings_service_id_fkey (name_ru, name_ky, name_en)')
             .eq('staff_id', staffId)
             .gte('start_at', todayStart)
             .lte('start_at', todayEnd)
@@ -131,7 +131,7 @@ export async function GET() {
         // Услуги сотрудника для выпадающего списка
         const { data: staffServices, error: servicesError } = await supabase
             .from('service_staff')
-            .select('services:services!inner (name_ru)')
+            .select('services:services!inner (name_ru, name_ky, name_en)')
             .eq('staff_id', staffId)
             .eq('is_active', true)
             .eq('services.active', true);
@@ -141,11 +141,11 @@ export async function GET() {
         }
 
         const availableServices = (staffServices ?? [])
-            .map((ss: { services: { name_ru: string } | { name_ru: string }[] | null }) => {
+            .map((ss: { services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null }) => {
                 const svc = Array.isArray(ss.services) ? ss.services[0] : ss.services;
-                return svc?.name_ru;
+                return svc ? { name_ru: svc.name_ru, name_ky: svc.name_ky ?? null, name_en: svc.name_en ?? null } : null;
             })
-            .filter((name: string | undefined): name is string => !!name);
+            .filter((svc): svc is { name_ru: string; name_ky: string | null; name_en: string | null } => !!svc);
 
         // Расчет текущих часов работы и суммы за выход для открытой смены
         let currentHoursWorked: number | null = null;
