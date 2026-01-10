@@ -290,6 +290,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             if (json.ok && 'currentGuaranteedAmount' in json) {
                 setCurrentGuaranteedAmount(json.currentGuaranteedAmount ?? null);
             }
+            // Загружаем все смены для статистики
+            if (json.ok && 'allShifts' in json && Array.isArray(json.allShifts)) {
+                setAllShifts(json.allShifts);
+            }
         } catch (e) {
             console.error('Error loading today shift:', e);
             setToday({ ok: false, error: t('staff.finance.error.loading', 'Не удалось загрузить данные смены') });

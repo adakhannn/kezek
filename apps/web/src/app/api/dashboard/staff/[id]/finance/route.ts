@@ -169,13 +169,12 @@ export async function GET(
             console.error('Error loading stats:', statsError);
         }
 
-        // Загружаем все закрытые смены для статистики
+        // Загружаем все смены (не только закрытые) для статистики - клиент фильтрует по статусу
         const { data: allShifts, error: allShiftsError } = await supabase
             .from('staff_shifts')
             .select('shift_date, status, total_amount, master_share, salon_share, late_minutes')
             .eq('biz_id', bizId)
             .eq('staff_id', staffId)
-            .eq('status', 'closed')
             .order('shift_date', { ascending: false });
 
         if (allShiftsError) {
@@ -235,13 +234,14 @@ export async function GET(
                   },
             bookings: todayBookings ?? [],
             services: availableServices,
+            // Возвращаем все смены (не только закрытые), фильтрация по статусу на клиенте
             allShifts: (allShifts ?? []).map((s) => ({
                 shift_date: s.shift_date,
                 status: s.status,
-                total_amount: s.total_amount,
-                master_share: s.master_share,
-                salon_share: s.salon_share,
-                late_minutes: s.late_minutes,
+                total_amount: Number(s.total_amount ?? 0),
+                master_share: Number(s.master_share ?? 0),
+                salon_share: Number(s.salon_share ?? 0),
+                late_minutes: Number(s.late_minutes ?? 0),
             })),
             staffPercentMaster,
             staffPercentSalon,
