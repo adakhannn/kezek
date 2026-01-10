@@ -182,12 +182,12 @@ export async function GET() {
 
         return NextResponse.json({
             allShifts: (allShifts ?? []).map((s) => ({
-                shift_date: s.shift_date,
+                shift_date: String(s.shift_date || '').split('T')[0].split(' ')[0], // Нормализуем дату в формат YYYY-MM-DD
                 status: s.status,
-                total_amount: s.total_amount,
-                master_share: s.master_share,
-                salon_share: s.salon_share,
-                late_minutes: s.late_minutes,
+                total_amount: Number(s.total_amount ?? 0),
+                master_share: Number(s.master_share ?? 0),
+                salon_share: Number(s.salon_share ?? 0),
+                late_minutes: Number(s.late_minutes ?? 0),
             })),
             ok: true,
             today: shift

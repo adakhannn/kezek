@@ -292,7 +292,11 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             }
             // Загружаем все смены для статистики
             if (json.ok && 'allShifts' in json && Array.isArray(json.allShifts)) {
+                console.log('[StaffFinanceView] Loaded allShifts:', json.allShifts.length, json.allShifts);
                 setAllShifts(json.allShifts);
+            } else {
+                console.warn('[StaffFinanceView] No allShifts in response:', json);
+                setAllShifts([]);
             }
         } catch (e) {
             console.error('Error loading today shift:', e);
@@ -394,11 +398,27 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
     // Вычисляем статистику в зависимости от выбранного периода
     const filteredStats = useMemo(() => {
+        if (!allShifts || allShifts.length === 0) {
+            return {
+                totalAmount: 0,
+                totalMaster: 0,
+                totalSalon: 0,
+                totalLateMinutes: 0,
+                shiftsCount: 0,
+            };
+        }
+        
         // Нормализуем shift_date - обрезаем время, если оно есть (формат YYYY-MM-DD)
-        const normalizedShifts = allShifts.map((s) => ({
-            ...s,
-            shift_date: s.shift_date.includes('T') ? s.shift_date.split('T')[0] : s.shift_date, // Берем только дату, без времени
-        }));
+        // PostgreSQL date тип возвращается как строка 'YYYY-MM-DD', но может быть и с временем
+        const normalizedShifts = allShifts.map((s) => {
+            let normalizedDate = String(s.shift_date || '');
+            // Если есть время, обрезаем его
+            normalizedDate = normalizedDate.split('T')[0].split(' ')[0].trim();
+            return {
+                ...s,
+                shift_date: normalizedDate,
+            };
+        });
         
         const closedShifts = normalizedShifts.filter((s) => s.status === 'closed');
         
@@ -423,6 +443,12 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         const totalMaster = filtered.reduce((sum, s) => sum + Number(s.master_share || 0), 0);
         const totalSalon = filtered.reduce((sum, s) => sum + Number(s.salon_share || 0), 0);
         const totalLateMinutes = filtered.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
+        
+        // Отладочная информация
+        if (filtered.length > 0) {
+            console.log('[StaffFinanceView] Filtered shifts:', filtered.length, filtered);
+            console.log('[StaffFinanceView] Stats:', { totalAmount, totalMaster, totalSalon, totalLateMinutes });
+        }
         
         return {
             totalAmount,
