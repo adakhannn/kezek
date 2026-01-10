@@ -2,8 +2,8 @@
 'use client';
 
 import { addDays, addMinutes, format } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { enGB } from 'date-fns/locale';
+import { enGB } from 'date-fns/locale/en-GB';
+import { ru } from 'date-fns/locale/ru';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
