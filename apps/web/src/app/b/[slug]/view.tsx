@@ -231,20 +231,31 @@ export default function BizClient({ data }: { data: Data }) {
         return filtered;
     }, [servicesByBranch, services, staffId, serviceToStaffMap, branchId, dayStr, temporaryTransfers]);
 
-    // при смене мастера — сбрасываем выбор услуги, если текущая не подходит
+    // при смене мастера или даты — сбрасываем выбор услуги, если текущая не подходит
     useEffect(() => {
-        if (!staffId) {
+        if (!staffId || !dayStr) {
+            if (!staffId) console.log('[Booking] Staff cleared, clearing service');
+            if (!dayStr) console.log('[Booking] Day cleared, clearing service');
             setServiceId('');
             return;
         }
-        // Если выбранная услуга не подходит под нового мастера — сбрасываем выбор
+        // Если выбранная услуга не подходит под нового мастера или дату — сбрасываем выбор
         if (serviceId) {
             const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
+            console.log('[Booking] Checking service validity after staff/day change:', { 
+                serviceId, 
+                staffId, 
+                dayStr,
+                isServiceValid, 
+                servicesFilteredCount: servicesFiltered.length, 
+                servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru })) 
+            });
             if (!isServiceValid) {
+                console.warn('[Booking] Service is not valid for current staff/day, clearing serviceId');
                 setServiceId('');
             }
         }
-    }, [staffId, servicesFiltered, serviceId]);
+    }, [staffId, dayStr, servicesFiltered, serviceId]);
 
     // Загружаем временные переводы для выбранного филиала
     useEffect(() => {
@@ -1047,7 +1058,10 @@ export default function BizClient({ data }: { data: Data }) {
                                                     <button
                                                         key={s.id}
                                                         type="button"
-                                                        onClick={() => setServiceId(s.id)}
+                                                        onClick={() => {
+                                                            console.log('[Booking] Service clicked:', { serviceId: s.id, name: s.name_ru, currentServiceId: serviceId });
+                                                            setServiceId(s.id);
+                                                        }}
                                                         className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
                                                             active
                                                                 ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
