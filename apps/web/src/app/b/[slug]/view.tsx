@@ -200,7 +200,7 @@ export default function BizClient({ data }: { data: Data }) {
     useEffect(() => {
         let ignore = false;
         (async () => {
-            if (!branchId || !biz.id) {
+            if (!branchId || !biz.id || staff.length === 0) {
                 setTemporaryTransfers([]);
                 return;
             }
@@ -213,26 +213,49 @@ export default function BizClient({ data }: { data: Data }) {
             const minDateStr = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
             const maxDateStr = formatInTimeZone(maxDate, TZ, 'yyyy-MM-dd');
             
+            // Создаем мапку staff_id -> home branch_id для определения временных переводов
+            const staffHomeBranches = new Map<string, string>();
+            for (const s of staff) {
+                staffHomeBranches.set(s.id, s.branch_id);
+            }
+            
+            // Загружаем все правила расписания для всех сотрудников этого бизнеса на нужный период
+            const staffIds = Array.from(staffHomeBranches.keys());
+            
             const { data, error } = await supabase
                 .from('staff_schedule_rules')
-                .select('staff_id, branch_id, date')
-                .eq('branch_id', branchId)
-                .eq('is_temporary_transfer', true)
-                .gte('date', minDateStr)
-                .lte('date', maxDateStr);
+                .select('staff_id, branch_id, date_on')
+                .eq('biz_id', biz.id)
+                .in('staff_id', staffIds)
+                .eq('kind', 'date')
+                .eq('is_active', true)
+                .eq('branch_id', branchId) // Только правила для выбранного филиала
+                .gte('date_on', minDateStr)
+                .lte('date_on', maxDateStr);
             
             if (ignore) return;
             if (error) {
                 console.warn('[staff_schedule_rules] read error:', error.message);
                 setTemporaryTransfers([]);
             } else {
-                setTemporaryTransfers((data ?? []) as Array<{ staff_id: string; branch_id: string; date: string }>);
+                // Фильтруем: временный перевод = branch_id в правиле отличается от домашнего филиала сотрудника
+                const transfers = (data ?? [])
+                    .filter((rule: { staff_id: string; branch_id: string; date_on: string }) => {
+                        const homeBranchId = staffHomeBranches.get(rule.staff_id);
+                        return homeBranchId && rule.branch_id !== homeBranchId;
+                    })
+                    .map((rule: { staff_id: string; branch_id: string; date_on: string }) => ({
+                        staff_id: rule.staff_id,
+                        branch_id: rule.branch_id,
+                        date: rule.date_on, // Используем date для совместимости с существующим кодом
+                    }));
+                setTemporaryTransfers(transfers);
             }
         })();
         return () => {
             ignore = true;
         };
-    }, [branchId, biz.id]);
+    }, [branchId, biz.id, staff]);
 
     // Список мастеров: по филиалу + временные переводы на выбранную дату
     const staffFiltered = useMemo<Staff[]>(() => {
