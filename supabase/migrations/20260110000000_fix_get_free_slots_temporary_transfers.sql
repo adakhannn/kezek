@@ -34,13 +34,23 @@
 --
 -- Использовать effective_branch_id вместо staff.branch_id для фильтрации слотов
 
--- Поскольку точная структура функции неизвестна, эта миграция не создает функцию автоматически.
--- Функцию нужно обновить вручную в Supabase SQL Editor, следуя инструкциям выше.
+-- Поскольку точная структура функции неизвестна, эта миграция добавляет комментарий,
+-- если функция существует. Функцию нужно обновить вручную в Supabase SQL Editor.
 
-COMMENT ON FUNCTION IF EXISTS public.get_free_slots_service_day_v2 IS 
+DO $$
+BEGIN
+    -- Проверяем, существует ли функция, и если да - добавляем комментарий
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public' AND p.proname = 'get_free_slots_service_day_v2'
+    ) THEN
+        COMMENT ON FUNCTION public.get_free_slots_service_day_v2 IS 
 'ВАЖНО: Функция требует обновления для учета временных переводов через staff_schedule_rules.
 Текущая проблема: функция возвращает пустой массив слотов для временно переведенных мастеров.
 Решение: добавить проверку staff_schedule_rules.branch_id для временных переводов на указанную дату.
 См. логику в check_booking_branch_match для примера.
 См. миграцию 20260110000000_fix_get_free_slots_temporary_transfers.sql для подробных инструкций.';
+    END IF;
+END $$;
 
