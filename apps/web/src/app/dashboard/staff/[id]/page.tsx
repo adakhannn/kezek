@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import StaffDetailPageClient from './StaffDetailPageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -15,8 +16,8 @@ export default async function Page({
     const { id } = await params;
     const {supabase, bizId} = await getBizContextForManagers();
 
-    // Грузим сотрудника, список филиалов текущего бизнеса и отзывы
-    const [{data: staff, error: eStaff}, {data: branches, error: eBr}, {data: reviewsData}] = await Promise.all([
+    // Грузим сотрудника и список филиалов
+    const [{data: staff, error: eStaff}, {data: branches, error: eBr}] = await Promise.all([
         supabase
             .from('staff')
             .select('id,full_name,email,phone,branch_id,is_active,biz_id,percent_master,percent_salon,hourly_rate')
@@ -27,16 +28,6 @@ export default async function Page({
             .select('id,name,is_active')
             .eq('biz_id', bizId)
             .order('name'),
-        supabase
-            .from('bookings')
-            .select(`
-                id, start_at, end_at, client_name, client_phone,
-                services:services!bookings_service_id_fkey ( name_ru ),
-                reviews:reviews ( id, rating, comment, created_at )
-            `)
-            .eq('staff_id', id)
-            .order('start_at', { ascending: false })
-            .limit(100),
     ]);
 
     if (eStaff) {
@@ -49,29 +40,87 @@ export default async function Page({
         return <main className="p-6 text-red-600">{eBr.message}</main>;
     }
 
-    // Обрабатываем отзывы: фильтруем только те, где есть отзыв
+    // Используем service client для обхода RLS при загрузке отзывов
+    // (владелец бизнеса должен видеть отзывы для своих сотрудников)
+    const admin = getServiceClient();
+
+    // Получаем booking_ids для сотрудника и информацию о бронях
+    const { data: bookingsData } = await admin
+        .from('bookings')
+        .select('id, start_at, end_at, client_name, client_phone, service_id')
+        .eq('staff_id', id)
+        .limit(100);
+
+    const bookingIds = (bookingsData ?? []).map(b => b.id);
+
+    // Загружаем отзывы по booking_ids и данные об услугах
+    const [{data: reviewsData}, {data: servicesData}] = await Promise.all([
+        // Загружаем отзывы для bookings этого сотрудника (используя service client для обхода RLS)
+        bookingIds.length > 0
+            ? admin
+                .from('reviews')
+                .select('id, rating, comment, created_at, booking_id')
+                .in('booking_id', bookingIds)
+                .order('created_at', { ascending: false })
+            : { data: [], error: null },
+        // Загружаем информацию об услугах
+        bookingIds.length > 0
+            ? admin
+                .from('bookings')
+                .select('id, service_id, services:services!bookings_service_id_fkey(name_ru, name_ky, name_en)')
+                .in('id', bookingIds)
+            : { data: [], error: null },
+    ]);
+
+    // Создаем мапу booking_id -> service для быстрого поиска
+    const serviceMap = new Map<string, { name_ru: string; name_ky?: string | null; name_en?: string | null }>();
+    (servicesData ?? []).forEach(booking => {
+        if (!booking.service_id) return;
+        const service = Array.isArray(booking.services) ? booking.services[0] : booking.services;
+        if (service && typeof service === 'object' && 'name_ru' in service) {
+            serviceMap.set(booking.id, service as { name_ru: string; name_ky?: string | null; name_en?: string | null });
+        }
+    });
+
+    // Создаем мапу booking_id -> booking для быстрого поиска
+    const bookingMap = new Map<string, { start_at: string; end_at: string; client_name: string | null; client_phone: string | null }>();
+    (bookingsData ?? []).forEach(booking => {
+        bookingMap.set(booking.id, {
+            start_at: booking.start_at,
+            end_at: booking.end_at,
+            client_name: booking.client_name,
+            client_phone: booking.client_phone,
+        });
+    });
+
+    // Обрабатываем отзывы: объединяем данные из reviews и bookings
     const reviews = (reviewsData ?? [])
-        .map(booking => {
-            const review = Array.isArray(booking.reviews) ? booking.reviews[0] : booking.reviews;
-            if (!review) return null;
-            const service = Array.isArray(booking.services) ? booking.services[0] : booking.services;
-            // Получаем название услуги в зависимости от языка
+        .map(review => {
+            if (!review || !review.booking_id) return null;
+            
+            // Получаем booking из мапы
+            const booking = bookingMap.get(review.booking_id);
+            if (!booking) return null;
+            
+            // Получаем название услуги из мапы
+            const service = serviceMap.get(review.booking_id);
             let serviceName: string | null = null;
-            if (service && typeof service === 'object') {
-                if ('name_ky' in service && service.name_ky) {
+            if (service) {
+                if (service.name_ky) {
                     serviceName = String(service.name_ky);
-                } else if ('name_en' in service && service.name_en) {
+                } else if (service.name_en) {
                     serviceName = String(service.name_en);
-                } else if ('name_ru' in service) {
+                } else {
                     serviceName = String(service.name_ru);
                 }
             }
+            
             return {
                 id: review.id,
                 rating: review.rating,
                 comment: review.comment,
                 created_at: review.created_at,
-                booking_id: booking.id,
+                booking_id: review.booking_id,
                 service_name: serviceName,
                 start_at: booking.start_at,
                 end_at: booking.end_at,
