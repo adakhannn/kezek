@@ -623,6 +623,9 @@ const dictionaries: Dictionaries = {
         'cabinet.review.error.submit': 'Пикирди жөнөтүү мүмкүн болгон жок',
         'cabinet.review.error.update': 'Пикирди жаңылоо мүмкүн болгон жок',
         'cabinet.review.error.alreadyExists': 'Бул запись үчүн пикир мурунтан эле бар. Баракча жаңыланууда...',
+        // Map Dialog
+        'cabinet.map.title': 'Карта',
+        'cabinet.map.close': 'Жабуу',
         'cabinet.bookings.card.cancelConfirm': 'Жазылышты жокко чыгаруу?',
         'cabinet.bookings.card.cancelError': 'Жокко чыгаруу ишке ашкан жок',
         'cabinet.nav.bookings': 'Менин жазылыштарым',
@@ -1422,6 +1425,9 @@ const dictionaries: Dictionaries = {
         'cabinet.review.error.submit': 'Не удалось отправить отзыв',
         'cabinet.review.error.update': 'Не удалось обновить отзыв',
         'cabinet.review.error.alreadyExists': 'Отзыв для этой записи уже существует. Обновляю страницу...',
+        // Map Dialog
+        'cabinet.map.title': 'Карта',
+        'cabinet.map.close': 'Закрыть',
         'cabinet.bookings.card.cancelConfirm': 'Отменить запись?',
         'cabinet.bookings.card.cancelError': 'Не удалось отменить',
         'cabinet.nav.bookings': 'Мои записи',
@@ -2222,6 +2228,9 @@ const dictionaries: Dictionaries = {
         'cabinet.review.error.submit': 'Failed to send review',
         'cabinet.review.error.update': 'Failed to update review',
         'cabinet.review.error.alreadyExists': 'Review for this booking already exists. Refreshing page...',
+        // Map Dialog
+        'cabinet.map.title': 'Map',
+        'cabinet.map.close': 'Close',
         'cabinet.bookings.card.status.hold': 'Awaiting confirmation',
         'cabinet.bookings.card.status.confirmed': 'Confirmed',
         'cabinet.bookings.card.status.paid': 'Completed',
