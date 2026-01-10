@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type ReviewDialogProps = {
     bookingId: string;
     onClose: () => void;
@@ -13,6 +15,7 @@ type ReviewDialogProps = {
 export default function ReviewDialog({
                                          bookingId, onClose, existingReview, onReviewCreated,
                                      }: ReviewDialogProps) {
+    const { t } = useLanguage();
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [busy, setBusy] = useState(false);
@@ -38,7 +41,7 @@ export default function ReviewDialog({
                 const j = await r.json();
                 if (!j.ok) {
                     setBusy(false);
-                    return setErr(j.error || 'Не удалось обновить отзыв');
+                    return setErr(j.error || t('cabinet.review.error.update', 'Не удалось обновить отзыв'));
                 }
                 // Обновляем состояние через callback
                 if (onReviewCreated) {
@@ -60,13 +63,13 @@ export default function ReviewDialog({
                     setBusy(false);
                     // Если отзыв уже существует, показываем понятное сообщение и обновляем состояние
                     if (j.error === 'REVIEW_ALREADY_EXISTS') {
-                        setErr('Отзыв для этой записи уже существует. Обновляю страницу...');
+                        setErr(t('cabinet.review.error.alreadyExists', 'Отзыв для этой записи уже существует. Обновляю страницу...'));
                         setTimeout(() => {
                             window.location.reload();
                         }, 1000);
                         return;
                     }
-                    return setErr(j.error || 'Не удалось отправить отзыв');
+                    return setErr(j.error || t('cabinet.review.error.submit', 'Не удалось отправить отзыв'));
                 }
                 
                 // Если отзыв был создан или обновлен, вызываем callback для оптимистичного обновления
@@ -102,17 +105,17 @@ export default function ReviewDialog({
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {existingReview ? 'Редактировать отзыв' : 'Оставить отзыв'}
+                            {existingReview ? t('cabinet.review.edit', 'Редактировать отзыв') : t('cabinet.review.create', 'Оставить отзыв')}
                         </h2>
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Оцените визит и, при желании, напишите пару слов для владельца.
+                            {t('cabinet.review.description', 'Оцените визит и, при желании, напишите пару слов для владельца.')}
                         </p>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
                         className="inline-flex items-center justify-center rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                        aria-label="Закрыть"
+                        aria-label={t('cabinet.review.close', 'Закрыть')}
                     >
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -129,7 +132,7 @@ export default function ReviewDialog({
                 {/* Оценка */}
                 <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-                        Оценка
+                        {t('cabinet.review.rating', 'Оценка')}
                     </label>
                     <select
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -147,16 +150,16 @@ export default function ReviewDialog({
                 {/* Комментарий */}
                 <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-800 dark:text-gray-200">
-                        Комментарий <span className="text-gray-400 text-xs">(опционально)</span>
+                        {t('cabinet.review.comment', 'Комментарий')} <span className="text-gray-400 text-xs">({t('cabinet.review.optional', 'опционально')})</span>
                     </label>
                     <textarea
                         className="min-h-[96px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        placeholder="Что понравилось, что можно улучшить?"
+                        placeholder={t('cabinet.review.commentPlaceholder', 'Что понравилось, что можно улучшить?')}
                     />
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                        Комментарий увидит только владелец заведения. Он помогает улучшать сервис.
+                        {t('cabinet.review.commentHint', 'Комментарий увидит только владелец заведения. Он помогает улучшать сервис.')}
                     </p>
                 </div>
 
@@ -167,7 +170,7 @@ export default function ReviewDialog({
                         onClick={onClose}
                         className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                     >
-                        Отмена
+                        {t('cabinet.review.cancel', 'Отмена')}
                     </button>
                     <button
                         type="button"
@@ -177,11 +180,11 @@ export default function ReviewDialog({
                     >
                         {busy
                             ? existingReview
-                                ? 'Обновляю…'
-                                : 'Отправляю…'
+                                ? t('cabinet.review.updating', 'Обновляю…')
+                                : t('cabinet.review.sending', 'Отправляю…')
                             : existingReview
-                            ? 'Обновить отзыв'
-                            : 'Отправить отзыв'}
+                            ? t('cabinet.review.update', 'Обновить отзыв')
+                            : t('cabinet.review.submit', 'Отправить отзыв')}
                     </button>
                 </div>
             </div>
