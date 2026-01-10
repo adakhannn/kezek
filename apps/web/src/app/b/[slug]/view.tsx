@@ -180,26 +180,55 @@ export default function BizClient({ data }: { data: Data }) {
         }
         
         // Проверяем, является ли выбранный мастер временно переведенным на выбранную дату
-        const isTemporaryTransfer = dayStr && temporaryTransfers.some((t: { staff_id: string; branch_id: string; date: string }) => 
-            t.staff_id === staffId && t.branch_id === branchId && t.date === dayStr
+        // Временный перевод определяется тем, что в temporaryTransfers есть запись для этого мастера и даты
+        // branch_id в temporaryTransfers - это филиал временного перевода (куда переведен мастер)
+        const isTemporaryTransfer = dayStr && staffId && temporaryTransfers.some((t: { staff_id: string; branch_id: string; date: string }) => 
+            t.staff_id === staffId && t.date === dayStr
         );
+        
+        console.log('[Booking] servicesFiltered check:', { 
+            staffId, 
+            branchId, 
+            dayStr, 
+            isTemporaryTransfer, 
+            temporaryTransfersCount: temporaryTransfers.length,
+            temporaryTransfers: temporaryTransfers.filter(t => t.staff_id === staffId),
+            servicesForStaffCount: servicesForStaff.size,
+            servicesByBranchCount: servicesByBranch.length,
+            allServicesCount: services.length
+        });
         
         // Если мастер временно переведен, показываем все его услуги из всех филиалов
         // Иначе показываем только услуги из выбранного филиала
         const baseServices = isTemporaryTransfer ? services : servicesByBranch;
         
-        return baseServices.filter((s) => {
+        const filtered = baseServices.filter((s) => {
             // Услуга должна быть доступна мастеру
-            if (!servicesForStaff.has(s.id)) return false;
+            if (!servicesForStaff.has(s.id)) {
+                console.log('[Booking] Service filtered out (not for staff):', s.id, s.name_ru);
+                return false;
+            }
             
             // Если мастер временно переведен, показываем услугу независимо от филиала
             // Если мастер основной в филиале, показываем только услуги этого филиала
             if (!isTemporaryTransfer) {
-                return s.branch_id === branchId;
+                const matchesBranch = s.branch_id === branchId;
+                if (!matchesBranch) {
+                    console.log('[Booking] Service filtered out (wrong branch):', s.id, s.name_ru, 'branch:', s.branch_id, 'selected:', branchId);
+                }
+                return matchesBranch;
             }
             
+            console.log('[Booking] Service included (temporary transfer):', s.id, s.name_ru, 'branch:', s.branch_id);
             return true;
         });
+        
+        console.log('[Booking] servicesFiltered result:', { 
+            total: filtered.length, 
+            services: filtered.map(s => ({ id: s.id, name: s.name_ru, branch: s.branch_id }))
+        });
+        
+        return filtered;
     }, [servicesByBranch, services, staffId, serviceToStaffMap, branchId, dayStr, temporaryTransfers]);
 
     // при смене мастера — сбрасываем выбор услуги, если текущая не подходит
