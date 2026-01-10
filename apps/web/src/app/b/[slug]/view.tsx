@@ -362,9 +362,23 @@ export default function BizClient({ data }: { data: Data }) {
                 const all = (data ?? []) as Slot[];
                 const now = new Date();
                 const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
+                
+                // Определяем правильный branch_id для фильтрации слотов
+                // Для временно переведенного мастера используем branch_id из временного перевода
+                let targetBranchId = branchId;
+                if (dayStr) {
+                    const tempTransfer = temporaryTransfers.find((t: { staff_id: string; branch_id: string; date: string }) => 
+                        t.staff_id === staffId && t.branch_id === branchId && t.date === dayStr
+                    );
+                    if (tempTransfer) {
+                        // Для временно переведенного мастера используем branch_id временного филиала
+                        targetBranchId = tempTransfer.branch_id;
+                    }
+                }
+                
                 let filtered = all.filter(
                     (s) => s.staff_id === staffId && 
-                           s.branch_id === branchId &&
+                           s.branch_id === targetBranchId &&
                            new Date(s.start_at) > minTime
                 );
                 
@@ -386,7 +400,7 @@ export default function BizClient({ data }: { data: Data }) {
                         .from('bookings')
                         .select('start_at, end_at, status')
                         .eq('staff_id', staffId)
-                        .eq('branch_id', branchId)
+                        .eq('branch_id', targetBranchId)
                         .in('status', ['hold', 'confirmed', 'paid']) // исключаем cancelled и no_show
                         .gte('start_at', searchStart.toISOString())
                         .lte('end_at', searchEnd.toISOString());
@@ -444,7 +458,7 @@ export default function BizClient({ data }: { data: Data }) {
         return () => {
             ignore = true;
         };
-    }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey, serviceToStaffMap]);
+    }, [biz.id, serviceId, staffId, branchId, dayStr, slotsRefreshKey, serviceToStaffMap, temporaryTransfers]);
 
     // Проверяем, есть ли уже записи клиента в этом бизнесе на выбранный день
     useEffect(() => {
