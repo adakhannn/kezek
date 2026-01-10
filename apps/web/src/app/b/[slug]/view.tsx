@@ -74,8 +74,15 @@ export default function BizClient({ data }: { data: Data }) {
     const { biz, branches, services, staff } = data;
     const {t, locale} = useLanguage();
     
-    // Функция для форматирования названия филиала (транслитерация для английского)
+    // Функции для форматирования названий (транслитерация для английского)
     const formatBranchName = (name: string): string => {
+        if (locale === 'en') {
+            return transliterate(name);
+        }
+        return name;
+    };
+    
+    const formatServiceName = (name: string): string => {
         if (locale === 'en') {
             return transliterate(name);
         }
@@ -1242,7 +1249,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                     >
                                                         <div>
                                                             <div className="font-semibold text-gray-900 dark:text-gray-100">
-                                                                {s.name_ru}
+                                                                {formatServiceName(s.name_ru)}
                                                             </div>
                                                             <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                                                                 {s.duration_min} {t('booking.duration.min', 'мин')}
@@ -1430,7 +1437,7 @@ export default function BizClient({ data }: { data: Data }) {
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">{t('booking.summary.service', 'Услуга:')}</span>
                                 <span className="text-right font-medium">
-                                    {serviceCurrent ? serviceCurrent.name_ru : t('booking.summary.notSelectedFem', 'Не выбрана')}
+                                    {serviceCurrent ? formatServiceName(serviceCurrent.name_ru) : t('booking.summary.notSelectedFem', 'Не выбрана')}
                                 </span>
                             </div>
                             <div className="flex justify-between gap-2">
