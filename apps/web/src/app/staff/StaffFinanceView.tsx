@@ -396,6 +396,12 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         }
     };
 
+    // Вычисляем общее количество закрытых смен
+    const allClosedShiftsCount = useMemo(() => {
+        if (!allShifts || allShifts.length === 0) return 0;
+        return allShifts.filter((s) => s.status === 'closed').length;
+    }, [allShifts]);
+
     // Вычисляем статистику в зависимости от выбранного периода
     const filteredStats = useMemo(() => {
         if (!allShifts || allShifts.length === 0) {
@@ -445,9 +451,13 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         const totalLateMinutes = filtered.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
         
         // Отладочная информация
+        console.log('[StaffFinanceView] All shifts:', allShifts.length, 'Closed:', closedShifts.length, 'Filtered:', filtered.length);
         if (filtered.length > 0) {
-            console.log('[StaffFinanceView] Filtered shifts:', filtered.length, filtered);
+            console.log('[StaffFinanceView] Filtered shifts:', filtered);
             console.log('[StaffFinanceView] Stats:', { totalAmount, totalMaster, totalSalon, totalLateMinutes });
+        } else if (closedShifts.length > 0) {
+            console.log('[StaffFinanceView] No shifts match filter. Period:', statsPeriod);
+            console.log('[StaffFinanceView] All closed shifts:', closedShifts.map(s => ({ shift_date: s.shift_date, total_amount: s.total_amount, master_share: s.master_share })));
         }
         
         return {
@@ -1255,7 +1265,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                             {t('staff.finance.stats.title', 'Общая статистика по сменам')}
                         </h2>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {t('staff.finance.stats.totalShifts', 'Всего закрытых смен')}: {stats.shiftsCount}
+                            {t('staff.finance.stats.totalShifts', 'Всего закрытых смен')}: {allClosedShiftsCount}
                         </div>
                     </div>
                     
