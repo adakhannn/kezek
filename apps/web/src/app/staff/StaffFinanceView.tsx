@@ -79,6 +79,7 @@ type TodayResponse =
               master_share: number;
               salon_share: number;
               late_minutes: number;
+              topup_amount?: number;
           }>;
           staffPercentMaster?: number;
           staffPercentSalon?: number;
@@ -123,6 +124,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         master_share: number;
         salon_share: number;
         late_minutes: number;
+        topup_amount?: number;
     }>>([]);
     const [showShiftDetails, setShowShiftDetails] = useState(false);
 
@@ -446,7 +448,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         }
         
         const totalAmount = filtered.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
-        const totalMaster = filtered.reduce((sum, s) => sum + Number(s.master_share || 0), 0);
+        // Учитываем доплату владельца (topup_amount) при расчете общей суммы сотрудника
+        const totalMaster = filtered.reduce((sum, s) => sum + Number(s.master_share || 0) + Number(s.topup_amount || 0), 0);
         const totalSalon = filtered.reduce((sum, s) => sum + Number(s.salon_share || 0), 0);
         const totalLateMinutes = filtered.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
         

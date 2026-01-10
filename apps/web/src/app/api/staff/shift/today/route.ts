@@ -162,7 +162,7 @@ export async function GET() {
         // Общая статистика по всем закрытым сменам сотрудника
         const { data: allShifts, error: statsError } = await supabase
             .from('staff_shifts')
-            .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes')
+            .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, topup_amount')
             .eq('staff_id', staffId)
             .order('shift_date', { ascending: false });
 
@@ -176,7 +176,8 @@ export async function GET() {
 
         const closed = (allShifts ?? []).filter((s) => s.status === 'closed');
         const totalAmount = closed.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
-        const totalMaster = closed.reduce((sum, s) => sum + Number(s.master_share || 0), 0);
+        // Учитываем доплату владельца (topup_amount) при расчете общей суммы сотрудника
+        const totalMaster = closed.reduce((sum, s) => sum + Number(s.master_share || 0) + Number(s.topup_amount || 0), 0);
         const totalSalon = closed.reduce((sum, s) => sum + Number(s.salon_share || 0), 0);
         const totalLateMinutes = closed.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
 
@@ -188,6 +189,7 @@ export async function GET() {
                 master_share: Number(s.master_share ?? 0),
                 salon_share: Number(s.salon_share ?? 0),
                 late_minutes: Number(s.late_minutes ?? 0),
+                topup_amount: Number(s.topup_amount ?? 0),
             })),
             ok: true,
             today: shift
