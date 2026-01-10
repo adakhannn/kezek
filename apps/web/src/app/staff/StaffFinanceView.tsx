@@ -9,7 +9,7 @@ import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import MonthPickerPopover from '@/components/pickers/MonthPickerPopover';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { TZ } from '@/lib/time';
+import { todayTz, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
 type ShiftItem = {
@@ -113,8 +113,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [today, setToday] = useState<TodayResponse | null>(null);
     const [activeTab, setActiveTab] = useState<TabKey>('shift');
     const [statsPeriod, setStatsPeriod] = useState<PeriodKey>('all');
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-    const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+    const [selectedDate, setSelectedDate] = useState<Date>(todayTz());
+    const [selectedMonth, setSelectedMonth] = useState<Date>(todayTz());
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [allShifts, setAllShifts] = useState<Array<{
         shift_date: string;
@@ -394,7 +394,13 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
     // Вычисляем статистику в зависимости от выбранного периода
     const filteredStats = useMemo(() => {
-        const closedShifts = allShifts.filter((s) => s.status === 'closed');
+        // Нормализуем shift_date - обрезаем время, если оно есть (формат YYYY-MM-DD)
+        const normalizedShifts = allShifts.map((s) => ({
+            ...s,
+            shift_date: s.shift_date.split('T')[0], // Берем только дату, без времени
+        }));
+        
+        const closedShifts = normalizedShifts.filter((s) => s.status === 'closed');
         
         let filtered: typeof closedShifts = [];
         
