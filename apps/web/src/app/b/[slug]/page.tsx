@@ -31,9 +31,9 @@ async function getData(slug: string) {
         `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`
     );
 
-    // активные мастера с их "родным" филиалом
+    // активные мастера с их "родным" филиалом и аватаркой
     const staff = await q(
-        `staff?select=id,full_name,branch_id&biz_id=eq.${biz.id}&is_active=eq.true&order=full_name.asc`
+        `staff?select=id,full_name,branch_id,avatar_url&biz_id=eq.${biz.id}&is_active=eq.true&order=full_name.asc`
     );
 
     return { biz, branches, services, staff };

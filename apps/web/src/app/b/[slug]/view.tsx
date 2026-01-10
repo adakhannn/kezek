@@ -25,7 +25,7 @@ type Service = {
     price_to?: number | null;
     branch_id: string;
 };
-type Staff = { id: string; full_name: string; branch_id: string };
+type Staff = { id: string; full_name: string; branch_id: string; avatar_url?: string | null };
 
 type Data = {
     biz: Biz;
@@ -1232,13 +1232,28 @@ export default function BizClient({ data }: { data: Data }) {
                                                     key={m.id}
                                                     type="button"
                                                     onClick={() => setStaffId(m.id)}
-                                                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                                                         active
                                                             ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
                                                             : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
                                                     }`}
                                                 >
-                                                    {formatStaffName(m.full_name)}
+                                                    {m.avatar_url ? (
+                                                        <img
+                                                            src={m.avatar_url}
+                                                            alt={formatStaffName(m.full_name)}
+                                                            className="h-6 w-6 rounded-full object-cover"
+                                                            onError={(e) => {
+                                                                // Скрываем изображение, если оно не загрузилось
+                                                                e.currentTarget.style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                                                            {formatStaffName(m.full_name).charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                    <span>{formatStaffName(m.full_name)}</span>
                                                 </button>
                                             );
                                         })}
@@ -1491,9 +1506,26 @@ export default function BizClient({ data }: { data: Data }) {
                             </div>
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">{t('booking.summary.master', 'Мастер:')}</span>
-                                <span className="text-right font-medium">
-                                    {staffCurrent ? formatStaffName(staffCurrent.full_name) : t('booking.summary.notSelected', 'Не выбран')}
-                                </span>
+                                <div className="flex items-center gap-2 text-right">
+                                    {staffCurrent?.avatar_url ? (
+                                        <img
+                                            src={staffCurrent.avatar_url}
+                                            alt={formatStaffName(staffCurrent.full_name)}
+                                            className="h-8 w-8 rounded-full object-cover ml-auto"
+                                            onError={(e) => {
+                                                // Скрываем изображение, если оно не загрузилось
+                                                e.currentTarget.style.display = 'none';
+                                            }}
+                                        />
+                                    ) : staffCurrent ? (
+                                        <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-400 ml-auto">
+                                            {formatStaffName(staffCurrent.full_name).charAt(0).toUpperCase()}
+                                        </div>
+                                    ) : null}
+                                    <span className="font-medium">
+                                        {staffCurrent ? formatStaffName(staffCurrent.full_name) : t('booking.summary.notSelected', 'Не выбран')}
+                                    </span>
+                                </div>
                             </div>
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">{t('booking.summary.day', 'День:')}</span>
