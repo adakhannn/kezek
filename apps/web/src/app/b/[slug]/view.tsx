@@ -14,7 +14,7 @@ import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[] };
-type Branch = { id: string; name: string };
+type Branch = { id: string; name: string; address?: string | null };
 type Service = {
     id: string;
     name_ru: string;
@@ -1160,7 +1160,7 @@ export default function BizClient({ data }: { data: Data }) {
                                         {t('booking.step1.noBranches', 'Нет активных филиалов.')}
                                     </div>
                                 ) : (
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {branches.map((b) => {
                                             const active = b.id === branchId;
                                             return (
@@ -1168,13 +1168,28 @@ export default function BizClient({ data }: { data: Data }) {
                                                     key={b.id}
                                                     type="button"
                                                     onClick={() => setBranchId(b.id)}
-                                                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                    className={`flex flex-col items-start rounded-lg border p-3 text-left transition ${
                                                         active
-                                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                                            : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                                            ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
+                                                            : 'border-gray-300 bg-white hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
                                                     }`}
                                                 >
-                                                    {formatBranchName(b.name)}
+                                                    <span className={`text-sm font-medium ${
+                                                        active
+                                                            ? 'text-indigo-700 dark:text-indigo-100'
+                                                            : 'text-gray-800 dark:text-gray-100'
+                                                    }`}>
+                                                        {formatBranchName(b.name)}
+                                                    </span>
+                                                    {b.address && (
+                                                        <span className={`mt-1 text-xs ${
+                                                            active
+                                                                ? 'text-indigo-600 dark:text-indigo-200'
+                                                                : 'text-gray-600 dark:text-gray-400'
+                                                        }`}>
+                                                            {b.address}
+                                                        </span>
+                                                    )}
                                                 </button>
                                             );
                                         })}

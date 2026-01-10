@@ -23,7 +23,7 @@ async function getData(slug: string) {
     if (!biz) return null;
 
     const branches = await q(
-        `branches?select=id,name&biz_id=eq.${biz.id}&is_active=eq.true&order=name.asc`
+        `branches?select=id,name,address&biz_id=eq.${biz.id}&is_active=eq.true&order=name.asc`
     );
 
     // все активные услуги бизнеса (дальше фильтруем по филиалу)
