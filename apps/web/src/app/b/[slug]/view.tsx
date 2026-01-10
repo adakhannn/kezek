@@ -156,15 +156,21 @@ export default function BizClient({ data }: { data: Data }) {
         return map;
     }, [serviceStaff]);
 
+    /* ---------- дата и слоты через RPC get_free_slots_service_day_v2 ---------- */
+    const [day, setDay] = useState<Date>(todayTz());
+    const dayStr = formatInTimeZone(day, TZ, 'yyyy-MM-dd');
+    const todayStr = formatInTimeZone(todayTz(), TZ, 'yyyy-MM-dd');
+    const maxStr = formatInTimeZone(addDays(todayTz(), 60), TZ, 'yyyy-MM-dd');
+
     /* ---------- временные переводы сотрудников (staff_schedule_rules) ---------- */
     const [temporaryTransfers, setTemporaryTransfers] = useState<Array<{ staff_id: string; branch_id: string; date: string }>>([]);
 
-
     // Список услуг: по филиалу + по мастеру (если мастер выбран)
+    // Для временно переведенных мастеров показываем услуги, которые они делают, независимо от филиала услуги
     const servicesFiltered = useMemo<Service[]>(() => {
-        const base = servicesByBranch;
         if (!staffId) return []; // Если мастер не выбран, не показываем услуги
         if (!serviceToStaffMap) return []; // Если нет данных о связи услуга-мастер, не показываем услуги (безопаснее)
+        
         // Находим все услуги, которые делает выбранный мастер
         const servicesForStaff = new Set<string>();
         for (const [serviceId, staffSet] of serviceToStaffMap.entries()) {
@@ -172,8 +178,29 @@ export default function BizClient({ data }: { data: Data }) {
                 servicesForStaff.add(serviceId);
             }
         }
-        return base.filter((s) => servicesForStaff.has(s.id));
-    }, [servicesByBranch, staffId, serviceToStaffMap]);
+        
+        // Проверяем, является ли выбранный мастер временно переведенным на выбранную дату
+        const isTemporaryTransfer = dayStr && temporaryTransfers.some((t: { staff_id: string; branch_id: string; date: string }) => 
+            t.staff_id === staffId && t.branch_id === branchId && t.date === dayStr
+        );
+        
+        // Если мастер временно переведен, показываем все его услуги из всех филиалов
+        // Иначе показываем только услуги из выбранного филиала
+        const baseServices = isTemporaryTransfer ? services : servicesByBranch;
+        
+        return baseServices.filter((s) => {
+            // Услуга должна быть доступна мастеру
+            if (!servicesForStaff.has(s.id)) return false;
+            
+            // Если мастер временно переведен, показываем услугу независимо от филиала
+            // Если мастер основной в филиале, показываем только услуги этого филиала
+            if (!isTemporaryTransfer) {
+                return s.branch_id === branchId;
+            }
+            
+            return true;
+        });
+    }, [servicesByBranch, services, staffId, serviceToStaffMap, branchId, dayStr, temporaryTransfers]);
 
     // при смене мастера — сбрасываем выбор услуги, если текущая не подходит
     useEffect(() => {
@@ -189,12 +216,6 @@ export default function BizClient({ data }: { data: Data }) {
             }
         }
     }, [staffId, servicesFiltered, serviceId]);
-
-    /* ---------- дата и слоты через RPC get_free_slots_service_day_v2 ---------- */
-    const [day, setDay] = useState<Date>(todayTz());
-    const dayStr = formatInTimeZone(day, TZ, 'yyyy-MM-dd');
-    const todayStr = formatInTimeZone(todayTz(), TZ, 'yyyy-MM-dd');
-    const maxStr = formatInTimeZone(addDays(todayTz(), 60), TZ, 'yyyy-MM-dd');
 
     // Загружаем временные переводы для выбранного филиала
     useEffect(() => {
