@@ -2,6 +2,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import type React from 'react';
 
 type RoleLiteral = 'owner' | 'manager' | 'staff' | 'admin' | 'client';
 const ROLES = ['owner', 'manager', 'staff', 'admin', 'client'] as const;
@@ -152,12 +153,12 @@ export function UserRolesEditor({
                 <select
                     className="border rounded px-3 py-2"
                     value={role}
-                    onChange={(e) => {
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         const v = e.target.value;
                         if (isRole(v)) setRole(v);
                     }}
                 >
-                    {ROLES.map((r) => (
+                    {ROLES.map((r: (typeof ROLES)[number]) => (
                         <option key={r} value={r}>
                             {r}
                         </option>

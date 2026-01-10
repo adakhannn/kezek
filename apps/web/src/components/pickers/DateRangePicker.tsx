@@ -36,7 +36,7 @@ export default function DateRangePicker({
             <DayPicker
                 mode="range"
                 selected={sel}
-                onSelect={(r) =>
+                onSelect={(r: DateRange | undefined) =>
                     onChange({
                         from: r?.from ? toYmdLocal(r.from) : null,
                         to: r?.to ? toYmdLocal(r.to) : r?.from ? toYmdLocal(r.from) : null,

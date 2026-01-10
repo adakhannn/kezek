@@ -8,7 +8,13 @@ export default function AuthPanel() {
     const [user, setUser] = useState<{email?: string|null; phone?: string|null} | null>(null);
 
     useEffect(() => {
-        supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+        supabase.auth.getUser().then(({ data }: { data: { user: { email?: string | null; phone?: string | null } | null; error?: unknown } }) => {
+            if (data?.user) {
+                setUser(data.user);
+            } else {
+                setUser(null);
+            }
+        });
     }, []);
 
     if (!user) {

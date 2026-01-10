@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type React from 'react';
 
 export type TimeRange = { start: string; end: string };
 
@@ -47,10 +48,10 @@ export default function TimeRangeList({
             <div className="text-xs text-gray-500 mb-1">{label}</div>
             <div className="flex gap-2 items-center mb-2">
                 <input type="time" className="border rounded px-2 py-1" value={draft.start}
-                       onChange={(e)=>setDraft(d=>({...d, start: e.target.value}))}/>
+                       onChange={(e: React.ChangeEvent<HTMLInputElement>)=>setDraft(d=>({...d, start: e.target.value}))}/>
                 <span className="text-sm">—</span>
                 <input type="time" className="border rounded px-2 py-1" value={draft.end}
-                       onChange={(e)=>setDraft(d=>({...d, end: e.target.value}))}/>
+                       onChange={(e: React.ChangeEvent<HTMLInputElement>)=>setDraft(d=>({...d, end: e.target.value}))}/>
                 <button className="border rounded px-2 py-1" onClick={add}>Добавить</button>
             </div>
 
@@ -59,11 +60,11 @@ export default function TimeRangeList({
                     <div key={i} className="flex items-center gap-2">
                         <input type="time" className="border rounded px-2 py-1"
                                value={tr.start}
-                               onChange={e=>replaceAt(i, { start: e.target.value })}/>
+                               onChange={(e: React.ChangeEvent<HTMLInputElement>)=>replaceAt(i, { start: e.target.value })}/>
                         <span className="text-sm">—</span>
                         <input type="time" className="border rounded px-2 py-1"
                                value={tr.end}
-                               onChange={e=>replaceAt(i, { end: e.target.value })}/>
+                               onChange={(e: React.ChangeEvent<HTMLInputElement>)=>replaceAt(i, { end: e.target.value })}/>
                         <button className="border rounded px-2 py-1" onClick={()=>removeAt(i)}>Удалить</button>
                     </div>
                 ))}

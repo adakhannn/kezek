@@ -129,7 +129,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
             map.controls.add(search);
 
             // Результат поиска → ставим метку и эмитим адрес
-            search.events.add('resultshow', async (e) => {
+            search.events.add('resultshow', async (e: IEvent) => {
                 const index = e.get<number>('index');
                 const result = await search.getResultsArray();
                 const item = result?.[index];
@@ -192,7 +192,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
             if (lat && lon) setPoint([lat, lon]);
 
             // клик по карте
-            map.events.add('click', async (e) => {
+            map.events.add('click', async (e: IEvent) => {
                 try {
                     const coords = e.get<Coordinates>('coords');
                     if (!coords || !Array.isArray(coords) || coords.length < 2) {
