@@ -98,7 +98,7 @@ export async function GET(
 
         const { data: shifts, error: shiftsError } = await admin
             .from('staff_shifts')
-            .select('*')
+            .select('*, staff:staff_id (hourly_rate, percent_master, percent_salon)')
             .eq('biz_id', bizId)
             .eq('staff_id', staffId)
             .gte('shift_date', dateFrom)
@@ -208,6 +208,12 @@ export async function GET(
                 let displayMasterShare = Number(s.master_share ?? 0);
                 let displaySalonShare = Number(s.salon_share ?? 0);
                 
+                // Получаем hourly_rate из связанной таблицы staff, если его нет в shift
+                const staffData = (s as { staff?: { hourly_rate?: number | null; percent_master?: number | null; percent_salon?: number | null } | null }).staff;
+                const hourlyRate = s.hourly_rate ? Number(s.hourly_rate) : (staffData?.hourly_rate ? Number(staffData.hourly_rate) : null);
+                const staffPercentMaster = staffData?.percent_master ? Number(staffData.percent_master) : null;
+                const staffPercentSalon = staffData?.percent_salon ? Number(staffData.percent_salon) : null;
+                
                 if (s.status === 'open') {
                     const shiftItems = shiftItemsMap[s.id] || [];
                     const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
@@ -215,9 +221,9 @@ export async function GET(
                     
                     displayTotalAmount = shiftTotalAmount;
                     
-                    // Получаем проценты из shift или используем дефолтные
-                    const shiftPercentMaster = Number(s.percent_master ?? 60);
-                    const shiftPercentSalon = Number(s.percent_salon ?? 40);
+                    // Получаем проценты из shift, staff или используем дефолтные
+                    const shiftPercentMaster = Number(s.percent_master ?? staffPercentMaster ?? 60);
+                    const shiftPercentSalon = Number(s.percent_salon ?? staffPercentSalon ?? 40);
                     const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
                     const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
                     const normalizedSalon = (shiftPercentSalon / percentSum) * 100;
@@ -227,18 +233,33 @@ export async function GET(
                     const baseSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
                     
                     // Проверяем, есть ли гарантированная сумма (оплата за выход)
-                    if (s.hourly_rate && s.opened_at) {
+                    if (hourlyRate && s.opened_at) {
                         const openedAt = new Date(s.opened_at);
                         const now = new Date();
                         const diffMs = now.getTime() - openedAt.getTime();
                         const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
-                        const guaranteedAmount = hoursWorked * Number(s.hourly_rate);
+                        const guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
+                        
+                        console.log('[dashboard/staff/finance/stats] Open shift calculation:', {
+                            shiftId: s.id,
+                            shiftTotalAmount,
+                            baseMasterShare,
+                            hoursWorked,
+                            hourlyRate,
+                            guaranteedAmount,
+                            willUseGuaranteed: guaranteedAmount > baseMasterShare,
+                        });
                         
                         // Если гарантированная сумма больше базовой доли, используем гарантию
                         if (guaranteedAmount > baseMasterShare) {
-                            displayMasterShare = Math.round(guaranteedAmount * 100) / 100;
+                            displayMasterShare = guaranteedAmount;
                             const topupAmount = displayMasterShare - baseMasterShare;
-                            displaySalonShare = baseSalonShare - topupAmount;
+                            displaySalonShare = Math.max(0, baseSalonShare - topupAmount);
+                            console.log('[dashboard/staff/finance/stats] Using guaranteed amount:', {
+                                displayMasterShare,
+                                topupAmount,
+                                displaySalonShare,
+                            });
                         } else {
                             displayMasterShare = baseMasterShare;
                             displaySalonShare = baseSalonShare;
@@ -252,15 +273,15 @@ export async function GET(
                 // Рассчитываем guaranteed_amount и hours_worked
                 let displayGuaranteedAmount = Number(s.guaranteed_amount ?? 0);
                 let displayHoursWorked: number | null = Number(s.hours_worked ?? null);
-                const displayHourlyRate: number | null = s.hourly_rate ? Number(s.hourly_rate) : null;
+                const displayHourlyRate: number | null = hourlyRate;
                 
-                if (s.status === 'open' && s.hourly_rate && s.opened_at) {
+                if (s.status === 'open' && hourlyRate && s.opened_at) {
                     // Для открытых смен пересчитываем на основе текущего времени
                     const openedAt = new Date(s.opened_at);
                     const now = new Date();
                     const diffMs = now.getTime() - openedAt.getTime();
                     displayHoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
-                    displayGuaranteedAmount = Math.round(displayHoursWorked * Number(s.hourly_rate) * 100) / 100;
+                    displayGuaranteedAmount = Math.round(displayHoursWorked * hourlyRate * 100) / 100;
                 }
                 
                 return {
@@ -292,13 +313,43 @@ export async function GET(
 
         // Суммируем итоги, используя уже пересчитанные значения из stats.shifts
         // Это важно, чтобы гарантированная сумма учитывалась правильно
+        console.log('[dashboard/staff/finance/stats] Calculating totals from shifts:', stats.shifts.length);
         for (const shift of stats.shifts) {
+            const prevTotalMaster = stats.totalMaster;
+            const prevTotalSalon = stats.totalSalon;
+            
             stats.totalAmount += shift.total_amount;
             stats.totalMaster += shift.master_share; // Уже включает гарантированную сумму, если она больше базовой доли
             stats.totalSalon += shift.salon_share; // Уже скорректирована с учетом доплаты за выход
             stats.totalConsumables += shift.consumables_amount;
             stats.totalLateMinutes += shift.late_minutes;
+            
+            if (shift.status === 'open') {
+                console.log('[dashboard/staff/finance/stats] Open shift totals:', {
+                    shiftId: shift.id,
+                    shiftDate: shift.shift_date,
+                    totalAmount: shift.total_amount,
+                    masterShare: shift.master_share,
+                    salonShare: shift.salon_share,
+                    guaranteedAmount: shift.guaranteed_amount,
+                    hoursWorked: shift.hours_worked,
+                    hourlyRate: shift.hourly_rate,
+                    addedToTotalMaster: shift.master_share,
+                    addedToTotalSalon: shift.salon_share,
+                    totalMasterBefore: prevTotalMaster,
+                    totalMasterAfter: stats.totalMaster,
+                    totalSalonBefore: prevTotalSalon,
+                    totalSalonAfter: stats.totalSalon,
+                });
+            }
         }
+        
+        console.log('[dashboard/staff/finance/stats] Final totals:', {
+            totalAmount: stats.totalAmount,
+            totalMaster: stats.totalMaster,
+            totalSalon: stats.totalSalon,
+            totalConsumables: stats.totalConsumables,
+        });
 
         return NextResponse.json({
             ok: true,
