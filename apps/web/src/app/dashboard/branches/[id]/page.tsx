@@ -33,7 +33,26 @@ export default async function EditBranchPage({
     }
     if (!branch || String(branch.biz_id) !== String(bizId)) return notFound();
 
+    // Загружаем расписание филиала
+    const { data: scheduleData } = await supabase
+        .from('branch_working_hours')
+        .select('day_of_week, intervals, breaks')
+        .eq('biz_id', bizId)
+        .eq('branch_id', branch.id)
+        .order('day_of_week');
+
+    const initialSchedule = (scheduleData || []).map((s) => ({
+        day_of_week: s.day_of_week,
+        intervals: (s.intervals || []) as Array<{ start: string; end: string }>,
+        breaks: (s.breaks || []) as Array<{ start: string; end: string }>,
+    }));
+
     return (
-        <EditBranchPageClient branch={branch} isSuperAdmin={isSuperAdmin} />
+        <EditBranchPageClient 
+            branch={branch} 
+            isSuperAdmin={isSuperAdmin}
+            initialSchedule={initialSchedule}
+            bizId={String(bizId)}
+        />
     );
 }

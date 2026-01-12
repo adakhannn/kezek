@@ -4,10 +4,20 @@ import BranchForm from '../BranchForm';
 import DeleteBranchButton from '../DeleteBranchButton';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { BranchScheduleEditor } from '@/components/admin/branches/BranchScheduleEditor';
+
+
+type BranchSchedule = {
+    day_of_week: number;
+    intervals: Array<{ start: string; end: string }>;
+    breaks: Array<{ start: string; end: string }>;
+};
 
 export default function EditBranchPageClient({ 
     branch, 
-    isSuperAdmin 
+    isSuperAdmin,
+    initialSchedule = [],
+    bizId,
 }: { 
     branch: { 
         id: string; 
@@ -17,7 +27,9 @@ export default function EditBranchPageClient({
         lat: number | null; 
         lon: number | null; 
     }; 
-    isSuperAdmin: boolean; 
+    isSuperAdmin: boolean;
+    initialSchedule?: BranchSchedule[];
+    bizId: string;
 }) {
     const { t } = useLanguage();
 
@@ -42,6 +54,16 @@ export default function EditBranchPageClient({
                         lat: branch.lat ?? null,
                         lon: branch.lon ?? null,
                     }}
+                    apiBase="/api/branches"
+                />
+            </div>
+
+            {/* Расписание филиала */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">
+                <BranchScheduleEditor 
+                    bizId={bizId}
+                    branchId={String(branch.id)}
+                    initialSchedule={initialSchedule}
                     apiBase="/api/branches"
                 />
             </div>

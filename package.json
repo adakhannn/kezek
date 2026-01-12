@@ -18,7 +18,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "pnpm -C apps/web typecheck",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "supabase": "supabase",
+    "db:push": "supabase db push"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

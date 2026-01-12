@@ -44,9 +44,10 @@ CREATE POLICY "Business owners and managers can select branch working hours"
                   OR EXISTS (
                       SELECT 1
                       FROM public.user_roles ur
+                      JOIN public.roles r ON ur.role_id = r.id
                       WHERE ur.biz_id = b.id
                         AND ur.user_id = auth.uid()
-                        AND ur.role IN ('owner', 'manager')
+                        AND r.key IN ('owner', 'manager')
                   )
               )
         )
@@ -67,9 +68,10 @@ CREATE POLICY "Business owners and managers can insert branch working hours"
                   OR EXISTS (
                       SELECT 1
                       FROM public.user_roles ur
+                      JOIN public.roles r ON ur.role_id = r.id
                       WHERE ur.biz_id = b.id
                         AND ur.user_id = auth.uid()
-                        AND ur.role IN ('owner', 'manager')
+                        AND r.key IN ('owner', 'manager')
                   )
               )
         )
@@ -90,9 +92,10 @@ CREATE POLICY "Business owners and managers can update branch working hours"
                   OR EXISTS (
                       SELECT 1
                       FROM public.user_roles ur
+                      JOIN public.roles r ON ur.role_id = r.id
                       WHERE ur.biz_id = b.id
                         AND ur.user_id = auth.uid()
-                        AND ur.role IN ('owner', 'manager')
+                        AND r.key IN ('owner', 'manager')
                   )
               )
         )
@@ -107,9 +110,10 @@ CREATE POLICY "Business owners and managers can update branch working hours"
                   OR EXISTS (
                       SELECT 1
                       FROM public.user_roles ur
+                      JOIN public.roles r ON ur.role_id = r.id
                       WHERE ur.biz_id = b.id
                         AND ur.user_id = auth.uid()
-                        AND ur.role IN ('owner', 'manager')
+                        AND r.key IN ('owner', 'manager')
                   )
               )
         )
@@ -130,9 +134,10 @@ CREATE POLICY "Business owners and managers can delete branch working hours"
                   OR EXISTS (
                       SELECT 1
                       FROM public.user_roles ur
+                      JOIN public.roles r ON ur.role_id = r.id
                       WHERE ur.biz_id = b.id
                         AND ur.user_id = auth.uid()
-                        AND ur.role IN ('owner', 'manager')
+                        AND r.key IN ('owner', 'manager')
                   )
               )
         )

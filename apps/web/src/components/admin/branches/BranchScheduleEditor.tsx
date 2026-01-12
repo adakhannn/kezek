@@ -19,9 +19,10 @@ type Props = {
     bizId: string;
     branchId: string;
     initialSchedule?: BranchSchedule[];
+    apiBase?: string; // API base path, e.g., '/api/branches' or '/admin/api/businesses/{bizId}/branches'
 };
 
-export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [] }: Props) {
+export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], apiBase }: Props) {
     const [schedule, setSchedule] = useState<Map<number, BranchSchedule>>(new Map());
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -64,7 +65,12 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [] }: 
         try {
             const scheduleArray = Array.from(schedule.values());
 
-            const res = await fetch(`/admin/api/businesses/${bizId}/branches/${branchId}/schedule`, {
+            // Определяем API путь
+            const apiPath = apiBase 
+                ? `${apiBase}/${encodeURIComponent(branchId)}/schedule`
+                : `/admin/api/businesses/${bizId}/branches/${branchId}/schedule`;
+
+            const res = await fetch(apiPath, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 credentials: 'include',
