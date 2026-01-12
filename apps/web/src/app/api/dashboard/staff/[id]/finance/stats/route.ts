@@ -67,6 +67,17 @@ export async function GET(
             date,
         });
 
+        // Сначала проверим, есть ли вообще смены у этого сотрудника
+        const { data: allShiftsCheck, error: checkError } = await supabase
+            .from('staff_shifts')
+            .select('id, shift_date, status')
+            .eq('biz_id', bizId)
+            .eq('staff_id', staffId)
+            .order('shift_date', { ascending: false })
+            .limit(5);
+
+        console.log('[dashboard/staff/finance/stats] All shifts check (last 5):', allShiftsCheck);
+
         const { data: shifts, error: shiftsError } = await supabase
             .from('staff_shifts')
             .select('*')
@@ -85,6 +96,9 @@ export async function GET(
         }
 
         console.log('[dashboard/staff/finance/stats] Found shifts:', shifts?.length || 0, shifts);
+        if (shifts && shifts.length > 0) {
+            console.log('[dashboard/staff/finance/stats] Shift dates:', shifts.map(s => ({ date: s.shift_date, status: s.status })));
+        }
 
         // Получаем позиции (клиентов) для всех смен
         const shiftIds = (shifts || []).map(s => s.id);
