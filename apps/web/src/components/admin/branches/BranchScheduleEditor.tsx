@@ -53,10 +53,9 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
         }
 
         try {
-            // Создаем расписание для всех дней недели (кроме воскресенья - выходной по умолчанию)
+            // Создаем расписание для всех дней недели (0 = воскресенье, 1 = понедельник, ..., 6 = суббота)
             const scheduleArray = [];
-            for (let dow = 1; dow <= 6; dow++) {
-                // 1 = понедельник, ..., 6 = суббота
+            for (let dow = 0; dow <= 6; dow++) {
                 scheduleArray.push({
                     day_of_week: dow,
                     intervals: [{ start, end }],
@@ -104,7 +103,7 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
                     Расписание работы филиала
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Установите рабочие часы, которые будут использоваться по умолчанию для всех сотрудников филиала во все рабочие дни (понедельник - суббота). Воскресенье - выходной день. Если у сотрудника есть индивидуальное расписание, оно имеет приоритет.
+                    Установите рабочие часы, которые будут использоваться по умолчанию для всех сотрудников филиала во все дни недели. Если у сотрудника есть индивидуальное расписание, оно имеет приоритет.
                 </p>
             </div>
 
@@ -142,7 +141,7 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
 
                     <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <p className="text-xs text-blue-800 dark:text-blue-300">
-                            Это расписание будет применяться к понедельнику - субботе. Воскресенье - выходной день.
+                            Это расписание будет применяться ко всем дням недели (понедельник - воскресенье).
                         </p>
                     </div>
                 </div>
