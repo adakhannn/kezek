@@ -453,6 +453,108 @@ export default function Client({
         return map;
     }, [rules]);
 
+    async function applyBranchSchedule() {
+        setSaving(true);
+        try {
+            // Загружаем расписание филиала
+            const { data: branchSchedule } = await supabase
+                .from('branch_working_hours')
+                .select('day_of_week, intervals')
+                .eq('biz_id', bizId)
+                .eq('branch_id', homeBranchId);
+
+            // Создаем карту расписания филиала по дням недели
+            const branchScheduleMap = new Map<number, TimeRange[]>();
+            (branchSchedule || []).forEach((s) => {
+                const intervals = (s.intervals || []) as TimeRange[];
+                if (intervals.length > 0) {
+                    branchScheduleMap.set(s.day_of_week, intervals);
+                }
+            });
+
+            // Получаем все даты текущей и следующей недели
+            const allDates = [
+                ...currentWeekDates.map((d) => formatInTimeZone(d, TZ, 'yyyy-MM-dd')),
+                ...nextWeekDates.map((d) => formatInTimeZone(d, TZ, 'yyyy-MM-dd')),
+            ];
+
+            // Обновляем или создаем правила для всех дней
+            const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
+            
+            for (const date of allDates) {
+                const dateObj = new Date(date + 'T12:00:00');
+                const dayOfWeek = dateObj.getDay();
+                
+                // Получаем расписание филиала для этого дня недели
+                const branchIntervals = branchScheduleMap.get(dayOfWeek);
+                const intervals = branchIntervals && branchIntervals.length > 0
+                    ? branchIntervals
+                    : [defaultInterval];
+
+                // Проверяем, есть ли уже правило для этой даты
+                const existing = rules.find((r) => r.date_on === date);
+
+                if (existing?.id) {
+                    // Обновляем существующее правило
+                    await supabase
+                        .from('staff_schedule_rules')
+                        .update({
+                            intervals,
+                            breaks: [],
+                            branch_id: homeBranchId,
+                            is_active: true,
+                        })
+                        .eq('id', existing.id)
+                        .eq('biz_id', bizId)
+                        .eq('staff_id', staffId);
+                } else {
+                    // Создаем новое правило
+                    await supabase.from('staff_schedule_rules').insert({
+                        biz_id: bizId,
+                        staff_id: staffId,
+                        kind: 'date',
+                        date_on: date,
+                        branch_id: homeBranchId,
+                        tz: TZ,
+                        intervals,
+                        breaks: [],
+                        is_active: true,
+                        priority: 0,
+                    });
+                }
+            }
+
+            // Перезагружаем правила
+            const weekStart = formatInTimeZone(currentWeekDates[0], TZ, 'yyyy-MM-dd');
+            const weekEnd = formatInTimeZone(addDays(nextWeekDates[6], 1), TZ, 'yyyy-MM-dd');
+            
+            const { data: reloadedData } = await supabase
+                .from('staff_schedule_rules')
+                .select('id, date_on, intervals, branch_id')
+                .eq('biz_id', bizId)
+                .eq('staff_id', staffId)
+                .eq('kind', 'date')
+                .eq('is_active', true)
+                .gte('date_on', weekStart)
+                .lt('date_on', weekEnd)
+                .order('date_on', { ascending: true });
+
+            setRules(
+                (reloadedData ?? []).map((r) => ({
+                    id: r.id,
+                    date_on: r.date_on,
+                    intervals: (r.intervals ?? []) as TimeRange[],
+                    branch_id: r.branch_id || homeBranchId,
+                }))
+            );
+        } catch (e) {
+            console.error('Error applying branch schedule:', e);
+            alert('Ошибка при применении расписания филиала: ' + (e instanceof Error ? e.message : String(e)));
+        } finally {
+            setSaving(false);
+        }
+    }
+
     async function saveDay(date: string, interval: TimeRange | null, branchId: string) {
         setSaving(true);
         try {
@@ -603,16 +705,42 @@ export default function Client({
                 <>
             <div className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-800">
                 <div className="mb-4 sm:mb-6">
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>{t('staff.schedule.week.current', 'Текущая неделя')}</span>
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        {formatInTimeZone(currentWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
-                        {formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}
-                    </p>
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                        <div className="flex-1">
+                            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>{t('staff.schedule.week.current', 'Текущая неделя')}</span>
+                            </h2>
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                {formatInTimeZone(currentWeekDates[0], TZ, 'dd.MM.yyyy')} —{' '}
+                                {formatInTimeZone(currentWeekDates[6], TZ, 'dd.MM.yyyy')}
+                            </p>
+                        </div>
+                        <button
+                            onClick={applyBranchSchedule}
+                            disabled={saving}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-indigo-300 dark:bg-indigo-900/20 dark:border-indigo-800 dark:hover:bg-indigo-900/30"
+                        >
+                            {saving ? (
+                                <>
+                                    <svg className="animate-spin h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Применение...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    <span>Применить расписание филиала</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
                 <div className="space-y-2 sm:space-y-3">
                     {/* Первая строка: 4 карточки */}
