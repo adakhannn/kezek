@@ -44,7 +44,125 @@ export async function POST(req: Request) {
 
         const admin = createClient(URL, SERVICE);
 
-        const {error} = await admin
+        // 1) Проверяем, что филиал существует и принадлежит бизнесу
+        const { data: br } = await admin
+            .from('branches')
+            .select('id,biz_id')
+            .eq('id', branchId)
+            .maybeSingle();
+        if (!br || String(br.biz_id) !== String(id)) {
+            return NextResponse.json({ ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS' }, { status: 400 });
+        }
+
+        // 2) Проверяем наличие активных услуг
+        const { count: servicesCount } = await admin
+            .from('services')
+            .select('id', { count: 'exact', head: true })
+            .eq('biz_id', id)
+            .eq('branch_id', branchId)
+            .eq('active', true);
+
+        if ((servicesCount ?? 0) > 0) {
+            return NextResponse.json({ 
+                ok: false, 
+                error: 'HAS_SERVICES',
+                message: 'Невозможно удалить филиал: к нему привязаны активные услуги. Сначала удалите или переместите все активные услуги.'
+            }, { status: 400 });
+        }
+
+        // 3) Проверяем наличие активных сотрудников
+        const { count: staffCount } = await admin
+            .from('staff')
+            .select('id', { count: 'exact', head: true })
+            .eq('biz_id', id)
+            .eq('branch_id', branchId)
+            .eq('is_active', true);
+
+        if ((staffCount ?? 0) > 0) {
+            return NextResponse.json({ 
+                ok: false, 
+                error: 'HAS_STAFF',
+                message: 'Невозможно удалить филиал: к нему привязаны активные сотрудники. Сначала удалите или переместите всех активных сотрудников.'
+            }, { status: 400 });
+        }
+
+        // 4) Проверяем наличие бронирований (включая отмененные для информации)
+        const { data: allBookings, count: allBookingsCount } = await admin
+            .from('bookings')
+            .select('id,status,start_at,client_name', { count: 'exact' })
+            .eq('biz_id', id)
+            .eq('branch_id', branchId)
+            .limit(20);
+
+        const { count: activeBookingsCount } = await admin
+            .from('bookings')
+            .select('id', { count: 'exact', head: true })
+            .eq('biz_id', id)
+            .eq('branch_id', branchId)
+            .neq('status', 'cancelled');
+
+        const cancelledCount = (allBookingsCount ?? 0) - (activeBookingsCount ?? 0);
+
+        if ((activeBookingsCount ?? 0) > 0) {
+            const activeBookings = allBookings?.filter(b => b.status !== 'cancelled') || [];
+            return NextResponse.json({ 
+                ok: false, 
+                error: 'HAS_BOOKINGS',
+                message: `Невозможно удалить филиал: к нему привязаны активные (неотмененные) брони. Сначала отмените или удалите все активные брони.`,
+                details: {
+                    total: allBookingsCount ?? 0,
+                    active: activeBookingsCount ?? 0,
+                    cancelled: cancelledCount,
+                    bookings: activeBookings.slice(0, 5),
+                }
+            }, { status: 400 });
+        }
+
+        // 5) Удаляем отмененные бронирования, чтобы они не блокировали удаление через FK
+        if (cancelledCount > 0) {
+            const { error: eDelCancelled } = await admin
+                .from('bookings')
+                .delete()
+                .eq('biz_id', id)
+                .eq('branch_id', branchId)
+                .eq('status', 'cancelled');
+
+            if (eDelCancelled) {
+                console.warn(`Не удалось удалить отмененные бронирования: ${eDelCancelled.message}`);
+                // Не блокируем удаление из-за этого, но логируем
+            } else {
+                console.log(`Удалено ${cancelledCount} отмененных бронирований для филиала ${branchId}`);
+            }
+        }
+
+        // 6) Перемещаем неактивных сотрудников в другой филиал (если есть)
+        const { data: otherBranch } = await admin
+            .from('branches')
+            .select('id')
+            .eq('biz_id', id)
+            .neq('id', branchId)
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+
+        if (otherBranch) {
+            const { error: eMoveStaff } = await admin
+                .from('staff')
+                .update({ branch_id: otherBranch.id })
+                .eq('biz_id', id)
+                .eq('branch_id', branchId)
+                .eq('is_active', false);
+
+            if (eMoveStaff) {
+                console.warn('Не удалось переместить неактивных сотрудников:', eMoveStaff.message);
+            }
+        }
+
+        // 7) Проверяем другие возможные связи (working_hours, staff_shifts и т.д.)
+        // Эти таблицы могут иметь связи через staff, но стоит проверить напрямую
+        
+        // 8) Удаляем филиал
+        const { error } = await admin
             .from('branches')
             .delete()
             .eq('id', branchId)
@@ -52,14 +170,44 @@ export async function POST(req: Request) {
 
         if (error) {
             const pgErr = error as PostgrestError;
-            const friendly =
-                pgErr.code === '23503' || /foreign key/i.test(pgErr.message)
-                    ? 'Нельзя удалить: филиал используется (есть сотрудники/записи). Сначала перенесите или удалите связанные данные.'
-                    : pgErr.message;
-            return NextResponse.json({ok: false, error: friendly}, {status: 400});
+            
+            // Если это foreign key constraint, пытаемся найти, что именно блокирует
+            if (pgErr.code === '23503' || /foreign key/i.test(pgErr.message)) {
+                // Проверяем все возможные связи еще раз для детального сообщения
+                const [
+                    { count: finalServicesCount },
+                    { count: finalStaffCount },
+                    { count: finalBookingsCount },
+                ] = await Promise.all([
+                    admin.from('services').select('id', { count: 'exact', head: true }).eq('biz_id', id).eq('branch_id', branchId),
+                    admin.from('staff').select('id', { count: 'exact', head: true }).eq('biz_id', id).eq('branch_id', branchId),
+                    admin.from('bookings').select('id', { count: 'exact', head: true }).eq('biz_id', id).eq('branch_id', branchId).neq('status', 'cancelled'),
+                ]);
+
+                const blockers: string[] = [];
+                if ((finalServicesCount ?? 0) > 0) blockers.push(`${finalServicesCount} услуги`);
+                if ((finalStaffCount ?? 0) > 0) blockers.push(`${finalStaffCount} сотрудники`);
+                if ((finalBookingsCount ?? 0) > 0) blockers.push(`${finalBookingsCount} активные бронирования`);
+
+                const friendly = blockers.length > 0
+                    ? `Нельзя удалить: филиал используется (${blockers.join(', ')}). Сначала перенесите или удалите связанные данные.`
+                    : 'Нельзя удалить: филиал используется. Проверьте все связанные данные (услуги, сотрудники, бронирования, расписание).';
+                
+                return NextResponse.json({ 
+                    ok: false, 
+                    error: friendly,
+                    details: {
+                        services: finalServicesCount ?? 0,
+                        staff: finalStaffCount ?? 0,
+                        bookings: finalBookingsCount ?? 0,
+                    }
+                }, { status: 400 });
+            }
+            
+            return NextResponse.json({ ok: false, error: pgErr.message }, { status: 400 });
         }
 
-        return NextResponse.json({ok: true});
+        return NextResponse.json({ ok: true });
     } catch (e: unknown) {
         console.error('branch delete error', e);
         const msg = e instanceof Error ? e.message : String(e);
