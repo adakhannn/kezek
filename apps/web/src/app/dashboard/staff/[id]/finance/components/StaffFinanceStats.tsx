@@ -89,20 +89,45 @@ function ShiftCard({
                     <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {shift.total_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {t('finance.staffStats.toEmployee', 'Сотруднику')}:{' '}
-                        {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                    </div>
-                    {shift.guaranteed_amount > 0 && shift.hourly_rate && (
-                        <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                            {t('finance.staffStats.guaranteedAmount', 'За выход')}:{' '}
-                            {shift.guaranteed_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                            {shift.hours_worked !== null && (
-                                <span className="text-gray-500 dark:text-gray-400 ml-1">
-                                    ({shift.hours_worked.toFixed(1)} {t('finance.staffStats.hours', 'ч')})
+                    {/* Если есть гарантированная сумма и она больше базовой доли, показываем её как основную выплату */}
+                    {shift.guaranteed_amount > 0 && shift.hourly_rate && shift.guaranteed_amount > shift.master_share ? (
+                        <>
+                            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                {t('finance.staffStats.toEmployee', 'Сотруднику')}:{' '}
+                                {shift.guaranteed_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                                <span className="text-amber-600 dark:text-amber-400 ml-1">
+                                    ({t('finance.staffStats.guaranteedAmount', 'За выход')})
                                 </span>
+                            </div>
+                            {shift.hours_worked !== null && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {shift.hours_worked.toFixed(1)} {t('finance.staffStats.hours', 'ч')} ×{' '}
+                                    {shift.hourly_rate.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('finance.staffStats.perHour', 'сом/ч')}
+                                </div>
                             )}
-                        </div>
+                            <div className="text-xs text-gray-400 dark:text-gray-500 line-through">
+                                {t('finance.staffStats.baseShare', 'Базовая доля')}:{' '}
+                                {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                {t('finance.staffStats.toEmployee', 'Сотруднику')}:{' '}
+                                {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                            </div>
+                            {shift.guaranteed_amount > 0 && shift.hourly_rate && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {t('finance.staffStats.guaranteedAmount', 'За выход')}:{' '}
+                                    {shift.guaranteed_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                                    {shift.hours_worked !== null && (
+                                        <span className="text-gray-400 dark:text-gray-500 ml-1">
+                                            ({shift.hours_worked.toFixed(1)} {t('finance.staffStats.hours', 'ч')})
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </>
                     )}
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                         {t('finance.staffStats.toBusiness', 'Бизнесу')}:{' '}

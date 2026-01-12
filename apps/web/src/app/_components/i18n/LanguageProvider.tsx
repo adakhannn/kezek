@@ -309,6 +309,8 @@ const dictionaries: Dictionaries = {
         'finance.staffStats.openedAt': 'Ачылган',
         'finance.staffStats.guaranteedAmount': 'Чыгуу үчүн',
         'finance.staffStats.hours': 'саат',
+        'finance.staffStats.perHour': 'сом/саат',
+        'finance.staffStats.baseShare': 'Базалык үлүш',
         'staff.slots.filters.title': 'Эркин слоттор үчүн фильтрлер',
         'staff.slots.noSlotsHint':
             'Тандалган параметрлер боюнча эркин слоттор жок. Башка күндү же кызматты тандап көрүңүз.',
@@ -1127,6 +1129,8 @@ const dictionaries: Dictionaries = {
         'finance.staffStats.openedAt': 'Открыта',
         'finance.staffStats.guaranteedAmount': 'За выход',
         'finance.staffStats.hours': 'ч',
+        'finance.staffStats.perHour': 'сом/ч',
+        'finance.staffStats.baseShare': 'Базовая доля',
         'staff.slots.filters.title': 'Фильтры свободных слотов',
         'staff.slots.noSlotsHint':
             'Нет свободных слотов на выбранные параметры. Попробуйте выбрать другой день или услугу.',
@@ -1931,6 +1935,8 @@ const dictionaries: Dictionaries = {
         'finance.staffStats.openedAt': 'Opened at',
         'finance.staffStats.guaranteedAmount': 'Guaranteed',
         'finance.staffStats.hours': 'h',
+        'finance.staffStats.perHour': 'som/h',
+        'finance.staffStats.baseShare': 'Base share',
         'staff.slots.filters.title': 'Filters for free slots',
         'staff.slots.noSlotsHint':
             'No free slots for the selected parameters. Try choosing another day or service.',
