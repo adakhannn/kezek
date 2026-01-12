@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-import { AuthStatusClient } from './AuthStatusClient';
+import { PersonalCabinetButton } from './PersonalCabinetButton';
+import { SignOutButton } from './SignOutButton';
+import { StaffCabinetButton } from './StaffCabinetButton';
 import { useLanguage } from './i18n/LanguageProvider';
 import { LanguageSwitcher } from './i18n/LanguageSwitcher';
+
+import { supabase } from '@/lib/supabaseClient';
 
 /**
  * Мобильное меню для хедера
@@ -86,11 +90,72 @@ export function MobileHeaderMenu() {
 
 /**
  * Упрощенная версия AuthStatus для мобильного меню
+ * Использует те же компоненты, что и десктопная версия
  */
 function MobileAuthStatus({ onAction }: { onAction: () => void }) {
+    const { t } = useLanguage();
+    const [user, setUser] = useState<{ id: string; email?: string; phone?: string } | null>(null);
+    const [label, setLabel] = useState<string>('');
+    const [isStaff, setIsStaff] = useState(false);
+
+    useEffect(() => {
+        let ignore = false;
+
+        (async () => {
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            if (ignore || !authUser) {
+                setUser(null);
+                return;
+            }
+
+            setUser(authUser);
+
+            // Получаем имя из профиля
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', authUser.id)
+                .maybeSingle();
+
+            const userName = profile?.full_name?.trim() || authUser.email || (authUser.phone as string | undefined) || 'аккаунт';
+            setLabel(userName);
+
+            // Проверяем, является ли пользователь сотрудником
+            const { data: staff } = await supabase
+                .from('staff')
+                .select('id, biz_id')
+                .eq('user_id', authUser.id)
+                .eq('is_active', true)
+                .maybeSingle();
+
+            setIsStaff(!!staff);
+        })();
+
+        return () => {
+            ignore = true;
+        };
+    }, []);
+
+    if (!user) {
+        return null;
+    }
+
     return (
         <div className="space-y-2">
-            <AuthStatusClient onAction={onAction} />
+            {/* Статус с именем - как в десктопной версии */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-gray-700 dark:text-gray-300 truncate">
+                    <span className="font-medium">{label}</span>
+                </span>
+            </div>
+            
+            {/* Кнопки - те же, что в десктопной версии */}
+            <div className="flex flex-col gap-2">
+                {isStaff && <StaffCabinetButton onClick={onAction} />}
+                <PersonalCabinetButton onClick={onAction} />
+                <SignOutButton onAction={onAction} />
+            </div>
         </div>
     );
 }
