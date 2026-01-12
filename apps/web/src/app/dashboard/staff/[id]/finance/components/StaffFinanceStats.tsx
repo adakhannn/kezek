@@ -6,6 +6,175 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { TZ } from '@/lib/time';
 
+type ShiftItem = {
+    id: string;
+    client_name: string;
+    service_name: string;
+    service_amount: number;
+    consumables_amount: number;
+    note: string | null;
+    booking_id: string | null;
+};
+
+type Shift = {
+    id: string;
+    shift_date: string;
+    status: 'open' | 'closed';
+    opened_at: string | null;
+    closed_at: string | null;
+    total_amount: number;
+    consumables_amount: number;
+    master_share: number;
+    salon_share: number;
+    late_minutes: number;
+    items: ShiftItem[];
+};
+
+function ShiftCard({
+    shift,
+    formatDate,
+    locale,
+    t,
+}: {
+    shift: Shift;
+    formatDate: (dateStr: string) => string;
+    locale: string;
+    t: (key: string, fallback: string) => string;
+}) {
+    const [isExpanded, setIsExpanded] = useState(shift.status === 'open');
+
+    return (
+        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => setIsExpanded(!isExpanded)}
+            >
+                <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {formatDate(shift.shift_date)}
+                        </span>
+                        <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                shift.status === 'open'
+                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                            }`}
+                        >
+                            {shift.status === 'open'
+                                ? t('finance.staffStats.status.open', 'Открыта')
+                                : t('finance.staffStats.status.closed', 'Закрыта')}
+                        </span>
+                        {shift.items.length > 0 && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                ({shift.items.length} {t('finance.staffStats.clients', 'клиентов')})
+                            </span>
+                        )}
+                    </div>
+                    {shift.opened_at && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {t('finance.staffStats.openedAt', 'Открыта')}
+                            {': '}
+                            {new Date(shift.opened_at).toLocaleTimeString(locale === 'en' ? 'en-US' : 'ru-RU', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                            })}
+                        </div>
+                    )}
+                </div>
+                <div className="text-right space-y-1 mr-4">
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {shift.total_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {t('finance.staffStats.toEmployee', 'Сотруднику')}:{' '}
+                        {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {t('finance.staffStats.toBusiness', 'Бизнесу')}:{' '}
+                        {shift.salon_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded(!isExpanded);
+                    }}
+                >
+                    <svg
+                        className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+
+            {/* Список клиентов */}
+            {isExpanded && shift.items.length > 0 && (
+                <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                    <div className="p-4">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                            {t('finance.staffStats.clientsList', 'Список клиентов')}
+                        </h4>
+                        <div className="space-y-2">
+                            {/* Заголовок колонок */}
+                            <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr] gap-2 px-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                <span>{t('finance.staffStats.client', 'Клиент')}</span>
+                                <span>{t('finance.staffStats.service', 'Услуга')}</span>
+                                <span className="text-right">{t('finance.staffStats.amount', 'Сумма')}</span>
+                                <span className="text-right">{t('finance.staffStats.consumables', 'Расходники')}</span>
+                            </div>
+                            {shift.items.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="grid grid-cols-[2fr,2fr,1fr,1fr] gap-2 items-center py-2 px-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                                >
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                            {item.client_name || t('finance.staffStats.clientNotSpecified', 'Клиент не указан')}
+                                        </div>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                                            {item.service_name || <span className="text-gray-400">—</span>}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                            {item.service_amount === 0 && !item.service_name
+                                                ? <span className="text-gray-400">—</span>
+                                                : `${item.service_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                            {item.consumables_amount === 0
+                                                ? <span className="text-gray-400">0</span>
+                                                : `${item.consumables_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isExpanded && shift.items.length === 0 && (
+                <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {t('finance.staffStats.noClients', 'Нет добавленных клиентов')}
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+}
+
 type Period = 'day' | 'month' | 'year';
 
 type Stats = {
@@ -330,52 +499,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                     </h3>
                     <div className="space-y-3">
                         {stats.shifts.map((shift) => (
-                            <div
-                                key={shift.id}
-                                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
-                            >
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                            {formatDate(shift.shift_date)}
-                                        </span>
-                                        <span
-                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                shift.status === 'open'
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                                            }`}
-                                        >
-                                            {shift.status === 'open'
-                                                ? t('finance.staffStats.status.open', 'Открыта')
-                                                : t('finance.staffStats.status.closed', 'Закрыта')}
-                                        </span>
-                                    </div>
-                                    {shift.opened_at && (
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            {t('finance.staffStats.openedAt', 'Открыта')}
-                                            {': '}
-                                            {new Date(shift.opened_at).toLocaleTimeString(locale === 'en' ? 'en-US' : 'ru-RU', {
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="text-right space-y-1">
-                                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {shift.total_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        {t('finance.staffStats.toEmployee', 'Сотруднику')}:{' '}
-                                        {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        {t('finance.staffStats.toBusiness', 'Бизнесу')}:{' '}
-                                        {shift.salon_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                                    </div>
-                                </div>
-                            </div>
+                            <ShiftCard key={shift.id} shift={shift} formatDate={formatDate} locale={locale} t={t} />
                         ))}
                     </div>
                 </div>
