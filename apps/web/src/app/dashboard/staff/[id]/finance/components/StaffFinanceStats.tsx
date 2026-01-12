@@ -227,7 +227,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
         setError(null);
         try {
             const res = await fetch(
-                `/api/dashboard/finance/${staffId}/stats?period=${period}&date=${date}`,
+                `/api/dashboard/staff/${staffId}/finance/stats?period=${period}&date=${date}`,
                 { cache: 'no-store' }
             );
             const json = await res.json();

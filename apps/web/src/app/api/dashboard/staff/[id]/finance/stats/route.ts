@@ -137,27 +137,75 @@ export async function GET(
                 (sum, items) => sum + items.length,
                 0
             ),
-            shifts: shifts?.map(s => ({
-                id: s.id,
-                shift_date: s.shift_date,
-                status: s.status,
-                opened_at: s.opened_at,
-                closed_at: s.closed_at,
-                total_amount: Number(s.total_amount ?? 0),
-                consumables_amount: Number(s.consumables_amount ?? 0),
-                master_share: Number(s.master_share ?? 0),
-                salon_share: Number(s.salon_share ?? 0),
-                late_minutes: Number(s.late_minutes ?? 0),
-                items: (shiftItemsMap[s.id] || []).map((item) => ({
-                    id: item.id,
-                    client_name: item.client_name || '',
-                    service_name: item.service_name || '',
-                    service_amount: item.service_amount,
-                    consumables_amount: item.consumables_amount,
-                    note: item.note || null,
-                    booking_id: item.booking_id || null,
-                })),
-            })) || [],
+            shifts: shifts?.map(s => {
+                // Для открытых смен пересчитываем суммы из позиций
+                let displayTotalAmount = Number(s.total_amount ?? 0);
+                let displayMasterShare = Number(s.master_share ?? 0);
+                let displaySalonShare = Number(s.salon_share ?? 0);
+                
+                if (s.status === 'open') {
+                    const shiftItems = shiftItemsMap[s.id] || [];
+                    const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
+                    const shiftConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
+                    
+                    displayTotalAmount = shiftTotalAmount;
+                    
+                    // Получаем проценты из shift или используем дефолтные
+                    const shiftPercentMaster = Number(s.percent_master ?? 60);
+                    const shiftPercentSalon = Number(s.percent_salon ?? 40);
+                    const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
+                    const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
+                    const normalizedSalon = (shiftPercentSalon / percentSum) * 100;
+                    
+                    // Базовая доля сотрудника от выручки
+                    const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
+                    const baseSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
+                    
+                    // Проверяем, есть ли гарантированная сумма (оплата за выход)
+                    if (s.hourly_rate && s.opened_at) {
+                        const openedAt = new Date(s.opened_at);
+                        const now = new Date();
+                        const diffMs = now.getTime() - openedAt.getTime();
+                        const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
+                        const guaranteedAmount = hoursWorked * Number(s.hourly_rate);
+                        
+                        // Если гарантированная сумма больше базовой доли, используем гарантию
+                        if (guaranteedAmount > baseMasterShare) {
+                            displayMasterShare = Math.round(guaranteedAmount * 100) / 100;
+                            const topupAmount = displayMasterShare - baseMasterShare;
+                            displaySalonShare = baseSalonShare - topupAmount;
+                        } else {
+                            displayMasterShare = baseMasterShare;
+                            displaySalonShare = baseSalonShare;
+                        }
+                    } else {
+                        displayMasterShare = baseMasterShare;
+                        displaySalonShare = baseSalonShare;
+                    }
+                }
+                
+                return {
+                    id: s.id,
+                    shift_date: s.shift_date,
+                    status: s.status,
+                    opened_at: s.opened_at,
+                    closed_at: s.closed_at,
+                    total_amount: displayTotalAmount,
+                    consumables_amount: Number(s.consumables_amount ?? 0),
+                    master_share: displayMasterShare,
+                    salon_share: displaySalonShare,
+                    late_minutes: Number(s.late_minutes ?? 0),
+                    items: (shiftItemsMap[s.id] || []).map((item) => ({
+                        id: item.id,
+                        client_name: item.client_name || '',
+                        service_name: item.service_name || '',
+                        service_amount: item.service_amount,
+                        consumables_amount: item.consumables_amount,
+                        note: item.note || null,
+                        booking_id: item.booking_id || null,
+                    })),
+                };
+            }) || [],
         };
 
         // Суммируем только закрытые смены
@@ -183,12 +231,32 @@ export async function GET(
             const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
             const normalizedSalon = (shiftPercentSalon / percentSum) * 100;
             
-            const shiftMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
-            const shiftSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
+            // Базовая доля сотрудника от выручки
+            const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
+            const baseSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
+            
+            // Проверяем, есть ли гарантированная сумма (оплата за выход)
+            let finalMasterShare = baseMasterShare;
+            let finalSalonShare = baseSalonShare;
+            
+            if (shift.hourly_rate && shift.opened_at) {
+                const openedAt = new Date(shift.opened_at);
+                const now = new Date();
+                const diffMs = now.getTime() - openedAt.getTime();
+                const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
+                const guaranteedAmount = hoursWorked * Number(shift.hourly_rate);
+                
+                // Если гарантированная сумма больше базовой доли, используем гарантию
+                if (guaranteedAmount > baseMasterShare) {
+                    finalMasterShare = Math.round(guaranteedAmount * 100) / 100;
+                    const topupAmount = finalMasterShare - baseMasterShare;
+                    finalSalonShare = baseSalonShare - topupAmount;
+                }
+            }
             
             stats.totalAmount += shiftTotalAmount;
-            stats.totalMaster += shiftMasterShare;
-            stats.totalSalon += shiftSalonShare;
+            stats.totalMaster += finalMasterShare;
+            stats.totalSalon += finalSalonShare;
             stats.totalConsumables += shiftConsumables;
             stats.totalLateMinutes += Number(shift.late_minutes ?? 0);
         }
