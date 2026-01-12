@@ -158,8 +158,18 @@ export async function POST(req: Request) {
             }
         }
 
-        // 7) Проверяем другие возможные связи (working_hours, staff_shifts и т.д.)
-        // Эти таблицы могут иметь связи через staff, но стоит проверить напрямую
+        // 7) Очищаем историю привязок мастеров к филиалам (staff_branch_assignments)
+        // Эти записи используются только для истории / логики расписания и не должны блокировать удаление тестового филиала
+        const { error: eDelAssignments } = await admin
+            .from('staff_branch_assignments')
+            .delete()
+            .eq('biz_id', id)
+            .eq('branch_id', branchId);
+
+        if (eDelAssignments) {
+            console.warn('Не удалось удалить строки из staff_branch_assignments:', eDelAssignments.message);
+            // Не блокируем удаление филиала, но логируем проблему
+        }
         
         // 8) Удаляем филиал
         const { error } = await admin
