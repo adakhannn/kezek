@@ -290,57 +290,14 @@ export async function GET(
             }) || [],
         };
 
-        // Суммируем только закрытые смены
-        for (const shift of closedShifts) {
-            stats.totalAmount += Number(shift.total_amount ?? 0);
-            stats.totalMaster += Number(shift.master_share ?? 0);
-            stats.totalSalon += Number(shift.salon_share ?? 0);
-            stats.totalConsumables += Number(shift.consumables_amount ?? 0);
-            stats.totalLateMinutes += Number(shift.late_minutes ?? 0);
-        }
-
-        // Для открытых смен считаем текущие значения из позиций (актуальные данные)
-        for (const shift of openShifts) {
-            // Для открытых смен пересчитываем суммы из позиций, чтобы показать актуальные данные
-            const shiftItems = shiftItemsMap[shift.id] || [];
-            const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
-            const shiftConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
-            
-            // Получаем проценты из shift или используем дефолтные
-            const shiftPercentMaster = Number(shift.percent_master ?? 60);
-            const shiftPercentSalon = Number(shift.percent_salon ?? 40);
-            const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
-            const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
-            const normalizedSalon = (shiftPercentSalon / percentSum) * 100;
-            
-            // Базовая доля сотрудника от выручки
-            const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
-            const baseSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
-            
-            // Проверяем, есть ли гарантированная сумма (оплата за выход)
-            let finalMasterShare = baseMasterShare;
-            let finalSalonShare = baseSalonShare;
-            
-            if (shift.hourly_rate && shift.opened_at) {
-                const openedAt = new Date(shift.opened_at);
-                const now = new Date();
-                const diffMs = now.getTime() - openedAt.getTime();
-                const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
-                const guaranteedAmount = hoursWorked * Number(shift.hourly_rate);
-                
-                // Если гарантированная сумма больше базовой доли, используем гарантию
-                if (guaranteedAmount > baseMasterShare) {
-                    finalMasterShare = Math.round(guaranteedAmount * 100) / 100;
-                    const topupAmount = finalMasterShare - baseMasterShare;
-                    finalSalonShare = baseSalonShare - topupAmount;
-                }
-            }
-            
-            stats.totalAmount += shiftTotalAmount;
-            stats.totalMaster += finalMasterShare;
-            stats.totalSalon += finalSalonShare;
-            stats.totalConsumables += shiftConsumables;
-            stats.totalLateMinutes += Number(shift.late_minutes ?? 0);
+        // Суммируем итоги, используя уже пересчитанные значения из stats.shifts
+        // Это важно, чтобы гарантированная сумма учитывалась правильно
+        for (const shift of stats.shifts) {
+            stats.totalAmount += shift.total_amount;
+            stats.totalMaster += shift.master_share; // Уже включает гарантированную сумму, если она больше базовой доли
+            stats.totalSalon += shift.salon_share; // Уже скорректирована с учетом доплаты за выход
+            stats.totalConsumables += shift.consumables_amount;
+            stats.totalLateMinutes += shift.late_minutes;
         }
 
         return NextResponse.json({
