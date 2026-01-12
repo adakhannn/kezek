@@ -27,6 +27,9 @@ type Shift = {
     master_share: number;
     salon_share: number;
     late_minutes: number;
+    hours_worked: number | null;
+    hourly_rate: number | null;
+    guaranteed_amount: number;
     items: ShiftItem[];
 };
 
@@ -90,6 +93,17 @@ function ShiftCard({
                         {t('finance.staffStats.toEmployee', 'Сотруднику')}:{' '}
                         {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                     </div>
+                    {shift.guaranteed_amount > 0 && shift.hourly_rate && (
+                        <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                            {t('finance.staffStats.guaranteedAmount', 'За выход')}:{' '}
+                            {shift.guaranteed_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                            {shift.hours_worked !== null && (
+                                <span className="text-gray-500 dark:text-gray-400 ml-1">
+                                    ({shift.hours_worked.toFixed(1)} {t('finance.staffStats.hours', 'ч')})
+                                </span>
+                            )}
+                        </div>
+                    )}
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                         {t('finance.staffStats.toBusiness', 'Бизнесу')}:{' '}
                         {shift.salon_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
@@ -188,30 +202,33 @@ type Stats = {
     totalAmount: number;
     totalMaster: number;
     totalSalon: number;
-    totalConsumables: number;
-    totalLateMinutes: number;
-    totalClients: number;
-    shifts: Array<{
-        id: string;
-        shift_date: string;
-        status: 'open' | 'closed';
-        opened_at: string | null;
-        closed_at: string | null;
-        total_amount: number;
-        consumables_amount: number;
-        master_share: number;
-        salon_share: number;
-        late_minutes: number;
-        items: Array<{
+        totalConsumables: number;
+        totalLateMinutes: number;
+        totalClients: number;
+        shifts: Array<{
             id: string;
-            client_name: string;
-            service_name: string;
-            service_amount: number;
+            shift_date: string;
+            status: 'open' | 'closed';
+            opened_at: string | null;
+            closed_at: string | null;
+            total_amount: number;
             consumables_amount: number;
-            note: string | null;
-            booking_id: string | null;
+            master_share: number;
+            salon_share: number;
+            late_minutes: number;
+            hours_worked: number | null;
+            hourly_rate: number | null;
+            guaranteed_amount: number;
+            items: Array<{
+                id: string;
+                client_name: string;
+                service_name: string;
+                service_amount: number;
+                consumables_amount: number;
+                note: string | null;
+                booking_id: string | null;
+            }>;
         }>;
-    }>;
 };
 
 export default function StaffFinanceStats({ staffId }: { staffId: string }) {

@@ -249,6 +249,20 @@ export async function GET(
                     }
                 }
                 
+                // Рассчитываем guaranteed_amount и hours_worked
+                let displayGuaranteedAmount = Number(s.guaranteed_amount ?? 0);
+                let displayHoursWorked: number | null = Number(s.hours_worked ?? null);
+                const displayHourlyRate: number | null = s.hourly_rate ? Number(s.hourly_rate) : null;
+                
+                if (s.status === 'open' && s.hourly_rate && s.opened_at) {
+                    // Для открытых смен пересчитываем на основе текущего времени
+                    const openedAt = new Date(s.opened_at);
+                    const now = new Date();
+                    const diffMs = now.getTime() - openedAt.getTime();
+                    displayHoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
+                    displayGuaranteedAmount = Math.round(displayHoursWorked * Number(s.hourly_rate) * 100) / 100;
+                }
+                
                 return {
                     id: s.id,
                     shift_date: s.shift_date,
@@ -260,6 +274,9 @@ export async function GET(
                     master_share: displayMasterShare,
                     salon_share: displaySalonShare,
                     late_minutes: Number(s.late_minutes ?? 0),
+                    hours_worked: displayHoursWorked,
+                    hourly_rate: displayHourlyRate,
+                    guaranteed_amount: displayGuaranteedAmount,
                     items: (shiftItemsMap[s.id] || []).map((item) => ({
                         id: item.id,
                         client_name: item.client_name || '',
