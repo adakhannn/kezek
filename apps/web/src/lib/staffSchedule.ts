@@ -70,20 +70,48 @@ export async function initializeStaffSchedule(
             return { success: true, daysCreated: 0 };
         }
 
-        // Создаем правила для отсутствующих дней с дефолтным расписанием
+        // Загружаем расписание филиала
+        const { data: branchSchedule } = await admin
+            .from('branch_working_hours')
+            .select('day_of_week, intervals')
+            .eq('biz_id', bizId)
+            .eq('branch_id', branchId);
+
+        // Создаем карту расписания филиала по дням недели
+        const branchScheduleMap = new Map<number, TimeRange[]>();
+        (branchSchedule || []).forEach((s) => {
+            const intervals = (s.intervals || []) as TimeRange[];
+            if (intervals.length > 0) {
+                branchScheduleMap.set(s.day_of_week, intervals);
+            }
+        });
+
+        // Создаем правила для отсутствующих дней, используя расписание филиала
         const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
-        const inserts = missingDates.map((date) => ({
-            biz_id: bizId,
-            staff_id: staffId,
-            kind: 'date' as const,
-            date_on: date,
-            branch_id: branchId,
-            tz: TZ,
-            intervals: [defaultInterval],
-            breaks: [],
-            is_active: true,
-            priority: 0,
-        }));
+        const inserts = missingDates.map((date) => {
+            // Определяем день недели (0 = воскресенье, 1 = понедельник, ..., 6 = суббота)
+            const dateObj = new Date(date + 'T12:00:00');
+            const dayOfWeek = dateObj.getDay();
+
+            // Получаем расписание филиала для этого дня недели
+            const branchIntervals = branchScheduleMap.get(dayOfWeek);
+            const intervals = branchIntervals && branchIntervals.length > 0
+                ? branchIntervals
+                : [defaultInterval]; // Fallback, если расписание не задано
+
+            return {
+                biz_id: bizId,
+                staff_id: staffId,
+                kind: 'date' as const,
+                date_on: date,
+                branch_id: branchId,
+                tz: TZ,
+                intervals,
+                breaks: [],
+                is_active: true,
+                priority: 0,
+            };
+        });
 
         console.log(`[initializeStaffSchedule] Inserting ${inserts.length} schedule rules...`);
 

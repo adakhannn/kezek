@@ -370,20 +370,47 @@ export default function Client({
             const missingDates = allDates.filter((d) => !existingDates.has(d));
 
             if (missingDates.length > 0) {
-                // Создаем правила для отсутствующих дней с дефолтным расписанием
-                const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
-                const inserts = missingDates.map((date) => ({
-                    biz_id: bizId,
-                    staff_id: staffId,
-                    kind: 'date' as const,
-                    date_on: date,
-                    branch_id: homeBranchId,
-                    tz: TZ,
-                    intervals: [defaultInterval],
-                    breaks: [],
-                    is_active: true,
-                    priority: 0,
-                }));
+                // Загружаем расписание филиала
+                const { data: branchSchedule } = await supabase
+                    .from('branch_working_hours')
+                    .select('day_of_week, intervals')
+                    .eq('biz_id', bizId)
+                    .eq('branch_id', homeBranchId);
+
+                // Создаем карту расписания филиала по дням недели
+                const branchScheduleMap = new Map<number, TimeRange[]>();
+                (branchSchedule || []).forEach((s) => {
+                    const intervals = (s.intervals || []) as TimeRange[];
+                    if (intervals.length > 0) {
+                        branchScheduleMap.set(s.day_of_week, intervals);
+                    }
+                });
+
+                // Создаем правила для отсутствующих дней, используя расписание филиала
+                const inserts = missingDates.map((date) => {
+                    // Определяем день недели (0 = воскресенье, 1 = понедельник, ..., 6 = суббота)
+                    const dateObj = new Date(date + 'T12:00:00');
+                    const dayOfWeek = dateObj.getDay(); // 0 = воскресенье, 1 = понедельник, ..., 6 = суббота
+
+                    // Получаем расписание филиала для этого дня недели
+                    const branchIntervals = branchScheduleMap.get(dayOfWeek);
+                    const defaultInterval: TimeRange = branchIntervals && branchIntervals.length > 0
+                        ? branchIntervals[0] // Используем первый интервал из расписания филиала
+                        : { start: '09:00', end: '21:00' }; // Fallback, если расписание не задано
+
+                    return {
+                        biz_id: bizId,
+                        staff_id: staffId,
+                        kind: 'date' as const,
+                        date_on: date,
+                        branch_id: homeBranchId,
+                        tz: TZ,
+                        intervals: branchIntervals && branchIntervals.length > 0 ? branchIntervals : [defaultInterval],
+                        breaks: [],
+                        is_active: true,
+                        priority: 0,
+                    };
+                });
 
                 // Вставляем все отсутствующие правила
                 await supabase.from('staff_schedule_rules').insert(inserts);

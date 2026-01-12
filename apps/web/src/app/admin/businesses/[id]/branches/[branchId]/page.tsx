@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import { BranchForm } from '@/components/admin/branches/BranchForm';
+import { BranchScheduleEditor } from '@/components/admin/branches/BranchScheduleEditor';
 import { Card } from '@/components/ui/Card';
 
 export const dynamic = 'force-dynamic';
@@ -39,6 +40,20 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
     if (!branch) return <div className="p-4">Филиал не найден</div>;
 
     const { data: biz } = await admin.from('businesses').select('id,name').eq('id', id).maybeSingle();
+
+    // Загружаем расписание филиала
+    const { data: scheduleData } = await admin
+        .from('branch_working_hours')
+        .select('day_of_week, intervals, breaks')
+        .eq('biz_id', id)
+        .eq('branch_id', branchId)
+        .order('day_of_week');
+
+    const initialSchedule = (scheduleData || []).map((s) => ({
+        day_of_week: s.day_of_week,
+        intervals: (s.intervals || []) as Array<{ start: string; end: string }>,
+        breaks: (s.breaks || []) as Array<{ start: string; end: string }>,
+    }));
 
     return (
         <div className="space-y-6">
@@ -79,6 +94,11 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
                         lon: branch.lon ?? null,
                     }}
                 />
+            </Card>
+
+            {/* Расписание */}
+            <Card className="p-6">
+                <BranchScheduleEditor bizId={branch.biz_id} branchId={branch.id} initialSchedule={initialSchedule} />
             </Card>
         </div>
     );
