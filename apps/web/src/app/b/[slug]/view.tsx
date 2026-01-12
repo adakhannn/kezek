@@ -840,9 +840,7 @@ export default function BizClient({ data }: { data: Data }) {
         };
     }, [serviceId, staffId, dayStr]);
 
-    /* ---------- hold / confirm и таймер ---------- */
-    const [holding, setHolding] = useState<{ bookingId: string; until: number; slotLabel: string } | null>(null);
-
+    /* ---------- создание бронирования ---------- */
     // Восстановление состояния после авторизации (localStorage)
     useEffect(() => {
         if (restoredFromStorage) return;
@@ -918,7 +916,7 @@ export default function BizClient({ data }: { data: Data }) {
         [servicesFiltered, servicesByBranch, services, serviceId]
     );
 
-    async function hold(slotTime: Date) {
+    async function createBooking(slotTime: Date) {
         if (!service) return alert('Выбери услугу');
         if (!staffId) return alert('Выбери мастера');
         if (!branchId) return alert('Выбери филиал');
@@ -932,7 +930,9 @@ export default function BizClient({ data }: { data: Data }) {
         setLoading(true);
         try {
             const startISO = formatInTimeZone(slotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
-            const { data, error } = await supabase.rpc('hold_slot', {
+            
+            // Создаем бронирование со статусом hold, затем сразу подтверждаем
+            const { data: holdData, error: holdError } = await supabase.rpc('hold_slot', {
                 p_biz_id: biz.id,
                 p_branch_id: branchId,
                 p_service_id: service.id,
@@ -940,62 +940,38 @@ export default function BizClient({ data }: { data: Data }) {
                 p_start: startISO,
             });
 
-            if (error) {
-                console.error('[hold_slot] error:', error);
-                alert(fmtErr(error, t));
+            if (holdError) {
+                console.error('[hold_slot] error:', holdError);
+                alert(fmtErr(holdError, t));
                 return;
             }
 
-            const bookingId = String(data);
-            setHolding({ bookingId, until: Date.now() + 120_000, slotLabel: toLabel(slotTime) });
-
-            fetch('/api/notify', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ type: 'hold', booking_id: bookingId }),
-            }).catch(() => {});
-        } catch (e) {
-            console.error('[hold_slot] catch:', e);
-            alert(fmtErr(e, t));
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function confirm() {
-        if (!isAuthed || !holding) return;
-        setLoading(true);
-        try {
-            const { error } = await supabase.rpc('confirm_booking', { p_booking_id: holding.bookingId });
-            if (error) {
-                console.error('[confirm_booking] error:', error);
-                alert(fmtErr(error, t));
+            const bookingId = String(holdData);
+            
+            // Сразу подтверждаем бронирование
+            const { error: confirmError } = await supabase.rpc('confirm_booking', { p_booking_id: bookingId });
+            if (confirmError) {
+                console.error('[confirm_booking] error:', confirmError);
+                alert(fmtErr(confirmError, t));
                 return;
             }
 
+            // Отправляем уведомление о подтверждении
             await fetch('/api/notify', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ type: 'confirm', booking_id: holding.bookingId }),
-            });
+                body: JSON.stringify({ type: 'confirm', booking_id: bookingId }),
+            }).catch(() => {});
 
-            location.href = `/booking/${holding.bookingId}`;
+            // Редирект на страницу бронирования
+            location.href = `/booking/${bookingId}`;
         } catch (e) {
-            console.error('[confirm_booking] catch:', e);
+            console.error('[createBooking] catch:', e);
             alert(fmtErr(e, t));
         } finally {
             setLoading(false);
         }
     }
-
-    // таймер
-    const [tick, setTick] = useState(0);
-    useEffect(() => {
-        const id = setInterval(() => setTick((t0) => t0 + 1), 500);
-        return () => clearInterval(id);
-    }, []);
-    const leftSec = Math.max(0, holding ? Math.ceil((holding.until - Date.now()) / 1000) : 0);
-    void tick;
 
     /* ---------- производные значения для отображения ---------- */
     const branch = branches.find((b) => b.id === branchId) ?? null;
@@ -1457,7 +1433,7 @@ export default function BizClient({ data }: { data: Data }) {
                                                     key={s.start_at}
                                                     disabled={loading}
                                                     className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
-                                                    onClick={() => hold(d)}
+                                                    onClick={() => createBooking(d)}
                                                 >
                                                     {toLabel(d)}
                                                 </button>
@@ -1549,7 +1525,7 @@ export default function BizClient({ data }: { data: Data }) {
                             <div className="flex justify-between gap-2">
                                 <span className="text-gray-500">{t('booking.summary.time', 'Время:')}</span>
                                 <span className="text-right font-medium">
-                                    {holding ? holding.slotLabel : t('booking.summary.selectSlot', 'Выберите слот')}
+                                    {t('booking.summary.selectSlot', 'Выберите слот')}
                                 </span>
                             </div>
                             {serviceCurrent?.price_from && (
@@ -1567,49 +1543,13 @@ export default function BizClient({ data }: { data: Data }) {
                             )}
                         </div>
 
-                        {!holding && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                {!isAuthed ? (
-                                    <span>{t('booking.needAuth', 'Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.')}</span>
-                                ) : (
-                                    <span>{t('booking.summary.selectSlotFirst', 'Сначала выберите свободный слот, затем вы сможете подтвердить бронь.')}</span>
-                                )}
-                            </div>
-                        )}
-
-                        {holding && leftSec > 0 && (
-                            <div className="space-y-2 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-100">
-                                <div className="flex items-center justify-between">
-                                    <span>
-                                        Слот удержан ещё{' '}
-                                        <b>
-                                            {leftSec}
-                                        </b>{' '}
-                                        сек.
-                                    </span>
-                                </div>
-                                {isAuthed ? (
-                                    <button
-                                        className="mt-1 w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
-                                        onClick={confirm}
-                                        disabled={loading}
-                                    >
-                                        Подтвердить бронь
-                                    </button>
-                                ) : (
-                                    <button
-                                        className="mt-1 w-full rounded-lg border border-indigo-400 bg-white/80 px-3 py-1.5 text-xs font-semibold text-indigo-900 shadow-sm hover:bg-indigo-50 dark:bg-indigo-900 dark:text-indigo-50 dark:hover:bg-indigo-800"
-                                        onClick={redirectToAuth}
-                                    >
-                                        Войти, чтобы подтвердить
-                                    </button>
-                                )}
-                                <div className="text-[11px] text-indigo-900/80 dark:text-indigo-100/80">
-                                    Пока без онлайн-оплаты. После добавления оплаты бронь будет подтверждаться
-                                    автоматически.
-                                </div>
-                            </div>
-                        )}
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {!isAuthed ? (
+                                <span>{t('booking.needAuth', 'Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.')}</span>
+                            ) : (
+                                <span>{t('booking.summary.selectSlotFirst', 'Выберите свободный слот для бронирования.')}</span>
+                            )}
+                        </div>
                     </aside>
                 </div>
             </div>

@@ -256,7 +256,7 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
         
         if (statusFilter !== 'all') {
             if (statusFilter === 'active') {
-                query = query.in('status', ['hold', 'confirmed']);
+                query = query.in('status', ['confirmed']);
             } else {
                 query = query.eq('status', statusFilter);
             }
@@ -393,7 +393,6 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
                     >
                         <option value="all">{t('bookings.list.allStatuses', 'Все статусы')}</option>
                         <option value="active">{t('bookings.list.active', 'Активные')}</option>
-                        <option value="hold">{t('bookings.list.hold', 'В ожидании')}</option>
                         <option value="confirmed">{t('bookings.list.confirmed', 'Подтвержденные')}</option>
                         <option value="paid">{t('bookings.list.paid', 'Оплаченные')}</option>
                         <option value="no_show">{t('bookings.list.noShow', 'Не пришли')}</option>
@@ -455,11 +454,6 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
                                                 {t('bookings.actions.cancel', 'Отменить')}
                                             </button>
                                         )}
-                                        {!isPast && b.status === 'hold' && (
-                                            <button className="px-2.5 py-1 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" onClick={() => confirm(b.id)}>
-                                                {t('bookings.actions.confirm', 'Подтвердить')}
-                                            </button>
-                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -514,7 +508,7 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
                                 </div>
 
                                 {/* Actions */}
-                                {(canMarkAttendance || (!isPast && b.status !== 'cancelled') || (!isPast && b.status === 'hold')) && (
+                                {(canMarkAttendance || (!isPast && b.status !== 'cancelled')) && (
                                     <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                                         {canMarkAttendance && (
                                             <>
@@ -535,11 +529,6 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
                                         {!isPast && b.status !== 'cancelled' && (
                                             <button className="flex-1 min-w-[100px] px-2.5 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" onClick={() => cancel(b.id)}>
                                                 {t('bookings.actions.cancel', 'Отменить')}
-                                            </button>
-                                        )}
-                                        {!isPast && b.status === 'hold' && (
-                                            <button className="flex-1 min-w-[100px] px-2.5 py-1.5 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" onClick={() => confirm(b.id)}>
-                                                {t('bookings.actions.confirm', 'Подтвердить')}
                                             </button>
                                         )}
                                     </div>

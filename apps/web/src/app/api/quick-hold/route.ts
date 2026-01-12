@@ -123,8 +123,7 @@ export async function POST(req: Request) {
     console.log('[quick-hold] Booking created with ID:', bookingId);
     console.log('[quick-hold] Attempting to confirm booking...');
 
-    // Автоматически подтверждаем бронирование (для мобильного приложения)
-    // В веб-версии подтверждение происходит отдельно через confirm_booking
+    // Автоматически подтверждаем бронирование
     const { data: confirmData, error: confirmError } = await supabase.rpc('confirm_booking', {
         p_booking_id: bookingId,
     });
@@ -136,43 +135,40 @@ export async function POST(req: Request) {
             details: confirmError.details,
             hint: confirmError.hint,
         });
-        // Не возвращаем ошибку, так как бронирование уже создано
-        // Пользователь может подтвердить его вручную позже
+        return NextResponse.json(
+            { ok: false, error: 'confirm_failed', message: confirmError.message },
+            { status: 400 }
+        );
+    }
+    
+    console.log('[quick-hold] Booking confirmed successfully:', bookingId, 'confirmData:', confirmData);
+    
+    // Проверяем статус бронирования после подтверждения
+    const { data: bookingCheck, error: checkError } = await supabase
+        .from('bookings')
+        .select('id, status')
+        .eq('id', bookingId)
+        .single();
+    
+    if (checkError) {
+        console.error('[quick-hold] Failed to check booking status:', checkError);
     } else {
-        console.log('[quick-hold] Booking confirmed successfully:', bookingId, 'confirmData:', confirmData);
-        
-        // Проверяем статус бронирования после подтверждения
-        const { data: bookingCheck, error: checkError } = await supabase
-            .from('bookings')
-            .select('id, status')
-            .eq('id', bookingId)
-            .single();
-        
-        if (checkError) {
-            console.error('[quick-hold] Failed to check booking status:', checkError);
-        } else {
-            console.log('[quick-hold] Booking status after confirm:', bookingCheck?.status);
-        }
+        console.log('[quick-hold] Booking status after confirm:', bookingCheck?.status);
     }
 
-    // Уведомление (type: 'confirm' если подтвердили, иначе 'hold')
-    const notifyType = confirmError ? 'hold' : 'confirm';
-    console.log('[quick-hold] Sending notification, type:', notifyType);
-    
-    // Вызываем уведомление синхронно, чтобы убедиться, что оно отправлено
+    // Отправляем уведомление о подтверждении
     try {
-        await notifyHold(bookingId, req, notifyType);
+        await notifyHold(bookingId, req, 'confirm');
         console.log('[quick-hold] Notification sent successfully');
     } catch (err) {
         console.error('[quick-hold] notifyHold failed:', err);
-        // Не возвращаем ошибку, так как бронирование уже создано
+        // Не возвращаем ошибку, так как бронирование уже создано и подтверждено
     }
 
     return NextResponse.json({
         ok: true, 
         booking_id: bookingId,
-        confirmed: !confirmError,
-        error: confirmError ? confirmError.message : undefined,
+        confirmed: true,
     });
 }
 
