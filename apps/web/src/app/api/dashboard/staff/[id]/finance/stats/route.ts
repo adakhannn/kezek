@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -136,6 +137,7 @@ export async function GET(
         }
 
         // Получаем позиции (клиентов) для всех смен
+        // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
         const shiftIds = (finalShifts || []).map(s => s.id);
         const shiftItemsMap: Record<string, Array<{
             id: string;
@@ -148,7 +150,8 @@ export async function GET(
         }>> = {};
         
         if (shiftIds.length > 0) {
-            const { data: itemsData, error: itemsError } = await supabase
+            const admin = getServiceClient(); // Используем service client для обхода RLS
+            const { data: itemsData, error: itemsError } = await admin
                 .from('staff_shift_items')
                 .select('id, shift_id, client_name, service_name, service_amount, consumables_amount, note, booking_id')
                 .in('shift_id', shiftIds)
