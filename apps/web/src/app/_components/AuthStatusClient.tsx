@@ -93,7 +93,7 @@ async function getTargetPath(userId: string, t: (key: string, fallback?: string)
  * Клиентский компонент для отображения статуса авторизации
  * Реагирует на изменения авторизации в реальном времени
  */
-export function AuthStatusClient() {
+export function AuthStatusClient({ onAction }: { onAction?: () => void }) {
     const router = useRouter();
     const { t } = useLanguage();
     const [user, setUser] = useState<User | null>(null);
@@ -269,6 +269,7 @@ export function AuthStatusClient() {
                 {target.isStaff && (
                     <Link 
                         href="/staff" 
+                        onClick={onAction}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,6 +280,7 @@ export function AuthStatusClient() {
                 )}
                 <Link 
                     href={target.href}
+                    onClick={onAction}
                     className="flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm hover:shadow-md transition-all duration-200 text-sm"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,7 +288,7 @@ export function AuthStatusClient() {
                     </svg>
                     <span>{target.label}</span>
                 </Link>
-                <SignOutButton />
+                <SignOutButton onAction={onAction} />
             </div>
         </div>
     );

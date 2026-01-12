@@ -8,8 +8,13 @@ const LABELS: Record<'ky' | 'ru' | 'en', string> = {
     en: 'EN',
 };
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ onLanguageChange }: { onLanguageChange?: () => void } = {}) {
     const {locale, setLocale} = useLanguage();
+
+    const handleLanguageChange = (code: 'ky' | 'ru' | 'en') => {
+        setLocale(code);
+        onLanguageChange?.();
+    };
 
     return (
         <div className="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-white/80 px-1.5 py-0.5 text-[11px] font-medium text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200">
@@ -19,7 +24,7 @@ export function LanguageSwitcher() {
                     <button
                         key={code}
                         type="button"
-                        onClick={() => setLocale(code)}
+                        onClick={() => handleLanguageChange(code)}
                         className={`px-1.5 py-0.5 rounded-full transition ${
                             active
                                 ? 'bg-indigo-600 text-white shadow'

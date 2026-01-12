@@ -4,9 +4,11 @@ import { useLanguage } from './i18n/LanguageProvider';
 
 import { supabase } from '@/lib/supabaseClient';
 
-export function SignOutButton({ className }: { className?: string }) {
+export function SignOutButton({ className, onAction }: { className?: string; onAction?: () => void }) {
     const { t } = useLanguage();
     const handleSignOut = async () => {
+        onAction?.();
+        
         // Выполняем выход (не ждем завершения)
         supabase.auth.signOut().catch(console.error);
         

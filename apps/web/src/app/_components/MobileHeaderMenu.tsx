@@ -65,7 +65,7 @@ export function MobileHeaderMenu() {
                                 <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 px-1">
                                     {t('header.language', 'Язык')}
                                 </div>
-                                <LanguageSwitcher />
+                                <LanguageSwitcher onLanguageChange={() => setIsOpen(false)} />
                             </div>
 
                             {/* Статус авторизации */}
@@ -73,7 +73,7 @@ export function MobileHeaderMenu() {
                                 <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 px-1">
                                     {t('header.account', 'Аккаунт')}
                                 </div>
-                                <MobileAuthStatus />
+                                <MobileAuthStatus onAction={() => setIsOpen(false)} />
                             </div>
                         </div>
                     </div>
@@ -87,10 +87,10 @@ export function MobileHeaderMenu() {
 /**
  * Упрощенная версия AuthStatus для мобильного меню
  */
-function MobileAuthStatus() {
+function MobileAuthStatus({ onAction }: { onAction: () => void }) {
     return (
         <div className="space-y-2">
-            <AuthStatusClient />
+            <AuthStatusClient onAction={onAction} />
         </div>
     );
 }
