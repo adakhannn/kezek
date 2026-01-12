@@ -11,7 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     const cookieStore = await cookies();
 
     const supabase = createServerClient(url, anon, {
-        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
     // 1) авторизация

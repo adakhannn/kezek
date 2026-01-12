@@ -13,7 +13,7 @@ export default async function RolesPage() {
     const cookieStore = await cookies();
 
     const supa = createServerClient(url, anon, {
-        cookies: { get: n => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
     const { data: { user } } = await supa.auth.getUser();

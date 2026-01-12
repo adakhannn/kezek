@@ -32,7 +32,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
 
     const supa = createServerClient(URL, ANON, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {},
+            get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {},
         },
     });
 

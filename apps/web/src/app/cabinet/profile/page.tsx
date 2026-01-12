@@ -15,7 +15,7 @@ export default async function ProfilePage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value,
+                get: (n: string) => cookieStore.get(n)?.value,
             },
         }
     );

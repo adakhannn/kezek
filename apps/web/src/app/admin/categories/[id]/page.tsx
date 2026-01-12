@@ -18,7 +18,7 @@ export default async function CategoryEditPage({params}: { params: Promise<Route
 
     const supa = createServerClient(URL, ANON, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value, set: () => {
+            get: (n: string) => cookieStore.get(n)?.value, set: () => {
             }, remove: () => {
             }
         },

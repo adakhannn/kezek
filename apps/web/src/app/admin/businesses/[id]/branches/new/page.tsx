@@ -17,7 +17,7 @@ export default async function BranchNewPage({ params }: { params: Promise<RouteP
     const cookieStore = await cookies();
 
     const supa = createServerClient(URL, ANON, {
-        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
     const { data: { user } } = await supa.auth.getUser();
     if (!user) return <div className="p-4">Не авторизован</div>;

@@ -50,7 +50,7 @@ export async function GET(req: Request) {
         // 1) Проверка прав (текущий запрос выполняется от имени пользователя по anon-cookie)
         const cookieStore = await cookies();
         const supa = createServerClient(SB_URL, SB_ANON, {
-            cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
         const { data: meData } = await supa.auth.getUser();

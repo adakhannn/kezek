@@ -64,7 +64,7 @@ export async function POST(req: Request, context: unknown) {
         const cookieStore = await cookies(); // без await
         const supa = createServerClient(URL, ANON, {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value, set: () => {
+                get: (n: string) => cookieStore.get(n)?.value, set: () => {
                 }, remove: () => {
                 }
             },

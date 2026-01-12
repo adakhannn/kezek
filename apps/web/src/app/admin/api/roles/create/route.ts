@@ -15,7 +15,7 @@ export async function POST(req: Request) {
         const cookieStore = await cookies();
 
         const supa = createServerClient(URL, ANON, {
-            cookies: { get: n => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
 
         const { data: { user } } = await supa.auth.getUser();

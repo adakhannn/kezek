@@ -25,7 +25,7 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
     const cookieStore = await cookies();
 
     const supa = createServerClient(URL, ANON, {
-        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
     // 1) auth

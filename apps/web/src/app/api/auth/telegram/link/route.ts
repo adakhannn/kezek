@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         // Проверяем авторизацию текущего пользователя
         const supabase = createServerClient(URL, ANON, {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value,
+                get: (n: string) => cookieStore.get(n)?.value,
                 set: () => {},
                 remove: () => {},
             },

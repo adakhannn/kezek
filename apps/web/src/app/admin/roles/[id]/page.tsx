@@ -14,7 +14,7 @@ export default async function RoleEditPage({ params }: { params: Promise<{ id: s
 
     const supa = createServerClient(url, anon, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value, set: () => {
+            get: (n: string) => cookieStore.get(n)?.value, set: () => {
             }, remove: () => {
             }
         },

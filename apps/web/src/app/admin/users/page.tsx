@@ -123,7 +123,7 @@ export default async function UsersListPage(
 
     const supa = createServerClient(url, anon, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value, set: () => {
+            get: (n: string) => cookieStore.get(n)?.value, set: () => {
             }, remove: () => {
             }
         },

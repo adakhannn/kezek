@@ -27,7 +27,7 @@ export async function POST(req: Request, ctx: unknown) {
         // Кто вызывает — должен быть супер
         const supa = createServerClient(URL, ANON, {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {},
+                get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {},
             },
         });
 

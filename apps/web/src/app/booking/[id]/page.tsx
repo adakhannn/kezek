@@ -20,7 +20,7 @@ export default async function BookingPage({
 
     const supabase = createServerClient(url, anon, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value,
+            get: (n: string) => cookieStore.get(n)?.value,
             // no-op’ы нужны, чтобы supabase/ssr не падал в RSC
             set: () => {
             },
@@ -72,7 +72,7 @@ async function FallbackBooking({ id }: { id: string }) {
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const cookieStore = await cookies();
     const supabase = createServerClient(url, anon, {
-        cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
     const { data, error } = await supabase.rpc('booking_view_public', { p_id: id });

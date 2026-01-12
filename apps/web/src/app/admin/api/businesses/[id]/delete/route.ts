@@ -21,7 +21,7 @@ export async function POST(_req: Request, context: unknown) {
         // проверяем, что вызывает супер-админ
         const supa = createServerClient(URL, ANON, {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value, set: () => {
+                get: (n: string) => cookieStore.get(n)?.value, set: () => {
                 }, remove: () => {
                 }
             },

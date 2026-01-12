@@ -53,7 +53,7 @@ export async function POST(req: Request) {
         // Для веб-версии: используем cookies
         const cookieStore = await cookies();
         supabase = createServerClient(url, anon, {
-            cookies: {get: (n) => cookieStore.get(n)?.value},
+            cookies: {get: (n: string) => cookieStore.get(n)?.value},
         });
         const {data: {user: userData}} = await supabase.auth.getUser();
         if (!userData) {

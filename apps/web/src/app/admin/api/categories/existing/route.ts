@@ -19,7 +19,7 @@ export async function GET() {
         const cookieStore = await cookies(); // без await
         const supabase = createServerClient(URL, ANON, {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value, set: () => {
+                get: (n: string) => cookieStore.get(n)?.value, set: () => {
                 }, remove: () => {
                 }
             },

@@ -14,7 +14,7 @@ export async function POST(
 
     const supabase = createServerClient(url, anon, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value,
+            get: (n: string) => cookieStore.get(n)?.value,
             // no-op для RSC/route handlers
             set: () => {
             },

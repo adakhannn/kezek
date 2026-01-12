@@ -36,7 +36,7 @@ export async function POST(req: Request, ctx: unknown) {
         // 1) Проверка авторизации и что вызывающий — global super_admin
         const supa = createServerClient(URL, ANON, {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value,
+                get: (n: string) => cookieStore.get(n)?.value,
                 set: () => {},
                 remove: () => {},
             },

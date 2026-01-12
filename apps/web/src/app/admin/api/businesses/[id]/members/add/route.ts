@@ -90,7 +90,7 @@ export async function POST(req: Request, context: unknown) {
         // auth: только глобальный super_admin
         const supa = createServerClient(URL, ANON, {
             cookies: {
-                get: n => cookieStore.get(n)?.value, set: () => {
+                get: (n: string) => cookieStore.get(n)?.value, set: () => {
                 }, remove: () => {
                 }
             },

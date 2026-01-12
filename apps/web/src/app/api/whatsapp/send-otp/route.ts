@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         // Проверка авторизации
         const supabase = createServerClient(URL, ANON, {
             cookies: {
-                get: (n) => cookieStore.get(n)?.value,
+                get: (n: string) => cookieStore.get(n)?.value,
                 set: () => {},
                 remove: () => {},
             },

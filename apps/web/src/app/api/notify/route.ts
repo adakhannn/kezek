@@ -147,7 +147,7 @@ export async function POST(req: Request) {
         const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const cookieStore = await cookies();
         const supabase = createServerClient(url, anon, {
-            cookies: { get: (n) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
         
         // Admin client для получения email владельца

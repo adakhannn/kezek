@@ -38,7 +38,7 @@ export default async function BizPage({ params }: { params: Promise<RouteParams>
     const cookieStore = await cookies();
     const supa = createServerClient(URL, ANON, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value,
+            get: (n: string) => cookieStore.get(n)?.value,
             set: () => {},
             remove: () => {},
         },

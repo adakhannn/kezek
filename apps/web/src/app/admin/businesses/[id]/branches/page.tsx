@@ -17,7 +17,7 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
 
     const supa = createServerClient(URL, ANON, {
         cookies: {
-            get: (n) => cookieStore.get(n)?.value,
+            get: (n: string) => cookieStore.get(n)?.value,
             set: () => {},
             remove: () => {},
         },

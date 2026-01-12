@@ -22,7 +22,7 @@ export default async function CategoriesPage() {
     const cookieStore = await cookies();
 
     const supa = createServerClient(URL, ANON, {
-        cookies: { get: n => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
+        cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
     });
 
     // 1) Авторизация
