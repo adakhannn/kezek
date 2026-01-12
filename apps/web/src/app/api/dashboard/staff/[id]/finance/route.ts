@@ -71,8 +71,11 @@ export async function GET(
             }
         }
 
+        // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
+        const admin = getServiceClient();
+
         // Смена за сегодня
-        const { data: shift, error: shiftError } = await supabase
+        const { data: shift, error: shiftError } = await admin
             .from('staff_shifts')
             .select('*')
             .eq('biz_id', bizId)
@@ -92,7 +95,6 @@ export async function GET(
         // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
         let items: unknown[] = [];
         if (shift) {
-            const admin = getServiceClient(); // Используем service client для обхода RLS
             const { data: itemsData, error: itemsError } = await admin
                 .from('staff_shift_items')
                 .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id')
@@ -159,7 +161,7 @@ export async function GET(
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const statsStart = formatInTimeZone(thirtyDaysAgo, TZ, 'yyyy-MM-dd');
 
-        const { data: recentShifts, error: statsError } = await supabase
+        const { data: recentShifts, error: statsError } = await admin
             .from('staff_shifts')
             .select('total_amount, master_share, salon_share, late_minutes')
             .eq('biz_id', bizId)
@@ -173,7 +175,7 @@ export async function GET(
         }
 
         // Загружаем все смены (не только закрытые) для статистики - клиент фильтрует по статусу
-        const { data: allShifts, error: allShiftsError } = await supabase
+        const { data: allShifts, error: allShiftsError } = await admin
             .from('staff_shifts')
             .select('shift_date, status, total_amount, master_share, salon_share, late_minutes')
             .eq('biz_id', bizId)

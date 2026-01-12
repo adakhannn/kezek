@@ -68,10 +68,13 @@ export async function GET(
             date,
         });
 
+        // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
+        const admin = getServiceClient();
+
         // Сначала проверим, есть ли открытая смена на сегодня
         // Это важно, потому что открытая смена должна показываться
         const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
-        const { data: todayOpenShift } = await supabase
+        const { data: todayOpenShift } = await admin
             .from('staff_shifts')
             .select('*')
             .eq('biz_id', bizId)
@@ -83,7 +86,7 @@ export async function GET(
         console.log('[dashboard/staff/finance/stats] Today open shift:', todayOpenShift);
 
         // Сначала проверим, есть ли вообще смены у этого сотрудника
-        const { data: allShiftsCheck, error: checkError } = await supabase
+        const { data: allShiftsCheck, error: checkError } = await admin
             .from('staff_shifts')
             .select('id, shift_date, status')
             .eq('biz_id', bizId)
@@ -93,7 +96,7 @@ export async function GET(
 
         console.log('[dashboard/staff/finance/stats] All shifts check (last 5):', allShiftsCheck);
 
-        const { data: shifts, error: shiftsError } = await supabase
+        const { data: shifts, error: shiftsError } = await admin
             .from('staff_shifts')
             .select('*')
             .eq('biz_id', bizId)
@@ -150,7 +153,6 @@ export async function GET(
         }>> = {};
         
         if (shiftIds.length > 0) {
-            const admin = getServiceClient(); // Используем service client для обхода RLS
             const { data: itemsData, error: itemsError } = await admin
                 .from('staff_shift_items')
                 .select('id, shift_id, client_name, service_name, service_amount, consumables_amount, note, booking_id')
