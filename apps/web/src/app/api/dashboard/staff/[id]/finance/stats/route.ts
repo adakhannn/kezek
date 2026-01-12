@@ -58,6 +58,15 @@ export async function GET(
         }
 
         // Получаем смены за период
+        console.log('[dashboard/staff/finance/stats] Loading shifts:', {
+            staffId,
+            bizId,
+            dateFrom,
+            dateTo,
+            period,
+            date,
+        });
+
         const { data: shifts, error: shiftsError } = await supabase
             .from('staff_shifts')
             .select('*')
@@ -68,12 +77,14 @@ export async function GET(
             .order('shift_date', { ascending: false });
 
         if (shiftsError) {
-            console.error('Error loading shifts:', shiftsError);
+            console.error('[dashboard/staff/finance/stats] Error loading shifts:', shiftsError);
             return NextResponse.json(
                 { ok: false, error: shiftsError.message },
                 { status: 500 }
             );
         }
+
+        console.log('[dashboard/staff/finance/stats] Found shifts:', shifts?.length || 0, shifts);
 
         // Получаем позиции (клиентов) для всех смен
         const shiftIds = (shifts || []).map(s => s.id);
