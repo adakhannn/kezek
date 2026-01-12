@@ -159,7 +159,7 @@ export async function POST(req: Request) {
         }
 
         // 7) Очищаем историю привязок мастеров к филиалам (staff_branch_assignments)
-        // Эти записи используются только для истории / логики расписания и не должны блокировать удаление тестового филиала
+        // Эти записи используются для истории / логики расписания и не должны блокировать удаление филиала
         const { error: eDelAssignments } = await admin
             .from('staff_branch_assignments')
             .delete()
@@ -170,8 +170,21 @@ export async function POST(req: Request) {
             console.warn('Не удалось удалить строки из staff_branch_assignments:', eDelAssignments.message);
             // Не блокируем удаление филиала, но логируем проблему
         }
+
+        // 8) Удаляем правила расписания для этого филиала (staff_schedule_rules)
+        // На эти записи есть FK с ON DELETE RESTRICT, поэтому их нужно удалить вручную
+        const { error: eDelScheduleRules } = await admin
+            .from('staff_schedule_rules')
+            .delete()
+            .eq('biz_id', id)
+            .eq('branch_id', branchId);
+
+        if (eDelScheduleRules) {
+            console.warn('Не удалось удалить строки из staff_schedule_rules:', eDelScheduleRules.message);
+            // Не блокируем удаление филиала, но логируем проблему
+        }
         
-        // 8) Удаляем филиал
+        // 9) Удаляем филиал
         const { error } = await admin
             .from('branches')
             .delete()
