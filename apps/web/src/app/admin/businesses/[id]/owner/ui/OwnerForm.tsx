@@ -23,37 +23,39 @@ type SearchResult = {
 
 export function OwnerForm({
     bizId,
-    currentOwnerId,
-    currentOwner,
+    currentOwners,
 }: {
     bizId: string;
-    currentOwnerId: string | null;
-    currentOwner?: UserRow | null;
+    currentOwners: UserRow[];
 }) {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
-    const [selected, setSelected] = useState<string>(currentOwnerId ?? '');
+    const [owners, setOwners] = useState<UserRow[]>(currentOwners);
     const [err, setErr] = useState<string | null>(null);
     const [ok, setOk] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    // Debounce для поиска
+    // Обновляем owners при изменении currentOwners
     useEffect(() => {
+        setOwners(currentOwners);
+    }, [currentOwners]);
+
+    // Debounce для поиска - только если введено минимум 2 символа
+    useEffect(() => {
+        const trimmed = searchQuery.trim();
+        if (trimmed.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
         const timer = setTimeout(() => {
-            if (searchQuery.trim().length >= 2 || searchQuery.trim().length === 0) {
-                performSearch(searchQuery.trim());
-            }
+            performSearch(trimmed);
         }, 300);
 
         return () => clearTimeout(timer);
     }, [searchQuery]);
-
-    // Загружаем первые результаты при монтировании
-    useEffect(() => {
-        performSearch('');
-    }, []);
 
     async function performSearch(q: string) {
         setSearchLoading(true);
@@ -85,40 +87,55 @@ export function OwnerForm({
         }
     }
 
-    // Объединяем результаты поиска с текущим владельцем
-    const options = useMemo(() => {
-        const results = [...searchResults];
-        
-        // Добавляем текущего владельца, если он есть и его нет в результатах
-        if (currentOwner && currentOwnerId) {
-            const exists = results.some((r) => r.id === currentOwnerId);
-            if (!exists) {
-                results.unshift({
-                    id: currentOwner.id,
-                    email: currentOwner.email,
-                    phone: currentOwner.phone,
-                    full_name: currentOwner.full_name,
-                });
-            }
+    // Фильтруем результаты поиска, исключая уже добавленных владельцев
+    const availableOptions = useMemo(() => {
+        const ownerIds = new Set(owners.map(o => o.id));
+        return searchResults
+            .filter(r => !ownerIds.has(r.id))
+            .map((u) => {
+                const parts: string[] = [];
+                if (u.full_name) parts.push(u.full_name);
+                if (u.email) parts.push(u.email);
+                if (u.phone) parts.push(u.phone);
+                const label = parts.length > 0 ? parts.join(' • ') : u.id;
+                return {
+                    id: u.id,
+                    label,
+                    full_name: u.full_name,
+                    email: u.email,
+                    phone: u.phone,
+                };
+            });
+    }, [searchResults, owners]);
+
+    function addOwner(userId: string) {
+        const user = searchResults.find(r => r.id === userId);
+        if (user && !owners.some(o => o.id === userId)) {
+            setOwners([...owners, {
+                id: user.id,
+                email: user.email,
+                phone: user.phone,
+                full_name: user.full_name,
+            }]);
+            setSearchQuery('');
+            setSearchResults([]);
         }
+    }
 
-        return results.map((u) => {
-            const parts: string[] = [];
-            if (u.full_name) parts.push(u.full_name);
-            if (u.email) parts.push(u.email);
-            if (u.phone) parts.push(u.phone);
-            const label = parts.length > 0 ? parts.join(' • ') : u.id;
-            return {
-                id: u.id,
-                label,
-                full_name: u.full_name,
-                email: u.email,
-                phone: u.phone,
-            };
-        });
-    }, [searchResults, currentOwner, currentOwnerId]);
+    function removeOwner(userId: string) {
+        setOwners(owners.filter(o => o.id !== userId));
+    }
 
-    const changed = (selected || '') !== (currentOwnerId || '');
+    const changed = useMemo(() => {
+        if (owners.length !== currentOwners.length) return true;
+        const currentIds = new Set(currentOwners.map(o => o.id));
+        const newIds = new Set(owners.map(o => o.id));
+        if (currentIds.size !== newIds.size) return true;
+        for (const id of currentIds) {
+            if (!newIds.has(id)) return true;
+        }
+        return false;
+    }, [owners, currentOwners]);
 
     async function save() {
         setErr(null);
@@ -129,7 +146,7 @@ export function OwnerForm({
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ user_id: selected || null }),
+                body: JSON.stringify({ user_ids: owners.map(o => o.id) }),
             });
 
             const ct = resp.headers.get('content-type') ?? '';
@@ -147,7 +164,7 @@ export function OwnerForm({
                 throw new Error(data?.error || `HTTP ${resp.status}`);
             }
 
-            setOk(selected ? 'Владелец назначен' : 'Владелец снят');
+            setOk(owners.length > 0 ? `Владельцы обновлены (${owners.length})` : 'Все владельцы удалены');
             router.refresh();
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : String(e));
@@ -156,46 +173,89 @@ export function OwnerForm({
         }
     }
 
+    function formatOwnerLabel(owner: UserRow): string {
+        const parts: string[] = [];
+        if (owner.full_name) parts.push(owner.full_name);
+        if (owner.email) parts.push(owner.email);
+        if (owner.phone) parts.push(owner.phone);
+        return parts.length > 0 ? parts.join(' • ') : owner.id;
+    }
+
     return (
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Владелец бизнеса</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Владельцы бизнеса</h3>
             
             <div className="space-y-4">
-                <div>
+                {/* Список текущих владельцев */}
+                {owners.length > 0 && (
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Текущие владельцы ({owners.length})
+                        </label>
+                        <div className="space-y-2">
+                            {owners.map((owner) => (
+                                <div
+                                    key={owner.id}
+                                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                                >
+                                    <span className="text-sm text-gray-900 dark:text-gray-100">
+                                        {formatOwnerLabel(owner)}
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeOwner(owner.id)}
+                                        disabled={loading}
+                                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                    >
+                                        Удалить
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Поиск и добавление нового владельца */}
+                <div className="space-y-2">
                     <Input
-                        label="Поиск пользователя"
+                        label="Добавить владельца"
                         placeholder="Введите email, телефон или имя (минимум 2 символа)"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         helperText={searchQuery.length > 0 && searchQuery.length < 2 ? 'Введите минимум 2 символа для поиска' : 'Начните вводить для поиска пользователя'}
                     />
+
+                    {availableOptions.length > 0 && (
+                        <div className="border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 max-h-60 overflow-y-auto">
+                            {availableOptions.map((option) => (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    onClick={() => addOwner(option.id)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {searchLoading && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">
+                            Поиск...
+                        </div>
+                    )}
+
+                    {!searchLoading && searchQuery.trim().length >= 2 && availableOptions.length === 0 && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">
+                            Ничего не найдено
+                        </div>
+                    )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                    <select
-                        className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 min-w-[400px] text-sm"
-                        value={selected}
-                        onChange={(e) => setSelected(e.target.value)}
-                        disabled={searchLoading}
-                    >
-                        <option value="">— Снять владельца —</option>
-                        {options.length === 0 && !searchLoading && (
-                            <option value="" disabled>
-                                {searchQuery.length >= 2 ? 'Ничего не найдено' : 'Начните поиск'}
-                            </option>
-                        )}
-                        {searchLoading && (
-                            <option value="" disabled>
-                                Поиск...
-                            </option>
-                        )}
-                        {options.map((o) => (
-                            <option key={o.id} value={o.id}>
-                                {o.label}
-                            </option>
-                        ))}
-                    </select>
-
+                {/* Кнопка сохранения */}
+                <div className="flex items-center gap-3">
                     <Button
                         onClick={save}
                         disabled={loading || !changed}

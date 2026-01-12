@@ -58,28 +58,46 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
     if (eBiz) return <div className="p-4">Ошибка: {eBiz.message}</div>;
     if (!biz) return <div className="p-4">Бизнес не найден</div>;
 
-    // 5) Получаем информацию о текущем владельце (если есть)
-    let currentOwner: UserRow | null = null;
-    if (biz.owner_id) {
-        try {
-            const { data: ownerData, error: ownerErr } = await admin.auth.admin.getUserById(biz.owner_id);
-            if (!ownerErr && ownerData?.user) {
-                const { data: profile } = await admin
-                    .from('profiles')
-                    .select('full_name')
-                    .eq('id', biz.owner_id)
-                    .maybeSingle();
-                
-                currentOwner = {
-                    id: ownerData.user.id,
-                    email: ownerData.user.email ?? null,
-                    phone: (ownerData.user as { phone?: string | null }).phone ?? null,
-                    full_name: profile?.full_name ?? (ownerData.user.user_metadata?.full_name as string | undefined) ?? null,
-                    is_suspended: null, // Проверка блокировки будет на клиенте при необходимости
-                };
+    // 5) Получаем всех владельцев бизнеса через user_roles
+    const { data: ownerRole, error: roleErr } = await admin
+        .from('roles')
+        .select('id')
+        .eq('key', 'owner')
+        .maybeSingle();
+
+    let currentOwners: UserRow[] = [];
+    if (!roleErr && ownerRole) {
+        const { data: ownerRoles, error: ownerRolesErr } = await admin
+            .from('user_roles')
+            .select('user_id')
+            .eq('biz_id', biz.id)
+            .eq('role_id', ownerRole.id);
+
+        if (!ownerRolesErr && ownerRoles) {
+            const ownerIds = ownerRoles.map(r => r.user_id).filter(Boolean) as string[];
+            
+            for (const ownerId of ownerIds) {
+                try {
+                    const { data: ownerData, error: ownerErr } = await admin.auth.admin.getUserById(ownerId);
+                    if (!ownerErr && ownerData?.user) {
+                        const { data: profile } = await admin
+                            .from('profiles')
+                            .select('full_name')
+                            .eq('id', ownerId)
+                            .maybeSingle();
+                        
+                        currentOwners.push({
+                            id: ownerData.user.id,
+                            email: ownerData.user.email ?? null,
+                            phone: (ownerData.user as { phone?: string | null }).phone ?? null,
+                            full_name: profile?.full_name ?? (ownerData.user.user_metadata?.full_name as string | undefined) ?? null,
+                            is_suspended: null,
+                        });
+                    }
+                } catch (e) {
+                    console.warn(`Failed to fetch owner ${ownerId}:`, e);
+                }
             }
-        } catch (e) {
-            console.warn('Failed to fetch current owner:', e);
         }
     }
 
@@ -90,7 +108,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                            Назначить владельца
+                            Владельцы бизнеса
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             Бизнес: <span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
@@ -102,8 +120,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
             {/* Форма */}
             <OwnerForm
                 bizId={biz.id}
-                currentOwnerId={biz.owner_id}
-                currentOwner={currentOwner}
+                currentOwners={currentOwners}
             />
         </div>
     );

@@ -9,7 +9,7 @@ import { NextResponse } from 'next/server';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 type Body = {
-    user_id?: string | null;
+    user_ids?: string[]; // Массив ID владельцев
 };
 
 export async function POST(req: Request, ctx: unknown) {
@@ -17,7 +17,7 @@ export async function POST(req: Request, ctx: unknown) {
         const bizId = await getRouteParamRequired(ctx, 'id');
 
         const raw = (await req.json()) as Body;
-        const userId = raw.user_id?.trim() || null;
+        const userIds = (raw.user_ids ?? []).filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
 
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -50,45 +50,87 @@ export async function POST(req: Request, ctx: unknown) {
         // Сервис-клиент
         const admin = createClient(URL, SERVICE);
 
-        // Снять владельца
-        if (!userId) {
-            const { error: clearErr } = await admin.rpc('clear_business_owner', { p_biz_id: bizId });
-            if (clearErr) {
-                return NextResponse.json({ ok: false, error: clearErr.message }, { status: 400 });
+        // Получаем role_id для роли 'owner'
+        const { data: ownerRole, error: roleErr } = await admin
+            .from('roles')
+            .select('id')
+            .eq('key', 'owner')
+            .maybeSingle();
+
+        if (roleErr || !ownerRole) {
+            return NextResponse.json({ ok: false, error: 'Роль owner не найдена' }, { status: 400 });
+        }
+
+        // Проверяем всех пользователей перед добавлением
+        for (const userId of userIds) {
+            const { data: targetUser, error: getUserErr } = await admin.auth.admin.getUserById(userId);
+            if (getUserErr || !targetUser?.user) {
+                return NextResponse.json({ ok: false, error: `Пользователь ${userId} не найден в системе` }, { status: 404 });
             }
-            return NextResponse.json({ ok: true, cleared: true });
-        }
-
-        // Проверка, что пользователь существует
-        const { data: targetUser, error: getUserErr } = await admin.auth.admin.getUserById(userId);
-        if (getUserErr || !targetUser?.user) {
-            return NextResponse.json({ ok: false, error: 'Пользователь не найден в системе' }, { status: 404 });
-        }
-
-        // Назначение владельца (ошибки маппим)
-        const { error: setErr } = await admin.rpc('assign_business_owner', {
-            p_biz_id: bizId,
-            p_user_id: userId,
-        });
-
-        if (setErr) {
-            const m = setErr.message || '';
-            if (/USER_SUSPENDED/i.test(m)) {
+            // Проверяем, не заблокирован ли пользователь через user_suspensions
+            const { data: suspension } = await admin
+                .from('user_suspensions')
+                .select('user_id')
+                .eq('user_id', userId)
+                .limit(1)
+                .maybeSingle();
+            if (suspension) {
                 return NextResponse.json(
-                    { ok: false, error: 'Этот пользователь заблокирован и не может быть назначен владельцем.', code: 'USER_SUSPENDED' },
+                    { ok: false, error: 'Один из пользователей заблокирован и не может быть назначен владельцем.', code: 'USER_SUSPENDED' },
                     { status: 400 }
                 );
             }
-            if (/USER_ALREADY_OWNER_OF_OTHER_BIZ/i.test(m)) {
-                return NextResponse.json(
-                    { ok: false, error: 'Пользователь уже владеет другим бизнесом. Создайте отдельный аккаунт.', code: 'USER_ALREADY_OWNER_OF_OTHER_BIZ' },
-                    { status: 400 }
-                );
-            }
-            return NextResponse.json({ ok: false, error: setErr.message }, { status: 400 });
         }
 
-        return NextResponse.json({ ok: true });
+        // Удаляем все существующие роли owner для этого бизнеса
+        const { error: deleteErr } = await admin
+            .from('user_roles')
+            .delete()
+            .eq('biz_id', bizId)
+            .eq('role_id', ownerRole.id);
+
+        if (deleteErr) {
+            return NextResponse.json({ ok: false, error: deleteErr.message }, { status: 400 });
+        }
+
+        // Добавляем новых владельцев
+        if (userIds.length > 0) {
+            const ownerRoles = userIds.map(userId => ({
+                user_id: userId,
+                biz_id: bizId,
+                role_id: ownerRole.id,
+            }));
+
+            const { error: insertErr } = await admin
+                .from('user_roles')
+                .insert(ownerRoles);
+
+            if (insertErr) {
+                return NextResponse.json({ ok: false, error: insertErr.message }, { status: 400 });
+            }
+
+            // Обновляем owner_id в businesses на первого владельца (для обратной совместимости)
+            const { error: updateErr } = await admin
+                .from('businesses')
+                .update({ owner_id: userIds[0] })
+                .eq('id', bizId);
+
+            if (updateErr) {
+                console.warn('Failed to update owner_id in businesses:', updateErr);
+            }
+        } else {
+            // Если владельцев нет, очищаем owner_id
+            const { error: updateErr } = await admin
+                .from('businesses')
+                .update({ owner_id: null })
+                .eq('id', bizId);
+
+            if (updateErr) {
+                console.warn('Failed to clear owner_id in businesses:', updateErr);
+            }
+        }
+
+        return NextResponse.json({ ok: true, owner_ids: userIds });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
