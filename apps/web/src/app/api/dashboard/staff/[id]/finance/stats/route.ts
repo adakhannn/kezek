@@ -169,13 +169,27 @@ export async function GET(
             stats.totalLateMinutes += Number(shift.late_minutes ?? 0);
         }
 
-        // Для открытых смен считаем текущие значения
+        // Для открытых смен считаем текущие значения из позиций (актуальные данные)
         for (const shift of openShifts) {
-            // Для открытых смен используем текущие значения из shift
-            stats.totalAmount += Number(shift.total_amount ?? 0);
-            stats.totalMaster += Number(shift.master_share ?? 0);
-            stats.totalSalon += Number(shift.salon_share ?? 0);
-            stats.totalConsumables += Number(shift.consumables_amount ?? 0);
+            // Для открытых смен пересчитываем суммы из позиций, чтобы показать актуальные данные
+            const shiftItems = shiftItemsMap[shift.id] || [];
+            const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
+            const shiftConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
+            
+            // Получаем проценты из shift или используем дефолтные
+            const shiftPercentMaster = Number(shift.percent_master ?? 60);
+            const shiftPercentSalon = Number(shift.percent_salon ?? 40);
+            const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
+            const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
+            const normalizedSalon = (shiftPercentSalon / percentSum) * 100;
+            
+            const shiftMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
+            const shiftSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
+            
+            stats.totalAmount += shiftTotalAmount;
+            stats.totalMaster += shiftMasterShare;
+            stats.totalSalon += shiftSalonShare;
+            stats.totalConsumables += shiftConsumables;
             stats.totalLateMinutes += Number(shift.late_minutes ?? 0);
         }
 

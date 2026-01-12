@@ -35,6 +35,20 @@ export async function POST(req: Request) {
         const todayStart = `${ymd}T00:00:00`;
         const todayEnd = `${ymd}T23:59:59`;
 
+        // Получаем настройки сотрудника для расчета процентов
+        const { data: staffData, error: staffError } = await supabase
+            .from('staff')
+            .select('percent_master, percent_salon')
+            .eq('id', staffId)
+            .maybeSingle();
+
+        if (staffError) {
+            console.error('Error loading staff for percent:', staffError);
+        }
+
+        const percentMaster = Number(staffData?.percent_master ?? 60);
+        const percentSalon = Number(staffData?.percent_salon ?? 40);
+
         const { data: existing, error: findError } = await supabase
             .from('staff_shifts')
             .select('id')
@@ -148,6 +162,53 @@ export async function POST(req: Request) {
                     );
                 }
             }
+        }
+
+        // Пересчитываем суммы для открытой смены на основе позиций
+        // Это нужно, чтобы владелец мог видеть актуальные данные до закрытия смены
+        const { data: savedItems } = await supabase
+            .from('staff_shift_items')
+            .select('service_amount, consumables_amount')
+            .eq('shift_id', shiftId);
+
+        let totalAmount = 0;
+        let finalConsumablesAmount = 0;
+
+        if (savedItems && savedItems.length > 0) {
+            totalAmount = savedItems.reduce((sum, item) => sum + Number(item.service_amount ?? 0), 0);
+            finalConsumablesAmount = savedItems.reduce((sum, item) => sum + Number(item.consumables_amount ?? 0), 0);
+        }
+
+        // Нормализуем проценты
+        const safePercentMaster = Number.isFinite(percentMaster) ? percentMaster : 60;
+        const safePercentSalon = Number.isFinite(percentSalon) ? percentSalon : 40;
+        const percentSum = safePercentMaster + safePercentSalon || 100;
+
+        const normalizedMaster = (safePercentMaster / percentSum) * 100;
+        const normalizedSalon = (safePercentSalon / percentSum) * 100;
+
+        // Доля мастера = процент от общей суммы услуг
+        const masterShare = Math.round((totalAmount * normalizedMaster) / 100);
+        // Доля салона = процент от общей суммы услуг + 100% расходников
+        const salonShareFromAmount = Math.round((totalAmount * normalizedSalon) / 100);
+        const salonShare = salonShareFromAmount + finalConsumablesAmount; // расходники 100% идут салону
+
+        // Обновляем суммы в открытой смене
+        const { error: updateShiftError } = await supabase
+            .from('staff_shifts')
+            .update({
+                total_amount: totalAmount,
+                consumables_amount: finalConsumablesAmount,
+                percent_master: normalizedMaster,
+                percent_salon: normalizedSalon,
+                master_share: masterShare,
+                salon_share: salonShare,
+            })
+            .eq('id', shiftId);
+
+        if (updateShiftError) {
+            console.error('Error updating shift totals:', updateShiftError);
+            // Не возвращаем ошибку, так как позиции уже сохранены
         }
 
         return NextResponse.json({ ok: true });
