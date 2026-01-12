@@ -67,6 +67,20 @@ export async function GET(
             date,
         });
 
+        // Сначала проверим, есть ли открытая смена на сегодня
+        // Это важно, потому что открытая смена должна показываться
+        const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+        const { data: todayOpenShift } = await supabase
+            .from('staff_shifts')
+            .select('*')
+            .eq('biz_id', bizId)
+            .eq('staff_id', staffId)
+            .eq('shift_date', today)
+            .eq('status', 'open')
+            .maybeSingle();
+
+        console.log('[dashboard/staff/finance/stats] Today open shift:', todayOpenShift);
+
         // Сначала проверим, есть ли вообще смены у этого сотрудника
         const { data: allShiftsCheck, error: checkError } = await supabase
             .from('staff_shifts')
@@ -100,8 +114,29 @@ export async function GET(
             console.log('[dashboard/staff/finance/stats] Shift dates:', shifts.map(s => ({ date: s.shift_date, status: s.status })));
         }
 
+        // Если есть открытая смена на сегодня, но она не попадает в выбранный период,
+        // добавляем её в результаты (для периода "день" это нужно, если смотрим на сегодня)
+        let finalShifts = shifts || [];
+        if (todayOpenShift) {
+            // Если смотрим на сегодня и есть открытая смена - она должна быть в результатах
+            if (period === 'day' && date === today) {
+                const hasTodayShift = finalShifts.some(s => s.id === todayOpenShift.id);
+                if (!hasTodayShift) {
+                    finalShifts = [todayOpenShift, ...finalShifts];
+                    console.log('[dashboard/staff/finance/stats] Added today open shift to results');
+                }
+            } else if (period !== 'day') {
+                // Для месяца/года добавляем открытую смену на сегодня, если её нет в результатах
+                const hasTodayShift = finalShifts.some(s => s.id === todayOpenShift.id);
+                if (!hasTodayShift) {
+                    finalShifts = [todayOpenShift, ...finalShifts];
+                    console.log('[dashboard/staff/finance/stats] Added today open shift to results for period view');
+                }
+            }
+        }
+
         // Получаем позиции (клиентов) для всех смен
-        const shiftIds = (shifts || []).map(s => s.id);
+        const shiftIds = (finalShifts || []).map(s => s.id);
         const shiftItemsMap: Record<string, Array<{
             id: string;
             client_name: string | null;
@@ -142,15 +177,15 @@ export async function GET(
         }
 
         // Считаем статистику
-        const closedShifts = shifts?.filter(s => s.status === 'closed') || [];
-        const openShifts = shifts?.filter(s => s.status === 'open') || [];
+        const closedShifts = finalShifts?.filter(s => s.status === 'closed') || [];
+        const openShifts = finalShifts?.filter(s => s.status === 'open') || [];
 
         const stats = {
             period,
             dateFrom,
             dateTo,
             staffName: staff.full_name,
-            shiftsCount: shifts?.length || 0,
+            shiftsCount: finalShifts?.length || 0,
             openShiftsCount: openShifts.length,
             closedShiftsCount: closedShifts.length,
             totalAmount: 0, // Общий оборот
@@ -162,7 +197,7 @@ export async function GET(
                 (sum, items) => sum + items.length,
                 0
             ),
-            shifts: shifts?.map(s => {
+            shifts: finalShifts?.map(s => {
                 // Для открытых смен пересчитываем суммы из позиций
                 let displayTotalAmount = Number(s.total_amount ?? 0);
                 let displayMasterShare = Number(s.master_share ?? 0);
