@@ -227,9 +227,12 @@ type Stats = {
     totalAmount: number;
     totalMaster: number;
     totalSalon: number;
-        totalConsumables: number;
-        totalLateMinutes: number;
-        totalClients: number;
+    totalConsumables: number;
+    totalLateMinutes: number;
+    totalClients: number;
+    totalBaseMasterShare?: number; // Базовая доля (без гарантированной суммы)
+    totalGuaranteedAmount?: number; // Гарантированная сумма за выход
+    hasGuaranteedPayment?: boolean; // Есть ли гарантированная оплата, превышающая базовую долю
         shifts: Array<{
             id: string;
             shift_date: string;
@@ -488,6 +491,26 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                             ? `${((stats.totalMaster / stats.totalAmount) * 100).toFixed(1)}%`
                             : '0%'}
                     </div>
+                    {/* Детальная разбивка расчета, если есть гарантированная оплата */}
+                    {stats.hasGuaranteedPayment && stats.totalBaseMasterShare !== undefined && stats.totalGuaranteedAmount !== undefined && (
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-1">
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                                {t('finance.staffStats.baseShare', 'Базовая доля')}:{' '}
+                                <span className="font-medium">
+                                    {stats.totalBaseMasterShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                                </span>
+                            </div>
+                            <div className="text-xs text-amber-600 dark:text-amber-400">
+                                {t('finance.staffStats.guaranteedAmount', 'За выход')}:{' '}
+                                <span className="font-medium">
+                                    +{stats.totalGuaranteedAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                                </span>
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 italic">
+                                {t('finance.staffStats.guaranteedNote', 'Применена гарантированная оплата, т.к. она больше базовой доли')}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Доля бизнеса */}

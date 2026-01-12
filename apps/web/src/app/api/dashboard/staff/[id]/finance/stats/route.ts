@@ -185,6 +185,43 @@ export async function GET(
         const closedShifts = finalShifts?.filter(s => s.status === 'closed') || [];
         const openShifts = finalShifts?.filter(s => s.status === 'open') || [];
 
+        // Рассчитываем детали для открытых смен (для отображения разбивки)
+        let totalBaseMasterShare = 0; // Базовая доля сотрудника (без гарантированной суммы)
+        let totalGuaranteedAmount = 0; // Гарантированная сумма за выход
+        let hasGuaranteedPayment = false; // Есть ли гарантированная оплата, превышающая базовую долю
+        
+        for (const shift of openShifts) {
+            const shiftItems = shiftItemsMap[shift.id] || [];
+            const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
+            
+            // Получаем проценты
+            const shiftPercentMaster = Number(shift.percent_master ?? 60);
+            const shiftPercentSalon = Number(shift.percent_salon ?? 40);
+            const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
+            const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
+            
+            // Базовая доля
+            const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
+            totalBaseMasterShare += baseMasterShare;
+            
+            // Гарантированная сумма
+            const staffData = (shift as { staff?: { hourly_rate?: number | null } | null }).staff;
+            const hourlyRate = shift.hourly_rate ? Number(shift.hourly_rate) : (staffData?.hourly_rate ? Number(staffData.hourly_rate) : null);
+            
+            if (hourlyRate && shift.opened_at) {
+                const openedAt = new Date(shift.opened_at);
+                const now = new Date();
+                const diffMs = now.getTime() - openedAt.getTime();
+                const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
+                const guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
+                totalGuaranteedAmount += guaranteedAmount;
+                
+                if (guaranteedAmount > baseMasterShare) {
+                    hasGuaranteedPayment = true;
+                }
+            }
+        }
+
         const stats = {
             period,
             dateFrom,
@@ -202,6 +239,10 @@ export async function GET(
                 (sum, items) => sum + items.length,
                 0
             ),
+            // Детали расчета для открытых смен
+            totalBaseMasterShare, // Базовая доля (без гарантированной суммы)
+            totalGuaranteedAmount, // Гарантированная сумма за выход
+            hasGuaranteedPayment, // Есть ли гарантированная оплата, превышающая базовую долю
             shifts: finalShifts?.map(s => {
                 // Для открытых смен пересчитываем суммы из позиций
                 let displayTotalAmount = Number(s.total_amount ?? 0);
