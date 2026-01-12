@@ -130,11 +130,16 @@ export async function POST(req: Request) {
         let guaranteedAmount = 0;
         let topupAmount = 0;
 
+        // Время закрытия - полночь следующего дня (как в cron job)
+        const midnightNextDay = new Date(`${ymd}T00:00:00`);
+        midnightNextDay.setDate(midnightNextDay.getDate() + 1);
+        const closedAt = midnightNextDay.toISOString();
+
         if (hourlyRate && existing.opened_at) {
             // Вычисляем количество отработанных часов
+            // Используем полночь следующего дня как время закрытия для расчета часов
             const openedAt = new Date(existing.opened_at);
-            const closedAt = now;
-            const diffMs = closedAt.getTime() - openedAt.getTime();
+            const diffMs = midnightNextDay.getTime() - openedAt.getTime();
             hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // округляем до 2 знаков
 
             // Гарантированная сумма за выход
@@ -171,7 +176,7 @@ export async function POST(req: Request) {
             guaranteed_amount: guaranteedAmount,
             topup_amount: topupAmount,
             status: 'closed' as const,
-            closed_at: now.toISOString(),
+            closed_at: closedAt,
         };
 
         const { data: updated, error: updateError } = await supabase
