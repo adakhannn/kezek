@@ -226,11 +226,11 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(
-                `/api/dashboard/staff/${staffId}/finance/stats?period=${period}&date=${date}`,
-                { cache: 'no-store' }
-            );
+            const url = `/api/dashboard/staff/${staffId}/finance/stats?period=${period}&date=${date}`;
+            console.log('[StaffFinanceStats] Loading stats:', { url, staffId, period, date });
+            const res = await fetch(url, { cache: 'no-store' });
             const json = await res.json();
+            console.log('[StaffFinanceStats] Stats response:', json);
             if (!json.ok) {
                 throw new Error(json.error || t('finance.loading', 'Не удалось загрузить статистику'));
             }
@@ -238,11 +238,11 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setError(msg);
-            console.error('Error loading stats:', e);
+            console.error('[StaffFinanceStats] Error loading stats:', e);
         } finally {
             setLoading(false);
         }
-    }, [staffId, period, date]);
+    }, [staffId, period, date, t]);
 
     useEffect(() => {
         void loadStats();
