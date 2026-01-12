@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
-import TimeRangeList, { type TimeRange } from '@/components/pickers/TimeRangeList';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
 type BranchSchedule = {
     day_of_week: number; // 0 = воскресенье, 1 = понедельник, ..., 6 = суббота
-    intervals: TimeRange[];
-    breaks: TimeRange[];
+    start: string; // HH:mm
+    end: string; // HH:mm
 };
 
 const DAY_NAMES = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
@@ -18,7 +17,11 @@ const DAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 type Props = {
     bizId: string;
     branchId: string;
-    initialSchedule?: BranchSchedule[];
+    initialSchedule?: Array<{
+        day_of_week: number;
+        intervals?: Array<{ start: string; end: string }>;
+        breaks?: Array<{ start: string; end: string }>;
+    }>;
     apiBase?: string; // API base path, e.g., '/api/branches' or '/admin/api/businesses/{bizId}/branches'
 };
 
@@ -33,12 +36,17 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
     useEffect(() => {
         const map = new Map<number, BranchSchedule>();
         
-        // Загружаем начальное расписание
+        // Загружаем начальное расписание (конвертируем из старого формата с intervals)
         initialSchedule.forEach((s) => {
+            // Если это старый формат с intervals, берем первый интервал
+            const scheduleItem = s as { day_of_week: number; intervals?: Array<{ start: string; end: string }>; breaks?: Array<{ start: string; end: string }> };
+            const firstInterval = scheduleItem.intervals?.[0];
+            const start = firstInterval?.start || '09:00';
+            const end = firstInterval?.end || '21:00';
             map.set(s.day_of_week, {
                 day_of_week: s.day_of_week,
-                intervals: s.intervals || [],
-                breaks: s.breaks || [],
+                start,
+                end,
             });
         });
 
@@ -47,8 +55,8 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
             if (!map.has(dow)) {
                 map.set(dow, {
                     day_of_week: dow,
-                    intervals: dow === 0 ? [] : [{ start: '09:00', end: '21:00' }], // Воскресенье по умолчанию выходной
-                    breaks: [],
+                    start: dow === 0 ? '' : '09:00', // Воскресенье по умолчанию выходной
+                    end: dow === 0 ? '' : '21:00',
                 });
             }
         }
@@ -63,7 +71,14 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
         setSuccess(false);
 
         try {
-            const scheduleArray = Array.from(schedule.values());
+            // Конвертируем в формат для API (с intervals для совместимости)
+            const scheduleArray = Array.from(schedule.values())
+                .filter((s) => s.start && s.end) // Только рабочие дни
+                .map((s) => ({
+                    day_of_week: s.day_of_week,
+                    intervals: [{ start: s.start, end: s.end }],
+                    breaks: [],
+                }));
 
             // Определяем API путь
             const apiPath = apiBase 
@@ -102,8 +117,8 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
         const newSchedule = new Map(schedule);
         const current = newSchedule.get(dow) || {
             day_of_week: dow,
-            intervals: [],
-            breaks: [],
+            start: '',
+            end: '',
         };
         newSchedule.set(dow, { ...current, ...updates });
         setSchedule(newSchedule);
@@ -120,7 +135,7 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
                     Расписание работы филиала
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Установите рабочие часы для каждого дня недели. Это расписание будет использоваться по умолчанию для всех сотрудников филиала.
+                    Установите рабочие часы для каждого дня недели. Это расписание будет использоваться по умолчанию для всех сотрудников филиала. Если у сотрудника есть индивидуальное расписание, оно имеет приоритет.
                 </p>
             </div>
 
@@ -129,7 +144,7 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
                     const daySchedule = schedule.get(i);
                     if (!daySchedule) return null;
 
-                    const isDayOff = daySchedule.intervals.length === 0;
+                    const isDayOff = !daySchedule.start || !daySchedule.end;
 
                     return (
                         <Card key={i} className="p-4">
@@ -146,9 +161,11 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
                                             type="checkbox"
                                             checked={!isDayOff}
                                             onChange={(e) => {
-                                                updateDay(i, {
-                                                    intervals: e.target.checked ? [{ start: '09:00', end: '21:00' }] : [],
-                                                });
+                                                if (e.target.checked) {
+                                                    updateDay(i, { start: '09:00', end: '21:00' });
+                                                } else {
+                                                    updateDay(i, { start: '', end: '' });
+                                                }
                                             }}
                                             className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                         />
@@ -158,16 +175,26 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
 
                                 {!isDayOff && (
                                     <div className="space-y-3">
-                                        <TimeRangeList
-                                            label="Рабочие часы"
-                                            items={daySchedule.intervals}
-                                            onChange={(intervals) => updateDay(i, { intervals })}
-                                        />
-                                        <TimeRangeList
-                                            label="Перерывы"
-                                            items={daySchedule.breaks}
-                                            onChange={(breaks) => updateDay(i, { breaks })}
-                                        />
+                                        <div>
+                                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                Рабочие часы
+                                            </label>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="time"
+                                                    value={daySchedule.start}
+                                                    onChange={(e) => updateDay(i, { start: e.target.value })}
+                                                    className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                                />
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">—</span>
+                                                <input
+                                                    type="time"
+                                                    value={daySchedule.end}
+                                                    onChange={(e) => updateDay(i, { end: e.target.value })}
+                                                    className="flex-1 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
@@ -202,4 +229,3 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
         </div>
     );
 }
-
