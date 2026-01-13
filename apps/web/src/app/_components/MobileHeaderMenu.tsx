@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 import { PersonalCabinetButton } from './PersonalCabinetButton';
@@ -137,7 +138,18 @@ function MobileAuthStatus({ onAction }: { onAction: () => void }) {
     }, []);
 
     if (!user) {
-        return null;
+        return (
+            <Link 
+                href="/auth/sign-in" 
+                onClick={onAction}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                <span>{t('header.signIn', 'Войти')}</span>
+            </Link>
+        );
     }
 
     return (
