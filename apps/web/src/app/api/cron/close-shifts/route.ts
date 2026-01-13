@@ -1,5 +1,5 @@
 // apps/web/src/app/api/cron/close-shifts/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getServiceClient } from '@/lib/supabaseService';
@@ -160,13 +160,14 @@ export async function GET(req: Request) {
 
                 if (hourlyRate && shift.opened_at) {
                     const openedAt = new Date(shift.opened_at);
-                    // Закрываем смену в полночь (начало следующего дня)
-                    const closedAt = new Date(`${ymd}T23:59:59`);
-                    closedAt.setDate(closedAt.getDate() + 1); // Переходим на следующий день и ставим 00:00
-                    
-                    // Используем полночь следующего дня как время закрытия
-                    const midnightNextDay = new Date(`${ymd}T00:00:00`);
-                    midnightNextDay.setDate(midnightNextDay.getDate() + 1);
+                    // Используем полночь следующего дня в правильном часовом поясе TZ
+                    const nextDayYmd = formatInTimeZone(new Date(`${ymd}T12:00:00`), TZ, 'yyyy-MM-dd');
+                    const nextDayDate = new Date(nextDayYmd);
+                    nextDayDate.setDate(nextDayDate.getDate() + 1);
+                    const nextDayYmdStr = formatInTimeZone(nextDayDate, TZ, 'yyyy-MM-dd');
+                    const midnightNextDayStr = `${nextDayYmdStr}T00:00:00`;
+                    // Преобразуем в UTC с учетом часового пояса TZ
+                    const midnightNextDay = fromZonedTime(midnightNextDayStr, TZ);
                     
                     const diffMs = midnightNextDay.getTime() - openedAt.getTime();
                     hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
@@ -178,9 +179,13 @@ export async function GET(req: Request) {
                     }
                 }
 
-                // Время закрытия - полночь следующего дня
-                const midnightNextDay = new Date(`${ymd}T00:00:00`);
-                midnightNextDay.setDate(midnightNextDay.getDate() + 1);
+                // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
+                const nextDayYmd = formatInTimeZone(new Date(`${ymd}T12:00:00`), TZ, 'yyyy-MM-dd');
+                const nextDayDate = new Date(nextDayYmd);
+                nextDayDate.setDate(nextDayDate.getDate() + 1);
+                const nextDayYmdStr = formatInTimeZone(nextDayDate, TZ, 'yyyy-MM-dd');
+                const midnightNextDayStr = `${nextDayYmdStr}T00:00:00`;
+                const midnightNextDay = fromZonedTime(midnightNextDayStr, TZ);
                 const closedAt = midnightNextDay.toISOString();
 
                 // Обновляем смену

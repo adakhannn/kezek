@@ -1,5 +1,5 @@
 // apps/web/src/app/api/staff/shift/close/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
@@ -130,9 +130,15 @@ export async function POST(req: Request) {
         let guaranteedAmount = 0;
         let topupAmount = 0;
 
-        // Время закрытия - полночь следующего дня (как в cron job)
-        const midnightNextDay = new Date(`${ymd}T00:00:00`);
-        midnightNextDay.setDate(midnightNextDay.getDate() + 1);
+        // Время закрытия - полночь следующего дня в правильном часовом поясе (как в cron job)
+        // Создаем дату следующего дня в часовом поясе TZ
+        const nextDayYmd = formatInTimeZone(new Date(`${ymd}T12:00:00`), TZ, 'yyyy-MM-dd');
+        const nextDayDate = new Date(nextDayYmd);
+        nextDayDate.setDate(nextDayDate.getDate() + 1);
+        const nextDayYmdStr = formatInTimeZone(nextDayDate, TZ, 'yyyy-MM-dd');
+        const midnightNextDayStr = `${nextDayYmdStr}T00:00:00`;
+        // Преобразуем в UTC с учетом часового пояса TZ
+        const midnightNextDay = fromZonedTime(midnightNextDayStr, TZ);
         const closedAt = midnightNextDay.toISOString();
 
         if (hourlyRate && existing.opened_at) {
@@ -141,6 +147,16 @@ export async function POST(req: Request) {
             const openedAt = new Date(existing.opened_at);
             const diffMs = midnightNextDay.getTime() - openedAt.getTime();
             hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // округляем до 2 знаков
+            
+            console.log('[staff/shift/close] Hours calculation:', {
+                ymd,
+                openedAt: existing.opened_at,
+                openedAtDate: openedAt.toISOString(),
+                midnightNextDayStr,
+                midnightNextDay: midnightNextDay.toISOString(),
+                diffMs,
+                hoursWorked,
+            });
 
             // Гарантированная сумма за выход
             guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
