@@ -179,6 +179,12 @@ export async function GET(req: Request) {
                     }
                 }
 
+                // Финальные значения для сохранения
+                // Если есть гарантированная сумма и она больше базовой доли, используем её
+                const finalMasterShare = (guaranteedAmount > masterShare) ? guaranteedAmount : masterShare;
+                // Скорректированная доля бизнеса (вычитаем доплату за выход, если она была)
+                const finalSalonShare = Math.max(0, salonShare - topupAmount);
+
                 // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
                 const nextDayYmd = formatInTimeZone(new Date(`${ymd}T12:00:00`), TZ, 'yyyy-MM-dd');
                 const nextDayDate = new Date(nextDayYmd);
@@ -196,8 +202,8 @@ export async function GET(req: Request) {
                         consumables_amount: finalConsumablesAmount,
                         percent_master: normalizedMaster,
                         percent_salon: normalizedSalon,
-                        master_share: masterShare,
-                        salon_share: salonShare,
+                        master_share: finalMasterShare,
+                        salon_share: finalSalonShare,
                         hours_worked: hoursWorked,
                         hourly_rate: hourlyRate,
                         guaranteed_amount: guaranteedAmount,

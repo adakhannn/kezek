@@ -167,6 +167,12 @@ export async function POST(req: Request) {
             }
         }
 
+        // Финальные значения для сохранения
+        // Если есть гарантированная сумма и она больше базовой доли, используем её
+        const finalMasterShare = (guaranteedAmount > masterShare) ? guaranteedAmount : masterShare;
+        // Скорректированная доля бизнеса (вычитаем доплату за выход, если она была)
+        const finalSalonShare = Math.max(0, salonShare - topupAmount);
+
         const updatePayload: {
             total_amount: number;
             consumables_amount: number;
@@ -185,8 +191,8 @@ export async function POST(req: Request) {
             consumables_amount: finalConsumablesAmount,
             percent_master: normalizedMaster,
             percent_salon: normalizedSalon,
-            master_share: masterShare,
-            salon_share: salonShare,
+            master_share: finalMasterShare,
+            salon_share: finalSalonShare,
             hours_worked: hoursWorked,
             hourly_rate: hourlyRate,
             guaranteed_amount: guaranteedAmount,

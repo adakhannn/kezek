@@ -14,10 +14,10 @@ SELECT
     guaranteed_amount,
     master_share,
     salon_share,
+    topup_amount,
     total_amount
 FROM public.staff_shifts
 WHERE shift_date = '2026-01-11'
-  AND status = 'open'
   -- Раскомментируйте и укажите ID сотрудника, если нужно исправить только его смену:
   -- AND staff_id = '41a2a539-fa66-4978-ae59-962b9c2bd34d'
 ORDER BY opened_at DESC
@@ -27,6 +27,7 @@ LIMIT 5;
 -- Устанавливаем 12 часов работы и закрываем смену
 
 -- Вариант 1: Если смена открыта с 10:06, закрываем её в 22:06 того же дня
+-- И правильно применяем гарантированную оплату
 UPDATE public.staff_shifts
 SET 
     hours_worked = 12.0,
@@ -43,19 +44,26 @@ SET
         THEN ROUND(12.0 * hourly_rate, 2)
         ELSE master_share
     END,
+    -- Скорректированная доля бизнеса (вычитаем доплату за выход, если она была)
     salon_share = CASE 
         WHEN hourly_rate IS NOT NULL AND ROUND(12.0 * hourly_rate, 2) > master_share 
-        THEN salon_share - (ROUND(12.0 * hourly_rate, 2) - master_share)
+        THEN GREATEST(0, salon_share - (ROUND(12.0 * hourly_rate, 2) - master_share))
         ELSE salon_share
+    END,
+    -- Доплата владельца
+    topup_amount = CASE 
+        WHEN hourly_rate IS NOT NULL AND ROUND(12.0 * hourly_rate, 2) > master_share 
+        THEN ROUND(12.0 * hourly_rate, 2) - master_share
+        ELSE 0
     END,
     updated_at = timezone('utc'::text, now())
 WHERE shift_date = '2026-01-11'
-  AND status = 'open'
+  AND (status = 'open' OR status = 'closed')  -- Можно исправить и открытую, и закрытую смену
   AND opened_at::date = '2026-01-11'
   -- Раскомментируйте и укажите конкретный ID смены или ID сотрудника, если нужно исправить только одну:
   -- AND id = 'SHIFT_ID_HERE'
   -- AND staff_id = '41a2a539-fa66-4978-ae59-962b9c2bd34d'
-RETURNING id, shift_date, status, hours_worked, guaranteed_amount, master_share, salon_share, closed_at;
+RETURNING id, shift_date, status, hours_worked, hourly_rate, guaranteed_amount, master_share, salon_share, topup_amount, closed_at;
 
 -- Проверяем результат
 SELECT 
