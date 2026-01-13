@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
         // Получаем всех сотрудников бизнеса
         const { data: staffList, error: staffError } = await supabase
             .from('staff')
-            .select('id, full_name, is_active')
+            .select('id, full_name, is_active, hourly_rate, percent_master, percent_salon')
             .eq('biz_id', bizId)
             .order('full_name');
 
@@ -54,8 +55,11 @@ export async function GET(req: Request) {
             );
         }
 
+        // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
+        const admin = getServiceClient();
+
         // Получаем все смены за период
-        const { data: allShifts, error: shiftsError } = await supabase
+        const { data: allShifts, error: shiftsError } = await admin
             .from('staff_shifts')
             .select('*')
             .eq('biz_id', bizId)
@@ -71,6 +75,43 @@ export async function GET(req: Request) {
             );
         }
 
+        // Получаем все позиции (клиентов) для всех смен
+        const shiftIds = (allShifts || []).map(s => s.id);
+        const shiftItemsMap: Record<string, Array<{
+            id: string;
+            client_name: string | null;
+            service_name: string | null;
+            service_amount: number;
+            consumables_amount: number;
+        }>> = {};
+        
+        if (shiftIds.length > 0) {
+            const { data: itemsData, error: itemsError } = await admin
+                .from('staff_shift_items')
+                .select('id, shift_id, client_name, service_name, service_amount, consumables_amount')
+                .in('shift_id', shiftIds)
+                .order('created_at', { ascending: true });
+
+            if (itemsError) {
+                console.error('Error loading shift items:', itemsError);
+            } else {
+                // Группируем по shift_id
+                for (const item of itemsData || []) {
+                    const shiftId = item.shift_id;
+                    if (!shiftItemsMap[shiftId]) {
+                        shiftItemsMap[shiftId] = [];
+                    }
+                    shiftItemsMap[shiftId].push({
+                        id: item.id,
+                        client_name: item.client_name,
+                        service_name: item.service_name,
+                        service_amount: Number(item.service_amount ?? 0),
+                        consumables_amount: Number(item.consumables_amount ?? 0),
+                    });
+                }
+            }
+        }
+
         // Группируем смены по сотрудникам и считаем статистику
         const staffStats = (staffList || []).map((staff) => {
             const staffShifts = (allShifts || []).filter((s) => s.staff_id === staff.id);
@@ -83,7 +124,7 @@ export async function GET(req: Request) {
             let totalConsumables = 0;
             let totalLateMinutes = 0;
 
-            // Считаем только закрытые смены для итогов
+            // Считаем закрытые смены (используем сохраненные значения)
             for (const shift of closedShifts) {
                 totalAmount += Number(shift.total_amount ?? 0);
                 totalMaster += Number(shift.master_share ?? 0);
@@ -92,12 +133,45 @@ export async function GET(req: Request) {
                 totalLateMinutes += Number(shift.late_minutes ?? 0);
             }
 
-            // Для открытых смен тоже считаем текущие значения
+            // Для открытых смен динамически рассчитываем из позиций
             for (const shift of openShifts) {
-                totalAmount += Number(shift.total_amount ?? 0);
-                totalMaster += Number(shift.master_share ?? 0);
-                totalSalon += Number(shift.salon_share ?? 0);
-                totalConsumables += Number(shift.consumables_amount ?? 0);
+                const shiftItems = shiftItemsMap[shift.id] || [];
+                
+                // Считаем суммы из позиций
+                const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
+                const shiftConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
+                
+                // Получаем проценты из смены или из профиля сотрудника
+                const shiftPercentMaster = Number(shift.percent_master ?? staff.percent_master ?? 60);
+                const shiftPercentSalon = Number(shift.percent_salon ?? staff.percent_salon ?? 40);
+                const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
+                const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
+                
+                // Базовая доля сотрудника
+                const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
+                const baseSalonShare = shiftTotalAmount - baseMasterShare;
+                
+                // Гарантированная сумма
+                const hourlyRate = shift.hourly_rate ? Number(shift.hourly_rate) : (staff.hourly_rate ? Number(staff.hourly_rate) : null);
+                let guaranteedAmount = 0;
+                
+                if (hourlyRate && shift.opened_at) {
+                    const openedAt = new Date(shift.opened_at);
+                    const now = new Date();
+                    const diffMs = now.getTime() - openedAt.getTime();
+                    const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
+                    guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
+                }
+                
+                // Применяем гарантированную сумму, если она больше базовой доли
+                const finalMasterShare = guaranteedAmount > baseMasterShare ? guaranteedAmount : baseMasterShare;
+                const topupAmount = guaranteedAmount > baseMasterShare ? (guaranteedAmount - baseMasterShare) : 0;
+                const finalSalonShare = baseSalonShare - topupAmount;
+                
+                totalAmount += shiftTotalAmount;
+                totalMaster += finalMasterShare;
+                totalSalon += Math.max(0, finalSalonShare);
+                totalConsumables += shiftConsumables;
                 totalLateMinutes += Number(shift.late_minutes ?? 0);
             }
 
