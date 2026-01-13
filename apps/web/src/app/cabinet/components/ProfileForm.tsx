@@ -241,7 +241,7 @@ export default function ProfileForm() {
                             </svg>
                             <div>
                                 <p className="font-medium">{t('cabinet.profile.phone.warning.title', 'Заполните номер телефона')}</p>
-                                <p className="mt-0.5 text-amber-700 dark:text-amber-300">{t('cabinet.profile.phone.warning.desc', 'Это нужно для подтверждения WhatsApp и связи с вами')}</p>
+                                <p className="mt-0.5 text-amber-700 dark:text-amber-300">{t('cabinet.profile.phone.warning.desc', 'Это нужно для связи с вами')}</p>
                             </div>
                         </div>
                     ) : (
@@ -273,6 +273,8 @@ export default function ProfileForm() {
                                 className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                             />
                         </label>
+                        {/* WhatsApp временно скрыт */}
+                        {false && (
                         <div className="space-y-2">
                             <label className="flex items-center justify-between cursor-pointer">
                                 <div className="flex items-center gap-2">
@@ -357,6 +359,7 @@ export default function ProfileForm() {
                                 </div>
                             )}
                         </div>
+                        )}
 
                         {/* Telegram */}
                         <label className="flex items-center justify-between cursor-pointer">

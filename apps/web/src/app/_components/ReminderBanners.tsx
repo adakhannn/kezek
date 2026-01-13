@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 
 import { NameReminderBanner } from './NameReminderBanner';
 import { TelegramReminderBanner } from './TelegramReminderBanner';
-import { WhatsAppReminderBanner } from './WhatsAppReminderBanner';
 
 import { supabase } from '@/lib/supabaseClient';
 
@@ -66,17 +65,15 @@ export function ReminderBanners() {
                     }>();
 
                 const hasName = !!profile?.full_name?.trim();
-                // WhatsApp: нужен и phone в auth, и whatsapp_verified в профиле
-                const hasWhatsApp = !!(user.phone || profile?.phone) && !!profile?.whatsapp_verified;
+                // WhatsApp временно скрыт
+                // const hasWhatsApp = !!(user.phone || profile?.phone) && !!profile?.whatsapp_verified;
                 const hasTelegram = !!profile?.telegram_id && !!profile?.telegram_verified;
 
                 if (mounted) {
-                    // Приоритет: имя → WhatsApp → Telegram
+                    // Приоритет: имя → Telegram (WhatsApp временно скрыт)
                     // Показываем только один баннер за раз
                     if (!hasName) {
                         setState({ showName: true, showWhatsApp: false, showTelegram: false, loading: false });
-                    } else if (!hasWhatsApp) {
-                        setState({ showName: false, showWhatsApp: true, showTelegram: false, loading: false });
                     } else if (!hasTelegram) {
                         setState({ showName: false, showWhatsApp: false, showTelegram: true, loading: false });
                     } else {
@@ -114,7 +111,8 @@ export function ReminderBanners() {
     return (
         <>
             {state.showName && <NameReminderBanner />}
-            {state.showWhatsApp && <WhatsAppReminderBanner />}
+            {/* WhatsApp временно скрыт */}
+            {/* {state.showWhatsApp && <WhatsAppReminderBanner />} */}
             {state.showTelegram && <TelegramReminderBanner />}
         </>
     );
