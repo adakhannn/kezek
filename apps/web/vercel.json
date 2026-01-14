@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/close-shifts",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/recalculate-ratings",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
+
