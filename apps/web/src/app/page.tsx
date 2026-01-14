@@ -15,6 +15,7 @@ type Business = {
     address: string | null;
     phones: string[] | null;
     categories: string[] | null;
+    rating_score: number | null;
 };
 
 export default async function Home({
@@ -30,7 +31,7 @@ export default async function Home({
     // базовый запрос по бизнесам
     let query = supabase
         .from('businesses')
-        .select('id,slug,name,address,phones,categories', {count: 'exact'})
+        .select('id,slug,name,address,phones,categories,rating_score', {count: 'exact'})
         .eq('is_approved', true);
 
     if (q) {
@@ -47,7 +48,8 @@ export default async function Home({
     // пагинация
     const from = (pageNum - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    query = query.range(from, to).order('name');
+    // Сортируем по рейтингу (лучшие первыми), затем по имени
+    query = query.range(from, to).order('rating_score', { ascending: false, nullsFirst: false }).order('name', { ascending: true });
 
     const {data: businesses, count} = await query;
 
@@ -83,11 +85,23 @@ export default async function Home({
                             <div className="h-full bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-md hover:shadow-xl border border-gray-200 dark:border-gray-800 transition-all duration-300 hover:-translate-y-1 flex flex-col">
                                 <div className="flex-1 space-y-4">
                                     <div>
-                                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                            <Link href={`/b/${b.slug}`} className="hover:underline">
-                                                {b.name}
-                                            </Link>
-                                        </h2>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                                <Link href={`/b/${b.slug}`} className="hover:underline">
+                                                    {b.name}
+                                                </Link>
+                                            </h2>
+                                            {b.rating_score !== null && (
+                                                <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                                                    <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                                                        {b.rating_score.toFixed(1)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                         {b.address && (
                                             <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

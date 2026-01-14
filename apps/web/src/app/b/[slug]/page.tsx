@@ -18,12 +18,12 @@ async function getData(slug: string) {
     }
 
     const [biz] = await q(
-        `businesses?select=id,slug,name,address,phones&slug=eq.${slug}&is_approved=eq.true&limit=1`
+        `businesses?select=id,slug,name,address,phones,rating_score&slug=eq.${slug}&is_approved=eq.true&limit=1`
     );
     if (!biz) return null;
 
     const branches = await q(
-        `branches?select=id,name,address&biz_id=eq.${biz.id}&is_active=eq.true&order=name.asc`
+        `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`
     );
 
     // все активные услуги бизнеса (дальше фильтруем по филиалу)
@@ -33,7 +33,7 @@ async function getData(slug: string) {
 
     // активные мастера с их "родным" филиалом и аватаркой
     const staff = await q(
-        `staff?select=id,full_name,branch_id,avatar_url&biz_id=eq.${biz.id}&is_active=eq.true&order=full_name.asc`
+        `staff?select=id,full_name,branch_id,avatar_url,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=full_name.asc`
     );
 
     return { biz, branches, services, staff };
