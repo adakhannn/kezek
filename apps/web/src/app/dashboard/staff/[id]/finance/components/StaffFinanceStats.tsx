@@ -128,6 +128,84 @@ function ShiftCard({
                             </div>
                         </div>
                     )}
+                    {shift.status === 'closed' && shift.hours_worked !== null && (
+                        <div className="mt-1">
+                            <button
+                                type="button"
+                                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const current = shift.hours_worked ?? 0;
+                                    const input = window.prompt(
+                                        t(
+                                            'finance.staffStats.editHoursPrompt',
+                                            'Введите фактическое количество отработанных часов для этой смены'
+                                        ),
+                                        current.toFixed(2)
+                                    );
+                                    if (!input) return;
+                                    const next = Number(input.replace(',', '.'));
+                                    if (!Number.isFinite(next) || next < 0) {
+                                        alert(
+                                            t(
+                                                'finance.staffStats.editHoursInvalid',
+                                                'Некорректное значение часов'
+                                            )
+                                        );
+                                        return;
+                                    }
+                                    try {
+                                        const res = await fetch(
+                                            `/api/dashboard/staff-shifts/${shift.id}/update-hours`,
+                                            {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                },
+                                                body: JSON.stringify({
+                                                    hours_worked: next,
+                                                }),
+                                            }
+                                        );
+                                        const json = await res.json().catch(() => ({}));
+                                        if (!res.ok || !json.ok) {
+                                            throw new Error(json.error || `HTTP_${res.status}`);
+                                        }
+                                        // Обновляем страницу, чтобы подтянуть актуальную статистику
+                                        window.location.reload();
+                                    } catch (err) {
+                                        console.error('Failed to update shift hours', err);
+                                        alert(
+                                            t(
+                                                'finance.staffStats.editHoursError',
+                                                'Не удалось обновить часы. Попробуйте позже.'
+                                            )
+                                        );
+                                    }
+                                }}
+                            >
+                                <svg
+                                    className="h-3 w-3"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15.232 5.232l3.536 3.536M9 11l4-4 6 6M5 19h4.586a1 1 0 00.707-.293l9.414-9.414a2 2 0 000-2.828l-2.172-2.172a2 2 0 00-2.828 0L5 13.586V19z"
+                                    />
+                                </svg>
+                                <span>
+                                    {t(
+                                        'finance.staffStats.editHours',
+                                        'Исправить часы'
+                                    )}
+                                </span>
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <button
                     type="button"
