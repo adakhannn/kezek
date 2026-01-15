@@ -1,9 +1,9 @@
 // apps/web/src/app/api/cron/close-shifts/route.ts
-import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getServiceClient } from '@/lib/supabaseService';
-import { TZ } from '@/lib/time';
+import { TZ, dateAtTz } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -160,14 +160,13 @@ export async function GET(req: Request) {
 
                 if (hourlyRate && shift.opened_at) {
                     const openedAt = new Date(shift.opened_at);
-                    // Используем полночь следующего дня в правильном часовом поясе TZ
-                    const nextDayYmd = formatInTimeZone(new Date(`${ymd}T12:00:00`), TZ, 'yyyy-MM-dd');
-                    const nextDayDate = new Date(nextDayYmd);
-                    nextDayDate.setDate(nextDayDate.getDate() + 1);
-                    const nextDayYmdStr = formatInTimeZone(nextDayDate, TZ, 'yyyy-MM-dd');
-                    const midnightNextDayStr = `${nextDayYmdStr}T00:00:00`;
-                    // Преобразуем в UTC с учетом часового пояса TZ
-                    const midnightNextDay = fromZonedTime(midnightNextDayStr, TZ);
+                    // ВАЖНО: для cron job используем полночь следующего дня как время закрытия
+                    // (так как cron закрывает смены автоматически в полночь)
+                    const todayInTz = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+                    const todayDate = new Date(todayInTz + 'T12:00:00');
+                    todayDate.setDate(todayDate.getDate() + 1);
+                    const nextDayYmd = formatInTimeZone(todayDate, TZ, 'yyyy-MM-dd');
+                    const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
                     
                     const diffMs = midnightNextDay.getTime() - openedAt.getTime();
                     hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
@@ -186,12 +185,11 @@ export async function GET(req: Request) {
                 const finalSalonShare = Math.max(0, salonShare - topupAmount);
 
                 // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
-                const nextDayYmd = formatInTimeZone(new Date(`${ymd}T12:00:00`), TZ, 'yyyy-MM-dd');
-                const nextDayDate = new Date(nextDayYmd);
-                nextDayDate.setDate(nextDayDate.getDate() + 1);
-                const nextDayYmdStr = formatInTimeZone(nextDayDate, TZ, 'yyyy-MM-dd');
-                const midnightNextDayStr = `${nextDayYmdStr}T00:00:00`;
-                const midnightNextDay = fromZonedTime(midnightNextDayStr, TZ);
+                const todayInTz = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+                const todayDate = new Date(todayInTz + 'T12:00:00');
+                todayDate.setDate(todayDate.getDate() + 1);
+                const nextDayYmd = formatInTimeZone(todayDate, TZ, 'yyyy-MM-dd');
+                const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
                 const closedAt = midnightNextDay.toISOString();
 
                 // Обновляем смену

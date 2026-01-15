@@ -1,10 +1,10 @@
 // apps/web/src/app/api/staff/shift/close/route.ts
-import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
-import { TZ } from '@/lib/time';
+import { TZ, dateAtTz } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -130,29 +130,31 @@ export async function POST(req: Request) {
         let guaranteedAmount = 0;
         let topupAmount = 0;
 
-        // Время закрытия - полночь следующего дня в правильном часовом поясе (как в cron job)
-        // Создаем дату следующего дня в часовом поясе TZ
-        const nextDayYmd = formatInTimeZone(new Date(`${ymd}T12:00:00`), TZ, 'yyyy-MM-dd');
-        const nextDayDate = new Date(nextDayYmd);
-        nextDayDate.setDate(nextDayDate.getDate() + 1);
-        const nextDayYmdStr = formatInTimeZone(nextDayDate, TZ, 'yyyy-MM-dd');
-        const midnightNextDayStr = `${nextDayYmdStr}T00:00:00`;
-        // Преобразуем в UTC с учетом часового пояса TZ
-        const midnightNextDay = fromZonedTime(midnightNextDayStr, TZ);
+        // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
+        // Правильно вычисляем следующую дату в часовом поясе TZ
+        const todayInTz = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const todayDate = new Date(todayInTz + 'T12:00:00'); // Создаем дату в локальном времени для манипуляций
+        todayDate.setDate(todayDate.getDate() + 1);
+        const nextDayYmd = formatInTimeZone(todayDate, TZ, 'yyyy-MM-dd');
+        // Создаем полночь следующего дня в часовом поясе TZ
+        const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
         const closedAt = midnightNextDay.toISOString();
 
         if (hourlyRate && existing.opened_at) {
             // Вычисляем количество отработанных часов
-            // Используем полночь следующего дня как время закрытия для расчета часов
+            // opened_at хранится в UTC в базе данных
             const openedAt = new Date(existing.opened_at);
-            const diffMs = midnightNextDay.getTime() - openedAt.getTime();
+            // Используем текущее время (now) для расчета, а не полночь следующего дня
+            // Это более точно отражает реальное время работы
+            const currentTime = now;
+            const diffMs = currentTime.getTime() - openedAt.getTime();
             hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // округляем до 2 знаков
             
             console.log('[staff/shift/close] Hours calculation:', {
                 ymd,
                 openedAt: existing.opened_at,
                 openedAtDate: openedAt.toISOString(),
-                midnightNextDayStr,
+                now: now.toISOString(),
                 midnightNextDay: midnightNextDay.toISOString(),
                 diffMs,
                 hoursWorked,
