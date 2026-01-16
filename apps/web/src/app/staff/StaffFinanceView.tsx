@@ -347,15 +347,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     }, [items, isOpen, isInitialLoad, isReadOnly]);
 
     // Автообновление часов работы для открытой смены (каждую минуту)
-    useEffect(() => {
-        if (!isOpen || !hourlyRate) return;
+    // НЕ обновляем автоматически, чтобы не сбрасывать открытые формы добавления клиентов
+    // useEffect(() => {
+    //     if (!isOpen || !hourlyRate) return;
 
-        const interval = setInterval(() => {
-            void load();
-        }, 60000); // обновляем каждую минуту
+    //     const interval = setInterval(() => {
+    //         void load();
+    //     }, 60000); // обновляем каждую минуту
 
-        return () => clearInterval(interval);
-    }, [isOpen, hourlyRate]);
+    //     return () => clearInterval(interval);
+    // }, [isOpen, hourlyRate]);
 
     const handleOpenShift = async () => {
         setSaving(true);
