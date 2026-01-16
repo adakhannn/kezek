@@ -553,23 +553,13 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         }
     }
 
-    // Для закрытой смены используем сохранённые значения guaranteed_amount
-    // Если есть гарантированная сумма, она и является итоговой суммой к получению
-    // topup_amount - это доплата владельца (разница между гарантией и базовой долей)
+    // Для закрытой смены используем сохранённые значения из БД
     if (isClosed && todayShift) {
-        const guaranteed = todayShift.guaranteed_amount ?? null;
-        if (guaranteed !== null && guaranteed > 0) {
-            // Итоговая сумма сотрудника = гарантированная сумма
-            mShare = Math.round(guaranteed * 100) / 100;
-            // Бизнес получает долю от выручки, но доплачивает разницу (topup_amount), если гарантия больше базовой доли
-            const topup = todayShift.topup_amount ?? 0;
-            // sShare = доля бизнеса от выручки - доплата владельца
-            sShare = baseBizShare - topup;
-        } else if (guaranteed !== null && guaranteed === 0) {
-            // Если гарантированная сумма = 0, используем базовую долю
-            mShare = baseStaffShare;
-            sShare = baseBizShare;
-        }
+        // Используем сохранённые значения из смены (они уже правильно рассчитаны при закрытии)
+        mShare = Math.round((todayShift.master_share ?? 0) * 100) / 100;
+        sShare = Math.round((todayShift.salon_share ?? 0) * 100) / 100;
+        // Также обновляем totalAmount для отображения оборота
+        // totalAmount уже вычислен выше, но для закрытой смены используем значение из БД
     }
 
     const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
@@ -771,32 +761,50 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                 </div>
 
                     {/* Краткое резюме по деньгам за смену */}
-                    {todayShift && (
-                        <div className="mt-4 grid sm:grid-cols-2 gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 px-4 py-3">
-                            <div className="space-y-1">
-                                <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                    {t('staff.finance.summary.toStaff', 'Итого сотруднику за смену')}
+                    {todayShift && (() => {
+                        // Общий оборот: для открытой смены - из items, для закрытой - из todayShift.total_amount
+                        const displayTotalAmount = isOpen 
+                            ? totalAmount 
+                            : (todayShift.total_amount ?? 0);
+                        
+                        return (
+                            <div className="mt-4 grid sm:grid-cols-3 gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 px-4 py-3">
+                                <div className="space-y-1">
+                                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                        {t('staff.finance.summary.totalTurnover', 'Общий оборот')}
+                                    </div>
+                                    <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                        {displayTotalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        {t('staff.finance.summary.totalServices', 'Сумма всех услуг за смену')}
+                                    </div>
                                 </div>
-                                <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
-                                    {mShare} {t('staff.finance.shift.som', 'сом')}
+                                <div className="space-y-1">
+                                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                        {t('staff.finance.summary.toStaff', 'Итого сотруднику за смену')}
+                                    </div>
+                                    <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+                                        {mShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        {t('staff.finance.summary.includesPercent', 'Учитывает проценты и оплату за выход')}
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    {t('staff.finance.summary.includesPercent', 'Учитывает проценты и оплату за выход')}
+                                <div className="space-y-1">
+                                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                        {t('staff.finance.summary.toBusiness', 'Итого бизнесу за смену')}
+                                    </div>
+                                    <div className="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
+                                        {sShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        {t('staff.finance.summary.includesConsumables', 'Включая все расходники и возможные доплаты сотруднику')}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="space-y-1">
-                                <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                    {t('staff.finance.summary.toBusiness', 'Итого бизнесу за смену')}
-                                </div>
-                                <div className="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
-                                    {sShare} {t('staff.finance.shift.som', 'сом')}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    {t('staff.finance.summary.includesConsumables', 'Включая все расходники и возможные доплаты сотруднику')}
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                        );
+                    })()}
 
                     {showShiftDetails && (
                         <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
