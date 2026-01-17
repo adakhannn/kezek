@@ -98,23 +98,46 @@ export async function POST(req: Request) {
         // Обновляем статус записей на "выполнено" (paid), если они были добавлены в смену
         // Делаем это сразу при добавлении записи в список, даже если суммы еще не заполнены
         // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
+        // Используем функцию с автоматическим применением акций
         const admin = getServiceClient();
+        const promotionInfoMap = new Map<string, { final_amount?: number; discount_percent?: number }>();
+        
         if (allBookingIds.length > 0) {
             for (const bookingId of allBookingIds) {
                 try {
-                    const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
+                    // Пытаемся использовать функцию с применением акций
+                    const { data: promotionResult, error: rpcError } = await admin.rpc('update_booking_status_with_promotion', {
                         p_booking_id: bookingId,
                         p_new_status: 'paid',
                     });
-                    if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
-                        // Если RPC не работает, используем прямой update
-                        const { error: updateError } = await admin
-                            .from('bookings')
-                            .update({ status: 'paid' })
-                            .eq('id', bookingId);
-                        if (updateError) {
-                            console.error(`Error updating booking ${bookingId} status:`, updateError);
+                    
+                    // Сохраняем информацию об акции, если она была применена
+                    if (promotionResult && promotionResult.applied) {
+                        promotionInfoMap.set(bookingId, {
+                            final_amount: promotionResult.final_amount,
+                            discount_percent: promotionResult.discount_percent,
+                        });
+                    }
+                    
+                    // Если функция не найдена, используем стандартную
+                    if (rpcError && (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist'))) {
+                        const { error: fallbackError } = await admin.rpc('update_booking_status_no_check', {
+                            p_booking_id: bookingId,
+                            p_new_status: 'paid',
+                        });
+                        if (fallbackError && !fallbackError.message?.includes('function') && !fallbackError.message?.includes('does not exist')) {
+                            // Если RPC не работает, используем прямой update
+                            const { error: updateError } = await admin
+                                .from('bookings')
+                                .update({ status: 'paid' })
+                                .eq('id', bookingId);
+                            if (updateError) {
+                                console.error(`Error updating booking ${bookingId} status:`, updateError);
+                            }
                         }
+                    } else if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+                        console.error(`Error applying promotion to booking ${bookingId}:`, rpcError);
+                        // Продолжаем выполнение, даже если акция не применилась
                     }
                 } catch (e) {
                     console.error(`Error updating booking ${bookingId} status:`, e);
@@ -124,6 +147,31 @@ export async function POST(req: Request) {
 
         // Вставляем новые позиции (фильтруем только для сохранения в БД)
         if (items.length > 0) {
+            // Получаем информацию о примененных акциях для booking_id
+            const bookingIdsWithPromotion = items
+                .map((it: { bookingId?: string | null; booking_id?: string | null }) => it.bookingId ?? it.booking_id ?? null)
+                .filter((id: string | null): id is string => !!id);
+            
+            const promotionMap = new Map<string, number>(); // booking_id -> final_amount
+            
+            if (bookingIdsWithPromotion.length > 0) {
+                const { data: bookingsWithPromotion } = await supabase
+                    .from('bookings')
+                    .select('id, promotion_applied')
+                    .in('id', bookingIdsWithPromotion);
+                
+                if (bookingsWithPromotion) {
+                    for (const booking of bookingsWithPromotion) {
+                        if (booking.promotion_applied && typeof booking.promotion_applied === 'object' && 'final_amount' in booking.promotion_applied) {
+                            const finalAmount = Number(booking.promotion_applied.final_amount);
+                            if (!isNaN(finalAmount) && finalAmount >= 0) {
+                                promotionMap.set(booking.id, finalAmount);
+                            }
+                        }
+                    }
+                }
+            }
+            
             const cleanItems = items
                 .map((it: {
                     clientName?: string;
@@ -136,14 +184,23 @@ export async function POST(req: Request) {
                     consumables_amount?: number;
                     bookingId?: string | null;
                     booking_id?: string | null;
-                }) => ({
-                    shift_id: shiftId,
-                    client_name: (it.clientName ?? it.client_name ?? '').trim() || null,
-                    service_name: (it.serviceName ?? it.service_name ?? '').trim() || null,
-                    service_amount: Number(it.serviceAmount ?? it.amount ?? 0) || 0,
-                    consumables_amount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
-                    booking_id: it.bookingId ?? it.booking_id ?? null,
-                }))
+                }) => {
+                    const bookingId = it.bookingId ?? it.booking_id ?? null;
+                    // Если есть примененная акция для этого booking_id, используем её сумму
+                    // Иначе используем сумму, указанную сотрудником
+                    const serviceAmount = bookingId && promotionMap.has(bookingId)
+                        ? promotionMap.get(bookingId)!
+                        : Number(it.serviceAmount ?? it.amount ?? 0) || 0;
+                    
+                    return {
+                        shift_id: shiftId,
+                        client_name: (it.clientName ?? it.client_name ?? '').trim() || null,
+                        service_name: (it.serviceName ?? it.service_name ?? '').trim() || null,
+                        service_amount: serviceAmount,
+                        consumables_amount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
+                        booking_id: bookingId,
+                    };
+                })
                 .filter((it: { service_amount: number; consumables_amount: number; booking_id: string | null }) => 
                     // Сохраняем в БД только если есть сумма ИЛИ booking_id (чтобы сохранить связь с записью)
                     it.service_amount > 0 || it.consumables_amount > 0 || it.booking_id !== null

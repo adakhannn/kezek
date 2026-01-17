@@ -3,6 +3,8 @@
 import BranchForm from '../BranchForm';
 import DeleteBranchButton from '../DeleteBranchButton';
 
+import BranchPromotionsPanel from './BranchPromotionsPanel';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { BranchScheduleEditor } from '@/components/admin/branches/BranchScheduleEditor';
 
@@ -67,6 +69,9 @@ export default function EditBranchPageClient({
                     apiBase="/api/branches"
                 />
             </div>
+
+            {/* Акции филиала */}
+            <BranchPromotionsPanel branchId={String(branch.id)} />
 
             {/* Временно скрыто */}
             {/* <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">

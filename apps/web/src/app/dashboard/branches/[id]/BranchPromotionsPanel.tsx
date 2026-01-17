@@ -1,0 +1,399 @@
+// apps/web/src/app/dashboard/branches/[id]/BranchPromotionsPanel.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
+type PromotionType = 'free_after_n_visits' | 'referral_free' | 'referral_discount_50' | 'birthday_discount' | 'first_visit_discount';
+
+type Promotion = {
+    id: string;
+    promotion_type: PromotionType;
+    params: Record<string, unknown>;
+    title_ru: string;
+    title_ky?: string | null;
+    title_en?: string | null;
+    description_ru?: string | null;
+    description_ky?: string | null;
+    description_en?: string | null;
+    is_active: boolean;
+    valid_from?: string | null;
+    valid_to?: string | null;
+    created_at: string;
+};
+
+const PROMOTION_TYPES: Array<{ value: PromotionType; label: string; description: string }> = [
+    { value: 'free_after_n_visits', label: 'Каждая N-я услуга бесплатно', description: 'Например, каждая 7-я стрижка бесплатно' },
+    { value: 'referral_free', label: 'Приведи друга — получи услугу бесплатно', description: 'Реферальный бонус: бесплатная услуга' },
+    { value: 'referral_discount_50', label: 'Приведи друга — получи скидку 50%', description: 'Реферальный бонус: скидка 50%' },
+    { value: 'first_visit_discount', label: 'Скидка за первый визит', description: 'Специальная скидка для новых клиентов' },
+];
+
+export default function BranchPromotionsPanel({ branchId }: { branchId: string }) {
+    const { t } = useLanguage();
+    const [promotions, setPromotions] = useState<Promotion[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    const [formData, setFormData] = useState<{
+        promotion_type: PromotionType;
+        params: Record<string, unknown>;
+        title_ru: string;
+        is_active: boolean;
+        valid_from?: string | null;
+        valid_to?: string | null;
+    }>({
+        promotion_type: 'free_after_n_visits',
+        params: { visit_count: 7 },
+        title_ru: '',
+        is_active: true,
+        valid_from: null,
+        valid_to: null,
+    });
+
+    useEffect(() => {
+        loadPromotions();
+    }, [branchId]);
+
+    async function loadPromotions() {
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/dashboard/branches/${branchId}/promotions`);
+            const data = await res.json();
+            if (data.ok) {
+                setPromotions(data.promotions || []);
+            } else {
+                console.error('Failed to load promotions:', data.error);
+                alert(data.error || 'Ошибка загрузки акций');
+            }
+        } catch (error) {
+            console.error('Failed to load promotions:', error);
+            alert('Ошибка загрузки акций');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function startEdit(promotion: Promotion) {
+        setFormData({
+            promotion_type: promotion.promotion_type,
+            params: promotion.params || {},
+            title_ru: promotion.title_ru,
+            is_active: promotion.is_active,
+            valid_from: promotion.valid_from || null,
+            valid_to: promotion.valid_to || null,
+        });
+        setEditingId(promotion.id);
+        setShowForm(true);
+    }
+
+    function startCreate() {
+        setFormData({
+            promotion_type: 'free_after_n_visits',
+            params: { visit_count: 7 },
+            title_ru: '',
+            is_active: true,
+            valid_from: null,
+            valid_to: null,
+        });
+        setEditingId(null);
+        setShowForm(true);
+    }
+
+    function cancelForm() {
+        setShowForm(false);
+        setEditingId(null);
+    }
+
+    async function savePromotion() {
+        try {
+            const url = editingId
+                ? `/api/dashboard/branches/${branchId}/promotions/${editingId}`
+                : `/api/dashboard/branches/${branchId}/promotions`;
+            const method = editingId ? 'PATCH' : 'POST';
+
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await res.json();
+            if (data.ok) {
+                alert(editingId ? 'Акция обновлена' : 'Акция создана');
+                loadPromotions();
+                cancelForm();
+            } else {
+                alert(data.error || 'Ошибка сохранения акции');
+            }
+        } catch (error) {
+            console.error('Failed to save promotion:', error);
+            alert('Ошибка сохранения акции');
+        }
+    }
+
+    async function deletePromotion(id: string) {
+        if (!confirm('Удалить акцию?')) return;
+
+        try {
+            const res = await fetch(`/api/dashboard/branches/${branchId}/promotions/${id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await res.json();
+            if (data.ok) {
+                alert('Акция удалена');
+                loadPromotions();
+            } else {
+                alert(data.error || 'Ошибка удаления акции');
+            }
+        } catch (error) {
+            console.error('Failed to delete promotion:', error);
+            alert('Ошибка удаления акции');
+        }
+    }
+
+    function toggleActive(id: string, currentStatus: boolean) {
+        fetch(`/api/dashboard/branches/${branchId}/promotions/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_active: !currentStatus }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.ok) {
+                    loadPromotions();
+                } else {
+                    alert(data.error || 'Ошибка обновления акции');
+                }
+            })
+            .catch((error) => {
+                console.error('Failed to toggle promotion:', error);
+                alert('Ошибка обновления акции');
+            });
+    }
+
+    const selectedType = PROMOTION_TYPES.find((t) => t.value === formData.promotion_type);
+
+    return (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        {t('branches.promotions.title', 'Акции филиала')}
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {t('branches.promotions.subtitle', 'Управление акциями и специальными предложениями')}
+                    </p>
+                </div>
+                {!showForm && (
+                    <Button onClick={startCreate} size="sm">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        {t('branches.promotions.add', 'Добавить акцию')}
+                    </Button>
+                )}
+            </div>
+
+            {showForm ? (
+                <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        {editingId ? 'Редактирование акции' : 'Создание акции'}
+                    </h3>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                            Тип акции *
+                        </label>
+                        <select
+                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            value={formData.promotion_type}
+                            onChange={(e) => {
+                                const newType = e.target.value as PromotionType;
+                                const newParams: Record<string, unknown> = {};
+                                if (newType === 'free_after_n_visits') {
+                                    newParams.visit_count = 7;
+                                } else if (newType === 'birthday_discount' || newType === 'first_visit_discount') {
+                                    newParams.discount_percent = 20;
+                                }
+                                setFormData((f) => ({ ...f, promotion_type: newType, params: newParams }));
+                            }}
+                        >
+                            {PROMOTION_TYPES.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                    {type.label}
+                                </option>
+                            ))}
+                        </select>
+                        {selectedType && (
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{selectedType.description}</p>
+                        )}
+                    </div>
+
+                    {formData.promotion_type === 'free_after_n_visits' && (
+                        <Input
+                            label="Количество посещений (N)"
+                            type="number"
+                            min={1}
+                            value={String((formData.params.visit_count as number) || 7)}
+                            onChange={(e) =>
+                                setFormData((f) => ({
+                                    ...f,
+                                    params: { ...f.params, visit_count: Number(e.target.value) || 7 },
+                                }))
+                            }
+                            helperText="Каждая N-я услуга будет бесплатной (например, 7-я)"
+                        />
+                    )}
+
+                    {(formData.promotion_type === 'birthday_discount' || formData.promotion_type === 'first_visit_discount') && (
+                        <Input
+                            label="Процент скидки"
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={String((formData.params.discount_percent as number) || 20)}
+                            onChange={(e) =>
+                                setFormData((f) => ({
+                                    ...f,
+                                    params: { ...f.params, discount_percent: Number(e.target.value) || 20 },
+                                }))
+                            }
+                            helperText="Размер скидки в процентах (1-100)"
+                        />
+                    )}
+
+                    <Input
+                        label="Название акции (русский) *"
+                        value={formData.title_ru}
+                        onChange={(e) => setFormData((f) => ({ ...f, title_ru: e.target.value }))}
+                        placeholder="Например: Каждая 7-я стрижка бесплатно"
+                        required
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label="Дата начала (опционально)"
+                            type="date"
+                            value={formData.valid_from || ''}
+                            onChange={(e) => setFormData((f) => ({ ...f, valid_from: e.target.value || null }))}
+                        />
+                        <Input
+                            label="Дата окончания (опционально)"
+                            type="date"
+                            value={formData.valid_to || ''}
+                            onChange={(e) => setFormData((f) => ({ ...f, valid_to: e.target.value || null }))}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <input
+                            type="checkbox"
+                            id="is_active"
+                            checked={formData.is_active}
+                            onChange={(e) => setFormData((f) => ({ ...f, is_active: e.target.checked }))}
+                            className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
+                        />
+                        <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                            Активна (отображается клиентам)
+                        </label>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <Button onClick={savePromotion} disabled={!formData.title_ru.trim()}>
+                            {editingId ? 'Сохранить' : 'Создать'}
+                        </Button>
+                        <Button variant="secondary" onClick={cancelForm}>
+                            Отмена
+                        </Button>
+                    </div>
+                </div>
+            ) : null}
+
+            {loading ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">Загрузка...</div>
+            ) : promotions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    {t('branches.promotions.empty', 'Нет акций. Добавьте первую акцию.')}
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {promotions.map((promotion) => {
+                        const typeLabel = PROMOTION_TYPES.find((t) => t.value === promotion.promotion_type)?.label || promotion.promotion_type;
+                        const params = promotion.params || {};
+
+                        return (
+                            <div
+                                key={promotion.id}
+                                className={`p-4 rounded-lg border ${
+                                    promotion.is_active
+                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                        : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                }`}
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">{promotion.title_ru}</h4>
+                                            <span
+                                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                    promotion.is_active
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                                                }`}
+                                            >
+                                                {promotion.is_active ? 'Активна' : 'Неактивна'}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">{typeLabel}</p>
+                                        {promotion.promotion_type === 'free_after_n_visits' && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Каждая {String(params.visit_count || 'N')}-я услуга бесплатно
+                                            </p>
+                                        )}
+                                        {(promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount') && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Скидка {String(params.discount_percent || 'N')}%
+                                            </p>
+                                        )}
+                                        {(promotion.valid_from || promotion.valid_to) && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Действует: {promotion.valid_from || 'с начала'} — {promotion.valid_to || 'без ограничений'}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => toggleActive(promotion.id, promotion.is_active)}
+                                            className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                                        >
+                                            {promotion.is_active ? 'Деактив.' : 'Актив.'}
+                                        </button>
+                                        <button
+                                            onClick={() => startEdit(promotion)}
+                                            className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                                        >
+                                            Редакт.
+                                        </button>
+                                        <button
+                                            onClick={() => deletePromotion(promotion.id)}
+                                            className="px-3 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+                                        >
+                                            Удалить
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+

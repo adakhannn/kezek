@@ -54,14 +54,37 @@ export async function POST(req: Request, context: unknown) {
         // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
         const newStatus = attended ? 'paid' : 'no_show';
 
-        // Сначала пробуем использовать специальную RPC функцию (если она есть)
-        const { error: rpcError } = await admin.rpc('update_booking_status_no_check', {
+        // Если статус = 'paid', используем функцию с автоматическим применением акций
+        // Иначе используем стандартную функцию обновления статуса
+        const rpcFunctionName = newStatus === 'paid' 
+            ? 'update_booking_status_with_promotion' 
+            : 'update_booking_status_no_check';
+
+        // Применяем статус (и акцию, если статус = 'paid')
+        const { error: rpcError, data: promotionResult } = await admin.rpc(rpcFunctionName, {
             p_booking_id: bookingId,
             p_new_status: newStatus,
         });
 
         // Если RPC успешно выполнен, возвращаем успех
         if (!rpcError) {
+            // Если применялась акция, возвращаем информацию о ней
+            if (newStatus === 'paid' && promotionResult) {
+                const result = promotionResult as { applied?: boolean; promotion_title?: string; discount_percent?: number; discount_amount?: number; final_amount?: number } | null;
+                const applied = result?.applied || false;
+                
+                return NextResponse.json({ 
+                    ok: true, 
+                    status: newStatus,
+                    promotion_applied: applied,
+                    promotion_info: applied ? {
+                        title: result?.promotion_title || '',
+                        discount_percent: result?.discount_percent || 0,
+                        discount_amount: result?.discount_amount || 0,
+                        final_amount: result?.final_amount || 0,
+                    } : null,
+                });
+            }
             return NextResponse.json({ ok: true, status: newStatus });
         }
 
