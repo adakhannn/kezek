@@ -10,7 +10,7 @@ type Dictionaries = Record<Locale, Translations>;
 
 const STORAGE_KEY = 'kezek_locale';
 
-const defaultLocale: Locale = 'ky';
+const defaultLocale: Locale = 'ru';
 
 const dictionaries: Dictionaries = {
     ky: {
