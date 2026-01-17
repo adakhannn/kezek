@@ -88,13 +88,21 @@ create policy "Biz owners/admins/managers can manage branch promotions"
     to authenticated
     using (
         biz_id in (
-            select biz_id from public.user_roles where user_id = auth.uid() and role_key in ('owner', 'admin', 'manager')
+            select ur.biz_id 
+            from public.user_roles ur
+            join public.roles r on ur.role_id = r.id
+            where ur.user_id = auth.uid() 
+              and r.key in ('owner', 'admin', 'manager')
         )
         or is_super_admin()
     )
     with check (
         biz_id in (
-            select biz_id from public.user_roles where user_id = auth.uid() and role_key in ('owner', 'admin', 'manager')
+            select ur.biz_id 
+            from public.user_roles ur
+            join public.roles r on ur.role_id = r.id
+            where ur.user_id = auth.uid() 
+              and r.key in ('owner', 'admin', 'manager')
         )
         or is_super_admin()
     );
@@ -163,7 +171,11 @@ create policy "Biz owners/admins/managers can view promotion usage"
     to authenticated
     using (
         biz_id in (
-            select biz_id from public.user_roles where user_id = auth.uid() and role_key in ('owner', 'admin', 'manager')
+            select ur.biz_id 
+            from public.user_roles ur
+            join public.roles r on ur.role_id = r.id
+            where ur.user_id = auth.uid() 
+              and r.key in ('owner', 'admin', 'manager')
         )
         or is_super_admin()
     );
@@ -217,7 +229,11 @@ create policy "Biz owners/admins/managers can view referrals"
     to authenticated
     using (
         biz_id in (
-            select biz_id from public.user_roles where user_id = auth.uid() and role_key in ('owner', 'admin', 'manager')
+            select ur.biz_id 
+            from public.user_roles ur
+            join public.roles r on ur.role_id = r.id
+            where ur.user_id = auth.uid() 
+              and r.key in ('owner', 'admin', 'manager')
         )
         or is_super_admin()
     );
