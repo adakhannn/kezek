@@ -123,6 +123,17 @@ export default function BizClient({ data }: { data: Data }) {
 
     /* ---------- auth ---------- */
     const [isAuthed, setIsAuthed] = useState<boolean>(false);
+    
+    // Модальное окно для гостевой брони
+    const [guestBookingModalOpen, setGuestBookingModalOpen] = useState(false);
+    const [guestBookingSlotTime, setGuestBookingSlotTime] = useState<Date | null>(null);
+    const [guestBookingForm, setGuestBookingForm] = useState({
+        client_name: '',
+        client_phone: '',
+        client_email: '',
+    });
+    const [guestBookingLoading, setGuestBookingLoading] = useState(false);
+    
     useEffect(() => {
         let ignore = false;
         (async () => {
@@ -917,13 +928,14 @@ export default function BizClient({ data }: { data: Data }) {
     );
 
     async function createBooking(slotTime: Date) {
-        if (!service) return alert('Выбери услугу');
-        if (!staffId) return alert('Выбери мастера');
-        if (!branchId) return alert('Выбери филиал');
+        if (!service) return alert(t('booking.selectService', 'Выберите услугу'));
+        if (!staffId) return alert(t('booking.selectMaster', 'Выберите мастера'));
+        if (!branchId) return alert(t('booking.selectBranch', 'Выберите филиал'));
 
-        // Требуем авторизацию для бронирования
+        // Если не авторизован, показываем модальное окно для гостевой брони
         if (!isAuthed) {
-            redirectToAuth();
+            setGuestBookingSlotTime(slotTime);
+            setGuestBookingModalOpen(true);
             return;
         }
 
@@ -970,6 +982,66 @@ export default function BizClient({ data }: { data: Data }) {
             alert(fmtErr(e, t));
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function createGuestBooking() {
+        if (!service || !staffId || !branchId || !guestBookingSlotTime) {
+            return;
+        }
+
+        // Валидация формы
+        const name = guestBookingForm.client_name.trim();
+        const phone = guestBookingForm.client_phone.trim();
+        
+        if (!name) {
+            alert(t('booking.guest.nameRequired', 'Введите ваше имя'));
+            return;
+        }
+        
+        if (!phone) {
+            alert(t('booking.guest.phoneRequired', 'Введите ваш телефон'));
+            return;
+        }
+
+        setGuestBookingLoading(true);
+        try {
+            const startISO = formatInTimeZone(guestBookingSlotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+            
+            const response = await fetch('/api/quick-book-guest', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    biz_id: biz.id,
+                    service_id: service.id,
+                    staff_id: staffId,
+                    start_at: startISO,
+                    client_name: name,
+                    client_phone: phone,
+                    client_email: guestBookingForm.client_email.trim() || null,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!result.ok) {
+                throw new Error(result.message || 'Ошибка при создании бронирования');
+            }
+
+            // Закрываем модальное окно
+            setGuestBookingModalOpen(false);
+            setGuestBookingForm({ client_name: '', client_phone: '', client_email: '' });
+            setGuestBookingSlotTime(null);
+
+            // Редирект на страницу бронирования
+            if (result.booking_id) {
+                location.href = `/booking/${result.booking_id}`;
+            }
+        } catch (e) {
+            console.error('[createGuestBooking] catch:', e);
+            alert(fmtErr(e, t));
+        } finally {
+            setGuestBookingLoading(false);
         }
     }
 
@@ -1589,6 +1661,97 @@ export default function BizClient({ data }: { data: Data }) {
                     </aside>
                 </div>
             </div>
+            
+            {/* Модальное окно для гостевой брони */}
+            {guestBookingModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !guestBookingLoading && setGuestBookingModalOpen(false)}>
+                    <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
+                        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {t('booking.guest.title', 'Быстрая бронь без регистрации')}
+                            </h3>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                {t('booking.guest.subtitle', 'Заполните ваши данные для бронирования')}
+                            </p>
+                        </div>
+                        
+                        <div className="px-4 py-4 space-y-3">
+                            {/* Имя */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t('booking.guest.name', 'Ваше имя')} <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={guestBookingForm.client_name}
+                                    onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_name: e.target.value })}
+                                    placeholder={t('booking.guest.namePlaceholder', 'Введите ваше имя')}
+                                    disabled={guestBookingLoading}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500"
+                                    autoFocus
+                                />
+                            </div>
+                            
+                            {/* Телефон */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t('booking.guest.phone', 'Телефон')} <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={guestBookingForm.client_phone}
+                                    onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_phone: e.target.value })}
+                                    placeholder={t('booking.guest.phonePlaceholder', '+996555123456')}
+                                    disabled={guestBookingLoading}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500"
+                                />
+                            </div>
+                            
+                            {/* Email (опционально) */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t('booking.guest.email', 'Email')} <span className="text-xs text-gray-400">({t('booking.guest.optional', 'необязательно')})</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    value={guestBookingForm.client_email}
+                                    onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_email: e.target.value })}
+                                    placeholder={t('booking.guest.emailPlaceholder', 'you@example.com')}
+                                    disabled={guestBookingLoading}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-800">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!guestBookingLoading) {
+                                        setGuestBookingModalOpen(false);
+                                        setGuestBookingForm({ client_name: '', client_phone: '', client_email: '' });
+                                        setGuestBookingSlotTime(null);
+                                    }
+                                }}
+                                disabled={guestBookingLoading}
+                                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
+                            >
+                                {t('booking.guest.cancel', 'Отмена')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={createGuestBooking}
+                                disabled={guestBookingLoading}
+                                className="rounded-lg border border-indigo-600 bg-indigo-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-400"
+                            >
+                                {guestBookingLoading 
+                                    ? t('booking.guest.booking', 'Бронируем...') 
+                                    : t('booking.guest.book', 'Забронировать')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

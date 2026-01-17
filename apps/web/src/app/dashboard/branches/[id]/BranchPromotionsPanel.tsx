@@ -25,11 +25,12 @@ type Promotion = {
     created_at: string;
 };
 
-const PROMOTION_TYPES: Array<{ value: PromotionType; label: string; description: string }> = [
-    { value: 'free_after_n_visits', label: 'Каждая N-я услуга бесплатно', description: 'Например, каждая 7-я стрижка бесплатно' },
-    { value: 'referral_free', label: 'Приведи друга — получи услугу бесплатно', description: 'Реферальный бонус: бесплатная услуга' },
-    { value: 'referral_discount_50', label: 'Приведи друга — получи скидку 50%', description: 'Реферальный бонус: скидка 50%' },
-    { value: 'first_visit_discount', label: 'Скидка за первый визит', description: 'Специальная скидка для новых клиентов' },
+// PROMOTION_TYPES будут переведены динамически через useLanguage
+const PROMOTION_TYPE_KEYS: Array<{ value: PromotionType; labelKey: string; descKey: string }> = [
+    { value: 'free_after_n_visits', labelKey: 'branches.promotions.type.freeAfterNVisits', descKey: 'branches.promotions.type.freeAfterNVisitsDesc' },
+    { value: 'referral_free', labelKey: 'branches.promotions.type.referralFree', descKey: 'branches.promotions.type.referralFreeDesc' },
+    { value: 'referral_discount_50', labelKey: 'branches.promotions.type.referralDiscount50', descKey: 'branches.promotions.type.referralDiscount50Desc' },
+    { value: 'first_visit_discount', labelKey: 'branches.promotions.type.firstVisitDiscount', descKey: 'branches.promotions.type.firstVisitDiscountDesc' },
 ];
 
 export default function BranchPromotionsPanel({ branchId }: { branchId: string }) {
@@ -68,11 +69,11 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                 setPromotions(data.promotions || []);
             } else {
                 console.error('Failed to load promotions:', data.error);
-                alert(data.error || 'Ошибка загрузки акций');
+                alert(data.error || t('branches.promotions.error.load', 'Ошибка загрузки акций'));
             }
         } catch (error) {
             console.error('Failed to load promotions:', error);
-            alert('Ошибка загрузки акций');
+            alert(t('branches.promotions.error.load', 'Ошибка загрузки акций'));
         } finally {
             setLoading(false);
         }
@@ -124,20 +125,20 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
 
             const data = await res.json();
             if (data.ok) {
-                alert(editingId ? 'Акция обновлена' : 'Акция создана');
+                alert(editingId ? t('branches.promotions.save.success', 'Акция обновлена') : t('branches.promotions.create.success', 'Акция создана'));
                 loadPromotions();
                 cancelForm();
             } else {
-                alert(data.error || 'Ошибка сохранения акции');
+                alert(data.error || t('branches.promotions.error.save', 'Ошибка сохранения акции'));
             }
         } catch (error) {
             console.error('Failed to save promotion:', error);
-            alert('Ошибка сохранения акции');
+            alert(t('branches.promotions.error.save', 'Ошибка сохранения акции'));
         }
     }
 
     async function deletePromotion(id: string) {
-        if (!confirm('Удалить акцию?')) return;
+        if (!confirm(t('branches.promotions.delete.confirm', 'Удалить акцию?'))) return;
 
         try {
             const res = await fetch(`/api/dashboard/branches/${branchId}/promotions/${id}`, {
@@ -146,14 +147,14 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
 
             const data = await res.json();
             if (data.ok) {
-                alert('Акция удалена');
+                alert(t('branches.promotions.delete.success', 'Акция удалена'));
                 loadPromotions();
             } else {
-                alert(data.error || 'Ошибка удаления акции');
+                alert(data.error || t('branches.promotions.error.delete', 'Ошибка удаления акции'));
             }
         } catch (error) {
             console.error('Failed to delete promotion:', error);
-            alert('Ошибка удаления акции');
+            alert(t('branches.promotions.error.delete', 'Ошибка удаления акции'));
         }
     }
 
@@ -168,16 +169,16 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                 if (data.ok) {
                     loadPromotions();
                 } else {
-                    alert(data.error || 'Ошибка обновления акции');
+                    alert(data.error || t('branches.promotions.error.update', 'Ошибка обновления акции'));
                 }
             })
             .catch((error) => {
                 console.error('Failed to toggle promotion:', error);
-                alert('Ошибка обновления акции');
+                alert(t('branches.promotions.error.update', 'Ошибка обновления акции'));
             });
     }
 
-    const selectedType = PROMOTION_TYPES.find((t) => t.value === formData.promotion_type);
+    const selectedTypeKey = PROMOTION_TYPE_KEYS.find((k) => k.value === formData.promotion_type);
 
     return (
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
@@ -203,12 +204,12 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
             {showForm ? (
                 <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        {editingId ? 'Редактирование акции' : 'Создание акции'}
+                        {editingId ? t('branches.promotions.edit.title', 'Редактирование акции') : t('branches.promotions.create.title', 'Создание акции')}
                     </h3>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Тип акции *
+                            {t('branches.promotions.type.label', 'Тип акции *')}
                         </label>
                         <select
                             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -224,20 +225,22 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                                 setFormData((f) => ({ ...f, promotion_type: newType, params: newParams }));
                             }}
                         >
-                            {PROMOTION_TYPES.map((type) => (
+                            {PROMOTION_TYPE_KEYS.map((type) => (
                                 <option key={type.value} value={type.value}>
-                                    {type.label}
+                                    {t(type.labelKey, type.value)}
                                 </option>
                             ))}
                         </select>
-                        {selectedType && (
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{selectedType.description}</p>
+                        {selectedTypeKey && (
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                {t(selectedTypeKey.descKey, '')}
+                            </p>
                         )}
                     </div>
 
                     {formData.promotion_type === 'free_after_n_visits' && (
                         <Input
-                            label="Количество посещений (N)"
+                            label={t('branches.promotions.visitCount.label', 'Количество посещений (N)')}
                             type="number"
                             min={1}
                             value={String((formData.params.visit_count as number) || 7)}
@@ -247,13 +250,13 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                                     params: { ...f.params, visit_count: Number(e.target.value) || 7 },
                                 }))
                             }
-                            helperText="Каждая N-я услуга будет бесплатной (например, 7-я)"
+                            helperText={t('branches.promotions.visitCount.help', 'Каждая N-я услуга будет бесплатной (например, 7-я)')}
                         />
                     )}
 
                     {(formData.promotion_type === 'birthday_discount' || formData.promotion_type === 'first_visit_discount') && (
                         <Input
-                            label="Процент скидки"
+                            label={t('branches.promotions.discountPercent.label', 'Процент скидки')}
                             type="number"
                             min={1}
                             max={100}
@@ -264,27 +267,27 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                                     params: { ...f.params, discount_percent: Number(e.target.value) || 20 },
                                 }))
                             }
-                            helperText="Размер скидки в процентах (1-100)"
+                            helperText={t('branches.promotions.discountPercent.help', 'Размер скидки в процентах (1-100)')}
                         />
                     )}
 
                     <Input
-                        label="Название акции (русский) *"
+                        label={t('branches.promotions.titleRu.label', 'Название акции (русский) *')}
                         value={formData.title_ru}
                         onChange={(e) => setFormData((f) => ({ ...f, title_ru: e.target.value }))}
-                        placeholder="Например: Каждая 7-я стрижка бесплатно"
+                        placeholder={t('branches.promotions.titleRu.placeholder', 'Например: Каждая 7-я стрижка бесплатно')}
                         required
                     />
 
                     <div className="grid grid-cols-2 gap-4">
                         <Input
-                            label="Дата начала (опционально)"
+                            label={t('branches.promotions.validFrom.label', 'Дата начала (опционально)')}
                             type="date"
                             value={formData.valid_from || ''}
                             onChange={(e) => setFormData((f) => ({ ...f, valid_from: e.target.value || null }))}
                         />
                         <Input
-                            label="Дата окончания (опционально)"
+                            label={t('branches.promotions.validTo.label', 'Дата окончания (опционально)')}
                             type="date"
                             value={formData.valid_to || ''}
                             onChange={(e) => setFormData((f) => ({ ...f, valid_to: e.target.value || null }))}
@@ -300,23 +303,23 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                             className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded border-gray-300 dark:border-gray-700"
                         />
                         <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                            Активна (отображается клиентам)
+                            {t('branches.promotions.isActive.label', 'Активна (отображается клиентам)')}
                         </label>
                     </div>
 
                     <div className="flex gap-3">
                         <Button onClick={savePromotion} disabled={!formData.title_ru.trim()}>
-                            {editingId ? 'Сохранить' : 'Создать'}
+                            {editingId ? t('branches.promotions.save', 'Сохранить') : t('branches.promotions.create', 'Создать')}
                         </Button>
                         <Button variant="secondary" onClick={cancelForm}>
-                            Отмена
+                            {t('branches.promotions.cancel', 'Отмена')}
                         </Button>
                     </div>
                 </div>
             ) : null}
 
             {loading ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">Загрузка...</div>
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('branches.promotions.loading', 'Загрузка...')}</div>
             ) : promotions.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     {t('branches.promotions.empty', 'Нет акций. Добавьте первую акцию.')}
@@ -324,7 +327,8 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
             ) : (
                 <div className="space-y-3">
                     {promotions.map((promotion) => {
-                        const typeLabel = PROMOTION_TYPES.find((t) => t.value === promotion.promotion_type)?.label || promotion.promotion_type;
+                        const typeKey = PROMOTION_TYPE_KEYS.find((k) => k.value === promotion.promotion_type);
+                        const typeLabel = typeKey ? t(typeKey.labelKey, promotion.promotion_type) : promotion.promotion_type;
                         const params = promotion.params || {};
 
                         return (
@@ -347,23 +351,25 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                                                         : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
                                                 }`}
                                             >
-                                                {promotion.is_active ? 'Активна' : 'Неактивна'}
+                                                {promotion.is_active ? t('branches.promotions.status.active', 'Активна') : t('branches.promotions.status.inactive', 'Неактивна')}
                                             </span>
                                         </div>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">{typeLabel}</p>
                                         {promotion.promotion_type === 'free_after_n_visits' && (
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                Каждая {String(params.visit_count || 'N')}-я услуга бесплатно
+                                                {t('branches.promotions.everyNthFree', 'Каждая {n}-я услуга бесплатно').replace('{n}', String(params.visit_count || 'N'))}
                                             </p>
                                         )}
                                         {(promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount') && (
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                Скидка {String(params.discount_percent || 'N')}%
+                                                {t('branches.promotions.discountPercent', 'Скидка {percent}%').replace('{percent}', String(params.discount_percent || 'N'))}
                                             </p>
                                         )}
                                         {(promotion.valid_from || promotion.valid_to) && (
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                Действует: {promotion.valid_from || 'с начала'} — {promotion.valid_to || 'без ограничений'}
+                                                {t('branches.promotions.validPeriod', 'Действует: {from} — {to}')
+                                                    .replace('{from}', promotion.valid_from || t('branches.promotions.validPeriod.from', 'с начала'))
+                                                    .replace('{to}', promotion.valid_to || t('branches.promotions.validPeriod.to', 'без ограничений'))}
                                             </p>
                                         )}
                                     </div>
@@ -372,19 +378,19 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                                             onClick={() => toggleActive(promotion.id, promotion.is_active)}
                                             className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
                                         >
-                                            {promotion.is_active ? 'Деактив.' : 'Актив.'}
+                                            {promotion.is_active ? t('branches.promotions.deactivate', 'Деактив.') : t('branches.promotions.activate', 'Актив.')}
                                         </button>
                                         <button
                                             onClick={() => startEdit(promotion)}
                                             className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
                                         >
-                                            Редакт.
+                                            {t('branches.promotions.edit', 'Редакт.')}
                                         </button>
                                         <button
                                             onClick={() => deletePromotion(promotion.id)}
                                             className="px-3 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
                                         >
-                                            Удалить
+                                            {t('branches.promotions.delete', 'Удалить')}
                                         </button>
                                     </div>
                                 </div>

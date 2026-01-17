@@ -3,9 +3,12 @@ import { notFound } from 'next/navigation';
 
 // Временно скрыто
 // import BranchAdminsPanel from "@/app/dashboard/branches/[id]/BranchAdminsPanel";
+import BranchErrorDisplay from './BranchErrorDisplay';
 import EditBranchPageClient from './EditBranchPageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,7 +32,7 @@ export default async function EditBranchPage({
         .maybeSingle();
 
     if (error) {
-        return <main className="p-6 text-red-600">Ошибка: {error.message}</main>;
+        return <BranchErrorDisplay error={error.message} />;
     }
     if (!branch || String(branch.biz_id) !== String(bizId)) return notFound();
 
