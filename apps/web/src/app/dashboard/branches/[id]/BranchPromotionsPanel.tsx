@@ -49,7 +49,7 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
         valid_to?: string | null;
     }>({
         promotion_type: 'free_after_n_visits',
-        params: { visit_count: 7 },
+        params: { visit_count: null },
         title_ru: '',
         is_active: true,
         valid_from: null,
@@ -95,7 +95,7 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
     function startCreate() {
         setFormData({
             promotion_type: 'free_after_n_visits',
-            params: { visit_count: 7 },
+            params: { visit_count: null },
             title_ru: '',
             is_active: true,
             valid_from: null,
@@ -112,6 +112,21 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
 
     async function savePromotion() {
         try {
+            // Если название не указано, используем название типа акции
+            const title_ru = formData.title_ru.trim() || (selectedTypeKey ? t(selectedTypeKey.labelKey, '') : '');
+            
+            // Устанавливаем значения по умолчанию, если они не указаны
+            let params = { ...formData.params };
+            if (formData.promotion_type === 'free_after_n_visits' && !params.visit_count) {
+                params.visit_count = 7;
+            }
+            if ((formData.promotion_type === 'birthday_discount' || formData.promotion_type === 'first_visit_discount') && !params.discount_percent) {
+                params.discount_percent = 20;
+            }
+            if (formData.promotion_type === 'referral_discount_50' && !params.discount_percent) {
+                params.discount_percent = 50;
+            }
+            
             const url = editingId
                 ? `/api/dashboard/branches/${branchId}/promotions/${editingId}`
                 : `/api/dashboard/branches/${branchId}/promotions`;
@@ -120,7 +135,11 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    title_ru,
+                    params,
+                }),
             });
 
             const data = await res.json();
@@ -218,9 +237,9 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                                 const newType = e.target.value as PromotionType;
                                 const newParams: Record<string, unknown> = {};
                                 if (newType === 'free_after_n_visits') {
-                                    newParams.visit_count = 7;
-                                } else if (newType === 'birthday_discount' || newType === 'first_visit_discount') {
-                                    newParams.discount_percent = 20;
+                                    newParams.visit_count = null;
+                                } else if (newType === 'birthday_discount' || newType === 'first_visit_discount' || newType === 'referral_discount_50') {
+                                    newParams.discount_percent = newType === 'referral_discount_50' ? 50 : 20;
                                 }
                                 setFormData((f) => ({ ...f, promotion_type: newType, params: newParams }));
                             }}
@@ -243,40 +262,43 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                             label={t('branches.promotions.visitCount.label', 'Количество посещений (N)')}
                             type="number"
                             min={1}
-                            value={String((formData.params.visit_count as number) || 7)}
-                            onChange={(e) =>
+                            value={(formData.params.visit_count as number) || ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                const num = val === '' ? null : Number(val);
                                 setFormData((f) => ({
                                     ...f,
-                                    params: { ...f.params, visit_count: Number(e.target.value) || 7 },
-                                }))
-                            }
+                                    params: { ...f.params, visit_count: num || null },
+                                }));
+                            }}
                             helperText={t('branches.promotions.visitCount.help', 'Каждая N-я услуга будет бесплатной (например, 7-я)')}
                         />
                     )}
 
-                    {(formData.promotion_type === 'birthday_discount' || formData.promotion_type === 'first_visit_discount') && (
+                    {(formData.promotion_type === 'birthday_discount' || formData.promotion_type === 'first_visit_discount' || formData.promotion_type === 'referral_discount_50') && (
                         <Input
                             label={t('branches.promotions.discountPercent.label', 'Процент скидки')}
                             type="number"
                             min={1}
                             max={100}
-                            value={String((formData.params.discount_percent as number) || 20)}
-                            onChange={(e) =>
+                            value={(formData.params.discount_percent as number) || ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                const num = val === '' ? null : Number(val);
                                 setFormData((f) => ({
                                     ...f,
-                                    params: { ...f.params, discount_percent: Number(e.target.value) || 20 },
-                                }))
-                            }
+                                    params: { ...f.params, discount_percent: num || null },
+                                }));
+                            }}
                             helperText={t('branches.promotions.discountPercent.help', 'Размер скидки в процентах (1-100)')}
                         />
                     )}
 
                     <Input
-                        label={t('branches.promotions.titleRu.label', 'Название акции (русский) *')}
+                        label={t('branches.promotions.titleRu.label', 'Название акции (русский)')}
                         value={formData.title_ru}
                         onChange={(e) => setFormData((f) => ({ ...f, title_ru: e.target.value }))}
-                        placeholder={t('branches.promotions.titleRu.placeholder', 'Например: Каждая 7-я стрижка бесплатно')}
-                        required
+                        placeholder={t('branches.promotions.titleRu.placeholder', 'Опционально. Если не указано, будет использовано название типа акции')}
                     />
 
                     <div className="grid grid-cols-2 gap-4">
@@ -308,7 +330,7 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                     </div>
 
                     <div className="flex gap-3">
-                        <Button onClick={savePromotion} disabled={!formData.title_ru.trim()}>
+                        <Button onClick={savePromotion}>
                             {editingId ? t('branches.promotions.save', 'Сохранить') : t('branches.promotions.create', 'Создать')}
                         </Button>
                         <Button variant="secondary" onClick={cancelForm}>
@@ -360,7 +382,7 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                                                 {t('branches.promotions.everyNthFree', 'Каждая {n}-я услуга бесплатно').replace('{n}', String(params.visit_count || 'N'))}
                                             </p>
                                         )}
-                                        {(promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount') && (
+                                        {(promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount' || promotion.promotion_type === 'referral_discount_50') && (
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
                                                 {t('branches.promotions.discountPercent', 'Скидка {percent}%').replace('{percent}', String(params.discount_percent || 'N'))}
                                             </p>
