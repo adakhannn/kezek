@@ -281,13 +281,13 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                             type="number"
                             min={1}
                             max={100}
-                            value={(formData.params.discount_percent as number) || ''}
+                            value={(formData.params.discount_percent as number) ?? ''}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                const num = val === '' ? null : Number(val);
+                                const num = val === '' ? null : (Number(val) || null);
                                 setFormData((f) => ({
                                     ...f,
-                                    params: { ...f.params, discount_percent: num || null },
+                                    params: { ...f.params, discount_percent: num },
                                 }));
                             }}
                             helperText={t('branches.promotions.discountPercent.help', 'Размер скидки в процентах (1-100)')}
