@@ -123,6 +123,9 @@ const dictionaries: Dictionaries = {
         'booking.selectService': 'Кызматты тандаңыз',
         'booking.selectMaster': 'Кызматкерди тандаңыз',
         'booking.selectBranch': 'Филиалды тандаңыз',
+        'booking.promotions.title': '🎁 Бул филиалда активдүү акциялар:',
+        'booking.promotions.freeAfterN': 'Ар бир {n}-чи кызмат бекер',
+        'booking.promotions.discountPercent': '{percent}% арзандатуу',
 
         // Home page
         'home.title': 'Кызматты табыңыз',
@@ -1027,6 +1030,9 @@ const dictionaries: Dictionaries = {
         'booking.selectService': 'Выберите услугу',
         'booking.selectMaster': 'Выберите мастера',
         'booking.selectBranch': 'Выберите филиал',
+        'booking.promotions.title': '🎁 Активные акции в этом филиале:',
+        'booking.promotions.freeAfterN': 'Каждая {n}-я услуга бесплатно',
+        'booking.promotions.discountPercent': 'Скидка {percent}%',
 
         // Home page
         'home.title': 'Найдите свой сервис',
@@ -1917,6 +1923,9 @@ const dictionaries: Dictionaries = {
         'booking.selectService': 'Select service',
         'booking.selectMaster': 'Select master',
         'booking.selectBranch': 'Select branch',
+        'booking.promotions.title': '🎁 Active promotions in this branch:',
+        'booking.promotions.freeAfterN': 'Every {n}th service is free',
+        'booking.promotions.discountPercent': '{percent}% discount',
 
         // Home page
         'home.title': 'Find your service',
