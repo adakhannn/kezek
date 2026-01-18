@@ -39,7 +39,7 @@ export default async function BookingsPage() {
     const { data: upcoming } = await supabase
         .from('bookings')
         .select(`
-      id, status, start_at, end_at,
+      id, status, start_at, end_at, promotion_applied,
       service_id, staff_id, branch_id, biz_id,
       services:services!bookings_service_id_fkey ( id, name_ru, name_ky, name_en, duration_min ),
       staff:staff!bookings_staff_id_fkey ( id, full_name ),
@@ -56,7 +56,7 @@ export default async function BookingsPage() {
     const { data: past } = await supabase
         .from('bookings')
         .select(`
-      id, status, start_at, end_at,
+      id, status, start_at, end_at, promotion_applied,
       service_id, staff_id, branch_id, biz_id,
       services:services!bookings_service_id_fkey ( id, name_ru, name_ky, name_en, duration_min ),
       staff:staff!bookings_staff_id_fkey ( id, full_name ),

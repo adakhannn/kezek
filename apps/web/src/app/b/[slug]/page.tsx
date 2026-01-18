@@ -36,7 +36,25 @@ async function getData(slug: string) {
         `staff?select=id,full_name,branch_id,avatar_url,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=full_name.asc`
     );
 
-    return { biz, branches, services, staff };
+    // активные акции для всех филиалов бизнеса
+    const branchIds = branches.map((b: { id: string }) => b.id);
+    let promotions: Array<{
+        id: string;
+        branch_id: string;
+        promotion_type: string;
+        title_ru: string | null;
+        params: Record<string, unknown>;
+        branches?: { name: string };
+    }> = [];
+    
+    if (branchIds.length > 0) {
+        const branchIdsStr = branchIds.map((id: string) => `'${id}'`).join(',');
+        promotions = await q(
+            `branch_promotions?select=id,branch_id,promotion_type,title_ru,params,branches(name)&branch_id=in.(${branchIdsStr})&is_active=eq.true&order=created_at.desc`
+        );
+    }
+
+    return { biz, branches, services, staff, promotions };
 }
 
 export default async function Page({

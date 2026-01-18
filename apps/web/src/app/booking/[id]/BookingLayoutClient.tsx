@@ -13,9 +13,10 @@ type BookingLayoutProps = {
     masterName: string;
     startAt: Date;
     status: string;
+    promotionApplied?: Record<string, unknown> | null;
 };
 
-export default function BookingLayoutClient({ id, service, masterName, startAt, status }: BookingLayoutProps) {
+export default function BookingLayoutClient({ id, service, masterName, startAt, status, promotionApplied }: BookingLayoutProps) {
     const { t, locale } = useLanguage();
 
     function getServiceName(): string {
@@ -135,6 +136,31 @@ export default function BookingLayoutClient({ id, service, masterName, startAt, 
                             </dd>
                         </div>
                     </dl>
+                    
+                    {/* Применённая акция */}
+                    {promotionApplied && typeof promotionApplied === 'object' && 'promotion_type' in promotionApplied && (
+                        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/40">
+                            <div className="flex items-start gap-2">
+                                <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                </svg>
+                                <div className="flex-1">
+                                    <p className="text-xs font-medium text-emerald-900 dark:text-emerald-100 mb-1">
+                                        {t('booking.promotionApplied', 'Применена акция:')}
+                                    </p>
+                                    <p className="text-xs text-emerald-800 dark:text-emerald-200">
+                                        {String(promotionApplied.promotion_title || promotionApplied.promotion_type || '')}
+                                        {('discount_percent' in promotionApplied && promotionApplied.discount_percent) ? ` — ${String(promotionApplied.discount_percent)}%` : ''}
+                                        {('final_amount' in promotionApplied && promotionApplied.final_amount) ? (
+                                            <span className="ml-2 font-semibold">
+                                                {t('booking.finalAmount', 'Итоговая сумма:')} {String(promotionApplied.final_amount)} {t('booking.currency', 'сом')}
+                                            </span>
+                                        ) : null}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         {t('booking.contactHint', 'If you need to change or cancel your booking, contact the salon by phone or through the contact channel specified on the business page.')}

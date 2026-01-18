@@ -16,6 +16,7 @@ type Business = {
     phones: string[] | null;
     categories: string[] | null;
     rating_score: number | null;
+    promotions_count?: number;
 };
 
 export default async function Home({
@@ -58,6 +59,50 @@ export default async function Home({
 
     const typedBusinesses: Business[] = (businesses as Business[] | null) ?? [];
 
+    // Подсчитываем количество активных акций для каждого бизнеса
+    if (typedBusinesses.length > 0) {
+        const bizIds = typedBusinesses.map(b => b.id);
+        
+        // Получаем филиалы для этих бизнесов
+        const { data: branchesData } = await supabase
+            .from('branches')
+            .select('id, biz_id')
+            .in('biz_id', bizIds)
+            .eq('is_active', true);
+        
+        if (branchesData && branchesData.length > 0) {
+            const branchIds = branchesData.map(b => b.id);
+            
+            // Получаем количество акций по филиалам
+            const { data: promotionsCounts } = await supabase
+                .from('branch_promotions')
+                .select('branch_id')
+                .eq('is_active', true)
+                .in('branch_id', branchIds);
+            
+            // Группируем по biz_id
+            const promoCountMap = new Map<string, number>();
+            const branchToBizMap = new Map<string, string>();
+            branchesData.forEach(b => {
+                branchToBizMap.set(b.id, b.biz_id);
+            });
+            
+            if (promotionsCounts) {
+                for (const promo of promotionsCounts) {
+                    const bizId = branchToBizMap.get(promo.branch_id);
+                    if (bizId) {
+                        promoCountMap.set(bizId, (promoCountMap.get(bizId) || 0) + 1);
+                    }
+                }
+            }
+            
+            // Добавляем counts к бизнесам
+            typedBusinesses.forEach(b => {
+                b.promotions_count = promoCountMap.get(b.id) || 0;
+            });
+        }
+    }
+
     // Собираем список доступных категорий из текущей выдачи
     const categoriesAvailable = Array.from(
         new Set(
@@ -98,6 +143,18 @@ export default async function Home({
                                                     </svg>
                                                     <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
                                                         {b.rating_score.toFixed(1)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            {b.promotions_count && b.promotions_count > 0 && (
+                                                <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                                                    <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                                        {b.promotions_count} {b.promotions_count === 1 ? 'акция' : b.promotions_count < 5 ? 'акции' : 'акций'}
                                                     </span>
                                                 </div>
                                             )}

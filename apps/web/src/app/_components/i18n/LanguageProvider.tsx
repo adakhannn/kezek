@@ -1033,6 +1033,16 @@ const dictionaries: Dictionaries = {
         'booking.promotions.title': '🎁 Активные акции в этом филиале:',
         'booking.promotions.freeAfterN': 'Каждая {n}-я услуга бесплатно',
         'booking.promotions.discountPercent': 'Скидка {percent}%',
+        'booking.summary.promotionWillApply': 'При оплате будет применена акция:',
+        'booking.promotionApplied': 'Применена акция:',
+        'booking.finalAmount': 'Итоговая сумма:',
+        'cabinet.bookings.card.promotionApplied': 'Применена акция:',
+        'cabinet.bookings.card.finalAmount': 'Итоговая сумма:',
+        'business.info.title': 'О бизнесе',
+        'business.info.branches': 'Филиалы',
+        'business.info.staff': 'Сотрудники',
+        'business.info.promotions': 'Акции',
+        'business.info.more': 'ещё',
 
         // Home page
         'home.title': 'Найдите свой сервис',
@@ -1926,6 +1936,16 @@ const dictionaries: Dictionaries = {
         'booking.promotions.title': '🎁 Active promotions in this branch:',
         'booking.promotions.freeAfterN': 'Every {n}th service is free',
         'booking.promotions.discountPercent': '{percent}% discount',
+        'booking.summary.promotionWillApply': 'Promotion will be applied when paying:',
+        'booking.promotionApplied': 'Applied promotion:',
+        'booking.finalAmount': 'Final amount:',
+        'cabinet.bookings.card.promotionApplied': 'Applied promotion:',
+        'cabinet.bookings.card.finalAmount': 'Final amount:',
+        'business.info.title': 'About the business',
+        'business.info.branches': 'Branches',
+        'business.info.staff': 'Staff',
+        'business.info.promotions': 'Promotions',
+        'business.info.more': 'more',
 
         // Home page
         'home.title': 'Find your service',

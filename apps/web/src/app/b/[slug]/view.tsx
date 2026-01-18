@@ -27,11 +27,21 @@ type Service = {
 };
 type Staff = { id: string; full_name: string; branch_id: string; avatar_url?: string | null; rating_score: number | null };
 
+type Promotion = {
+    id: string;
+    branch_id: string;
+    promotion_type: string;
+    title_ru: string | null;
+    params: Record<string, unknown>;
+    branches?: { name: string };
+};
+
 type Data = {
     biz: Biz;
     branches: Branch[];
     services: Service[];
     staff: Staff[];
+    promotions?: Promotion[];
 };
 
 
@@ -75,7 +85,7 @@ function fmtErr(e: unknown, t?: (key: string, fallback?: string) => string): str
 }
 
 export default function BizClient({ data }: { data: Data }) {
-    const { biz, branches, services, staff } = data;
+    const { biz, branches, services, staff, promotions = [] } = data;
     const {t, locale} = useLanguage();
     
     // Функции для форматирования названий (используем нужный язык, если доступен)
@@ -1211,6 +1221,103 @@ export default function BizClient({ data }: { data: Data }) {
                     ) : null}
                 </div>
 
+                {/* Информационная секция о бизнесе */}
+                <div className="rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 space-y-6">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        {t('business.info.title', 'О бизнесе')}
+                    </h2>
+                    
+                    {/* Филиалы */}
+                    {branches.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                                {t('business.info.branches', 'Филиалы')} ({branches.length})
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {branches.map((b) => (
+                                    <div key={b.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">{formatBranchName(b.name)}</span>
+                                        {b.rating_score !== null && b.rating_score !== undefined && (
+                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded border border-amber-200 dark:border-amber-800">
+                                                <svg className="w-3 h-3 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                                                    {b.rating_score.toFixed(1)}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Сотрудники */}
+                    {staff.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                                {t('business.info.staff', 'Сотрудники')} ({staff.length})
+                            </h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {staff.slice(0, 9).map((s) => (
+                                    <div key={s.id} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                                        {s.avatar_url ? (
+                                            <img src={s.avatar_url} alt={formatStaffName(s.full_name)} className="w-8 h-8 rounded-full object-cover" />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                                {formatStaffName(s.full_name).charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                        <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{formatStaffName(s.full_name)}</span>
+                                    </div>
+                                ))}
+                                {staff.length > 9 && (
+                                    <div className="flex items-center justify-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                                        +{staff.length - 9} {t('business.info.more', 'ещё')}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Акции */}
+                    {promotions.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                                {t('business.info.promotions', 'Акции')} ({promotions.length})
+                            </h3>
+                            <div className="space-y-2">
+                                {promotions.map((promotion) => {
+                                    const branch = branches.find(b => b.id === promotion.branch_id);
+                                    const params = promotion.params || {};
+                                    let description = promotion.title_ru || '';
+                                    
+                                    if (promotion.promotion_type === 'free_after_n_visits' && params.visit_count) {
+                                        description = t('booking.promotions.freeAfterN', 'Каждая {n}-я услуга бесплатно').replace('{n}', String(params.visit_count));
+                                    } else if ((promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount' || promotion.promotion_type === 'referral_discount_50') && params.discount_percent) {
+                                        description = t('booking.promotions.discountPercent', 'Скидка {percent}%').replace('{percent}', String(params.discount_percent));
+                                    }
+                                    
+                                    return (
+                                        <div key={promotion.id} className="flex items-start gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                                            <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                            </svg>
+                                            <div className="flex-1">
+                                                <p className="text-sm text-emerald-900 dark:text-emerald-100 font-medium">{description}</p>
+                                                {branch && (
+                                                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">{formatBranchName(branch.name)}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 {!isAuthed && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
                         {t(
@@ -1727,6 +1834,40 @@ export default function BizClient({ data }: { data: Data }) {
                                             : ''}{' '}
                                         {t('booking.currency', 'сом')}
                                     </span>
+                                </div>
+                            )}
+                            
+                            {/* Информация об акциях */}
+                            {branchId && branchPromotions.length > 0 && (
+                                <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/40">
+                                    <div className="flex items-start gap-2">
+                                        <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                        </svg>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-medium text-emerald-900 dark:text-emerald-100 mb-1">
+                                                {t('booking.summary.promotionWillApply', 'При оплате будет применена акция:')}
+                                            </p>
+                                            <ul className="space-y-1">
+                                                {branchPromotions.map((promotion) => {
+                                                    const params = promotion.params || {};
+                                                    let description = promotion.title_ru || '';
+                                                    
+                                                    if (promotion.promotion_type === 'free_after_n_visits' && params.visit_count) {
+                                                        description = t('booking.promotions.freeAfterN', 'Каждая {n}-я услуга бесплатно').replace('{n}', String(params.visit_count));
+                                                    } else if ((promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount' || promotion.promotion_type === 'referral_discount_50') && params.discount_percent) {
+                                                        description = t('booking.promotions.discountPercent', 'Скидка {percent}%').replace('{percent}', String(params.discount_percent));
+                                                    }
+                                                    
+                                                    return (
+                                                        <li key={promotion.id} className="text-xs text-emerald-800 dark:text-emerald-200">
+                                                            • {description}
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>

@@ -12,6 +12,7 @@ type Booking = {
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
     start_at: string;
     end_at: string;
+    promotion_applied?: Record<string, unknown> | null;
     service_id?: string | null;
     staff_id?: string | null;
     branch_id?: string | null;
@@ -160,6 +161,7 @@ export default function ClientCabinet({
                                         branchId={b.branch_id ?? branch?.id}
                                         bizId={b.biz_id ?? business?.id}
                                         review={extractReview(b.reviews)}
+                                        promotionApplied={b.promotion_applied}
                                         canCancel
                                     />
                                 );

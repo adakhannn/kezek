@@ -33,7 +33,7 @@ export default async function BookingPage({
     const {data} = await supabase
         .from('bookings')
         .select(`
-      id,status,start_at,end_at,
+      id,status,start_at,end_at,promotion_applied,
       services:services!bookings_service_id_fkey(name_ru, name_ky, name_en),
       staff:staff!bookings_staff_id_fkey(full_name)
     `)
@@ -62,6 +62,7 @@ export default async function BookingPage({
                 masterName={master?.full_name ?? '—'}
                 startAt={new Date(data.start_at)}
                 status={data.status}
+                promotionApplied={data.promotion_applied}
             />
         </LanguageProvider>
     );
@@ -87,6 +88,13 @@ async function FallbackBooking({ id }: { id: string }) {
     }
 
     const row = data[0];
+    // Загружаем promotion_applied отдельно, так как RPC может не возвращать его
+    const { data: bookingData } = await supabase
+        .from('bookings')
+        .select('promotion_applied')
+        .eq('id', id)
+        .maybeSingle();
+    
     return (
         <LanguageProvider>
             <BookingLayoutClient
@@ -99,6 +107,7 @@ async function FallbackBooking({ id }: { id: string }) {
                 masterName={row.staff_name}
                 startAt={new Date(row.start_at)}
                 status={row.status}
+                promotionApplied={bookingData?.promotion_applied || null}
             />
         </LanguageProvider>
     );
