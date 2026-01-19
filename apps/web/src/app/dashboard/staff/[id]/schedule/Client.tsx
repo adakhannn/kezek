@@ -125,7 +125,7 @@ function DayRow({
     
     // Если правила нет в БД или интервалы пустые - день выходной
     // Если правила нет - день рабочий по умолчанию
-    const isDayOffFromDb = intervals !== null && intervals !== undefined && intervals.length === 0;
+    const isDayOffFromDb = intervals !== null && intervals !== undefined && Array.isArray(intervals) && intervals.length === 0;
     const defaultInterval: TimeRange = { start: '09:00', end: '21:00' };
     
     const [isDayOff, setIsDayOff] = useState(isDayOffFromDb);
