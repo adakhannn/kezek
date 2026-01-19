@@ -205,7 +205,7 @@ export default async function Home({
                                         <HomeAboutButtonText />
                                     </Link>
                                     <Link
-                                        href={`/b/${b.slug}/booking#booking`} 
+                                        href={`/b/${b.slug}/booking`} 
                                         className="inline-flex items-center justify-center flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 group"
                                     >
                                         <HomeBookButtonText />

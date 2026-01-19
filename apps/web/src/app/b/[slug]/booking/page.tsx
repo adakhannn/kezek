@@ -1,6 +1,6 @@
 import { JSX } from 'react';
 
-import BizClient from '../view';
+import BookingForm from '../view';
 
 async function getData(slug: string) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -64,7 +64,7 @@ export default async function Page({
     const { slug } = await params;
     const data = await getData(slug);
     if (!data) return <main className="p-6">Бизнес не найден</main>;
-    return <BizClient data={data} />;
+    return <BookingForm data={data} />;
 }
 
 

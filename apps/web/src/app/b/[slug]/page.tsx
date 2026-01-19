@@ -1,7 +1,7 @@
 // apps/web/src/app/[slug]/page.tsx
 import { JSX } from 'react';
 
-import BizClient from './view';
+import BusinessInfo from './BusinessInfo';
 
 async function getData(slug: string) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -24,11 +24,6 @@ async function getData(slug: string) {
 
     const branches = await q(
         `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`
-    );
-
-    // все активные услуги бизнеса (дальше фильтруем по филиалу)
-    const services = await q(
-        `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`
     );
 
     // активные мастера с их "родным" филиалом и аватаркой
@@ -55,7 +50,7 @@ async function getData(slug: string) {
         );
     }
 
-    return { biz, branches, services, staff, promotions };
+    return { biz, branches, staff, promotions };
 }
 
 export default async function Page({
@@ -66,5 +61,5 @@ export default async function Page({
     const { slug } = await params;
     const data = await getData(slug);
     if (!data) return <main className="p-6">Бизнес не найден</main>;
-    return <BizClient data={data} />;
+    return <BusinessInfo data={data} />;
 }
