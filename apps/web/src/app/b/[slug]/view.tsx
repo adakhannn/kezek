@@ -1195,7 +1195,7 @@ export default function BizClient({ data }: { data: Data }) {
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
             <div className="mx-auto max-w-5xl px-4 py-6 space-y-5">
-                <div className="space-y-1">
+                <div id="info" className="space-y-1">
                     <div className="flex items-center gap-3">
                         <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100">
                             {biz.name}
@@ -1358,7 +1358,7 @@ export default function BizClient({ data }: { data: Data }) {
                 )}
 
                 {/* Степпер по шагам */}
-                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div id="booking" className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs shadow-sm dark:border-gray-800 dark:bg-gray-900">
                     {stepsMeta.map((s, index) => {
                         const isActive = s.id === step;
                         const isCompleted = s.id < step;

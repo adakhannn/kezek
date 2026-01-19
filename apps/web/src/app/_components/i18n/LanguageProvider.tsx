@@ -136,6 +136,7 @@ const dictionaries: Dictionaries = {
         'home.cats.title': 'Популярдуу категориялар:',
         'home.cats.all': 'Баары',
         'home.card.book': 'Жазылуу',
+        'home.card.about': 'Бизнес тууралуу',
         'home.empty': 'Эч нерсе табылган жок',
 
         // Header
@@ -1053,6 +1054,7 @@ const dictionaries: Dictionaries = {
         'home.cats.title': 'Популярные категории:',
         'home.cats.all': 'Все',
         'home.card.book': 'Записаться',
+        'home.card.about': 'О бизнесе',
         'home.empty': 'Ничего не найдено',
 
         // Header
@@ -1956,6 +1958,7 @@ const dictionaries: Dictionaries = {
         'home.cats.title': 'Popular categories:',
         'home.cats.all': 'All',
         'home.card.book': 'Book now',
+        'home.card.about': 'About business',
         'home.empty': 'Nothing found',
 
         // Header

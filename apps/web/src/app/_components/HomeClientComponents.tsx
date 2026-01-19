@@ -26,6 +26,11 @@ export function HomeBookButtonText() {
     return <>{t('home.card.book', 'Записаться')}</>;
 }
 
+export function HomeAboutButtonText() {
+    const {t} = useLanguage();
+    return <>{t('home.card.about', 'О бизнесе')}</>;
+}
+
 export function HomeHeader({q, cat, categories}: { q: string; cat: string; categories: string[] }) {
     const {t} = useLanguage();
     return (
