@@ -46,9 +46,10 @@ async function getData(slug: string) {
         params: Record<string, unknown>;
         branches?: { name: string };
     }> = [];
-    
+
     if (branchIds.length > 0) {
-        const branchIdsStr = branchIds.map((id: string) => `'${id}'`).join(',');
+        // Для фильтра in.(...) в PostgREST передаем UUID без кавычек и URL-кодирования
+        const branchIdsStr = branchIds.join(',');
         promotions = await q(
             `branch_promotions?select=id,branch_id,promotion_type,title_ru,params,branches(name)&branch_id=in.(${branchIdsStr})&is_active=eq.true&order=created_at.desc`
         );
