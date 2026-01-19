@@ -139,10 +139,10 @@ function DayRow({
 
     useEffect(() => {
         // Если правила нет (null) - день рабочий по умолчанию
-        // Если правило есть, но интервалы пустые - день выходной
-        const isOff = intervals !== null && intervals !== undefined && intervals.length === 0;
+        // Если правило есть, но интервалы пустые или null - день выходной
+        const isOff = intervals !== null && intervals !== undefined && Array.isArray(intervals) && intervals.length === 0;
         setIsDayOff(isOff);
-        if (intervals && intervals.length > 0 && intervals[0].start && intervals[0].end) {
+        if (intervals && Array.isArray(intervals) && intervals.length > 0 && intervals[0].start && intervals[0].end) {
             setInterval(intervals[0]);
         } else {
             setInterval(defaultInterval);
