@@ -85,9 +85,13 @@ function ShiftCard({
                         </div>
                     )}
                 </div>
-                <div className="text-right mr-4 min-w-[140px]">
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                <div className="text-right mr-4 min-w-[160px]">
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
                         {shift.total_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
+                    </div>
+                    <div className="text-[10px] leading-tight text-gray-500 dark:text-gray-400 mb-1">
+                        {t('finance.staffStats.consumables', 'Расходники')}:{' '}
+                        {shift.consumables_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
                     </div>
                     {/* Если есть гарантированная сумма и она больше базовой доли, показываем её как основную выплату */}
                     {shift.guaranteed_amount > 0 && shift.hourly_rate && shift.guaranteed_amount > shift.master_share ? (
