@@ -40,6 +40,11 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
         }
 
+        // Если статус уже финальный, не пытаемся применять его повторно
+        if (booking.status === 'paid' || booking.status === 'no_show') {
+            return NextResponse.json({ ok: true, status: booking.status });
+        }
+
         // Проверяем, что бронь уже прошла
         const now = new Date();
         const startAt = new Date(booking.start_at);
