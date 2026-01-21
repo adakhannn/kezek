@@ -629,7 +629,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     );
                     if (tempTransfer) {
                         targetBranchId = tempTransfer.branch_id;
-                        console.log('[Booking] Temporary transfer found:', { staffId, date: dayStr, tempBranch: tempTransfer.branch_id, homeBranch: homeBranchId, selectedBranch: branchId });
+                        debugLog('[Booking] Temporary transfer found:', { staffId, date: dayStr, tempBranch: tempTransfer.branch_id, homeBranch: homeBranchId, selectedBranch: branchId });
                     }
                 }
                 
@@ -647,7 +647,7 @@ export default function BookingForm({ data }: { data: Data }) {
                         .eq('is_active', true)
                         .maybeSingle();
                     
-                    console.log('[Booking] Checking schedule for temporary transfer:', { 
+                    debugLog('[Booking] Checking schedule for temporary transfer:', { 
                         staffId, 
                         date: dayStr, 
                         tempBranch: targetBranchId,
@@ -658,11 +658,11 @@ export default function BookingForm({ data }: { data: Data }) {
                     });
                     
                     if (scheduleError) {
-                        console.warn('[Booking] Error checking schedule:', scheduleError);
+                        debugWarn('[Booking] Error checking schedule:', scheduleError);
                     }
                     
                     if (!scheduleRule || !scheduleRule.intervals || (Array.isArray(scheduleRule.intervals) && scheduleRule.intervals.length === 0)) {
-                        console.warn('[Booking] No schedule found for temporary transfer. Master may not have working hours set for this date in temporary branch.');
+                        debugWarn('[Booking] No schedule found for temporary transfer. Master may not have working hours set for this date in temporary branch.');
                         // Не прерываем выполнение - возможно, есть еженедельное расписание
                     }
                 }
@@ -670,7 +670,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 // Вызываем RPC для получения слотов
                 // Для временно переведенного мастера RPC должен вернуть слоты с branch_id временного филиала
                 // Но RPC может проверять staff.branch_id, поэтому может вернуть пустой массив
-                console.log('[Booking] Calling RPC with params:', { biz_id: biz.id, service_id: serviceId, day: dayStr, targetBranchId, homeBranchId, isTemporaryTransfer });
+                debugLog('[Booking] Calling RPC with params:', { biz_id: biz.id, service_id: serviceId, day: dayStr, targetBranchId, homeBranchId, isTemporaryTransfer });
                 const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
                     p_biz_id: biz.id,
                     p_service_id: serviceId,
@@ -680,16 +680,17 @@ export default function BookingForm({ data }: { data: Data }) {
                 });
                 if (ignore) return;
                 if (error) {
+                     
                     console.error('[get_free_slots_service_day_v2] error:', error);
                     setSlots([]);
-                    setSlotsError(error.message);
+                    setSlotsError(t('booking.error.loadSlots', 'Не удалось загрузить свободные слоты. Попробуйте выбрать другой день или мастера.'));
                     return;
                 }
                 const all = (data ?? []) as Slot[];
                 const now = new Date();
                 const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
                 
-            debugLog('[Booking] RPC returned slots:', { 
+                debugLog('[Booking] RPC returned slots:', { 
                     total: all.length, 
                     slots: all.map(s => ({ staff_id: s.staff_id, branch_id: s.branch_id, start_at: s.start_at })),
                     isTemporaryTransfer,
@@ -709,11 +710,11 @@ export default function BookingForm({ data }: { data: Data }) {
                 // (так как функция RPC уже учитывает временные переводы и возвращает слоты с правильным branch_id)
                 let filtered = all.filter((s) => {
                     if (s.staff_id !== staffId) {
-                        console.log('[Booking] Slot filtered (wrong staff):', { slot_staff: s.staff_id, selected_staff: staffId });
+                        debugLog('[Booking] Slot filtered (wrong staff):', { slot_staff: s.staff_id, selected_staff: staffId });
                         return false;
                     }
                     if (new Date(s.start_at) <= minTime) {
-                        console.log('[Booking] Slot filtered (too early):', { start_at: s.start_at, minTime: minTime.toISOString() });
+                        debugLog('[Booking] Slot filtered (too early):', { start_at: s.start_at, minTime: minTime.toISOString() });
                         return false;
                     }
                     
@@ -722,14 +723,14 @@ export default function BookingForm({ data }: { data: Data }) {
                     if (isTemporaryTransfer && targetBranchId) {
                         const matchesBranch = s.branch_id === targetBranchId;
                         if (!matchesBranch) {
-                            console.log('[Booking] Slot filtered (wrong branch for temporary transfer):', { 
+                            debugLog('[Booking] Slot filtered (wrong branch for temporary transfer):', { 
                                 slot_branch: s.branch_id, 
                                 expected_branch: targetBranchId,
                                 selected_branch: branchId,
                                 home_branch: homeBranchId
                             });
                         } else {
-                            console.log('[Booking] Slot accepted (temporary transfer):', { 
+                            debugLog('[Booking] Slot accepted (temporary transfer):', { 
                                 slot_branch: s.branch_id, 
                                 start_at: s.start_at 
                             });
@@ -740,12 +741,12 @@ export default function BookingForm({ data }: { data: Data }) {
                     // Для обычного мастера показываем только слоты из выбранного филиала
                     const matchesBranch = s.branch_id === branchId;
                     if (!matchesBranch) {
-                        console.log('[Booking] Slot filtered (wrong branch):', { slot_branch: s.branch_id, selected_branch: branchId });
+                        debugLog('[Booking] Slot filtered (wrong branch):', { slot_branch: s.branch_id, selected_branch: branchId });
                     }
                     return matchesBranch;
                 });
                 
-                console.log('[Booking] Filtered slots result:', { 
+                debugLog('[Booking] Filtered slots result:', { 
                     beforeFilter: all.length, 
                     afterFilter: filtered.length, 
                     targetBranchId, 
