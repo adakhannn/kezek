@@ -59,6 +59,49 @@
 - **Доплата за выход**: разница между гарантированной суммой и базовой долей выплачивается бизнесом
 - **Опоздания**: учет времени опозданий сотрудников
 
+#### 1.5.3 Точные формулы расчета смены
+
+- **Базовые значения (по факту смены)**  
+  - `total_amount` — сумма всех `service_amount` по `staff_shift_items` (если позиции есть) или сумма по бронированиям/ручному вводу.  
+  - `consumables_amount` — сумма всех `consumables_amount` по `staff_shift_items` или вручную заданная сумма расходников.  
+  - `percent_master`, `percent_salon` — проценты мастера и салона из настроек сотрудника или смены.  
+  - Перед расчетом проценты **нормализуются** так, чтобы сумма была 100%:
+    - `normalized_master = percent_master / (percent_master + percent_salon) * 100`
+    - `normalized_salon = percent_salon / (percent_master + percent_salon) * 100`
+
+- **Базовые доли (без гарантии)**  
+  - `base_master_share = round(total_amount * normalized_master / 100)`  
+  - `salon_share_from_amount = round(total_amount * normalized_salon / 100)`  
+  - `salon_share = salon_share_from_amount + consumables_amount` (расходники всегда 100% в пользу салона).
+
+- **Часы и гарантия**  
+  - `hourly_rate` берется из `staff.hourly_rate` (и дублируется в `staff_shifts.hourly_rate` при закрытии).  
+  - `hours_worked`:
+    - При **ручном закрытии смены** (`/api/staff/shift/close`) считается как разница между `opened_at` и текущим временем `now` в TZ.  
+    - При **авто‑закрытии cron’ом** (`/api/cron/close-shifts`) считается как разница между `opened_at` и полуночью следующего дня (`midnight_next_day` в TZ).  
+  - `guaranteed_amount = round(hours_worked * hourly_rate, 2)` (если ставка задана, иначе 0).  
+  - `topup_amount = max(0, guaranteed_amount - base_master_share)` — сколько доплачивает бизнес до гарантии.
+
+- **Финальные значения, которые пишутся в смену**  
+  - `master_share`:
+    - если `guaranteed_amount > base_master_share` → `master_share = guaranteed_amount`  
+    - иначе → `master_share = base_master_share`  
+  - `salon_share`:
+    - сначала считается как `salon_share_from_amount + consumables_amount`,  
+    - затем корректируется: `salon_share = max(0, salon_share - topup_amount)` (бизнес платит доплату за выход из своей доли, но она не может уйти в минус).  
+  - В таблице `staff_shifts` сохраняются: `total_amount`, `consumables_amount`, `percent_master`, `percent_salon`, `master_share`, `salon_share`, `hours_worked`, `hourly_rate`, `guaranteed_amount`, `topup_amount`, `closed_at`, `status = 'closed'`.
+
+#### 1.5.4 Особенности отображения на дашборде владельца
+
+- Для **закрытых смен** на странице владельца всегда показываются сохранённые в БД значения (`master_share`, `salon_share`, `guaranteed_amount`, `topup_amount`, `hours_worked`).  
+- Для **открытых смен**:
+  - Оборот и суммы считаются **динамически** на основе текущих `staff_shift_items` и текущего времени.  
+  - Для гарантии используется `hourly_rate` из смены, а если он `NULL` — из профиля сотрудника.  
+  - В статистике дополнительно считаются:
+    - `totalBaseMasterShare` — суммарная базовая доля без учета гарантии,
+    - `totalGuaranteedAmount` — суммарная потенциальная гарантия по открытым сменам,
+    - `hasGuaranteedPayment` — флаг, что гарантия уже превышает базовую долю и влияет на расчет.
+
 #### 1.5.3 Финансовая аналитика
 - **Статистика по сотрудникам**: оборот, доля сотрудника, доля бизнеса, количество клиентов, опоздания
 - **Статистика по периодам**: день, месяц, год
