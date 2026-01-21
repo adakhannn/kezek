@@ -13,6 +13,20 @@ import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
+const isDev = process.env.NODE_ENV !== 'production';
+const debugLog = (...args: unknown[]) => {
+    if (isDev) {
+        // eslint-disable-next-line no-console
+        console.log(...args);
+    }
+};
+const debugWarn = (...args: unknown[]) => {
+    if (isDev) {
+         
+        console.warn(...args);
+    }
+};
+
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
 type Branch = { id: string; name: string; address?: string | null; rating_score: number | null };
 type Service = {
@@ -305,7 +319,7 @@ export default function BookingForm({ data }: { data: Data }) {
             t.staff_id === staffId && t.date === dayStr
         );
         
-        console.log('[Booking] servicesFiltered check:', { 
+        debugLog('[Booking] servicesFiltered check:', { 
             staffId, 
             branchId, 
             dayStr, 
@@ -328,7 +342,7 @@ export default function BookingForm({ data }: { data: Data }) {
             );
             if (tempTransfer) {
                 targetBranchId = tempTransfer.branch_id;
-                console.log('[Booking] Using temporary branch for service filtering:', targetBranchId);
+                debugLog('[Booking] Using temporary branch for service filtering:', targetBranchId);
             }
         }
         
@@ -349,14 +363,14 @@ export default function BookingForm({ data }: { data: Data }) {
                     servicesForStaff.has(svc.id)
                 );
                 if (hasSimilarServiceLink) {
-                    console.log('[Booking] Service included (temporary transfer, similar service found):', {
+                    debugLog('[Booking] Service included (temporary transfer, similar service found):', {
                         service_id: s.id,
                         service_name: s.name_ru,
                         branch: s.branch_id,
                         target_branch: targetBranchId
                     });
                 } else {
-                    console.log('[Booking] Service filtered out (not for staff, no similar service):', s.id, s.name_ru);
+                    debugLog('[Booking] Service filtered out (not for staff, no similar service):', s.id, s.name_ru);
                 }
                 // Если услуга в целевом филиале и есть похожая услуга, которую мастер делает - показываем её
                 if (s.branch_id === targetBranchId && hasSimilarServiceLink) {
@@ -366,14 +380,14 @@ export default function BookingForm({ data }: { data: Data }) {
             
             // Обычная проверка: услуга должна быть доступна мастеру
             if (!hasServiceStaffLink) {
-                console.log('[Booking] Service filtered out (not for staff):', s.id, s.name_ru);
+                debugLog('[Booking] Service filtered out (not for staff):', s.id, s.name_ru);
                 return false;
             }
             
             // Услуга должна быть из целевого филиала (временного перевода или выбранного)
             const matchesTargetBranch = s.branch_id === targetBranchId;
             if (!matchesTargetBranch) {
-                console.log('[Booking] Service filtered out (wrong branch):', {
+                debugLog('[Booking] Service filtered out (wrong branch):', {
                     service_id: s.id,
                     service_name: s.name_ru,
                     service_branch: s.branch_id,
@@ -383,7 +397,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 return false;
             }
             
-            console.log('[Booking] Service included:', {
+            debugLog('[Booking] Service included:', {
                 service_id: s.id,
                 service_name: s.name_ru,
                 branch: s.branch_id,
@@ -392,7 +406,7 @@ export default function BookingForm({ data }: { data: Data }) {
             return true;
         });
         
-        console.log('[Booking] servicesFiltered result:', { 
+        debugLog('[Booking] servicesFiltered result:', { 
             total: filtered.length, 
             services: filtered.map(s => ({ id: s.id, name: s.name_ru, branch: s.branch_id }))
         });
@@ -403,15 +417,15 @@ export default function BookingForm({ data }: { data: Data }) {
     // при смене мастера или даты — сбрасываем выбор услуги, если текущая не подходит
     useEffect(() => {
         if (!staffId || !dayStr) {
-            if (!staffId) console.log('[Booking] Staff cleared, clearing service');
-            if (!dayStr) console.log('[Booking] Day cleared, clearing service');
+            if (!staffId) debugLog('[Booking] Staff cleared, clearing service');
+            if (!dayStr) debugLog('[Booking] Day cleared, clearing service');
             setServiceId('');
             return;
         }
         // Если выбранная услуга не подходит под нового мастера или дату — сбрасываем выбор
         if (serviceId) {
             const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            console.log('[Booking] Checking service validity after staff/day change:', { 
+            debugLog('[Booking] Checking service validity after staff/day change:', { 
                 serviceId, 
                 staffId, 
                 dayStr,
@@ -420,7 +434,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru })) 
             });
             if (!isServiceValid) {
-                console.warn('[Booking] Service is not valid for current staff/day, clearing serviceId');
+                debugWarn('[Booking] Service is not valid for current staff/day, clearing serviceId');
                 setServiceId('');
             }
         }
@@ -566,7 +580,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 // serviceStaff загружен (может быть пустым массивом, если нет связей), проверяем валидность услуги через servicesFiltered
                 const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
                 if (!isServiceValid) {
-                    console.log('[Booking] Slots loading: service not in servicesFiltered, skipping RPC call', { 
+                    debugLog('[Booking] Slots loading: service not in servicesFiltered, skipping RPC call', { 
                         serviceId, 
                         staffId,
                         servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru })),
@@ -581,10 +595,10 @@ export default function BookingForm({ data }: { data: Data }) {
                     setSlotsLoading(false);
                     return;
                 }
-                console.log('[Booking] Slots loading: service is valid (in servicesFiltered), proceeding with RPC call', { serviceId, staffId });
+                debugLog('[Booking] Slots loading: service is valid (in servicesFiltered), proceeding with RPC call', { serviceId, staffId });
             } else {
                 // serviceStaff еще не загружен (null), пропускаем проверку и позволяем RPC проверить
-                console.log('[Booking] Slots loading: serviceStaff not loaded yet, proceeding with RPC call (will check validity)', {
+                debugLog('[Booking] Slots loading: serviceStaff not loaded yet, proceeding with RPC call (will check validity)', {
                     serviceId,
                     staffId,
                     serviceStaffLoaded: false
@@ -592,7 +606,7 @@ export default function BookingForm({ data }: { data: Data }) {
             }
             
             // Если услуга валидна (есть в servicesFiltered), можно загружать слоты
-            console.log('[Booking] Slots loading: service is valid, proceeding with RPC call', { serviceId, staffId });
+            debugLog('[Booking] Slots loading: service is valid, proceeding with RPC call', { serviceId, staffId });
             
             setSlotsLoading(true);
             setSlotsError(null);
@@ -675,7 +689,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 const now = new Date();
                 const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
                 
-                console.log('[Booking] RPC returned slots:', { 
+            debugLog('[Booking] RPC returned slots:', { 
                     total: all.length, 
                     slots: all.map(s => ({ staff_id: s.staff_id, branch_id: s.branch_id, start_at: s.start_at })),
                     isTemporaryTransfer,
@@ -744,12 +758,12 @@ export default function BookingForm({ data }: { data: Data }) {
                 // Если для временно переведенного мастера нет слотов, возможно RPC не учитывает временные переводы
                 // В этом случае нужно вызвать RPC для временного филиала или изменить логику RPC
                 if (filtered.length === 0 && isTemporaryTransfer && all.length > 0) {
-                    console.warn('[Booking] No slots after filtering for temporary transfer. RPC may not be accounting for temporary transfers.');
-                    console.warn('[Booking] All slots from RPC:', all);
+                    debugWarn('[Booking] No slots after filtering for temporary transfer. RPC may not be accounting for temporary transfers.');
+                    debugWarn('[Booking] All slots from RPC:', all);
                 } else if (filtered.length === 0 && isTemporaryTransfer && all.length === 0) {
-                    console.warn('[Booking] RPC returned 0 slots for temporary transfer. This likely means RPC does not account for temporary transfers.');
-                    console.warn('[Booking] RPC may be checking staff.branch_id =', homeBranchId, 'but master is temporarily transferred to', targetBranchId);
-                    console.warn('[Booking] Solution: RPC needs to check staff_schedule_rules for temporary transfers on date', dayStr);
+                    debugWarn('[Booking] RPC returned 0 slots for temporary transfer. This likely means RPC does not account for temporary transfers.');
+                    debugWarn('[Booking] RPC may be checking staff.branch_id =', homeBranchId, 'but master is temporarily transferred to', targetBranchId);
+                    debugWarn('[Booking] Solution: RPC needs to check staff_schedule_rules for temporary transfers on date', dayStr);
                 }
                 
                 // Дополнительная проверка: исключаем слоты, которые уже забронированы
@@ -975,7 +989,7 @@ export default function BookingForm({ data }: { data: Data }) {
             const found = servicesFiltered.find((s) => s.id === serviceId) 
                 ?? servicesByBranch.find((s) => s.id === serviceId)
                 ?? services.find((s) => s.id === serviceId);
-            console.log('[Booking] Finding service:', { 
+            debugLog('[Booking] Finding service:', { 
                 serviceId, 
                 found: found ? found.name_ru : null, 
                 foundInFiltered: !!servicesFiltered.find((s) => s.id === serviceId),
@@ -1172,7 +1186,7 @@ export default function BookingForm({ data }: { data: Data }) {
             // - правильный филиал услуги
             const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
             if (!isServiceValid) {
-                console.log('[Booking] canGoNext: service not in servicesFiltered', { 
+                debugLog('[Booking] canGoNext: service not in servicesFiltered', { 
                     serviceId, 
                     servicesFiltered: servicesFiltered.map(s => s.id),
                     servicesFilteredNames: servicesFiltered.map(s => s.name_ru)
@@ -1182,7 +1196,7 @@ export default function BookingForm({ data }: { data: Data }) {
             
             // Если услуга есть в servicesFiltered, она уже прошла все проверки (включая временные переводы)
             // Дополнительная проверка через serviceToStaffMap не нужна, так как servicesFiltered уже это учитывает
-            console.log('[Booking] canGoNext: service is valid (in servicesFiltered)', { serviceId });
+            debugLog('[Booking] canGoNext: service is valid (in servicesFiltered)', { serviceId });
             return true;
         }
         
@@ -1480,7 +1494,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                                         key={s.id}
                                                         type="button"
                                                         onClick={() => {
-                                                            console.log('[Booking] Service clicked:', { serviceId: s.id, name: s.name_ru, currentServiceId: serviceId });
+                                                            debugLog('[Booking] Service clicked:', { serviceId: s.id, name: s.name_ru, currentServiceId: serviceId });
                                                             setServiceId(s.id);
                                                         }}
                                                         className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
