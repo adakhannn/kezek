@@ -97,50 +97,83 @@ export async function POST(req: Request) {
         // Обновляем статус записей на "выполнено" (paid), если они были добавлены в смену
         // Делаем это сразу при добавлении записи в список, даже если суммы еще не заполнены
         // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
-        // Используем функцию с автоматическим применением акций
+        // Используем функцию с автоматическим применением акций,
+        // но не трогаем уже финальные статусы (paid / no_show) и будущие записи
         const admin = getServiceClient();
-        const promotionInfoMap = new Map<string, { final_amount?: number; discount_percent?: number }>();
-        
+
         if (allBookingIds.length > 0) {
-            for (const bookingId of allBookingIds) {
-                try {
-                    // Пытаемся использовать функцию с применением акций
-                    const { data: promotionResult, error: rpcError } = await admin.rpc('update_booking_status_with_promotion', {
-                        p_booking_id: bookingId,
-                        p_new_status: 'paid',
-                    });
-                    
-                    // Сохраняем информацию об акции, если она была применена
-                    if (promotionResult && promotionResult.applied) {
-                        promotionInfoMap.set(bookingId, {
-                            final_amount: promotionResult.final_amount,
-                            discount_percent: promotionResult.discount_percent,
+            try {
+                const nowTs = new Date();
+
+                // Загружаем текущие статусы и время начала для всех бронирований
+                const { data: bookingsForUpdate, error: bookingsError } = await admin
+                    .from('bookings')
+                    .select('id, status, start_at')
+                    .in('id', allBookingIds);
+
+                if (bookingsError) {
+                    console.error('[staff/shift/items] Error loading bookings for status update:', bookingsError);
+                } else if (bookingsForUpdate && bookingsForUpdate.length > 0) {
+                    const bookingsMap = new Map<string, { id: string; status: string; start_at: string | null }>();
+                    for (const b of bookingsForUpdate) {
+                        bookingsMap.set(String(b.id), {
+                            id: String(b.id),
+                            status: String(b.status),
+                            start_at: b.start_at ?? null,
                         });
                     }
-                    
-                    // Если функция не найдена, используем стандартную
-                    if (rpcError && (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist'))) {
-                        const { error: fallbackError } = await admin.rpc('update_booking_status_no_check', {
-                            p_booking_id: bookingId,
-                            p_new_status: 'paid',
-                        });
-                        if (fallbackError && !fallbackError.message?.includes('function') && !fallbackError.message?.includes('does not exist')) {
-                            // Если RPC не работает, используем прямой update
-                            const { error: updateError } = await admin
-                                .from('bookings')
-                                .update({ status: 'paid' })
-                                .eq('id', bookingId);
-                            if (updateError) {
-                                console.error(`Error updating booking ${bookingId} status:`, updateError);
+
+                    for (const bookingId of allBookingIds) {
+                        const booking = bookingsMap.get(bookingId);
+                        if (!booking) continue;
+
+                        // Пропускаем уже финальные статусы
+                        if (booking.status === 'paid' || booking.status === 'no_show') {
+                            continue;
+                        }
+
+                        // Не отмечаем как paid записи из будущего
+                        if (booking.start_at) {
+                            const startAt = new Date(booking.start_at);
+                            if (startAt > nowTs) {
+                                continue;
                             }
                         }
-                    } else if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
-                        console.error(`Error applying promotion to booking ${bookingId}:`, rpcError);
-                        // Продолжаем выполнение, даже если акция не применилась
+
+                        try {
+                            // Пытаемся использовать функцию с применением акций
+                            const { error: rpcError } = await admin.rpc('update_booking_status_with_promotion', {
+                                p_booking_id: booking.id,
+                                p_new_status: 'paid',
+                            });
+
+                            // Если функция не найдена, используем стандартную
+                            if (rpcError && (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist') || rpcError.message?.includes('schema cache'))) {
+                                const { error: fallbackError } = await admin.rpc('update_booking_status_no_check', {
+                                    p_booking_id: booking.id,
+                                    p_new_status: 'paid',
+                                });
+                                if (fallbackError && !fallbackError.message?.includes('function') && !fallbackError.message?.includes('does not exist')) {
+                                    // Если RPC не работает, используем прямой update
+                                    const { error: updateError } = await admin
+                                        .from('bookings')
+                                        .update({ status: 'paid' })
+                                        .eq('id', booking.id);
+                                    if (updateError) {
+                                        console.error(`Error updating booking ${booking.id} status:`, updateError);
+                                    }
+                                }
+                            } else if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+                                console.error(`Error applying promotion to booking ${booking.id}:`, rpcError);
+                                // Продолжаем выполнение, даже если акция не применилась
+                            }
+                        } catch (e) {
+                            console.error(`Error updating booking ${booking.id} status:`, e);
+                        }
                     }
-                } catch (e) {
-                    console.error(`Error updating booking ${bookingId} status:`, e);
                 }
+            } catch (e) {
+                console.error('[staff/shift/items] Unexpected error while updating bookings to paid:', e);
             }
         }
 
