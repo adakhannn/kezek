@@ -214,65 +214,116 @@ export async function GET(req: Request) {
                 if (updateError) {
                     console.error(`[Close Shifts Cron] Error closing shift ${shift.id}:`, updateError);
                     errors.push(`Shift ${shift.id}: ${updateError.message}`);
-                } else {
-                    closedCount++;
-                    console.log(`[Close Shifts Cron] Successfully closed shift ${shift.id}`);
-                    
-                    // После закрытия смены: находим все записи сотрудника за этот день,
-                    // которые не были добавлены в список позиций смены, и устанавливаем им статус "не пришел" (no_show)
-                    try {
-                        const dayStart = `${ymd}T00:00:00`;
-                        const dayEnd = `${ymd}T23:59:59`;
-                        
-                        // Получаем все записи сотрудника за этот день
-                        const { data: todayBookings, error: bookingsError } = await supabase
-                            .from('bookings')
-                            .select('id, status')
-                            .eq('staff_id', shift.staff_id)
-                            .gte('start_at', dayStart)
-                            .lte('start_at', dayEnd)
-                            .neq('status', 'cancelled');
-                        
-                        if (!bookingsError && todayBookings) {
-                            // Получаем список booking_id из позиций смены
-                            const { data: shiftItems } = await supabase
-                                .from('staff_shift_items')
-                                .select('booking_id')
-                                .eq('shift_id', shift.id)
-                                .not('booking_id', 'is', null);
-                            
-                            const addedBookingIds = new Set(
-                                (shiftItems ?? [])
-                                    .map((it: { booking_id: string | null }) => it.booking_id)
-                                    .filter((id: string | null): id is string => !!id)
-                            );
-                            
-                            // Находим записи, которые не были добавлены в смену
-                            const notAddedBookings = todayBookings.filter(
-                                (b) => !addedBookingIds.has(b.id) && b.status !== 'no_show' && b.status !== 'paid'
-                            );
-                            
-                            // Устанавливаем статус "не пришел" для записей, которые не были добавлены
-                            for (const booking of notAddedBookings) {
-                                try {
-                                    const { error: rpcError } = await supabase.rpc('update_booking_status_no_check', {
+                    continue;
+                }
+
+                closedCount++;
+                console.log(`[Close Shifts Cron] Successfully closed shift ${shift.id}`);
+
+                // После закрытия смены:
+                // 1) Переводим связанные записи в статус "paid" с применением акций
+                // 2) Остальные ещё не обработанные записи помечаем как "no_show"
+                try {
+                    const dayStart = `${ymd}T00:00:00`;
+                    const dayEnd = `${ymd}T23:59:59`;
+
+                    // Получаем все записи сотрудника за этот день
+                    const { data: todayBookings, error: bookingsError } = await supabase
+                        .from('bookings')
+                        .select('id, status')
+                        .eq('staff_id', shift.staff_id)
+                        .gte('start_at', dayStart)
+                        .lte('start_at', dayEnd)
+                        .neq('status', 'cancelled');
+
+                    if (!bookingsError && todayBookings) {
+                        // Получаем список booking_id из позиций смены
+                        const { data: shiftItems } = await supabase
+                            .from('staff_shift_items')
+                            .select('booking_id')
+                            .eq('shift_id', shift.id)
+                            .not('booking_id', 'is', null);
+
+                        const addedBookingIds = new Set(
+                            (shiftItems ?? [])
+                                .map((it: { booking_id: string | null }) => it.booking_id)
+                                .filter((id: string | null): id is string => !!id)
+                        );
+
+                        // 1) Обновляем статус "paid" с применением акций для всех записей, которые есть в смене
+                        const bookingsById = new Map<string, { id: string; status: string }>();
+                        for (const b of todayBookings) {
+                            bookingsById.set(String(b.id), { id: String(b.id), status: String(b.status) });
+                        }
+
+                        for (const bookingId of addedBookingIds) {
+                            const booking = bookingsById.get(bookingId);
+                            if (!booking) continue;
+
+                            // Пропускаем уже финальные статусы
+                            if (booking.status === 'paid' || booking.status === 'no_show') {
+                                continue;
+                            }
+
+                            try {
+                                const { error: rpcError } = await supabase.rpc('update_booking_status_with_promotion', {
+                                    p_booking_id: booking.id,
+                                    p_new_status: 'paid',
+                                });
+
+                                if (!rpcError) {
+                                    continue;
+                                }
+
+                                // Fallback: если функции нет — возвращаемся к старому поведению
+                                if (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist') || rpcError.message?.includes('schema cache')) {
+                                    const { error: fallbackRpcError } = await supabase.rpc('update_booking_status_no_check', {
                                         p_booking_id: booking.id,
-                                        p_new_status: 'no_show',
+                                        p_new_status: 'paid',
                                     });
-                                    if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+
+                                    if (fallbackRpcError && !fallbackRpcError.message?.includes('function') && !fallbackRpcError.message?.includes('does not exist')) {
                                         await supabase
                                             .from('bookings')
-                                            .update({ status: 'no_show' })
+                                            .update({ status: 'paid' })
                                             .eq('id', booking.id);
                                     }
-                                } catch (e) {
-                                    console.error(`[Close Shifts Cron] Error updating booking ${booking.id} status to no_show:`, e);
+                                } else {
+                                    console.error(`[Close Shifts Cron] Error updating booking ${booking.id} status to paid via promotions RPC:`, rpcError);
                                 }
+                            } catch (e) {
+                                console.error(`[Close Shifts Cron] Error updating booking ${booking.id} status to paid:`, e);
                             }
                         }
-                    } catch (e) {
-                        console.error(`[Close Shifts Cron] Error processing no_show bookings for shift ${shift.id}:`, e);
+
+                        // 2) Находим записи, которые не были добавлены в смену и ещё не имеют финального статуса
+                        const notAddedBookings = todayBookings.filter(
+                            (b) =>
+                                !addedBookingIds.has(b.id) &&
+                                b.status !== 'no_show' &&
+                                b.status !== 'paid'
+                        );
+
+                        // Устанавливаем статус "не пришел" для записей, которые не были добавлены
+                        for (const booking of notAddedBookings) {
+                            try {
+                                const { error: rpcError } = await supabase.rpc('update_booking_status_no_check', {
+                                    p_booking_id: booking.id,
+                                    p_new_status: 'no_show',
+                                });
+                                if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
+                                    await supabase
+                                        .from('bookings')
+                                        .update({ status: 'no_show' })
+                                        .eq('id', booking.id);
+                                }
+                            } catch (e) {
+                                console.error(`[Close Shifts Cron] Error updating booking ${booking.id} status to no_show:`, e);
+                            }
+                        }
                     }
+                } catch (e) {
+                    console.error(`[Close Shifts Cron] Error processing bookings for shift ${shift.id}:`, e);
                 }
             } catch (error) {
                 console.error(`[Close Shifts Cron] Unexpected error closing shift ${shift.id}:`, error);
