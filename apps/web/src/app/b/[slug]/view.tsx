@@ -69,6 +69,83 @@ type Slot = {
     end_at: string;
 };
 
+type BookingStep = 1 | 2 | 3 | 4 | 5;
+
+function useBookingSteps(params: {
+    branchId: string;
+    dayStr: string;
+    staffId: string;
+    serviceId: string;
+    servicesFiltered: Service[];
+    t: (key: string, fallback?: string) => string;
+}) {
+    const { branchId, dayStr, staffId, serviceId, servicesFiltered, t } = params;
+
+    const [step, setStep] = useState<BookingStep>(1);
+    const totalSteps: BookingStep = 5;
+
+    const stepsMeta = useMemo(
+        () => [
+            { id: 1 as BookingStep, label: t('booking.step.branch', 'Филиал') },
+            { id: 2 as BookingStep, label: t('booking.step.day', 'День') },
+            { id: 3 as BookingStep, label: t('booking.step.master', 'Мастер') },
+            { id: 4 as BookingStep, label: t('booking.step.service', 'Услуга') },
+            { id: 5 as BookingStep, label: t('booking.step.time', 'Время') },
+        ],
+        [t],
+    );
+
+    const canGoNext = useMemo(() => {
+        if (step >= totalSteps) return false;
+
+        // Шаг 1 -> 2: должен быть выбран филиал
+        if (step === 1) return !!branchId;
+
+        // Шаг 2 -> 3: должна быть выбрана дата
+        if (step === 2) return !!dayStr;
+
+        // Шаг 3 -> 4: должен быть выбран мастер
+        if (step === 3) return !!staffId;
+
+        // Шаг 4 -> 5: должна быть выбрана услуга И мастер должен делать эту услугу
+        if (step === 4) {
+            if (!serviceId || !staffId) return false;
+
+            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
+            if (!isServiceValid) {
+                debugLog('[Booking] canGoNext: service not in servicesFiltered', {
+                    serviceId,
+                    servicesFiltered: servicesFiltered.map((s) => s.id),
+                    servicesFilteredNames: servicesFiltered.map((s) => s.name_ru),
+                });
+                return false;
+            }
+
+            debugLog('[Booking] canGoNext: service is valid (in servicesFiltered)', { serviceId });
+            return true;
+        }
+
+        return true;
+    }, [step, totalSteps, branchId, dayStr, staffId, serviceId, servicesFiltered]);
+
+    const canGoPrev = step > 1;
+
+    const goPrev = () => {
+        if (!canGoPrev) return;
+        setStep((prev) => (Math.max(1, prev - 1) as BookingStep));
+    };
+
+    const goNext = () => {
+        if (!canGoNext) return;
+        setStep((prev) => {
+            const next = (prev + 1) as BookingStep;
+            return (next > totalSteps ? totalSteps : next) as BookingStep;
+        });
+    };
+
+    return { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, totalSteps };
+}
+
 function fmtErr(e: unknown, t?: (key: string, fallback?: string) => string): string {
     if (e && typeof e === 'object') {
         const any = e as { message?: string; details?: string; hint?: string; code?: string };
@@ -990,9 +1067,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     // ignore
                 }
             }
-            if (parsed.step && parsed.step >= 1 && parsed.step <= 4) {
-                setStep(parsed.step);
-            }
+            // шаг восстанавливаем через useBookingSteps чуть ниже (через payload в localStorage)
 
             window.localStorage.removeItem(key);
         } catch (e) {
@@ -1172,60 +1247,14 @@ export default function BookingForm({ data }: { data: Data }) {
     }, [day, dateLocale]);
 
     /* ---------- пошаговый визард ---------- */
-    const [step, setStep] = useState<number>(1);
-    const totalSteps = 5;
-
-    const stepsMeta = [
-        { id: 1, label: t('booking.step.branch', 'Филиал') },
-        { id: 2, label: t('booking.step.day', 'День') },
-        { id: 3, label: t('booking.step.master', 'Мастер') },
-        { id: 4, label: t('booking.step.service', 'Услуга') },
-        { id: 5, label: t('booking.step.time', 'Время') },
-    ] as const;
-
-    // Валидация для перехода к следующему шагу
-    const canGoNext = useMemo(() => {
-        if (step >= totalSteps) return false;
-        
-        // Шаг 1 -> 2: должен быть выбран филиал
-        if (step === 1) return !!branchId;
-        
-        // Шаг 2 -> 3: должна быть выбрана дата
-        if (step === 2) return !!dayStr;
-        
-        // Шаг 3 -> 4: должен быть выбран мастер
-        if (step === 3) return !!staffId;
-        
-        // Шаг 4 -> 5: должна быть выбрана услуга И мастер должен делать эту услугу
-        if (step === 4) {
-            if (!serviceId || !staffId) return false;
-            
-            // Проверяем, что услуга есть в отфильтрованном списке
-            // Это основная проверка - если услуга есть в servicesFiltered, значит она валидна
-            // servicesFiltered уже учитывает:
-            // - временные переводы (показывает услуги из филиала временного перевода)
-            // - связи service_staff (проверяет прямые связи или похожие услуги для временных переводов)
-            // - правильный филиал услуги
-            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            if (!isServiceValid) {
-                debugLog('[Booking] canGoNext: service not in servicesFiltered', { 
-                    serviceId, 
-                    servicesFiltered: servicesFiltered.map(s => s.id),
-                    servicesFilteredNames: servicesFiltered.map(s => s.name_ru)
-                });
-                return false;
-            }
-            
-            // Если услуга есть в servicesFiltered, она уже прошла все проверки (включая временные переводы)
-            // Дополнительная проверка через serviceToStaffMap не нужна, так как servicesFiltered уже это учитывает
-            debugLog('[Booking] canGoNext: service is valid (in servicesFiltered)', { serviceId });
-            return true;
-        }
-        
-        return true;
-    }, [step, branchId, dayStr, serviceId, staffId, serviceToStaffMap, totalSteps, servicesFiltered]);
-    
-    const canGoPrev = step > 1;
+    const { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, totalSteps } = useBookingSteps({
+        branchId,
+        dayStr,
+        staffId,
+        serviceId,
+        servicesFiltered,
+        t,
+    });
 
     /* ---------- UI ---------- */
     return (
@@ -1305,7 +1334,15 @@ export default function BookingForm({ data }: { data: Data }) {
                             <button
                                 key={s.id}
                                 type="button"
-                                onClick={() => setStep(s.id)}
+                                onClick={() => {
+                                    // Переход к шагу возможен только если все предыдущие шаги валидны
+                                    if (s.id < step) {
+                                        goPrev();
+                                        return;
+                                    }
+                                    if (s.id > step && !canGoNext) return;
+                                    // Прямой переход на произвольный шаг пока ограничиваем UX-кнопками "Далее/Назад"
+                                }}
                                 className="flex items-center gap-2"
                             >
                                 <div
@@ -1683,7 +1720,7 @@ export default function BookingForm({ data }: { data: Data }) {
                             <button
                                 type="button"
                                 disabled={!canGoPrev}
-                                onClick={() => canGoPrev && setStep(step - 1)}
+                                onClick={goPrev}
                                 className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                                     canGoPrev
                                         ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800'
@@ -1695,7 +1732,7 @@ export default function BookingForm({ data }: { data: Data }) {
                             <button
                                 type="button"
                                 disabled={!canGoNext}
-                                onClick={() => canGoNext && setStep(step + 1)}
+                                onClick={goNext}
                                 className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                                     canGoNext
                                         ? 'border-indigo-500 bg-indigo-600 text-white hover:bg-indigo-700 dark:border-indigo-400'
