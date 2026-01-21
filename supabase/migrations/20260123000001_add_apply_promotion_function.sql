@@ -1,6 +1,13 @@
 -- Миграция для добавления функции автоматического применения акций при оплате бронирования
 
 -- Функция для применения акции к бронированию при отметке как "paid"
+-- Приоритет применения акций (если подходят несколько одновременно):
+--   1) first_visit_discount
+--   2) birthday_discount
+--   3) referral_free
+--   4) referral_discount_50
+--   5) free_after_n_visits
+--   6) прочие типы (priority = 99, на будущее)
 create or replace function public.apply_promotion_to_booking(p_booking_id uuid)
 returns jsonb
 language plpgsql
@@ -51,27 +58,21 @@ begin
     v_biz_id := v_booking.biz_id;
     v_service_id := v_booking.service_id;
     
-    -- Получаем все активные акции для этого филиала
+    -- Получаем все активные и допустимые по условиям использования акции для этого филиала
     select array_agg(p.*) into v_promotions
     from public.branch_promotions p
     where p.branch_id = v_branch_id
       and p.is_active = true
       and (p.valid_from is null or p.valid_from <= CURRENT_DATE)
       and (p.valid_to is null or p.valid_to >= CURRENT_DATE)
-      and (
-          -- Для first_visit_discount и birthday_discount - проверяем сразу
-          p.promotion_type in ('first_visit_discount', 'birthday_discount')
-          -- Для остальных - проверяем через can_use_promotion
-          or public.can_use_promotion(v_client_id, v_branch_id, p.id)
-      )
+      and public.can_use_promotion(v_client_id, v_branch_id, p.id)
     order by 
-        -- Приоритет: бесплатная услуга > скидка 50% > скидка < 50%
         case p.promotion_type
-            when 'free_after_n_visits' then 1
-            when 'referral_free' then 2
-            when 'referral_discount_50' then 3
-            when 'first_visit_discount' then 4
-            when 'birthday_discount' then 5
+            when 'first_visit_discount' then 1
+            when 'birthday_discount' then 2
+            when 'referral_free' then 3
+            when 'referral_discount_50' then 4
+            when 'free_after_n_visits' then 5
             else 99
         end;
     
