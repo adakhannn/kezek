@@ -34,6 +34,11 @@ type TotalStats = {
     totalClosedShifts: number;
 };
 
+type BranchOption = {
+    id: string;
+    name: string;
+};
+
 export default function AllStaffFinanceStats() {
     const { t, locale } = useLanguage();
     const [loading, setLoading] = useState(true);
@@ -42,18 +47,36 @@ export default function AllStaffFinanceStats() {
     const [staffStats, setStaffStats] = useState<StaffStat[]>([]);
     const [totalStats, setTotalStats] = useState<TotalStats | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [branches, setBranches] = useState<BranchOption[]>([]);
+    const [branchId, setBranchId] = useState<string | 'all'>('all');
 
     const loadStats = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/dashboard/finance/all?period=${period}&date=${date}`, {
+            const params = new URLSearchParams({
+                period,
+                date,
+            });
+            if (branchId !== 'all') {
+                params.set('branchId', branchId);
+            }
+
+            const res = await fetch(`/api/dashboard/finance/all?${params.toString()}`, {
                 cache: 'no-store',
             });
             const json = await res.json();
             if (!json.ok) {
                 throw new Error(json.error || t('finance.loading', 'Не удалось загрузить статистику'));
             }
+
+            const apiBranches: BranchOption[] = Array.isArray(json.branches)
+                ? json.branches.map((b: { id: string; name: string }) => ({
+                      id: String(b.id),
+                      name: String(b.name),
+                  }))
+                : [];
+            setBranches(apiBranches);
             setStaffStats(json.staffStats || []);
             setTotalStats(json.totalStats || null);
         } catch (e) {
@@ -63,7 +86,7 @@ export default function AllStaffFinanceStats() {
         } finally {
             setLoading(false);
         }
-    }, [period, date]);
+    }, [period, date, branchId, t]);
 
     useEffect(() => {
         void loadStats();
@@ -141,7 +164,23 @@ export default function AllStaffFinanceStats() {
                         {t('finance.period.year', 'Год')}
                     </button>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                    {branches.length > 0 && (
+                        <select
+                            value={branchId}
+                            onChange={(e) => setBranchId(e.target.value as string | 'all')}
+                            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100"
+                        >
+                            <option value="all">
+                                {t('finance.branch.all', 'Все филиалы')}
+                            </option>
+                            {branches.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                    {b.name}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                     <input
                         type={period === 'year' ? 'number' : period === 'month' ? 'month' : 'date'}
                         value={period === 'year' ? date.split('-')[0] : date}

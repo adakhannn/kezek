@@ -19,6 +19,7 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const period = (searchParams.get('period') || 'day') as Period;
         const date = searchParams.get('date') || formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+        const branchId = searchParams.get('branchId');
 
         // Определяем диапазон дат в зависимости от периода
         let dateFrom: string;
@@ -40,12 +41,33 @@ export async function GET(req: Request) {
             dateTo = `${year}-12-31`;
         }
 
-        // Получаем всех сотрудников бизнеса
-        const { data: staffList, error: staffError } = await supabase
+        // Получаем все филиалы бизнеса (для фильтра в UI)
+        const { data: branches, error: branchesError } = await supabase
+            .from('branches')
+            .select('id, name')
+            .eq('biz_id', bizId)
+            .order('name');
+
+        if (branchesError) {
+            console.error('Error loading branches:', branchesError);
+            return NextResponse.json(
+                { ok: false, error: branchesError.message },
+                { status: 500 }
+            );
+        }
+
+        // Получаем всех сотрудников бизнеса (с optional фильтром по филиалу)
+        let staffQuery = supabase
             .from('staff')
-            .select('id, full_name, is_active, hourly_rate, percent_master, percent_salon')
+            .select('id, full_name, is_active, hourly_rate, percent_master, percent_salon, branch_id')
             .eq('biz_id', bizId)
             .order('full_name');
+
+        if (branchId) {
+            staffQuery = staffQuery.eq('branch_id', branchId);
+        }
+
+        const { data: staffList, error: staffError } = await staffQuery;
 
         if (staffError) {
             console.error('Error loading staff:', staffError);
@@ -58,14 +80,20 @@ export async function GET(req: Request) {
         // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
         const admin = getServiceClient();
 
-        // Получаем все смены за период
-        const { data: allShifts, error: shiftsError } = await admin
+        // Получаем все смены за период (с optional фильтром по филиалу)
+        let shiftsQuery = admin
             .from('staff_shifts')
             .select('*')
             .eq('biz_id', bizId)
             .gte('shift_date', dateFrom)
             .lte('shift_date', dateTo)
             .order('shift_date', { ascending: false });
+
+        if (branchId) {
+            shiftsQuery = shiftsQuery.eq('branch_id', branchId);
+        }
+
+        const { data: allShifts, error: shiftsError } = await shiftsQuery;
 
         if (shiftsError) {
             console.error('Error loading shifts:', shiftsError);
@@ -207,6 +235,11 @@ export async function GET(req: Request) {
             period,
             dateFrom,
             dateTo,
+            branchId: branchId || null,
+            branches: (branches || []).map((b) => ({
+                id: b.id,
+                name: b.name,
+            })),
             staffStats,
             totalStats,
         });
