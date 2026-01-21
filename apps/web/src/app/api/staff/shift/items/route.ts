@@ -32,8 +32,6 @@ export async function POST(req: Request) {
         // Находим открытую смену за сегодня
         const now = new Date();
         const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
-        const todayStart = `${ymd}T00:00:00`;
-        const todayEnd = `${ymd}T23:59:59`;
 
         // Получаем настройки сотрудника для расчета процентов
         const { data: staffData, error: staffError } = await supabase
@@ -54,8 +52,9 @@ export async function POST(req: Request) {
             .select('id')
             .eq('staff_id', staffId)
             .eq('status', 'open')
-            .gte('shift_date', todayStart)
-            .lte('shift_date', todayEnd)
+            // Ищем открытую смену строго по дате смены в TZ, без сравнения с временем,
+            // чтобы избежать ошибок на границах дня и различий типов (date vs timestamp)
+            .eq('shift_date', ymd)
             .maybeSingle();
 
         if (findError) {
