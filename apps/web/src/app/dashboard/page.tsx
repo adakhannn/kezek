@@ -35,7 +35,11 @@ export default async function DashboardHome() {
     const start = `${y}-${m}-${d}T00:00:00Z`;
     const end   = `${y}-${m}-${d}T23:59:59Z`;
 
-    const [[bookingsToday, staffActive, servicesActive, branchesCount], { data: biz }] = await Promise.all([
+    const [
+        [bookingsToday, staffActive, servicesActive, branchesCount],
+        { data: biz },
+        { data: ratingConfig },
+    ] = await Promise.all([
         Promise.all([
             count(supabase, 'bookings', [{ col: 'biz_id', eq: bizId }, { col: 'start_at', gte: start }, { col: 'start_at', lte: end }]),
             count(supabase, 'staff', [{ col: 'biz_id', eq: bizId }, { col: 'is_active', eq: true }]),
@@ -44,13 +48,27 @@ export default async function DashboardHome() {
         ]),
         supabase
             .from('businesses')
-            .select('name, city, slug')
+            .select('name, city, slug, rating_score')
             .eq('id', bizId)
-            .maybeSingle<{ name: string | null; city: string | null; slug: string | null }>(),
+            .maybeSingle<{ name: string | null; city: string | null; slug: string | null; rating_score: number | null }>(),
+        supabase
+            .from('rating_global_config')
+            .select('staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days')
+            .eq('is_active', true)
+            .order('valid_from', { ascending: false })
+            .limit(1)
+            .maybeSingle<{
+                staff_reviews_weight: number;
+                staff_productivity_weight: number;
+                staff_loyalty_weight: number;
+                staff_discipline_weight: number;
+                window_days: number;
+            }>(),
     ]);
 
     const bizName = biz?.name || null; // Передаем null, чтобы перевести на клиенте
     const bizCity = biz?.city || null;
+    const bizRatingScore = biz?.rating_score ?? null;
 
     // Передаем ISO строку, форматирование будет на клиенте с учетом локали
     const formattedDate = today.toISOString();
@@ -68,6 +86,18 @@ export default async function DashboardHome() {
             servicesActive={servicesActive}
             branchesCount={branchesCount}
             needOnboarding={needOnboarding}
+            ratingScore={bizRatingScore}
+            ratingWeights={
+                ratingConfig
+                    ? {
+                          reviews: Number(ratingConfig.staff_reviews_weight),
+                          productivity: Number(ratingConfig.staff_productivity_weight),
+                          loyalty: Number(ratingConfig.staff_loyalty_weight),
+                          discipline: Number(ratingConfig.staff_discipline_weight),
+                          windowDays: Number(ratingConfig.window_days),
+                      }
+                    : null
+            }
         />
     );
 }

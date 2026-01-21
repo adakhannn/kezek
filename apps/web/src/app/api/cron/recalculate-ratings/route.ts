@@ -1,6 +1,7 @@
 // apps/web/src/app/api/cron/recalculate-ratings/route.ts
 import { NextResponse } from 'next/server';
 
+import { logDebug, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -26,21 +27,21 @@ export async function GET(req: Request) {
         });
 
         if (error) {
-            console.error('[Recalculate Ratings Cron] Error:', error);
+            logError('RecalculateRatingsCron', 'RPC recalculate_ratings_for_date failed', error);
             return NextResponse.json(
                 { ok: false, error: error.message },
                 { status: 500 }
             );
         }
 
-        console.log('[Recalculate Ratings Cron] Successfully recalculated ratings');
+        logDebug('RecalculateRatingsCron', 'Successfully recalculated ratings', { data });
 
         return NextResponse.json({
             ok: true,
             message: 'Ratings recalculated successfully',
         });
     } catch (error) {
-        console.error('[Recalculate Ratings Cron] Unexpected error:', error);
+        logError('RecalculateRatingsCron', 'Unexpected top-level error', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

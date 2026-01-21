@@ -2,6 +2,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
+import { logDebug, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
 
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
         yesterday.setDate(yesterday.getDate() - 1);
         const ymd = formatInTimeZone(yesterday, TZ, 'yyyy-MM-dd');
 
-        console.log(`[Close Shifts Cron] Closing shifts for date: ${ymd}`);
+        logDebug('CloseShiftsCron', 'Closing shifts for date', { ymd });
 
         // Находим все открытые смены за вчерашний день
         const { data: openShifts, error: findError } = await supabase
@@ -38,7 +39,7 @@ export async function GET(req: Request) {
             .eq('shift_date', ymd);
 
         if (findError) {
-            console.error('[Close Shifts Cron] Error finding open shifts:', findError);
+            logError('CloseShiftsCron', 'Error finding open shifts', findError);
             return NextResponse.json(
                 { ok: false, error: findError.message },
                 { status: 500 }
@@ -46,7 +47,7 @@ export async function GET(req: Request) {
         }
 
         if (!openShifts || openShifts.length === 0) {
-            console.log('[Close Shifts Cron] No open shifts to close');
+            logDebug('CloseShiftsCron', 'No open shifts to close');
             return NextResponse.json({ 
                 ok: true, 
                 message: 'No open shifts to close',
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
             });
         }
 
-        console.log(`[Close Shifts Cron] Found ${openShifts.length} open shifts to close`);
+        logDebug('CloseShiftsCron', 'Found open shifts to close', { count: openShifts.length });
 
         let closedCount = 0;
         const errors: string[] = [];
@@ -70,7 +71,7 @@ export async function GET(req: Request) {
                     .maybeSingle();
 
                 if (staffError || !staffData) {
-                    console.error(`[Close Shifts Cron] Error loading staff ${shift.staff_id}:`, staffError);
+                    logError('CloseShiftsCron', `Error loading staff ${shift.staff_id}`, staffError);
                     errors.push(`Staff ${shift.staff_id}: ${staffError?.message || 'Not found'}`);
                     continue;
                 }
@@ -86,7 +87,7 @@ export async function GET(req: Request) {
                     .eq('shift_id', shift.id);
 
                 if (itemsError) {
-                    console.error(`[Close Shifts Cron] Error loading shift items for ${shift.id}:`, itemsError);
+                    logError('CloseShiftsCron', `Error loading shift items for ${shift.id}`, itemsError);
                 }
 
                 // Рассчитываем суммы
@@ -212,13 +213,13 @@ export async function GET(req: Request) {
                     .eq('id', shift.id);
 
                 if (updateError) {
-                    console.error(`[Close Shifts Cron] Error closing shift ${shift.id}:`, updateError);
+                    logError('CloseShiftsCron', `Error closing shift ${shift.id}`, updateError);
                     errors.push(`Shift ${shift.id}: ${updateError.message}`);
                     continue;
                 }
 
                 closedCount++;
-                console.log(`[Close Shifts Cron] Successfully closed shift ${shift.id}`);
+                logDebug('CloseShiftsCron', 'Successfully closed shift', { shiftId: shift.id });
 
                 // После закрытия смены:
                 // 1) Переводим связанные записи в статус "paid" с применением акций
@@ -289,10 +290,18 @@ export async function GET(req: Request) {
                                             .eq('id', booking.id);
                                     }
                                 } else {
-                                    console.error(`[Close Shifts Cron] Error updating booking ${booking.id} status to paid via promotions RPC:`, rpcError);
+                                    logError(
+                                        'CloseShiftsCron',
+                                        `Error updating booking ${booking.id} status to paid via promotions RPC`,
+                                        rpcError
+                                    );
                                 }
                             } catch (e) {
-                                console.error(`[Close Shifts Cron] Error updating booking ${booking.id} status to paid:`, e);
+                                logError(
+                                    'CloseShiftsCron',
+                                    `Unexpected error updating booking ${booking.id} status to paid`,
+                                    e
+                                );
                             }
                         }
 
@@ -318,28 +327,40 @@ export async function GET(req: Request) {
                                         .eq('id', booking.id);
                                 }
                             } catch (e) {
-                                console.error(`[Close Shifts Cron] Error updating booking ${booking.id} status to no_show:`, e);
+                                logError(
+                                    'CloseShiftsCron',
+                                    `Unexpected error updating booking ${booking.id} status to no_show`,
+                                    e
+                                );
                             }
                         }
                     }
                 } catch (e) {
-                    console.error(`[Close Shifts Cron] Error processing bookings for shift ${shift.id}:`, e);
+                    logError('CloseShiftsCron', `Unexpected error processing bookings for shift ${shift.id}`, e);
                 }
             } catch (error) {
-                console.error(`[Close Shifts Cron] Unexpected error closing shift ${shift.id}:`, error);
+                logError('CloseShiftsCron', `Unexpected error closing shift ${shift.id}`, error);
                 errors.push(`Shift ${shift.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         }
 
-        return NextResponse.json({
+        const response = {
             ok: true,
             message: `Closed ${closedCount} of ${openShifts.length} shifts`,
             closed: closedCount,
             total: openShifts.length,
             errors: errors.length > 0 ? errors : undefined,
-        });
+        };
+
+        if (errors.length > 0) {
+            logError('CloseShiftsCron', 'Completed with errors', { closedCount, total: openShifts.length, errors });
+        } else {
+            logDebug('CloseShiftsCron', 'Completed successfully', { closedCount, total: openShifts.length });
+        }
+
+        return NextResponse.json(response);
     } catch (error) {
-        console.error('[Close Shifts Cron] Unexpected error:', error);
+        logError('CloseShiftsCron', 'Unexpected top-level error', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }
