@@ -7,6 +7,8 @@ import { ru } from 'date-fns/locale/ru';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+import { BookingEmptyState } from './BookingEmptyState';
+
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { supabase } from '@/lib/supabaseClient';
@@ -778,10 +780,23 @@ export default function BookingForm({ data }: { data: Data }) {
                 });
                 if (ignore) return;
                 if (error) {
-                     
                     console.error('[get_free_slots_service_day_v2] error:', error);
                     setSlots([]);
-                    setSlotsError(t('booking.error.loadSlots', 'Не удалось загрузить свободные слоты. Попробуйте выбрать другой день или мастера.'));
+                    // Определяем тип ошибки для более детального сообщения
+                    const errorMessage = error.message || '';
+                    let userMessage = t('booking.error.loadSlots', 'Не удалось загрузить свободные слоты. Попробуйте выбрать другой день или мастера.');
+                    
+                    if (errorMessage.includes('not assigned') || errorMessage.includes('не прикреплён')) {
+                        userMessage = t('booking.error.masterNotAssigned', 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.');
+                    } else if (errorMessage.includes('schedule') || errorMessage.includes('расписание')) {
+                        userMessage = t('booking.error.noSchedule', 'У выбранного мастера нет расписания на выбранный день. Выберите другой день.');
+                    } else if (errorMessage.includes('conflict') || errorMessage.includes('конфликт')) {
+                        userMessage = t('booking.error.scheduleConflict', 'Есть конфликт в расписании мастера на выбранный день. Выберите другой день или мастера.');
+                    } else if (error.code === 'PGRST301' || error.code === 'PGRST116') {
+                        userMessage = t('booking.error.technical', 'Произошла техническая ошибка. Пожалуйста, обновите страницу или попробуйте позже.');
+                    }
+                    
+                    setSlotsError(userMessage);
                     return;
                 }
                 const all = (data ?? []) as Slot[];
@@ -935,7 +950,26 @@ export default function BookingForm({ data }: { data: Data }) {
                 if (ignore) return;
                 console.error('[get_free_slots_service_day_v2] catch:', e);
                 setSlots([]);
-                setSlotsError(fmtErr(e, t));
+                // Используем fmtErr для базового форматирования, но также проверяем тип ошибки
+                const baseError = fmtErr(e, t);
+                let userMessage = baseError;
+                
+                // Если это известная ошибка, показываем более понятное сообщение
+                if (e && typeof e === 'object' && 'message' in e) {
+                    const errorMessage = String((e as { message?: string }).message || '');
+                    if (errorMessage.includes('not assigned') || errorMessage.includes('не прикреплён')) {
+                        userMessage = t('booking.error.masterNotAssigned', 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.');
+                    } else if (errorMessage.includes('schedule') || errorMessage.includes('расписание')) {
+                        userMessage = t('booking.error.noSchedule', 'У выбранного мастера нет расписания на выбранный день. Выберите другой день.');
+                    } else if (errorMessage.includes('conflict') || errorMessage.includes('конфликт')) {
+                        userMessage = t('booking.error.scheduleConflict', 'Есть конфликт в расписании мастера на выбранный день. Выберите другой день или мастера.');
+                    } else if (!errorMessage.includes('Не удалось загрузить') && !errorMessage.includes('Failed to load')) {
+                        // Если это не наше сообщение, возможно это техническая ошибка
+                        userMessage = t('booking.error.technical', 'Произошла техническая ошибка. Пожалуйста, обновите страницу или попробуйте позже.');
+                    }
+                }
+                
+                setSlotsError(userMessage);
             } finally {
                 if (!ignore) setSlotsLoading(false);
             }
@@ -1379,9 +1413,10 @@ export default function BookingForm({ data }: { data: Data }) {
                                     {t('booking.step1.title', 'Шаг 1. Выберите филиал')}
                                 </h2>
                                 {branches.length === 0 ? (
-                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        {t('booking.step1.noBranches', 'Нет активных филиалов.')}
-                                    </div>
+                                    <BookingEmptyState
+                                        type="empty"
+                                        message={t('booking.empty.noBranches', 'У этого бизнеса нет активных филиалов. Пожалуйста, вернитесь позже.')}
+                                    />
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {branches.map((b) => {
@@ -1466,13 +1501,15 @@ export default function BookingForm({ data }: { data: Data }) {
                                     {t('booking.step3.title', 'Шаг 3. Выберите мастера')}
                                 </h2>
                                 {!dayStr ? (
-                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        {t('booking.step3.selectDayFirst', 'Сначала выберите день на шаге 2.')}
-                                    </div>
+                                    <BookingEmptyState
+                                        type="info"
+                                        message={t('booking.empty.selectDayFirst', 'Сначала выберите день.')}
+                                    />
                                 ) : staffFiltered.length === 0 ? (
-                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        {t('booking.step3.noStaff', 'На выбранную дату в этом филиале нет доступных мастеров.')}
-                                    </div>
+                                    <BookingEmptyState
+                                        type="empty"
+                                        message={t('booking.empty.noStaff', 'На выбранную дату в этом филиале нет доступных мастеров. Выберите другой день.')}
+                                    />
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {staffFiltered.map((m) => {
@@ -1531,13 +1568,15 @@ export default function BookingForm({ data }: { data: Data }) {
                                     {t('booking.step4.title', 'Шаг 4. Выберите услугу')}
                                 </h2>
                                 {!staffId ? (
-                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        {t('booking.step4.selectMasterFirst', 'Сначала выберите мастера на шаге 3.')}
-                                    </div>
+                                    <BookingEmptyState
+                                        type="info"
+                                        message={t('booking.empty.selectMasterFirst', 'Сначала выберите мастера.')}
+                                    />
                                 ) : servicesFiltered.length === 0 ? (
-                                    <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                                        {t('booking.step4.noServices', 'У выбранного мастера пока нет назначенных услуг.')}
-                                    </div>
+                                    <BookingEmptyState
+                                        type="empty"
+                                        message={t('booking.empty.noServices', 'У выбранного мастера пока нет назначенных услуг. Выберите другого мастера.')}
+                                    />
                                 ) : (
                                     <>
                                         <div className="flex flex-col gap-2">
@@ -1633,18 +1672,12 @@ export default function BookingForm({ data }: { data: Data }) {
                                     // Также не показываем ошибку, если есть ошибка загрузки слотов (slotsError) - там будет своё сообщение
                                     if (serviceStaff !== null && !isServiceValid && !slotsError) {
                                         return (
-                                            <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
-                                                <div className="flex items-start gap-2">
-                                                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                    </svg>
-                                                    <div>
-                                                        <p className="font-medium">{t('booking.step5.masterNoService', 'Выбранный мастер не выполняет эту услугу')}</p>
-                                                        <p className="mt-1 text-amber-700 dark:text-amber-300">
-                                                            {t('booking.step5.masterNoServiceHint', 'Пожалуйста, вернитесь к шагу 4 и выберите другого мастера или выберите другую услугу.')}
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                            <div className="mb-3">
+                                                <BookingEmptyState
+                                                    type="warning"
+                                                    message={t('booking.step5.masterNoService', 'Выбранный мастер не выполняет эту услугу')}
+                                                    hint={t('booking.step5.masterNoServiceHint', 'Пожалуйста, вернитесь к шагу 4 и выберите другого мастера или выберите другую услугу.')}
+                                                />
                                             </div>
                                         );
                                     }
@@ -1653,27 +1686,16 @@ export default function BookingForm({ data }: { data: Data }) {
 
                                 {/* Уведомление, если у клиента уже есть запись в этом бизнесе на выбранный день */}
                                 {isAuthed && !clientBookingsLoading && clientBookingsCount && clientBookingsCount > 0 && (
-                                    <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
-                                        <div className="flex items-start gap-2">
-                                            <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                                />
-                                            </svg>
-                                            <div>
-                                                <p className="font-medium">
-                                                    {clientBookingsCount === 1
-                                                        ? t('booking.existingBookings.warning.one', 'У вас уже есть одна активная запись в этом заведении на выбранный день.')
-                                                        : t('booking.existingBookings.warning.many', `У вас уже есть ${clientBookingsCount} активных записей в этом заведении на выбранный день.`)}
-                                                </p>
-                                                <p className="mt-1 text-amber-700 dark:text-amber-300">
-                                                    {t('booking.existingBookings.hint', 'Вы всё равно можете оформить ещё одну запись, если это необходимо.')}
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <div className="mb-3">
+                                        <BookingEmptyState
+                                            type="warning"
+                                            message={
+                                                clientBookingsCount === 1
+                                                    ? t('booking.existingBookings.warning.one', 'У вас уже есть одна активная запись в этом заведении на выбранный день.')
+                                                    : t('booking.existingBookings.warning.many', `У вас уже есть ${clientBookingsCount} активных записей в этом заведении на выбранный день.`)
+                                            }
+                                            hint={t('booking.existingBookings.hint', 'Вы всё равно можете оформить ещё одну запись, если это необходимо.')}
+                                        />
                                     </div>
                                 )}
 
@@ -1686,14 +1708,16 @@ export default function BookingForm({ data }: { data: Data }) {
                                     </div>
                                 )}
                                 {!slotsLoading && slotsError && (
-                                    <div className="rounded-lg border border-dashed border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-700 dark:bg-red-950/40 dark:text-red-200">
-                                        {slotsError}
-                                    </div>
+                                    <BookingEmptyState
+                                        type="error"
+                                        message={slotsError}
+                                    />
                                 )}
                                 {!slotsLoading && !slotsError && slots.length === 0 && (
-                                    <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                        {t('booking.noSlots', 'Нет свободных окон на этот день. Попробуйте выбрать другой день или мастера.')}
-                                    </div>
+                                    <BookingEmptyState
+                                        type="empty"
+                                        message={t('booking.empty.noSlots', 'На выбранный день нет свободных слотов. Выберите другой день или мастера.')}
+                                    />
                                 )}
                                 {!slotsLoading && !slotsError && slots.length > 0 && (
                                     <div className="mt-1 flex flex-wrap gap-2">
