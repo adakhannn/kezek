@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -58,8 +59,7 @@ export async function GET(
             dateTo = `${year}-12-31`;
         }
 
-        // Получаем смены за период
-        console.log('[dashboard/staff/finance/stats] Loading shifts:', {
+        logDebug('StaffFinanceStats', 'Loading shifts', {
             staffId,
             bizId,
             dateFrom,
@@ -83,18 +83,7 @@ export async function GET(
             .eq('status', 'open')
             .maybeSingle();
 
-        console.log('[dashboard/staff/finance/stats] Today open shift:', todayOpenShift);
-
-        // Сначала проверим, есть ли вообще смены у этого сотрудника
-        const { data: allShiftsCheck, error: checkError } = await admin
-            .from('staff_shifts')
-            .select('id, shift_date, status')
-            .eq('biz_id', bizId)
-            .eq('staff_id', staffId)
-            .order('shift_date', { ascending: false })
-            .limit(5);
-
-        console.log('[dashboard/staff/finance/stats] All shifts check (last 5):', allShiftsCheck);
+        logDebug('StaffFinanceStats', 'Today open shift', { hasOpenShift: !!todayOpenShift });
 
         const { data: shifts, error: shiftsError } = await admin
             .from('staff_shifts')

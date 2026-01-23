@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -49,7 +50,7 @@ export async function GET(req: Request) {
             .order('name');
 
         if (branchesError) {
-            console.error('Error loading branches:', branchesError);
+            logError('FinanceAll', 'Error loading branches', branchesError);
             return NextResponse.json(
                 { ok: false, error: branchesError.message },
                 { status: 500 }
@@ -70,7 +71,7 @@ export async function GET(req: Request) {
         const { data: staffList, error: staffError } = await staffQuery;
 
         if (staffError) {
-            console.error('Error loading staff:', staffError);
+            logError('FinanceAll', 'Error loading staff', staffError);
             return NextResponse.json(
                 { ok: false, error: staffError.message },
                 { status: 500 }
@@ -80,31 +81,44 @@ export async function GET(req: Request) {
         // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
         const admin = getServiceClient();
 
-        // Получаем все смены за период (с optional фильтром по филиалу)
+        // Используем оптимизированную SQL функцию для получения статистики
+        // Это уменьшает количество запросов к БД и выполняет агрегацию на стороне сервера
+        const { data: businessStats, error: statsError } = await admin.rpc('get_business_finance_stats', {
+            p_biz_id: bizId,
+            p_date_from: dateFrom,
+            p_date_to: dateTo,
+            p_branch_id: branchId || null,
+            p_include_open: true,
+        });
+
+        if (statsError) {
+            logError('FinanceAll', 'Error calling get_business_finance_stats RPC', statsError);
+            // Fallback на старый метод, если функция не работает
+            logDebug('FinanceAll', 'Falling back to old method');
+            return await getFinanceStatsLegacy(admin, bizId, dateFrom, dateTo, branchId, staffList || []);
+        }
+
+        // Получаем все смены для расчета открытых смен (они требуют динамического расчета)
         let shiftsQuery = admin
             .from('staff_shifts')
             .select('*')
             .eq('biz_id', bizId)
+            .eq('status', 'open')
             .gte('shift_date', dateFrom)
-            .lte('shift_date', dateTo)
-            .order('shift_date', { ascending: false });
+            .lte('shift_date', dateTo);
 
         if (branchId) {
             shiftsQuery = shiftsQuery.eq('branch_id', branchId);
         }
 
-        const { data: allShifts, error: shiftsError } = await shiftsQuery;
+        const { data: openShifts, error: openShiftsError } = await shiftsQuery;
 
-        if (shiftsError) {
-            console.error('Error loading shifts:', shiftsError);
-            return NextResponse.json(
-                { ok: false, error: shiftsError.message },
-                { status: 500 }
-            );
+        if (openShiftsError) {
+            logError('FinanceAll', 'Error loading open shifts', openShiftsError);
         }
 
-        // Получаем все позиции (клиентов) для всех смен
-        const shiftIds = (allShifts || []).map(s => s.id);
+        // Получаем позиции для открытых смен
+        const openShiftIds = (openShifts || []).map(s => s.id);
         const shiftItemsMap: Record<string, Array<{
             id: string;
             client_name: string | null;
@@ -113,15 +127,15 @@ export async function GET(req: Request) {
             consumables_amount: number;
         }>> = {};
         
-        if (shiftIds.length > 0) {
+        if (openShiftIds.length > 0) {
             const { data: itemsData, error: itemsError } = await admin
                 .from('staff_shift_items')
                 .select('id, shift_id, client_name, service_name, service_amount, consumables_amount')
-                .in('shift_id', shiftIds)
+                .in('shift_id', openShiftIds)
                 .order('created_at', { ascending: true });
 
             if (itemsError) {
-                console.error('Error loading shift items:', itemsError);
+                logError('FinanceAll', 'Error loading shift items', itemsError);
             } else {
                 // Группируем по shift_id
                 for (const item of itemsData || []) {
@@ -140,29 +154,54 @@ export async function GET(req: Request) {
             }
         }
 
+        // Парсим результат из SQL функции
+        const businessStatsData = businessStats as {
+            staff_stats?: Array<{
+                staff_id: string;
+                staff_name: string;
+                is_active: boolean;
+                branch_id: string;
+                shifts: { total: number; closed: number; open: number };
+                stats: {
+                    total_amount: number;
+                    total_master: number;
+                    total_salon: number;
+                    total_consumables: number;
+                    total_late_minutes: number;
+                };
+            }>;
+            total_stats?: {
+                total_shifts: number;
+                closed_shifts: number;
+                open_shifts: number;
+                total_amount: number;
+                total_master: number;
+                total_salon: number;
+                total_consumables: number;
+                total_late_minutes: number;
+            };
+        };
+
         // Группируем смены по сотрудникам и считаем статистику
+        // Используем данные из SQL функции для закрытых смен, добавляем расчеты для открытых
         const staffStats = (staffList || []).map((staff) => {
-            const staffShifts = (allShifts || []).filter((s) => s.staff_id === staff.id);
-            const closedShifts = staffShifts.filter((s) => s.status === 'closed');
-            const openShifts = staffShifts.filter((s) => s.status === 'open');
-
-            let totalAmount = 0;
-            let totalMaster = 0;
-            let totalSalon = 0;
-            let totalConsumables = 0;
-            let totalLateMinutes = 0;
-
-            // Считаем закрытые смены (используем сохраненные значения)
-            for (const shift of closedShifts) {
-                totalAmount += Number(shift.total_amount ?? 0);
-                totalMaster += Number(shift.master_share ?? 0);
-                totalSalon += Number(shift.salon_share ?? 0);
-                totalConsumables += Number(shift.consumables_amount ?? 0);
-                totalLateMinutes += Number(shift.late_minutes ?? 0);
-            }
+            // Находим статистику из SQL функции
+            const sqlStats = businessStatsData.staff_stats?.find(s => s.staff_id === staff.id);
+            
+            // Базовые значения из SQL функции (закрытые смены)
+            let totalAmount = sqlStats?.stats.total_amount || 0;
+            let totalMaster = sqlStats?.stats.total_master || 0;
+            let totalSalon = sqlStats?.stats.total_salon || 0;
+            let totalConsumables = sqlStats?.stats.total_consumables || 0;
+            let totalLateMinutes = sqlStats?.stats.total_late_minutes || 0;
+            let closedShiftsCount = sqlStats?.shifts.closed || 0;
+            let openShiftsCount = sqlStats?.shifts.open || 0;
+            
+            // Находим открытые смены для этого сотрудника
+            const staffOpenShifts = (openShifts || []).filter((s) => s.staff_id === staff.id);
 
             // Для открытых смен динамически рассчитываем из позиций
-            for (const shift of openShifts) {
+            for (const shift of staffOpenShifts) {
                 const shiftItems = shiftItemsMap[shift.id] || [];
                 
                 // Считаем суммы из позиций
@@ -207,9 +246,9 @@ export async function GET(req: Request) {
                 staffId: staff.id,
                 staffName: staff.full_name,
                 isActive: staff.is_active,
-                shiftsCount: staffShifts.length,
-                openShiftsCount: openShifts.length,
-                closedShiftsCount: closedShifts.length,
+                shiftsCount: closedShiftsCount + staffOpenShifts.length,
+                openShiftsCount: staffOpenShifts.length,
+                closedShiftsCount,
                 totalAmount,
                 totalMaster,
                 totalSalon,
@@ -219,7 +258,17 @@ export async function GET(req: Request) {
         });
 
         // Считаем общую статистику
-        const totalStats = {
+        // Используем данные из SQL функции, если доступны, иначе считаем из staffStats
+        const totalStats = businessStatsData.total_stats ? {
+            totalAmount: businessStatsData.total_stats.total_amount,
+            totalMaster: businessStatsData.total_stats.total_master,
+            totalSalon: businessStatsData.total_stats.total_salon,
+            totalConsumables: businessStatsData.total_stats.total_consumables,
+            totalLateMinutes: businessStatsData.total_stats.total_late_minutes,
+            totalShifts: businessStatsData.total_stats.total_shifts,
+            totalOpenShifts: businessStatsData.total_stats.open_shifts,
+            totalClosedShifts: businessStatsData.total_stats.closed_shifts,
+        } : {
             totalAmount: staffStats.reduce((sum, s) => sum + s.totalAmount, 0),
             totalMaster: staffStats.reduce((sum, s) => sum + s.totalMaster, 0),
             totalSalon: staffStats.reduce((sum, s) => sum + s.totalSalon, 0),
@@ -245,11 +294,25 @@ export async function GET(req: Request) {
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[dashboard/staff/finance/all] error:', e);
+        logError('FinanceAll', 'Unexpected error', e);
         return NextResponse.json(
             { ok: false, error: msg },
             { status: 500 }
         );
     }
+}
+
+// Fallback функция для обратной совместимости (старый метод)
+// Пока не реализована, так как SQL функция должна работать
+// Если понадобится, можно добавить полную реализацию старого метода
+async function getFinanceStatsLegacy(
+    _admin: ReturnType<typeof getServiceClient>,
+    _bizId: string,
+    _dateFrom: string,
+    _dateTo: string,
+    _branchId: string | null,
+    _staffList: Array<{ id: string; full_name: string; is_active: boolean }>
+) {
+    return NextResponse.json({ ok: false, error: 'Legacy method not implemented. Please check SQL function.' }, { status: 500 });
 }
 
