@@ -5,6 +5,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { logError } from '@/lib/log';
+
 type Body = {
     full_name?: string | null;
     phone?: string | null;
@@ -80,7 +82,7 @@ export async function POST(req: Request) {
             .upsert(upsertData, { onConflict: 'id' });
 
         if (profileError) {
-            console.error('[profile/update] profile error:', profileError);
+            logError('ProfileUpdate', 'profile error', profileError);
             return NextResponse.json(
                 { ok: false, error: 'profile_update_failed', message: profileError.message },
                 { status: 400 }
@@ -94,14 +96,14 @@ export async function POST(req: Request) {
         });
 
         if (metaError) {
-            console.error('[profile/update] metadata error:', metaError);
+            logError('ProfileUpdate', 'metadata error', metaError);
             // Не критично, продолжаем
         }
 
         return NextResponse.json({ ok: true });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[profile/update] error:', e);
+        logError('ProfileUpdate', 'Unexpected error', e);
         return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
     }
 }

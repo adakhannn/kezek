@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { logError, logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
         const { error: removeError } = await admin.storage.from('avatars').remove([oldPath]);
 
         if (removeError) {
-            console.warn('Failed to delete avatar file:', removeError);
+            logWarn('StaffAvatarRemove', 'Failed to delete avatar file', removeError);
             // Продолжаем, даже если удаление файла не удалось
         }
 
@@ -40,13 +41,13 @@ export async function POST(req: Request) {
             .eq('id', staffId);
 
         if (updateError) {
-            console.error('Update error:', updateError);
+            logError('StaffAvatarRemove', 'Update error', updateError);
             return NextResponse.json({ ok: false, error: updateError.message }, { status: 400 });
         }
 
         return NextResponse.json({ ok: true });
     } catch (error) {
-        console.error('Error in avatar remove:', error);
+        logError('StaffAvatarRemove', 'Error in avatar remove', error);
         const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

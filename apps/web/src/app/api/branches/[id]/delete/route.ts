@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logWarn } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -111,7 +112,7 @@ export async function POST(_req: Request, context: unknown) {
             if (eMoveStaff) {
                 // Если не удалось переместить, это не критично для неактивных
                 // Продолжаем удаление филиала
-                console.warn('Не удалось переместить неактивных сотрудников:', eMoveStaff.message);
+                logWarn('BranchDelete', 'Не удалось переместить неактивных сотрудников', eMoveStaff);
             }
         }
         // Если нет других филиалов, неактивные сотрудники останутся с этим branch_id

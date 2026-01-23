@@ -5,6 +5,7 @@ import {NextResponse} from 'next/server';
 
 import {getBizContextForManagers} from '@/lib/authBiz';
 import { formatErrorSimple } from '@/lib/errors';
+import { logWarn } from '@/lib/log';
 import {getServiceClient} from '@/lib/supabaseService';
 
 /**
@@ -18,7 +19,7 @@ async function addStaffRole(admin: ReturnType<typeof getServiceClient>, userId: 
         .maybeSingle();
     
     if (!roleStaff?.id) {
-        console.warn('Staff role not found in roles table');
+        logWarn('StaffUpdate', 'Staff role not found in roles table');
         return;
     }
 
@@ -41,7 +42,7 @@ async function addStaffRole(admin: ReturnType<typeof getServiceClient>, userId: 
                 biz_key: bizId,
             });
         if (eRole) {
-            console.warn('Failed to add staff role:', eRole.message);
+            logWarn('StaffUpdate', 'Failed to add staff role', eRole);
         }
     }
 }
