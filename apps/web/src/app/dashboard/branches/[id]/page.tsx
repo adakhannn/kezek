@@ -25,11 +25,30 @@ export default async function EditBranchPage({
     const { data: isSuper } = await supabase.rpc('is_super_admin');
     const isSuperAdmin = !!isSuper;
 
-    const { data: branch, error } = await supabase
-        .from('branches')
-        .select('id,name,address,is_active,biz_id,lat,lon,businesses!inner(slug)')
-        .eq('id', id)
-        .maybeSingle();
+    // Загружаем филиал с рейтингом и конфиг рейтинга
+    const [
+        { data: branch, error },
+        { data: ratingConfig },
+    ] = await Promise.all([
+        supabase
+            .from('branches')
+            .select('id,name,address,is_active,biz_id,lat,lon,rating_score,businesses!inner(slug)')
+            .eq('id', id)
+            .maybeSingle(),
+        supabase
+            .from('rating_global_config')
+            .select('staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days')
+            .eq('is_active', true)
+            .order('valid_from', { ascending: false })
+            .limit(1)
+            .maybeSingle<{
+                staff_reviews_weight: number;
+                staff_productivity_weight: number;
+                staff_loyalty_weight: number;
+                staff_discipline_weight: number;
+                window_days: number;
+            }>(),
+    ]);
 
     if (error) {
         return <BranchErrorDisplay error={error.message} />;
@@ -60,6 +79,14 @@ export default async function EditBranchPage({
             initialSchedule={initialSchedule}
             bizId={String(bizId)}
             bizSlug={bizSlug}
+            ratingScore={branch.rating_score}
+            ratingWeights={ratingConfig ? {
+                reviews: ratingConfig.staff_reviews_weight,
+                productivity: ratingConfig.staff_productivity_weight,
+                loyalty: ratingConfig.staff_loyalty_weight,
+                discipline: ratingConfig.staff_discipline_weight,
+                windowDays: ratingConfig.window_days,
+            } : null}
         />
     );
 }

@@ -1415,6 +1415,18 @@ const dictionaries: Dictionaries = {
             'Хороший уровень. Для роста рейтинга: стабильно высокие оценки, меньше опозданий и больше возвращающихся клиентов.',
         'staff.rating.advice.high':
             'Отличный рейтинг. Важно удерживать качество: не снижать уровень сервиса, вовремя выходить на смены и работать с постоянными клиентами.',
+        'branch.rating.title': 'Рейтинг филиала в Kezek',
+        'branch.rating.subtitle': 'Рейтинг филиала = средний рейтинг сотрудников. Каждый рабочий день влияет на рейтинг за последние {days} дней.',
+        'branch.rating.scoreLabel': 'Текущий балл',
+        'branch.rating.scoreLabelPending': 'Рейтинг считается',
+        'branch.rating.advice.noScore':
+            'Рейтинг филиала рассчитывается на основе среднего рейтинга сотрудников. Рейтинг обновляется автоматически раз в сутки.',
+        'branch.rating.advice.low':
+            'Нужно улучшить работу филиала: повысить качество сервиса сотрудников, увеличить количество клиентов и улучшить отзывы.',
+        'branch.rating.advice.medium':
+            'Хороший уровень. Для роста рейтинга: поддерживать высокое качество работы сотрудников, увеличивать количество постоянных клиентов и улучшать отзывы.',
+        'branch.rating.advice.high':
+            'Отличный рейтинг. Важно удерживать качество: поддерживать высокий уровень сервиса сотрудников и продолжать привлекать новых клиентов.',
         'staff.detail.transfer.note': 'Временные переводы между филиалами задаются в разделе',
         'staff.detail.transfer.scheduleLink': '"Расписание"',
         'staff.form.fullName.label': 'ФИО',
@@ -2045,6 +2057,18 @@ const dictionaries: Dictionaries = {
             'Good level. To grow further: keep high review scores, reduce lateness and increase returning clients.',
         'staff.rating.advice.high':
             'Excellent rating. It is important to maintain quality: keep the service level high, be on time and work with loyal clients.',
+        'branch.rating.title': 'Branch rating in Kezek',
+        'branch.rating.subtitle': 'Branch rating = average staff rating. Each working day affects the rating for the last {days} days.',
+        'branch.rating.scoreLabel': 'Current score',
+        'branch.rating.scoreLabelPending': 'Rating in progress',
+        'branch.rating.advice.noScore':
+            'Branch rating is calculated based on the average rating of staff. The rating is updated automatically once a day.',
+        'branch.rating.advice.low':
+            'You need to improve the branch: increase the quality of staff service, increase the number of clients and improve reviews.',
+        'branch.rating.advice.medium':
+            'Good level. To grow further: maintain high quality of staff work, increase the number of returning clients and improve reviews.',
+        'branch.rating.advice.high':
+            'Excellent rating. It is important to maintain quality: keep the service level of staff high and continue to attract new clients.',
 
         // Home page
         'home.title': 'Find your service',
