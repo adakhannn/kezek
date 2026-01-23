@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
 
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (staffError) {
-            console.error('Error loading staff for percent:', staffError);
+            logError('StaffShiftClose', 'Error loading staff for percent', staffError);
             return NextResponse.json(
                 { ok: false, error: 'Не удалось загрузить настройки сотрудника' },
                 { status: 500 }
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (loadError) {
-            console.error('Error loading shift for close:', loadError);
+            logError('StaffShiftClose', 'Error loading shift for close', loadError);
             return NextResponse.json(
                 { ok: false, error: loadError.message },
                 { status: 500 }
@@ -150,7 +151,7 @@ export async function POST(req: Request) {
             const diffMs = currentTime.getTime() - openedAt.getTime();
             hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // округляем до 2 знаков
             
-            console.log('[staff/shift/close] Hours calculation:', {
+            logDebug('StaffShiftClose', 'Hours calculation', {
                 ymd,
                 openedAt: existing.opened_at,
                 openedAtDate: openedAt.toISOString(),
@@ -203,20 +204,45 @@ export async function POST(req: Request) {
             closed_at: closedAt,
         };
 
-        const { data: updated, error: updateError } = await supabase
-            .from('staff_shifts')
-            .update(updatePayload)
-            .eq('id', existing.id)
-            .select('*')
-            .maybeSingle();
+        // Используем безопасную SQL функцию с защитой от race conditions
+        // Функция проверяет статус в WHERE и использует SELECT FOR UPDATE
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('close_staff_shift_safe', {
+            p_shift_id: existing.id,
+            p_total_amount: totalAmount,
+            p_consumables_amount: finalConsumablesAmount,
+            p_percent_master: normalizedMaster,
+            p_percent_salon: normalizedSalon,
+            p_master_share: finalMasterShare,
+            p_salon_share: finalSalonShare,
+            p_hours_worked: hoursWorked,
+            p_hourly_rate: hourlyRate,
+            p_guaranteed_amount: guaranteedAmount,
+            p_topup_amount: topupAmount,
+            p_closed_at: closedAt,
+        });
 
-        if (updateError || !updated) {
-            console.error('Error closing shift:', updateError);
+        if (rpcError) {
+            logError('StaffShiftClose', 'Error calling close_staff_shift_safe RPC', rpcError);
             return NextResponse.json(
-                { ok: false, error: updateError?.message || 'Не удалось закрыть смену' },
+                { ok: false, error: rpcError.message || 'Не удалось закрыть смену' },
                 { status: 500 }
             );
         }
+
+        // Проверяем результат RPC
+        if (!rpcResult || !(rpcResult as { ok?: boolean }).ok) {
+            const errorMsg = (rpcResult as { error?: string })?.error || 'Не удалось закрыть смену';
+            logError('StaffShiftClose', 'RPC returned error', { error: errorMsg, result: rpcResult });
+            return NextResponse.json({ ok: false, error: errorMsg }, { status: 500 });
+        }
+
+        const shift = (rpcResult as { shift?: unknown }).shift;
+        if (!shift) {
+            logError('StaffShiftClose', 'RPC returned ok but no shift data', rpcResult);
+            return NextResponse.json({ ok: false, error: 'Не удалось получить данные смены' }, { status: 500 });
+        }
+
+        const updated = shift as typeof existing;
 
         // Перезаписываем позиции смены, если они были переданы
         // Важно: используем позиции из запроса для обновления, сохраняя booking_id даже если суммы = 0
@@ -284,13 +310,13 @@ export async function POST(req: Request) {
                 .eq('shift_id', shiftId);
 
             if (delError) {
-                console.error('Error deleting old shift items:', delError);
+                logError('StaffShiftClose', 'Error deleting old shift items', delError);
             } else if (cleanItems.length > 0) {
                 const { error: insError } = await supabase
                     .from('staff_shift_items')
                     .insert(cleanItems);
                 if (insError) {
-                    console.error('Error inserting shift items:', insError);
+                    logError('StaffShiftClose', 'Error inserting shift items', insError);
                 }
             }
         }
@@ -310,7 +336,7 @@ export async function POST(req: Request) {
                     .in('id', bookingIdsArray);
 
                 if (bookingsForUpdateError) {
-                    console.error('Error loading bookings for status update:', bookingsForUpdateError);
+                    logError('StaffShiftClose', 'Error loading bookings for status update', bookingsForUpdateError);
                 }
 
                 const statusMap = new Map<string, string>();
@@ -351,14 +377,14 @@ export async function POST(req: Request) {
                             }
                         } else {
                             // Любая другая ошибка — логируем, но не падаем целиком
-                            console.error(`Error updating booking ${bookingId} status to paid via promotions RPC:`, rpcError);
+                            logError('StaffShiftClose', `Error updating booking ${bookingId} status to paid via promotions RPC`, rpcError);
                         }
                     } catch (e) {
-                        console.error(`Error updating booking ${bookingId} status:`, e);
+                        logError('StaffShiftClose', `Error updating booking ${bookingId} status`, e);
                     }
                 }
             } catch (e) {
-                console.error('Unexpected error while updating bookings to paid on shift close:', e);
+                logError('StaffShiftClose', 'Unexpected error while updating bookings to paid on shift close', e);
             }
         }
 
@@ -400,14 +426,14 @@ export async function POST(req: Request) {
                             .eq('id', booking.id);
                     }
                 } catch (e) {
-                    console.error(`Error updating booking ${booking.id} status to no_show:`, e);
+                    logError('StaffShiftClose', `Error updating booking ${booking.id} status to no_show`, e);
                 }
             }
         }
 
         return NextResponse.json({ ok: true, shift: updated });
     } catch (error) {
-        console.error('Unexpected error in /api/staff/shift/close:', error);
+        logError('StaffShiftClose', 'Unexpected error', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { logError, logDebug } from '@/lib/log';
 import { TZ, dateAtTz, todayTz } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -14,53 +15,6 @@ export async function POST() {
 
         const now = new Date();
         const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
-
-        // Проверяем, есть ли уже смена на сегодня
-        const { data: existing, error: loadError } = await supabase
-            .from('staff_shifts')
-            .select('*')
-            .eq('staff_id', staffId)
-            .eq('shift_date', ymd)
-            .maybeSingle();
-
-        if (loadError) {
-            console.error('Error loading existing shift:', loadError);
-            return NextResponse.json({ ok: false, error: loadError.message }, { status: 500 });
-        }
-
-        if (existing) {
-            if (existing.status === 'open') {
-                // Уже открыта — просто возвращаем
-                return NextResponse.json({ ok: true, shift: existing });
-            }
-
-            // Смена была закрыта, но сотрудник хочет её переоткрыть.
-            // Логика: сохраняем первое время открытия и опоздание (opened_at / late_minutes),
-            // очищаем финансы и closed_at, переводим статус обратно в open.
-            const { data: reopened, error: reopenError } = await supabase
-                .from('staff_shifts')
-                .update({
-                    status: 'open',
-                    closed_at: null,
-                    total_amount: 0,
-                    consumables_amount: 0,
-                    master_share: 0,
-                    salon_share: 0,
-                })
-                .eq('id', existing.id)
-                .select('*')
-                .maybeSingle();
-
-            if (reopenError || !reopened) {
-                console.error('Error reopening shift:', reopenError);
-                return NextResponse.json(
-                    { ok: false, error: reopenError?.message || 'Не удалось переоткрыть смену' },
-                    { status: 500 }
-                );
-            }
-
-            return NextResponse.json({ ok: true, shift: reopened });
-        }
 
         // Проверяем, не выходной ли сегодня
         const baseDate = todayTz();
@@ -167,34 +121,46 @@ export async function POST() {
             }
         }
 
-        const insertPayload = {
-            staff_id: staffId,
-            biz_id: bizId,
-            branch_id: branchId,
-            shift_date: ymd,
-            opened_at: openedAt.toISOString(),
-            expected_start: expectedStart ? expectedStart.toISOString() : null,
-            late_minutes: lateMinutes,
-            status: 'open' as const,
-        };
+        // Используем безопасную SQL функцию с защитой от race conditions
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('open_staff_shift_safe', {
+            p_staff_id: staffId,
+            p_biz_id: bizId,
+            p_branch_id: branchId,
+            p_shift_date: ymd,
+            p_opened_at: openedAt.toISOString(),
+            p_expected_start: expectedStart ? expectedStart.toISOString() : null,
+            p_late_minutes: lateMinutes,
+        });
 
-        const { data: inserted, error: insertError } = await supabase
-            .from('staff_shifts')
-            .insert(insertPayload)
-            .select('*')
-            .maybeSingle();
-
-        if (insertError || !inserted) {
-            console.error('Error opening shift:', insertError);
+        if (rpcError) {
+            logError('StaffShiftOpen', 'Error calling open_staff_shift_safe RPC', rpcError);
             return NextResponse.json(
-                { ok: false, error: insertError?.message || 'Не удалось открыть смену' },
+                { ok: false, error: rpcError.message || 'Не удалось открыть смену' },
                 { status: 500 }
             );
         }
 
-        return NextResponse.json({ ok: true, shift: inserted });
+        // Проверяем результат RPC
+        if (!rpcResult || !rpcResult.ok) {
+            const errorMsg = (rpcResult as { error?: string })?.error || 'Не удалось открыть смену';
+            logError('StaffShiftOpen', 'RPC returned error', { error: errorMsg, result: rpcResult });
+            return NextResponse.json({ ok: false, error: errorMsg }, { status: 500 });
+        }
+
+        const shift = (rpcResult as { shift?: unknown }).shift;
+        if (!shift) {
+            logError('StaffShiftOpen', 'RPC returned ok but no shift data', rpcResult);
+            return NextResponse.json({ ok: false, error: 'Не удалось получить данные смены' }, { status: 500 });
+        }
+
+        logDebug('StaffShiftOpen', 'Shift opened successfully', {
+            action: (rpcResult as { action?: string }).action,
+            shiftId: (shift as { id?: string })?.id,
+        });
+
+        return NextResponse.json({ ok: true, shift });
     } catch (error) {
-        console.error('Unexpected error in /api/staff/shift/open:', error);
+        logError('StaffShiftOpen', 'Unexpected error', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

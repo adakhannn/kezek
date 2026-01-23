@@ -193,28 +193,42 @@ export async function GET(req: Request) {
                 const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
                 const closedAt = midnightNextDay.toISOString();
 
-                // Обновляем смену
-                const { error: updateError } = await supabase
-                    .from('staff_shifts')
-                    .update({
-                        total_amount: totalAmount,
-                        consumables_amount: finalConsumablesAmount,
-                        percent_master: normalizedMaster,
-                        percent_salon: normalizedSalon,
-                        master_share: finalMasterShare,
-                        salon_share: finalSalonShare,
-                        hours_worked: hoursWorked,
-                        hourly_rate: hourlyRate,
-                        guaranteed_amount: guaranteedAmount,
-                        topup_amount: topupAmount,
-                        status: 'closed',
-                        closed_at: closedAt,
-                    })
-                    .eq('id', shift.id);
+                // Используем безопасную SQL функцию с защитой от race conditions
+                const { data: rpcResult, error: rpcError } = await supabase.rpc('close_staff_shift_safe', {
+                    p_shift_id: shift.id,
+                    p_total_amount: totalAmount,
+                    p_consumables_amount: finalConsumablesAmount,
+                    p_percent_master: normalizedMaster,
+                    p_percent_salon: normalizedSalon,
+                    p_master_share: finalMasterShare,
+                    p_salon_share: finalSalonShare,
+                    p_hours_worked: hoursWorked,
+                    p_hourly_rate: hourlyRate,
+                    p_guaranteed_amount: guaranteedAmount,
+                    p_topup_amount: topupAmount,
+                    p_closed_at: closedAt,
+                });
 
-                if (updateError) {
-                    logError('CloseShiftsCron', `Error closing shift ${shift.id}`, updateError);
-                    errors.push(`Shift ${shift.id}: ${updateError.message}`);
+                if (rpcError) {
+                    logError('CloseShiftsCron', `Error calling close_staff_shift_safe for shift ${shift.id}`, rpcError);
+                    errors.push(`Shift ${shift.id}: ${rpcError.message}`);
+                    continue;
+                }
+
+                // Проверяем результат RPC
+                if (!rpcResult || !(rpcResult as { ok?: boolean }).ok) {
+                    const errorMsg = (rpcResult as { error?: string })?.error || 'Не удалось закрыть смену';
+                    const action = (rpcResult as { action?: string })?.action;
+                    
+                    // Если смена уже закрыта другим процессом - это не ошибка
+                    if (action === 'already_closed') {
+                        logDebug('CloseShiftsCron', `Shift ${shift.id} already closed by another process`);
+                        closedCount++;
+                        continue;
+                    }
+                    
+                    logError('CloseShiftsCron', `RPC returned error for shift ${shift.id}`, { error: errorMsg, result: rpcResult });
+                    errors.push(`Shift ${shift.id}: ${errorMsg}`);
                     continue;
                 }
 
