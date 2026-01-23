@@ -23,6 +23,7 @@ type Promotion = {
     valid_from?: string | null;
     valid_to?: string | null;
     created_at: string;
+    usage_count?: number;
 };
 
 // PROMOTION_TYPES будут переведены динамически через useLanguage
@@ -33,7 +34,7 @@ const PROMOTION_TYPE_KEYS: Array<{ value: PromotionType; labelKey: string; descK
     { value: 'first_visit_discount', labelKey: 'branches.promotions.type.firstVisitDiscount', descKey: 'branches.promotions.type.firstVisitDiscountDesc' },
 ];
 
-export default function BranchPromotionsPanel({ branchId }: { branchId: string }) {
+export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId: string; bizSlug?: string }) {
     const { t } = useLanguage();
     const [promotions, setPromotions] = useState<Promotion[]>([]);
     const [loading, setLoading] = useState(true);
@@ -210,14 +211,30 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                         {t('branches.promotions.subtitle', 'Управление акциями и специальными предложениями')}
                     </p>
                 </div>
-                {!showForm && (
-                    <Button onClick={startCreate} size="sm">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        {t('branches.promotions.add', 'Добавить акцию')}
-                    </Button>
-                )}
+                <div className="flex items-center gap-2">
+                    {!showForm && bizSlug && (
+                        <a
+                            href={`/b/${bizSlug}/promotions`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-all"
+                        >
+                            <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            {t('branches.promotions.viewAsClient', 'Посмотреть как клиент')}
+                        </a>
+                    )}
+                    {!showForm && (
+                        <Button onClick={startCreate} size="sm">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            {t('branches.promotions.add', 'Добавить акцию')}
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {showForm ? (
@@ -393,6 +410,16 @@ export default function BranchPromotionsPanel({ branchId }: { branchId: string }
                                                     .replace('{from}', promotion.valid_from || t('branches.promotions.validPeriod.from', 'с начала'))
                                                     .replace('{to}', promotion.valid_to || t('branches.promotions.validPeriod.to', 'без ограничений'))}
                                             </p>
+                                        )}
+                                        {typeof promotion.usage_count === 'number' && (
+                                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                </svg>
+                                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                    {t('branches.promotions.usageCount', 'Использовано: {count} раз').replace('{count}', String(promotion.usage_count))}
+                                                </span>
+                                            </div>
                                         )}
                                     </div>
                                     <div className="flex gap-2">

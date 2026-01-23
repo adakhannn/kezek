@@ -20,6 +20,7 @@ export default function EditBranchPageClient({
     isSuperAdmin,
     initialSchedule = [],
     bizId,
+    bizSlug,
 }: { 
     branch: { 
         id: string; 
@@ -32,6 +33,7 @@ export default function EditBranchPageClient({
     isSuperAdmin: boolean;
     initialSchedule?: BranchSchedule[];
     bizId: string;
+    bizSlug: string;
 }) {
     const { t } = useLanguage();
 
@@ -71,7 +73,7 @@ export default function EditBranchPageClient({
             </div>
 
             {/* Акции филиала */}
-            <BranchPromotionsPanel branchId={String(branch.id)} />
+            <BranchPromotionsPanel branchId={String(branch.id)} bizSlug={bizSlug} />
 
             {/* Временно скрыто */}
             {/* <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800">

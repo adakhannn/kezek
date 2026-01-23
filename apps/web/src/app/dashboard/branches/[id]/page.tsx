@@ -27,7 +27,7 @@ export default async function EditBranchPage({
 
     const { data: branch, error } = await supabase
         .from('branches')
-        .select('id,name,address,is_active,biz_id,lat,lon')
+        .select('id,name,address,is_active,biz_id,lat,lon,businesses!inner(slug)')
         .eq('id', id)
         .maybeSingle();
 
@@ -50,12 +50,16 @@ export default async function EditBranchPage({
         breaks: (s.breaks || []) as Array<{ start: string; end: string }>,
     }));
 
+    const businessesData = branch.businesses as { slug: string } | { slug: string }[] | null;
+    const bizSlug = Array.isArray(businessesData) ? businessesData[0]?.slug || '' : businessesData?.slug || '';
+
     return (
         <EditBranchPageClient 
             branch={branch} 
             isSuperAdmin={isSuperAdmin}
             initialSchedule={initialSchedule}
             bizId={String(bizId)}
+            bizSlug={bizSlug}
         />
     );
 }

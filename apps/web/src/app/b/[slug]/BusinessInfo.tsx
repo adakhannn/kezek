@@ -134,11 +134,22 @@ export default function BusinessInfo({ data }: { data: Data }) {
                     {/* Акции */}
                     {promotions.length > 0 && (
                         <div>
-                            <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                                {t('business.info.promotions', 'Акции')} ({promotions.length})
-                            </h3>
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                    {t('business.info.promotions', 'Акции')} ({promotions.length})
+                                </h3>
+                                <Link
+                                    href={`/b/${biz.slug}/promotions`}
+                                    className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1"
+                                >
+                                    {t('business.info.viewAllPromotions', 'Все акции')}
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </Link>
+                            </div>
                             <div className="space-y-2">
-                                {promotions.map((promotion) => {
+                                {promotions.slice(0, 3).map((promotion) => {
                                     const branch = branches.find(b => b.id === promotion.branch_id);
                                     const params = promotion.params || {};
                                     let description = promotion.title_ru || '';
@@ -150,12 +161,12 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     }
 
                                     return (
-                                        <div key={promotion.id} className="flex items-start gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                                            <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <div key={promotion.id} className="flex items-start gap-2 p-3 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200 dark:border-emerald-800 hover:shadow-md transition-shadow">
+                                            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                                             </svg>
                                             <div className="flex-1">
-                                                <p className="text-sm text-emerald-900 dark:text-emerald-100 font-medium">{description}</p>
+                                                <p className="text-sm text-emerald-900 dark:text-emerald-100 font-semibold">{description}</p>
                                                 {branch && (
                                                     <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">{formatBranchName(branch.name)}</p>
                                                 )}
@@ -163,6 +174,14 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                         </div>
                                     );
                                 })}
+                                {promotions.length > 3 && (
+                                    <Link
+                                        href={`/b/${biz.slug}/promotions`}
+                                        className="block text-center py-2 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-lg border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
+                                    >
+                                        {t('business.info.morePromotions', '+{count} ещё акций').replace('{count}', String(promotions.length - 3))}
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     )}

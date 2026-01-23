@@ -58,9 +58,28 @@ export async function GET(req: Request, context: unknown) {
             return NextResponse.json({ ok: false, error: promotionsError.message }, { status: 500 });
         }
 
+        // Получаем статистику использования для каждой акции
+        const promotionsWithStats = await Promise.all(
+            (promotions || []).map(async (promo) => {
+                const { count, error } = await admin
+                    .from('client_promotion_usage')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('promotion_id', promo.id);
+
+                if (error) {
+                    console.error('Error counting promotion usage:', error);
+                }
+
+                return {
+                    ...promo,
+                    usage_count: count || 0,
+                };
+            })
+        );
+
         return NextResponse.json({
             ok: true,
-            promotions: promotions || [],
+            promotions: promotionsWithStats,
         });
     } catch (error) {
         console.error('Unexpected error in GET promotions API:', error);
