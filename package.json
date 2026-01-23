@@ -20,7 +20,8 @@
     "typecheck": "pnpm -C apps/web typecheck",
     "prepare": "husky install",
     "supabase": "supabase",
-    "db:push": "supabase db push"
+    "db:push": "supabase db push",
+    "test:sql": "bash scripts/run-tests.sh || powershell -ExecutionPolicy Bypass -File scripts/run-tests.ps1"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

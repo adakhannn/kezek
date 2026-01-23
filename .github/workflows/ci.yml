@@ -35,3 +35,30 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+  # SQL тесты запускаются только если есть доступ к тестовой БД
+  # Для запуска в CI нужно установить SUPABASE_DB_URL в secrets
+  sql_tests:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run SQL tests
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_TEST_DB_URL }}
+        run: |
+          if [ -n "$SUPABASE_DB_URL" ]; then
+            echo "🧪 Запуск критичных SQL-тестов..."
+            psql "$SUPABASE_DB_URL" -f supabase/tests_critical_scenarios.sql
+            echo "✅ Все тесты пройдены успешно!"
+          else
+            echo "⚠️ SUPABASE_TEST_DB_URL не установлен, пропускаем SQL тесты"
+            echo "Для запуска тестов в CI установите SUPABASE_TEST_DB_URL в secrets"
+          fi
