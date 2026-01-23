@@ -3,7 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logDebug } from '@/lib/log';
+import { logDebug, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -95,16 +95,16 @@ export async function GET(
             .order('shift_date', { ascending: false });
 
         if (shiftsError) {
-            console.error('[dashboard/staff/finance/stats] Error loading shifts:', shiftsError);
+            logError('StaffFinanceStats', 'Error loading shifts', shiftsError);
             return NextResponse.json(
                 { ok: false, error: shiftsError.message },
                 { status: 500 }
             );
         }
 
-        console.log('[dashboard/staff/finance/stats] Found shifts:', shifts?.length || 0, shifts);
+        logDebug('StaffFinanceStats', 'Found shifts', { count: shifts?.length || 0, shifts });
         if (shifts && shifts.length > 0) {
-            console.log('[dashboard/staff/finance/stats] Shift dates:', shifts.map(s => ({ date: s.shift_date, status: s.status })));
+            logDebug('StaffFinanceStats', 'Shift dates', shifts.map(s => ({ date: s.shift_date, status: s.status })));
         }
 
         // Если есть открытая смена на сегодня, но она не попадает в выбранный период,
@@ -116,14 +116,14 @@ export async function GET(
                 const hasTodayShift = finalShifts.some(s => s.id === todayOpenShift.id);
                 if (!hasTodayShift) {
                     finalShifts = [todayOpenShift, ...finalShifts];
-                    console.log('[dashboard/staff/finance/stats] Added today open shift to results');
+                    logDebug('StaffFinanceStats', 'Added today open shift to results');
                 }
             } else if (period !== 'day') {
                 // Для месяца/года добавляем открытую смену на сегодня, если её нет в результатах
                 const hasTodayShift = finalShifts.some(s => s.id === todayOpenShift.id);
                 if (!hasTodayShift) {
                     finalShifts = [todayOpenShift, ...finalShifts];
-                    console.log('[dashboard/staff/finance/stats] Added today open shift to results for period view');
+                    logDebug('StaffFinanceStats', 'Added today open shift to results for period view');
                 }
             }
         }
@@ -149,7 +149,7 @@ export async function GET(
                 .order('created_at', { ascending: true });
 
             if (itemsError) {
-                console.error('Error loading shift items:', itemsError);
+                logError('StaffFinanceStats', 'Error loading shift items', itemsError);
             } else {
                 // Группируем по shift_id
                 for (const item of itemsData || []) {
@@ -270,7 +270,7 @@ export async function GET(
                         const hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60));
                         const guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
                         
-                        console.log('[dashboard/staff/finance/stats] Open shift calculation:', {
+                        logDebug('StaffFinanceStats', 'Open shift calculation', {
                             shiftId: s.id,
                             shiftTotalAmount,
                             baseMasterShare,
@@ -285,7 +285,7 @@ export async function GET(
                             displayMasterShare = guaranteedAmount;
                             const topupAmount = displayMasterShare - baseMasterShare;
                             displaySalonShare = Math.max(0, baseSalonShare - topupAmount);
-                            console.log('[dashboard/staff/finance/stats] Using guaranteed amount:', {
+                            logDebug('StaffFinanceStats', 'Using guaranteed amount', {
                                 displayMasterShare,
                                 topupAmount,
                                 displaySalonShare,
@@ -343,7 +343,7 @@ export async function GET(
 
         // Суммируем итоги, используя уже пересчитанные значения из stats.shifts
         // Это важно, чтобы гарантированная сумма учитывалась правильно
-        console.log('[dashboard/staff/finance/stats] Calculating totals from shifts:', stats.shifts.length);
+        logDebug('StaffFinanceStats', 'Calculating totals from shifts', { count: stats.shifts.length });
         for (const shift of stats.shifts) {
             const prevTotalMaster = stats.totalMaster;
             const prevTotalSalon = stats.totalSalon;
@@ -355,7 +355,7 @@ export async function GET(
             stats.totalLateMinutes += shift.late_minutes;
             
             if (shift.status === 'open') {
-                console.log('[dashboard/staff/finance/stats] Open shift totals:', {
+                logDebug('StaffFinanceStats', 'Open shift totals', {
                     shiftId: shift.id,
                     shiftDate: shift.shift_date,
                     totalAmount: shift.total_amount,
@@ -374,7 +374,7 @@ export async function GET(
             }
         }
         
-        console.log('[dashboard/staff/finance/stats] Final totals:', {
+        logDebug('StaffFinanceStats', 'Final totals', {
             totalAmount: stats.totalAmount,
             totalMaster: stats.totalMaster,
             totalSalon: stats.totalSalon,
@@ -387,7 +387,7 @@ export async function GET(
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[dashboard/staff/finance/stats] error:', e);
+        logError('StaffFinanceStats', 'Unexpected error', e);
         return NextResponse.json(
             { ok: false, error: msg },
             { status: 500 }

@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function GET(request: Request) {
@@ -432,7 +433,7 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ ok: true, data: result });
     } catch (error) {
-        console.error('[admin/promotions/debug] error:', error);
+        logError('PromotionsDebug', 'Unexpected error', error);
         return NextResponse.json(
             { ok: false, error: error instanceof Error ? error.message : 'Unknown error' },
             { status: 500 }

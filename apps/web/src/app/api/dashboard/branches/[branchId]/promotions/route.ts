@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -67,7 +68,7 @@ export async function GET(req: Request, context: unknown) {
                     .eq('promotion_id', promo.id);
 
                 if (error) {
-                    console.error('Error counting promotion usage:', error);
+                    logError('BranchPromotions', 'Error counting promotion usage', error);
                 }
 
                 return {
@@ -82,7 +83,7 @@ export async function GET(req: Request, context: unknown) {
             promotions: promotionsWithStats,
         });
     } catch (error) {
-        console.error('Unexpected error in GET promotions API:', error);
+        logError('BranchPromotions', 'Unexpected error in GET promotions API', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }
@@ -164,7 +165,7 @@ export async function POST(req: Request, context: unknown) {
             promotion,
         });
     } catch (error) {
-        console.error('Unexpected error in POST promotions API:', error);
+        logError('BranchPromotions', 'Unexpected error in POST promotions API', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

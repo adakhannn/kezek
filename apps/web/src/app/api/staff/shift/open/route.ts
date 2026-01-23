@@ -3,7 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
-import { logError, logDebug } from '@/lib/log';
+import { logError, logDebug, logWarn } from '@/lib/log';
 import { TZ, dateAtTz, todayTz } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +30,7 @@ export async function POST() {
             .gte('date_to', ymd);
 
         if (toError) {
-            console.warn('Cannot load staff_time_off for shift open:', toError.message);
+            logWarn('StaffShiftOpen', 'Cannot load staff_time_off', toError);
         }
 
         if (timeOffs && timeOffs.length > 0) {
@@ -52,7 +52,7 @@ export async function POST() {
             .maybeSingle();
 
         if (ruleError) {
-            console.warn('Cannot load staff_schedule_rules for shift open:', ruleError.message);
+            logWarn('StaffShiftOpen', 'Cannot load staff_schedule_rules', ruleError);
         }
 
         let hasWorkingHours = false;
@@ -71,7 +71,7 @@ export async function POST() {
                     }
                 }
             } catch (e) {
-                console.warn('Failed to parse staff_schedule_rules.intervals for shift open:', e);
+                logWarn('StaffShiftOpen', 'Failed to parse staff_schedule_rules.intervals', e);
             }
         }
 
@@ -86,7 +86,7 @@ export async function POST() {
                 .maybeSingle();
 
             if (whError) {
-                console.warn('Cannot load working_hours for shift open:', whError.message);
+                logWarn('StaffShiftOpen', 'Cannot load working_hours', whError);
             }
 
             try {
@@ -100,7 +100,7 @@ export async function POST() {
                     }
                 }
             } catch (e) {
-                console.warn('Failed to parse working_hours.intervals for shift open:', e);
+                logWarn('StaffShiftOpen', 'Failed to parse working_hours.intervals', e);
             }
         }
 
