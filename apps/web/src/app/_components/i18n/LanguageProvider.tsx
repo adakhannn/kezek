@@ -1403,6 +1403,18 @@ const dictionaries: Dictionaries = {
         'staff.detail.reviews.count': 'Отзывов:',
         'staff.detail.reviews.service': 'Услуга:',
         'staff.detail.reviews.client': 'Клиент',
+        'staff.rating.title': 'Рейтинг сотрудника в Kezek',
+        'staff.rating.subtitle': 'Каждый рабочий день влияет на рейтинг за последние {days} дней.',
+        'staff.rating.scoreLabel': 'Текущий балл',
+        'staff.rating.scoreLabelPending': 'Рейтинг считается',
+        'staff.rating.advice.noScore':
+            'Рейтинг обновляется автоматически раз в сутки. Сосредоточьтесь на стабильном качестве сервиса.',
+        'staff.rating.advice.low':
+            'Нужно подтянуть базу: просите клиентов оставлять отзывы, следите за пунктуальностью и не пропускайте смены.',
+        'staff.rating.advice.medium':
+            'Хороший уровень. Для роста рейтинга: стабильно высокие оценки, меньше опозданий и больше возвращающихся клиентов.',
+        'staff.rating.advice.high':
+            'Отличный рейтинг. Важно удерживать качество: не снижать уровень сервиса, вовремя выходить на смены и работать с постоянными клиентами.',
         'staff.detail.transfer.note': 'Временные переводы между филиалами задаются в разделе',
         'staff.detail.transfer.scheduleLink': '"Расписание"',
         'staff.form.fullName.label': 'ФИО',
@@ -2021,6 +2033,18 @@ const dictionaries: Dictionaries = {
         'promotions.validPeriod.to': 'no limit',
         'branches.promotions.viewAsClient': 'View as client',
         'branches.promotions.usageCount': 'Used: {count} times',
+        'staff.rating.title': 'Staff rating in Kezek',
+        'staff.rating.subtitle': 'Each working day affects the rating for the last {days} days.',
+        'staff.rating.scoreLabel': 'Current score',
+        'staff.rating.scoreLabelPending': 'Rating in progress',
+        'staff.rating.advice.noScore':
+            'The rating is updated automatically once a day. Focus on consistently high service quality.',
+        'staff.rating.advice.low':
+            'You need to improve the basics: ask clients to leave reviews, be on time and avoid skipping shifts.',
+        'staff.rating.advice.medium':
+            'Good level. To grow further: keep high review scores, reduce lateness and increase returning clients.',
+        'staff.rating.advice.high':
+            'Excellent rating. It is important to maintain quality: keep the service level high, be on time and work with loyal clients.',
 
         // Home page
         'home.title': 'Find your service',

@@ -14,13 +14,17 @@ export default async function Page({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const {supabase, bizId} = await getBizContextForManagers();
+    const { supabase, bizId } = await getBizContextForManagers();
 
-    // Грузим сотрудника и список филиалов
-    const [{data: staff, error: eStaff}, {data: branches, error: eBr}] = await Promise.all([
+    // Грузим сотрудника, список филиалов и конфиг рейтинга
+    const [
+        { data: staff, error: eStaff },
+        { data: branches, error: eBr },
+        { data: ratingConfig },
+    ] = await Promise.all([
         supabase
             .from('staff')
-            .select('id,full_name,email,phone,branch_id,is_active,biz_id,percent_master,percent_salon,hourly_rate')
+            .select('id,full_name,email,phone,branch_id,is_active,biz_id,percent_master,percent_salon,hourly_rate,rating_score')
             .eq('id', id)
             .maybeSingle(),
         supabase
@@ -28,6 +32,19 @@ export default async function Page({
             .select('id,name,is_active')
             .eq('biz_id', bizId)
             .order('name'),
+        supabase
+            .from('rating_global_config')
+            .select('staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days')
+            .eq('is_active', true)
+            .order('valid_from', { ascending: false })
+            .limit(1)
+            .maybeSingle<{
+                staff_reviews_weight: number;
+                staff_productivity_weight: number;
+                staff_loyalty_weight: number;
+                staff_discipline_weight: number;
+                window_days: number;
+            }>(),
     ]);
 
     if (eStaff) {
@@ -143,7 +160,12 @@ export default async function Page({
         })
         .filter((r): r is ReviewData => r !== null);
 
-    const activeBranches = (branches ?? []).filter(b => b.is_active);
+    const activeBranches = (branches ?? []).filter((b) => b.is_active);
+
+    const ratingScore: number | null =
+        staff && typeof (staff as { rating_score?: unknown }).rating_score === 'number'
+            ? ((staff as { rating_score?: number }).rating_score as number)
+            : null;
 
     return (
         <StaffDetailPageClient
@@ -164,6 +186,18 @@ export default async function Page({
                 is_active: Boolean(b.is_active),
             }))}
             reviews={reviews}
+            ratingScore={ratingScore}
+            ratingWeights={
+                ratingConfig
+                    ? {
+                          reviews: Number(ratingConfig.staff_reviews_weight),
+                          productivity: Number(ratingConfig.staff_productivity_weight),
+                          loyalty: Number(ratingConfig.staff_loyalty_weight),
+                          discipline: Number(ratingConfig.staff_discipline_weight),
+                          windowDays: Number(ratingConfig.window_days),
+                      }
+                    : null
+            }
         />
     );
 }

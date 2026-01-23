@@ -38,19 +38,58 @@ type Review = {
     client_phone: string | null;
 };
 
+type RatingWeights = {
+    reviews: number;
+    productivity: number;
+    loyalty: number;
+    discipline: number;
+    windowDays: number;
+};
+
 export default function StaffDetailPageClient({
     staff,
     branches,
     reviews,
+    ratingScore,
+    ratingWeights,
 }: {
     staff: StaffData;
     branches: Branch[];
     reviews: Review[];
+    ratingScore?: number | null;
+    ratingWeights?: RatingWeights | null;
 }) {
     const { t, locale } = useLanguage();
-    
-    const activeBranches = branches.filter(b => b.is_active);
-    const currentBranch = branches.find(b => b.id === staff.branch_id);
+
+    const activeBranches = branches.filter((b) => b.is_active);
+    const currentBranch = branches.find((b) => b.id === staff.branch_id);
+
+    const effectiveRatingScore = typeof ratingScore === 'number' ? ratingScore : null;
+
+    const getRatingAdvice = () => {
+        if (effectiveRatingScore === null) {
+            return t(
+                'staff.rating.advice.noScore',
+                'Рейтинг обновляется автоматически раз в сутки. Сосредоточьтесь на стабильном качестве сервиса.',
+            );
+        }
+        if (effectiveRatingScore < 60) {
+            return t(
+                'staff.rating.advice.low',
+                'Нужно подтянуть базу: просите клиентов оставлять отзывы, следите за пунктуальностью и не пропускайте смены.',
+            );
+        }
+        if (effectiveRatingScore < 80) {
+            return t(
+                'staff.rating.advice.medium',
+                'Хороший уровень. Для роста рейтинга: стабильно высокие оценки, меньше опозданий и больше возвращающихся клиентов.',
+            );
+        }
+        return t(
+            'staff.rating.advice.high',
+            'Отличный рейтинг. Важно удерживать качество: не снижать уровень сервиса, вовремя выходить на смены и работать с постоянными клиентами.',
+        );
+    };
     
     // Функция для получения названия услуги в зависимости от языка (для отзывов)
     const getServiceName = (serviceName: string | null): string => {
@@ -143,6 +182,73 @@ export default function StaffDetailPageClient({
                     </div>
                 </div>
             </div>
+
+            {/* Объяснение рейтинга сотрудника */}
+            {ratingWeights && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm dark:border-amber-800 dark:bg-amber-950/30">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex items-start gap-2">
+                            <div className="mt-0.5 rounded-full bg-amber-100 p-2 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300">
+                                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                                    {t('staff.rating.title', 'Рейтинг сотрудника в Kezek')}
+                                </p>
+                                <p className="mt-0.5 text-[11px] text-amber-800/80 dark:text-amber-200/90">
+                                    {t(
+                                        'staff.rating.subtitle',
+                                        'Каждый рабочий день влияет на рейтинг за последние {days} дней.',
+                                    ).replace('{days}', String(ratingWeights.windowDays))}
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-amber-900/90 dark:text-amber-100">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-amber-900/40">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                        {t('dashboard.rating.factor.reviews', 'Отзывы')}: {ratingWeights.reviews}%
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-amber-900/40">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                                        {t('dashboard.rating.factor.productivity', 'Количество клиентов')}:{' '}
+                                        {ratingWeights.productivity}%
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-amber-900/40">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                                        {t('dashboard.rating.factor.loyalty', 'Возвращаемость клиентов')}:{' '}
+                                        {ratingWeights.loyalty}%
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-amber-900/40">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                        {t('dashboard.rating.factor.discipline', 'Дисциплина (опоздания)')}:{' '}
+                                        {ratingWeights.discipline}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-2 flex items-center gap-3 sm:mt-0 sm:flex-col sm:items-end sm:justify-center">
+                            {effectiveRatingScore !== null ? (
+                                <div className="inline-flex items-baseline gap-1 rounded-xl bg-white/80 px-3 py-2 text-amber-900 shadow-sm dark:bg-amber-900/50 dark:text-amber-50">
+                                    <span className="text-xs font-medium uppercase tracking-wide">
+                                        {t('staff.rating.scoreLabel', 'Текущий балл')}
+                                    </span>
+                                    <span className="text-xl font-semibold">{effectiveRatingScore.toFixed(1)}</span>
+                                    <span className="text-[10px] opacity-70">/ 100</span>
+                                </div>
+                            ) : (
+                                <div className="inline-flex items-baseline gap-1 rounded-xl bg-white/60 px-3 py-2 text-amber-900 shadow-sm dark:bg-amber-900/40 dark:text-amber-50">
+                                    <span className="text-xs font-medium uppercase tracking-wide">
+                                        {t('staff.rating.scoreLabelPending', 'Рейтинг считается')}
+                                    </span>
+                                </div>
+                            )}
+                            <p className="text-[11px] text-amber-800/80 dark:text-amber-200/80 max-w-[220px]">
+                                {getRatingAdvice()}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {activeBranches.length === 0 && (
                 <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 shadow-md">
