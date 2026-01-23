@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -102,7 +103,7 @@ export async function PATCH(req: Request, context: unknown) {
             promotion: updatedPromotion,
         });
     } catch (error) {
-        console.error('Unexpected error in PATCH promotions API:', error);
+        logError('BranchPromotion', 'Unexpected error in PATCH promotions API', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }
@@ -146,7 +147,7 @@ export async function DELETE(req: Request, context: unknown) {
             ok: true,
         });
     } catch (error) {
-        console.error('Unexpected error in DELETE promotions API:', error);
+        logError('BranchPromotion', 'Unexpected error in DELETE promotions API', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

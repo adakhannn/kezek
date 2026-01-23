@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { logDebug, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -55,21 +56,21 @@ export async function POST(req: Request) {
         });
 
         if (error) {
-            console.error('[Initialize Ratings] Error:', error);
+            logError('InitializeRatings', 'Error initializing ratings', error);
             return NextResponse.json(
                 { ok: false, error: error.message },
                 { status: 500 }
             );
         }
 
-        console.log('[Initialize Ratings] Successfully initialized ratings');
+        logDebug('InitializeRatings', 'Successfully initialized ratings');
 
         return NextResponse.json({
             ok: true,
             message: `Ratings initialized for last ${daysBack} days`,
         });
     } catch (error) {
-        console.error('[Initialize Ratings] Unexpected error:', error);
+        logError('InitializeRatings', 'Unexpected error', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import { logDebug, logError } from '@/lib/log';
+
 type HoldSlotGuestArgs = {
     p_biz_id: string;
     p_branch_id: string;
@@ -85,7 +87,7 @@ export async function POST(req: Request) {
     }
 
     // Вызываем RPC для создания гостевой брони
-    console.log('[quick-book-guest] Calling hold_slot_guest RPC');
+    logDebug('QuickBookGuest', 'Calling hold_slot_guest RPC');
     const { data: rpcData, error } = await supabase.rpc<string, HoldSlotGuestArgs>('hold_slot_guest', {
         p_biz_id: body.biz_id,
         p_branch_id: branch.id,
@@ -98,7 +100,7 @@ export async function POST(req: Request) {
     });
     
     if (error) {
-        console.error('[quick-book-guest] RPC error:', error);
+        logError('QuickBookGuest', 'RPC error', error);
         return NextResponse.json(
             { ok: false, error: 'rpc', message: error.message },
             { status: 400 }
@@ -113,8 +115,8 @@ export async function POST(req: Request) {
         );
     }
 
-    console.log('[quick-book-guest] Guest booking created with ID:', bookingId);
-    console.log('[quick-book-guest] Attempting to confirm booking...');
+    logDebug('QuickBookGuest', 'Guest booking created', { bookingId });
+    logDebug('QuickBookGuest', 'Attempting to confirm booking');
 
     // Автоматически подтверждаем бронирование
     const { data: confirmData, error: confirmError } = await supabase.rpc('confirm_booking', {
@@ -122,7 +124,7 @@ export async function POST(req: Request) {
     });
     
     if (confirmError) {
-        console.error('[quick-book-guest] Failed to confirm booking:', {
+        logError('QuickBookGuest', 'Failed to confirm booking', {
             error: confirmError.message,
             code: confirmError.code,
             details: confirmError.details,
@@ -134,7 +136,7 @@ export async function POST(req: Request) {
         );
     }
     
-    console.log('[quick-book-guest] Booking confirmed successfully:', bookingId, 'confirmData:', confirmData);
+    logDebug('QuickBookGuest', 'Booking confirmed successfully', { bookingId, confirmData });
     
     // Проверяем статус бронирования после подтверждения
     const { data: bookingCheck, error: checkError } = await supabase
@@ -144,17 +146,17 @@ export async function POST(req: Request) {
         .single();
 
     if (checkError) {
-        console.error('[quick-book-guest] Failed to check booking status:', checkError);
+        logError('QuickBookGuest', 'Failed to check booking status', checkError);
     } else {
-        console.log('[quick-book-guest] Booking status after confirm:', bookingCheck?.status);
+        logDebug('QuickBookGuest', 'Booking status after confirm', { status: bookingCheck?.status });
     }
 
     // Отправляем уведомление о подтверждении
     try {
         await notifyGuestBooking(bookingId, req, 'confirm');
-        console.log('[quick-book-guest] Notification sent successfully');
+        logDebug('QuickBookGuest', 'Notification sent successfully');
     } catch (err) {
-        console.error('[quick-book-guest] notifyGuestBooking failed:', err);
+        logError('QuickBookGuest', 'notifyGuestBooking failed', err);
         // Не возвращаем ошибку, так как бронирование уже создано и подтверждено
     }
 
@@ -168,7 +170,7 @@ export async function POST(req: Request) {
 async function notifyGuestBooking(bookingId: string, req: Request, type: 'hold' | 'confirm' = 'hold') {
     try {
         const notifyUrl = new URL('/api/notify', req.url);
-        console.log('[quick-book-guest] Calling notify API:', notifyUrl.toString(), 'type:', type, 'booking_id:', bookingId);
+        logDebug('QuickBookGuest', 'Calling notify API', { url: notifyUrl.toString(), type, bookingId });
         
         const response = await fetch(notifyUrl, {
             method: 'POST',
@@ -178,13 +180,13 @@ async function notifyGuestBooking(bookingId: string, req: Request, type: 'hold' 
         
         if (!response.ok) {
             const errorText = await response.text().catch(() => 'Unknown error');
-            console.error('[quick-book-guest] Notify API error:', response.status, errorText);
+            logError('QuickBookGuest', 'Notify API error', { status: response.status, errorText });
         } else {
             const result = await response.json().catch(() => ({}));
-            console.log('[quick-book-guest] Notify API success:', result);
+            logDebug('QuickBookGuest', 'Notify API success', result);
         }
     } catch (error) {
-        console.error('[quick-book-guest] Notify API exception:', error);
+        logError('QuickBookGuest', 'Notify API exception', error);
     }
 }
 

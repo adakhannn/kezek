@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (staffError) {
-            console.error('Error loading staff for percent:', staffError);
+            logError('StaffShiftItems', 'Error loading staff for percent', staffError);
         }
 
         const percentMaster = Number(staffData?.percent_master ?? 60);
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (findError) {
-            console.error('Error finding open shift:', findError);
+            logError('StaffShiftItems', 'Error finding open shift', findError);
             return NextResponse.json(
                 { ok: false, error: 'Не удалось найти открытую смену' },
                 { status: 500 }
@@ -81,7 +82,7 @@ export async function POST(req: Request) {
             .eq('shift_id', shiftId);
 
         if (deleteError) {
-            console.error('Error deleting old items:', deleteError);
+            logError('StaffShiftItems', 'Error deleting old items', deleteError);
             return NextResponse.json(
                 { ok: false, error: 'Не удалось удалить старые позиции' },
                 { status: 500 }
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
                     .in('id', allBookingIds);
 
                 if (bookingsError) {
-                    console.error('[staff/shift/items] Error loading bookings for status update:', bookingsError);
+                    logError('StaffShiftItems', 'Error loading bookings for status update', bookingsError);
                 } else if (bookingsForUpdate && bookingsForUpdate.length > 0) {
                     const bookingsMap = new Map<string, { id: string; status: string; start_at: string | null }>();
                     for (const b of bookingsForUpdate) {
@@ -160,20 +161,20 @@ export async function POST(req: Request) {
                                         .update({ status: 'paid' })
                                         .eq('id', booking.id);
                                     if (updateError) {
-                                        console.error(`Error updating booking ${booking.id} status:`, updateError);
+                                        logError('StaffShiftItems', `Error updating booking ${booking.id} status`, updateError);
                                     }
                                 }
                             } else if (rpcError && !rpcError.message?.includes('function') && !rpcError.message?.includes('does not exist')) {
-                                console.error(`Error applying promotion to booking ${booking.id}:`, rpcError);
+                                logError('StaffShiftItems', `Error applying promotion to booking ${booking.id}`, rpcError);
                                 // Продолжаем выполнение, даже если акция не применилась
                             }
                         } catch (e) {
-                            console.error(`Error updating booking ${booking.id} status:`, e);
+                            logError('StaffShiftItems', `Error updating booking ${booking.id} status`, e);
                         }
                     }
                 }
             } catch (e) {
-                console.error('[staff/shift/items] Unexpected error while updating bookings to paid:', e);
+                logError('StaffShiftItems', 'Unexpected error while updating bookings to paid', e);
             }
         }
 
@@ -244,7 +245,7 @@ export async function POST(req: Request) {
                     .insert(cleanItems);
 
                 if (insertError) {
-                    console.error('Error inserting items:', insertError);
+                    logError('StaffShiftItems', 'Error inserting items', insertError);
                     return NextResponse.json(
                         { ok: false, error: 'Не удалось сохранить позиции' },
                         { status: 500 }
@@ -296,13 +297,13 @@ export async function POST(req: Request) {
             .eq('id', shiftId);
 
         if (updateShiftError) {
-            console.error('Error updating shift totals:', updateShiftError);
+            logError('StaffShiftItems', 'Error updating shift totals', updateShiftError);
             // Не возвращаем ошибку, так как позиции уже сохранены
         }
 
         return NextResponse.json({ ok: true });
     } catch (e) {
-        console.error('Error saving shift items:', e);
+        logError('StaffShiftItems', 'Error saving shift items', e);
         return NextResponse.json(
             { ok: false, error: 'Ошибка при сохранении данных' },
             { status: 500 }

@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -22,7 +23,7 @@ export async function POST(req: Request, context: unknown) {
         try {
             body = await req.json();
         } catch (e) {
-            console.error('[dashboard/staff-shifts/update-hours] Invalid JSON body', e);
+            logError('UpdateShiftHours', 'Invalid JSON body', e);
             return NextResponse.json({ ok: false, error: 'INVALID_JSON' }, { status: 400 });
         }
 
@@ -47,7 +48,7 @@ export async function POST(req: Request, context: unknown) {
             .maybeSingle();
 
         if (shiftError) {
-            console.error('[dashboard/staff-shifts/update-hours] Error loading shift', shiftError);
+            logError('UpdateShiftHours', 'Error loading shift', shiftError);
             return NextResponse.json(
                 { ok: false, error: shiftError.message },
                 { status: 500 }
@@ -117,10 +118,7 @@ export async function POST(req: Request, context: unknown) {
             .maybeSingle();
 
         if (updateError || !updated) {
-            console.error(
-                '[dashboard/staff-shifts/update-hours] Error updating shift',
-                updateError
-            );
+            logError('UpdateShiftHours', 'Error updating shift', updateError);
             return NextResponse.json(
                 { ok: false, error: updateError?.message || 'UPDATE_FAILED' },
                 { status: 500 }
@@ -132,7 +130,7 @@ export async function POST(req: Request, context: unknown) {
             shift: updated,
         });
     } catch (e) {
-        console.error('[dashboard/staff-shifts/update-hours] Unexpected error', e);
+        logError('UpdateShiftHours', 'Unexpected error', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }

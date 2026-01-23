@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -85,7 +86,7 @@ export async function GET() {
             businesses_without_rating: bizNoRating ?? null,
         });
     } catch (error) {
-        console.error('[Ratings Status] Unexpected error:', error);
+        logError('RatingsStatus', 'Unexpected error', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }
