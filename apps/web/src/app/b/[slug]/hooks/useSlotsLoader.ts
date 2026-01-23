@@ -1,5 +1,5 @@
 import { addMinutes } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
 
@@ -36,8 +36,21 @@ const debugWarn = (...args: unknown[]) => {
 };
 
 /**
+ * Кэш для хранения загруженных слотов
+ * Ключ: `${dayStr}-${staffId}-${serviceId}`
+ */
+type CacheEntry = {
+    slots: Slot[];
+    timestamp: number;
+};
+
+const SLOTS_CACHE_TTL = 5 * 60 * 1000; // 5 минут
+const DEBOUNCE_DELAY = 300; // 300ms
+
+/**
  * Хук для загрузки свободных слотов для выбранной услуги, мастера и даты
  * Учитывает временные переводы и фильтрует слоты по времени (минимум через 30 минут)
+ * Использует debounce для оптимизации частых изменений и кэширование для повторных запросов
  */
 export function useSlotsLoader(params: {
     serviceId: string;
@@ -70,16 +83,61 @@ export function useSlotsLoader(params: {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        let ignore = false;
+    // Кэш слотов (используем useRef для сохранения между рендерами)
+    const cacheRef = useRef<Map<string, CacheEntry>>(new Map());
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-        (async () => {
-            if (!serviceId || !staffId || !dayStr) {
-                setSlots([]);
-                setError(null);
-                setLoading(false);
-                return;
+    useEffect(() => {
+        // Очищаем предыдущий таймер debounce
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        // Если параметры неполные, сразу очищаем состояние
+        if (!serviceId || !staffId || !dayStr) {
+            setSlots([]);
+            setError(null);
+            setLoading(false);
+            return;
+        }
+
+        // Формируем ключ кэша
+        const cacheKey = `${dayStr}-${staffId}-${serviceId}`;
+
+        // Проверяем кэш (только если slotsRefreshKey не изменился, т.е. не было принудительного обновления)
+        if (slotsRefreshKey === 0) {
+            const cached = cacheRef.current.get(cacheKey);
+            if (cached) {
+                const age = Date.now() - cached.timestamp;
+                if (age < SLOTS_CACHE_TTL) {
+                    debugLog('[Booking] Using cached slots:', { cacheKey, age: `${Math.round(age / 1000)}s` });
+                    setSlots(cached.slots);
+                    setError(null);
+                    setLoading(false);
+                    return;
+                } else {
+                    // Кэш устарел, удаляем
+                    cacheRef.current.delete(cacheKey);
+                    debugLog('[Booking] Cache expired, removing:', { cacheKey, age: `${Math.round(age / 1000)}s` });
+                }
             }
+        } else {
+            // Принудительное обновление - очищаем кэш для этого ключа
+            cacheRef.current.delete(cacheKey);
+            debugLog('[Booking] Force refresh, clearing cache:', { cacheKey });
+        }
+
+        // Debounce: откладываем выполнение запроса
+        debounceTimerRef.current = setTimeout(() => {
+            let ignore = false;
+
+            (async () => {
+                if (!serviceId || !staffId || !dayStr) {
+                    setSlots([]);
+                    setError(null);
+                    setLoading(false);
+                    return;
+                }
 
             // Проверка: если услуга не в servicesFiltered, значит мастер не выполняет её
             if (serviceStaff !== null) {
@@ -265,6 +323,14 @@ export function useSlotsLoader(params: {
                     debugWarn('[Booking] RPC returned 0 slots for temporary transfer. This likely means RPC does not account for temporary transfers.');
                 }
 
+                // Сохраняем в кэш
+                const cacheKey = `${dayStr}-${staffId}-${serviceId}`;
+                cacheRef.current.set(cacheKey, {
+                    slots: filtered,
+                    timestamp: Date.now(),
+                });
+                debugLog('[Booking] Slots cached:', { cacheKey, count: filtered.length });
+
                 setSlots(filtered);
                 setError(null);
             } catch (err) {
@@ -278,12 +344,37 @@ export function useSlotsLoader(params: {
                     setLoading(false);
                 }
             }
-        })();
+            })();
+        }, DEBOUNCE_DELAY);
 
         return () => {
-            ignore = true;
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+                debounceTimerRef.current = null;
+            }
         };
     }, [serviceId, staffId, dayStr, branchId, bizId, servicesFiltered, serviceStaff, temporaryTransfers, staff, t, slotsRefreshKey]);
+
+    // Очистка устаревших записей кэша при размонтировании или периодически
+    useEffect(() => {
+        const cleanupInterval = setInterval(() => {
+            const now = Date.now();
+            let cleaned = 0;
+            for (const [key, entry] of cacheRef.current.entries()) {
+                if (now - entry.timestamp > SLOTS_CACHE_TTL) {
+                    cacheRef.current.delete(key);
+                    cleaned++;
+                }
+            }
+            if (cleaned > 0) {
+                debugLog('[Booking] Cleaned expired cache entries:', { cleaned });
+            }
+        }, 60000); // Проверяем каждую минуту
+
+        return () => {
+            clearInterval(cleanupInterval);
+        };
+    }, []);
 
     return { slots, loading, error };
 }
