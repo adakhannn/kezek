@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -84,7 +85,7 @@ export async function GET(
             .maybeSingle();
 
         if (shiftError) {
-            console.error('Error loading today shift:', shiftError);
+            logError('StaffFinance', 'Error loading today shift', shiftError);
             return NextResponse.json(
                 { ok: false, error: shiftError.message },
                 { status: 500 }
@@ -102,7 +103,7 @@ export async function GET(
                 .order('created_at', { ascending: true });
 
             if (itemsError) {
-                console.error('Error loading shift items:', itemsError);
+                logError('StaffFinance', 'Error loading shift items', itemsError);
             } else {
                 items = itemsData ?? [];
             }
@@ -121,7 +122,7 @@ export async function GET(
             .order('start_at', { ascending: true });
 
         if (bookingsError) {
-            console.error('Error loading today bookings:', bookingsError);
+            logError('StaffFinance', 'Error loading today bookings', bookingsError);
         }
 
         // Услуги сотрудника для выпадающего списка
@@ -133,7 +134,7 @@ export async function GET(
             .eq('services.active', true);
 
         if (servicesError) {
-            console.error('Error loading staff services:', servicesError);
+            logError('StaffFinance', 'Error loading staff services', servicesError);
         }
 
         const availableServices = (staffServices ?? [])
@@ -171,7 +172,7 @@ export async function GET(
             .order('shift_date', { ascending: false });
 
         if (statsError) {
-            console.error('Error loading stats:', statsError);
+            logError('StaffFinance', 'Error loading stats', statsError);
         }
 
         // Загружаем все смены (не только закрытые) для статистики - клиент фильтрует по статусу
@@ -183,7 +184,7 @@ export async function GET(
             .order('shift_date', { ascending: false });
 
         if (allShiftsError) {
-            console.error('Error loading all shifts:', allShiftsError);
+            logError('StaffFinance', 'Error loading all shifts', allShiftsError);
         }
 
         const stats = {
@@ -258,7 +259,7 @@ export async function GET(
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[dashboard/staff/finance] error:', e);
+        logError('StaffFinance', 'Unexpected error', e);
         return NextResponse.json(
             { ok: false, error: msg },
             { status: 500 }

@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -69,7 +70,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ ok: true });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('branch schedule save error', e);
+        logError('BranchSchedule', 'branch schedule save error', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }
@@ -110,7 +111,7 @@ export async function GET(req: Request, context: unknown) {
         return NextResponse.json({ ok: true, schedule: schedule || [] });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('branch schedule load error', e);
+        logError('BranchSchedule', 'branch schedule load error', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }
