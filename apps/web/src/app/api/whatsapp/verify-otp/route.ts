@@ -6,6 +6,9 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { logError } from '@/lib/log';
+
 /**
  * POST /api/whatsapp/verify-otp
  * Проверяет OTP код и подтверждает WhatsApp номер
@@ -27,17 +30,14 @@ export async function POST(req: Request) {
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            return NextResponse.json({ ok: false, error: 'auth', message: 'Не авторизован' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         const body = await req.json();
         const { code } = body as { code?: string };
 
         if (!code || !/^\d{6}$/.test(code)) {
-            return NextResponse.json(
-                { ok: false, error: 'invalid_code', message: 'Неверный формат кода. Введите 6 цифр.' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Неверный формат кода. Введите 6 цифр.', { code: 'invalid_code' }, 400);
         }
 
         // Получаем сохраненный OTP код из user_metadata
@@ -50,26 +50,17 @@ export async function POST(req: Request) {
         const expiresAt = userMeta.whatsapp_otp_expires;
 
         if (!savedCode) {
-            return NextResponse.json(
-                { ok: false, error: 'no_code', message: 'Код не найден. Запросите новый код.' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Код не найден. Запросите новый код.', { code: 'no_code' }, 400);
         }
 
         // Проверяем срок действия кода
         if (expiresAt && new Date(expiresAt) < new Date()) {
-            return NextResponse.json(
-                { ok: false, error: 'expired', message: 'Код истек. Запросите новый код.' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Код истек. Запросите новый код.', { code: 'expired' }, 400);
         }
 
         // Проверяем код
         if (savedCode !== code) {
-            return NextResponse.json(
-                { ok: false, error: 'wrong_code', message: 'Неверный код. Попробуйте еще раз.' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Неверный код. Попробуйте еще раз.', { code: 'wrong_code' }, 400);
         }
 
         // Код верный - подтверждаем WhatsApp номер
@@ -79,11 +70,8 @@ export async function POST(req: Request) {
             .eq('id', user.id);
 
         if (updateError) {
-            console.error('[whatsapp/verify-otp] update error:', updateError);
-            return NextResponse.json(
-                { ok: false, error: 'update_failed', message: updateError.message },
-                { status: 500 }
-            );
+            logError('WhatsAppVerifyOtp', 'Update profile error', updateError);
+            return createErrorResponse('internal', updateError.message, { code: 'update_failed' }, 500);
         }
 
         // Удаляем OTP код из user_metadata
@@ -95,15 +83,13 @@ export async function POST(req: Request) {
         });
 
         if (metaError) {
-            console.error('[whatsapp/verify-otp] metadata cleanup error:', metaError);
+            logError('WhatsAppVerifyOtp', 'Metadata cleanup error', metaError);
             // Не критично, продолжаем
         }
 
         return NextResponse.json({ ok: true, message: 'WhatsApp номер подтвержден' });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        console.error('[whatsapp/verify-otp] error:', e);
-        return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
+    } catch (error) {
+        return handleApiError(error, 'WhatsAppVerifyOtp', 'Внутренняя ошибка при проверке OTP');
     }
 }
 

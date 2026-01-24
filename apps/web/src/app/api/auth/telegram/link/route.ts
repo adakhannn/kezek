@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { logError } from '@/lib/log';
 import {
     TelegramAuthData,
     normalizeTelegramData,
@@ -34,27 +36,18 @@ export async function POST(req: Request) {
 
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
-            return NextResponse.json(
-                { ok: false, error: 'auth', message: 'Не авторизован' },
-                { status: 401 },
-            );
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         const body = (await req.json()) as TelegramAuthData;
 
         if (!body || !body.id || !body.hash || !body.auth_date) {
-            return NextResponse.json(
-                { ok: false, error: 'missing_data', message: 'Недостаточно данных от Telegram' },
-                { status: 400 },
-            );
+            return createErrorResponse('validation', 'Недостаточно данных от Telegram', { code: 'missing_data' }, 400);
         }
 
         // Проверяем подпись
         if (!verifyTelegramAuth(body)) {
-            return NextResponse.json(
-                { ok: false, error: 'invalid_signature', message: 'Неверная подпись данных Telegram' },
-                { status: 400 },
-            );
+            return createErrorResponse('validation', 'Неверная подпись данных Telegram', { code: 'invalid_signature' }, 400);
         }
 
         const admin = createClient(URL, SERVICE);
@@ -68,14 +61,7 @@ export async function POST(req: Request) {
             .maybeSingle<{ id: string | null; telegram_id: number | null }>();
 
         if (existingProfile && existingProfile.id !== user.id) {
-            return NextResponse.json(
-                {
-                    ok: false,
-                    error: 'already_linked',
-                    message: 'Этот Telegram аккаунт уже привязан к другому пользователю',
-                },
-                { status: 400 },
-            );
+            return createErrorResponse('conflict', 'Этот Telegram аккаунт уже привязан к другому пользователю', { code: 'already_linked' }, 400);
         }
 
         // Обновляем профиль текущего пользователя
@@ -91,14 +77,12 @@ export async function POST(req: Request) {
             .eq('id', user.id);
 
         if (profileUpdateError) {
-            console.error('[telegram/link] profile update error:', profileUpdateError);
-            return NextResponse.json(
-                {
-                    ok: false,
-                    error: 'update_error',
-                    message: profileUpdateError.message || 'Не удалось привязать Telegram',
-                },
-                { status: 500 },
+            logError('TelegramLink', 'Profile update error', profileUpdateError);
+            return createErrorResponse(
+                'internal',
+                profileUpdateError.message || 'Не удалось привязать Telegram',
+                { code: 'update_error' },
+                500
             );
         }
 
@@ -113,7 +97,7 @@ export async function POST(req: Request) {
         });
 
         if (metaError) {
-            console.error('[telegram/link] metadata update error:', metaError);
+            logError('TelegramLink', 'Metadata update error', metaError);
             // Не критично, продолжаем
         }
 
@@ -121,17 +105,8 @@ export async function POST(req: Request) {
             ok: true,
             message: 'Telegram успешно привязан',
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        console.error('[telegram/link] error:', e);
-        return NextResponse.json(
-            {
-                ok: false,
-                error: 'internal',
-                message: msg,
-            },
-            { status: 500 },
-        );
+    } catch (error) {
+        return handleApiError(error, 'TelegramLink', 'Внутренняя ошибка при привязке Telegram');
     }
 }
 

@@ -6,6 +6,8 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { logError } from '@/lib/log';
 import {
     TelegramAuthData,
     normalizeTelegramData,
@@ -25,18 +27,12 @@ export async function POST(req: Request) {
         const body = (await req.json()) as TelegramAuthData;
 
         if (!body || !body.id || !body.hash || !body.auth_date) {
-            return NextResponse.json(
-                { ok: false, error: 'missing_data', message: 'Недостаточно данных от Telegram' },
-                { status: 400 },
-            );
+            return createErrorResponse('validation', 'Недостаточно данных от Telegram', { code: 'missing_data' }, 400);
         }
 
         // Проверяем подпись
         if (!verifyTelegramAuth(body)) {
-            return NextResponse.json(
-                { ok: false, error: 'invalid_signature', message: 'Неверная подпись данных Telegram' },
-                { status: 400 },
-            );
+            return createErrorResponse('validation', 'Неверная подпись данных Telegram', { code: 'invalid_signature' }, 400);
         }
 
         const admin = createClient(URL, SERVICE);
@@ -50,7 +46,7 @@ export async function POST(req: Request) {
             .maybeSingle<{ id: string | null; telegram_id: number | null }>();
 
         if (profileSelectError) {
-            console.error('[telegram/login] profile select error:', profileSelectError);
+            logError('TelegramLogin', 'Profile select error', profileSelectError);
         }
 
         let userId: string;
@@ -71,7 +67,7 @@ export async function POST(req: Request) {
                 .eq('id', userId);
 
             if (profileUpdateError) {
-                console.error('[telegram/login] profile update error:', profileUpdateError);
+                logError('TelegramLogin', 'Profile update error', profileUpdateError);
             }
         } else {
             // Новый пользователь – создаём в Supabase Auth и в profiles
@@ -90,14 +86,12 @@ export async function POST(req: Request) {
             });
 
             if (authError || !authUser?.user) {
-                console.error('[telegram/login] auth createUser error:', authError);
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: 'auth_error',
-                        message: authError?.message ?? 'Ошибка создания пользователя',
-                    },
-                    { status: 500 },
+                logError('TelegramLogin', 'Auth createUser error', authError);
+                return createErrorResponse(
+                    'internal',
+                    authError?.message ?? 'Ошибка создания пользователя',
+                    { code: 'auth_error' },
+                    500
                 );
             }
 
@@ -113,7 +107,7 @@ export async function POST(req: Request) {
             });
 
             if (profileInsertError) {
-                console.error('[telegram/login] profile insert error:', profileInsertError);
+                logError('TelegramLogin', 'Profile insert error', profileInsertError);
                 // Не критично – профиль можно создать позже
             }
         }
@@ -124,7 +118,7 @@ export async function POST(req: Request) {
 
         const { data: currentUser, error: getUserError } = await admin.auth.admin.getUserById(userId);
         if (getUserError) {
-            console.error('[telegram/login] getUserById error:', getUserError);
+            logError('TelegramLogin', 'GetUserById error', getUserError);
         }
 
         // Если у пользователя нет email – задаём временный
@@ -135,7 +129,7 @@ export async function POST(req: Request) {
             });
 
             if (updateEmailError) {
-                console.error('[telegram/login] update email error:', updateEmailError);
+                logError('TelegramLogin', 'Update email error', updateEmailError);
             }
         }
 
@@ -147,11 +141,8 @@ export async function POST(req: Request) {
         });
 
         if (passwordError) {
-            console.error('[telegram/login] set password error:', passwordError);
-            return NextResponse.json(
-                { ok: false, error: 'session_error', message: 'Не удалось подготовить сессию' },
-                { status: 500 },
-            );
+            logError('TelegramLogin', 'Set password error', passwordError);
+            return createErrorResponse('internal', 'Не удалось подготовить сессию', { code: 'session_error' }, 500);
         }
 
         return NextResponse.json({
@@ -162,17 +153,8 @@ export async function POST(req: Request) {
             needsSignIn: true,
             redirect: '/',
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        console.error('[telegram/login] error:', e);
-        return NextResponse.json(
-            {
-                ok: false,
-                error: 'internal',
-                message: msg,
-            },
-            { status: 500 },
-        );
+    } catch (error) {
+        return handleApiError(error, 'TelegramLogin', 'Внутренняя ошибка при входе через Telegram');
     }
 }
 
