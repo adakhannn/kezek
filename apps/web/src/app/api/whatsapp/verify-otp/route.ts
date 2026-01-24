@@ -8,14 +8,20 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 
 /**
  * POST /api/whatsapp/verify-otp
  * Проверяет OTP код и подтверждает WhatsApp номер
  */
 export async function POST(req: Request) {
-    try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    // Применяем rate limiting для аутентификации
+    return withRateLimit(
+        req,
+        RateLimitConfigs.auth,
+        async () => {
+            try {
+                const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const cookieStore = await cookies();
 
@@ -87,9 +93,11 @@ export async function POST(req: Request) {
             // Не критично, продолжаем
         }
 
-        return NextResponse.json({ ok: true, message: 'WhatsApp номер подтвержден' });
-    } catch (error) {
-        return handleApiError(error, 'WhatsAppVerifyOtp', 'Внутренняя ошибка при проверке OTP');
-    }
+            return NextResponse.json({ ok: true, message: 'WhatsApp номер подтвержден' });
+        } catch (error) {
+            return handleApiError(error, 'WhatsAppVerifyOtp', 'Внутренняя ошибка при проверке OTP');
+        }
+        }
+    );
 }
 

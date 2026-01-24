@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
 
@@ -11,8 +12,13 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-    try {
-        const { supabase, staffId } = await getStaffContext();
+    // Применяем rate limiting для критичной операции
+    return withRateLimit(
+        req,
+        RateLimitConfigs.critical,
+        async () => {
+            try {
+                const { supabase, staffId } = await getStaffContext();
 
         const body = await req.json().catch(() => ({}));
         const totalAmountRaw = Number(body.totalAmount ?? 0);
@@ -431,12 +437,14 @@ export async function POST(req: Request) {
             }
         }
 
-        return NextResponse.json({ ok: true, shift: updated });
-    } catch (error) {
-        logError('StaffShiftClose', 'Unexpected error', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+                return NextResponse.json({ ok: true, shift: updated });
+            } catch (error) {
+                logError('StaffShiftClose', 'Unexpected error', error);
+                const message = error instanceof Error ? error.message : 'Unknown error';
+                return NextResponse.json({ ok: false, error: message }, { status: 500 });
+            }
+        }
+    );
 }
 
 

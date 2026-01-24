@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -12,8 +13,13 @@ export const runtime = 'nodejs';
 
 // POST - сохранить список клиентов для открытой смены
 export async function POST(req: Request) {
-    try {
-        const { supabase, staffId } = await getStaffContext();
+    // Применяем rate limiting для обычной операции
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        async () => {
+            try {
+                const { supabase, staffId } = await getStaffContext();
 
         const body = await req.json().catch(() => ({}));
         const items = Array.isArray(body.items) ? body.items : [];
@@ -301,13 +307,15 @@ export async function POST(req: Request) {
             // Не возвращаем ошибку, так как позиции уже сохранены
         }
 
-        return NextResponse.json({ ok: true });
-    } catch (e) {
-        logError('StaffShiftItems', 'Error saving shift items', e);
-        return NextResponse.json(
-            { ok: false, error: 'Ошибка при сохранении данных' },
-            { status: 500 }
-        );
-    }
+                return NextResponse.json({ ok: true });
+            } catch (e) {
+                logError('StaffShiftItems', 'Error saving shift items', e);
+                return NextResponse.json(
+                    { ok: false, error: 'Ошибка при сохранении данных' },
+                    { status: 500 }
+                );
+            }
+        }
+    );
 }
 

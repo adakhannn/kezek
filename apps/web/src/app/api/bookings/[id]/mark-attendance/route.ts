@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -13,9 +14,14 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    try {
-        const bookingId = await getRouteParamRequired(context, 'id');
-        const { bizId } = await getBizContextForManagers();
+    // Применяем rate limiting для обычной операции
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        async () => {
+            try {
+                const bookingId = await getRouteParamRequired(context, 'id');
+                const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
         const body = await req.json().catch(() => ({} as Body));
@@ -97,7 +103,7 @@ export async function POST(req: Request, context: unknown) {
         // Service client должен обходить большинство проверок
         if (rpcError && (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist') || rpcError.message?.includes('schema cache'))) {
             // Fallback: прямой update через service client
-            const { error: updateError, data } = await admin
+            const { error: updateError } = await admin
                 .from('bookings')
                 .update({ status: newStatus })
                 .eq('id', bookingId)
@@ -135,11 +141,13 @@ export async function POST(req: Request, context: unknown) {
             return NextResponse.json({ ok: true, status: newStatus });
         }
 
-        // Если это не ошибка "функция не найдена", возвращаем ошибку RPC
-        return NextResponse.json({ ok: false, error: rpcError?.message || 'Неизвестная ошибка' }, { status: 400 });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+                // Если это не ошибка "функция не найдена", возвращаем ошибку RPC
+                return NextResponse.json({ ok: false, error: rpcError?.message || 'Неизвестная ошибка' }, { status: 400 });
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
+                return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+            }
+        }
+    );
 }
 

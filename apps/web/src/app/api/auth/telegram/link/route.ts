@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import {
     TelegramAuthData,
     normalizeTelegramData,
@@ -19,11 +20,16 @@ import {
  * Связывает Telegram аккаунт с текущим залогиненным пользователем
  */
 export async function POST(req: Request) {
-    try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const cookieStore = await cookies();
+    // Применяем rate limiting для аутентификации
+    return withRateLimit(
+        req,
+        RateLimitConfigs.auth,
+        async () => {
+            try {
+                const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+                const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+                const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+                const cookieStore = await cookies();
 
         // Проверяем авторизацию текущего пользователя
         const supabase = createServerClient(URL, ANON, {
@@ -101,12 +107,14 @@ export async function POST(req: Request) {
             // Не критично, продолжаем
         }
 
-        return NextResponse.json({
-            ok: true,
-            message: 'Telegram успешно привязан',
-        });
-    } catch (error) {
-        return handleApiError(error, 'TelegramLink', 'Внутренняя ошибка при привязке Telegram');
-    }
+                return NextResponse.json({
+                    ok: true,
+                    message: 'Telegram успешно привязан',
+                });
+            } catch (error) {
+                return handleApiError(error, 'TelegramLink', 'Внутренняя ошибка при привязке Telegram');
+            }
+        }
+    );
 }
 

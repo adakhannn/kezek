@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
 
@@ -16,8 +17,13 @@ import { sendWhatsApp } from '@/lib/senders/whatsapp';
  * Отправляет OTP код на WhatsApp номер пользователя для подтверждения
  */
 export async function POST(req: Request) {
-    try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    // Применяем rate limiting для аутентификации
+    return withRateLimit(
+        req,
+        RateLimitConfigs.auth,
+        async () => {
+            try {
+                const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const cookieStore = await cookies();
 
@@ -89,9 +95,11 @@ export async function POST(req: Request) {
             return createErrorResponse('internal', `Не удалось отправить код: ${errorMsg}`, { code: 'send_failed' }, 500);
         }
 
-        return NextResponse.json({ ok: true, message: 'Код отправлен на WhatsApp' });
-    } catch (error) {
-        return handleApiError(error, 'WhatsAppSendOtp', 'Внутренняя ошибка при отправке OTP');
-    }
+                return NextResponse.json({ ok: true, message: 'Код отправлен на WhatsApp' });
+            } catch (error) {
+                return handleApiError(error, 'WhatsAppSendOtp', 'Внутренняя ошибка при отправке OTP');
+            }
+        }
+    );
 }
 

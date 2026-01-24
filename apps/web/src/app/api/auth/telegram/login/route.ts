@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import {
     TelegramAuthData,
     normalizeTelegramData,
@@ -20,9 +21,14 @@ import {
  * и возвращает данные для входа (email + временный пароль), если нужно.
  */
 export async function POST(req: Request) {
-    try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    // Применяем rate limiting для аутентификации
+    return withRateLimit(
+        req,
+        RateLimitConfigs.auth,
+        async () => {
+            try {
+                const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+                const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
         const body = (await req.json()) as TelegramAuthData;
 
@@ -151,11 +157,13 @@ export async function POST(req: Request) {
             email: emailToUse,
             password: tempPassword,
             needsSignIn: true,
-            redirect: '/',
-        });
-    } catch (error) {
-        return handleApiError(error, 'TelegramLogin', 'Внутренняя ошибка при входе через Telegram');
-    }
+                redirect: '/',
+            });
+            } catch (error) {
+                return handleApiError(error, 'TelegramLogin', 'Внутренняя ошибка при входе через Telegram');
+            }
+        }
+    );
 }
 
 
