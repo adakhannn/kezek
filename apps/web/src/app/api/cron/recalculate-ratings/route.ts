@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { logDebug, logError } from '@/lib/log';
+import { measurePerformance } from '@/lib/performance';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -22,9 +23,16 @@ export async function GET(req: Request) {
 
         // Вызываем функцию пересчета рейтингов за вчерашний день
         // Функция сама пересчитает метрики за вчера и обновит агрегированные рейтинги
-        const { data, error } = await supabase.rpc('recalculate_ratings_for_date', {
-            p_date: null, // null означает вчерашний день (по умолчанию)
-        });
+        // Мониторинг производительности пересчета рейтингов
+        const { data, error } = await measurePerformance(
+            'recalculate_ratings',
+            async () => {
+                return await supabase.rpc('recalculate_ratings_for_date', {
+                    p_date: null, // null означает вчерашний день (по умолчанию)
+                });
+            },
+            { date: null }
+        );
 
         if (error) {
             logError('RecalculateRatingsCron', 'RPC recalculate_ratings_for_date failed', error);

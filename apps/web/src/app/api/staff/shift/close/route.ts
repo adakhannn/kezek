@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
+import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
@@ -212,20 +213,27 @@ export async function POST(req: Request) {
 
         // Используем безопасную SQL функцию с защитой от race conditions
         // Функция проверяет статус в WHERE и использует SELECT FOR UPDATE
-        const { data: rpcResult, error: rpcError } = await supabase.rpc('close_staff_shift_safe', {
-            p_shift_id: existing.id,
-            p_total_amount: totalAmount,
-            p_consumables_amount: finalConsumablesAmount,
-            p_percent_master: normalizedMaster,
-            p_percent_salon: normalizedSalon,
-            p_master_share: finalMasterShare,
-            p_salon_share: finalSalonShare,
-            p_hours_worked: hoursWorked,
-            p_hourly_rate: hourlyRate,
-            p_guaranteed_amount: guaranteedAmount,
-            p_topup_amount: topupAmount,
-            p_closed_at: closedAt,
-        });
+        // Мониторинг производительности закрытия смены
+        const { data: rpcResult, error: rpcError } = await measurePerformance(
+            'shift_close',
+            async () => {
+                return await supabase.rpc('close_staff_shift_safe', {
+                    p_shift_id: existing.id,
+                    p_total_amount: totalAmount,
+                    p_consumables_amount: finalConsumablesAmount,
+                    p_percent_master: normalizedMaster,
+                    p_percent_salon: normalizedSalon,
+                    p_master_share: finalMasterShare,
+                    p_salon_share: finalSalonShare,
+                    p_hours_worked: hoursWorked,
+                    p_hourly_rate: hourlyRate,
+                    p_guaranteed_amount: guaranteedAmount,
+                    p_topup_amount: topupAmount,
+                    p_closed_at: closedAt,
+                });
+            },
+            { shiftId: existing.id, staffId, totalAmount, itemsCount: items.length }
+        );
 
         if (rpcError) {
             logError('StaffShiftClose', 'Error calling close_staff_shift_safe RPC', rpcError);

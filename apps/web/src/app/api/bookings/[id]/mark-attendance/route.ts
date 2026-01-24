@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -72,10 +73,17 @@ export async function POST(req: Request, context: unknown) {
             : 'update_booking_status_no_check';
 
         // Применяем статус (и акцию, если статус = 'paid')
-        const { error: rpcError, data: promotionResult } = await admin.rpc(rpcFunctionName, {
-            p_booking_id: bookingId,
-            p_new_status: newStatus,
-        });
+        // Мониторинг производительности применения промо
+        const { error: rpcError, data: promotionResult } = await measurePerformance(
+            newStatus === 'paid' ? 'apply_promotion' : 'update_booking_status',
+            async () => {
+                return await admin.rpc(rpcFunctionName, {
+                    p_booking_id: bookingId,
+                    p_new_status: newStatus,
+                });
+            },
+            { bookingId, newStatus, rpcFunctionName }
+        );
 
         // Если RPC успешно выполнен, возвращаем успех
         if (!rpcError) {

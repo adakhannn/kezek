@@ -235,13 +235,22 @@ export function useSlotsLoader(params: {
                     isTemporaryTransfer,
                 });
 
-                const { data, error: rpcError } = await supabase.rpc('get_free_slots_service_day_v2', {
-                    p_biz_id: bizId,
-                    p_service_id: serviceId,
-                    p_day: dayStr,
-                    p_per_staff: 400,
-                    p_step_min: 15,
-                });
+                // Мониторинг производительности загрузки слотов
+                const { measurePerformance } = await import('@/lib/performance');
+                const rpcResult = await measurePerformance(
+                    'get_free_slots_service_day_v2',
+                    async () => {
+                        return await supabase.rpc('get_free_slots_service_day_v2', {
+                            p_biz_id: bizId,
+                            p_service_id: serviceId,
+                            p_day: dayStr,
+                            p_per_staff: 400,
+                            p_step_min: 15,
+                        });
+                    },
+                    { bizId, serviceId, dayStr, staffId }
+                );
+                const { data, error: rpcError } = rpcResult;
 
                 if (ignore) return;
 
