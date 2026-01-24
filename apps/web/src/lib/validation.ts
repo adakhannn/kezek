@@ -1,33 +1,30 @@
 /**
- * Утилиты для валидации данных
+ * Утилиты для валидации данных на клиенте
  */
 
 /**
- * Проверяет, является ли строка валидным UUID
+ * Простая проверка UUID (возвращает boolean)
  */
 export function isUuid(v: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 }
 
 /**
- * Проверяет, является ли строка валидным email адресом
+ * Простая проверка email (возвращает boolean)
  */
 export function isEmail(s: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
 /**
- * Проверяет, является ли строка валидным телефоном в формате E.164
- * Формат: +[1-9][0-9]{1,14} (например, +996555123456)
+ * Простая проверка телефона в формате E.164 (возвращает boolean)
  */
 export function isE164(s: string): boolean {
     return /^\+[1-9]\d{1,14}$/.test(s);
 }
 
 /**
- * Валидирует координаты широты и долготы
- * @returns { ok: false } если координаты невалидны
- * @returns { ok: true, lat: number, lon: number } если координаты валидны
+ * Валидация координат (широта и долгота)
  */
 export function validateLatLon(lat: unknown, lon: unknown): { ok: false } | { ok: true; lat: number; lon: number } {
     if (lat == null || lon == null) return { ok: false };
@@ -39,21 +36,176 @@ export function validateLatLon(lat: unknown, lon: unknown): { ok: false } | { ok
 }
 
 /**
- * Преобразует координаты в формат EWKT для PostGIS
- * @param lat - широта
- * @param lon - долгота
- * @returns строка в формате SRID=4326;POINT(lon lat)
+ * Конвертация координат в EWKT формат для PostGIS
+ * Формат: SRID=4326;POINT(lon lat)
  */
 export function coordsToEWKT(lat: number, lon: number): string {
     return `SRID=4326;POINT(${lon} ${lat})`;
 }
 
 /**
- * Нормализует строку (убирает пробелы, возвращает null если пусто)
+ * Валидация email
  */
-export function normalizeString(v?: string | null): string | null {
-    const s = (v ?? '').trim();
-    return s.length ? s : null;
+export function validateEmail(email: string): { valid: boolean; error?: string } {
+    if (!email || !email.trim()) {
+        return { valid: true }; // Email опционален
+    }
+
+    const trimmed = email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(trimmed)) {
+        return { valid: false, error: 'Неверный формат email' };
+    }
+
+    if (trimmed.length > 255) {
+        return { valid: false, error: 'Email слишком длинный (максимум 255 символов)' };
+    }
+
+    return { valid: true };
 }
 
+/**
+ * Валидация телефона (формат E.164: +996555123456)
+ */
+export function validatePhone(phone: string, required: boolean = false): { valid: boolean; error?: string } {
+    const trimmed = phone.trim();
 
+    if (!trimmed) {
+        if (required) {
+            return { valid: false, error: 'Телефон обязателен' };
+        }
+        return { valid: true }; // Телефон опционален
+    }
+
+    // Формат E.164: начинается с +, затем код страны (1-3 цифры), затем номер (7-14 цифр)
+    const phoneRegex = /^\+[1-9]\d{7,14}$/;
+
+    if (!phoneRegex.test(trimmed)) {
+        return { valid: false, error: 'Неверный формат телефона. Используйте формат: +996555123456' };
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Валидация имени (не пустое, минимум 2 символа)
+ */
+export function validateName(name: string, required: boolean = true): { valid: boolean; error?: string } {
+    const trimmed = name.trim();
+
+    if (!trimmed) {
+        if (required) {
+            return { valid: false, error: 'Имя обязательно' };
+        }
+        return { valid: true };
+    }
+
+    if (trimmed.length < 2) {
+        return { valid: false, error: 'Имя должно содержать минимум 2 символа' };
+    }
+
+    if (trimmed.length > 100) {
+        return { valid: false, error: 'Имя слишком длинное (максимум 100 символов)' };
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Валидация числового значения (положительное число)
+ */
+export function validatePositiveNumber(
+    value: number | string,
+    options: {
+        min?: number;
+        max?: number;
+        required?: boolean;
+        allowZero?: boolean;
+    } = {}
+): { valid: boolean; error?: string } {
+    const { min = 0, max, required = false, allowZero = true } = options;
+
+    if (value === null || value === undefined || value === '') {
+        if (required) {
+            return { valid: false, error: 'Значение обязательно' };
+        }
+        return { valid: true };
+    }
+
+    const num = typeof value === 'string' ? Number(value) : value;
+
+    if (isNaN(num)) {
+        return { valid: false, error: 'Введите число' };
+    }
+
+    if (!allowZero && num === 0) {
+        return { valid: false, error: 'Значение должно быть больше 0' };
+    }
+
+    if (num < min) {
+        return { valid: false, error: `Значение должно быть не менее ${min}` };
+    }
+
+    if (max !== undefined && num > max) {
+        return { valid: false, error: `Значение должно быть не более ${max}` };
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Валидация процента (0-100)
+ */
+export function validatePercent(percent: number | string): { valid: boolean; error?: string } {
+    return validatePositiveNumber(percent, { min: 0, max: 100, required: true });
+}
+
+/**
+ * Валидация диапазона цен (price_from <= price_to)
+ */
+export function validatePriceRange(
+    priceFrom: number | string,
+    priceTo: number | string
+): { valid: boolean; error?: string } {
+    const from = typeof priceFrom === 'string' ? Number(priceFrom) : priceFrom;
+    const to = typeof priceTo === 'string' ? Number(priceTo) : priceTo;
+
+    if (isNaN(from) || isNaN(to)) {
+        return { valid: true }; // Если не заполнены, валидация не требуется
+    }
+
+    if (from < 0 || to < 0) {
+        return { valid: false, error: 'Цены не могут быть отрицательными' };
+    }
+
+    if (from > to) {
+        return { valid: false, error: 'Минимальная цена не может быть больше максимальной' };
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Валидация суммы процентов (должна быть равна 100)
+ */
+export function validatePercentSum(
+    master: number | string,
+    salon: number | string
+): { valid: boolean; error?: string } {
+    const masterNum = typeof master === 'string' ? Number(master) : master;
+    const salonNum = typeof salon === 'string' ? Number(salon) : salon;
+
+    if (isNaN(masterNum) || isNaN(salonNum)) {
+        return { valid: false, error: 'Проценты должны быть указаны' };
+    }
+
+    const sum = masterNum + salonNum;
+
+    if (Math.abs(sum - 100) > 0.01) {
+        // Допускаем небольшую погрешность из-за округления
+        return { valid: false, error: 'Сумма процентов должна быть равна 100%' };
+    }
+
+    return { valid: true };
+}

@@ -7,6 +7,7 @@ import { ru } from 'date-fns/locale/ru';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
+
 import { BookingEmptyState } from './BookingEmptyState';
 import { useServicesFilter } from './hooks/useServicesFilter';
 import { useSlotsLoader } from './hooks/useSlotsLoader';
@@ -17,6 +18,7 @@ import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
+import { validateEmail, validateName, validatePhone } from '@/lib/validation';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const debugLog = (...args: unknown[]) => {
@@ -792,15 +794,29 @@ export default function BookingForm({ data }: { data: Data }) {
         // Валидация формы
         const name = guestBookingForm.client_name.trim();
         const phone = guestBookingForm.client_phone.trim();
-        
-        if (!name) {
-            alert(t('booking.guest.nameRequired', 'Введите ваше имя'));
+        const email = guestBookingForm.client_email.trim();
+
+        // Валидация имени
+        const nameValidation = validateName(name, true);
+        if (!nameValidation.valid) {
+            alert(nameValidation.error || t('booking.guest.nameRequired', 'Введите ваше имя'));
             return;
         }
-        
-        if (!phone) {
-            alert(t('booking.guest.phoneRequired', 'Введите ваш телефон'));
+
+        // Валидация телефона
+        const phoneValidation = validatePhone(phone, true);
+        if (!phoneValidation.valid) {
+            alert(phoneValidation.error || t('booking.guest.phoneRequired', 'Введите ваш телефон'));
             return;
+        }
+
+        // Валидация email (если заполнен)
+        if (email) {
+            const emailValidation = validateEmail(email);
+            if (!emailValidation.valid) {
+                alert(emailValidation.error || t('booking.guest.emailInvalid', 'Неверный формат email'));
+                return;
+            }
         }
 
         setGuestBookingLoading(true);

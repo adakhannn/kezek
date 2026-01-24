@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { validateEmail, validateName, validatePercent, validatePercentSum, validatePhone, validatePositiveNumber } from '@/lib/validation';
 
 type Staff = {
     id?: string;
@@ -42,11 +43,73 @@ export default function StaffForm({
                 ? `${apiBase}/${encodeURIComponent(form.id)}/update`
                 : `${apiBase}/create`;
             
-            // Проверяем, что все обязательные поля присутствуют
-            if (!form.full_name || !form.branch_id) {
-                setErr(t('staff.form.errors.required', 'Заполните все обязательные поля'));
+            // Валидация обязательных полей
+            const nameValidation = validateName(form.full_name);
+            if (!nameValidation.valid) {
+                setErr(nameValidation.error || t('staff.form.errors.nameRequired', 'ФИО обязательно'));
                 setSaving(false);
                 return;
+            }
+
+            if (!form.branch_id) {
+                setErr(t('staff.form.errors.branchRequired', 'Выберите филиал'));
+                setSaving(false);
+                return;
+            }
+
+            // Валидация email (если заполнен)
+            if (form.email && form.email.trim()) {
+                const emailValidation = validateEmail(form.email);
+                if (!emailValidation.valid) {
+                    setErr(emailValidation.error || t('staff.form.errors.emailInvalid', 'Неверный формат email'));
+                    setSaving(false);
+                    return;
+                }
+            }
+
+            // Валидация телефона (если заполнен)
+            if (form.phone && form.phone.trim()) {
+                const phoneValidation = validatePhone(form.phone, false);
+                if (!phoneValidation.valid) {
+                    setErr(phoneValidation.error || t('staff.form.errors.phoneInvalid', 'Неверный формат телефона'));
+                    setSaving(false);
+                    return;
+                }
+            }
+
+            // Валидация процентов
+            const masterPercent = form.percent_master ?? 60;
+            const salonPercent = form.percent_salon ?? 40;
+
+            const masterPercentValidation = validatePercent(masterPercent);
+            if (!masterPercentValidation.valid) {
+                setErr(masterPercentValidation.error || t('staff.form.errors.percentMasterInvalid', 'Доля мастера должна быть от 0 до 100%'));
+                setSaving(false);
+                return;
+            }
+
+            const salonPercentValidation = validatePercent(salonPercent);
+            if (!salonPercentValidation.valid) {
+                setErr(salonPercentValidation.error || t('staff.form.errors.percentSalonInvalid', 'Доля салона должна быть от 0 до 100%'));
+                setSaving(false);
+                return;
+            }
+
+            const percentSumValidation = validatePercentSum(masterPercent, salonPercent);
+            if (!percentSumValidation.valid) {
+                setErr(percentSumValidation.error || t('staff.form.errors.percentSumInvalid', 'Сумма процентов должна быть равна 100%'));
+                setSaving(false);
+                return;
+            }
+
+            // Валидация hourly_rate (если заполнен)
+            if (form.hourly_rate !== null && form.hourly_rate !== undefined) {
+                const hourlyRateValidation = validatePositiveNumber(form.hourly_rate, { min: 0, allowZero: false });
+                if (!hourlyRateValidation.valid) {
+                    setErr(hourlyRateValidation.error || t('staff.form.errors.hourlyRateInvalid', 'Ставка за час должна быть больше 0'));
+                    setSaving(false);
+                    return;
+                }
             }
             
             const requestBody = JSON.stringify(form);

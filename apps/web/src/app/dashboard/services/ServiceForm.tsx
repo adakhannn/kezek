@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { validateName, validatePositiveNumber, validatePriceRange } from '@/lib/validation';
 
 type Branch = { id: string; name: string };
 
@@ -80,23 +81,64 @@ export default function ServiceForm({
                 : `${apiBase}/create`;
 
             // валидация
-            if (!form.name_ru.trim()) {
-                throw new Error(t('services.form.error.nameRequired', 'Название обязательно'));
+            const nameRuValidation = validateName(form.name_ru.trim());
+            if (!nameRuValidation.valid) {
+                throw new Error(nameRuValidation.error || t('services.form.error.nameRequired', 'Название обязательно'));
             }
-            if (!isEdit) {
-                const ids = form.branch_ids ?? [];
-                if (ids.length === 0) {
-                    throw new Error(
-                        t('services.form.error.branchRequired', 'Выберите хотя бы один филиал'),
-                    );
+
+            // Валидация опциональных названий
+            if (form.name_ky && form.name_ky.trim()) {
+                const nameKyValidation = validateName(form.name_ky.trim(), false);
+                if (!nameKyValidation.valid) {
+                    throw new Error(t('services.form.error.nameKyInvalid', 'Название (кыргызский) должно содержать минимум 2 символа'));
                 }
-            } else {
-                const ids = form.branch_ids ?? [];
-                if (ids.length === 0) {
-                    throw new Error(
-                        t('services.form.error.branchRequired', 'Выберите хотя бы один филиал'),
-                    );
+            }
+
+            if (form.name_en && form.name_en.trim()) {
+                const nameEnValidation = validateName(form.name_en.trim(), false);
+                if (!nameEnValidation.valid) {
+                    throw new Error(t('services.form.error.nameEnInvalid', 'Название (английский) должно содержать минимум 2 символа'));
                 }
+            }
+
+            // Валидация длительности
+            const durationValidation = validatePositiveNumber(form.duration_min, { min: 1, required: true, allowZero: false });
+            if (!durationValidation.valid) {
+                throw new Error(durationValidation.error || t('services.form.error.durationInvalid', 'Длительность должна быть не менее 1 минуты'));
+            }
+
+            // Валидация цен
+            const priceFromNum = priceFromStr.trim() === '' ? 0 : Number(priceFromStr) || 0;
+            const priceToNum = priceToStr.trim() === '' ? 0 : Number(priceToStr) || 0;
+
+            if (priceFromNum > 0) {
+                const priceFromValidation = validatePositiveNumber(priceFromNum, { min: 0, allowZero: false });
+                if (!priceFromValidation.valid) {
+                    throw new Error(priceFromValidation.error || t('services.form.error.priceFromInvalid', 'Минимальная цена должна быть больше 0'));
+                }
+            }
+
+            if (priceToNum > 0) {
+                const priceToValidation = validatePositiveNumber(priceToNum, { min: 0, allowZero: false });
+                if (!priceToValidation.valid) {
+                    throw new Error(priceToValidation.error || t('services.form.error.priceToInvalid', 'Максимальная цена должна быть больше 0'));
+                }
+            }
+
+            // Валидация диапазона цен
+            if (priceFromNum > 0 || priceToNum > 0) {
+                const rangeValidation = validatePriceRange(priceFromNum, priceToNum);
+                if (!rangeValidation.valid) {
+                    throw new Error(rangeValidation.error || t('services.form.error.priceRangeInvalid', 'Минимальная цена не может быть больше максимальной'));
+                }
+            }
+
+            // Валидация филиалов
+            const ids = form.branch_ids ?? [];
+            if (ids.length === 0) {
+                throw new Error(
+                    t('services.form.error.branchRequired', 'Выберите хотя бы один филиал'),
+                );
             }
 
             // готовим тело запроса:
