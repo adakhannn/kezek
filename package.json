@@ -21,11 +21,13 @@
     "prepare": "husky install",
     "supabase": "supabase",
     "db:push": "supabase db push",
-    "test:sql": "bash scripts/run-tests.sh || powershell -ExecutionPolicy Bypass -File scripts/run-tests.ps1"
+    "test:sql": "bash scripts/run-tests.sh || powershell -ExecutionPolicy Bypass -File scripts/run-tests.ps1",
+    "test:api": "pnpm -C apps/web test",
+    "test": "pnpm test:sql && pnpm test:api"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix"
+      "eslint --fix --ignore-pattern '**/__tests__/**' --ignore-pattern '**/*.test.{ts,tsx}' --ignore-pattern '**/*.spec.{ts,tsx}' --ignore-pattern 'jest.config.js' --ignore-pattern 'jest.setup.js'"
     ]
   },
   "dependencies": {
