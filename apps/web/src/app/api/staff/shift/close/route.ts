@@ -36,7 +36,10 @@ export async function POST(req: Request) {
         if (staffError) {
             logError('StaffShiftClose', 'Error loading staff for percent', staffError);
             return NextResponse.json(
-                { ok: false, error: 'Не удалось загрузить настройки сотрудника' },
+                { 
+                    ok: false, 
+                    error: 'Не удалось загрузить настройки сотрудника. Проверьте подключение к интернету и попробуйте снова.' 
+                },
                 { status: 500 }
             );
         }
@@ -76,21 +79,30 @@ export async function POST(req: Request) {
         if (loadError) {
             logError('StaffShiftClose', 'Error loading shift for close', loadError);
             return NextResponse.json(
-                { ok: false, error: loadError.message },
+                { 
+                    ok: false, 
+                    error: loadError.message || 'Не удалось загрузить данные смены. Проверьте подключение к интернету и попробуйте снова.' 
+                },
                 { status: 500 }
             );
         }
 
         if (!existing) {
             return NextResponse.json(
-                { ok: false, error: 'Смена на сегодня ещё не открыта' },
+                { 
+                    ok: false, 
+                    error: 'Смена на сегодня ещё не открыта. Сначала откройте смену, затем добавьте клиентов и закройте её.' 
+                },
                 { status: 400 }
             );
         }
 
         if (existing.status === 'closed') {
             return NextResponse.json(
-                { ok: false, error: 'Смена уже закрыта' },
+                { 
+                    ok: false, 
+                    error: 'Смена уже закрыта. Обновите страницу для просмотра результатов.' 
+                },
                 { status: 400 }
             );
         }
@@ -237,8 +249,19 @@ export async function POST(req: Request) {
 
         if (rpcError) {
             logError('StaffShiftClose', 'Error calling close_staff_shift_safe RPC', rpcError);
+            
+            // Улучшенные сообщения об ошибках
+            let errorMessage = 'Не удалось закрыть смену';
+            if (rpcError.code === 'P0001' || rpcError.message?.includes('already closed')) {
+                errorMessage = 'Смена уже закрыта';
+            } else if (rpcError.code === '23505') {
+                errorMessage = 'Конфликт данных. Смена могла быть закрыта другим процессом. Обновите страницу.';
+            } else if (rpcError.message) {
+                errorMessage = rpcError.message;
+            }
+            
             return NextResponse.json(
-                { ok: false, error: rpcError.message || 'Не удалось закрыть смену' },
+                { ok: false, error: errorMessage },
                 { status: 500 }
             );
         }
@@ -253,7 +276,10 @@ export async function POST(req: Request) {
         const shift = (rpcResult as { shift?: unknown }).shift;
         if (!shift) {
             logError('StaffShiftClose', 'RPC returned ok but no shift data', rpcResult);
-            return NextResponse.json({ ok: false, error: 'Не удалось получить данные смены' }, { status: 500 });
+            return NextResponse.json({ 
+                ok: false, 
+                error: 'Смена закрыта, но не удалось получить обновленные данные. Обновите страницу для просмотра результатов.' 
+            }, { status: 500 });
         }
 
         const updated = shift as typeof existing;

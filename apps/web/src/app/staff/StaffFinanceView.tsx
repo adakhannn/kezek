@@ -9,6 +9,9 @@ import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import MonthPickerPopover from '@/components/pickers/MonthPickerPopover';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { LoadingOverlay } from '@/components/ui/ProgressBar';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 import { todayTz, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
@@ -110,6 +113,7 @@ type PeriodKey = 'day' | 'month' | 'year' | 'all';
 
 export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const { t, locale } = useLanguage();
+    const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [today, setToday] = useState<TodayResponse | null>(null);
     const [activeTab, setActiveTab] = useState<TabKey>('shift');
@@ -142,6 +146,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
     const [savingItems, setSavingItems] = useState(false);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [closingProgress, setClosingProgress] = useState<{ show: boolean; message: string; progress?: number } | null>(null);
     
     // Функция для получения правильного названия услуги с учетом языка
     function getServiceName(service: ServiceName | string): string {
@@ -301,7 +306,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             }
         } catch (e) {
             console.error('Error loading today shift:', e);
-            setToday({ ok: false, error: t('staff.finance.error.loading', 'Не удалось загрузить данные смены') });
+            let errorMessage = t('staff.finance.error.loading', 'Не удалось загрузить данные смены');
+            
+            if (e instanceof TypeError && e.message.includes('fetch')) {
+                errorMessage = t('staff.finance.error.loading.network', 'Ошибка сети. Проверьте подключение к интернету.');
+            } else if (e instanceof Error) {
+                errorMessage = e.message;
+            }
+            
+            setToday({ ok: false, error: errorMessage });
+            toast.showError(errorMessage);
         } finally {
             setLoading(false);
             setIsInitialLoad(false);
@@ -364,12 +378,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             const res = await fetch('/api/staff/shift/open', { method: 'POST' });
             const json = await res.json();
             if (!json.ok) {
-                alert(json.error || t('staff.finance.error.openShift', 'Не удалось открыть смену'));
+                const errorMessage = json.error || json.message || t('staff.finance.error.openShift', 'Не удалось открыть смену');
+                toast.showError(errorMessage);
+            } else {
+                toast.showSuccess(t('staff.finance.success.shiftOpened', 'Смена успешно открыта'));
+                await load();
             }
-            await load();
         } catch (e) {
             console.error('Error opening shift:', e);
-            alert(t('staff.finance.error.openShift', 'Ошибка при открытии смены'));
+            const errorMessage = e instanceof Error ? e.message : t('staff.finance.error.openShift', 'Ошибка при открытии смены');
+            toast.showError(errorMessage);
         } finally {
             setSaving(false);
         }
@@ -377,7 +395,20 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
     const handleCloseShift = async () => {
         setSaving(true);
+        setClosingProgress({
+            show: true,
+            message: t('staff.finance.closing.processing', 'Обработка данных смены...'),
+            progress: 0,
+        });
+
         try {
+            // Показываем прогресс обработки
+            setClosingProgress({
+                show: true,
+                message: t('staff.finance.closing.calculating', `Расчет сумм для ${items.length} клиентов...`),
+                progress: 20,
+            });
+
             const res = await fetch('/api/staff/shift/close', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -385,14 +416,64 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     items,
                 }),
             });
+
+            setClosingProgress({
+                show: true,
+                message: t('staff.finance.closing.saving', 'Сохранение результатов...'),
+                progress: 60,
+            });
+
             const json = await res.json();
-            if (!json.ok) {
-                alert(json.error || t('staff.finance.error.closeShift', 'Не удалось закрыть смену'));
+            
+            if (!res.ok) {
+                setClosingProgress(null);
+                // Улучшенная обработка ошибок
+                let errorMessage = t('staff.finance.error.closeShift', 'Не удалось закрыть смену');
+                
+                if (json.error) {
+                    errorMessage = json.error;
+                } else if (json.message) {
+                    errorMessage = json.message;
+                } else if (res.status === 400) {
+                    errorMessage = t('staff.finance.error.closeShift.badRequest', 'Ошибка в данных. Проверьте суммы и попробуйте снова.');
+                } else if (res.status === 403) {
+                    errorMessage = t('staff.finance.error.closeShift.forbidden', 'У вас нет прав для закрытия смены.');
+                } else if (res.status === 500) {
+                    errorMessage = t('staff.finance.error.closeShift.serverError', 'Ошибка сервера. Попробуйте позже или обратитесь в поддержку.');
+                } else if (res.status >= 400) {
+                    errorMessage = t('staff.finance.error.closeShift.unknown', `Ошибка ${res.status}. Попробуйте позже.`);
+                }
+                
+                toast.showError(errorMessage);
+                return;
             }
+
+            setClosingProgress({
+                show: true,
+                message: t('staff.finance.closing.success', 'Смена успешно закрыта!'),
+                progress: 100,
+            });
+
+            // Небольшая задержка для показа успешного сообщения
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            
+            setClosingProgress(null);
+            toast.showSuccess(t('staff.finance.success.shiftClosed', 'Смена успешно закрыта'));
+            
             await load();
         } catch (e) {
+            setClosingProgress(null);
             console.error('Error closing shift:', e);
-            alert(t('staff.finance.error.closeShift', 'Ошибка при закрытии смены'));
+            
+            let errorMessage = t('staff.finance.error.closeShift', 'Ошибка при закрытии смены');
+            
+            if (e instanceof TypeError && e.message.includes('fetch')) {
+                errorMessage = t('staff.finance.error.closeShift.network', 'Ошибка сети. Проверьте подключение к интернету.');
+            } else if (e instanceof Error) {
+                errorMessage = e.message;
+            }
+            
+            toast.showError(errorMessage);
         } finally {
             setSaving(false);
         }
@@ -608,7 +689,19 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     );
 
     return (
-        <main className="mx-auto max-w-4xl p-6 space-y-6">
+        <>
+            {(closingProgress?.show || (loading && isInitialLoad)) && (
+                <LoadingOverlay
+                    message={closingProgress?.message || t('staff.finance.loading', 'Загрузка данных смены...')}
+                    progress={closingProgress?.progress}
+                    showProgress={closingProgress?.progress !== undefined}
+                />
+            )}
+            <ToastContainer
+                toasts={toast.toasts}
+                onRemove={toast.removeToast}
+            />
+            <main className="mx-auto max-w-4xl p-6 space-y-6">
             <div>
                 <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     {t('staff.finance.title', 'Финансы')}
@@ -1533,7 +1626,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     </div>
                 </Card>
             )}
-        </main>
+            </main>
+        </>
     );
 }
 
