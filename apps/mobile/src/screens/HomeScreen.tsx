@@ -13,6 +13,7 @@ import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import EmptyState from '../components/ui/EmptyState';
 import Logo from '../components/Logo';
+import RatingBadge from '../components/ui/RatingBadge';
 import { colors } from '../constants/colors';
 import { formatPhone } from '../utils/format';
 
@@ -25,6 +26,7 @@ type Business = {
     address: string | null;
     phones: string[] | null;
     categories: string[] | null;
+    rating_score: number | null;
 };
 
 export default function HomeScreen() {
@@ -38,7 +40,7 @@ export default function HomeScreen() {
         queryFn: async () => {
             let query = supabase
                 .from('businesses')
-                .select('id, name, slug, address, phones, categories')
+                .select('id, name, slug, address, phones, categories, rating_score')
                 .eq('is_approved', true);
 
             if (search) {
@@ -202,7 +204,12 @@ export default function HomeScreen() {
                         >
                             <Card style={styles.businessCard}>
                                 <View style={styles.businessHeader}>
-                                    <Text style={styles.businessName}>{business.name}</Text>
+                                    <View style={styles.businessNameRow}>
+                                        <Text style={styles.businessName}>{business.name}</Text>
+                                        {business.rating_score !== null && business.rating_score !== undefined && (
+                                            <RatingBadge rating={business.rating_score} size="small" />
+                                        )}
+                                    </View>
                                 </View>
 
                                 {business.address && (
@@ -378,10 +385,17 @@ const styles = StyleSheet.create({
     businessHeader: {
         marginBottom: 12,
     },
+    businessNameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        flexWrap: 'wrap',
+    },
     businessName: {
         fontSize: 20,
         fontWeight: '600',
         color: colors.text.primary,
+        flex: 1,
     },
     businessInfo: {
         flexDirection: 'row',

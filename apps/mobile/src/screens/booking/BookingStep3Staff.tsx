@@ -11,6 +11,7 @@ import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import RatingBadge from '../../components/ui/RatingBadge';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -25,10 +26,11 @@ export default function BookingStep3Staff() {
 
             const { data, error } = await supabase
                 .from('staff')
-                .select('id, full_name, branch_id')
+                .select('id, full_name, branch_id, rating_score, avatar_url')
                 .eq('biz_id', bookingData.business.id)
                 .eq('branch_id', bookingData.branchId)
                 .eq('is_active', true)
+                .order('rating_score', { ascending: false, nullsFirst: false })
                 .order('full_name');
 
             if (error) throw error;
@@ -118,11 +120,21 @@ export default function BookingStep3Staff() {
                                             end={{ x: 1, y: 0 }}
                                             style={styles.chipSelected}
                                         >
-                                            <Text style={styles.chipTextSelected}>{staff.full_name}</Text>
+                                            <View style={styles.chipContent}>
+                                                <Text style={styles.chipTextSelected}>{staff.full_name}</Text>
+                                                {staff.rating_score !== null && staff.rating_score !== undefined && (
+                                                    <RatingBadge rating={staff.rating_score} size="small" />
+                                                )}
+                                            </View>
                                         </LinearGradient>
                                     ) : (
                                         <View style={styles.chip}>
-                                            <Text style={styles.chipText}>{staff.full_name}</Text>
+                                            <View style={styles.chipContent}>
+                                                <Text style={styles.chipText}>{staff.full_name}</Text>
+                                                {staff.rating_score !== null && staff.rating_score !== undefined && (
+                                                    <RatingBadge rating={staff.rating_score} size="small" />
+                                                )}
+                                            </View>
                                         </View>
                                     )}
                                 </TouchableOpacity>
@@ -213,6 +225,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '500',
         color: colors.primary.from,
+    },
+    chipContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     emptyContainer: {
         padding: 40,

@@ -13,6 +13,7 @@ import { colors } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import RatingBadge from '../../components/ui/RatingBadge';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -58,6 +59,7 @@ export default function BookingStep6Confirm() {
                 method: 'POST',
                 body: JSON.stringify({
                     biz_id: bookingData.business.id,
+                    branch_id: bookingData.branchId, // Передаем явно выбранный филиал
                     service_id: bookingData.serviceId,
                     staff_id: bookingData.staffId,
                     start_at: bookingData.selectedSlot.start_at,
@@ -104,7 +106,12 @@ export default function BookingStep6Confirm() {
             <ScrollView style={styles.container} contentContainerStyle={styles.content}>
                 <BookingProgressIndicator currentStep={6} />
                 <View style={styles.header}>
-                    <Text style={styles.title}>{bookingData.business?.name}</Text>
+                    <View style={styles.headerRow}>
+                        <Text style={styles.title}>{bookingData.business?.name}</Text>
+                        {bookingData.business?.rating_score !== null && bookingData.business?.rating_score !== undefined && (
+                            <RatingBadge rating={bookingData.business.rating_score} />
+                        )}
+                    </View>
                 </View>
 
             <View style={styles.section}>
@@ -193,11 +200,18 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingTop: 24,
     },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        flexWrap: 'wrap',
+    },
     title: {
         fontSize: 24,
         fontWeight: '600',
         color: colors.text.primary,
         marginBottom: 4,
+        flex: 1,
     },
     subtitle: {
         fontSize: 16,

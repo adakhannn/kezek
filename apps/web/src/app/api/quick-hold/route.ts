@@ -70,18 +70,44 @@ export async function POST(req: Request) {
         user = userData;
     }
 
-    const {biz_id, service_id, staff_id, start_at} = await req.json();
+    const {biz_id, branch_id, service_id, staff_id, start_at} = await req.json();
 
-    const {data: branch, error: eBranch} = await supabase
-        .from('branches')
-        .select('id')
-        .eq('biz_id', biz_id)
-        .eq('is_active', true)
-        .order('created_at', {ascending: true})
-        .limit(1)
-        .maybeSingle<{ id: string }>();
+    let branch: { id: string } | null = null;
+    
+    // Если branch_id передан, используем его, иначе находим первый активный филиал
+    if (branch_id) {
+        const {data: branchData, error: eBranch} = await supabase
+            .from('branches')
+            .select('id')
+            .eq('id', branch_id)
+            .eq('biz_id', biz_id)
+            .eq('is_active', true)
+            .maybeSingle<{ id: string }>();
+        
+        if (eBranch) {
+            logError('QuickHold', 'Branch lookup error', eBranch);
+            return NextResponse.json({ok: false, error: 'branch_lookup', message: eBranch.message}, {status: 400});
+        }
+        branch = branchData;
+    } else {
+        // Fallback: находим первый активный филиал
+        const {data: branchData, error: eBranch} = await supabase
+            .from('branches')
+            .select('id')
+            .eq('biz_id', biz_id)
+            .eq('is_active', true)
+            .order('created_at', {ascending: true})
+            .limit(1)
+            .maybeSingle<{ id: string }>();
+        
+        if (eBranch) {
+            logError('QuickHold', 'Branch lookup error', eBranch);
+            return NextResponse.json({ok: false, error: 'branch_lookup', message: eBranch.message}, {status: 400});
+        }
+        branch = branchData;
+    }
 
-    if (eBranch || !branch?.id) {
+    if (!branch?.id) {
         return NextResponse.json({ok: false, error: 'no_branch', message: 'No active branch'}, {status: 400});
     }
 

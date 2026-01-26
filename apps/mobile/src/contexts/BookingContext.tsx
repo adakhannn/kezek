@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 type Branch = {
     id: string;
     name: string;
+    rating_score: number | null;
 };
 
 type Service = {
@@ -18,6 +19,16 @@ type Staff = {
     id: string;
     full_name: string;
     branch_id: string;
+    rating_score: number | null;
+    avatar_url: string | null;
+};
+
+type Promotion = {
+    id: string;
+    branch_id: string;
+    promotion_type: string;
+    title_ru: string | null;
+    params: Record<string, unknown>;
 };
 
 type Slot = {
@@ -31,6 +42,7 @@ type Business = {
     id: string;
     name: string;
     slug: string;
+    rating_score: number | null;
 };
 
 type BookingData = {
@@ -38,6 +50,7 @@ type BookingData = {
     branches: Branch[];
     services: Service[];
     staff: Staff[];
+    promotions: Promotion[];
     branchId: string;
     serviceId: string;
     staffId: string;
@@ -51,6 +64,7 @@ type BookingContextType = {
     setBranches: (branches: Branch[]) => void;
     setServices: (services: Service[]) => void;
     setStaff: (staff: Staff[]) => void;
+    setPromotions: (promotions: Promotion[]) => void;
     setBranchId: (id: string) => void;
     setServiceId: (id: string) => void;
     setStaffId: (id: string) => void;
@@ -64,6 +78,7 @@ const initialState: BookingData = {
     branches: [],
     services: [],
     staff: [],
+    promotions: [],
     branchId: '',
     serviceId: '',
     staffId: '',
@@ -90,6 +105,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
     const setStaff = useCallback((staff: Staff[]) => {
         setBookingData((prev) => ({ ...prev, staff }));
+    }, []);
+
+    const setPromotions = useCallback((promotions: Promotion[]) => {
+        setBookingData((prev) => ({ ...prev, promotions }));
     }, []);
 
     const setBranchId = useCallback((id: string) => {
@@ -124,6 +143,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
                 setBranches,
                 setServices,
                 setStaff,
+                setPromotions,
                 setBranchId,
                 setServiceId,
                 setStaffId,
