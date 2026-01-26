@@ -20,6 +20,8 @@ const eslintConfig = [
       "**/*.spec.tsx",
       "jest.config.js",
       "jest.setup.js",
+      "e2e/**",
+      "playwright.config.ts",
     ],
   },
 ];

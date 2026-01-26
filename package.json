@@ -23,12 +23,15 @@
     "db:push": "supabase db push",
     "test:sql": "bash scripts/run-tests.sh || powershell -ExecutionPolicy Bypass -File scripts/run-tests.ps1",
     "test:api": "pnpm -C apps/web test",
+    "test:e2e": "pnpm -C apps/web test:e2e",
     "test": "pnpm test:sql && pnpm test:api"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix --ignore-pattern '**/__tests__/**' --ignore-pattern '**/*.test.{ts,tsx}' --ignore-pattern '**/*.spec.{ts,tsx}' --ignore-pattern 'jest.config.js' --ignore-pattern 'jest.setup.js'"
-    ]
+      "eslint --fix --ignore-pattern '**/__tests__/**' --ignore-pattern '**/*.test.{ts,tsx}' --ignore-pattern '**/*.spec.{ts,tsx}' --ignore-pattern 'jest.config.js' --ignore-pattern 'jest.setup.js' --ignore-pattern 'e2e/**' --ignore-pattern 'playwright.config.ts' --no-warn-ignored"
+    ],
+    "e2e/**": [],
+    "playwright.config.ts": []
   },
   "dependencies": {
     "resend": "^6.0.1"

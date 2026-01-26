@@ -40,7 +40,11 @@
     "**/__tests__/**",
     "**/*.test.ts",
     "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
     "jest.config.js",
-    "jest.setup.js"
+    "jest.setup.js",
+    "e2e/**",
+    "playwright.config.ts"
   ]
 }
