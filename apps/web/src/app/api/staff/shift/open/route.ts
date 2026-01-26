@@ -10,6 +10,54 @@ import { TZ, dateAtTz, todayTz } from '@/lib/time';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+/**
+ * @swagger
+ * /api/staff/shift/open:
+ *   post:
+ *     summary: Открытие смены сотрудника
+ *     tags: [Shifts]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     description: |
+ *       Открывает смену для текущего сотрудника на сегодня.
+ *       Требования:
+ *       - Только сотрудники могут открывать смены
+ *       - Не должен быть выходной день
+ *       - Не должно быть открытой смены на сегодня
+ *     requestBody:
+ *       required: false
+ *     responses:
+ *       '200':
+ *         description: Смена успешно открыта
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 shift_id:
+ *                   type: string
+ *                   format: uuid
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   example: "2024-01-15"
+ *       '400':
+ *         description: Выходной день или смена уже открыта
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       '403':
+ *         description: Нет доступа (не сотрудник)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export async function POST(req: Request) {
     // Применяем rate limiting для критичной операции
     return withRateLimit(

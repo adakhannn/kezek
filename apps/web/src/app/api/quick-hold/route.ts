@@ -6,7 +6,80 @@ import {NextResponse} from "next/server";
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 
-
+/**
+ * @swagger
+ * /api/quick-hold:
+ *   post:
+ *     summary: Быстрое создание бронирования (hold) для авторизованных пользователей
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - biz_id
+ *               - service_id
+ *               - staff_id
+ *               - start_at
+ *             properties:
+ *               biz_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID бизнеса
+ *               branch_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID филиала (опционально, если не указан - берется первый активный)
+ *               service_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID услуги
+ *               staff_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID мастера
+ *               start_at:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Время начала в формате ISO с таймзоной
+ *                 example: "2024-01-15T10:00:00+06:00"
+ *     responses:
+ *       '200':
+ *         description: Бронирование успешно создано
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 booking_id:
+ *                   type: string
+ *                   format: uuid
+ *                 confirmed:
+ *                   type: boolean
+ *                   example: true
+ *       '400':
+ *         description: Неверные параметры или ошибка создания
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       '401':
+ *         description: Не авторизован
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       '429':
+ *         description: Превышен лимит запросов
+ */
 type HoldSlotArgs = {
     p_biz_id: string;
     p_branch_id: string;

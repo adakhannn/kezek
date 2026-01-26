@@ -10,6 +10,67 @@ import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
+/**
+ * @swagger
+ * /api/bookings/{id}/mark-attendance:
+ *   post:
+ *     summary: Отметка посещения клиента (пришел/не пришел)
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID бронирования
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - attended
+ *             properties:
+ *               attended:
+ *                 type: boolean
+ *                 description: true = пришел, false = не пришел
+ *     responses:
+ *       '200':
+ *         description: Посещение отмечено, промоакция применена (если применима)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 booking:
+ *                   $ref: '#/components/schemas/Booking'
+ *       '400':
+ *         description: Неверные параметры или бронирование не найдено
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       '403':
+ *         description: Нет доступа (только менеджеры бизнеса)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       '404':
+ *         description: Бронирование не найдено
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 type Body = {
     attended: boolean; // true = пришел, false = не пришел
 };
