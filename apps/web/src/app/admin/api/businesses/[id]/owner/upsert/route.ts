@@ -58,7 +58,7 @@ async function findUserIdByEmailOrPhone(
 ): Promise<string | null> {
     const emailLc = email?.toLowerCase();
     const phoneNorm = phone ?? undefined;
-    const adminAuth = admin.auth.admin as unknown as AdminAuthApi;
+    const adminAuth = (admin as { auth: { admin: AdminAuthApi } }).auth.admin;
 
     for (let page = 1; page <= 10; page++) {
         const {data, error} = await adminAuth.listUsers({page, perPage: 1000});
@@ -88,7 +88,7 @@ async function upsertOwnerUser(admin: AdminClient, payload: Body): Promise<strin
 
     if (!email && !phone) throw new Error('Укажите email или телефон владельца');
 
-    const adminAuth = admin.auth.admin as unknown as AdminAuthApi;
+    const adminAuth = (admin as { auth: { admin: AdminAuthApi } }).auth.admin;
 
     // Пытаемся создать нового пользователя
     const password = crypto.randomBytes(10).toString('hex');

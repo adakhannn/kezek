@@ -12,6 +12,39 @@ export const runtime = 'nodejs';
 
 type Period = 'day' | 'month' | 'year';
 
+type StaffFinanceStats = {
+    staff_id: string;
+    staff_name: string;
+    is_active: boolean;
+    branch_id: string;
+    shifts: {
+        total: number;
+        closed: number;
+        open: number;
+    };
+    stats: {
+        total_amount: number;
+        total_master: number;
+        total_salon: number;
+        total_consumables: number;
+        total_late_minutes: number;
+    };
+};
+
+type BusinessFinanceStatsResult = {
+    staff_stats?: StaffFinanceStats[];
+    total_stats?: {
+        total_shifts: number;
+        closed_shifts: number;
+        open_shifts: number;
+        total_amount: number;
+        total_master: number;
+        total_salon: number;
+        total_consumables: number;
+        total_late_minutes: number;
+    };
+};
+
 export async function GET(req: Request) {
     try {
         const { supabase, bizId } = await getBizContextForManagers();
@@ -155,38 +188,13 @@ export async function GET(req: Request) {
         }
 
         // Парсим результат из SQL функции
-        const businessStatsData = businessStats as {
-            staff_stats?: Array<{
-                staff_id: string;
-                staff_name: string;
-                is_active: boolean;
-                branch_id: string;
-                shifts: { total: number; closed: number; open: number };
-                stats: {
-                    total_amount: number;
-                    total_master: number;
-                    total_salon: number;
-                    total_consumables: number;
-                    total_late_minutes: number;
-                };
-            }>;
-            total_stats?: {
-                total_shifts: number;
-                closed_shifts: number;
-                open_shifts: number;
-                total_amount: number;
-                total_master: number;
-                total_salon: number;
-                total_consumables: number;
-                total_late_minutes: number;
-            };
-        };
+        const businessStatsData: BusinessFinanceStatsResult | undefined = businessStats ?? undefined;
 
         // Группируем смены по сотрудникам и считаем статистику
         // Используем данные из SQL функции для закрытых смен, добавляем расчеты для открытых
         const staffStats = (staffList || []).map((staff) => {
             // Находим статистику из SQL функции
-            const sqlStats = businessStatsData.staff_stats?.find(s => s.staff_id === staff.id);
+            const sqlStats = businessStatsData?.staff_stats?.find(s => s.staff_id === staff.id);
             
             // Базовые значения из SQL функции (закрытые смены)
             let totalAmount = sqlStats?.stats.total_amount || 0;
@@ -259,7 +267,7 @@ export async function GET(req: Request) {
 
         // Считаем общую статистику
         // Используем данные из SQL функции, если доступны, иначе считаем из staffStats
-        const totalStats = businessStatsData.total_stats ? {
+        const totalStats = businessStatsData?.total_stats ? {
             totalAmount: businessStatsData.total_stats.total_amount,
             totalMaster: businessStatsData.total_stats.total_master,
             totalSalon: businessStatsData.total_stats.total_salon,

@@ -49,7 +49,7 @@ interface GoTrueAdminShim {
 type AdminClient = SupabaseClient;
 
 const adminAPI = (c: AdminClient): GoTrueAdminShim =>
-    (c as unknown as { auth: { admin: GoTrueAdminShim } }).auth.admin;
+    (c as { auth: { admin: GoTrueAdminShim } }).auth.admin;
 
 // ---------- Данные ----------
 type Body = { full_name?: string | null; email?: string | null; phone?: string | null };

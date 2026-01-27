@@ -25,8 +25,8 @@ function WhatsAppAuthContent() {
         }
     }, [countdown]);
 
-    async function handleSendOtp(e: React.FormEvent) {
-        e.preventDefault();
+    async function handleSendOtp(e?: React.FormEvent) {
+        e?.preventDefault();
         setSending(true);
         setError(null);
 
@@ -179,7 +179,7 @@ function WhatsAppAuthContent() {
 
     async function handleResendOtp() {
         if (countdown > 0) return;
-        await handleSendOtp(new Event('submit') as unknown as React.FormEvent);
+        await handleSendOtp();
     }
 
     return (

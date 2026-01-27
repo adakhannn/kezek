@@ -12,6 +12,32 @@ import { TZ, dateAtTz } from '@/lib/time';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+type StaffShiftRow = {
+    id: string;
+    staff_id: string;
+    biz_id: string;
+    shift_date: string;
+    status: 'open' | 'closed';
+    opened_at: string | null;
+    closed_at: string | null;
+    total_amount: number | null;
+    consumables_amount: number | null;
+    percent_master: number | null;
+    percent_salon: number | null;
+    master_share: number | null;
+    salon_share: number | null;
+    hours_worked: number | null;
+    hourly_rate: number | null;
+    guaranteed_amount: number | null;
+    topup_amount: number | null;
+};
+
+type CloseStaffShiftRpcResult = {
+    ok: boolean;
+    error?: string | null;
+    shift?: StaffShiftRow | null;
+};
+
 export async function POST(req: Request) {
     // Применяем rate limiting для критичной операции
     return withRateLimit(
@@ -74,7 +100,7 @@ export async function POST(req: Request) {
             .select('*')
             .eq('staff_id', staffId)
             .eq('shift_date', ymd)
-            .maybeSingle();
+            .maybeSingle<StaffShiftRow>();
 
         if (loadError) {
             logError('StaffShiftClose', 'Error loading shift for close', loadError);
@@ -267,13 +293,14 @@ export async function POST(req: Request) {
         }
 
         // Проверяем результат RPC
-        if (!rpcResult || !(rpcResult as { ok?: boolean }).ok) {
-            const errorMsg = (rpcResult as { error?: string })?.error || 'Не удалось закрыть смену';
+        const typedResult: CloseStaffShiftRpcResult | null = rpcResult as CloseStaffShiftRpcResult | null;
+        if (!typedResult || !typedResult.ok) {
+            const errorMsg = typedResult?.error || 'Не удалось закрыть смену';
             logError('StaffShiftClose', 'RPC returned error', { error: errorMsg, result: rpcResult });
             return NextResponse.json({ ok: false, error: errorMsg }, { status: 500 });
         }
 
-        const shift = (rpcResult as { shift?: unknown }).shift;
+        const shift = typedResult.shift;
         if (!shift) {
             logError('StaffShiftClose', 'RPC returned ok but no shift data', rpcResult);
             return NextResponse.json({ 

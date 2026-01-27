@@ -206,20 +206,20 @@ export default function PromotionsPageClient({ data }: { data: Data }) {
                                                                     {promo.promotion_type === 'free_after_n_visits' &&
                                                                         typeof params.visit_count === 'number' && (
                                                                         <p className="text-sm text-white/90 mt-1">
-                                                                            {(t(
+                                                                            {t(
                                                                                 'promotions.details.freeAfterN',
                                                                                 'Каждая {n}-я услуга бесплатно',
-                                                                            ) as unknown as string).replace('{n}', String(params.visit_count))}
+                                                                            ).replace('{n}', String(params.visit_count))}
                                                                         </p>
                                                                     )}
                                                                     {(promo.promotion_type === 'first_visit_discount' ||
                                                                         promo.promotion_type === 'birthday_discount') &&
                                                                         typeof params.discount_percent === 'number' && (
                                                                             <p className="text-sm text-white/90 mt-1">
-                                                                                {(t(
+                                                                                {t(
                                                                                     'promotions.details.discount',
                                                                                     'Скидка {percent}%',
-                                                                                ) as unknown as string).replace(
+                                                                                ).replace(
                                                                                     '{percent}',
                                                                                     String(params.discount_percent),
                                                                                 )}

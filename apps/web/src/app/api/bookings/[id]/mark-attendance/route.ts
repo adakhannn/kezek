@@ -75,6 +75,14 @@ type Body = {
     attended: boolean; // true = пришел, false = не пришел
 };
 
+type PromotionRpcResult = {
+    applied?: boolean;
+    promotion_title?: string | null;
+    discount_percent?: number | null;
+    discount_amount?: number | null;
+    final_amount?: number | null;
+} | null;
+
 export async function POST(req: Request, context: unknown) {
     // Применяем rate limiting для обычной операции
     return withRateLimit(
@@ -149,9 +157,9 @@ export async function POST(req: Request, context: unknown) {
         // Если RPC успешно выполнен, возвращаем успех
         if (!rpcError) {
             // Если применялась акция, возвращаем информацию о ней
-            if (newStatus === 'paid' && promotionResult) {
-                const result = promotionResult as { applied?: boolean; promotion_title?: string; discount_percent?: number; discount_amount?: number; final_amount?: number } | null;
-                const applied = result?.applied || false;
+            const result: PromotionRpcResult = promotionResult;
+            if (newStatus === 'paid' && result) {
+                const applied = result.applied || false;
                 
                 return NextResponse.json({ 
                     ok: true, 

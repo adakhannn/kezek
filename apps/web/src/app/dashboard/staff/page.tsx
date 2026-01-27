@@ -32,7 +32,8 @@ export default async function Page({
         .from('staff')
         .select('id,full_name,is_active,branch_id,branches(name)')
         .eq('biz_id', bizId)
-        .order('full_name');
+        .order('full_name')
+        .returns<Row[]>();
 
     if (error) {
         return (
@@ -44,5 +45,5 @@ export default async function Page({
         );
     }
 
-    return <StaffPageClient initialRows={(rows as unknown as Row[]) || []} showDismissed={showDismissed} />;
+    return <StaffPageClient initialRows={rows ?? []} showDismissed={showDismissed} />;
 }

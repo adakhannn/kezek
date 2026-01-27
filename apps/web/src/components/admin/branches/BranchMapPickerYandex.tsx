@@ -97,7 +97,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
 
         (async () => {
             try {
-                const ymaps = (await loadYandexMaps()) as unknown as IYMaps;
+            const ymaps = (await loadYandexMaps()) as unknown as IYMaps;
                 if (destroyed || !boxRef.current) return;
 
             // Yandex Maps использует формат [lat, lon] для center и Placemark
@@ -174,7 +174,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                         // у некоторых объектов есть text
                         const text = first.properties.get<string | undefined>('text');
                         // в старых версиях у GeoObject мог быть метод getAddressLine (не у всех)
-                        const maybeAddrLine = (first as unknown as { getAddressLine?: () => string | undefined }).getAddressLine?.();
+                        const maybeAddrLine = (first as { getAddressLine?: () => string | undefined }).getAddressLine?.();
 
                         addr = maybeAddrLine ?? meta?.GeocoderMetaData?.text ?? text ?? undefined;
                     }

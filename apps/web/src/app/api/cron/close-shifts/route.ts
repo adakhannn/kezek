@@ -194,6 +194,12 @@ export async function GET(req: Request) {
                 const closedAt = midnightNextDay.toISOString();
 
                 // Используем безопасную SQL функцию с защитой от race conditions
+                type CloseStaffShiftRpcResult = {
+                    ok: boolean;
+                    error?: string | null;
+                    action?: string | null;
+                };
+
                 const { data: rpcResult, error: rpcError } = await supabase.rpc('close_staff_shift_safe', {
                     p_shift_id: shift.id,
                     p_total_amount: totalAmount,
@@ -216,9 +222,10 @@ export async function GET(req: Request) {
                 }
 
                 // Проверяем результат RPC
-                if (!rpcResult || !(rpcResult as { ok?: boolean }).ok) {
-                    const errorMsg = (rpcResult as { error?: string })?.error || 'Не удалось закрыть смену';
-                    const action = (rpcResult as { action?: string })?.action;
+                const typedResult: CloseStaffShiftRpcResult | null = rpcResult;
+                if (!typedResult || !typedResult.ok) {
+                    const errorMsg = typedResult?.error || 'Не удалось закрыть смену';
+                    const action = typedResult?.action;
                     
                     // Если смена уже закрыта другим процессом - это не ошибка
                     if (action === 'already_closed') {
