@@ -24,3 +24,41 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Оптимизация для мобильных устройств */
+/* Предотвращаем зум при фокусе на input на iOS */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="password"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Улучшение производительности на touch-устройствах */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Улучшение для select на мобильных */
+select {
+  min-height: 44px;
+}
+
+@media (min-width: 640px) {
+  select {
+    min-height: 40px;
+  }
+}

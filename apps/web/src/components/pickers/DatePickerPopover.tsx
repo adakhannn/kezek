@@ -84,7 +84,7 @@ export default function DatePickerPopover({
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
+                className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[40px] sm:py-2 sm:text-sm touch-manipulation"
             >
                 {/* Иконка календаря */}
                 <svg
@@ -122,7 +122,7 @@ export default function DatePickerPopover({
             {isOpen && (
                 <div
                     ref={popoverRef}
-                    className="absolute left-0 top-full z-50 mt-2 border rounded p-2 bg-white dark:bg-[#0b0b0d] shadow-lg sm:left-auto sm:right-0"
+                    className="absolute left-0 top-full z-50 mt-2 border rounded-lg p-3 bg-white dark:bg-[#0b0b0d] shadow-lg sm:left-auto sm:right-0 sm:p-2 max-w-[calc(100vw-2rem)] sm:max-w-none"
                 >
                     <DayPicker
                         mode="single"
@@ -165,15 +165,15 @@ export default function DatePickerPopover({
                             dropdown_month: '',
                             dropdown_year: '',
                             nav: '',
-                            nav_button: '',
-                            nav_button_previous: '',
-                            nav_button_next: '',
+                            nav_button: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
+                            nav_button_previous: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
+                            nav_button_next: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
                             table: 'w-full',
                             head_row: '',
                             head_cell: 'text-[11px] text-gray-500 dark:text-gray-400',
                             row: '',
                             cell: 'p-0',
-                            day: 'text-[12px] px-2 py-1 m-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800',
+                            day: 'text-sm sm:text-[12px] px-2 py-2 sm:py-1 m-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] flex items-center justify-center touch-manipulation',
                             day_selected: 'bg-gray-900 text-white hover:bg-gray-900 dark:bg-gray-100 dark:text-gray-900',
                             day_today: 'ring-1 ring-gray-500 dark:ring-gray-400',
                             day_disabled: 'opacity-40 cursor-not-allowed hover:bg-transparent',

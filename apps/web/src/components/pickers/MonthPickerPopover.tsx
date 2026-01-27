@@ -78,7 +78,7 @@ export default function MonthPickerPopover({
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
+                className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[40px] sm:py-2 sm:text-sm touch-manipulation"
             >
                 {/* Иконка календаря */}
                 <svg
@@ -116,7 +116,7 @@ export default function MonthPickerPopover({
             {isOpen && (
                 <div
                     ref={popoverRef}
-                    className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-[#0b0b0d] sm:left-auto sm:right-0"
+                    className="absolute left-0 top-full z-50 mt-2 rounded-lg border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-[#0b0b0d] sm:left-auto sm:right-0 sm:p-3 max-w-[calc(100vw-2rem)] sm:max-w-none"
                 >
                     <DayPicker
                         mode="single"
@@ -157,7 +157,7 @@ export default function MonthPickerPopover({
                             month: 'w-full',
                             caption: 'mb-4 flex items-center justify-center',
                             caption_dropdowns: 'flex items-center justify-center gap-3',
-                            dropdown: 'px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-indigo-500 dark:hover:border-indigo-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors cursor-pointer',
+                            dropdown: 'px-3 py-3 sm:py-2 text-base sm:text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-indigo-500 dark:hover:border-indigo-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors cursor-pointer min-h-[44px] sm:min-h-[36px] touch-manipulation',
                             dropdown_month: 'min-w-[120px]',
                             dropdown_year: 'min-w-[80px]',
                             nav: 'hidden', // Скрываем навигационные стрелки, так как используем dropdown
@@ -169,7 +169,7 @@ export default function MonthPickerPopover({
                             head_cell: 'text-[10px] font-medium text-gray-400 dark:text-gray-500 pb-1.5 w-[36px]',
                             row: '',
                             cell: 'p-0.5',
-                            day: 'text-[11px] h-7 w-7 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer opacity-60',
+                            day: 'text-sm sm:text-[11px] h-9 w-9 sm:h-7 sm:w-7 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer opacity-60 min-h-[36px] sm:min-h-[28px] min-w-[36px] sm:min-w-[28px] flex items-center justify-center touch-manipulation',
                             day_selected: 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 font-medium opacity-100',
                             day_today: 'ring-1 ring-indigo-500/30 dark:ring-indigo-400/30 opacity-80',
                             day_disabled: 'opacity-20 cursor-not-allowed hover:bg-transparent',

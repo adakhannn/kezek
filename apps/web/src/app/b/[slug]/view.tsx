@@ -1337,7 +1337,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                                 <button
                                                     key={s.start_at}
                                                     disabled={loading}
-                                                    className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40"
+                                                    className="rounded-full border border-gray-300 bg-white px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[32px] touch-manipulation"
                                                     onClick={() => createBooking(d)}
                                                 >
                                                     {toLabel(d)}
@@ -1355,7 +1355,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                 type="button"
                                 disabled={!canGoPrev}
                                 onClick={goPrev}
-                                className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                                className={`inline-flex items-center gap-1 rounded-lg border px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium transition min-h-[44px] sm:min-h-[32px] touch-manipulation ${
                                     canGoPrev
                                         ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800'
                                         : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
@@ -1367,7 +1367,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                 type="button"
                                 disabled={!canGoNext}
                                 onClick={goNext}
-                                className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                                className={`inline-flex items-center gap-1 rounded-lg border px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium transition min-h-[44px] sm:min-h-[32px] touch-manipulation ${
                                     canGoNext
                                         ? 'border-indigo-500 bg-indigo-600 text-white hover:bg-indigo-700 dark:border-indigo-400'
                                         : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
@@ -1518,7 +1518,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                     onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_name: e.target.value })}
                                     placeholder={t('booking.guest.namePlaceholder', 'Введите ваше имя')}
                                     disabled={guestBookingLoading}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500 min-h-[44px] sm:min-h-[40px] touch-manipulation"
                                     autoFocus
                                 />
                             </div>
@@ -1534,7 +1534,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                     onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_phone: e.target.value })}
                                     placeholder={t('booking.guest.phonePlaceholder', '+996555123456')}
                                     disabled={guestBookingLoading}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500 min-h-[44px] sm:min-h-[40px] touch-manipulation"
                                 />
                             </div>
                             
@@ -1549,7 +1549,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                     onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_email: e.target.value })}
                                     placeholder={t('booking.guest.emailPlaceholder', 'you@example.com')}
                                     disabled={guestBookingLoading}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500 min-h-[44px] sm:min-h-[40px] touch-manipulation"
                                 />
                             </div>
                         </div>
