@@ -55,7 +55,7 @@ export default function DatePickerPopover({
     const minDate = min ? fromYmdLocal(min) : undefined;
     const maxDate = max ? fromYmdLocal(max) : undefined;
 
-    // Закрытие при клике вне попапа
+    // Закрытие при клике вне попапа и при нажатии Escape
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (
@@ -68,9 +68,20 @@ export default function DatePickerPopover({
             }
         }
 
+        function handleEscape(event: KeyboardEvent) {
+            if (event.key === 'Escape' && isOpen) {
+                setIsOpen(false);
+                buttonRef.current?.focus();
+            }
+        }
+
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEscape);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+                document.removeEventListener('keydown', handleEscape);
+            };
         }
     }, [isOpen]);
 
@@ -84,6 +95,9 @@ export default function DatePickerPopover({
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
+                aria-haspopup="dialog"
+                aria-label={selected ? `Выбранная дата: ${displayValue}` : 'Выбрать дату'}
                 className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[40px] sm:py-2 sm:text-sm touch-manipulation"
             >
                 {/* Иконка календаря */}
@@ -93,6 +107,7 @@ export default function DatePickerPopover({
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
                 >
                     <path
                         strokeLinecap="round"
@@ -108,6 +123,7 @@ export default function DatePickerPopover({
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                 >
                     <path
                         strokeLinecap="round"
@@ -122,6 +138,9 @@ export default function DatePickerPopover({
             {isOpen && (
                 <div
                     ref={popoverRef}
+                    role="dialog"
+                    aria-modal="false"
+                    aria-label="Выбор даты"
                     className="absolute left-0 top-full z-50 mt-2 border rounded-lg p-3 bg-white dark:bg-[#0b0b0d] shadow-lg sm:left-auto sm:right-0 sm:p-2 max-w-[calc(100vw-2rem)] sm:max-w-none"
                 >
                     <DayPicker

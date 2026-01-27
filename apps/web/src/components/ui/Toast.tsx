@@ -58,24 +58,31 @@ export function Toast({ message, type = 'info', duration = 5000, onClose }: Toas
 
     if (!isVisible) return null;
 
+    const role = type === 'error' ? 'alert' : 'status';
+    const ariaLive = type === 'error' ? 'assertive' : 'polite';
+
     return (
         <div
+            role={role}
+            aria-live={ariaLive}
+            aria-atomic="true"
             className={clsx(
                 'fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg max-w-md transition-all duration-300',
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
                 typeStyles[type]
             )}
         >
-            <div className="flex-shrink-0">{icons[type]}</div>
+            <div className="flex-shrink-0" aria-hidden="true">{icons[type]}</div>
             <div className="flex-1 text-sm font-medium">{message}</div>
             <button
                 onClick={() => {
                     setIsVisible(false);
                     setTimeout(() => onClose?.(), 300);
                 }}
+                aria-label="Закрыть уведомление"
                 className="flex-shrink-0 text-current opacity-70 hover:opacity-100 transition-opacity"
             >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
             </button>
