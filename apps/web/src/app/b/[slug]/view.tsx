@@ -16,6 +16,7 @@ import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
 
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
+import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
@@ -179,6 +180,49 @@ function fmtErr(e: unknown, t?: (key: string, fallback?: string) => string): str
         return JSON.stringify(e);
     } catch {
         return String(e);
+    }
+}
+
+// Проверяем, является ли ошибка сетевой (например, недоступен интернет или сервер)
+function isNetworkError(e: unknown): boolean {
+    if (e instanceof TypeError) {
+        // Fetch в браузере выбрасывает TypeError при проблемах сети / CORS
+        return true;
+    }
+    if (e && typeof e === 'object' && 'code' in e) {
+        const anyErr = e as { code?: string };
+        // Некоторые драйверы могут использовать такие коды для сетевых ошибок
+        if (anyErr.code === 'ECONNABORTED' || anyErr.code === 'ECONNREFUSED' || anyErr.code === 'ENETUNREACH') {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Универсальный helper для повторной попытки при сетевых ошибках
+async function withNetworkRetry<T>(
+    fn: () => Promise<T>,
+    options?: { retries?: number; delayMs?: number; scope?: string }
+): Promise<T> {
+    const retries = options?.retries ?? 1;
+    const delayMs = options?.delayMs ?? 500;
+    const scope = options?.scope ?? 'BookingFlow';
+
+    let attempt = 0;
+
+     
+    while (true) {
+        try {
+            return await fn();
+        } catch (e) {
+            if (isNetworkError(e) && attempt < retries) {
+                attempt += 1;
+                logError(scope, `Network error, retrying attempt ${attempt}/${retries}`, e);
+                await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+                continue;
+            }
+            throw e;
+        }
     }
 }
 
@@ -606,9 +650,18 @@ export default function BookingForm({ data }: { data: Data }) {
     );
 
     async function createBooking(slotTime: Date) {
-        if (!service) return alert(t('booking.selectService', 'Выберите услугу'));
-        if (!staffId) return alert(t('booking.selectMaster', 'Выберите мастера'));
-        if (!branchId) return alert(t('booking.selectBranch', 'Выберите филиал'));
+        if (!service) {
+            alert(t('booking.selectService', 'Пожалуйста, выберите услугу перед продолжением.'));
+            return;
+        }
+        if (!staffId) {
+            alert(t('booking.selectMaster', 'Пожалуйста, выберите мастера перед продолжением.'));
+            return;
+        }
+        if (!branchId) {
+            alert(t('booking.selectBranch', 'Пожалуйста, выберите филиал перед продолжением.'));
+            return;
+        }
 
         // Если не авторизован, показываем модальное окно для гостевой брони
         if (!isAuthed) {
@@ -631,8 +684,17 @@ export default function BookingForm({ data }: { data: Data }) {
             });
 
             if (holdError) {
-                console.error('[hold_slot] error:', holdError);
-                alert(fmtErr(holdError, t));
+                logError('BookingFlow', '[hold_slot] error', holdError);
+                alert(
+                    fmtErr(
+                        holdError,
+                        t
+                    ) ||
+                        t(
+                            'booking.error.holdFailed',
+                            'Не удалось зарезервировать слот. Пожалуйста, обновите страницу и попробуйте ещё раз.'
+                        )
+                );
                 return;
             }
 
@@ -641,23 +703,45 @@ export default function BookingForm({ data }: { data: Data }) {
             // Сразу подтверждаем бронирование
             const { error: confirmError } = await supabase.rpc('confirm_booking', { p_booking_id: bookingId });
             if (confirmError) {
-                console.error('[confirm_booking] error:', confirmError);
-                alert(fmtErr(confirmError, t));
+                logError('BookingFlow', '[confirm_booking] error', confirmError);
+                alert(
+                    fmtErr(
+                        confirmError,
+                        t
+                    ) ||
+                        t(
+                            'booking.error.confirmFailed',
+                            'Слот был зарезервирован, но не удалось подтвердить бронирование. Свяжитесь с салоном для уточнения.'
+                        )
+                );
                 return;
             }
 
-            // Отправляем уведомление о подтверждении
-            await fetch('/api/notify', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ type: 'confirm', booking_id: bookingId }),
-            }).catch(() => {});
+            // Отправляем уведомление о подтверждении (best effort, с повторной попыткой при сетевой ошибке)
+            void withNetworkRetry(
+                () =>
+                    fetch('/api/notify', {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ type: 'confirm', booking_id: bookingId }),
+                    }),
+                { retries: 1, delayMs: 500, scope: 'BookingNotify' }
+            ).catch((e) => {
+                // Не блокируем пользователя, просто логируем
+                logError('BookingNotify', 'Failed to send confirm notification', e);
+            });
 
             // Редирект на страницу бронирования
             location.href = `/booking/${bookingId}`;
         } catch (e) {
-            console.error('[createBooking] catch:', e);
-            alert(fmtErr(e, t));
+            logError('BookingFlow', '[createBooking] unexpected error', e);
+            const message =
+                fmtErr(e, t) ||
+                t(
+                    'booking.error.technical',
+                    'Произошла техническая ошибка при создании бронирования. Пожалуйста, проверьте подключение к интернету и попробуйте ещё раз.'
+                );
+            alert(message);
         } finally {
             setLoading(false);
         }
@@ -665,6 +749,12 @@ export default function BookingForm({ data }: { data: Data }) {
 
     async function createGuestBooking() {
         if (!service || !staffId || !branchId || !guestBookingSlotTime) {
+            alert(
+                t(
+                    'booking.guest.missingData',
+                    'Данные для бронирования неполные. Пожалуйста, выберите филиал, мастера, услугу и время.'
+                )
+            );
             return;
         }
 
@@ -676,14 +766,14 @@ export default function BookingForm({ data }: { data: Data }) {
         // Валидация имени
         const nameValidation = validateName(name, true);
         if (!nameValidation.valid) {
-            alert(nameValidation.error || t('booking.guest.nameRequired', 'Введите ваше имя'));
+            alert(nameValidation.error || t('booking.guest.nameRequired', 'Введите ваше имя.'));
             return;
         }
 
         // Валидация телефона
         const phoneValidation = validatePhone(phone, true);
         if (!phoneValidation.valid) {
-            alert(phoneValidation.error || t('booking.guest.phoneRequired', 'Введите ваш телефон'));
+            alert(phoneValidation.error || t('booking.guest.phoneRequired', 'Введите корректный номер телефона.'));
             return;
         }
 
@@ -691,7 +781,7 @@ export default function BookingForm({ data }: { data: Data }) {
         if (email) {
             const emailValidation = validateEmail(email);
             if (!emailValidation.valid) {
-                alert(emailValidation.error || t('booking.guest.emailInvalid', 'Неверный формат email'));
+                alert(emailValidation.error || t('booking.guest.emailInvalid', 'Неверный формат email.'));
                 return;
             }
         }
@@ -700,24 +790,35 @@ export default function BookingForm({ data }: { data: Data }) {
         try {
             const startISO = formatInTimeZone(guestBookingSlotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
             
-            const response = await fetch('/api/quick-book-guest', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    biz_id: biz.id,
-                    service_id: service.id,
-                    staff_id: staffId,
-                    start_at: startISO,
-                    client_name: name,
-                    client_phone: phone,
-                    client_email: guestBookingForm.client_email.trim() || null,
-                }),
-            });
+            const response = await withNetworkRetry(
+                () =>
+                    fetch('/api/quick-book-guest', {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({
+                            biz_id: biz.id,
+                            service_id: service.id,
+                            staff_id: staffId,
+                            start_at: startISO,
+                            client_name: name,
+                            client_phone: phone,
+                            client_email: guestBookingForm.client_email.trim() || null,
+                        }),
+                    }),
+                { retries: 1, delayMs: 700, scope: 'GuestBooking' }
+            );
 
             const result = await response.json();
 
-            if (!result.ok) {
-                throw new Error(result.message || 'Ошибка при создании бронирования');
+            if (!response.ok || !result.ok) {
+                const apiMessage: string | undefined = result?.message || result?.error;
+                const message =
+                    apiMessage ||
+                    t(
+                        'booking.guest.error.create',
+                        'Не удалось создать бронирование. Пожалуйста, проверьте введённые данные и попробуйте ещё раз.'
+                    );
+                throw new Error(message);
             }
 
             // Закрываем модальное окно
@@ -730,8 +831,22 @@ export default function BookingForm({ data }: { data: Data }) {
                 location.href = `/booking/${result.booking_id}`;
             }
         } catch (e) {
-            console.error('[createGuestBooking] catch:', e);
-            alert(fmtErr(e, t));
+            logError('GuestBooking', '[createGuestBooking] unexpected error', e);
+            let message =
+                fmtErr(e, t) ||
+                t(
+                    'booking.guest.error.technical',
+                    'Произошла техническая ошибка при создании бронирования. Пожалуйста, проверьте подключение к интернету и попробуйте ещё раз.'
+                );
+
+            if (isNetworkError(e)) {
+                message = t(
+                    'booking.guest.error.network',
+                    'Не удалось связаться с сервером. Проверьте подключение к интернету и попробуйте ещё раз.'
+                );
+            }
+
+            alert(message);
         } finally {
             setGuestBookingLoading(false);
         }
