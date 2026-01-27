@@ -11,6 +11,8 @@ import {ReminderBanners} from './_components/ReminderBanners';
 import {LanguageProvider} from './_components/i18n/LanguageProvider';
 import {LanguageSwitcher} from './_components/i18n/LanguageSwitcher';
 
+import {ReactQueryProvider} from '@/lib/react-query';
+
 const geistSans = Geist({
     variable: '--font-geist-sans',
     subsets: ['latin'],
@@ -42,6 +44,7 @@ export default function RootLayout({
     return (
         <html lang="ky">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ReactQueryProvider>
         <LanguageProvider>
             <div className="flex flex-col min-h-screen">
                 <header className="sticky top-0 z-[100] border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
@@ -74,6 +77,7 @@ export default function RootLayout({
                 <Footer />
             </div>
         </LanguageProvider>
+        </ReactQueryProvider>
         </body>
         </html>
     );

@@ -1,8 +1,10 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { supabase } from '@/lib/supabaseClient';
 import { transliterate } from '@/lib/transliterate';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
@@ -27,6 +29,55 @@ type Data = {
 export default function BusinessInfo({ data }: { data: Data }) {
     const { biz, branches, staff, promotions = [] } = data;
     const { t, locale } = useLanguage();
+    const queryClient = useQueryClient();
+
+    // Prefetch данных для бронирования при наведении на кнопку "Записаться"
+    const handlePrefetchBookingData = () => {
+        const branchIds = branches.map((b) => b.id);
+        const staffIds = staff.map((s) => s.id);
+
+        // Prefetch промоакций для всех филиалов
+        branchIds.forEach((branchId) => {
+            queryClient.prefetchQuery({
+                queryKey: ['branch-promotions', branchId],
+                queryFn: async () => {
+                    const { data: promoData, error } = await supabase
+                        .from('branch_promotions')
+                        .select('id, promotion_type, title_ru, params')
+                        .eq('branch_id', branchId)
+                        .eq('is_active', true)
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+                    return (promoData || []) as Array<{
+                        id: string;
+                        promotion_type: string;
+                        title_ru: string | null;
+                        params: Record<string, unknown>;
+                    }>;
+                },
+                staleTime: 2 * 60 * 1000,
+            });
+        });
+
+        // Prefetch связей услуга-мастер
+        if (staffIds.length > 0) {
+            queryClient.prefetchQuery({
+                queryKey: ['service-staff', biz.id, staffIds.sort().join(',')],
+                queryFn: async () => {
+                    const { data: serviceStaffData, error } = await supabase
+                        .from('service_staff')
+                        .select('service_id, staff_id, is_active')
+                        .eq('is_active', true)
+                        .in('staff_id', staffIds);
+
+                    if (error) throw error;
+                    return (serviceStaffData || []) as Array<{ service_id: string; staff_id: string; is_active: boolean }>;
+                },
+                staleTime: 5 * 60 * 1000,
+            });
+        }
+    };
 
     const formatBranchName = (name: string): string => {
         if (locale === 'en') {
@@ -191,6 +242,8 @@ export default function BusinessInfo({ data }: { data: Data }) {
                 <div className="flex justify-center">
                     <Link
                         href={`/b/${biz.slug}/booking`}
+                        onMouseEnter={handlePrefetchBookingData}
+                        onFocus={handlePrefetchBookingData}
                         className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200"
                     >
                         {t('business.info.bookButton', 'Записаться')}

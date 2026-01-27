@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 
 import { BookingEmptyState } from './BookingEmptyState';
+import { useBranchPromotions, useClientBookings, useServiceStaff } from './hooks/useBookingData';
 import { useServicesFilter } from './hooks/useServicesFilter';
 import { useSlotsLoader } from './hooks/useSlotsLoader';
 import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
@@ -273,15 +274,8 @@ export default function BookingForm({ data }: { data: Data }) {
     const [staffId, setStaffId] = useState<string>('');
     const [restoredFromStorage, setRestoredFromStorage] = useState(false);
     
-    // Акции филиала
-    const [branchPromotions, setBranchPromotions] = useState<Array<{
-        id: string;
-        promotion_type: string;
-        title_ru: string;
-        params: Record<string, unknown>;
-    }>>([]);
-    const [promotionsLoading, setPromotionsLoading] = useState(false);
-
+    // Загружаем активные акции филиала с кэшированием через React Query
+    const { data: branchPromotions = [], isLoading: promotionsLoading } = useBranchPromotions(branchId || null);
 
     // при смене филиала — сбрасываем выборы мастеров и услуг (если не восстановили состояние из localStorage)
     useEffect(() => {
@@ -290,76 +284,12 @@ export default function BookingForm({ data }: { data: Data }) {
         setStaffId('');
         setServiceId('');
     }, [branchId, restoredFromStorage]);
-    
-    // Загружаем активные акции филиала
-    useEffect(() => {
-        let ignore = false;
-        if (!branchId) {
-            setBranchPromotions([]);
-            return;
-        }
-        
-        setPromotionsLoading(true);
-        (async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('branch_promotions')
-                    .select('id, promotion_type, title_ru, params')
-                    .eq('branch_id', branchId)
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false });
-                
-                if (!ignore) {
-                    if (error) {
-                        console.error('[Promotions] Error loading promotions:', error);
-                        setBranchPromotions([]);
-                    } else {
-                        setBranchPromotions(data || []);
-                    }
-                }
-            } catch (e) {
-                if (!ignore) {
-                    console.error('[Promotions] Unexpected error:', e);
-                    setBranchPromotions([]);
-                }
-            } finally {
-                if (!ignore) setPromotionsLoading(false);
-            }
-        })();
-        
-        return () => {
-            ignore = true;
-        };
-    }, [branchId]);
 
     /* ---------- сервисные навыки мастеров (service_staff) ---------- */
-    const [serviceStaff, setServiceStaff] = useState<ServiceStaffRow[] | null>(null);
-    useEffect(() => {
-        let ignore = false;
-        (async () => {
-            // Загружаем только связи для мастеров этого бизнеса
-            const staffIds = staff.map((s) => s.id);
-            if (staffIds.length === 0) {
-                setServiceStaff([]);
-                return;
-            }
-            const { data, error } = await supabase
-                .from('service_staff')
-                .select('service_id,staff_id,is_active')
-                .eq('is_active', true)
-                .in('staff_id', staffIds);
-            if (ignore) return;
-            if (error) {
-                console.warn('[service_staff] read error:', error.message);
-                setServiceStaff(null); // нет доступа — UI живёт без фильтра по навыкам
-            } else {
-                setServiceStaff((data ?? []) as ServiceStaffRow[]);
-            }
-        })();
-        return () => {
-            ignore = true;
-        };
-    }, [staff]);
+    // Загружаем связи услуга-мастер с кэшированием через React Query
+    const staffIds = useMemo(() => staff.map((s) => s.id), [staff]);
+    const { data: serviceStaffData, isLoading: serviceStaffLoading } = useServiceStaff(biz.id, staffIds);
+    const serviceStaff: ServiceStaffRow[] | null = serviceStaffLoading ? null : (serviceStaffData || null);
 
     // мапка service_id -> Set(staff_id)
     const serviceToStaffMap = useMemo(() => {
@@ -477,8 +407,12 @@ export default function BookingForm({ data }: { data: Data }) {
     const [slotsRefreshKey, setSlotsRefreshKey] = useState(0); // Ключ для принудительного обновления
 
     // Брони клиента в этом бизнесе на выбранный день (для мягкого уведомления)
-    const [clientBookingsCount, setClientBookingsCount] = useState<number | null>(null);
-    const [clientBookingsLoading, setClientBookingsLoading] = useState(false);
+    // Используем React Query для кэширования
+    const { data: clientBookingsCount = null, isLoading: clientBookingsLoading } = useClientBookings(
+        biz.id,
+        dayStr || null,
+        isAuthed
+    );
 
     /* ---------- загрузка слотов ---------- */
     const { slots: slotsFromHook, loading: slotsLoading, error: slotsError } = useSlotsLoader({
@@ -575,63 +509,6 @@ export default function BookingForm({ data }: { data: Data }) {
         };
     }, [slotsFromHook, staffId, branchId, dayStr, temporaryTransfers, staff]);
 
-    // Проверяем, есть ли уже записи клиента в этом бизнесе на выбранный день
-    useEffect(() => {
-        let ignore = false;
-        (async () => {
-            if (!isAuthed) {
-                if (!ignore) {
-                    setClientBookingsCount(null);
-                    setClientBookingsLoading(false);
-                }
-                return;
-            }
-
-            setClientBookingsLoading(true);
-            try {
-                const { data: auth } = await supabase.auth.getUser();
-                const userId = auth.user?.id;
-                if (!userId) {
-                    if (!ignore) setClientBookingsCount(null);
-                    return;
-                }
-
-                // Ищем все брони клиента в этом бизнесе на выбранный день
-                const dayStartUTC = new Date(dayStr + 'T00:00:00Z');
-                const dayEndUTC = new Date(dayStr + 'T23:59:59.999Z');
-                const searchStart = new Date(dayStartUTC.getTime() - 12 * 60 * 60 * 1000);
-                const searchEnd = new Date(dayEndUTC.getTime() + 12 * 60 * 60 * 1000);
-
-                const { data, error } = await supabase
-                    .from('bookings')
-                    .select('id')
-                    .eq('biz_id', biz.id)
-                    .eq('client_id', userId)
-                    .in('status', ['hold', 'confirmed', 'paid'])
-                    .gte('start_at', searchStart.toISOString())
-                    .lte('start_at', searchEnd.toISOString());
-
-                if (ignore) return;
-                if (error) {
-                    console.warn('[client bookings warning] failed to load bookings:', error.message);
-                    setClientBookingsCount(null);
-                } else {
-                    setClientBookingsCount((data ?? []).length);
-                }
-            } catch (e) {
-                if (!ignore) {
-                    console.warn('[client bookings warning] unexpected error:', e);
-                    setClientBookingsCount(null);
-                }
-            } finally {
-                if (!ignore) setClientBookingsLoading(false);
-            }
-        })();
-
-        return () => {
-            ignore = true;
-        };
-    }, [isAuthed, biz.id, dayStr]);
 
     // Обновляем список слотов при возврате на страницу (например, через кнопку "Назад")
     // Используем useRef для хранения предыдущих значений, чтобы избежать лишних обновлений
