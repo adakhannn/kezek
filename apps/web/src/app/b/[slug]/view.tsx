@@ -1565,7 +1565,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                     }
                                 }}
                                 disabled={guestBookingLoading}
-                                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
+                                className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800 min-h-[44px] sm:min-h-[32px] touch-manipulation"
                             >
                                 {t('booking.guest.cancel', 'Отмена')}
                             </button>
@@ -1573,7 +1573,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                 type="button"
                                 onClick={createGuestBooking}
                                 disabled={guestBookingLoading}
-                                className="rounded-lg border border-indigo-600 bg-indigo-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-400"
+                                className="rounded-lg border border-indigo-600 bg-indigo-600 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-400 min-h-[44px] sm:min-h-[32px] touch-manipulation"
                             >
                                 {guestBookingLoading 
                                     ? t('booking.guest.booking', 'Бронируем...') 
