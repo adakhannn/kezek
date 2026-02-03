@@ -1,9 +1,9 @@
 'use client';
 
+import { format } from 'date-fns';
+import { useEffect, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { useEffect, useRef, useState } from 'react';
-import { format } from 'date-fns';
 
 // Русские названия для календаря
 const MONTHS = [
@@ -94,6 +94,7 @@ export default function DatePickerPopover({
             <button
                 ref={buttonRef}
                 type="button"
+                data-testid="date-picker"
                 onClick={() => setIsOpen(!isOpen)}
                 aria-expanded={isOpen}
                 aria-haspopup="dialog"

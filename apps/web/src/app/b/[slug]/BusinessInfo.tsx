@@ -184,7 +184,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
 
                     {/* Акции */}
                     {promotions.length > 0 && (
-                        <div>
+                        <div data-testid="promotions-section">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200">
                                     {t('business.info.promotions', 'Акции')} ({promotions.length})

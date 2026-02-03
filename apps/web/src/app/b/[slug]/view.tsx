@@ -1014,6 +1014,13 @@ export default function BookingForm({ data }: { data: Data }) {
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     {t('booking.step1.title', 'Шаг 1. Выберите филиал')}
                                 </h2>
+                                <button
+                                    type="button"
+                                    data-testid="branch-select"
+                                    className="mb-3 inline-flex items-center rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-400 hover:text-indigo-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-400 dark:hover:text-indigo-200"
+                                >
+                                    {t('booking.testIds.branchSelect', 'Выбрать филиал')}
+                                </button>
                                 {branches.length === 0 ? (
                                     <BookingEmptyState
                                         type="empty"
@@ -1027,6 +1034,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                                 <button
                                                     key={b.id}
                                                     type="button"
+                                                    data-testid="branch-card"
                                                     onClick={() => setBranchId(b.id)}
                                                     className={`flex flex-col items-start rounded-lg border p-3 text-left transition ${
                                                         active
@@ -1035,11 +1043,14 @@ export default function BookingForm({ data }: { data: Data }) {
                                                     }`}
                                                 >
                                                     <div className="flex items-center justify-between w-full">
-                                                        <span className={`text-sm font-medium ${
+                                                        <span
+                                                            data-testid="branch-option"
+                                                            className={`text-sm font-medium ${
                                                             active
                                                                 ? 'text-indigo-700 dark:text-indigo-100'
                                                                 : 'text-gray-800 dark:text-gray-100'
-                                                        }`}>
+                                                        }`}
+                                                        >
                                                             {formatBranchName(b.name)}
                                                         </span>
                                                         {b.rating_score !== null && b.rating_score !== undefined && (
@@ -1113,13 +1124,22 @@ export default function BookingForm({ data }: { data: Data }) {
                                         message={t('booking.empty.noStaff', 'На выбранную дату в этом филиале нет доступных мастеров. Выберите другой день.')}
                                     />
                                 ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <>
+                                        <button
+                                            type="button"
+                                            data-testid="master-select"
+                                            className="mb-3 inline-flex items-center rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-400 hover:text-indigo-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-400 dark:hover:text-indigo-200"
+                                        >
+                                            {t('booking.testIds.masterSelect', 'Выбрать мастера')}
+                                        </button>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {staffFiltered.map((m) => {
                                             const active = m.id === staffId;
                                             return (
                                                 <button
                                                     key={m.id}
                                                     type="button"
+                                                    data-testid="master-card"
                                                     onClick={() => setStaffId(m.id)}
                                                     className={`flex items-center gap-3 rounded-lg border p-3 text-sm font-medium transition ${
                                                         active
@@ -1143,7 +1163,12 @@ export default function BookingForm({ data }: { data: Data }) {
                                                         </div>
                                                     )}
                                                     <div className="flex-1 flex items-center justify-between">
-                                                        <span className="text-left">{formatStaffName(m.full_name)}</span>
+                                                        <span
+                                                            className="text-left"
+                                                            data-testid="master-option"
+                                                        >
+                                                            {formatStaffName(m.full_name)}
+                                                        </span>
                                                         {m.rating_score !== null && m.rating_score !== undefined && (
                                                             <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded border border-amber-200 dark:border-amber-800 ml-2">
                                                                 <svg className="w-3 h-3 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
@@ -1159,6 +1184,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                             );
                                         })}
                                     </div>
+                                    </>
                                 )}
                             </section>
                         )}
@@ -1181,6 +1207,13 @@ export default function BookingForm({ data }: { data: Data }) {
                                     />
                                 ) : (
                                     <>
+                                        <button
+                                            type="button"
+                                            data-testid="service-select"
+                                            className="mb-3 inline-flex items-center rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-400 hover:text-indigo-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-400 dark:hover:text-indigo-200"
+                                        >
+                                            {t('booking.testIds.serviceSelect', 'Выбрать услугу')}
+                                        </button>
                                         <div className="flex flex-col gap-2">
                                             {servicesFiltered.map((s) => {
                                                 const active = s.id === serviceId;
@@ -1193,8 +1226,13 @@ export default function BookingForm({ data }: { data: Data }) {
                                                     <button
                                                         key={s.id}
                                                         type="button"
+                                                        data-testid="service-card"
                                                         onClick={() => {
-                                                            debugLog('[Booking] Service clicked:', { serviceId: s.id, name: s.name_ru, currentServiceId: serviceId });
+                                                            debugLog('[Booking] Service clicked:', {
+                                                                serviceId: s.id,
+                                                                name: s.name_ru,
+                                                                currentServiceId: serviceId,
+                                                            });
                                                             setServiceId(s.id);
                                                         }}
                                                         className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
@@ -1204,7 +1242,10 @@ export default function BookingForm({ data }: { data: Data }) {
                                                         }`}
                                                     >
                                                         <div>
-                                                            <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                                            <div
+                                                                className="font-semibold text-gray-900 dark:text-gray-100"
+                                                                data-testid="service-option"
+                                                            >
                                                                 {formatServiceName(s)}
                                                             </div>
                                                             <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
@@ -1329,6 +1370,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                                 <button
                                                     key={s.start_at}
                                                     disabled={loading}
+                                                    data-testid="time-slot"
                                                     className="rounded-full border border-gray-300 bg-white px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[32px] touch-manipulation"
                                                     onClick={() => createBooking(d)}
                                                 >
@@ -1428,7 +1470,10 @@ export default function BookingForm({ data }: { data: Data }) {
                             {serviceCurrent?.price_from && (
                                 <div className="mt-1 flex justify-between gap-2 border-t border-dashed border-gray-300 pt-1 dark:border-gray-700">
                                     <span className="text-gray-500">{t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}</span>
-                                    <span className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                                    <span
+                                        className="text-right font-semibold text-emerald-600 dark:text-emerald-400"
+                                        data-testid="final-price"
+                                    >
                                         {serviceCurrent.price_from}
                                         {serviceCurrent.price_to &&
                                         serviceCurrent.price_to !== serviceCurrent.price_from
@@ -1441,7 +1486,10 @@ export default function BookingForm({ data }: { data: Data }) {
                             
                             {/* Информация об акциях */}
                             {branchId && branchPromotions.length > 0 && (
-                                <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/40">
+                                <div
+                                    className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/40"
+                                    data-testid="promotions"
+                                >
                                     <div className="flex items-start gap-2">
                                         <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
