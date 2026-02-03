@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { BranchForm } from '@/components/admin/branches/BranchForm';
 import { BranchScheduleEditor } from '@/components/admin/branches/BranchScheduleEditor';
 import { Card } from '@/components/ui/Card';
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,9 +16,9 @@ type RouteParams = { id: string; branchId: string };
 export default async function BranchEditPage({ params }: { params: Promise<RouteParams> }) {
     const { id, branchId } = await params;
 
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const URL = getSupabaseUrl();
+    const ANON = getSupabaseAnonKey();
+    const SERVICE = getSupabaseServiceRoleKey();
     const cookieStore = await cookies();
 
     const supa = createServerClient(URL, ANON, {

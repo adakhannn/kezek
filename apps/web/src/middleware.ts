@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+
 export async function middleware(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
     
@@ -19,9 +21,20 @@ export async function middleware(req: NextRequest) {
     }
 
     const res = NextResponse.next();
+    
+    // Добавляем Security Headers (дополнительно к headers() в next.config.ts)
+    // Это гарантирует, что headers применяются даже для динамических routes
+    res.headers.set('X-DNS-Prefetch-Control', 'on');
+    res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+    res.headers.set('X-Frame-Options', 'SAMEORIGIN');
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    res.headers.set('X-XSS-Protection', '1; mode=block');
+    res.headers.set('Referrer-Policy', 'origin-when-cross-origin');
+    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        getSupabaseUrl(),
+        getSupabaseAnonKey(),
         {
             cookies: {
                 get: (name: string) => req.cookies.get(name)?.value,
@@ -44,7 +57,8 @@ export async function middleware(req: NextRequest) {
         const { data: roles, error } = await supabase.rpc('my_role_keys');
         if (error) {
             // Логируем ошибку, но не прерываем запрос - пользователь останется на текущей странице
-            console.warn('[middleware] Failed to get user roles:', error.message);
+            const { logWarn } = await import('@/lib/log');
+            logWarn('middleware', 'Failed to get user roles', error);
             return res;
         }
 

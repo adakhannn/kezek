@@ -28,11 +28,13 @@ function normStr(v?: string | null): string | null {
 /**
  * Создаёт пользователя с проверкой прав доступа
  */
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
+
 export async function createUser(payload: CreateUserPayload): Promise<CreateUserResult> {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const URL = getSupabaseUrl();
+        const ANON = getSupabaseAnonKey();
+        const SERVICE = getSupabaseServiceRoleKey();
 
         // Проверка: только глобальный super_admin
         const cookieStore = await cookies();

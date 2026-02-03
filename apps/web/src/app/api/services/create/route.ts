@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 
 type Body = {
     name_ru: string;
@@ -23,7 +24,7 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('ServicesCreate', async () => {
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
@@ -31,16 +32,20 @@ export async function POST(req: Request) {
 
         // ---- валидация базовых полей
         const name = (body.name_ru ?? '').trim();
-        if (!name) return NextResponse.json({ ok: false, error: 'NAME_REQUIRED' }, { status: 400 });
+        if (!name) {
+            return createErrorResponse('validation', 'Название услуги обязательно', undefined, 400);
+        }
 
         const duration = Number(body.duration_min) || 0;
-        if (duration <= 0)
-            return NextResponse.json({ ok: false, error: 'DURATION_INVALID' }, { status: 400 });
+        if (duration <= 0) {
+            return createErrorResponse('validation', 'Длительность должна быть больше 0', undefined, 400);
+        }
 
         const price_from = Number(body.price_from) || 0;
         const price_to = Number(body.price_to) || 0;
-        if (price_to && price_from && price_to < price_from)
-            return NextResponse.json({ ok: false, error: 'PRICE_RANGE_INVALID' }, { status: 400 });
+        if (price_to && price_from && price_to < price_from) {
+            return createErrorResponse('validation', 'Максимальная цена не может быть меньше минимальной', undefined, 400);
+        }
 
         // ---- собираем список филиалов
         let branchIds = Array.isArray(body.branch_ids) ? body.branch_ids.filter(Boolean) : [];
@@ -51,12 +56,14 @@ export async function POST(req: Request) {
         // чистим дубликаты
         branchIds = Array.from(new Set(branchIds));
 
-        if (branchIds.length === 0)
-            return NextResponse.json({ ok: false, error: 'BRANCHES_REQUIRED' }, { status: 400 });
+        if (branchIds.length === 0) {
+            return createErrorResponse('validation', 'Необходимо указать хотя бы один филиал', undefined, 400);
+        }
 
         // на всякий ограничим пачку
-        if (branchIds.length > 100)
-            return NextResponse.json({ ok: false, error: 'TOO_MANY_BRANCHES' }, { status: 400 });
+        if (branchIds.length > 100) {
+            return createErrorResponse('validation', 'Слишком много филиалов (максимум 100)', undefined, 400);
+        }
 
         // ---- проверим, что ВСЕ указанные филиалы принадлежат этому бизнесу
         const { data: brRows, error: brErr } = await admin
@@ -65,15 +72,18 @@ export async function POST(req: Request) {
             .eq('biz_id', bizId)
             .in('id', branchIds);
 
-        if (brErr)
-            return NextResponse.json({ ok: false, error: brErr.message }, { status: 400 });
+        if (brErr) {
+            return createErrorResponse('validation', brErr.message, undefined, 400);
+        }
 
         const found = new Set((brRows ?? []).map((r) => String(r.id)));
         const missing = branchIds.filter((id) => !found.has(String(id)));
         if (missing.length) {
-            return NextResponse.json(
-                { ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS', details: { missing } },
-                { status: 400 }
+            return createErrorResponse(
+                'validation',
+                'Некоторые филиалы не принадлежат этому бизнесу',
+                { missing },
+                400
             );
         }
 
@@ -98,16 +108,13 @@ export async function POST(req: Request) {
             .insert(rows)
             .select('id, branch_id');
 
-        if (insErr)
-            return NextResponse.json({ ok: false, error: insErr.message }, { status: 400 });
+        if (insErr) {
+            return createErrorResponse('validation', insErr.message, undefined, 400);
+        }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             count: inserted?.length ?? 0,
             ids: (inserted ?? []).map((r) => r.id),
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+    });
 }

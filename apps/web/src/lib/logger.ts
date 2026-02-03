@@ -1,41 +1,35 @@
 /**
  * Утилита для логирования
+ * @deprecated Используйте @/lib/log вместо этого модуля
+ * Этот модуль оставлен для обратной совместимости
+ * 
  * В продакшене можно расширить для отправки в сервис мониторинга
  */
 
-const isDev = process.env.NODE_ENV === 'development';
+import { logError as logErrorSafe, logWarn as logWarnSafe, logDebug } from './log';
 
 /**
  * Логирует ошибку
+ * @deprecated Используйте logError из @/lib/log
  */
 export function logError(message: string, error?: unknown, context?: Record<string, unknown>): void {
-    if (isDev) {
-        console.error(`[ERROR] ${message}`, error, context);
-    } else {
-        // В продакшене можно отправлять в Sentry, LogRocket и т.д.
-        console.error(`[ERROR] ${message}`, error, context);
-    }
+    logErrorSafe('LegacyLogger', message, error || context);
 }
 
 /**
  * Логирует предупреждение
+ * @deprecated Используйте logWarn из @/lib/log
  */
 export function logWarn(message: string, context?: Record<string, unknown>): void {
-    if (isDev) {
-        console.warn(`[WARN] ${message}`, context);
-    } else {
-        console.warn(`[WARN] ${message}`, context);
-    }
+    logWarnSafe('LegacyLogger', message, context);
 }
 
 /**
  * Логирует информационное сообщение (только в dev)
+ * @deprecated Используйте logDebug из @/lib/log
  */
 export function logInfo(message: string, context?: Record<string, unknown>): void {
-    if (isDev) {
-        console.log(`[INFO] ${message}`, context);
-    }
-    // В продакшене не логируем info
+    logDebug('LegacyLogger', message, context);
 }
 
 

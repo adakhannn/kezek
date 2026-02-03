@@ -11,10 +11,14 @@ import { NextResponse } from 'next/server';
  * Использование:
  * GET /api/whatsapp/get-business-account
  */
+import { getWhatsAppAccessToken } from '@/lib/env';
+
 export async function GET() {
     try {
-        const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-        if (!accessToken) {
+        let accessToken: string;
+        try {
+            accessToken = getWhatsAppAccessToken();
+        } catch {
             return NextResponse.json(
                 { 
                     ok: false, 

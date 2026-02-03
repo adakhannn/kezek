@@ -3,8 +3,11 @@ import {createClient} from "@supabase/supabase-js";
 import {cookies} from "next/headers";
 import {NextResponse} from "next/server";
 
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { quickHoldSchema } from '@/lib/validation/bookingSchemas';
 
 /**
  * @swagger
@@ -94,8 +97,8 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.public,
         async () => {
-            const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-            const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+            const url = getSupabaseUrl();
+            const anon = getSupabaseAnonKey();
             
             // Проверяем, есть ли Bearer token в заголовках (для мобильного приложения)
             const authHeader = req.headers.get('Authorization');
@@ -124,9 +127,9 @@ export async function POST(req: Request) {
                 error: userError?.message || 'No user',
                 hasToken: !!bearerToken,
                 tokenLength: bearerToken?.length,
-                tokenPreview: bearerToken?.substring(0, 20) + '...',
+                // Токен автоматически замаскируется через sanitizeObject
             });
-            return NextResponse.json({ok: false, error: 'auth', message: 'Not signed in'}, {status: 401});
+            return createErrorResponse('auth', 'Not signed in', undefined, 401);
         }
         user = userData;
         logDebug('QuickHold', 'Bearer token auth successful', { userId: user.id });
@@ -138,12 +141,18 @@ export async function POST(req: Request) {
         });
         const {data: {user: userData}} = await supabase.auth.getUser();
         if (!userData) {
-            return NextResponse.json({ok: false, error: 'auth', message: 'Not signed in'}, {status: 401});
+            return createErrorResponse('auth', 'Not signed in', undefined, 401);
         }
         user = userData;
     }
 
-    const {biz_id, branch_id, service_id, staff_id, start_at} = await req.json();
+    // Валидация входных данных
+    const validationResult = await validateRequest(req, quickHoldSchema);
+    if (!validationResult.success) {
+        return validationResult.response;
+    }
+    
+    const { biz_id, branch_id, service_id, staff_id, start_at } = validationResult.data;
 
     let branch: { id: string } | null = null;
     
@@ -159,7 +168,7 @@ export async function POST(req: Request) {
         
         if (eBranch) {
             logError('QuickHold', 'Branch lookup error', eBranch);
-            return NextResponse.json({ok: false, error: 'branch_lookup', message: eBranch.message}, {status: 400});
+            return createErrorResponse('validation', eBranch.message, undefined, 400);
         }
         branch = branchData;
     } else {
@@ -175,13 +184,13 @@ export async function POST(req: Request) {
         
         if (eBranch) {
             logError('QuickHold', 'Branch lookup error', eBranch);
-            return NextResponse.json({ok: false, error: 'branch_lookup', message: eBranch.message}, {status: 400});
+            return createErrorResponse('validation', eBranch.message, undefined, 400);
         }
         branch = branchData;
     }
 
     if (!branch?.id) {
-        return NextResponse.json({ok: false, error: 'no_branch', message: 'No active branch'}, {status: 400});
+        return createErrorResponse('not_found', 'No active branch', undefined, 400);
     }
 
     function pickBookingId(data: unknown): string | null {
@@ -213,18 +222,12 @@ export async function POST(req: Request) {
     }
 
     if (error) {
-        return NextResponse.json(
-            { ok: false, error: 'rpc', message: error.message },
-            { status: 400 }
-        );
+        return createErrorResponse('validation', error.message, undefined, 400);
     }
 
     const bookingId = pickBookingId(rpcData);
     if (!bookingId) {
-        return NextResponse.json(
-            { ok: false, error: 'rpc_shape', message: 'Unexpected RPC result shape' },
-            { status: 400 }
-        );
+        return createErrorResponse('validation', 'Unexpected RPC result shape', undefined, 400);
     }
 
     logDebug('QuickHold', 'Booking created', { bookingId });
@@ -242,10 +245,7 @@ export async function POST(req: Request) {
             details: confirmError.details,
             hint: confirmError.hint,
         });
-        return NextResponse.json(
-            { ok: false, error: 'confirm_failed', message: confirmError.message },
-            { status: 400 }
-        );
+        return createErrorResponse('validation', confirmError.message, undefined, 400);
     }
     
     logDebug('QuickHold', 'Booking confirmed successfully', { bookingId, confirmData });

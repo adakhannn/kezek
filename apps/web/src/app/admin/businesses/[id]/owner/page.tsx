@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
+
 import { OwnerForm } from './ui/OwnerForm';
 
 export const dynamic = 'force-dynamic';
@@ -25,9 +27,9 @@ type RouteParams = { id: string };
 export default async function OwnerPage({ params }: { params: Promise<RouteParams> }) {
     const { id } = await params;
 
-    const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const URL = getSupabaseUrl();
+    const ANON = getSupabaseAnonKey();
+    const SERVICE = getSupabaseServiceRoleKey();
     const cookieStore = await cookies();
 
     const supa = createServerClient(URL, ANON, {

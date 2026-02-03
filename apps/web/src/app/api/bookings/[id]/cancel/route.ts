@@ -6,11 +6,11 @@ import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
-import { formatErrorSimple } from '@/lib/errors';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 
 export async function POST(_: Request, context: unknown) {
-    try {
+    return withErrorHandler('BookingsCancel', async () => {
         const bookingId = await getRouteParamRequired(context, 'id');
 
         const cookieStore = await cookies();
@@ -35,12 +35,12 @@ export async function POST(_: Request, context: unknown) {
 
         const {data: auth} = await supabase.auth.getUser();
         if (!auth.user || !b || b.client_id !== auth.user.id) {
-            return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
         }
 
         // Если уже отменена, возвращаем успех
         if (b.status === 'cancelled') {
-            return NextResponse.json({ok: true});
+            return createSuccessResponse();
         }
 
         // Пытаемся отменить через RPC
@@ -58,10 +58,10 @@ export async function POST(_: Request, context: unknown) {
                     .eq('client_id', auth.user.id);
                 
                 if (updateError) {
-                    return NextResponse.json({ok: false, error: updateError.message}, {status: 400});
+                    return createErrorResponse('validation', updateError.message, undefined, 400);
                 }
             } else {
-                return NextResponse.json({ok: false, error: error.message}, {status: 400});
+                return createErrorResponse('validation', error.message, undefined, 400);
             }
         }
 
@@ -73,8 +73,6 @@ export async function POST(_: Request, context: unknown) {
         }).catch(() => {
         });
 
-        return NextResponse.json({ok: true});
-    } catch (e) {
-        return NextResponse.json({ok: false, error: formatErrorSimple(e)}, {status: 500});
-    }
+        return createSuccessResponse();
+    });
 }

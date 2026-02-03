@@ -16,8 +16,8 @@ type SendWhatsAppOpts = {
     };
 };
 
-const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+import { getWhatsAppAccessToken, getWhatsAppPhoneNumberId } from '../env';
+import { logDebugSafe, logErrorSafe } from '../logSafe';
 
 /**
  * Отправка сообщения через WhatsApp Cloud API
@@ -25,11 +25,19 @@ const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
  */
 export async function sendWhatsApp(opts: SendWhatsAppOpts) {
     const { to, text } = opts;
-    if (!WHATSAPP_ACCESS_TOKEN) {
+    
+    let accessToken: string;
+    let phoneNumberId: string;
+    
+    try {
+        accessToken = getWhatsAppAccessToken();
+    } catch {
         throw new Error('WhatsApp ENV not configured (WHATSAPP_ACCESS_TOKEN)');
     }
 
-    if (!WHATSAPP_PHONE_NUMBER_ID) {
+    try {
+        phoneNumberId = getWhatsAppPhoneNumberId();
+    } catch {
         throw new Error('WhatsApp ENV not configured (WHATSAPP_PHONE_NUMBER_ID)');
     }
 
@@ -44,7 +52,7 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
         throw new Error(`Invalid phone number format: ${to} (normalized: ${phoneNumber})`);
     }
 
-    const url = `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+    const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
 
     // Если указан шаблон, используем его (для отправки вне 24-часового окна)
     const body = opts.template ? {
@@ -70,20 +78,20 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
         },
     };
 
-    console.log('[WhatsApp] Sending message:', { 
+    // Используем безопасное логирование (токены автоматически замаскируются)
+    logDebugSafe('WhatsApp', 'Sending message', { 
         to: phoneNumber, 
         url, 
-        hasToken: !!WHATSAPP_ACCESS_TOKEN, 
-        hasPhoneId: !!WHATSAPP_PHONE_NUMBER_ID,
-        phoneNumberId: WHATSAPP_PHONE_NUMBER_ID,
-        tokenPreview: WHATSAPP_ACCESS_TOKEN ? `${WHATSAPP_ACCESS_TOKEN.slice(0, 10)}...${WHATSAPP_ACCESS_TOKEN.slice(-5)}` : 'missing',
+        hasToken: !!accessToken, 
+        hasPhoneId: !!phoneNumberId,
+        phoneNumberId: phoneNumberId,
         note: 'Для тестового номера получатель должен быть добавлен в список тестовых получателей в Meta Developers'
     });
 
     const resp = await fetch(url, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
@@ -133,18 +141,18 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
         } catch {
             errorMessage += ` — ${errText.slice(0, 500)}`;
         }
-        console.error('[WhatsApp] API error:', { 
+        logErrorSafe('WhatsApp', 'API error', { 
             status: resp.status, 
             error: errorDetails, 
             response: errText,
-            phoneNumberId: WHATSAPP_PHONE_NUMBER_ID,
+            phoneNumberId: phoneNumberId,
             url
         });
         throw new Error(errorMessage);
     }
 
     const result = await resp.json();
-    console.log('[WhatsApp] Message sent successfully:', { messageId: result.messages?.[0]?.id, to: phoneNumber });
+    logDebugSafe('WhatsApp', 'Message sent successfully', { messageId: result.messages?.[0]?.id, to: phoneNumber });
     return result;
 }
 

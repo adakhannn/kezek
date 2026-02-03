@@ -1,17 +1,13 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
+import { getSupabaseUrl, getSupabaseAnonKey } from './env';
+
 const ROLE_KEYS_ALLOWED = new Set(['owner', 'admin', 'manager']);
 
 export async function getSupabaseServer() {
-    const url  = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!url || !anon) {
-        throw new Error(
-            'Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.'
-        );
-    }
+    const url  = getSupabaseUrl();
+    const anon = getSupabaseAnonKey();
     
     const cookieStore = await cookies();
 
@@ -126,9 +122,10 @@ export async function getStaffContext() {
 
     // 3) Проверяем и автоматически добавляем роль staff в user_roles, если её нет
     const { createClient } = await import('@supabase/supabase-js');
+    const { getSupabaseUrl, getSupabaseServiceRoleKey } = await import('./env');
     const serviceClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        getSupabaseUrl(),
+        getSupabaseServiceRoleKey(),
         { auth: { persistSession: false } }
     );
 

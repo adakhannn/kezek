@@ -18,6 +18,7 @@ export default [
             '**/.vercel/**',
             '**/coverage/**',
             '**/*.log',
+            '**/eslint-rules/**', // Исключаем кастомные ESLint правила
         ],
     },
 
@@ -52,4 +53,21 @@ export default [
             'no-console': ['warn', { allow: ['warn', 'error'] }],
         },
     }),
+
+    // Правила для API routes - проверка использования централизованной обработки ошибок
+    {
+        files: ['apps/web/src/app/api/**/route.ts'],
+        rules: {
+            // Предупреждаем о прямом использовании NextResponse.json с ok: false
+            // Это не строгое правило, так как миграция постепенная
+            // Можно включить как 'error' после полной миграции
+            'no-restricted-syntax': [
+                'warn',
+                {
+                    selector: 'CallExpression[callee.object.name="NextResponse"][callee.property.name="json"] > ObjectExpression > Property[key.name="ok"][value.value=false]',
+                    message: 'Используйте createErrorResponse() вместо NextResponse.json({ ok: false, ... }). См. ERROR_HANDLING_GUIDE.md',
+                },
+            ],
+        },
+    },
 ];

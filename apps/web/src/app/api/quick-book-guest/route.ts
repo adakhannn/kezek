@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { quickBookGuestSchema } from '@/lib/validation/bookingSchemas';
 
 type HoldSlotGuestArgs = {
     p_biz_id: string;
@@ -24,8 +27,8 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.public,
         async () => {
-            const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-            const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+            const url = getSupabaseUrl();
+            const anon = getSupabaseAnonKey();
             
             // Для гостевых броней используем анонимный клиент (без авторизации)
             const supabase = createClient(url, anon, {
@@ -35,34 +38,16 @@ export async function POST(req: Request) {
                 },
             });
 
-            let body: {
-                biz_id: string;
-                service_id: string;
-                staff_id: string;
-                start_at: string;
-                client_name: string;
-                client_phone: string;
-                client_email?: string | null;
-            };
-
-            try {
-                body = await req.json();
-            } catch {
-                return NextResponse.json(
-                    { ok: false, error: 'invalid_json', message: 'Invalid JSON body' },
-                    { status: 400 }
-                );
+            // Валидация входных данных
+            const validationResult = await validateRequest(req, quickBookGuestSchema);
+            if (!validationResult.success) {
+                return validationResult.response;
             }
-
-            // Валидация обязательных полей
-            if (!body.biz_id || !body.service_id || !body.staff_id || !body.start_at || !body.client_name || !body.client_phone) {
-                return NextResponse.json(
-                    { ok: false, error: 'missing_fields', message: 'Missing required fields' },
-                    { status: 400 }
-                );
-            }
+            
+            const body = validationResult.data;
 
             // Нормализуем телефон (убираем пробелы, дефисы и т.д.)
+            // Телефон уже валидирован как E.164, но убираем возможные пробелы для безопасности
             const normalizedPhone = body.client_phone.replace(/\s+/g, '').replace(/[-\s()]/g, '');
 
             // Получаем первый активный филиал бизнеса

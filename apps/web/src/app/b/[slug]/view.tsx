@@ -1,4 +1,4 @@
-// apps/web/src/app/[slug]/view.tsx
+// apps/web/src/app/b/[slug]/view.tsx
 'use client';
 
 import { addDays, format } from 'date-fns';
@@ -7,224 +7,30 @@ import { ru } from 'date-fns/locale/ru';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
-
 import { BookingEmptyState } from './BookingEmptyState';
 import { useBranchPromotions, useClientBookings, useServiceStaff } from './hooks/useBookingData';
 import { useServicesFilter } from './hooks/useServicesFilter';
 import { useSlotsLoader } from './hooks/useSlotsLoader';
 import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
+import { useBookingSteps } from './hooks/useBookingSteps';
+import { useBookingCreation } from './hooks/useBookingCreation';
+import { useGuestBooking } from './hooks/useGuestBooking';
+import { BookingHeader } from './components/BookingHeader';
+import { PromotionsList } from './components/PromotionsList';
+import { BookingSteps } from './components/BookingSteps';
+import { BranchSelector } from './components/BranchSelector';
+import { GuestBookingModal } from './components/GuestBookingModal';
+import type { Data, ServiceStaffRow, Slot } from './types';
+import { fmtErr } from './utils';
 
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { logError } from '@/lib/log';
-import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
-import { validateEmail, validateName, validatePhone } from '@/lib/validation';
 
-const isDev = process.env.NODE_ENV !== 'production';
-const debugLog = (...args: unknown[]) => {
-    if (isDev) {
-        // eslint-disable-next-line no-console
-        console.log(...args);
-    }
-};
-const debugWarn = (...args: unknown[]) => {
-    if (isDev) {
-         
-        console.warn(...args);
-    }
-};
-type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
-type Branch = { id: string; name: string; address?: string | null; rating_score: number | null };
-type Service = {
-    id: string;
-    name_ru: string;
-    name_ky?: string | null;
-    name_en?: string | null;
-    duration_min: number;
-    price_from?: number | null;
-    price_to?: number | null;
-    branch_id: string;
-};
-type Staff = { id: string; full_name: string; branch_id: string; avatar_url?: string | null; rating_score: number | null };
-
-type Promotion = {
-    id: string;
-    branch_id: string;
-    promotion_type: string;
-    title_ru: string | null;
-    params: Record<string, unknown>;
-    branches?: { name: string };
-};
-
-type Data = {
-    biz: Biz;
-    branches: Branch[];
-    services: Service[];
-    staff: Staff[];
-    promotions?: Promotion[];
-};
-
-
-// связь услуга ↔ мастер
-type ServiceStaffRow = { service_id: string; staff_id: string; is_active: boolean };
-
-// RPC get_free_slots_service_day_v2
-type Slot = {
-    staff_id: string;
-    branch_id: string;
-    start_at: string;
-    end_at: string;
-};
-
-type BookingStep = 1 | 2 | 3 | 4 | 5;
-
-function useBookingSteps(params: {
-    branchId: string;
-    dayStr: string;
-    staffId: string;
-    serviceId: string;
-    servicesFiltered: Service[];
-    t: (key: string, fallback?: string) => string;
-}) {
-    const { branchId, dayStr, staffId, serviceId, servicesFiltered, t } = params;
-
-    const [step, setStep] = useState<BookingStep>(1);
-    const totalSteps: BookingStep = 5;
-
-    const stepsMeta = useMemo(
-        () => [
-            { id: 1 as BookingStep, label: t('booking.step.branch', 'Филиал') },
-            { id: 2 as BookingStep, label: t('booking.step.day', 'День') },
-            { id: 3 as BookingStep, label: t('booking.step.master', 'Мастер') },
-            { id: 4 as BookingStep, label: t('booking.step.service', 'Услуга') },
-            { id: 5 as BookingStep, label: t('booking.step.time', 'Время') },
-        ],
-        [t],
-    );
-
-    const canGoNext = useMemo(() => {
-        if (step >= totalSteps) return false;
-
-        // Шаг 1 -> 2: должен быть выбран филиал
-        if (step === 1) return !!branchId;
-
-        // Шаг 2 -> 3: должна быть выбрана дата
-        if (step === 2) return !!dayStr;
-
-        // Шаг 3 -> 4: должен быть выбран мастер
-        if (step === 3) return !!staffId;
-
-        // Шаг 4 -> 5: должна быть выбрана услуга И мастер должен делать эту услугу
-        if (step === 4) {
-            if (!serviceId || !staffId) return false;
-
-            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            if (!isServiceValid) {
-                debugLog('[Booking] canGoNext: service not in servicesFiltered', {
-                    serviceId,
-                    servicesFiltered: servicesFiltered.map((s) => s.id),
-                    servicesFilteredNames: servicesFiltered.map((s) => s.name_ru),
-                });
-                return false;
-            }
-
-            debugLog('[Booking] canGoNext: service is valid (in servicesFiltered)', { serviceId });
-            return true;
-        }
-
-        return true;
-    }, [step, totalSteps, branchId, dayStr, staffId, serviceId, servicesFiltered]);
-
-    const canGoPrev = step > 1;
-
-    const goPrev = () => {
-        if (!canGoPrev) return;
-        setStep((prev) => (Math.max(1, prev - 1) as BookingStep));
-    };
-
-    const goNext = () => {
-        if (!canGoNext) return;
-        setStep((prev) => {
-            const next = (prev + 1) as BookingStep;
-            return (next > totalSteps ? totalSteps : next) as BookingStep;
-        });
-    };
-
-    return { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, totalSteps };
-}
-
-function fmtErr(e: unknown, t?: (key: string, fallback?: string) => string): string {
-    if (e && typeof e === 'object') {
-        const any = e as { message?: string; details?: string; hint?: string; code?: string };
-        const rawMessage = any.message || '';
-
-        // Пользовательский текст для частых бизнес-ошибок
-        if (rawMessage.includes('is not assigned to branch')) {
-            return t?.('booking.error.masterNotAssigned', 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.') || 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
-        }
-
-        if (any.message) {
-            const parts = [
-                any.message,
-                any.details && `Details: ${any.details}`,
-                any.hint && `Hint: ${any.hint}`,
-                any.code && `Code: ${any.code}`,
-            ].filter(Boolean);
-            return parts.join('\n');
-        }
-    }
-    if (e instanceof Error) return e.message;
-    try {
-        return JSON.stringify(e);
-    } catch {
-        return String(e);
-    }
-}
-
-// Проверяем, является ли ошибка сетевой (например, недоступен интернет или сервер)
-function isNetworkError(e: unknown): boolean {
-    if (e instanceof TypeError) {
-        // Fetch в браузере выбрасывает TypeError при проблемах сети / CORS
-        return true;
-    }
-    if (e && typeof e === 'object' && 'code' in e) {
-        const anyErr = e as { code?: string };
-        // Некоторые драйверы могут использовать такие коды для сетевых ошибок
-        if (anyErr.code === 'ECONNABORTED' || anyErr.code === 'ECONNREFUSED' || anyErr.code === 'ENETUNREACH') {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Универсальный helper для повторной попытки при сетевых ошибках
-async function withNetworkRetry<T>(
-    fn: () => Promise<T>,
-    options?: { retries?: number; delayMs?: number; scope?: string }
-): Promise<T> {
-    const retries = options?.retries ?? 1;
-    const delayMs = options?.delayMs ?? 500;
-    const scope = options?.scope ?? 'BookingFlow';
-
-    let attempt = 0;
-
-     
-    while (true) {
-        try {
-            return await fn();
-        } catch (e) {
-            if (isNetworkError(e) && attempt < retries) {
-                attempt += 1;
-                logError(scope, `Network error, retrying attempt ${attempt}/${retries}`, e);
-                await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
-                continue;
-            }
-            throw e;
-        }
-    }
-}
+// Используем безопасное логирование из @/lib/log
+// debugLog и debugWarn удалены - используйте logDebug и logWarn из @/lib/log
 
 
 export default function BookingForm({ data }: { data: Data }) {
@@ -277,15 +83,6 @@ export default function BookingForm({ data }: { data: Data }) {
     /* ---------- auth ---------- */
     const [isAuthed, setIsAuthed] = useState<boolean>(false);
     
-    // Модальное окно для гостевой брони
-    const [guestBookingModalOpen, setGuestBookingModalOpen] = useState(false);
-    const [guestBookingSlotTime, setGuestBookingSlotTime] = useState<Date | null>(null);
-    const [guestBookingForm, setGuestBookingForm] = useState({
-        client_name: '',
-        client_phone: '',
-        client_email: '',
-    });
-    const [guestBookingLoading, setGuestBookingLoading] = useState(false);
     
     useEffect(() => {
         let ignore = false;
@@ -374,15 +171,15 @@ export default function BookingForm({ data }: { data: Data }) {
     // при смене мастера или даты — сбрасываем выбор услуги, если текущая не подходит
     useEffect(() => {
         if (!staffId || !dayStr) {
-            if (!staffId) debugLog('[Booking] Staff cleared, clearing service');
-            if (!dayStr) debugLog('[Booking] Day cleared, clearing service');
+            if (!staffId) logDebug('Booking', 'Staff cleared, clearing service');
+            if (!dayStr) logDebug('Booking', 'Day cleared, clearing service');
             setServiceId('');
             return;
         }
         // Если выбранная услуга не подходит под нового мастера или дату — сбрасываем выбор
         if (serviceId) {
             const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            debugLog('[Booking] Checking service validity after staff/day change:', { 
+            logDebug('Booking', 'Checking service validity after staff/day change', { 
                 serviceId, 
                 staffId, 
                 dayStr,
@@ -391,7 +188,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru })) 
             });
             if (!isServiceValid) {
-                debugWarn('[Booking] Service is not valid for current staff/day, clearing serviceId');
+                logWarn('Booking', 'Service is not valid for current staff/day, clearing serviceId');
                 setServiceId('');
             }
         }
@@ -542,7 +339,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 }
             } catch (e) {
                 if (!ignore) {
-                    debugWarn('[Booking] Error filtering slots by bookings:', e);
+                    logWarn('Booking', 'Error filtering slots by bookings', e);
                     setSlots(slotsFromHook);
                 }
             }
@@ -627,7 +424,6 @@ export default function BookingForm({ data }: { data: Data }) {
             setRestoredFromStorage(true);
         }
     }, [biz.id, restoredFromStorage]); // Убрали branches, services, staff из зависимостей, чтобы избежать бесконечных ререндеров
-    const [loading, setLoading] = useState(false);
 
     const service = useMemo(
         () => {
@@ -637,7 +433,7 @@ export default function BookingForm({ data }: { data: Data }) {
             const found = servicesFiltered.find((s) => s.id === serviceId) 
                 ?? servicesByBranch.find((s) => s.id === serviceId)
                 ?? services.find((s) => s.id === serviceId);
-            debugLog('[Booking] Finding service:', { 
+            logDebug('Booking', 'Finding service', { 
                 serviceId, 
                 found: found ? found.name_ru : null, 
                 foundInFiltered: !!servicesFiltered.find((s) => s.id === serviceId),
@@ -649,8 +445,24 @@ export default function BookingForm({ data }: { data: Data }) {
         [servicesFiltered, servicesByBranch, services, serviceId]
     );
 
-    async function createBooking(slotTime: Date) {
-        if (!service) {
+    // Используем хуки для создания бронирования
+    const guestBooking = useGuestBooking({
+        bizId: biz.id,
+        service,
+        staffId,
+        branchId,
+        t,
+    });
+
+    const { createBooking, loading: bookingLoading } = useBookingCreation({
+        bizId: biz.id,
+        branchId,
+        service,
+        staffId,
+        isAuthed,
+        t,
+        onGuestBookingRequest: (slotTime) => guestBooking.openModal(slotTime),
+    });
             alert(t('booking.selectService', 'Пожалуйста, выберите услугу перед продолжением.'));
             return;
         }
@@ -896,31 +708,7 @@ export default function BookingForm({ data }: { data: Data }) {
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
             <div className="mx-auto max-w-5xl px-4 py-6 space-y-5">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100">
-                            {biz.name}
-                        </h1>
-                        {biz.rating_score !== null && biz.rating_score !== undefined && (
-                            <div className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                                <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                                    {biz.rating_score.toFixed(1)}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                    {biz.address && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{biz.address}</p>
-                    )}
-                    {biz.phones?.length ? (
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                            {t('booking.phoneLabel', 'Телефон:')} {biz.phones.join(', ')}
-                        </p>
-                    ) : null}
-                </div>
+                <BookingHeader biz={biz} t={t} />
 
                 {!isAuthed && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
@@ -931,154 +719,23 @@ export default function BookingForm({ data }: { data: Data }) {
                     </div>
                 )}
                 
-                {/* Активные акции филиала */}
                 {branchId && branchPromotions.length > 0 && (
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800 dark:bg-emerald-950/40">
-                        <h3 className="mb-2 text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-                            {t('booking.promotions.title', '🎁 Активные акции в этом филиале:')}
-                        </h3>
-                        <div className="space-y-2">
-                            {branchPromotions.map((promotion) => {
-                                const params = promotion.params || {};
-                                let description = promotion.title_ru || '';
-                                
-                                if (promotion.promotion_type === 'free_after_n_visits' && params.visit_count) {
-                                    description = t('booking.promotions.freeAfterN', 'Каждая {n}-я услуга бесплатно').replace('{n}', String(params.visit_count));
-                                } else if ((promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount' || promotion.promotion_type === 'referral_discount_50') && params.discount_percent) {
-                                    description = t('booking.promotions.discountPercent', 'Скидка {percent}%').replace('{percent}', String(params.discount_percent));
-                                }
-                                
-                                return (
-                                    <div key={promotion.id} className="flex items-start gap-2 rounded-lg bg-white dark:bg-gray-900 px-3 py-2 border border-emerald-200 dark:border-emerald-800">
-                                        <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="text-xs text-emerald-800 dark:text-emerald-200">{description}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    <PromotionsList promotions={branchPromotions} t={t} />
                 )}
 
-                {/* Степпер по шагам */}
-                <div id="booking" className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                    {stepsMeta.map((s, index) => {
-                        const isActive = s.id === step;
-                        const isCompleted = s.id < step;
-                        return (
-                            <button
-                                key={s.id}
-                                type="button"
-                                onClick={() => {
-                                    // Переход к шагу возможен только если все предыдущие шаги валидны
-                                    if (s.id < step) {
-                                        goPrev();
-                                        return;
-                                    }
-                                    if (s.id > step && !canGoNext) return;
-                                    // Прямой переход на произвольный шаг пока ограничиваем UX-кнопками "Далее/Назад"
-                                }}
-                                className="flex items-center gap-2"
-                            >
-                                <div
-                                    className={`flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold transition ${
-                                        isActive
-                                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
-                                            : isCompleted
-                                            ? 'border-emerald-500 bg-emerald-500 text-white'
-                                            : 'border-gray-300 bg-white text-gray-600 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-300'
-                                    }`}
-                                >
-                                    {isCompleted ? '✓' : s.id}
-                                </div>
-                                <span
-                                    className={`text-[11px] font-medium ${
-                                        isActive
-                                            ? 'text-indigo-700 dark:text-indigo-300'
-                                            : 'text-gray-600 dark:text-gray-300'
-                                    }`}
-                                >
-                                    {index + 1}. {s.label}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
+                <BookingSteps stepsMeta={stepsMeta} step={step} canGoNext={canGoNext} goPrev={goPrev} />
 
                 <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
                     <div className="space-y-4">
                         {/* Шаг 1: филиал */}
                         {step === 1 && (
-                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    {t('booking.step1.title', 'Шаг 1. Выберите филиал')}
-                                </h2>
-                                <button
-                                    type="button"
-                                    data-testid="branch-select"
-                                    className="mb-3 inline-flex items-center rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-400 hover:text-indigo-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-400 dark:hover:text-indigo-200"
-                                >
-                                    {t('booking.testIds.branchSelect', 'Выбрать филиал')}
-                                </button>
-                                {branches.length === 0 ? (
-                                    <BookingEmptyState
-                                        type="empty"
-                                        message={t('booking.empty.noBranches', 'У этого бизнеса нет активных филиалов. Пожалуйста, вернитесь позже.')}
-                                    />
-                                ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {branches.map((b) => {
-                                            const active = b.id === branchId;
-                                            return (
-                                                <button
-                                                    key={b.id}
-                                                    type="button"
-                                                    data-testid="branch-card"
-                                                    onClick={() => setBranchId(b.id)}
-                                                    className={`flex flex-col items-start rounded-lg border p-3 text-left transition ${
-                                                        active
-                                                            ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
-                                                            : 'border-gray-300 bg-white hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center justify-between w-full">
-                                                        <span
-                                                            data-testid="branch-option"
-                                                            className={`text-sm font-medium ${
-                                                            active
-                                                                ? 'text-indigo-700 dark:text-indigo-100'
-                                                                : 'text-gray-800 dark:text-gray-100'
-                                                        }`}
-                                                        >
-                                                            {formatBranchName(b.name)}
-                                                        </span>
-                                                        {b.rating_score !== null && b.rating_score !== undefined && (
-                                                            <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded border border-amber-200 dark:border-amber-800">
-                                                                <svg className="w-3 h-3 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                                </svg>
-                                                                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                                                                    {b.rating_score.toFixed(1)}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {b.address && (
-                                                        <span className={`mt-1 text-xs ${
-                                                            active
-                                                                ? 'text-indigo-600 dark:text-indigo-200'
-                                                                : 'text-gray-600 dark:text-gray-400'
-                                                        }`}>
-                                                            {b.address}
-                                                        </span>
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </section>
+                            <BranchSelector
+                                branches={branches}
+                                selectedBranchId={branchId}
+                                onSelect={setBranchId}
+                                formatBranchName={formatBranchName}
+                                t={t}
+                            />
                         )}
 
                         {/* Шаг 2: день */}
@@ -1369,7 +1026,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                             return (
                                                 <button
                                                     key={s.start_at}
-                                                    disabled={loading}
+                                                    disabled={bookingLoading}
                                                     data-testid="time-slot"
                                                     className="rounded-full border border-gray-300 bg-white px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[32px] touch-manipulation"
                                                     onClick={() => createBooking(d)}
@@ -1533,96 +1190,15 @@ export default function BookingForm({ data }: { data: Data }) {
                 </div>
             </div>
             
-            {/* Модальное окно для гостевой брони */}
-            {guestBookingModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !guestBookingLoading && setGuestBookingModalOpen(false)}>
-                    <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
-                        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                {t('booking.guest.title', 'Быстрая бронь без регистрации')}
-                            </h3>
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                {t('booking.guest.subtitle', 'Заполните ваши данные для бронирования')}
-                            </p>
-                        </div>
-                        
-                        <div className="px-4 py-4 space-y-3">
-                            {/* Имя */}
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t('booking.guest.name', 'Ваше имя')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={guestBookingForm.client_name}
-                                    onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_name: e.target.value })}
-                                    placeholder={t('booking.guest.namePlaceholder', 'Введите ваше имя')}
-                                    disabled={guestBookingLoading}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500 min-h-[44px] sm:min-h-[40px] touch-manipulation"
-                                    autoFocus
-                                />
-                            </div>
-                            
-                            {/* Телефон */}
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t('booking.guest.phone', 'Телефон')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="tel"
-                                    value={guestBookingForm.client_phone}
-                                    onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_phone: e.target.value })}
-                                    placeholder={t('booking.guest.phonePlaceholder', '+996555123456')}
-                                    disabled={guestBookingLoading}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500 min-h-[44px] sm:min-h-[40px] touch-manipulation"
-                                />
-                            </div>
-                            
-                            {/* Email (опционально) */}
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t('booking.guest.email', 'Email')} <span className="text-xs text-gray-400">({t('booking.guest.optional', 'необязательно')})</span>
-                                </label>
-                                <input
-                                    type="email"
-                                    value={guestBookingForm.client_email}
-                                    onChange={(e) => setGuestBookingForm({ ...guestBookingForm, client_email: e.target.value })}
-                                    placeholder={t('booking.guest.emailPlaceholder', 'you@example.com')}
-                                    disabled={guestBookingLoading}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-500 min-h-[44px] sm:min-h-[40px] touch-manipulation"
-                                />
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-800">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (!guestBookingLoading) {
-                                        setGuestBookingModalOpen(false);
-                                        setGuestBookingForm({ client_name: '', client_phone: '', client_email: '' });
-                                        setGuestBookingSlotTime(null);
-                                    }
-                                }}
-                                disabled={guestBookingLoading}
-                                className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800 min-h-[44px] sm:min-h-[32px] touch-manipulation"
-                            >
-                                {t('booking.guest.cancel', 'Отмена')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={createGuestBooking}
-                                disabled={guestBookingLoading}
-                                className="rounded-lg border border-indigo-600 bg-indigo-600 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-400 min-h-[44px] sm:min-h-[32px] touch-manipulation"
-                            >
-                                {guestBookingLoading 
-                                    ? t('booking.guest.booking', 'Бронируем...') 
-                                    : t('booking.guest.book', 'Забронировать')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <GuestBookingModal
+                isOpen={guestBooking.modalOpen}
+                loading={guestBooking.loading}
+                form={guestBooking.form}
+                onClose={guestBooking.closeModal}
+                onFormChange={guestBooking.setForm}
+                onSubmit={guestBooking.createGuestBooking}
+                t={t}
+            />
         </main>
     );
 }

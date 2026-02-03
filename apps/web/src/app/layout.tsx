@@ -12,6 +12,7 @@ import {LanguageProvider} from './_components/i18n/LanguageProvider';
 import {LanguageSwitcher} from './_components/i18n/LanguageSwitcher';
 
 import {ReactQueryProvider} from '@/lib/react-query';
+import {ErrorBoundary} from '@/components/ErrorBoundary';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -44,6 +45,7 @@ export default function RootLayout({
     return (
         <html lang="ky">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ErrorBoundary>
         <ReactQueryProvider>
         <LanguageProvider>
             <div className="flex flex-col min-h-screen">
@@ -78,6 +80,7 @@ export default function RootLayout({
             </div>
         </LanguageProvider>
         </ReactQueryProvider>
+        </ErrorBoundary>
         </body>
         </html>
     );

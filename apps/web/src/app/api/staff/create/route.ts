@@ -6,6 +6,7 @@ import {NextResponse} from 'next/server';
 import {getBizContextForManagers} from '@/lib/authBiz';
 import {initializeStaffSchedule} from '@/lib/staffSchedule';
 import {getServiceClient} from '@/lib/supabaseService';
+import {withErrorHandler, createErrorResponse, createSuccessResponse} from '@/lib/apiErrorHandler';
 
 /**
  * Добавляет роль staff пользователю в бизнесе (idempotent)
@@ -55,7 +56,7 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('StaffCreate', async () => {
         const {supabase, userId, bizId} = await getBizContextForManagers();
 
         // проверка роли в этом бизнесе
@@ -67,11 +68,13 @@ export async function POST(req: Request) {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const ok = (roles ?? []).some(r => (r as any).roles?.key && ['owner', 'admin', 'manager'].includes((r as any).roles.key));
-        if (!ok) return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+        if (!ok) {
+            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
+        }
 
         const body = (await req.json()) as Body;
         if (!body.full_name || !body.branch_id) {
-            return NextResponse.json({ok: false, error: 'INVALID_BODY'}, {status: 400});
+            return createErrorResponse('validation', 'Имя и филиал обязательны', undefined, 400);
         }
 
         // Используем service client для поиска пользователя и добавления роли
@@ -105,7 +108,9 @@ export async function POST(req: Request) {
             .select('id')
             .single();
 
-        if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        if (error) {
+            return createErrorResponse('validation', error.message, undefined, 400);
+        }
 
         // Создаём первую запись в истории закреплений сотрудника за филиалом
         try {
@@ -144,16 +149,12 @@ export async function POST(req: Request) {
             console.warn('[staff/create] No staff ID returned, cannot initialize schedule');
         }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             id: data?.id,
             user_linked: !!linkedUserId,
             schedule_initialized: scheduleResult.success,
             schedule_days_created: scheduleResult.daysCreated,
             schedule_error: scheduleResult.error || null,
         });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'UNKNOWN';
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+    });
 }

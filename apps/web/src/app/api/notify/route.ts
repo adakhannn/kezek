@@ -12,8 +12,9 @@ import { buildIcs } from '@/lib/ics';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendTelegram } from '@/lib/senders/telegram';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
+import { getTimezone } from '@/lib/env';
 
-const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
+const TZ = getTimezone();
 
 type NotifyType = 'hold' | 'confirm' | 'cancel';
 
@@ -125,26 +126,30 @@ export async function POST(req: Request) {
         
         if (!body?.type || !body?.booking_id) {
             console.error('[notify] Bad request: missing type or booking_id');
-            return NextResponse.json({ ok: false, error: 'bad_request' }, { status: 400 });
+            return createErrorResponse('validation', 'Missing type or booking_id', undefined, 400);
         }
 
-        const apiKey = process.env.RESEND_API_KEY;
-        const from = process.env.EMAIL_FROM || 'Kezek <noreply@mail.kezek.kg>';
-        // Всегда используем kezek.kg для ссылок в письмах, даже если NEXT_PUBLIC_SITE_ORIGIN указывает на vercel.app
-        const originEnv = process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
-        const origin = originEnv.includes('vercel.app') ? 'https://kezek.kg' : originEnv;
-
-        if (!apiKey) {
+        const { getResendApiKey, getEmailFrom, getSiteOrigin, getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } = await import('@/lib/env');
+        
+        let apiKey: string;
+        try {
+            apiKey = getResendApiKey();
+        } catch (error) {
             console.error('[notify] RESEND_API_KEY is not set');
-            return NextResponse.json({ ok: false, error: 'no RESEND_API_KEY' }, { status: 500 });
+            return createErrorResponse('internal', 'RESEND_API_KEY is not set', undefined, 500);
         }
+        
+        const from = getEmailFrom();
+        // Всегда используем kezek.kg для ссылок в письмах, даже если NEXT_PUBLIC_SITE_ORIGIN указывает на vercel.app
+        const originEnv = getSiteOrigin();
+        const origin = originEnv.includes('vercel.app') ? 'https://kezek.kg' : originEnv;
         
         console.log('[notify] Resend API key found, from:', from);
 
         // Supabase client (SSR)
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const url = getSupabaseUrl();
+        const anon = getSupabaseAnonKey();
+        const service = getSupabaseServiceRoleKey();
         const cookieStore = await cookies();
         const supabase = createServerClient(url, anon, {
             cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
@@ -565,6 +570,6 @@ export async function POST(req: Request) {
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[notify] error:', msg);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+        return createErrorResponse('internal', msg, undefined, 500);
     }
 }

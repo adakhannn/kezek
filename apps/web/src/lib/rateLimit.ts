@@ -1,6 +1,15 @@
 /**
  * Rate limiting utility для API endpoints
- * Использует простой in-memory подход для dev и может быть расширен для продакшена
+ * 
+ * Использует Upstash Redis для продакшена (serverless-совместимо)
+ * Fallback на in-memory хранилище для dev окружения
+ * 
+ * Настройка Upstash Redis:
+ * 1. Создайте Redis database на https://upstash.com
+ * 2. Добавьте переменные окружения:
+ *    - UPSTASH_REDIS_REST_URL
+ *    - UPSTASH_REDIS_REST_TOKEN
+ * 3. Для Vercel: подключите Upstash через интеграцию или добавьте env vars
  */
 
 type RateLimitConfig = {
@@ -17,12 +26,11 @@ type RateLimitResult = {
     retryAfter?: number; // Секунды до следующего запроса
 };
 
-// In-memory хранилище для rate limiting (для dev/staging)
-// В продакшене лучше использовать Redis или Upstash
+// In-memory хранилище для dev окружения (fallback)
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
-// Очистка устаревших записей каждые 5 минут
-if (typeof setInterval !== 'undefined') {
+// Очистка устаревших записей каждые 5 минут (только для in-memory)
+if (typeof setInterval !== 'undefined' && typeof window === 'undefined') {
     setInterval(() => {
         const now = Date.now();
         for (const [key, value] of rateLimitStore.entries()) {
@@ -31,6 +39,32 @@ if (typeof setInterval !== 'undefined') {
             }
         }
     }, 5 * 60 * 1000);
+}
+
+/**
+ * Получает Redis клиент (lazy loading)
+ */
+async function getRedisClient() {
+    // Проверяем наличие Upstash Redis переменных
+    const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    
+    if (!redisUrl || !redisToken) {
+        return null; // Fallback на in-memory
+    }
+    
+    try {
+        // Динамический импорт @upstash/redis (опциональная зависимость)
+        const { Redis } = await import('@upstash/redis');
+        return new Redis({
+            url: redisUrl,
+            token: redisToken,
+        });
+    } catch (error) {
+        // Если пакет не установлен, используем fallback
+        console.warn('[rateLimit] @upstash/redis not available, using in-memory fallback');
+        return null;
+    }
 }
 
 /**
@@ -51,18 +85,70 @@ function getRateLimitIdentifier(req: Request): string {
 }
 
 /**
- * Проверяет rate limit для запроса
+ * Проверяет rate limit используя Redis (если доступен) или in-memory fallback
  */
-export async function checkRateLimit(
-    req: Request,
-    config: RateLimitConfig
-): Promise<RateLimitResult> {
-    const { maxRequests, windowMs, identifier } = config;
+async function checkRateLimitWithRedis(
+    key: string,
+    maxRequests: number,
+    windowMs: number
+): Promise<RateLimitResult | null> {
+    const redis = await getRedisClient();
     
-    // Формируем ключ для rate limiting
-    const baseKey = identifier || getRateLimitIdentifier(req);
-    const key = `ratelimit:${baseKey}`;
+    if (!redis) {
+        return null; // Fallback на in-memory
+    }
     
+    try {
+        const now = Date.now();
+        const windowSeconds = Math.ceil(windowMs / 1000);
+        
+        // Используем Redis INCR с TTL для атомарной операции
+        const count = await redis.incr(key);
+        
+        // Устанавливаем TTL при первом запросе
+        if (count === 1) {
+            await redis.expire(key, windowSeconds);
+        }
+        
+        // Получаем TTL для расчета reset времени
+        const ttl = await redis.ttl(key);
+        const reset = now + (ttl * 1000);
+        
+        const remaining = Math.max(0, maxRequests - count);
+        const success = count <= maxRequests;
+        
+        if (!success) {
+            const retryAfter = Math.ceil(ttl);
+            return {
+                success: false,
+                limit: maxRequests,
+                remaining: 0,
+                reset,
+                retryAfter,
+            };
+        }
+        
+        return {
+            success: true,
+            limit: maxRequests,
+            remaining,
+            reset,
+        };
+    } catch (error) {
+        // Если Redis недоступен, fallback на in-memory
+        console.warn('[rateLimit] Redis error, falling back to in-memory:', error);
+        return null;
+    }
+}
+
+/**
+ * Проверяет rate limit используя in-memory хранилище
+ */
+function checkRateLimitInMemory(
+    key: string,
+    maxRequests: number,
+    windowMs: number
+): RateLimitResult {
     const now = Date.now();
     const entry = rateLimitStore.get(key);
     
@@ -104,6 +190,30 @@ export async function checkRateLimit(
         remaining: maxRequests - entry.count,
         reset: entry.resetAt,
     };
+}
+
+/**
+ * Проверяет rate limit для запроса
+ */
+export async function checkRateLimit(
+    req: Request,
+    config: RateLimitConfig
+): Promise<RateLimitResult> {
+    const { maxRequests, windowMs, identifier } = config;
+    
+    // Формируем ключ для rate limiting
+    const baseKey = identifier || getRateLimitIdentifier(req);
+    const key = `ratelimit:${baseKey}`;
+    
+    // Пытаемся использовать Redis
+    const redisResult = await checkRateLimitWithRedis(key, maxRequests, windowMs);
+    
+    if (redisResult !== null) {
+        return redisResult;
+    }
+    
+    // Fallback на in-memory
+    return checkRateLimitInMemory(key, maxRequests, windowMs);
 }
 
 /**
@@ -182,4 +292,3 @@ export const RateLimitConfigs = {
         windowMs: 15 * 60 * 1000, // в 15 минут
     },
 } as const;
-

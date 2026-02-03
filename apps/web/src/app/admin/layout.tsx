@@ -3,11 +3,13 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+
 import { AdminNav } from './_components/AdminNav';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-    const url  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const url  = getSupabaseUrl();
+    const anon = getSupabaseAnonKey();
     const cookieStore = await cookies();
 
     const supabase = createServerClient(url, anon, {
