@@ -21,7 +21,7 @@ declare
     v_service_duration_min integer;
     v_end timestamptz;
     v_expires_at timestamptz;
-    v_status text := 'hold';
+    v_status booking_status := 'hold'::booking_status;
     v_client_name_trimmed text;
     v_client_phone_trimmed text;
     v_client_email_trimmed text;
