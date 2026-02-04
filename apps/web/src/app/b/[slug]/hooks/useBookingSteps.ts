@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { BookingStep } from '../types';
 import type { Service } from '../types';
+import { logDebug } from '@/lib/log';
 
 type UseBookingStepsParams = {
     branchId: string;
@@ -46,7 +47,6 @@ export function useBookingSteps(params: UseBookingStepsParams) {
 
             const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
             if (!isServiceValid) {
-                const { logDebug } = await import('@/lib/log');
                 logDebug('Booking', 'canGoNext: service not in servicesFiltered', {
                     serviceId,
                     servicesFiltered: servicesFiltered.map((s) => s.id),
@@ -55,7 +55,6 @@ export function useBookingSteps(params: UseBookingStepsParams) {
                 return false;
             }
 
-            const { logDebug } = await import('@/lib/log');
             logDebug('Booking', 'canGoNext: service is valid (in servicesFiltered)', { serviceId });
             return true;
         }
