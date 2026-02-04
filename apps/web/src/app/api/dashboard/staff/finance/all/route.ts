@@ -292,18 +292,10 @@ export async function GET(req: Request) {
             };
         });
 
-        // Считаем общую статистику
-        // Используем данные из SQL функции, если доступны, иначе считаем из staffStats
-        const totalStats = businessStatsData?.total_stats ? {
-            totalAmount: businessStatsData.total_stats.total_amount,
-            totalMaster: businessStatsData.total_stats.total_master,
-            totalSalon: businessStatsData.total_stats.total_salon,
-            totalConsumables: businessStatsData.total_stats.total_consumables,
-            totalLateMinutes: businessStatsData.total_stats.total_late_minutes,
-            totalShifts: businessStatsData.total_stats.total_shifts,
-            totalOpenShifts: businessStatsData.total_stats.open_shifts,
-            totalClosedShifts: businessStatsData.total_stats.closed_shifts,
-        } : {
+        // Считаем общую статистику из staffStats
+        // Это гарантирует, что открытые смены включены в статистику для всех периодов
+        // Для периода "день" это особенно важно, чтобы видеть актуальные данные до закрытия смен
+        const totalStats = {
             totalAmount: staffStats.reduce((sum, s) => sum + s.totalAmount, 0),
             totalMaster: staffStats.reduce((sum, s) => sum + s.totalMaster, 0),
             totalSalon: staffStats.reduce((sum, s) => sum + s.totalSalon, 0),

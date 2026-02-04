@@ -95,6 +95,18 @@ export default function AllStaffFinanceStats() {
         void loadStats();
     }, [loadStats]);
 
+    // Автоматическое обновление статистики для периода "день" каждую минуту
+    // чтобы видеть актуальные данные открытых смен в реальном времени
+    useEffect(() => {
+        if (period !== 'day') return;
+        
+        const interval = setInterval(() => {
+            void loadStats();
+        }, 60000); // Обновляем каждую минуту
+
+        return () => clearInterval(interval);
+    }, [period, loadStats]);
+
     const formatPeriodLabel = () => {
         if (period === 'day') {
             return new Date(date + 'T12:00:00').toLocaleDateString(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU', {
