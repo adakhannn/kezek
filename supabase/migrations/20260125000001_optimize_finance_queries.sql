@@ -148,6 +148,10 @@ $$;
 
 comment on function public.get_staff_finance_stats is 'Получает финансовую статистику по сотруднику за период. Оптимизированная версия с агрегацией на стороне БД.';
 
+-- Предоставляем права на выполнение функции
+grant execute on function public.get_staff_finance_stats(uuid, uuid, date, date, boolean) to authenticated;
+grant execute on function public.get_staff_finance_stats(uuid, uuid, date, date, boolean) to service_role;
+
 -- Функция для получения финансовой статистики по всем сотрудникам бизнеса за период
 create or replace function public.get_business_finance_stats(
     p_biz_id uuid,
