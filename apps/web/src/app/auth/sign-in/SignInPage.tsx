@@ -410,11 +410,13 @@ export default function SignInPage() {
                     </button>
 
                     {/* Вариант 3. Вход через Telegram */}
-                    <TelegramLoginWidget
-                        redirectTo={redirectParam || '/'}
-                        onError={handleTelegramError}
-                        size="large"
-                    />
+                    <div className="w-full">
+                        <TelegramLoginWidget
+                            redirectTo={redirectParam || '/'}
+                            onError={handleTelegramError}
+                            size="large"
+                        />
+                    </div>
 
                     {/* Вариант 4. Вход через WhatsApp - временно скрыт */}
                     {/* <button

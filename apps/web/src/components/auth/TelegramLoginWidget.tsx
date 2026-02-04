@@ -121,6 +121,11 @@ function TelegramLoginWidgetComponent({
             script.setAttribute('data-radius', String(cornerRadius));
         }
         script.async = true;
+        
+        script.onerror = () => {
+            console.error('[TelegramLoginWidget] Failed to load Telegram widget script');
+            onErrorRef.current?.('Не удалось загрузить виджет Telegram. Проверьте подключение к интернету.');
+        };
 
         containerRef.current.appendChild(script);
 
@@ -133,7 +138,7 @@ function TelegramLoginWidgetComponent({
     }, [size, cornerRadius, requestAccess, router]); // Убрали onSuccess, onError, redirectTo из зависимостей
 
     return (
-        <div className="relative">
+        <div className="relative w-full">
             {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 rounded-lg z-10">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -156,7 +161,11 @@ function TelegramLoginWidgetComponent({
                     </div>
                 </div>
             )}
-            <div ref={containerRef} className="flex justify-center" />
+            <div 
+                ref={containerRef} 
+                className="flex justify-center min-h-[40px] w-full"
+                style={{ minHeight: size === 'large' ? '48px' : size === 'medium' ? '40px' : '32px' }}
+            />
         </div>
     );
 }

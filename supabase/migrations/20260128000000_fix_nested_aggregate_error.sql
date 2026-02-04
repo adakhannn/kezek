@@ -1,16 +1,7 @@
--- Скрипт для проверки и исправления прав доступа к функциям финансовой статистики
--- Выполните этот скрипт в Supabase SQL Editor, если функция не работает
+-- Исправление ошибки "aggregate function calls cannot be nested" в get_business_finance_stats
+-- Проблема: использование агрегатных функций (count, sum) внутри jsonb_agg
+-- Решение: разделение на CTE для избежания вложенных агрегатов
 
--- Проверяем текущее определение функции
-SELECT 
-    p.proname as function_name,
-    pg_get_functiondef(p.oid) as function_definition
-FROM pg_proc p
-JOIN pg_namespace n ON p.pronamespace = n.oid
-WHERE n.nspname = 'public' 
-  AND p.proname IN ('get_business_finance_stats', 'get_staff_finance_stats');
-
--- Пересоздаем функцию с правильными параметрами безопасности
 CREATE OR REPLACE FUNCTION public.get_business_finance_stats(
     p_biz_id uuid,
     p_date_from date,
@@ -109,23 +100,20 @@ BEGIN
     FROM staff_data sd
     CROSS JOIN total_data td;
     
+    -- Если нужно включить открытые смены, добавляем их расчеты
+    IF p_include_open THEN
+        -- Для открытых смен нужно считать из позиций
+        -- Это делается отдельно, так как требует JOIN с staff_shift_items
+        -- Пока оставляем это на стороне API для гибкости
+    END IF;
+    
     RETURN v_result;
 END;
 $$;
 
+COMMENT ON FUNCTION public.get_business_finance_stats IS 'Получает финансовую статистику по всем сотрудникам бизнеса за период. Исправлена версия без вложенных агрегатных функций.';
+
 -- Предоставляем права на выполнение функции
 GRANT EXECUTE ON FUNCTION public.get_business_finance_stats(uuid, date, date, uuid, boolean) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_business_finance_stats(uuid, date, date, uuid, boolean) TO service_role;
-
--- Проверяем права доступа
-SELECT 
-    p.proname as function_name,
-    r.rolname as role_name,
-    has_function_privilege(r.rolname, p.oid, 'EXECUTE') as can_execute
-FROM pg_proc p
-JOIN pg_namespace n ON p.pronamespace = n.oid
-CROSS JOIN pg_roles r
-WHERE n.nspname = 'public' 
-  AND p.proname = 'get_business_finance_stats'
-  AND r.rolname IN ('authenticated', 'service_role', 'anon');
 

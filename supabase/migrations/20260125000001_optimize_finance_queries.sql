@@ -172,49 +172,84 @@ declare
 begin
     v_today := current_date;
     
-    -- Получаем статистику по всем сотрудникам
+    -- Сначала получаем статистику по каждому сотруднику
+    with staff_data as (
+        select 
+            st.id as staff_id,
+            st.full_name as staff_name,
+            st.is_active,
+            st.branch_id,
+            count(s.id) as total_shifts,
+            count(*) filter (where s.status = 'closed') as closed_shifts,
+            count(*) filter (where s.status = 'open') as open_shifts,
+            coalesce(sum(s.total_amount) filter (where s.status = 'closed'), 0) as total_amount,
+            coalesce(sum(s.master_share) filter (where s.status = 'closed'), 0) as total_master,
+            coalesce(sum(s.salon_share) filter (where s.status = 'closed'), 0) as total_salon,
+            coalesce(sum(s.consumables_amount) filter (where s.status = 'closed'), 0) as total_consumables,
+            coalesce(sum(s.late_minutes) filter (where s.status = 'closed'), 0) as total_late_minutes
+        from public.staff st
+        left join public.staff_shifts s on s.staff_id = st.id
+            and s.biz_id = p_biz_id
+            and s.shift_date >= p_date_from
+            and s.shift_date <= p_date_to
+        where st.biz_id = p_biz_id
+          and (p_branch_id is null or st.branch_id = p_branch_id)
+        group by st.id, st.full_name, st.is_active, st.branch_id
+    ),
+    total_data as (
+        select 
+            count(s.id) as total_shifts,
+            count(*) filter (where s.status = 'closed') as closed_shifts,
+            count(*) filter (where s.status = 'open') as open_shifts,
+            coalesce(sum(s.total_amount) filter (where s.status = 'closed'), 0) as total_amount,
+            coalesce(sum(s.master_share) filter (where s.status = 'closed'), 0) as total_master,
+            coalesce(sum(s.salon_share) filter (where s.status = 'closed'), 0) as total_salon,
+            coalesce(sum(s.consumables_amount) filter (where s.status = 'closed'), 0) as total_consumables,
+            coalesce(sum(s.late_minutes) filter (where s.status = 'closed'), 0) as total_late_minutes
+        from public.staff st
+        left join public.staff_shifts s on s.staff_id = st.id
+            and s.biz_id = p_biz_id
+            and s.shift_date >= p_date_from
+            and s.shift_date <= p_date_to
+        where st.biz_id = p_biz_id
+          and (p_branch_id is null or st.branch_id = p_branch_id)
+    )
     select jsonb_build_object(
         'staff_stats', coalesce(jsonb_agg(
             jsonb_build_object(
-                'staff_id', st.id,
-                'staff_name', st.full_name,
-                'is_active', st.is_active,
-                'branch_id', st.branch_id,
+                'staff_id', sd.staff_id,
+                'staff_name', sd.staff_name,
+                'is_active', sd.is_active,
+                'branch_id', sd.branch_id,
                 'shifts', jsonb_build_object(
-                    'total', count(s.id),
-                    'closed', count(*) filter (where s.status = 'closed'),
-                    'open', count(*) filter (where s.status = 'open')
+                    'total', sd.total_shifts,
+                    'closed', sd.closed_shifts,
+                    'open', sd.open_shifts
                 ),
                 'stats', jsonb_build_object(
-                    'total_amount', coalesce(sum(s.total_amount) filter (where s.status = 'closed'), 0),
-                    'total_master', coalesce(sum(s.master_share) filter (where s.status = 'closed'), 0),
-                    'total_salon', coalesce(sum(s.salon_share) filter (where s.status = 'closed'), 0),
-                    'total_consumables', coalesce(sum(s.consumables_amount) filter (where s.status = 'closed'), 0),
-                    'total_late_minutes', coalesce(sum(s.late_minutes) filter (where s.status = 'closed'), 0)
+                    'total_amount', sd.total_amount,
+                    'total_master', sd.total_master,
+                    'total_salon', sd.total_salon,
+                    'total_consumables', sd.total_consumables,
+                    'total_late_minutes', sd.total_late_minutes
                 )
             )
-            order by st.full_name
+            order by sd.staff_name
         ), '[]'::jsonb),
         'total_stats', jsonb_build_object(
-            'total_shifts', count(s.id),
-            'closed_shifts', count(*) filter (where s.status = 'closed'),
-            'open_shifts', count(*) filter (where s.status = 'open'),
-            'total_amount', coalesce(sum(s.total_amount) filter (where s.status = 'closed'), 0),
-            'total_master', coalesce(sum(s.master_share) filter (where s.status = 'closed'), 0),
-            'total_salon', coalesce(sum(s.salon_share) filter (where s.status = 'closed'), 0),
-            'total_consumables', coalesce(sum(s.consumables_amount) filter (where s.status = 'closed'), 0),
-            'total_late_minutes', coalesce(sum(s.late_minutes) filter (where s.status = 'closed'), 0)
+            'total_shifts', td.total_shifts,
+            'closed_shifts', td.closed_shifts,
+            'open_shifts', td.open_shifts,
+            'total_amount', td.total_amount,
+            'total_master', td.total_master,
+            'total_salon', td.total_salon,
+            'total_consumables', td.total_consumables,
+            'total_late_minutes', td.total_late_minutes
         )
     )
     into v_result
-    from public.staff st
-    left join public.staff_shifts s on s.staff_id = st.id
-        and s.biz_id = p_biz_id
-        and s.shift_date >= p_date_from
-        and s.shift_date <= p_date_to
-    where st.biz_id = p_biz_id
-      and (p_branch_id is null or st.branch_id = p_branch_id)
-    group by st.id, st.full_name, st.is_active, st.branch_id;
+    from staff_data sd
+    cross join total_data td;
     
     -- Если нужно включить открытые смены, добавляем их расчеты
     if p_include_open then

@@ -36,7 +36,7 @@ const securityHeaders = [
         key: 'Content-Security-Policy',
         value: [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api-maps.yandex.ru https://yandex.ru",
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api-maps.yandex.ru https://yandex.ru https://telegram.org",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "img-src 'self' data: https: blob:",
             "font-src 'self' data: https://fonts.gstatic.com",
