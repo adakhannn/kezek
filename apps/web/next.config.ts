@@ -41,7 +41,7 @@ const securityHeaders = [
             "img-src 'self' data: https: blob:",
             "font-src 'self' data: https://fonts.gstatic.com",
             "connect-src 'self' https://*.supabase.co https://graph.facebook.com https://api.telegram.org wss://*.supabase.co",
-            "frame-src 'self' https://www.google.com https://yandex.ru",
+            "frame-src 'self' https://www.google.com https://yandex.ru https://oauth.telegram.org",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
