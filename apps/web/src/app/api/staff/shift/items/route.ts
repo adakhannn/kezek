@@ -146,18 +146,19 @@ export async function POST(req: Request) {
         // Для операций записи в режиме владельца используем service client
         const writeClient = useServiceClient ? getServiceClient() : supabase;
 
-        // Удаляем старые позиции
-        const { error: deleteError } = await writeClient
+        // Получаем существующие записи для определения, какие нужно обновить, а какие удалить
+        const { data: existingItemsData } = await writeClient
             .from('staff_shift_items')
-            .delete()
+            .select('id')
             .eq('shift_id', shiftId);
-
-        if (deleteError) {
-            logError('StaffShiftItems', 'Error deleting old items', deleteError);
-            return NextResponse.json(
-                { ok: false, error: 'Не удалось удалить старые позиции' },
-                { status: 500 }
-            );
+        
+        const existingItemIds = new Set<string>();
+        if (existingItemsData) {
+            for (const item of existingItemsData) {
+                if (item.id) {
+                    existingItemIds.add(item.id);
+                }
+            }
         }
 
         // Собираем booking_id из всех items (даже если суммы еще не заполнены)
@@ -276,7 +277,38 @@ export async function POST(req: Request) {
                 }
             }
             
-            const cleanItems = items
+            // Разделяем на существующие (с id) и новые (без id) записи
+            const existingItems = items.filter((it: { id?: string }) => !!it.id);
+            const newItems = items.filter((it: { id?: string }) => !it.id);
+            
+            // Для существующих записей делаем UPDATE, сохраняя их created_at
+            if (existingItems.length > 0) {
+                for (const it of existingItems) {
+                    const bookingId = (it as { bookingId?: string | null; booking_id?: string | null }).bookingId ?? (it as { bookingId?: string | null; booking_id?: string | null }).booking_id ?? null;
+                    const serviceAmount = bookingId && promotionMap.has(bookingId)
+                        ? promotionMap.get(bookingId)!
+                        : Number((it as { serviceAmount?: number; amount?: number }).serviceAmount ?? (it as { serviceAmount?: number; amount?: number }).amount ?? 0) || 0;
+                    
+                    const { error: updateError } = await writeClient
+                        .from('staff_shift_items')
+                        .update({
+                            client_name: ((it as { clientName?: string; client_name?: string }).clientName ?? (it as { clientName?: string; client_name?: string }).client_name ?? '').trim() || null,
+                            service_name: ((it as { serviceName?: string; service_name?: string }).serviceName ?? (it as { serviceName?: string; service_name?: string }).service_name ?? '').trim() || null,
+                            service_amount: serviceAmount,
+                            consumables_amount: Number((it as { consumablesAmount?: number; consumables_amount?: number }).consumablesAmount ?? (it as { consumablesAmount?: number; consumables_amount?: number }).consumables_amount ?? 0) || 0,
+                            booking_id: bookingId,
+                            // created_at НЕ обновляем, чтобы сохранить оригинальное время
+                        })
+                        .eq('id', it.id);
+                    
+                    if (updateError) {
+                        logError('StaffShiftItems', `Error updating item ${it.id}`, updateError);
+                    }
+                }
+            }
+            
+            // Для новых записей делаем INSERT с разным created_at
+            const cleanItems = newItems
                 .map((it: {
                     clientName?: string;
                     client_name?: string;
@@ -288,13 +320,17 @@ export async function POST(req: Request) {
                     consumables_amount?: number;
                     bookingId?: string | null;
                     booking_id?: string | null;
-                }) => {
+                }, index: number) => {
                     const bookingId = it.bookingId ?? it.booking_id ?? null;
                     // Если есть примененная акция для этого booking_id, используем её сумму
                     // Иначе используем сумму, указанную сотрудником
                     const serviceAmount = bookingId && promotionMap.has(bookingId)
                         ? promotionMap.get(bookingId)!
                         : Number(it.serviceAmount ?? it.amount ?? 0) || 0;
+                    
+                    // Для новых записей устанавливаем текущее время с небольшой задержкой для каждого элемента
+                    // чтобы время было разным даже при массовом добавлении
+                    const createdAt = new Date(Date.now() + index * 100).toISOString(); // 100мс задержка для каждого элемента
                     
                     return {
                         shift_id: shiftId,
@@ -303,6 +339,7 @@ export async function POST(req: Request) {
                         service_amount: serviceAmount,
                         consumables_amount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
                         booking_id: bookingId,
+                        created_at: createdAt,
                     };
                 })
                 .filter((it: { service_amount: number; consumables_amount: number; booking_id: string | null }) => 

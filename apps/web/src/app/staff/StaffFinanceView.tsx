@@ -117,7 +117,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [today, setToday] = useState<TodayResponse | null>(null);
-    const [activeTab, setActiveTab] = useState<TabKey>('shift');
+    // По умолчанию открываем вкладку "Клиенты" для владельца, "Текущая смена" для сотрудника
+    const [activeTab, setActiveTab] = useState<TabKey>(staffId ? 'clients' : 'shift');
     const [statsPeriod, setStatsPeriod] = useState<PeriodKey>('all');
     const [selectedDate, setSelectedDate] = useState<Date>(todayTz());
     const [selectedMonth, setSelectedMonth] = useState<Date>(todayTz());
