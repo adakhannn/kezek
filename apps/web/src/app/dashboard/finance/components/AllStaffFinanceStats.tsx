@@ -67,7 +67,10 @@ export default function AllStaffFinanceStats() {
             });
             const json = await res.json();
             if (!json.ok) {
-                throw new Error(json.error || t('finance.loading', 'Не удалось загрузить статистику'));
+                // Показываем детали ошибки, если они есть
+                const errorMsg = json.message || json.error || t('finance.loading', 'Не удалось загрузить статистику');
+                const errorDetails = json.details ? ` (${JSON.stringify(json.details)})` : '';
+                throw new Error(errorMsg + errorDetails);
             }
 
             const apiBranches: BranchOption[] = Array.isArray(json.branches)

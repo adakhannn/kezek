@@ -116,6 +116,13 @@ export async function GET(req: Request) {
 
         // Используем оптимизированную SQL функцию для получения статистики
         // Это уменьшает количество запросов к БД и выполняет агрегацию на стороне сервера
+        logDebug('FinanceAll', 'Calling get_business_finance_stats', {
+            bizId,
+            dateFrom,
+            dateTo,
+            branchId: branchId || null,
+        });
+        
         const { data: businessStats, error: statsError } = await admin.rpc('get_business_finance_stats', {
             p_biz_id: bizId,
             p_date_from: dateFrom,
@@ -130,6 +137,7 @@ export async function GET(req: Request) {
                 code: statsError.code,
                 details: statsError.details,
                 hint: statsError.hint,
+                fullError: statsError,
             });
             // Возвращаем ошибку с деталями вместо fallback
             return NextResponse.json(
@@ -138,10 +146,17 @@ export async function GET(req: Request) {
                     error: 'get_business_finance_stats_failed',
                     message: statsError.message || 'Failed to get finance stats',
                     details: statsError.details,
+                    hint: statsError.hint,
+                    code: statsError.code,
                 },
                 { status: 500 }
             );
         }
+        
+        logDebug('FinanceAll', 'get_business_finance_stats success', {
+            hasData: !!businessStats,
+            staffStatsCount: businessStats?.staff_stats?.length || 0,
+        });
 
         // Получаем все смены для расчета открытых смен (они требуют динамического расчета)
         let shiftsQuery = admin
