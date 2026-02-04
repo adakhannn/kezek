@@ -45,26 +45,8 @@ BEGIN
           AND (p_branch_id IS NULL OR st.branch_id = p_branch_id)
         GROUP BY st.id, st.full_name, st.is_active, st.branch_id
     ),
-    total_data AS (
-        SELECT 
-            COUNT(s.id) AS total_shifts,
-            COUNT(*) FILTER (WHERE s.status = 'closed') AS closed_shifts,
-            COUNT(*) FILTER (WHERE s.status = 'open') AS open_shifts,
-            COALESCE(SUM(s.total_amount) FILTER (WHERE s.status = 'closed'), 0) AS total_amount,
-            COALESCE(SUM(s.master_share) FILTER (WHERE s.status = 'closed'), 0) AS total_master,
-            COALESCE(SUM(s.salon_share) FILTER (WHERE s.status = 'closed'), 0) AS total_salon,
-            COALESCE(SUM(s.consumables_amount) FILTER (WHERE s.status = 'closed'), 0) AS total_consumables,
-            COALESCE(SUM(s.late_minutes) FILTER (WHERE s.status = 'closed'), 0) AS total_late_minutes
-        FROM public.staff st
-        LEFT JOIN public.staff_shifts s ON s.staff_id = st.id
-            AND s.biz_id = p_biz_id
-            AND s.shift_date >= p_date_from
-            AND s.shift_date <= p_date_to
-        WHERE st.biz_id = p_biz_id
-          AND (p_branch_id IS NULL OR st.branch_id = p_branch_id)
-    )
-    SELECT jsonb_build_object(
-        'staff_stats', COALESCE(jsonb_agg(
+    staff_stats_json AS (
+        SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
                 'staff_id', sd.staff_id,
                 'staff_name', sd.staff_name,
@@ -84,7 +66,29 @@ BEGIN
                 )
             )
             ORDER BY sd.staff_name
-        ), '[]'::jsonb),
+        ), '[]'::jsonb) AS staff_stats
+        FROM staff_data sd
+    ),
+    total_data AS (
+        SELECT 
+            COUNT(s.id) AS total_shifts,
+            COUNT(*) FILTER (WHERE s.status = 'closed') AS closed_shifts,
+            COUNT(*) FILTER (WHERE s.status = 'open') AS open_shifts,
+            COALESCE(SUM(s.total_amount) FILTER (WHERE s.status = 'closed'), 0) AS total_amount,
+            COALESCE(SUM(s.master_share) FILTER (WHERE s.status = 'closed'), 0) AS total_master,
+            COALESCE(SUM(s.salon_share) FILTER (WHERE s.status = 'closed'), 0) AS total_salon,
+            COALESCE(SUM(s.consumables_amount) FILTER (WHERE s.status = 'closed'), 0) AS total_consumables,
+            COALESCE(SUM(s.late_minutes) FILTER (WHERE s.status = 'closed'), 0) AS total_late_minutes
+        FROM public.staff st
+        LEFT JOIN public.staff_shifts s ON s.staff_id = st.id
+            AND s.biz_id = p_biz_id
+            AND s.shift_date >= p_date_from
+            AND s.shift_date <= p_date_to
+        WHERE st.biz_id = p_biz_id
+          AND (p_branch_id IS NULL OR st.branch_id = p_branch_id)
+    )
+    SELECT jsonb_build_object(
+        'staff_stats', ssj.staff_stats,
         'total_stats', jsonb_build_object(
             'total_shifts', td.total_shifts,
             'closed_shifts', td.closed_shifts,
@@ -97,7 +101,7 @@ BEGIN
         )
     )
     INTO v_result
-    FROM staff_data sd
+    FROM staff_stats_json ssj
     CROSS JOIN total_data td;
     
     -- Если нужно включить открытые смены, добавляем их расчеты

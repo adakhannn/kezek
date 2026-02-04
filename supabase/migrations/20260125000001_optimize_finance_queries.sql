@@ -213,9 +213,9 @@ begin
             and s.shift_date <= p_date_to
         where st.biz_id = p_biz_id
           and (p_branch_id is null or st.branch_id = p_branch_id)
-    )
-    select jsonb_build_object(
-        'staff_stats', coalesce(jsonb_agg(
+    ),
+    staff_stats_json AS (
+        select coalesce(jsonb_agg(
             jsonb_build_object(
                 'staff_id', sd.staff_id,
                 'staff_name', sd.staff_name,
@@ -235,7 +235,11 @@ begin
                 )
             )
             order by sd.staff_name
-        ), '[]'::jsonb),
+        ), '[]'::jsonb) as staff_stats
+        from staff_data sd
+    )
+    select jsonb_build_object(
+        'staff_stats', ssj.staff_stats,
         'total_stats', jsonb_build_object(
             'total_shifts', td.total_shifts,
             'closed_shifts', td.closed_shifts,
@@ -248,7 +252,7 @@ begin
         )
     )
     into v_result
-    from staff_data sd
+    from staff_stats_json ssj
     cross join total_data td;
     
     -- Если нужно включить открытые смены, добавляем их расчеты
