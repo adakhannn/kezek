@@ -360,6 +360,33 @@ export async function POST(req: Request) {
                     );
                 }
             }
+            
+            // Удаляем записи, которых нет в новом списке
+            const newItemIds = new Set<string>();
+            for (const it of items) {
+                if ((it as { id?: string }).id) {
+                    newItemIds.add((it as { id?: string }).id!);
+                }
+            }
+            
+            const itemsToDelete: string[] = [];
+            for (const existingId of existingItemIds) {
+                if (!newItemIds.has(existingId)) {
+                    itemsToDelete.push(existingId);
+                }
+            }
+            
+            if (itemsToDelete.length > 0) {
+                const { error: deleteError } = await writeClient
+                    .from('staff_shift_items')
+                    .delete()
+                    .in('id', itemsToDelete);
+                
+                if (deleteError) {
+                    logError('StaffShiftItems', 'Error deleting removed items', deleteError);
+                    // Не возвращаем ошибку, так как основные данные уже сохранены
+                }
+            }
         }
 
         // Пересчитываем суммы для открытой смены на основе позиций

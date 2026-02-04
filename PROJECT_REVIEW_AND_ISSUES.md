@@ -357,25 +357,96 @@ const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 ---
 
-### 12. Отсутствие валидации типов в runtime
+### 12. Отсутствие валидации типов в runtime ✅ ЧАСТИЧНО РЕШЕНО
 **Проблема:** TypeScript проверяет типы только на этапе компиляции  
 **Риск:** Средний - ошибки типов в runtime при невалидных данных из API  
-**Решение:**
-- Использовать Zod для runtime валидации
-- Валидировать данные на границах (API routes, компоненты)
+**Текущее состояние:**
+- ✅ Создана инфраструктура валидации (`apps/web/src/lib/validation/`)
+- ✅ Функции `validateRequest()` и `validateQuery()` для валидации в API routes
+- ✅ Готовые схемы валидации (UUID, email, phone, booking schemas)
+- ✅ Используется в 2 API routes: `quick-hold`, `quick-book-guest`
+- ❌ Остальные ~98+ API routes не используют валидацию
+- ❌ Клиентские компоненты не валидируют данные, приходящие из API
+
+**Решение (РЕАЛИЗОВАНО):**
+- ✅ Создан модуль `apps/web/src/lib/validation/` с утилитами для валидации
+- ✅ Функции `validateRequest()` и `validateQuery()` для валидации запросов
+- ✅ Готовые схемы: `uuidSchema`, `emailSchema`, `phoneSchema`, `quickHoldSchema`, `quickBookGuestSchema`
+- ✅ Документация `apps/web/src/lib/validation/README.md` с примерами использования
+
+**Осталось:**
+- Мигрировать остальные ~98+ API routes на использование `validateRequest()`/`validateQuery()`
+- Добавить валидацию данных из API в клиентских компонентах (опционально, но рекомендуется)
+- Создать схемы валидации для других типов данных (staff, services, branches, promotions, etc.)
+
+**Рекомендации:**
+- Использовать `validateRequest()` во всех POST/PUT/PATCH routes
+- Использовать `validateQuery()` во всех GET routes с параметрами
+- В клиентских компонентах валидировать ответы API перед использованием (опционально, но повышает надежность)
 
 ---
 
-### 13. Потенциальные проблемы с производительностью
-**Проблемы:**
-- Отсутствие мемоизации в некоторых компонентах
-- Большие компоненты без code splitting
-- Отсутствие индексов в БД (нужно проверить миграции)
+### 13. Потенциальные проблемы с производительностью ✅ ЧАСТИЧНО РЕШЕНО
+**Риск:** Средний - проблемы с производительностью при росте данных и пользователей
 
-**Решение:**
-- Использовать React.memo для тяжелых компонентов
-- Добавить динамические импорты для больших компонентов
-- Провести аудит производительности БД
+**Текущее состояние:**
+
+**1. Мемоизация:**
+- ✅ Используется `useMemo` и `useCallback` в ~25 компонентах
+- ✅ Есть кэширование в `useSlotsLoader` (TTL 5 минут, debounce 300ms)
+- ✅ Создан хук `useMemoizedCallback` в мобильном приложении
+- ✅ Есть модуль `apps/web/src/lib/performance.ts` для мониторинга производительности
+- ❌ Только 1 компонент использует `React.memo` (`TelegramLoginWidget.tsx`)
+- ❌ Многие компоненты без мемоизации могут перерендериваться излишне часто
+
+**2. Code Splitting:**
+- ❌ Нет использования `next/dynamic` для динамических импортов
+- ✅ Есть `Suspense` в некоторых местах (`admin/performance/page.tsx`)
+- ❌ Большие компоненты загружаются полностью:
+  - `apps/web/src/app/staff/StaffFinanceView.tsx` - **1704 строки**
+  - `apps/web/src/app/b/[slug]/view.tsx` - **~1200 строк** (улучшено с 1629)
+  - `apps/web/src/app/_components/i18n/LanguageProvider.tsx` - большой компонент
+
+**3. Индексы БД:**
+- ✅ Создано множество индексов в миграциях:
+  - Индексы для `staff_shifts` (staff_id, date, biz_id, status)
+  - Индексы для `branch_promotions` (branch_id, biz_id, is_active, type)
+  - Индексы для рейтинговой системы (staff_day_metrics, branch_day_metrics, biz_day_metrics)
+  - Индексы для `client_promotion_usage`, `client_referrals`
+  - Индексы для `whatsapp_otp_codes`, `profiles` (telegram_id, yandex_id)
+  - Индексы для `branch_working_hours`, `staff_shift_items`
+- ✅ Есть оптимизированные запросы в `20260125000001_optimize_finance_queries.sql`
+- ⚠️ Нужно проверить покрытие индексами всех частых запросов
+
+**Решение (РЕАЛИЗОВАНО):**
+- ✅ Создан модуль мониторинга производительности (`apps/web/src/lib/performance.ts`)
+- ✅ Настроены пороговые значения для критичных операций:
+  - `get_free_slots_service_day_v2`: warn 2s, error 5s
+  - `shift_close`: warn 3s, error 10s
+  - `apply_promotion`: warn 1s, error 3s
+  - `recalculate_ratings`: warn 30s, error 60s
+- ✅ Кэширование и debounce в `useSlotsLoader`
+- ✅ Множество индексов БД для оптимизации запросов
+- ✅ Страница мониторинга производительности (`/admin/performance`)
+
+**Осталось:**
+- Добавить `React.memo` для тяжелых компонентов (списки, таблицы, формы)
+- Использовать `next/dynamic` для больших компонентов:
+  - `StaffFinanceView.tsx` - можно загружать динамически
+  - `LanguageProvider.tsx` - можно загружать динамически
+  - Другие большие компоненты в dashboard
+- Провести аудит производительности БД:
+  - Проверить EXPLAIN для медленных запросов
+  - Добавить недостающие индексы
+  - Оптимизировать N+1 запросы
+- Добавить `useMemo`/`useCallback` в компоненты, которые часто перерендериваются
+- Настроить React DevTools Profiler для выявления узких мест
+
+**Рекомендации:**
+- Использовать `React.memo` для компонентов, которые получают стабильные props
+- Использовать `next/dynamic` с `ssr: false` для компонентов, не критичных для SEO
+- Регулярно проверять производительность через `/admin/performance`
+- Мониторить медленные запросы в Supabase Dashboard
 
 ---
 
