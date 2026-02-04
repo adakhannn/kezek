@@ -125,10 +125,22 @@ export async function GET(req: Request) {
         });
 
         if (statsError) {
-            logError('FinanceAll', 'Error calling get_business_finance_stats RPC', statsError);
-            // Fallback на старый метод, если функция не работает
-            logDebug('FinanceAll', 'Falling back to old method');
-            return await getFinanceStatsLegacy(admin, bizId, dateFrom, dateTo, branchId, staffList || []);
+            logError('FinanceAll', 'Error calling get_business_finance_stats RPC', {
+                error: statsError.message,
+                code: statsError.code,
+                details: statsError.details,
+                hint: statsError.hint,
+            });
+            // Возвращаем ошибку с деталями вместо fallback
+            return NextResponse.json(
+                { 
+                    ok: false, 
+                    error: 'get_business_finance_stats_failed',
+                    message: statsError.message || 'Failed to get finance stats',
+                    details: statsError.details,
+                },
+                { status: 500 }
+            );
         }
 
         // Получаем все смены для расчета открытых смен (они требуют динамического расчета)

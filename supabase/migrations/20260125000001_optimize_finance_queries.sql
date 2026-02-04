@@ -21,6 +21,8 @@ create or replace function public.get_staff_finance_stats(
 returns jsonb
 language plpgsql
 stable
+security definer
+set search_path = public
 as $$
 declare
     v_result jsonb;
@@ -157,6 +159,8 @@ create or replace function public.get_business_finance_stats(
 returns jsonb
 language plpgsql
 stable
+security definer
+set search_path = public
 as $$
 declare
     v_result jsonb;
@@ -220,6 +224,10 @@ end;
 $$;
 
 comment on function public.get_business_finance_stats is 'Получает финансовую статистику по всем сотрудникам бизнеса за период. Оптимизированная версия с агрегацией на стороне БД.';
+
+-- Предоставляем права на выполнение функции
+grant execute on function public.get_business_finance_stats(uuid, date, date, uuid, boolean) to authenticated;
+grant execute on function public.get_business_finance_stats(uuid, date, date, uuid, boolean) to service_role;
 
 -- Индекс для ускорения запросов по датам смен
 create index if not exists staff_shifts_biz_date_status_idx
