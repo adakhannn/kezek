@@ -8,6 +8,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { buildIcs } from '@/lib/ics';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendTelegram } from '@/lib/senders/telegram';

@@ -6,6 +6,7 @@ import {NextResponse} from "next/server";
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { quickHoldSchema } from '@/lib/validation/bookingSchemas';
 

@@ -63,7 +63,7 @@ export async function validateRequest<T extends z.ZodTypeAny>(
         
         // Обработка ошибок валидации Zod
         if (error instanceof z.ZodError) {
-            const errors = error.errors.map((err) => ({
+            const errors = error.issues.map((err) => ({
                 path: err.path.join('.'),
                 message: err.message,
             }));
@@ -115,10 +115,10 @@ export async function validateRequest<T extends z.ZodTypeAny>(
  * }
  * ```
  */
-export async function withValidation<T extends z.ZodTypeAny>(
+export function withValidation<T extends z.ZodTypeAny>(
     schema: T,
     handler: (data: z.infer<T>, req: Request) => Promise<NextResponse>
-): Promise<NextResponse> {
+): (req: Request) => Promise<NextResponse> {
     return async (req: Request) => {
         const result = await validateRequest(req, schema);
         
@@ -159,7 +159,7 @@ export function validateQuery<T extends z.ZodTypeAny>(
         return { success: true, data };
     } catch (error) {
         if (error instanceof z.ZodError) {
-            const errors = error.errors.map((err) => ({
+            const errors = error.issues.map((err) => ({
                 path: err.path.join('.'),
                 message: err.message,
             }));
