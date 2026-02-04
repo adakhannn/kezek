@@ -355,6 +355,7 @@ type Stats = {
                 consumables_amount: number;
                 note: string | null;
                 booking_id: string | null;
+                created_at: string | null;
             }>;
         }>;
 };

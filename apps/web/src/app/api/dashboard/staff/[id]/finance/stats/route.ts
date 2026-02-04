@@ -142,16 +142,7 @@ export async function GET(
         // Получаем позиции (клиентов) для всех смен
         // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
         const shiftIds = (finalShifts || []).map(s => s.id);
-        const shiftItemsMap: Record<string, Array<{
-            id: string;
-            client_name: string | null;
-            service_name: string | null;
-            service_amount: number;
-            consumables_amount: number;
-            note: string | null;
-            booking_id: string | null;
-            created_at: string | null;
-        }>> = {};
+        const shiftItemsMap: Record<string, ShiftItem[]> = {};
         
         if (shiftIds.length > 0) {
             const { data: itemsData, error: itemsError } = await admin
@@ -177,8 +168,8 @@ export async function GET(
                         consumables_amount: Number(item.consumables_amount ?? 0),
                         note: item.note,
                         booking_id: item.booking_id,
-                        created_at: item.created_at,
-                    });
+                        created_at: item.created_at ?? null,
+                    } as ShiftItem);
                 }
             }
         }
@@ -327,6 +318,18 @@ export async function GET(
                     displayGuaranteedAmount = Math.round(displayHoursWorked * hourlyRate * 100) / 100;
                 }
                 
+                // Создаем items с явным типом ShiftItem[]
+                const shiftItems: ShiftItem[] = (shiftItemsMap[s.id] || []).map((item): ShiftItem => ({
+                    id: item.id,
+                    client_name: item.client_name || '',
+                    service_name: item.service_name || '',
+                    service_amount: item.service_amount,
+                    consumables_amount: item.consumables_amount,
+                    note: item.note || null,
+                    booking_id: item.booking_id || null,
+                    created_at: item.created_at ?? null,
+                }));
+                
                 return {
                     id: s.id,
                     shift_date: s.shift_date,
@@ -341,16 +344,7 @@ export async function GET(
                     hours_worked: displayHoursWorked,
                     hourly_rate: displayHourlyRate,
                     guaranteed_amount: displayGuaranteedAmount,
-                    items: (shiftItemsMap[s.id] || []).map((item): ShiftItem => ({
-                        id: item.id,
-                        client_name: item.client_name || '',
-                        service_name: item.service_name || '',
-                        service_amount: item.service_amount,
-                        consumables_amount: item.consumables_amount,
-                        note: item.note || null,
-                        booking_id: item.booking_id || null,
-                        created_at: item.created_at || null,
-                    })),
+                    items: shiftItems,
                 };
             }) || [],
         };
