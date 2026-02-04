@@ -96,7 +96,7 @@ function isSensitiveKey(key: string): boolean {
  * @param depth - Глубина рекурсии (защита от циклических ссылок)
  * @returns Очищенный объект
  */
-function sanitizeObject(obj: unknown, depth = 0): unknown {
+export function sanitizeObject(obj: unknown, depth = 0): unknown {
     // Защита от слишком глубокой рекурсии
     if (depth > 10) {
         return '[Max depth reached]';
