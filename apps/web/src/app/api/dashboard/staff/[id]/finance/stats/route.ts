@@ -12,6 +12,17 @@ export const runtime = 'nodejs';
 
 type Period = 'day' | 'month' | 'year';
 
+type ShiftItem = {
+    id: string;
+    client_name: string;
+    service_name: string;
+    service_amount: number;
+    consumables_amount: number;
+    note: string | null;
+    booking_id: string | null;
+    created_at: string | null;
+};
+
 export async function GET(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -139,12 +150,13 @@ export async function GET(
             consumables_amount: number;
             note: string | null;
             booking_id: string | null;
+            created_at: string | null;
         }>> = {};
         
         if (shiftIds.length > 0) {
             const { data: itemsData, error: itemsError } = await admin
                 .from('staff_shift_items')
-                .select('id, shift_id, client_name, service_name, service_amount, consumables_amount, note, booking_id')
+                .select('id, shift_id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
                 .in('shift_id', shiftIds)
                 .order('created_at', { ascending: true });
 
@@ -165,6 +177,7 @@ export async function GET(
                         consumables_amount: Number(item.consumables_amount ?? 0),
                         note: item.note,
                         booking_id: item.booking_id,
+                        created_at: item.created_at,
                     });
                 }
             }
@@ -328,7 +341,7 @@ export async function GET(
                     hours_worked: displayHoursWorked,
                     hourly_rate: displayHourlyRate,
                     guaranteed_amount: displayGuaranteedAmount,
-                    items: (shiftItemsMap[s.id] || []).map((item) => ({
+                    items: (shiftItemsMap[s.id] || []).map((item): ShiftItem => ({
                         id: item.id,
                         client_name: item.client_name || '',
                         service_name: item.service_name || '',
@@ -336,6 +349,7 @@ export async function GET(
                         consumables_amount: item.consumables_amount,
                         note: item.note || null,
                         booking_id: item.booking_id || null,
+                        created_at: item.created_at || null,
                     })),
                 };
             }) || [],

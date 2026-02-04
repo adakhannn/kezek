@@ -3,6 +3,8 @@
 import StaffFinanceStats from './components/StaffFinanceStats';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import StaffFinanceView from '@/app/staff/StaffFinanceView';
+
 
 export default function StaffFinancePageClient({
     id,
@@ -31,6 +33,11 @@ export default function StaffFinancePageClient({
                         {t('staff.finance', 'Финансы')}: {fullName ?? ''}
                     </h1>
                 </div>
+            </div>
+
+            {/* Текущая смена и управление клиентами - для владельца */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+                <StaffFinanceView staffId={id} />
             </div>
 
             {/* Статистика */}

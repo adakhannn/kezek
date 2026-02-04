@@ -2,7 +2,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -19,10 +19,9 @@ export async function POST(req: Request) {
         RateLimitConfigs.normal,
         async () => {
             try {
-                const { supabase, staffId } = await getStaffContext();
-
-        const body = await req.json().catch(() => ({}));
-        const items = Array.isArray(body.items) ? body.items : [];
+                const body = await req.json().catch(() => ({}));
+                const items = Array.isArray(body.items) ? body.items : [];
+                const targetStaffId = body.staffId as string | undefined;
 
         // Валидация
         for (const it of items) {
@@ -34,6 +33,69 @@ export async function POST(req: Request) {
                     { status: 400 }
                 );
             }
+        }
+
+        let supabase;
+        let staffId: string;
+        let isOwnerMode = false;
+        let useServiceClient = false;
+
+        // Если передан staffId, проверяем права владельца/менеджера
+        if (targetStaffId) {
+            const { supabase: managerSupabase, bizId } = await getBizContextForManagers();
+            supabase = managerSupabase;
+            useServiceClient = true; // Используем service client для операций записи
+            
+            // Проверяем права владельца/админа/менеджера
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+            }
+
+            const { data: roles } = await supabase
+                .from('user_roles')
+                .select('roles!inner(key)')
+                .eq('user_id', user.id)
+                .eq('biz_id', bizId);
+
+            const hasPermission = (roles ?? []).some(r => {
+                if (!r || typeof r !== 'object' || !('roles' in r)) return false;
+                const roleObj = (r as { roles?: { key?: unknown } | null }).roles;
+                if (!roleObj || typeof roleObj !== 'object' || !('key' in roleObj)) return false;
+                const key = roleObj.key;
+                return typeof key === 'string' && ['owner', 'admin', 'manager'].includes(key);
+            });
+
+            // Также проверяем через owner_id
+            const { data: owned } = await supabase
+                .from('businesses')
+                .select('id')
+                .eq('owner_id', user.id)
+                .eq('id', bizId)
+                .maybeSingle();
+
+            if (!hasPermission && !owned) {
+                return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
+            }
+
+            // Проверяем, что сотрудник принадлежит бизнесу
+            const { data: staff } = await supabase
+                .from('staff')
+                .select('id, biz_id')
+                .eq('id', targetStaffId)
+                .maybeSingle();
+
+            if (!staff || String(staff.biz_id) !== String(bizId)) {
+                return NextResponse.json({ ok: false, error: 'STAFF_NOT_IN_THIS_BUSINESS' }, { status: 403 });
+            }
+
+            staffId = targetStaffId;
+            isOwnerMode = true;
+        } else {
+            // Обычный режим - сотрудник редактирует свою смену
+            const context = await getStaffContext();
+            supabase = context.supabase;
+            staffId = context.staffId;
         }
 
         // Находим открытую смену за сегодня
@@ -81,8 +143,11 @@ export async function POST(req: Request) {
 
         const shiftId = existing.id;
 
+        // Для операций записи в режиме владельца используем service client
+        const writeClient = useServiceClient ? getServiceClient() : supabase;
+
         // Удаляем старые позиции
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await writeClient
             .from('staff_shift_items')
             .delete()
             .eq('shift_id', shiftId);
@@ -246,7 +311,7 @@ export async function POST(req: Request) {
                 );
 
             if (cleanItems.length > 0) {
-                const { error: insertError } = await supabase
+                const { error: insertError } = await writeClient
                     .from('staff_shift_items')
                     .insert(cleanItems);
 
@@ -290,7 +355,7 @@ export async function POST(req: Request) {
         const salonShare = salonShareFromAmount + finalConsumablesAmount; // расходники 100% идут салону
 
         // Обновляем суммы в открытой смене
-        const { error: updateShiftError } = await supabase
+        const { error: updateShiftError } = await writeClient
             .from('staff_shifts')
             .update({
                 total_amount: totalAmount,

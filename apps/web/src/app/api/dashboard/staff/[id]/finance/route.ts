@@ -98,7 +98,7 @@ export async function GET(
         if (shift) {
             const { data: itemsData, error: itemsError } = await admin
                 .from('staff_shift_items')
-                .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id')
+                .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
                 .eq('shift_id', shift.id)
                 .order('created_at', { ascending: true });
 

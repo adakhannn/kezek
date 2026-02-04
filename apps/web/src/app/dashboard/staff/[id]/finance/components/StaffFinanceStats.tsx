@@ -14,6 +14,7 @@ type ShiftItem = {
     consumables_amount: number;
     note: string | null;
     booking_id: string | null;
+    created_at: string | null;
 };
 
 type Shift = {
@@ -239,43 +240,65 @@ function ShiftCard({
                         </h4>
                         <div className="space-y-1">
                             {/* Заголовок колонок */}
-                            <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr] gap-2 px-1.5 pb-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr,1fr] gap-2 px-1.5 pb-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                 <span>{t('finance.staffStats.client', 'Клиент')}</span>
                                 <span>{t('finance.staffStats.service', 'Услуга')}</span>
                                 <span className="text-right">{t('finance.staffStats.amount', 'Сумма')}</span>
                                 <span className="text-right">{t('finance.staffStats.consumables', 'Расходники')}</span>
+                                <span className="text-right">{t('finance.staffStats.createdAt', 'Время заполнения')}</span>
                             </div>
-                            {shift.items.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="grid grid-cols-[2fr,2fr,1fr,1fr] gap-2 items-center py-1 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                                >
-                                    <div className="min-w-0">
-                                        <div className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate leading-tight">
-                                            {item.client_name || t('finance.staffStats.clientNotSpecified', 'Клиент не указан')}
+                            {shift.items.map((item) => {
+                                const formatTime = (iso: string | null) => {
+                                    if (!iso) return '—';
+                                    try {
+                                        const d = new Date(iso);
+                                        const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
+                                        return d.toLocaleTimeString(localeMap[locale] || 'ru-RU', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        });
+                                    } catch {
+                                        return '—';
+                                    }
+                                };
+                                
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className="grid grid-cols-[2fr,2fr,1fr,1fr,1fr] gap-2 items-center py-1 px-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                                    >
+                                        <div className="min-w-0">
+                                            <div className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate leading-tight">
+                                                {item.client_name || t('finance.staffStats.clientNotSpecified', 'Клиент не указан')}
+                                            </div>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="text-xs text-gray-700 dark:text-gray-300 truncate leading-tight">
+                                                {item.service_name || <span className="text-gray-400">—</span>}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight">
+                                                {item.service_amount === 0 && !item.service_name
+                                                    ? <span className="text-gray-400">—</span>
+                                                    : `${item.service_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight">
+                                                {item.consumables_amount === 0
+                                                    ? <span className="text-gray-400">0</span>
+                                                    : `${item.consumables_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
+                                                {formatTime(item.created_at)}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <div className="text-xs text-gray-700 dark:text-gray-300 truncate leading-tight">
-                                            {item.service_name || <span className="text-gray-400">—</span>}
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight">
-                                            {item.service_amount === 0 && !item.service_name
-                                                ? <span className="text-gray-400">—</span>
-                                                : `${item.service_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`}
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight">
-                                            {item.consumables_amount === 0
-                                                ? <span className="text-gray-400">0</span>
-                                                : `${item.consumables_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

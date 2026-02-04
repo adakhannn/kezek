@@ -22,6 +22,7 @@ type ShiftItem = {
     serviceAmount: number;
     consumablesAmount: number;
     bookingId?: string | null;
+    createdAt?: string | null;
 };
 
 type ServiceName = {
@@ -234,6 +235,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     consumables_amount?: number; // из БД / для обратной совместимости
                     bookingId?: string | null;
                     booking_id?: string | null; // для обратной совместимости
+                    createdAt?: string | null;
+                    created_at?: string | null; // из БД
                 }) => ({
                     id: it.id,
                     clientName: it.clientName ?? it.client_name ?? '',
@@ -255,6 +258,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                 0
                         ) || 0,
                     bookingId: it.bookingId ?? it.booking_id ?? null,
+                    createdAt: it.createdAt ?? it.created_at ?? null,
                 }));
                 setItems(loadedItems);
             } else {
@@ -332,8 +336,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const isClosed = todayShift && todayShift.status === 'closed';
 
     // Автосохранение клиентов при изменении (debounce)
-    // Отключаем для владельца бизнеса (readonly режим)
-    const isReadOnly = !!staffId;
+    // Владелец может редактировать, поэтому isReadOnly = false
+    const isReadOnly = false;
     useEffect(() => {
         // Не сохраняем при первой загрузке, если смена закрыта, или в режиме просмотра
         if (isInitialLoad || !isOpen || isReadOnly) return;
@@ -344,7 +348,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                 const res = await fetch('/api/staff/shift/items', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items }),
+                    body: JSON.stringify({ items, staffId: staffId || undefined }),
                 });
                 const json = await res.json();
                 if (!json.ok) {
@@ -1137,11 +1141,13 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                 ) : (
                     <div className="space-y-1.5 text-sm">
                         {/* Заголовок колонок (для понимания структуры) */}
-                        <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr] gap-2 px-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-2 px-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             <span>{t('staff.finance.clients.client', 'Клиент')}</span>
                             <span>{t('staff.finance.clients.service', 'Услуга / комментарий')}</span>
                             <span className="text-right">{t('staff.finance.clients.amount', 'Сумма')}</span>
                             <span className="text-right">{t('staff.finance.clients.consumables', 'Расходники')}</span>
+                            <span className="text-right">{t('staff.finance.clients.createdAt', 'Время заполнения')}</span>
+                            <span></span>
                         </div>
 
                         {items.map((item, idx) => {
@@ -1167,7 +1173,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                         className={`group flex items-center justify-between py-2 px-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all ${isOpen && !isReadOnly ? 'cursor-pointer hover:shadow-sm' : ''}`}
                                         onClick={() => isOpen && !isReadOnly && setExpandedItems((prev) => new Set(prev).add(idx))}
                                     >
-                                        <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr] gap-2 items-center min-w-0">
+                                        <div className="flex-1 grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-2 items-center min-w-0">
                                             <div className="min-w-0">
                                                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                                                     {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
@@ -1192,9 +1198,14 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                         : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {t('staff.finance.shift.som', 'сом')}
                                                 </div>
                                             </div>
+                                            <div className="text-right">
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {item.createdAt ? formatTime(item.createdAt, locale) : <span className="text-gray-400">—</span>}
+                                                </div>
+                                            </div>
                                         </div>
                                         {isOpen && !isReadOnly && (
-                                            <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center gap-1 ml-2">
                                                 <button
                                                     type="button"
                                                     className="p-1 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded transition-colors"
