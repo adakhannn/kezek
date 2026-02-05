@@ -690,9 +690,17 @@ export async function POST(req: Request) {
         }
 
         // --- Telegram владельцу (если подключен и включены настройки)
-        if (ownerTelegramId && hasTelegramConfig && ownerNotifyTelegram && ownerTelegramVerified) {
+        // Для владельца отправляем уведомление даже если telegram не верифицирован (для служебных уведомлений это допустимо)
+        console.log('[notify] Owner Telegram check:', {
+            hasTelegramId: !!ownerTelegramId,
+            telegramId: ownerTelegramId,
+            hasTelegramConfig,
+            ownerNotifyTelegram,
+            ownerTelegramVerified,
+        });
+        if (ownerTelegramId && hasTelegramConfig && ownerNotifyTelegram) {
             try {
-                console.log('[notify] Sending Telegram to owner:', ownerTelegramId);
+                console.log('[notify] Sending Telegram to owner:', ownerTelegramId, '(verified:', ownerTelegramVerified, ')');
                 await sendTelegram({ chatId: ownerTelegramId, text: telegramText });
                 telegramSent += 1;
                 console.log('[notify] Telegram to owner sent successfully');
@@ -702,10 +710,10 @@ export async function POST(req: Request) {
             }
         } else if (ownerTelegramId && !ownerNotifyTelegram) {
             console.log('[notify] Skipping Telegram to owner: notifications disabled');
-        } else if (ownerTelegramId && !ownerTelegramVerified) {
-            console.log('[notify] Skipping Telegram to owner: telegram not verified');
         } else if (!ownerTelegramId) {
             console.log('[notify] No owner telegram_id for Telegram');
+        } else if (!hasTelegramConfig) {
+            console.log('[notify] Telegram not configured: missing TELEGRAM_BOT_TOKEN');
         }
 
         return NextResponse.json({ ok: true, sent, whatsappSent, telegramSent });
