@@ -106,40 +106,7 @@ export async function POST(req: Request) {
             }
 
             logDebug('QuickBookGuest', 'Guest booking created', { bookingId });
-            logDebug('QuickBookGuest', 'Attempting to confirm booking');
-
-            // Автоматически подтверждаем бронирование
-            const { data: confirmData, error: confirmError } = await supabase.rpc('confirm_booking', {
-                p_booking_id: bookingId,
-            });
-            
-            if (confirmError) {
-                logError('QuickBookGuest', 'Failed to confirm booking', {
-                    error: confirmError.message,
-                    code: confirmError.code,
-                    details: confirmError.details,
-                    hint: confirmError.hint,
-                });
-                return NextResponse.json(
-                    { ok: false, error: 'confirm_failed', message: confirmError.message },
-                    { status: 400 }
-                );
-            }
-            
-            logDebug('QuickBookGuest', 'Booking confirmed successfully', { bookingId, confirmData });
-            
-            // Проверяем статус бронирования после подтверждения
-            const { data: bookingCheck, error: checkError } = await supabase
-                .from('bookings')
-                .select('id, status')
-                .eq('id', bookingId)
-                .single();
-
-            if (checkError) {
-                logError('QuickBookGuest', 'Failed to check booking status', checkError);
-            } else {
-                logDebug('QuickBookGuest', 'Booking status after confirm', { status: bookingCheck?.status });
-            }
+            // Бронирование создается сразу со статусом confirmed, подтверждение не требуется
 
             // Отправляем уведомление о подтверждении
             try {

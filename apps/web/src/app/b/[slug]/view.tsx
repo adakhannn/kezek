@@ -309,7 +309,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     .select('start_at, end_at, status')
                     .eq('staff_id', staffId)
                     .eq('branch_id', targetBranchId)
-                    .in('status', ['hold', 'confirmed', 'paid'])
+                    .in('status', ['confirmed', 'paid'])  // Только подтвержденные и оплаченные, без hold
                     .gte('start_at', searchStart.toISOString())
                     .lte('end_at', searchEnd.toISOString());
 

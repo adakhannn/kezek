@@ -67,8 +67,8 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         try {
             const startISO = formatInTimeZone(slotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
             
-            // Создаем бронирование со статусом hold, затем сразу подтверждаем
-            const { data: holdData, error: holdError } = await supabase.rpc('hold_slot', {
+            // Создаем бронирование сразу со статусом confirmed (без hold)
+            const { data: bookingData, error: bookingError } = await supabase.rpc('hold_slot', {
                 p_biz_id: bizId,
                 p_branch_id: branchId,
                 p_service_id: service.id,
@@ -76,35 +76,21 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 p_start: startISO,
             });
 
-            if (holdError) {
-                logError('BookingFlow', '[hold_slot] error', holdError);
+            if (bookingError) {
+                logError('BookingFlow', '[hold_slot] error', bookingError);
                 alert(
-                    fmtErr(holdError, t) ||
+                    fmtErr(bookingError, t) ||
                         t(
                             'booking.error.holdFailed',
-                            'Не удалось зарезервировать слот. Пожалуйста, обновите страницу и попробуйте ещё раз.'
+                            'Не удалось создать бронирование. Пожалуйста, обновите страницу и попробуйте ещё раз.'
                         )
                 );
                 return;
             }
 
-            const bookingId = String(holdData);
-            
-            // Сразу подтверждаем бронирование
-            const { error: confirmError } = await supabase.rpc('confirm_booking', { p_booking_id: bookingId });
-            if (confirmError) {
-                logError('BookingFlow', '[confirm_booking] error', confirmError);
-                alert(
-                    fmtErr(confirmError, t) ||
-                        t(
-                            'booking.error.confirmFailed',
-                            'Слот был зарезервирован, но не удалось подтвердить бронирование. Свяжитесь с салоном для уточнения.'
-                        )
-                );
-                return;
-            }
+            const bookingId = String(bookingData);
 
-            // Отправляем уведомление о подтверждении (best effort, с повторной попыткой при сетевой ошибке)
+            // Отправляем уведомление о создании бронирования (best effort, с повторной попыткой при сетевой ошибке)
             void withNetworkRetry(
                 () =>
                     fetch('/api/notify', {
@@ -115,7 +101,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 { retries: 1, delayMs: 500, scope: 'BookingNotify' }
             ).catch((e) => {
                 // Не блокируем пользователя, просто логируем
-                logError('BookingNotify', 'Failed to send confirm notification', e);
+                logError('BookingNotify', 'Failed to send booking notification', e);
             });
 
             // Обновляем кэш слотов после успешного создания бронирования
