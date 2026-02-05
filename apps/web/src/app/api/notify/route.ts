@@ -9,11 +9,11 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse } from '@/lib/apiErrorHandler';
+import { getTimezone } from '@/lib/env';
 import { buildIcs } from '@/lib/ics';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendTelegram } from '@/lib/senders/telegram';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
-import { getTimezone } from '@/lib/env';
 
 const TZ = getTimezone();
 
@@ -32,6 +32,7 @@ interface StaffRow {
     full_name: string;
     email: string | null;
     phone: string | null;
+    user_id?: string | null;
 }
 interface BizRow {
     name: string;
@@ -165,7 +166,7 @@ export async function POST(req: Request) {
             .select(`
         id, status, start_at, end_at, created_at, client_id, client_phone, client_name, client_email,
         services:services!bookings_service_id_fkey ( name_ru, duration_min ),
-        staff:staff!bookings_staff_id_fkey ( full_name, email, phone ),
+        staff:staff!bookings_staff_id_fkey ( full_name, email, phone, user_id ),
         biz:businesses!bookings_biz_id_fkey ( name, email_notify_to, slug, address, phones, owner_id )
       `)
             .eq('id', body.booking_id)
@@ -250,10 +251,13 @@ export async function POST(req: Request) {
             clientName = raw.client_name;
         }
 
-        // E-mail + имя + телефон владельца (через Admin API для надежности)
+        // E-mail + имя + телефон + telegram_id владельца (через Admin API для надежности)
         let ownerEmail: string | null = null;
         let ownerName: string | null = null;
         let ownerPhone: string | null = null;
+        let ownerTelegramId: number | null = null;
+        let ownerNotifyTelegram = true;
+        let ownerTelegramVerified = false;
         if (biz?.owner_id) {
             try {
                 const { data: ou, error: ouError } = await admin.auth.admin.getUserById(biz.owner_id);
@@ -307,11 +311,21 @@ export async function POST(req: Request) {
                 try {
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('full_name')
+                        .select('full_name, telegram_id, notify_telegram, telegram_verified')
                         .eq('id', biz.owner_id)
-                        .maybeSingle<{ full_name: string | null }>();
-                    if (profile?.full_name) {
-                        ownerName = profile.full_name;
+                        .maybeSingle<{ 
+                            full_name: string | null;
+                            telegram_id: number | null;
+                            notify_telegram: boolean | null;
+                            telegram_verified: boolean | null;
+                        }>();
+                    if (profile) {
+                        if (profile.full_name) {
+                            ownerName = profile.full_name;
+                        }
+                        ownerTelegramId = profile.telegram_id ?? null;
+                        ownerNotifyTelegram = profile.notify_telegram ?? true;
+                        ownerTelegramVerified = profile.telegram_verified ?? false;
                     }
                 } catch (e) {
                     console.error('[notify] failed to get owner name from profiles:', e);
@@ -321,6 +335,31 @@ export async function POST(req: Request) {
 
         const staffEmail = staf?.email ?? null;
         const staffPhone = staf?.phone ?? null;
+        
+        // Получаем telegram_id мастера (если у мастера есть user_id)
+        let staffTelegramId: number | null = null;
+        let staffNotifyTelegram = true;
+        let staffTelegramVerified = false;
+        if (staf && 'user_id' in staf && staf.user_id) {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('telegram_id, notify_telegram, telegram_verified')
+                    .eq('id', staf.user_id)
+                    .maybeSingle<{ 
+                        telegram_id: number | null;
+                        notify_telegram: boolean | null;
+                        telegram_verified: boolean | null;
+                    }>();
+                if (profile) {
+                    staffTelegramId = profile.telegram_id ?? null;
+                    staffNotifyTelegram = profile.notify_telegram ?? true;
+                    staffTelegramVerified = profile.telegram_verified ?? false;
+                }
+            } catch (e) {
+                console.error('[notify] failed to get staff telegram data from profiles:', e);
+            }
+        }
         const adminEmails = biz?.email_notify_to ?? [];
 
         const title =
@@ -565,6 +604,44 @@ export async function POST(req: Request) {
             console.log('[notify] Skipping Telegram to client: telegram not verified');
         } else if (!clientTelegramId) {
             console.log('[notify] No client telegram_id for Telegram');
+        }
+
+        // --- Telegram мастеру (если подключен и включены настройки)
+        if (staffTelegramId && hasTelegramConfig && staffNotifyTelegram && staffTelegramVerified) {
+            try {
+                console.log('[notify] Sending Telegram to staff:', staffTelegramId);
+                await sendTelegram({ chatId: staffTelegramId, text: telegramText });
+                telegramSent += 1;
+                console.log('[notify] Telegram to staff sent successfully');
+            } catch (e) {
+                const errorMsg = e instanceof Error ? e.message : String(e);
+                console.error('[notify] Telegram to staff failed:', errorMsg, { chatId: staffTelegramId });
+            }
+        } else if (staffTelegramId && !staffNotifyTelegram) {
+            console.log('[notify] Skipping Telegram to staff: notifications disabled');
+        } else if (staffTelegramId && !staffTelegramVerified) {
+            console.log('[notify] Skipping Telegram to staff: telegram not verified');
+        } else if (!staffTelegramId) {
+            console.log('[notify] No staff telegram_id for Telegram');
+        }
+
+        // --- Telegram владельцу (если подключен и включены настройки)
+        if (ownerTelegramId && hasTelegramConfig && ownerNotifyTelegram && ownerTelegramVerified) {
+            try {
+                console.log('[notify] Sending Telegram to owner:', ownerTelegramId);
+                await sendTelegram({ chatId: ownerTelegramId, text: telegramText });
+                telegramSent += 1;
+                console.log('[notify] Telegram to owner sent successfully');
+            } catch (e) {
+                const errorMsg = e instanceof Error ? e.message : String(e);
+                console.error('[notify] Telegram to owner failed:', errorMsg, { chatId: ownerTelegramId });
+            }
+        } else if (ownerTelegramId && !ownerNotifyTelegram) {
+            console.log('[notify] Skipping Telegram to owner: notifications disabled');
+        } else if (ownerTelegramId && !ownerTelegramVerified) {
+            console.log('[notify] Skipping Telegram to owner: telegram not verified');
+        } else if (!ownerTelegramId) {
+            console.log('[notify] No owner telegram_id for Telegram');
         }
 
         return NextResponse.json({ ok: true, sent, whatsappSent, telegramSent });
