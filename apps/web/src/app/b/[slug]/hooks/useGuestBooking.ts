@@ -51,7 +51,21 @@ export function useGuestBooking(params: UseGuestBookingParams) {
 
     async function createGuestBooking() {
         // Определяем реального мастера: если выбран "любой мастер", используем мастера из слота
-        const actualStaffId = staffId === 'any' ? (slotStaffId || '') : staffId;
+        let actualStaffId: string;
+        if (staffId === 'any') {
+            if (!slotStaffId) {
+                alert(
+                    t(
+                        'booking.guest.missingStaffId',
+                        'Не удалось определить мастера для выбранного времени. Пожалуйста, выберите время еще раз.'
+                    )
+                );
+                return;
+            }
+            actualStaffId = slotStaffId;
+        } else {
+            actualStaffId = staffId;
+        }
         
         if (!service || !actualStaffId || !branchId || !slotTime) {
             alert(
@@ -102,6 +116,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                         headers: { 'content-type': 'application/json' },
                         body: JSON.stringify({
                             biz_id: bizId,
+                            branch_id: branchId, // Добавляем branch_id в запрос
                             service_id: service.id,
                             staff_id: actualStaffId,
                             start_at: startISO,

@@ -31,7 +31,16 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         }
         
         // Определяем реального мастера: если выбран "любой мастер", используем мастера из слота
-        const actualStaffId = staffId === 'any' ? (slotStaffId || '') : staffId;
+        let actualStaffId: string;
+        if (staffId === 'any') {
+            if (!slotStaffId) {
+                alert(t('booking.selectMaster', 'Не удалось определить мастера для выбранного времени. Пожалуйста, выберите время еще раз.'));
+                return;
+            }
+            actualStaffId = slotStaffId;
+        } else {
+            actualStaffId = staffId;
+        }
         
         if (!actualStaffId) {
             alert(t('booking.selectMaster', 'Пожалуйста, выберите мастера перед продолжением.'));

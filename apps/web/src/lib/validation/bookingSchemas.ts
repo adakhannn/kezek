@@ -22,6 +22,7 @@ export const quickHoldSchema = z.object({
  */
 export const quickBookGuestSchema = z.object({
     biz_id: uuidSchema,
+    branch_id: uuidSchema, // Добавляем branch_id для использования выбранного филиала
     service_id: uuidSchema,
     staff_id: uuidSchema,
     start_at: isoDateTimeSchema,

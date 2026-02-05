@@ -50,19 +50,18 @@ export async function POST(req: Request) {
             // Телефон уже валидирован как E.164, но убираем возможные пробелы для безопасности
             const normalizedPhone = body.client_phone.replace(/\s+/g, '').replace(/[-\s()]/g, '');
 
-            // Получаем первый активный филиал бизнеса
+            // Проверяем, что переданный филиал существует и активен
             const { data: branch, error: eBranch } = await supabase
                 .from('branches')
                 .select('id')
+                .eq('id', body.branch_id)
                 .eq('biz_id', body.biz_id)
                 .eq('is_active', true)
-                .order('created_at', { ascending: true })
-                .limit(1)
                 .maybeSingle<{ id: string }>();
 
             if (eBranch || !branch?.id) {
                 return NextResponse.json(
-                    { ok: false, error: 'no_branch', message: 'No active branch found' },
+                    { ok: false, error: 'no_branch', message: 'Branch not found or inactive' },
                     { status: 400 }
                 );
             }
