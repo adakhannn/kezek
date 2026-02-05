@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Service } from '../types';
 import { fmtErr, withNetworkRetry } from '../utils';
 
-import { logError } from '@/lib/log';
+import { logDebug, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 
@@ -119,12 +119,20 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             });
 
             // Обновляем кэш слотов после успешного создания бронирования
+            logDebug('BookingFlow', 'Updating slots cache before redirect');
             if (onBookingCreated) {
                 onBookingCreated();
+                logDebug('BookingFlow', 'Slots cache update callback called');
+            } else {
+                logError('BookingFlow', 'onBookingCreated callback is not provided!');
             }
 
             // Редирект на страницу бронирования
-            location.href = `/booking/${bookingId}`;
+            // Используем небольшую задержку, чтобы дать время обновиться кэшу слотов
+            logDebug('BookingFlow', 'Redirecting to booking page', { bookingId });
+            setTimeout(() => {
+                location.href = `/booking/${bookingId}`;
+            }, 200);
         } catch (e) {
             logError('BookingFlow', '[createBooking] unexpected error', e);
             const message =

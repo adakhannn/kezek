@@ -229,17 +229,28 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 throw new Error(message);
             }
 
+            // Обновляем кэш слотов ПЕРЕД закрытием модального окна и редиректом
+            // Это важно, чтобы слоты обновились до того, как пользователь увидит страницу
+            logDebug('GuestBooking', 'Updating slots cache before redirect');
+            if (onBookingCreated) {
+                onBookingCreated();
+                logDebug('GuestBooking', 'Slots cache update callback called');
+            } else {
+                logError('GuestBooking', 'onBookingCreated callback is not provided!');
+            }
+
             // Закрываем модальное окно
             closeModal();
 
-            // Обновляем кэш слотов после успешного создания бронирования
-            if (onBookingCreated) {
-                onBookingCreated();
-            }
-
             // Редирект на страницу бронирования
+            // Используем небольшую задержку, чтобы дать время обновиться кэшу слотов
             if (result.booking_id) {
-                location.href = `/booking/${result.booking_id}`;
+                logDebug('GuestBooking', 'Redirecting to booking page', { bookingId: result.booking_id });
+                // Используем setTimeout для гарантии, что onBookingCreated успеет выполниться
+                // и React успеет обработать обновление состояния
+                setTimeout(() => {
+                    location.href = `/booking/${result.booking_id}`;
+                }, 200);
             }
         } catch (e) {
             logError('GuestBooking', '[createGuestBooking] unexpected error', e);
