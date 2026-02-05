@@ -524,6 +524,12 @@ export async function POST(req: Request) {
 
         console.log('[notify] Recipients to notify:', uniqRecipients.length, uniqRecipients.map(r => ({ email: r.email, role: r.role })));
         
+        // Проверяем, что владелец в списке получателей
+        const ownerInRecipients = uniqRecipients.some(r => r.role === 'owner');
+        if (!ownerInRecipients && ownerEmail) {
+            console.warn('[notify] WARNING: Owner email exists but not in recipients list!', { ownerEmail, owner_id: biz?.owner_id });
+        }
+        
         let sent = 0;
         for (const rcp of uniqRecipients) {
             console.log('[notify] Sending email to:', rcp.email, 'role:', rcp.role);
@@ -547,10 +553,10 @@ export async function POST(req: Request) {
             
             if (!emailResponse.ok) {
                 const errorText = await emailResponse.text().catch(() => 'Unknown error');
-                console.error('[notify] Failed to send email to', rcp.email, 'status:', emailResponse.status, 'error:', errorText);
+                console.error('[notify] Failed to send email to', rcp.email, 'role:', rcp.role, 'status:', emailResponse.status, 'error:', errorText);
             } else {
                 const result = await emailResponse.json().catch(() => ({}));
-                console.log('[notify] Email sent successfully to', rcp.email, 'result:', result);
+                console.log('[notify] Email sent successfully to', rcp.email, 'role:', rcp.role, 'result:', result);
                 sent += 1;
             }
         }
