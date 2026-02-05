@@ -322,9 +322,10 @@ export async function POST(req: Request) {
             });
             
             // Важно: номер телефона может быть в profiles.phone (для связи, не для авторизации)
+            // Используем admin client для обхода RLS
             if (!ownerPhone) {
                 try {
-                    const { data: profile } = await supabase
+                    const { data: profile } = await admin
                         .from('profiles')
                         .select('phone')
                         .eq('id', biz.owner_id)
@@ -340,7 +341,7 @@ export async function POST(req: Request) {
             
             if (!ownerName) {
                 try {
-                    const { data: profile } = await supabase
+                    const { data: profile } = await admin
                         .from('profiles')
                         .select('full_name, telegram_id, notify_telegram, telegram_verified')
                         .eq('id', biz.owner_id)
@@ -357,6 +358,11 @@ export async function POST(req: Request) {
                         ownerTelegramId = profile.telegram_id ?? null;
                         ownerNotifyTelegram = profile.notify_telegram ?? true;
                         ownerTelegramVerified = profile.telegram_verified ?? false;
+                        console.log('[notify] Got owner telegram data from profiles:', {
+                            telegram_id: ownerTelegramId,
+                            notify_telegram: ownerNotifyTelegram,
+                            telegram_verified: ownerTelegramVerified,
+                        });
                     }
                 } catch (e) {
                     console.error('[notify] failed to get owner name from profiles:', e);
@@ -368,13 +374,14 @@ export async function POST(req: Request) {
         const staffPhone = staf?.phone ?? null;
         
         // Получаем telegram_id мастера (если у мастера есть user_id)
+        // Используем admin client для обхода RLS политик
         let staffTelegramId: number | null = null;
         let staffNotifyTelegram = true;
         let staffTelegramVerified = false;
         if (staf && 'user_id' in staf && staf.user_id) {
             try {
                 console.log('[notify] Getting staff telegram data for user_id:', staf.user_id);
-                const { data: profile } = await supabase
+                const { data: profile } = await admin
                     .from('profiles')
                     .select('telegram_id, notify_telegram, telegram_verified')
                     .eq('id', staf.user_id)
