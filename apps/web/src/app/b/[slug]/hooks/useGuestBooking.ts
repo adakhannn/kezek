@@ -125,7 +125,16 @@ export function useGuestBooking(params: UseGuestBookingParams) {
 
         setLoading(true);
         try {
+            // Форматируем дату в ISO 8601 формат с таймзоной
+            // Используем формат с двоеточием в оффсете (XXX), который соответствует ISO 8601
             const startISO = formatInTimeZone(slotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+            
+            // Логируем для отладки
+            logDebug('GuestBooking', 'Formatted start_at', { 
+                startISO, 
+                slotTime: slotTime.toISOString(),
+                timezone: TZ 
+            });
             
             // Проверяем, что все обязательные поля заполнены и валидны
             if (!bizId || !branchId || !service.id || !actualStaffId) {

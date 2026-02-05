@@ -26,8 +26,21 @@ export const nameSchema = z.string().min(2, 'Name must be at least 2 characters'
 
 /**
  * ISO дата-время строка
+ * Zod .datetime() принимает формат ISO 8601: YYYY-MM-DDTHH:mm:ss[+-]HH:mm или YYYY-MM-DDTHH:mm:ssZ
+ * Поддерживает форматы с двоеточием и без в оффсете
  */
-export const isoDateTimeSchema = z.string().datetime('Invalid ISO datetime format');
+export const isoDateTimeSchema = z.string().refine(
+    (val) => {
+        // Проверяем различные форматы ISO 8601
+        const isoPatterns = [
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/, // UTC
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/, // С двоеточием в оффсете
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{4}$/, // Без двоеточия в оффсете
+        ];
+        return isoPatterns.some(pattern => pattern.test(val));
+    },
+    { message: 'Invalid ISO datetime format' }
+);
 
 /**
  * Положительное число
