@@ -30,21 +30,33 @@ begin
         raise exception 'User must be authenticated';
     end if;
     
-    -- Получаем данные клиента из профиля (full_name, phone) и из auth.users (email)
+    -- Получаем данные клиента из auth.users (email) и из профиля (full_name, phone)
+    -- Используем LEFT JOIN, чтобы получить данные даже если профиля нет
     select 
-        p.full_name,
-        p.phone,
+        coalesce(p.full_name, (u.raw_user_meta_data->>'full_name')::text, u.email) as full_name,
+        coalesce(p.phone, u.phone) as phone,
         u.email
     into 
         v_client_name,
         v_client_phone,
         v_client_email
-    from public.profiles p
-    join auth.users u on u.id = p.id
-    where p.id = v_client_id;
+    from auth.users u
+    left join public.profiles p on p.id = u.id
+    where u.id = v_client_id;
     
     if not found then
-        raise exception 'User profile not found';
+        raise exception 'User not found';
+    end if;
+    
+    -- Если профиля нет, создаем его с базовыми данными
+    if not exists (select 1 from public.profiles where id = v_client_id) then
+        insert into public.profiles (id, full_name, phone)
+        values (
+            v_client_id,
+            coalesce(v_client_name, 'Пользователь'),
+            v_client_phone
+        )
+        on conflict (id) do nothing;
     end if;
     
     -- Проверяем, что услуга существует и активна
