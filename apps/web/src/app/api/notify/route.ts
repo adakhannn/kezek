@@ -543,8 +543,21 @@ export async function POST(req: Request) {
         
         let sent = 0;
         console.log('[notify] Starting email sending loop, total recipients:', uniqRecipients.length);
-        for (const rcp of uniqRecipients) {
-            console.log('[notify] Sending email to:', rcp.email, 'role:', rcp.role, 'name:', rcp.name);
+        
+        // Resend API ограничивает до 2 запросов в секунду
+        // Добавляем задержку между отправками, чтобы избежать rate limiting
+        const RESEND_RATE_LIMIT_DELAY_MS = 600; // 600ms между запросами = ~1.67 запросов/сек (безопасно)
+        
+        for (let i = 0; i < uniqRecipients.length; i++) {
+            const rcp = uniqRecipients[i];
+            
+            // Добавляем задержку перед каждым запросом, кроме первого
+            if (i > 0) {
+                console.log('[notify] Waiting before sending next email to avoid rate limit...');
+                await new Promise(resolve => setTimeout(resolve, RESEND_RATE_LIMIT_DELAY_MS));
+            }
+            
+            console.log('[notify] Sending email to:', rcp.email, 'role:', rcp.role, 'name:', rcp.name, `(${i + 1}/${uniqRecipients.length})`);
             const htmlPersonal = buildHtmlPersonal(baseHtml, rcp.name, rcp.role);
             const payload: Record<string, unknown> = {
                 from,
@@ -591,16 +604,57 @@ export async function POST(req: Request) {
                         // Не JSON, используем текст как есть
                     }
                     console.error('[notify] Failed to send email to', rcp.email, 'role:', rcp.role, 'status:', emailResponse.status, 'error:', errorText, 'errorJson:', errorJson);
-                    // Для владельца логируем более подробно
-                    if (rcp.role === 'owner') {
-                        console.error('[notify] CRITICAL: Failed to send email to owner!', {
-                            email: rcp.email,
-                            owner_id: biz?.owner_id,
-                            status: emailResponse.status,
-                            error: errorText,
-                            errorJson,
-                            payload: { ...payload, attachments: payload.attachments ? '[present]' : undefined },
+                    
+                    // Если это rate limit ошибка, ждем и пробуем еще раз
+                    if (emailResponse.status === 429) {
+                        const retryAfter = emailResponse.headers.get('retry-after');
+                        const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : 2000; // По умолчанию 2 секунды
+                        console.log('[notify] Rate limit hit, waiting', waitTime, 'ms before retry...');
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        
+                        // Пробуем еще раз
+                        const retryResponse = await fetch('https://api.resend.com/emails', {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify(payload),
                         });
+                        
+                        if (!retryResponse.ok) {
+                            const retryErrorText = await retryResponse.text().catch(() => 'Unknown error');
+                            console.error('[notify] Retry failed for', rcp.email, 'role:', rcp.role, 'status:', retryResponse.status, 'error:', retryErrorText);
+                            // Для владельца логируем более подробно
+                            if (rcp.role === 'owner') {
+                                console.error('[notify] CRITICAL: Retry failed for owner!', {
+                                    email: rcp.email,
+                                    owner_id: biz?.owner_id,
+                                    status: retryResponse.status,
+                                    error: retryErrorText,
+                                });
+                            }
+                        } else {
+                            const retryResult = await retryResponse.json().catch(() => ({}));
+                            console.log('[notify] Email sent successfully after retry to', rcp.email, 'role:', rcp.role, 'result:', retryResult);
+                            if (rcp.role === 'owner') {
+                                console.log('[notify] Owner email sent successfully after retry!', {
+                                    email: rcp.email,
+                                    owner_id: biz?.owner_id,
+                                    result: retryResult,
+                                });
+                            }
+                            sent += 1;
+                        }
+                    } else {
+                        // Для владельца логируем более подробно
+                        if (rcp.role === 'owner') {
+                            console.error('[notify] CRITICAL: Failed to send email to owner!', {
+                                email: rcp.email,
+                                owner_id: biz?.owner_id,
+                                status: emailResponse.status,
+                                error: errorText,
+                                errorJson,
+                                payload: { ...payload, attachments: payload.attachments ? '[present]' : undefined },
+                            });
+                        }
                     }
                 } else {
                     const result = await emailResponse.json().catch(() => ({}));
