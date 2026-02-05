@@ -319,6 +319,8 @@ export async function POST(req: Request) {
                 ownerName,
                 ownerPhone,
                 ownerTelegramId,
+                hasEmail: !!ownerEmail,
+                emailLength: ownerEmail?.length || 0,
             });
             
             // Важно: номер телефона может быть в profiles.phone (для связи, не для авторизации)
@@ -502,6 +504,9 @@ export async function POST(req: Request) {
         const uniqMap = new Map<string, Recipient>();
         for (const r of recipients) if (!uniqMap.has(r.email)) uniqMap.set(r.email, r);
         const uniqRecipients = Array.from(uniqMap.values());
+        
+        console.log('[notify] Recipients before dedup:', recipients.length, recipients.map(r => ({ email: r.email, role: r.role })));
+        console.log('[notify] Recipients after dedup:', uniqRecipients.length, uniqRecipients.map(r => ({ email: r.email, role: r.role })));
 
         // --- готовим .ics для клиента (один раз)
         const icsText = buildIcs({
@@ -531,8 +536,9 @@ export async function POST(req: Request) {
         }
         
         let sent = 0;
+        console.log('[notify] Starting email sending loop, total recipients:', uniqRecipients.length);
         for (const rcp of uniqRecipients) {
-            console.log('[notify] Sending email to:', rcp.email, 'role:', rcp.role);
+            console.log('[notify] Sending email to:', rcp.email, 'role:', rcp.role, 'name:', rcp.name);
             const htmlPersonal = buildHtmlPersonal(baseHtml, rcp.name, rcp.role);
             const payload: Record<string, unknown> = {
                 from,
