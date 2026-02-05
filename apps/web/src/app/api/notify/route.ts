@@ -122,6 +122,12 @@ function buildHtmlPersonal(
 /* ---------- route ---------- */
 
 export async function POST(req: Request) {
+    // Логируем в самом начале, чтобы убедиться, что endpoint вызывается
+    console.log('[notify] ===== NOTIFY ENDPOINT CALLED =====');
+    console.log('[notify] Request URL:', req.url);
+    console.log('[notify] Request method:', req.method);
+    console.log('[notify] Request headers:', Object.fromEntries(req.headers.entries()));
+    
     try {
         const body: NotifyBody = await req.json();
         console.log('[notify] Received notification request:', { type: body?.type, booking_id: body?.booking_id });
@@ -784,10 +790,15 @@ export async function POST(req: Request) {
             console.log('[notify] Telegram not configured: missing TELEGRAM_BOT_TOKEN');
         }
 
+        console.log('[notify] ===== NOTIFY ENDPOINT COMPLETED =====', { sent, whatsappSent, telegramSent });
         return NextResponse.json({ ok: true, sent, whatsappSent, telegramSent });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[notify] error:', msg);
+        const stack = e instanceof Error ? e.stack : undefined;
+        console.error('[notify] ===== NOTIFY ENDPOINT ERROR =====');
+        console.error('[notify] error message:', msg);
+        console.error('[notify] error stack:', stack);
+        console.error('[notify] full error:', e);
         return createErrorResponse('internal', msg, undefined, 500);
     }
 }

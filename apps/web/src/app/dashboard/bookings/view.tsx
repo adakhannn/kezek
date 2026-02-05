@@ -28,13 +28,27 @@ type RpcSlot = { staff_id: string; branch_id: string; start_at: string; end_at: 
 // ---------------- utils/notify ----------------
 async function notify(type: 'hold' | 'confirm' | 'cancel', bookingId: string) {
     try {
-        await fetch('/api/notify', {
+        console.log('[dashboard/notify] Calling notify API:', { type, bookingId });
+        const response = await fetch('/api/notify', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ type, booking_id: bookingId }),
         });
+        
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unknown error');
+            console.error('[dashboard/notify] Notify API error:', { 
+                type, 
+                bookingId, 
+                status: response.status, 
+                error: errorText 
+            });
+        } else {
+            const result = await response.json().catch(() => ({}));
+            console.log('[dashboard/notify] Notify API success:', { type, bookingId, result });
+        }
     } catch (e) {
-        console.error('notify failed', type, bookingId, e);
+        console.error('[dashboard/notify] Notify API exception:', { type, bookingId, error: e });
     }
 }
 
