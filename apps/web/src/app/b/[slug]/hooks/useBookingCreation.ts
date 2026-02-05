@@ -67,7 +67,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         try {
             const startISO = formatInTimeZone(slotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
             
-            // Создаем бронирование сразу со статусом confirmed (без hold)
+            // Создаем бронирование (пока миграции не применены, функция создает hold)
             const { data: bookingData, error: bookingError } = await supabase.rpc('hold_slot', {
                 p_biz_id: bizId,
                 p_branch_id: branchId,
@@ -89,6 +89,20 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             }
 
             const bookingId = String(bookingData);
+            
+            // Подтверждаем бронирование (пока миграции не применены, функция создает hold)
+            const { error: confirmError } = await supabase.rpc('confirm_booking', { p_booking_id: bookingId });
+            if (confirmError) {
+                logError('BookingFlow', '[confirm_booking] error', confirmError);
+                alert(
+                    fmtErr(confirmError, t) ||
+                        t(
+                            'booking.error.confirmFailed',
+                            'Слот был зарезервирован, но не удалось подтвердить бронирование. Свяжитесь с салоном для уточнения.'
+                        )
+                );
+                return;
+            }
 
             // Отправляем уведомление о создании бронирования (best effort, с повторной попыткой при сетевой ошибке)
             void withNetworkRetry(
