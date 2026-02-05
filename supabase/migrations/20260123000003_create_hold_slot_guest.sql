@@ -21,7 +21,6 @@ declare
     v_service_duration_min integer;
     v_end timestamptz;
     v_expires_at timestamptz;
-    v_status booking_status := 'hold'::booking_status;
     v_client_name_trimmed text;
     v_client_phone_trimmed text;
     v_client_email_trimmed text;
@@ -91,6 +90,7 @@ begin
     end if;
     
     -- Создаем бронирование для гостя (client_id = NULL)
+    -- Используем литерал 'hold'::booking_status напрямую, чтобы избежать проблем с типом переменной
     insert into public.bookings (
         biz_id,
         branch_id,
@@ -115,7 +115,7 @@ begin
         v_client_email_trimmed,
         p_start,
         v_end,
-        v_status,
+        'hold'::booking_status,  -- Используем литерал напрямую для избежания проблем с типом
         v_expires_at
     )
     returning id into v_booking_id;
