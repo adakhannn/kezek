@@ -546,41 +546,80 @@ export async function POST(req: Request) {
                 subject: `Kezek: ${title}`,
                 html: htmlPersonal,
                 text,
-                reply_to: ownerEmail || undefined,
             };
-            if (rcp.withIcs) {
-                payload.attachments = [{ filename: 'booking.ics', content: icsBase64 }];
+            // Добавляем reply_to только если есть email владельца
+            if (ownerEmail) {
+                payload.reply_to = ownerEmail;
             }
-            const emailResponse = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(payload),
+            if (rcp.withIcs) {
+                payload.attachments = [{ 
+                    filename: 'booking.ics', 
+                    content: icsBase64
+                }];
+            }
+            
+            // Логируем payload для отладки (без sensitive данных)
+            console.log('[notify] Email payload prepared:', {
+                to: rcp.email,
+                from,
+                subject: payload.subject,
+                hasHtml: !!payload.html,
+                hasText: !!payload.text,
+                hasAttachments: !!payload.attachments,
+                attachmentsCount: payload.attachments ? (payload.attachments as unknown[]).length : 0,
             });
             
-            if (!emailResponse.ok) {
-                const errorText = await emailResponse.text().catch(() => 'Unknown error');
-                console.error('[notify] Failed to send email to', rcp.email, 'role:', rcp.role, 'status:', emailResponse.status, 'error:', errorText);
+            try {
+                const emailResponse = await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload),
+                });
+                
+                if (!emailResponse.ok) {
+                    const errorText = await emailResponse.text().catch(() => 'Unknown error');
+                    let errorJson: unknown = null;
+                    try {
+                        errorJson = JSON.parse(errorText);
+                    } catch {
+                        // Не JSON, используем текст как есть
+                    }
+                    console.error('[notify] Failed to send email to', rcp.email, 'role:', rcp.role, 'status:', emailResponse.status, 'error:', errorText, 'errorJson:', errorJson);
+                    // Для владельца логируем более подробно
+                    if (rcp.role === 'owner') {
+                        console.error('[notify] CRITICAL: Failed to send email to owner!', {
+                            email: rcp.email,
+                            owner_id: biz?.owner_id,
+                            status: emailResponse.status,
+                            error: errorText,
+                            errorJson,
+                            payload: { ...payload, attachments: payload.attachments ? '[present]' : undefined },
+                        });
+                    }
+                } else {
+                    const result = await emailResponse.json().catch(() => ({}));
+                    console.log('[notify] Email sent successfully to', rcp.email, 'role:', rcp.role, 'result:', result);
+                    // Для владельца логируем более подробно
+                    if (rcp.role === 'owner') {
+                        console.log('[notify] Owner email sent successfully!', {
+                            email: rcp.email,
+                            owner_id: biz?.owner_id,
+                            result,
+                        });
+                    }
+                    sent += 1;
+                }
+            } catch (fetchError) {
+                const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+                console.error('[notify] Exception while sending email to', rcp.email, 'role:', rcp.role, 'error:', errorMsg);
                 // Для владельца логируем более подробно
                 if (rcp.role === 'owner') {
-                    console.error('[notify] CRITICAL: Failed to send email to owner!', {
+                    console.error('[notify] CRITICAL: Exception sending email to owner!', {
                         email: rcp.email,
                         owner_id: biz?.owner_id,
-                        status: emailResponse.status,
-                        error: errorText,
+                        error: errorMsg,
                     });
                 }
-            } else {
-                const result = await emailResponse.json().catch(() => ({}));
-                console.log('[notify] Email sent successfully to', rcp.email, 'role:', rcp.role, 'result:', result);
-                // Для владельца логируем более подробно
-                if (rcp.role === 'owner') {
-                    console.log('[notify] Owner email sent successfully!', {
-                        email: rcp.email,
-                        owner_id: biz?.owner_id,
-                        result,
-                    });
-                }
-                sent += 1;
             }
         }
 
