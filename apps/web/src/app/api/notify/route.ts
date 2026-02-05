@@ -157,11 +157,13 @@ export async function POST(req: Request) {
             cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
         });
         
-        // Admin client для получения email владельца
+        // Admin client для получения email владельца и чтения брони (обход RLS)
         const admin = createClient(url, service);
 
         // Получаем данные брони с денормализованными связями
-        const { data: raw, error } = await supabase
+        // Используем admin client для обхода RLS политик (бронь может быть только что создана)
+        console.log('[notify] Fetching booking data for booking_id:', body.booking_id);
+        const { data: raw, error } = await admin
             .from('bookings')
             .select(`
         id, status, start_at, end_at, created_at, client_id, client_phone, client_name, client_email,
@@ -173,8 +175,16 @@ export async function POST(req: Request) {
             .maybeSingle<BookingRow>();
 
         if (error || !raw) {
+            console.error('[notify] Booking not found or error:', {
+                booking_id: body.booking_id,
+                error: error?.message,
+                hasRaw: !!raw,
+                errorDetails: error,
+            });
             return NextResponse.json({ ok: false, error: error?.message || 'not_found' }, { status: 404 });
         }
+        
+        console.log('[notify] Booking found:', { booking_id: raw.id, status: raw.status });
 
         const svc  = first<ServiceRow>(raw.services);
         const staf = first<StaffRow>(raw.staff);
