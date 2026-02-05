@@ -94,7 +94,8 @@ export function useSlotsLoader(params: {
         }
 
         // Если параметры неполные, сразу очищаем состояние
-        if (!serviceId || !staffId || !dayStr) {
+        // Для 'any' мастера staffId может быть 'any', но это валидное значение
+        if (!serviceId || !dayStr || (staffId !== 'any' && !staffId)) {
             setSlots([]);
             setError(null);
             setLoading(false);
@@ -140,7 +141,8 @@ export function useSlotsLoader(params: {
                 }
 
             // Проверка: если услуга не в servicesFiltered, значит мастер не выполняет её
-            if (serviceStaff !== null) {
+            // Для "любого мастера" пропускаем эту проверку, так как показываем слоты от всех мастеров
+            if (staffId !== 'any' && serviceStaff !== null) {
                 const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
                 if (!isServiceValid) {
                     debugLog('[Booking] Slots loading: service not in servicesFiltered, skipping RPC call', {
@@ -158,11 +160,17 @@ export function useSlotsLoader(params: {
                     staffId,
                 });
             } else {
-                debugLog('[Booking] Slots loading: serviceStaff not loaded yet, proceeding with RPC call (will check validity)', {
-                    serviceId,
-                    staffId,
-                    serviceStaffLoaded: false,
-                });
+                if (staffId === 'any') {
+                    debugLog('[Booking] Slots loading: any master selected, showing slots from all masters', {
+                        serviceId,
+                    });
+                } else {
+                    debugLog('[Booking] Slots loading: serviceStaff not loaded yet, proceeding with RPC call (will check validity)', {
+                        serviceId,
+                        staffId,
+                        serviceStaffLoaded: false,
+                    });
+                }
             }
 
             setLoading(true);
@@ -288,9 +296,10 @@ export function useSlotsLoader(params: {
                     homeBranchId,
                 });
 
-                // Фильтруем слоты по мастеру, времени и филиалу
+                // Фильтруем слоты по мастеру (если не выбран "любой мастер"), времени и филиалу
                 const filtered = all.filter((s) => {
-                    if (s.staff_id !== staffId) {
+                    // Если выбран конкретный мастер, фильтруем по нему
+                    if (staffId !== 'any' && s.staff_id !== staffId) {
                         debugLog('[Booking] Slot filtered (wrong staff):', { slot_staff: s.staff_id, selected_staff: staffId });
                         return false;
                     }
@@ -320,6 +329,13 @@ export function useSlotsLoader(params: {
                     }
 
                     return true;
+                });
+
+                // Сортируем слоты по времени (от ближайшего к дальнему)
+                filtered.sort((a, b) => {
+                    const timeA = new Date(a.start_at).getTime();
+                    const timeB = new Date(b.start_at).getTime();
+                    return timeA - timeB;
                 });
 
                 debugLog('[Booking] Filtered slots result:', { total: all.length, filtered: filtered.length });

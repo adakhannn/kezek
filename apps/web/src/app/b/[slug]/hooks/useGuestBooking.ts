@@ -1,10 +1,13 @@
-import { useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
+import { useState } from 'react';
+
+import type { Service } from '../types';
+import { fmtErr, isNetworkError, withNetworkRetry } from '../utils';
+
 import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
-import { fmtErr, isNetworkError, withNetworkRetry } from '../utils';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
-import type { Service } from '../types';
+
 
 type GuestBookingForm = {
     client_name: string;
@@ -25,6 +28,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
     
     const [modalOpen, setModalOpen] = useState(false);
     const [slotTime, setSlotTime] = useState<Date | null>(null);
+    const [slotStaffId, setSlotStaffId] = useState<string | null>(null);
     const [form, setForm] = useState<GuestBookingForm>({
         client_name: '',
         client_phone: '',
@@ -32,8 +36,9 @@ export function useGuestBooking(params: UseGuestBookingParams) {
     });
     const [loading, setLoading] = useState(false);
 
-    function openModal(slotTime: Date) {
+    function openModal(slotTime: Date, slotStaffId?: string) {
         setSlotTime(slotTime);
+        setSlotStaffId(slotStaffId || null);
         setModalOpen(true);
     }
 
@@ -41,10 +46,14 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         setModalOpen(false);
         setForm({ client_name: '', client_phone: '', client_email: '' });
         setSlotTime(null);
+        setSlotStaffId(null);
     }
 
     async function createGuestBooking() {
-        if (!service || !staffId || !branchId || !slotTime) {
+        // Определяем реального мастера: если выбран "любой мастер", используем мастера из слота
+        const actualStaffId = staffId === 'any' ? (slotStaffId || '') : staffId;
+        
+        if (!service || !actualStaffId || !branchId || !slotTime) {
             alert(
                 t(
                     'booking.guest.missingData',
@@ -94,7 +103,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                         body: JSON.stringify({
                             biz_id: bizId,
                             service_id: service.id,
-                            staff_id: staffId,
+                            staff_id: actualStaffId,
                             start_at: startISO,
                             client_name: name,
                             client_phone: phone,

@@ -68,6 +68,21 @@ function computeServicesFiltered(params: {
     if (!staffId) return [];
     if (!serviceToStaffMap) return [];
 
+    // Если выбран "любой мастер", показываем все услуги филиала, которые может выполнить хотя бы один мастер
+    if (staffId === 'any') {
+        const servicesWithStaff = new Set<string>();
+        for (const [serviceId, staffSet] of serviceToStaffMap.entries()) {
+            if (staffSet.size > 0) {
+                servicesWithStaff.add(serviceId);
+            }
+        }
+        
+        // Фильтруем услуги: только услуги из выбранного филиала, которые может выполнить хотя бы один мастер
+        return services.filter((s) => {
+            return s.branch_id === branchId && servicesWithStaff.has(s.id);
+        });
+    }
+
     // Находим все услуги, которые делает выбранный мастер
     const servicesForStaff = new Set<string>();
     for (const [serviceId, staffSet] of serviceToStaffMap.entries()) {

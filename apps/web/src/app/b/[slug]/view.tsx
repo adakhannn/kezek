@@ -458,6 +458,7 @@ export default function BookingForm({ data }: { data: Data }) {
     // Состояние для модального окна выбора (авторизация или запись без регистрации)
     const [authChoiceModalOpen, setAuthChoiceModalOpen] = useState(false);
     const [selectedSlotTime, setSelectedSlotTime] = useState<Date | null>(null);
+    const [selectedSlotStaffId, setSelectedSlotStaffId] = useState<string | null>(null);
 
     const { createBooking, loading: bookingLoading } = useBookingCreation({
         bizId: biz.id,
@@ -466,9 +467,17 @@ export default function BookingForm({ data }: { data: Data }) {
         staffId,
         isAuthed,
         t,
-        onAuthChoiceRequest: (slotTime) => {
+        onAuthChoiceRequest: (slotTime, slotStaffId) => {
             setSelectedSlotTime(slotTime);
+            setSelectedSlotStaffId(slotStaffId || null);
+            // Сохраняем staff_id из слота для использования в модальном окне
+            if (slotStaffId && staffId === 'any') {
+                setStaffId(slotStaffId);
+            }
             setAuthChoiceModalOpen(true);
+        },
+        onStaffIdChange: (newStaffId) => {
+            setStaffId(newStaffId);
         },
     });
 
@@ -598,6 +607,32 @@ export default function BookingForm({ data }: { data: Data }) {
                                             {t('booking.testIds.masterSelect', 'Выбрать мастера')}
                                         </button>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {/* Опция "Любой мастер" */}
+                                        <button
+                                            type="button"
+                                            data-testid="master-card-any"
+                                            onClick={() => setStaffId('any')}
+                                            className={`flex items-center gap-3 rounded-lg border p-3 text-sm font-medium transition ${
+                                                staffId === 'any'
+                                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
+                                                    : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
+                                            }`}
+                                        >
+                                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700 flex items-center justify-center text-base font-semibold text-white flex-shrink-0">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                </svg>
+                                            </div>
+                                            <div className="flex-1 text-left">
+                                                <span data-testid="master-option-any">
+                                                    {t('booking.step3.anyMaster', 'Любой мастер')}
+                                                </span>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                    {t('booking.step3.anyMasterHint', 'Ближайший свободный слот')}
+                                                </div>
+                                            </div>
+                                        </button>
+                                        
                                         {staffFiltered.map((m) => {
                                             const active = m.id === staffId;
                                             return (
@@ -831,15 +866,24 @@ export default function BookingForm({ data }: { data: Data }) {
                                     <div className="mt-1 flex flex-wrap gap-2">
                                         {slots.map((s) => {
                                             const d = new Date(s.start_at);
+                                            const slotStaff = staff.find((m) => m.id === s.staff_id);
+                                            const showStaffName = staffId === 'any' && slotStaff;
                                             return (
                                                 <button
-                                                    key={s.start_at}
+                                                    key={`${s.start_at}-${s.staff_id}`}
                                                     disabled={bookingLoading}
                                                     data-testid="time-slot"
                                                     className="rounded-full border border-gray-300 bg-white px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[32px] touch-manipulation"
-                                                    onClick={() => createBooking(d)}
+                                                    onClick={() => createBooking(d, s.staff_id)}
                                                 >
-                                                    {toLabel(d)}
+                                                    <div className="flex flex-col items-center">
+                                                        <span>{toLabel(d)}</span>
+                                                        {showStaffName && (
+                                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                                                {formatStaffName(slotStaff.full_name)}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </button>
                                             );
                                         })}
@@ -1003,13 +1047,14 @@ export default function BookingForm({ data }: { data: Data }) {
                 onClose={() => {
                     setAuthChoiceModalOpen(false);
                     setSelectedSlotTime(null);
+                    setSelectedSlotStaffId(null);
                 }}
                 onAuth={() => {
                     redirectToAuth();
                 }}
                 onGuestBooking={() => {
                     if (selectedSlotTime) {
-                        guestBooking.openModal(selectedSlotTime);
+                        guestBooking.openModal(selectedSlotTime, selectedSlotStaffId || undefined);
                     }
                 }}
                 t={t}

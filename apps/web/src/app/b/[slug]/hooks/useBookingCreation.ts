@@ -16,19 +16,24 @@ type UseBookingCreationParams = {
     staffId: string;
     isAuthed: boolean;
     t: (key: string, fallback?: string) => string;
-    onAuthChoiceRequest: (slotTime: Date) => void;
+    onAuthChoiceRequest: (slotTime: Date, slotStaffId?: string) => void;
+    onStaffIdChange?: (staffId: string) => void; // Колбэк для обновления staffId при выборе "любого мастера"
 };
 
 export function useBookingCreation(params: UseBookingCreationParams) {
-    const { bizId, branchId, service, staffId, isAuthed, t, onAuthChoiceRequest } = params;
+    const { bizId, branchId, service, staffId, isAuthed, t, onAuthChoiceRequest, onStaffIdChange } = params;
     const [loading, setLoading] = useState(false);
 
-    async function createBooking(slotTime: Date) {
+    async function createBooking(slotTime: Date, slotStaffId?: string) {
         if (!service) {
             alert(t('booking.selectService', 'Пожалуйста, выберите услугу перед продолжением.'));
             return;
         }
-        if (!staffId) {
+        
+        // Определяем реального мастера: если выбран "любой мастер", используем мастера из слота
+        const actualStaffId = staffId === 'any' ? (slotStaffId || '') : staffId;
+        
+        if (!actualStaffId) {
             alert(t('booking.selectMaster', 'Пожалуйста, выберите мастера перед продолжением.'));
             return;
         }
@@ -37,9 +42,14 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             return;
         }
 
+        // Если выбран "любой мастер" и мы получили мастера из слота, обновляем staffId
+        if (staffId === 'any' && slotStaffId && onStaffIdChange) {
+            onStaffIdChange(slotStaffId);
+        }
+
         // Если не авторизован, показываем модальное окно выбора (авторизация или запись без регистрации)
         if (!isAuthed) {
-            onAuthChoiceRequest(slotTime);
+            onAuthChoiceRequest(slotTime, actualStaffId);
             return;
         }
 
@@ -52,7 +62,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 p_biz_id: bizId,
                 p_branch_id: branchId,
                 p_service_id: service.id,
-                p_staff_id: staffId,
+                p_staff_id: actualStaffId,
                 p_start: startISO,
             });
 
