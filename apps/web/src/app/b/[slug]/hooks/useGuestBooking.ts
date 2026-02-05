@@ -188,7 +188,22 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 // Если есть детали ошибок валидации, показываем их
                 let apiMessage: string | undefined = result?.message || result?.error;
                 
-                if (result?.details?.errors && Array.isArray(result.details.errors)) {
+                // Проверяем, является ли ошибка связанной с занятым слотом
+                const isSlotBookedError = 
+                    apiMessage?.toLowerCase().includes('time slot is already booked') ||
+                    apiMessage?.toLowerCase().includes('already booked') ||
+                    apiMessage?.toLowerCase().includes('слот уже занят');
+                
+                if (isSlotBookedError) {
+                    // Обновляем список слотов, если слот уже занят
+                    if (onBookingCreated) {
+                        onBookingCreated();
+                    }
+                    apiMessage = t(
+                        'booking.guest.error.slotBooked',
+                        'Этот слот уже занят. Список слотов обновлен, пожалуйста, выберите другое время.'
+                    );
+                } else if (result?.details?.errors && Array.isArray(result.details.errors)) {
                     const validationErrors = result.details.errors
                         .map((err: { path?: string; message?: string }) => {
                             const field = err.path || 'unknown';

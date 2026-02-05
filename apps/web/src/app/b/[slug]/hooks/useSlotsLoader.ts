@@ -44,7 +44,7 @@ type CacheEntry = {
     timestamp: number;
 };
 
-const SLOTS_CACHE_TTL = 5 * 60 * 1000; // 5 минут
+const SLOTS_CACHE_TTL = 30 * 1000; // 30 секунд (уменьшено для уменьшения race conditions)
 const DEBOUNCE_DELAY = 300; // 300ms
 
 /**
