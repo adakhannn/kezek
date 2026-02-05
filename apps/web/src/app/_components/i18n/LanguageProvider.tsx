@@ -131,6 +131,14 @@ const dictionaries: Dictionaries = {
         'booking.guest.cancel': 'Жокко чыгаруу',
         'booking.guest.book': 'Брондоо',
         'booking.guest.booking': 'Брондоо жатабыз...',
+        
+        // Auth choice modal (выбор способа бронирования)
+        'booking.authChoice.title': 'Брондоо ыкмасын тандаңыз',
+        'booking.authChoice.subtitle': 'Сиз катталуу же катталбай брондоо аласыз',
+        'booking.authChoice.authButton': 'Кирүү же катталуу',
+        'booking.authChoice.guestButton': 'Катталбай брондоо',
+        'booking.authChoice.cancel': 'Жокко чыгаруу',
+        
         'booking.selectService': 'Кызматты тандаңыз',
         'booking.selectMaster': 'Кызматкерди тандаңыз',
         'booking.selectBranch': 'Филиалды тандаңыз',
@@ -1052,6 +1060,14 @@ const dictionaries: Dictionaries = {
         'booking.guest.cancel': 'Отмена',
         'booking.guest.book': 'Забронировать',
         'booking.guest.booking': 'Бронируем...',
+        
+        // Auth choice modal (выбор способа бронирования)
+        'booking.authChoice.title': 'Выберите способ бронирования',
+        'booking.authChoice.subtitle': 'Вы можете авторизоваться или забронировать без регистрации',
+        'booking.authChoice.authButton': 'Войти или зарегистрироваться',
+        'booking.authChoice.guestButton': 'Запись без регистрации',
+        'booking.authChoice.cancel': 'Отмена',
+        
         'booking.selectService': 'Выберите услугу',
         'booking.selectMaster': 'Выберите мастера',
         'booking.selectBranch': 'Выберите филиал',
@@ -2010,6 +2026,14 @@ const dictionaries: Dictionaries = {
         'booking.guest.cancel': 'Cancel',
         'booking.guest.book': 'Book',
         'booking.guest.booking': 'Booking...',
+        
+        // Auth choice modal (выбор способа бронирования)
+        'booking.authChoice.title': 'Choose booking method',
+        'booking.authChoice.subtitle': 'You can sign in or book without registration',
+        'booking.authChoice.authButton': 'Sign in or register',
+        'booking.authChoice.guestButton': 'Book without registration',
+        'booking.authChoice.cancel': 'Cancel',
+        
         'booking.selectService': 'Select service',
         'booking.selectMaster': 'Select master',
         'booking.selectBranch': 'Select branch',

@@ -1,10 +1,13 @@
-import { useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
-import { supabase } from '@/lib/supabaseClient';
-import { logError } from '@/lib/log';
-import { TZ } from '@/lib/time';
-import { fmtErr, withNetworkRetry } from '../utils';
+import { useState } from 'react';
+
 import type { Service } from '../types';
+import { fmtErr, withNetworkRetry } from '../utils';
+
+import { logError } from '@/lib/log';
+import { supabase } from '@/lib/supabaseClient';
+import { TZ } from '@/lib/time';
+
 
 type UseBookingCreationParams = {
     bizId: string;
@@ -13,11 +16,11 @@ type UseBookingCreationParams = {
     staffId: string;
     isAuthed: boolean;
     t: (key: string, fallback?: string) => string;
-    onGuestBookingRequest: (slotTime: Date) => void;
+    onAuthChoiceRequest: (slotTime: Date) => void;
 };
 
 export function useBookingCreation(params: UseBookingCreationParams) {
-    const { bizId, branchId, service, staffId, isAuthed, t, onGuestBookingRequest } = params;
+    const { bizId, branchId, service, staffId, isAuthed, t, onAuthChoiceRequest } = params;
     const [loading, setLoading] = useState(false);
 
     async function createBooking(slotTime: Date) {
@@ -34,9 +37,9 @@ export function useBookingCreation(params: UseBookingCreationParams) {
             return;
         }
 
-        // Если не авторизован, показываем модальное окно для гостевой брони
+        // Если не авторизован, показываем модальное окно выбора (авторизация или запись без регистрации)
         if (!isAuthed) {
-            onGuestBookingRequest(slotTime);
+            onAuthChoiceRequest(slotTime);
             return;
         }
 

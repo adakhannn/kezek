@@ -8,24 +8,24 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { BookingEmptyState } from './BookingEmptyState';
-import { useBranchPromotions, useClientBookings, useServiceStaff } from './hooks/useBookingData';
-import { useServicesFilter } from './hooks/useServicesFilter';
-import { useSlotsLoader } from './hooks/useSlotsLoader';
-import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
-import { useBookingSteps } from './hooks/useBookingSteps';
-import { useBookingCreation } from './hooks/useBookingCreation';
-import { useGuestBooking } from './hooks/useGuestBooking';
+import { AuthChoiceModal } from './components/AuthChoiceModal';
 import { BookingHeader } from './components/BookingHeader';
-import { PromotionsList } from './components/PromotionsList';
 import { BookingSteps } from './components/BookingSteps';
 import { BranchSelector } from './components/BranchSelector';
 import { GuestBookingModal } from './components/GuestBookingModal';
+import { PromotionsList } from './components/PromotionsList';
+import { useBookingCreation } from './hooks/useBookingCreation';
+import { useBranchPromotions, useClientBookings, useServiceStaff } from './hooks/useBookingData';
+import { useBookingSteps } from './hooks/useBookingSteps';
+import { useGuestBooking } from './hooks/useGuestBooking';
+import { useServicesFilter } from './hooks/useServicesFilter';
+import { useSlotsLoader } from './hooks/useSlotsLoader';
+import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
 import type { Data, Service, ServiceStaffRow, Slot, Staff } from './types';
-import { fmtErr } from './utils';
 
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
-import { logDebug, logError, logWarn } from '@/lib/log';
+import { logDebug, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
@@ -455,6 +455,10 @@ export default function BookingForm({ data }: { data: Data }) {
         t,
     });
 
+    // Состояние для модального окна выбора (авторизация или запись без регистрации)
+    const [authChoiceModalOpen, setAuthChoiceModalOpen] = useState(false);
+    const [selectedSlotTime, setSelectedSlotTime] = useState<Date | null>(null);
+
     const { createBooking, loading: bookingLoading } = useBookingCreation({
         bizId: biz.id,
         branchId,
@@ -462,7 +466,10 @@ export default function BookingForm({ data }: { data: Data }) {
         staffId,
         isAuthed,
         t,
-        onGuestBookingRequest: (slotTime) => guestBooking.openModal(slotTime),
+        onAuthChoiceRequest: (slotTime) => {
+            setSelectedSlotTime(slotTime);
+            setAuthChoiceModalOpen(true);
+        },
     });
 
     /* ---------- производные значения для отображения ---------- */
@@ -990,6 +997,23 @@ export default function BookingForm({ data }: { data: Data }) {
                     </aside>
                 </div>
             </div>
+            
+            <AuthChoiceModal
+                isOpen={authChoiceModalOpen}
+                onClose={() => {
+                    setAuthChoiceModalOpen(false);
+                    setSelectedSlotTime(null);
+                }}
+                onAuth={() => {
+                    redirectToAuth();
+                }}
+                onGuestBooking={() => {
+                    if (selectedSlotTime) {
+                        guestBooking.openModal(selectedSlotTime);
+                    }
+                }}
+                t={t}
+            />
             
             <GuestBookingModal
                 isOpen={guestBooking.modalOpen}
