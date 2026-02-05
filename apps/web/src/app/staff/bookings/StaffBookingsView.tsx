@@ -146,16 +146,15 @@ export default function StaffBookingsView({
     function CreateBookingForm() {
         const [branchId, setBranchId] = useState<string>(defaultBranchId || '');
         const [serviceId, setServiceId] = useState<string>('');
-        const [selectedStaffId, setSelectedStaffId] = useState<string>(staffId);
+        // Сотрудник может бронировать только себе
+        const selectedStaffId = staffId;
         const [date, setDate] = useState<string>(() => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
         const [slots, setSlots] = useState<RpcSlot[]>([]);
         const [slotStartISO, setSlotStartISO] = useState<string>('');
         const [slotsLoading, setSlotsLoading] = useState(false);
         const [creating, setCreating] = useState(false);
 
-        // Режимы клиента
-        type ClientMode = 'none' | 'new';
-        const [clientMode, setClientMode] = useState<ClientMode>('new');
+        // Данные клиента (всегда обязательны, так как клиент звонит или приходит лично)
         const [newClientName, setNewClientName] = useState('');
         const [newClientPhone, setNewClientPhone] = useState('');
 
@@ -165,17 +164,11 @@ export default function StaffBookingsView({
             return services.filter(s => s.branch_id === branchId && s.active);
         }, [services, branchId]);
 
-        // Фильтруем сотрудников по выбранному филиалу
-        const staffByBranch = useMemo(() => {
-            if (!branchId) return [];
-            return staff.filter(s => s.branch_id === branchId && s.is_active);
-        }, [staff, branchId]);
-
         // Загрузка слотов
         useEffect(() => {
             let ignore = false;
             (async () => {
-                if (!branchId || !serviceId || !date || !selectedStaffId) {
+                if (!branchId || !serviceId || !date) {
                     setSlots([]);
                     setSlotStartISO('');
                     setSlotsLoading(false);
@@ -218,22 +211,15 @@ export default function StaffBookingsView({
         // Сброс при смене филиала
         useEffect(() => {
             setServiceId('');
-            setSelectedStaffId(staffId);
             setSlots([]);
             setSlotStartISO('');
-        }, [branchId, staffId]);
+        }, [branchId]);
 
         // Сброс при смене даты
         useEffect(() => {
             setSlots([]);
             setSlotStartISO('');
         }, [date]);
-
-        // Сброс при смене мастера
-        useEffect(() => {
-            setSlots([]);
-            setSlotStartISO('');
-        }, [selectedStaffId]);
 
         function getServiceName(service: Service): string {
             if (locale === 'ky' && service.name_ky) return service.name_ky;
@@ -245,30 +231,21 @@ export default function StaffBookingsView({
             const svc = servicesByBranch.find(s => s.id === serviceId);
             if (!svc) return alert(t('staff.cabinet.bookings.create.errors.selectService', 'Выберите услугу'));
             if (!slotStartISO) return alert(t('staff.cabinet.bookings.create.errors.noSlots', 'Нет свободных слотов'));
-            if (!selectedStaffId) return alert(t('staff.cabinet.bookings.create.errors.selectStaff', 'Выберите мастера'));
 
-            let p_client_id: string | null = null;
-            let p_client_name: string | null = null;
-            let p_client_phone: string | null = null;
+            // Валидация данных клиента (всегда обязательны)
+            const name = newClientName.trim();
+            const phone = newClientPhone.trim();
 
-            if (clientMode === 'new') {
-                const name = newClientName.trim();
-                const phone = newClientPhone.trim();
+            const nameValidation = validateName(name, true);
+            if (!nameValidation.valid) {
+                alert(nameValidation.error || t('staff.cabinet.bookings.create.errors.nameRequired', 'Введите имя клиента'));
+                return;
+            }
 
-                const nameValidation = validateName(name, true);
-                if (!nameValidation.valid) {
-                    alert(nameValidation.error || t('staff.cabinet.bookings.create.errors.nameRequired', 'Введите имя клиента'));
-                    return;
-                }
-
-                const phoneValidation = validatePhone(phone, true);
-                if (!phoneValidation.valid) {
-                    alert(phoneValidation.error || t('staff.cabinet.bookings.create.errors.phoneRequired', 'Введите корректный номер телефона'));
-                    return;
-                }
-
-                p_client_name = name;
-                p_client_phone = phone;
+            const phoneValidation = validatePhone(phone, true);
+            if (!phoneValidation.valid) {
+                alert(phoneValidation.error || t('staff.cabinet.bookings.create.errors.phoneRequired', 'Введите корректный номер телефона'));
+                return;
             }
 
             setCreating(true);
@@ -280,9 +257,9 @@ export default function StaffBookingsView({
                     p_staff_id: selectedStaffId,
                     p_start: slotStartISO,
                     p_minutes: svc.duration_min,
-                    p_client_id,
-                    p_client_name,
-                    p_client_phone,
+                    p_client_id: null,
+                    p_client_name: name,
+                    p_client_phone: phone,
                 });
                 if (error) {
                     alert(error.message);
@@ -296,7 +273,6 @@ export default function StaffBookingsView({
                 setServiceId('');
                 setSlotStartISO('');
                 setSlots([]);
-                setClientMode('new');
                 setNewClientName('');
                 setNewClientPhone('');
                 
@@ -307,8 +283,7 @@ export default function StaffBookingsView({
             }
         }
 
-        const canCreate = branchId && serviceId && selectedStaffId && slotStartISO &&
-            (clientMode === 'none' || (clientMode === 'new' && newClientName.trim() && newClientPhone.trim()));
+        const canCreate = branchId && serviceId && slotStartISO && newClientName.trim() && newClientPhone.trim();
 
         return (
             <Card variant="elevated" className="p-6 space-y-6">
@@ -348,30 +323,13 @@ export default function StaffBookingsView({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {t('staff.cabinet.bookings.create.staff', 'Мастер')}
-                        </label>
-                        <select
-                            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            value={selectedStaffId}
-                            onChange={(e) => setSelectedStaffId(e.target.value)}
-                            disabled={!branchId}
-                        >
-                            <option value="">{t('staff.cabinet.bookings.create.selectStaff', 'Выберите мастера')}</option>
-                            {staffByBranch.map(s => (
-                                <option key={s.id} value={s.id}>{s.full_name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {t('staff.cabinet.bookings.create.service', 'Услуга')}
                         </label>
                         <select
                             className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             value={serviceId}
                             onChange={(e) => setServiceId(e.target.value)}
-                            disabled={!branchId || !selectedStaffId}
+                            disabled={!branchId}
                         >
                             <option value="">{t('staff.cabinet.bookings.create.selectService', 'Выберите услугу')}</option>
                             {servicesByBranch.map(s => (
@@ -411,7 +369,7 @@ export default function StaffBookingsView({
                             })}
                         </div>
                     </div>
-                ) : branchId && selectedStaffId && serviceId && date ? (
+                ) : branchId && serviceId && date ? (
                     <div className="text-center py-4 text-gray-500 dark:text-gray-400">
                         {t('staff.cabinet.bookings.create.noSlots', 'Нет свободных слотов')}
                     </div>
@@ -419,67 +377,41 @@ export default function StaffBookingsView({
 
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-4">
                     <div className="font-semibold text-gray-900 dark:text-gray-100">
-                        {t('staff.cabinet.bookings.create.client', 'Клиент')}
+                        {t('staff.cabinet.bookings.create.client', 'Данные клиента')}
                     </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {t('staff.cabinet.bookings.create.clientDescription', 'Введите данные клиента, который звонит или приходит лично')}
+                    </p>
 
-                    <div className="flex flex-wrap gap-4">
-                        <label className="inline-flex items-center gap-2 cursor-pointer">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {t('staff.cabinet.bookings.create.clientName', 'Имя')} <span className="text-red-500">*</span>
+                            </label>
                             <input
-                                type="radio"
-                                name="clientMode"
-                                checked={clientMode === 'none'}
-                                onChange={() => setClientMode('none')}
-                                className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                                type="text"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder={t('staff.cabinet.bookings.create.clientNamePlaceholder', 'Введите имя клиента')}
+                                value={newClientName}
+                                onChange={(e) => setNewClientName(e.target.value)}
                             />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                                {t('staff.cabinet.bookings.create.clientNone', 'Без клиента (walk-in)')}
-                            </span>
-                        </label>
-                        <label className="inline-flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="clientMode"
-                                checked={clientMode === 'new'}
-                                onChange={() => setClientMode('new')}
-                                className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
-                            />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                                {t('staff.cabinet.bookings.create.clientNew', 'Новый клиент (звонок/лично)')}
-                            </span>
-                        </label>
-                    </div>
-
-                    {clientMode === 'new' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    {t('staff.cabinet.bookings.create.clientName', 'Имя')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder={t('staff.cabinet.bookings.create.clientNamePlaceholder', 'Введите имя клиента')}
-                                    value={newClientName}
-                                    onChange={(e) => setNewClientName(e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    {t('staff.cabinet.bookings.create.clientPhone', 'Телефон')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="tel"
-                                    className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="+996555123456"
-                                    value={newClientPhone}
-                                    onChange={(e) => setNewClientPhone(e.target.value)}
-                                />
-                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    {t('staff.cabinet.bookings.create.phoneFormat', 'Формат: +996555123456')}
-                                </p>
-                            </div>
                         </div>
-                    )}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {t('staff.cabinet.bookings.create.clientPhone', 'Телефон')} <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="tel"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="+996555123456"
+                                value={newClientPhone}
+                                onChange={(e) => setNewClientPhone(e.target.value)}
+                            />
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                {t('staff.cabinet.bookings.create.phoneFormat', 'Формат: +996555123456')}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
