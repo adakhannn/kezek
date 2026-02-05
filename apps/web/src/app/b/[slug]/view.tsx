@@ -304,12 +304,14 @@ export default function BookingForm({ data }: { data: Data }) {
                 const searchStart = new Date(dayStartUTC.getTime() - 12 * 60 * 60 * 1000);
                 const searchEnd = new Date(dayEndUTC.getTime() + 12 * 60 * 60 * 1000);
 
+                // Запрашиваем все брони для этого мастера и филиала на выбранный день
+                // Включаем все статусы кроме cancelled, чтобы точно исключить занятые слоты
                 const { data: existingBookings, error: bookingsError } = await supabase
                     .from('bookings')
                     .select('start_at, end_at, status')
                     .eq('staff_id', staffId)
                     .eq('branch_id', targetBranchId)
-                    .in('status', ['confirmed', 'paid'])  // Только подтвержденные и оплаченные, без hold
+                    .not('status', 'eq', 'cancelled')  // Исключаем только отмененные
                     .gte('start_at', searchStart.toISOString())
                     .lte('end_at', searchEnd.toISOString());
 
@@ -322,6 +324,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 }
 
                 if (existingBookings && existingBookings.length > 0) {
+                    console.log('[Booking] Filtering slots, found', existingBookings.length, 'existing bookings');
                     const filtered = slotsFromHook.filter((slot) => {
                         const slotStart = new Date(slot.start_at);
                         const slotEnd = new Date(slot.end_at);
@@ -329,13 +332,23 @@ export default function BookingForm({ data }: { data: Data }) {
                         const overlaps = existingBookings.some((booking) => {
                             const bookingStart = new Date(booking.start_at);
                             const bookingEnd = new Date(booking.end_at);
-                            return slotStart < bookingEnd && slotEnd > bookingStart;
+                            // Проверяем пересечение временных интервалов
+                            const hasOverlap = slotStart < bookingEnd && slotEnd > bookingStart;
+                            if (hasOverlap) {
+                                console.log('[Booking] Slot overlaps with booking:', {
+                                    slot: { start: slotStart.toISOString(), end: slotEnd.toISOString() },
+                                    booking: { start: bookingStart.toISOString(), end: bookingEnd.toISOString(), status: booking.status },
+                                });
+                            }
+                            return hasOverlap;
                         });
 
                         return !overlaps;
                     });
+                    console.log('[Booking] Filtered slots:', filtered.length, 'out of', slotsFromHook.length);
                     setSlots(filtered);
                 } else {
+                    console.log('[Booking] No existing bookings found, showing all slots');
                     setSlots(slotsFromHook);
                 }
             } catch (e) {
