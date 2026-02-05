@@ -554,9 +554,26 @@ export async function POST(req: Request) {
             if (!emailResponse.ok) {
                 const errorText = await emailResponse.text().catch(() => 'Unknown error');
                 console.error('[notify] Failed to send email to', rcp.email, 'role:', rcp.role, 'status:', emailResponse.status, 'error:', errorText);
+                // Для владельца логируем более подробно
+                if (rcp.role === 'owner') {
+                    console.error('[notify] CRITICAL: Failed to send email to owner!', {
+                        email: rcp.email,
+                        owner_id: biz?.owner_id,
+                        status: emailResponse.status,
+                        error: errorText,
+                    });
+                }
             } else {
                 const result = await emailResponse.json().catch(() => ({}));
                 console.log('[notify] Email sent successfully to', rcp.email, 'role:', rcp.role, 'result:', result);
+                // Для владельца логируем более подробно
+                if (rcp.role === 'owner') {
+                    console.log('[notify] Owner email sent successfully!', {
+                        email: rcp.email,
+                        owner_id: biz?.owner_id,
+                        result,
+                    });
+                }
                 sent += 1;
             }
         }
