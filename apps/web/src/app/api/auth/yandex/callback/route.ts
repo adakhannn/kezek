@@ -98,7 +98,6 @@ export async function GET(req: Request) {
                 .from('profiles')
                 .update({
                     full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
-                    email: yandexUser.default_email || null,
                     yandex_id: String(yandexUser.id),
                     yandex_username: yandexUser.login || null,
                     updated_at: new Date().toISOString(),
@@ -132,20 +131,36 @@ export async function GET(req: Request) {
                     authError.message?.includes('email address has already been registered')) {
                     console.log('[yandex/callback] User already exists, trying to find by email:', email);
                     
-                    // Ищем пользователя по email через profiles
-                    const { data: profileByEmail } = await admin
-                        .from('profiles')
-                        .select('id')
-                        .eq('email', email)
-                        .maybeSingle();
-                    
-                    if (profileByEmail?.id) {
-                        userId = profileByEmail.id;
-                        console.log('[yandex/callback] Found existing user by email in profiles:', userId);
-                    } else {
-                        // Если не нашли в profiles, пытаемся найти через auth.users
-                        // Используем getUserByEmail через admin API
-                        try {
+                    // Ищем пользователя по email через auth_users_view
+                    try {
+                        const { data: userByEmail } = await admin
+                            .from('auth_users_view')
+                            .select('id')
+                            .eq('email', email)
+                            .maybeSingle();
+                        
+                        if (userByEmail?.id) {
+                            userId = userByEmail.id;
+                            console.log('[yandex/callback] Found existing user by email in auth_users_view:', userId);
+                            
+                            // Создаем профиль, если его нет
+                            const { data: existingProfile } = await admin
+                                .from('profiles')
+                                .select('id')
+                                .eq('id', userId)
+                                .maybeSingle();
+                            
+                            if (!existingProfile) {
+                                await admin.from('profiles').insert({
+                                    id: userId,
+                                    full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
+                                    yandex_id: String(yandexUser.id),
+                                    yandex_username: yandexUser.login || null,
+                                });
+                            }
+                        } else {
+                            // Если не нашли в auth_users_view, пытаемся найти через auth.users
+                            // Используем listUsers через admin API
                             const { data: { users } } = await admin.auth.admin.listUsers();
                             const existingUser = users?.find(u => u.email === email);
                             
@@ -163,8 +178,9 @@ export async function GET(req: Request) {
                                 if (!existingProfile) {
                                     await admin.from('profiles').insert({
                                         id: userId,
-                                        email: yandexUser.default_email || null,
                                         full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
+                                        yandex_id: String(yandexUser.id),
+                                        yandex_username: yandexUser.login || null,
                                     });
                                 }
                             } else {
@@ -174,12 +190,12 @@ export async function GET(req: Request) {
                                     `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
                                 );
                             }
-                        } catch (listError) {
-                            console.error('[yandex/callback] Error listing users:', listError);
-                            return NextResponse.redirect(
-                                `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
-                            );
                         }
+                    } catch (listError) {
+                        console.error('[yandex/callback] Error finding user by email:', listError);
+                        return NextResponse.redirect(
+                            `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
+                        );
                     }
                 } else {
                     // Другая ошибка
@@ -210,7 +226,6 @@ export async function GET(req: Request) {
                 const { error: profileInsertError } = await admin.from('profiles').insert({
                     id: userId,
                     full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
-                    email: yandexUser.default_email || null,
                     yandex_id: String(yandexUser.id),
                     yandex_username: yandexUser.login || null,
                 });
@@ -225,7 +240,6 @@ export async function GET(req: Request) {
                     .from('profiles')
                     .update({
                         full_name: yandexUser.real_name || yandexUser.display_name || yandexUser.first_name || null,
-                        email: yandexUser.default_email || null,
                         yandex_id: String(yandexUser.id),
                         yandex_username: yandexUser.login || null,
                         updated_at: new Date().toISOString(),
