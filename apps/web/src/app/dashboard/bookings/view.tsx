@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
+import { validateName, validatePhone } from '@/lib/validation';
 
 type ServiceRow = { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number; branch_id: string };
 type StaffRow   = { id: string; full_name: string; branch_id: string };
@@ -777,7 +778,7 @@ function QuickDesk({
     const [creating, setCreating] = useState(false);
 
     // ====== Клиент ======
-    type ClientMode = 'none' | 'existing';
+    type ClientMode = 'none' | 'existing' | 'new';
     const [clientMode, setClientMode] = useState<ClientMode>('none');
 
     // существующий клиент (поиск)
@@ -786,6 +787,10 @@ function QuickDesk({
     const [searchErr, setSearchErr] = useState<string | null>(null);
     const [foundUsers, setFoundUsers] = useState<{id:string; full_name:string; email:string|null; phone:string|null}[]>([]);
     const [selectedClientId, setSelectedClientId] = useState<string>('');
+
+    // новый клиент (по телефону/лично)
+    const [newClientName, setNewClientName] = useState('');
+    const [newClientPhone, setNewClientPhone] = useState('');
 
     async function searchUsers(q: string) {
         setSearchLoading(true); setSearchErr(null);
@@ -901,6 +906,19 @@ function QuickDesk({
         return () => clearTimeout(timer);
     }, [searchQ, clientMode, searchUsers]);
 
+    // Сброс полей при смене режима клиента
+    useEffect(() => {
+        if (clientMode !== 'new') {
+            setNewClientName('');
+            setNewClientPhone('');
+        }
+        if (clientMode !== 'existing') {
+            setSearchQ('');
+            setFoundUsers([]);
+            setSelectedClientId('');
+        }
+    }, [clientMode]);
+
     async function quickCreate() {
         const svc = servicesByBranch.find(s => s.id === serviceId);
         if (!svc) return alert(t('bookings.desk.errors.selectService', 'Выбери услугу'));
@@ -921,10 +939,32 @@ function QuickDesk({
 
         // валидация клиента
         let p_client_id: string | null = null;
+        let p_client_name: string | null = null;
+        let p_client_phone: string | null = null;
 
         if (clientMode === 'existing') {
             if (!selectedClientId) return alert(t('bookings.desk.errors.selectClient', 'Выбери клиента из поиска'));
             p_client_id = selectedClientId;
+        } else if (clientMode === 'new') {
+            const name = newClientName.trim();
+            const phone = newClientPhone.trim();
+
+            // Валидация имени
+            const nameValidation = validateName(name, true);
+            if (!nameValidation.valid) {
+                alert(nameValidation.error || t('bookings.desk.errors.nameRequired', 'Введите имя клиента'));
+                return;
+            }
+
+            // Валидация телефона
+            const phoneValidation = validatePhone(phone, true);
+            if (!phoneValidation.valid) {
+                alert(phoneValidation.error || t('bookings.desk.errors.phoneRequired', 'Введите корректный номер телефона'));
+                return;
+            }
+
+            p_client_name = name;
+            p_client_phone = phone;
         }
 
         setCreating(true);
@@ -937,8 +977,8 @@ function QuickDesk({
                 p_start: slotStartISO,
                 p_minutes: svc.duration_min,
                 p_client_id,
-                p_client_name: null,
-                p_client_phone: null,
+                p_client_name,
+                p_client_phone,
             });
             if (error) {
                 alert(error.message);
@@ -958,6 +998,8 @@ function QuickDesk({
             setSelectedClientId('');
             setSearchQ('');
             setFoundUsers([]);
+            setNewClientName('');
+            setNewClientPhone('');
         } finally {
             setCreating(false);
         }
@@ -965,7 +1007,9 @@ function QuickDesk({
 
     // Проверка готовности к созданию записи
     const canCreate = branchId && serviceId && staffId && slotStartISO && 
-        (clientMode === 'none' || (clientMode === 'existing' && selectedClientId));
+        (clientMode === 'none' || 
+         (clientMode === 'existing' && selectedClientId) ||
+         (clientMode === 'new' && newClientName.trim() && newClientPhone.trim()));
 
     const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
     const tomorrow = formatInTimeZone(addDays(new Date(), 1), TZ, 'yyyy-MM-dd');
@@ -1109,6 +1153,10 @@ function QuickDesk({
                         <input type="radio" name="clientMode" checked={clientMode==='existing'} onChange={()=>setClientMode('existing')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
                         <span className="text-sm text-gray-700 dark:text-gray-300">{t('bookings.desk.clientExisting', 'Существующий')}</span>
                     </label>
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="clientMode" checked={clientMode==='new'} onChange={()=>setClientMode('new')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{t('bookings.desk.clientNew', 'Новый клиент (звонок/лично)')}</span>
+                    </label>
                 </div>
 
                 {clientMode === 'existing' && (
@@ -1164,6 +1212,38 @@ function QuickDesk({
                                 )}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                )}
+
+                {clientMode === 'new' && (
+                    <div className="space-y-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                {t('bookings.desk.clientName', 'Имя')} <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text"
+                                className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                                placeholder={t('bookings.desk.newClientNamePlaceholder', 'Введите имя клиента')}
+                                value={newClientName} 
+                                onChange={e => setNewClientName(e.target.value)} 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                {t('bookings.desk.clientPhone', 'Телефон')} <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="tel"
+                                className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+                                placeholder={t('bookings.desk.newClientPhonePlaceholder', '+996555123456')}
+                                value={newClientPhone} 
+                                onChange={e => setNewClientPhone(e.target.value)} 
+                            />
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                {t('bookings.desk.phoneFormat', 'Формат: +996555123456')}
+                            </p>
                         </div>
                     </div>
                 )}

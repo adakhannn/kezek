@@ -11,13 +11,13 @@ export const runtime = 'nodejs';
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 export default async function StaffBookingsPage() {
-    const { supabase, staffId } = await getStaffContext();
+    const { supabase, staffId, bizId, branchId } = await getStaffContext();
 
     // Текущее время в нужной TZ как ISO (с оффсетом)
     const nowISO = formatInTimeZone(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
 
-    // Параллельные запросы для предстоящих и прошедших броней
-    const [upcomingResult, pastResult] = await Promise.all([
+    // Параллельные запросы для предстоящих и прошедших броней, а также данных для создания бронирований
+    const [upcomingResult, pastResult, servicesResult, staffResult, branchesResult] = await Promise.all([
         // Предстоящие брони (исключаем отменённые) - записи, которые еще не закончились (end_at >= now)
         supabase
             .from('bookings')
@@ -43,15 +43,45 @@ export default async function StaffBookingsPage() {
             .eq('staff_id', staffId)
             .lt('end_at', nowISO)
             .order('start_at', { ascending: false }),
+        // Услуги для создания бронирований (только активные)
+        supabase
+            .from('services')
+            .select('id, name_ru, name_ky, name_en, duration_min, active, branch_id')
+            .eq('biz_id', bizId)
+            .eq('active', true)
+            .order('name_ru'),
+        // Сотрудники для создания бронирований (только активные)
+        supabase
+            .from('staff')
+            .select('id, full_name, is_active, branch_id')
+            .eq('biz_id', bizId)
+            .eq('is_active', true)
+            .order('full_name'),
+        // Филиалы для создания бронирований (только активные)
+        supabase
+            .from('branches')
+            .select('id, name, is_active')
+            .eq('biz_id', bizId)
+            .eq('is_active', true)
+            .order('name'),
     ]);
 
     const upcoming = upcomingResult.data ?? [];
     const past = pastResult.data ?? [];
+    const services = servicesResult.data ?? [];
+    const staff = staffResult.data ?? [];
+    const branches = branchesResult.data ?? [];
 
     return (
         <StaffBookingsView
+            bizId={bizId}
+            staffId={staffId}
+            branchId={branchId}
             upcoming={upcoming}
             past={past}
+            services={services}
+            staff={staff}
+            branches={branches}
         />
     );
 }
