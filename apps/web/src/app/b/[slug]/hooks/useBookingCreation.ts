@@ -18,10 +18,11 @@ type UseBookingCreationParams = {
     t: (key: string, fallback?: string) => string;
     onAuthChoiceRequest: (slotTime: Date, slotStaffId?: string) => void;
     onStaffIdChange?: (staffId: string) => void; // Колбэк для обновления staffId при выборе "любого мастера"
+    onBookingCreated?: () => void; // Колбэк для обновления кэша слотов после создания бронирования
 };
 
 export function useBookingCreation(params: UseBookingCreationParams) {
-    const { bizId, branchId, service, staffId, isAuthed, t, onAuthChoiceRequest, onStaffIdChange } = params;
+    const { bizId, branchId, service, staffId, isAuthed, t, onAuthChoiceRequest, onStaffIdChange, onBookingCreated } = params;
     const [loading, setLoading] = useState(false);
 
     async function createBooking(slotTime: Date, slotStaffId?: string) {
@@ -116,6 +117,11 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 // Не блокируем пользователя, просто логируем
                 logError('BookingNotify', 'Failed to send confirm notification', e);
             });
+
+            // Обновляем кэш слотов после успешного создания бронирования
+            if (onBookingCreated) {
+                onBookingCreated();
+            }
 
             // Редирект на страницу бронирования
             location.href = `/booking/${bookingId}`;

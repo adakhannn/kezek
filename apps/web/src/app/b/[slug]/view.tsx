@@ -453,6 +453,10 @@ export default function BookingForm({ data }: { data: Data }) {
         staffId,
         branchId,
         t,
+        onBookingCreated: () => {
+            // Обновляем кэш слотов после создания бронирования
+            setSlotsRefreshKey((k) => k + 1);
+        },
     });
 
     // Состояние для модального окна выбора (авторизация или запись без регистрации)
@@ -478,6 +482,10 @@ export default function BookingForm({ data }: { data: Data }) {
         },
         onStaffIdChange: (newStaffId) => {
             setStaffId(newStaffId);
+        },
+        onBookingCreated: () => {
+            // Обновляем кэш слотов после создания бронирования
+            setSlotsRefreshKey((k) => k + 1);
         },
     });
 

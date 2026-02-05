@@ -18,13 +18,14 @@ type GuestBookingForm = {
 type UseGuestBookingParams = {
     bizId: string;
     service: Service | null;
-    staffId: string;
+    staffId: string; // Может быть 'any'
     branchId: string;
     t: (key: string, fallback?: string) => string;
+    onBookingCreated?: () => void; // Колбэк для обновления кэша слотов после создания бронирования
 };
 
 export function useGuestBooking(params: UseGuestBookingParams) {
-    const { bizId, service, staffId, branchId, t } = params;
+    const { bizId, service, staffId, branchId, t, onBookingCreated } = params;
     
     const [modalOpen, setModalOpen] = useState(false);
     const [slotTime, setSlotTime] = useState<Date | null>(null);
@@ -215,6 +216,11 @@ export function useGuestBooking(params: UseGuestBookingParams) {
 
             // Закрываем модальное окно
             closeModal();
+
+            // Обновляем кэш слотов после успешного создания бронирования
+            if (onBookingCreated) {
+                onBookingCreated();
+            }
 
             // Редирект на страницу бронирования
             if (result.booking_id) {
