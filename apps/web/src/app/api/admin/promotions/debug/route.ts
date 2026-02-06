@@ -46,6 +46,17 @@ export async function GET(request: Request) {
             return createErrorResponse('validation', 'Требуется clientId, branchId или bizId', undefined, 400);
         }
 
+        // Валидация UUID параметров для предотвращения SQL injection
+        if (clientId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientId)) {
+            return createErrorResponse('validation', 'Неверный формат clientId (требуется UUID)', undefined, 400);
+        }
+        if (branchId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(branchId)) {
+            return createErrorResponse('validation', 'Неверный формат branchId (требуется UUID)', undefined, 400);
+        }
+        if (bizId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(bizId)) {
+            return createErrorResponse('validation', 'Неверный формат bizId (требуется UUID)', undefined, 400);
+        }
+
         const serviceClient = getServiceClient();
 
         // Собираем данные для отладки

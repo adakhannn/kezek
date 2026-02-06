@@ -21,10 +21,14 @@ export async function POST(req: Request) {
         const { supabase, bizId } = await getBizContextForManagers();
 
         const { q, page = 1, perPage = 50 } = await req.json().catch(() => ({}));
-        const query = (q ?? '').trim().toLowerCase();
+        
+        // Валидация и санитизация входных данных для предотвращения проблем безопасности
+        const query = (q ?? '').trim().slice(0, 100).toLowerCase(); // Ограничиваем длину поискового запроса
+        const pageNum = Math.max(1, Math.min(100, Number(page) || 1)); // Ограничиваем page от 1 до 100
+        const perPageNum = Math.max(1, Math.min(100, Number(perPage) || 50)); // Ограничиваем perPage от 1 до 100
 
         const admin = getServiceClient();
-        const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+        const { data, error } = await admin.auth.admin.listUsers({ page: pageNum, perPage: perPageNum });
 
         if (error) {
             return createErrorResponse('validation', error.message, undefined, 400);

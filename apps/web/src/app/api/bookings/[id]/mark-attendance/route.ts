@@ -7,7 +7,7 @@ import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
-import { getRouteParamRequired } from '@/lib/routeParams';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 /**
@@ -90,7 +90,8 @@ export async function POST(req: Request, context: unknown) {
         RateLimitConfigs.normal,
         async () => {
             return withErrorHandler('BookingsMarkAttendance', async () => {
-                const bookingId = await getRouteParamRequired(context, 'id');
+                // Валидация UUID для предотвращения потенциальных проблем безопасности
+                const bookingId = await getRouteParamUuid(context, 'id');
                 const { bizId } = await getBizContextForManagers();
                 const admin = getServiceClient();
 

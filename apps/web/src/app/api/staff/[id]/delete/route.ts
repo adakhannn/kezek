@@ -5,12 +5,13 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { getRouteParamRequired } from '@/lib/routeParams';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function POST(_: Request, context: unknown) {
     try {
-        const staffId = await getRouteParamRequired(context, 'id');
+        // Валидация UUID для предотвращения потенциальных проблем безопасности
+        const staffId = await getRouteParamUuid(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 

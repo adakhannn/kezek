@@ -2,6 +2,8 @@
  * Утилиты для безопасного получения params из route handlers Next.js
  */
 
+import { isUuid } from './validation';
+
 /**
  * Извлекает params из context route handler.
  * Поддерживает как синхронные, так и асинхронные params (Next.js 15/16).
@@ -48,6 +50,24 @@ export async function getRouteParamRequired(
     if (!value) {
         throw new Error(`Missing required route parameter: ${key}`);
     }
+    return value;
+}
+
+/**
+ * Извлекает UUID параметр из route с валидацией формата.
+ * Бросает ошибку, если параметр отсутствует или не является валидным UUID.
+ */
+export async function getRouteParamUuid(
+    context: unknown,
+    key: string
+): Promise<string> {
+    const value = await getRouteParamRequired(context, key);
+    
+    // Валидация UUID для предотвращения потенциальных проблем безопасности
+    if (!isUuid(value)) {
+        throw new Error(`Invalid UUID format for route parameter: ${key}`);
+    }
+    
     return value;
 }
 

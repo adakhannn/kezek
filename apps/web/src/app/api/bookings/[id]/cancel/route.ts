@@ -4,14 +4,14 @@ export const dynamic = 'force-dynamic';
 
 import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
-import {NextResponse} from 'next/server';
 
-import { getRouteParamRequired } from '@/lib/routeParams';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { getRouteParamUuid } from '@/lib/routeParams';
 
 export async function POST(_: Request, context: unknown) {
     return withErrorHandler('BookingsCancel', async () => {
-        const bookingId = await getRouteParamRequired(context, 'id');
+        // Валидация UUID для предотвращения потенциальных проблем безопасности
+        const bookingId = await getRouteParamUuid(context, 'id');
 
         const cookieStore = await cookies();
         const supabase = createServerClient(

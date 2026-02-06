@@ -5,12 +5,13 @@ import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logWarn } from '@/lib/log';
-import { getRouteParamRequired } from '@/lib/routeParams';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function POST(_req: Request, context: unknown) {
     try {
-        const branchId = await getRouteParamRequired(context, 'id');
+        // Валидация UUID для предотвращения потенциальных проблем безопасности
+        const branchId = await getRouteParamUuid(context, 'id');
         const { supabase, bizId } = await getBizContextForManagers();
         
         // Проверяем, является ли пользователь суперадмином
