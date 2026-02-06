@@ -30,7 +30,7 @@ export default async function BranchesListPage() {
             .order('name'),
         supabase
             .from('businesses')
-            .select('slug')
+            .select('slug,name')
             .eq('id', bizId)
             .maybeSingle(),
     ]);
@@ -44,6 +44,7 @@ export default async function BranchesListPage() {
             branches={(branches ?? []) as Branch[]}
             isSuperAdmin={isSuperAdmin}
             businessSlug={business?.slug || null}
+            businessName={business?.name || null}
         />
     );
 }

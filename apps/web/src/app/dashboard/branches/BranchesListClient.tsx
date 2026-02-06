@@ -18,13 +18,20 @@ export default function BranchesListClient({
     branches,
     isSuperAdmin,
     businessSlug,
+    businessName,
 }: {
     branches: Branch[];
     isSuperAdmin: boolean;
     businessSlug: string | null;
+    businessName: string | null;
 }) {
     const { t, locale } = useLanguage();
-    const [qrCodeData, setQrCodeData] = useState<{ url: string; branchName: string } | null>(null);
+    const [qrCodeData, setQrCodeData] = useState<{ 
+        url: string; 
+        branchName: string; 
+        branchAddress: string | null;
+        businessName: string | null;
+    } | null>(null);
 
     function formatText(text: string): string {
         // Транслитерируем текст для английского языка
@@ -46,7 +53,12 @@ export default function BranchesListClient({
         }
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
         const bookingUrl = `${baseUrl}/b/${businessSlug}/booking?branch=${branch.id}`;
-        setQrCodeData({ url: bookingUrl, branchName: branch.name });
+        setQrCodeData({ 
+            url: bookingUrl, 
+            branchName: branch.name,
+            branchAddress: branch.address,
+            businessName: businessName,
+        });
     };
 
     return (
@@ -55,6 +67,8 @@ export default function BranchesListClient({
                 <QRCodeGenerator
                     url={qrCodeData.url}
                     branchName={qrCodeData.branchName}
+                    branchAddress={qrCodeData.branchAddress}
+                    businessName={qrCodeData.businessName}
                     onClose={() => setQrCodeData(null)}
                 />
             )}
