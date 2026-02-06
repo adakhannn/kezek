@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 
@@ -78,7 +79,7 @@ export default function QRCodeGenerator({
                 const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
                 const svgUrl = URL.createObjectURL(svgBlob);
 
-                const img = new Image();
+                const img = new window.Image();
                 img.crossOrigin = 'anonymous';
                 
                 img.onload = () => {
@@ -154,56 +155,83 @@ export default function QRCodeGenerator({
                     <div className="flex justify-center">
                         <div 
                             ref={brandedRef}
-                            className="bg-white p-10 rounded-2xl border-4 border-gray-300 shadow-2xl"
+                            className="relative overflow-hidden rounded-3xl shadow-2xl"
                             style={{ 
-                                width: '500px', 
+                                width: '400px', 
+                                height: '600px',
                                 maxWidth: '100%',
                                 printColorAdjust: 'exact',
                                 WebkitPrintColorAdjust: 'exact',
                             }}
                         >
-                            {/* Заголовок с названием бизнеса */}
-                            {businessName && (
-                                <div className="text-center mb-6">
-                                    <h2 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
-                                        {businessName}
-                                    </h2>
-                                    <div className="h-1.5 w-24 bg-gradient-to-r from-indigo-600 to-pink-600 mx-auto rounded-full shadow-md"></div>
-                                </div>
-                            )}
-
-                            {/* Название филиала */}
-                            <div className="text-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                                    {branchName}
-                                </h3>
-                                {branchAddress && (
-                                    <p className="text-base text-gray-600 leading-relaxed">
-                                        📍 {branchAddress}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* QR код */}
-                            <div className="flex justify-center mb-6 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 shadow-inner">
-                                <QRCodeSVG
-                                    value={url}
-                                    size={240}
-                                    level="H"
-                                    includeMargin={true}
-                                    fgColor="#000000"
-                                    bgColor="#ffffff"
+                            {/* Фоновое изображение шаблона */}
+                            <div className="absolute inset-0">
+                                <Image
+                                    src="/qr-template.png"
+                                    alt="QR Code Template"
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                    unoptimized
+                                    sizes="400px"
                                 />
                             </div>
 
-                            {/* Инструкция */}
-                            <div className="text-center space-y-1">
-                                <p className="text-base font-bold text-gray-800 mb-1">
-                                    📱 Отсканируйте для записи
-                                </p>
-                                <p className="text-sm text-gray-600 italic">
-                                    Scan to book an appointment
-                                </p>
+                            {/* Контент поверх изображения */}
+                            <div className="relative z-10 h-full flex flex-col items-center justify-between p-8">
+                                {/* Верхняя часть - логотип (скрыта, так как уже на изображении) */}
+                                <div className="text-center mt-4 opacity-0 pointer-events-none">
+                                    <div className="h-20"></div>
+                                </div>
+
+                                {/* Название филиала (если нужно показать) */}
+                                {branchName && (
+                                    <div className="text-center">
+                                        <h3 
+                                            className="text-lg font-semibold mb-1"
+                                            style={{ 
+                                                color: '#ffffff',
+                                                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                                            }}
+                                        >
+                                            {branchName}
+                                        </h3>
+                                        {branchAddress && (
+                                            <p 
+                                                className="text-xs"
+                                                style={{ 
+                                                    color: 'rgba(255,255,255,0.9)',
+                                                    textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                                                }}
+                                            >
+                                                {branchAddress}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* QR код в белом квадрате - позиционируем в нужном месте */}
+                                <div 
+                                    className="relative"
+                                    style={{
+                                        marginTop: 'auto',
+                                        marginBottom: '120px', // Позиционируем QR код в нужном месте
+                                    }}
+                                >
+                                    <div className="bg-white p-4 rounded-2xl shadow-xl">
+                                        <QRCodeSVG
+                                            value={url}
+                                            size={220}
+                                            level="H"
+                                            includeMargin={true}
+                                            fgColor="#000000"
+                                            bgColor="#ffffff"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Нижняя часть (скрыта, так как уже на изображении) */}
+                                <div className="h-8"></div>
                             </div>
                         </div>
                     </div>
