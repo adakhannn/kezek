@@ -184,31 +184,31 @@ export default function QRCodeGenerator({
                                     <div className="h-20"></div>
                                 </div>
 
-                                {/* Название филиала (если нужно показать) */}
-                                {branchName && (
-                                    <div className="text-center">
-                                        <h3 
-                                            className="text-lg font-semibold mb-1"
+                                {/* Название филиала и бизнеса поверх изображения */}
+                                <div className="text-center">
+                                    {businessName && (
+                                        <h2 
+                                            className="text-2xl font-bold mb-1"
                                             style={{ 
-                                                color: '#ffffff',
-                                                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                                                color: '#ff6b35',
+                                                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                            }}
+                                        >
+                                            {businessName}
+                                        </h2>
+                                    )}
+                                    {branchName && (
+                                        <h3 
+                                            className="text-xl font-semibold mb-1"
+                                            style={{ 
+                                                color: '#e91e63',
+                                                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
                                             }}
                                         >
                                             {branchName}
                                         </h3>
-                                        {branchAddress && (
-                                            <p 
-                                                className="text-xs"
-                                                style={{ 
-                                                    color: 'rgba(255,255,255,0.9)',
-                                                    textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                                                }}
-                                            >
-                                                {branchAddress}
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
+                                    )}
+                                </div>
 
                                 {/* QR код в белом квадрате - позиционируем в нужном месте */}
                                 <div 
@@ -237,22 +237,17 @@ export default function QRCodeGenerator({
                     </div>
                 </div>
 
-                {/* Простой QR код (для справки) */}
-                <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                        Простой QR код
-                    </h3>
-                    <div className="flex justify-center p-4 bg-white rounded-lg border-2 border-gray-200 dark:border-gray-700">
-                        <div ref={qrRef}>
-                            <QRCodeSVG
-                                value={url}
-                                size={200}
-                                level="H"
-                                includeMargin={true}
-                                fgColor="#000000"
-                                bgColor="#ffffff"
-                            />
-                        </div>
+                {/* Простой QR код (скрыт, но нужен для скачивания) */}
+                <div className="hidden">
+                    <div ref={qrRef}>
+                        <QRCodeSVG
+                            value={url}
+                            size={200}
+                            level="H"
+                            includeMargin={true}
+                            fgColor="#000000"
+                            bgColor="#ffffff"
+                        />
                     </div>
                 </div>
 
@@ -265,14 +260,6 @@ export default function QRCodeGenerator({
                         className="w-full"
                     >
                         {downloading ? 'Скачивание...' : '📄 Скачать брендированный QR код для печати'}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => handleDownload(false)}
-                        disabled={downloading}
-                        className="w-full"
-                    >
-                        Скачать простой QR код
                     </Button>
                     {onClose && (
                         <Button variant="outline" onClick={onClose} className="w-full">
