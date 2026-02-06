@@ -278,8 +278,11 @@ export async function POST(req: Request) {
             clientName = raw.client_name;
         }
 
-        // E-mail + имя + телефон + telegram_id владельца (через Admin API для надежности)
+        // E-mail + имя + телефон + telegram_id владельца
+        // ВАЖНО: email для уведомлений берется из email_notify_to (приоритет), а не из auth.users
+        // email из auth.users используется только как fallback, если email_notify_to пустой
         let ownerEmail: string | null = null;
+        let ownerEmailFromAuth: string | null = null; // Сохраняем email из auth.users только для fallback
         let ownerName: string | null = null;
         let ownerPhone: string | null = null;
         let ownerTelegramId: number | null = null;
@@ -290,12 +293,12 @@ export async function POST(req: Request) {
             try {
                 const { data: ou, error: ouError } = await admin.auth.admin.getUserById(biz.owner_id);
                 if (!ouError && ou?.user) {
-                    ownerEmail = ou.user.email ?? null;
+                    ownerEmailFromAuth = ou.user.email ?? null; // Сохраняем для fallback
                     const meta = (ou.user.user_metadata ?? {}) as Partial<{ full_name: string }>;
                     ownerName = meta.full_name ?? null;
                     // Номер телефона из auth.users.phone (для авторизации по телефону)
                     ownerPhone = (ou.user as { phone?: string | null }).phone ?? null;
-                    console.log('[notify] Got owner data via Admin API:', { email: ownerEmail, name: ownerName, phone: ownerPhone });
+                    console.log('[notify] Got owner data via Admin API:', { email: ownerEmailFromAuth, name: ownerName, phone: ownerPhone });
                 } else {
                     console.log('[notify] Failed to get owner data via Admin API:', { error: ouError?.message, hasUser: !!ou?.user });
                 }
@@ -304,7 +307,7 @@ export async function POST(req: Request) {
             }
             
             // Fallback: пробуем через auth_users_view
-            if (!ownerEmail || !ownerPhone) {
+            if (!ownerEmailFromAuth || !ownerPhone) {
                 try {
                     const { data: ou } = await supabase
                         .from('auth_users_view')
@@ -312,10 +315,10 @@ export async function POST(req: Request) {
                         .eq('id', biz.owner_id)
                         .maybeSingle<{ email: string | null; full_name: string | null; phone: string | null }>();
                     if (ou) {
-                        ownerEmail = ownerEmail || (ou.email ?? null);
+                        ownerEmailFromAuth = ownerEmailFromAuth || (ou.email ?? null);
                         ownerName = ownerName || (ou.full_name ?? null);
                         ownerPhone = ownerPhone || (ou.phone ?? null);
-                        console.log('[notify] Got owner data from auth_users_view:', { email: ownerEmail, phone: ownerPhone });
+                        console.log('[notify] Got owner data from auth_users_view:', { email: ownerEmailFromAuth, phone: ownerPhone });
                     } else {
                         console.log('[notify] No owner data found in auth_users_view for owner_id:', biz.owner_id);
                     }
@@ -326,12 +329,13 @@ export async function POST(req: Request) {
             
             console.log('[notify] Owner data summary:', {
                 owner_id: biz.owner_id,
-                ownerEmail,
+                ownerEmailFromAuth, // Email из auth.users (используется только как fallback)
+                ownerEmail, // Email для уведомлений (будет установлен из email_notify_to или fallback)
                 ownerName,
                 ownerPhone,
                 ownerTelegramId,
-                hasEmail: !!ownerEmail,
-                emailLength: ownerEmail?.length || 0,
+                hasEmail: !!ownerEmailFromAuth,
+                emailLength: ownerEmailFromAuth?.length || 0,
             });
             
             // Важно: номер телефона может быть в profiles.phone (для связи, не для авторизации)
@@ -426,21 +430,29 @@ export async function POST(req: Request) {
         }
         const adminEmails = biz?.email_notify_to ?? [];
         
-        // Если в email_notify_to есть email, используем первый из них как основной email для владельца
+        // ПРИОРИТЕТ: email для уведомлений владельца берется из email_notify_to, а НЕ из auth.users
+        // email из auth.users (ownerEmailFromAuth) используется только как fallback, если email_notify_to пустой
         // Это позволяет владельцу указать другой email для уведомлений, отличный от email аккаунта
-        // Например, если владелец авторизован через lowfade.9909@gmail.com, но хочет получать уведомления на low.low.fade.osh@gmail.com
+        // Например, если владелец авторизован через lowfade.9909@gmail.com, но хочет получать уведомления на low.fade.osh@gmail.com
         if (adminEmails.length > 0) {
             const normalizedAdminEmails = normalizeEmails(adminEmails);
             if (normalizedAdminEmails.length > 0) {
                 const primaryNotifyEmail = normalizedAdminEmails[0];
-                console.log('[notify] Found email_notify_to, using first email for owner:', {
-                    originalEmail: ownerEmail,
-                    notifyEmail: primaryNotifyEmail,
+                console.log('[notify] Using email from email_notify_to for owner notifications:', {
+                    emailFromAuth: ownerEmailFromAuth, // Email из auth.users (не используется для уведомлений)
+                    notifyEmail: primaryNotifyEmail, // Email из email_notify_to (используется для уведомлений)
                     allNotifyEmails: normalizedAdminEmails,
-                    note: 'email_notify_to takes priority over auth.users email for owner notifications',
+                    note: 'email_notify_to takes priority - email from auth.users is NOT used for notifications',
                 });
-                ownerEmail = primaryNotifyEmail;
+                ownerEmail = primaryNotifyEmail; // Используем email из email_notify_to
             }
+        } else {
+            // Fallback: если email_notify_to пустой, используем email из auth.users
+            ownerEmail = ownerEmailFromAuth;
+            console.log('[notify] email_notify_to is empty, using email from auth.users as fallback:', {
+                ownerEmail,
+                note: 'Consider adding email_notify_to to use a different email for notifications',
+            });
         }
 
         const title =
