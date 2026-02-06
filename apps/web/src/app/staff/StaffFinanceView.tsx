@@ -679,7 +679,9 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             >
                 {t('staff.finance.tabs.clients', 'Клиенты')} {items.length > 0 && `(${items.length})`}
             </button>
-            {stats && (
+            {/* Вкладка "Статистика" показывается только для сотрудника (без staffId), 
+                так как для владельца статистика показывается отдельным компонентом StaffFinanceStats ниже */}
+            {stats && !staffId && (
                 <button
                     onClick={() => setActiveTab('stats')}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
@@ -1484,8 +1486,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             </Card>
             )}
 
-            {/* Таб: Статистика */}
-            {activeTab === 'stats' && stats && (
+            {/* Таб: Статистика - показывается только для сотрудника (без staffId) */}
+            {activeTab === 'stats' && stats && !staffId && (
                 <Card variant="elevated" className="p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
