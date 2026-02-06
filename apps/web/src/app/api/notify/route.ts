@@ -42,6 +42,16 @@ interface BizRow {
     phones: string[] | null;
     owner_id?: string | null;
 }
+interface BranchRow {
+    name: string;
+    address: string | null;
+}
+interface ServiceRow {
+    name_ru: string;
+    duration_min: number;
+    price_from: number | null;
+    price_to: number | null;
+}
 interface BookingRow {
     id: string;
     status: string;
@@ -55,6 +65,7 @@ interface BookingRow {
     services: ServiceRow[] | ServiceRow | null;
     staff:    StaffRow[]    | StaffRow    | null;
     biz:      BizRow[]      | BizRow      | null;
+    branches: BranchRow[]   | BranchRow   | null;
 }
 
 /* ---------- helpers ---------- */
@@ -178,9 +189,10 @@ export async function POST(req: Request) {
             .from('bookings')
             .select(`
         id, status, start_at, end_at, created_at, client_id, client_phone, client_name, client_email,
-        services:services!bookings_service_id_fkey ( name_ru, duration_min ),
+        services:services!bookings_service_id_fkey ( name_ru, duration_min, price_from, price_to ),
         staff:staff!bookings_staff_id_fkey ( full_name, email, phone, user_id ),
-        biz:businesses!bookings_biz_id_fkey ( name, email_notify_to, slug, address, phones, owner_id )
+        biz:businesses!bookings_biz_id_fkey ( name, email_notify_to, slug, address, phones, owner_id ),
+        branches:branches!bookings_branch_id_fkey ( name, address )
       `)
             .eq('id', body.booking_id)
             .maybeSingle<BookingRow>();
@@ -461,32 +473,85 @@ export async function POST(req: Request) {
                     'Бронь отменена';
 
         const when = formatInTimeZone(new Date(raw.start_at), TZ, 'dd.MM.yyyy HH:mm');
+        const whenEnd = formatInTimeZone(new Date(raw.end_at), TZ, 'HH:mm');
+        const created = formatInTimeZone(new Date(raw.created_at), TZ, 'dd.MM.yyyy HH:mm');
         const svcName = svc?.name_ru ?? 'Услуга';
+        const svcDuration = svc?.duration_min ?? 0;
+        const svcPriceFrom = svc?.price_from;
+        const svcPriceTo = svc?.price_to;
+        const priceText = svcPriceFrom && svcPriceTo 
+            ? (svcPriceFrom === svcPriceTo ? `${svcPriceFrom} сом` : `${svcPriceFrom} - ${svcPriceTo} сом`)
+            : svcPriceFrom ? `${svcPriceFrom} сом` : null;
         const master  = staf?.full_name ?? 'Мастер';
+        const masterPhone = staf?.phone;
         const bizName = biz?.name ?? 'Бизнес';
+        const bizAddress = biz?.address;
+        const bizPhones = biz?.phones ?? [];
+        const branch = first(raw.branches);
+        const branchName = branch?.name;
+        const branchAddress = branch?.address;
         const link    = `${origin}/booking/${raw.id}`;
         const statusRuText = statusRu(raw.status);
+        
+        // Информация о клиенте
+        const clientInfo = [];
+        if (clientName) clientInfo.push(`Имя: ${clientName}`);
+        if (clientPhone) clientInfo.push(`Телефон: ${clientPhone}`);
+        if (clientEmail && !raw.client_id) clientInfo.push(`Email: ${clientEmail}`); // Только для гостевых броней
+        const clientInfoText = clientInfo.length > 0 ? clientInfo.join(', ') : 'Клиент не указан';
 
         // HTML + текстовая версия (базовая, без персонализации)
         const baseHtml = `
-      <div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.5;">
-        <h2 style="margin:0 0 12px 0">${title}: ${bizName}</h2>
-        <p style="margin:0 0 6px 0"><b>Услуга:</b> ${svcName}</p>
-        <p style="margin:0 0 6px 0"><b>Мастер:</b> ${master}</p>
-        <p style="margin:0 0 6px 0"><b>Время:</b> ${when} (${TZ})</p>
-        <p style="margin:0 0 10px 0"><b>Статус:</b> ${statusRuText}</p>
-        <p style="margin:0 0 12px 0"><a href="${link}" target="_blank" rel="noopener">Открыть бронь</a></p>
-        <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0" />
-        <small style="color:#6b7280">Письмо отправлено автоматически Kezek</small>
+      <div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6;color:#1f2937;">
+        <h2 style="margin:0 0 16px 0;color:#111827;font-size:20px;">${title}: ${bizName}</h2>
+        
+        <div style="background:#f9fafb;padding:16px;border-radius:8px;margin-bottom:16px;">
+          <h3 style="margin:0 0 12px 0;font-size:16px;color:#111827;">Детали бронирования</h3>
+          <p style="margin:0 0 8px 0;"><b>Номер брони:</b> <code style="background:#e5e7eb;padding:2px 6px;border-radius:4px;font-size:12px;">${raw.id.slice(0, 8)}</code></p>
+          <p style="margin:0 0 8px 0;"><b>Услуга:</b> ${svcName}${svcDuration ? ` (${svcDuration} мин)` : ''}${priceText ? ` — ${priceText}` : ''}</p>
+          <p style="margin:0 0 8px 0;"><b>Мастер:</b> ${master}${masterPhone ? ` (${masterPhone})` : ''}</p>
+          <p style="margin:0 0 8px 0;"><b>Время:</b> ${when} - ${whenEnd} (${TZ})</p>
+          <p style="margin:0 0 8px 0;"><b>Статус:</b> <span style="color:${raw.status === 'confirmed' || raw.status === 'paid' ? '#059669' : raw.status === 'cancelled' ? '#dc2626' : '#f59e0b'};font-weight:600;">${statusRuText}</span></p>
+          ${branchName ? `<p style="margin:0 0 8px 0;"><b>Филиал:</b> ${branchName}${branchAddress ? ` — ${branchAddress}` : ''}</p>` : ''}
+          ${!branchName && bizAddress ? `<p style="margin:0 0 8px 0;"><b>Адрес:</b> ${bizAddress}</p>` : ''}
+          <p style="margin:0 0 0 0;"><b>Создано:</b> ${created}</p>
+        </div>
+        
+        <div style="background:#eff6ff;padding:16px;border-radius:8px;margin-bottom:16px;">
+          <h3 style="margin:0 0 12px 0;font-size:16px;color:#111827;">Информация о клиенте</h3>
+          <p style="margin:0 0 0 0;">${clientInfoText}</p>
+        </div>
+        
+        ${bizPhones.length > 0 ? `
+        <div style="background:#f0fdf4;padding:16px;border-radius:8px;margin-bottom:16px;">
+          <h3 style="margin:0 0 12px 0;font-size:16px;color:#111827;">Контакты</h3>
+          <p style="margin:0 0 0 0;"><b>Телефоны:</b> ${bizPhones.map(p => `<a href="tel:${p}" style="color:#2563eb;text-decoration:none;">${p}</a>`).join(', ')}</p>
+        </div>
+        ` : ''}
+        
+        <div style="margin:16px 0;text-align:center;">
+          <a href="${link}" target="_blank" rel="noopener" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Открыть бронь в системе</a>
+        </div>
+        
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0" />
+        <small style="color:#6b7280;font-size:12px;">Письмо отправлено автоматически системой Kezek</small>
       </div>
     `.trim();
 
         const text =
-            `${title}: ${bizName}\n` +
-            `Услуга: ${svcName}\n` +
-            `Мастер: ${master}\n` +
-            `Время: ${when} (${TZ})\n` +
+            `${title}: ${bizName}\n\n` +
+            `Детали бронирования:\n` +
+            `Номер брони: ${raw.id.slice(0, 8)}\n` +
+            `Услуга: ${svcName}${svcDuration ? ` (${svcDuration} мин)` : ''}${priceText ? ` — ${priceText}` : ''}\n` +
+            `Мастер: ${master}${masterPhone ? ` (${masterPhone})` : ''}\n` +
+            `Время: ${when} - ${whenEnd} (${TZ})\n` +
             `Статус: ${statusRuText}\n` +
+            `${branchName ? `Филиал: ${branchName}${branchAddress ? ` — ${branchAddress}` : ''}\n` : ''}` +
+            `${!branchName && bizAddress ? `Адрес: ${bizAddress}\n` : ''}` +
+            `Создано: ${created}\n\n` +
+            `Информация о клиенте:\n` +
+            `${clientInfoText}\n\n` +
+            `${bizPhones.length > 0 ? `Контакты: ${bizPhones.join(', ')}\n\n` : ''}` +
             `Ссылка: ${link}`;
 
         // --- формируем получателей
