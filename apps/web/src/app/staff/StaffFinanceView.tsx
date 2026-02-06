@@ -709,129 +709,116 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                 toasts={toast.toasts}
                 onRemove={toast.removeToast}
             />
-            <main className="mx-auto max-w-4xl p-6 space-y-6">
-            <div>
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                    {t('staff.finance.title', 'Финансы')}
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {t('staff.finance.subtitle', 'Управление сменой, клиентами и тем, сколько получает сотрудник и бизнес')}
-                </p>
-            </div>
+            
+            {/* Для владельца убираем заголовок и описание, так как они уже есть в StaffFinancePageClient */}
+            {!staffId && (
+                <div className="mb-6 px-6 pt-6">
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                        {t('staff.finance.title', 'Финансы')}
+                    </h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {t('staff.finance.subtitle', 'Управление сменой, клиентами и тем, сколько получает сотрудник и бизнес')}
+                    </p>
+                </div>
+            )}
 
-            <Tabs />
+            <div className={staffId ? '' : 'px-6'}>
+                <Tabs />
+            </div>
 
             {/* Таб: Текущая смена */}
             {activeTab === 'shift' && (
-                <Card variant="elevated" className="p-6 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                    {t('staff.finance.shift.current', 'Текущая смена')}
+                <div className={`space-y-4 ${staffId ? 'p-6' : 'px-6 pb-6'}`}>
+                    {/* Компактный заголовок смены */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-4 flex-1">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {t('staff.finance.shift.current', 'Текущая смена')}
+                                    </span>
+                                    {staffId && (
+                                        <DatePickerPopover
+                                            value={formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}
+                                            onChange={(dateStr) => {
+                                                const [year, month, day] = dateStr.split('-').map(Number);
+                                                setShiftDate(new Date(year, month - 1, day));
+                                            }}
+                                            className="inline-block"
+                                        />
+                                    )}
                                 </div>
-                                {staffId && (
-                                    <DatePickerPopover
-                                        value={formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}
-                                        onChange={(dateStr) => {
-                                            const [year, month, day] = dateStr.split('-').map(Number);
-                                            setShiftDate(new Date(year, month - 1, day));
-                                        }}
-                                        className="inline-block"
-                                    />
+                                <div className="text-base text-gray-600 dark:text-gray-400">
+                                    {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
+                                </div>
+                                {todayShift && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        {t('staff.finance.shift.opened', 'Открыта')}: {formatTime(todayShift.opened_at, locale)}
+                                    </div>
                                 )}
                             </div>
-                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
-                            </div>
                             {todayShift && (
-                                <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                                    <div>{t('staff.finance.shift.opened', 'Открыта')}: {formatTime(todayShift.opened_at, locale)}</div>
-                                    {showShiftDetails && (
-                                        <>
-                                            <div>
-                                                {t('staff.finance.shift.expectedStart', 'Плановый старт')}:{' '}
-                                                {todayShift.expected_start
-                                                    ? formatTime(todayShift.expected_start, locale)
-                                                    : t('staff.finance.shift.notSet', 'не задан')}
-                                            </div>
-                                            <div>
-                                                {t('staff.finance.shift.late', 'Опоздание')}:{' '}
-                                                {todayShift.late_minutes > 0
-                                                    ? `${todayShift.late_minutes} ${t('staff.finance.shift.minutes', 'мин')}`
-                                                    : t('staff.finance.shift.no', 'нет')}
-                                            </div>
-                                        </>
-                                    )}
-                                    {todayShift && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowShiftDetails(!showShiftDetails)}
-                                            className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1"
-                                        >
-                                            {showShiftDetails ? t('staff.finance.shift.hideDetails', 'Скрыть детали') : t('staff.finance.shift.showDetails', 'Показать детали')}
-                                        </button>
-                                    )}
+                                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                    isOpen 
+                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                }`}>
+                                    {isOpen ? t('staff.finance.shift.status.open', 'Открыта') : t('staff.finance.shift.status.closed', 'Закрыта')}
                                 </div>
                             )}
                         </div>
-                    <div className="flex gap-2 items-center flex-wrap">
-                         {!todayShift && (
-                             <>
-                                 {isDayOff ? (
-                                     <div className="text-sm text-amber-600 dark:text-amber-400 font-medium px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
-                                         {t('staff.finance.shift.dayOff', 'Сегодня у вас выходной день. Нельзя открыть смену.')}
-                                     </div>
-                                 ) : (
-                                     <Button
-                                         variant="primary"
-                                         onClick={handleOpenShift}
-                                         disabled={loading || saving || isDayOff}
-                                         isLoading={saving}
-                                     >
-                                         {t('staff.finance.shift.open', 'Открыть смену')}
-                                     </Button>
-                                 )}
-                             </>
-                         )}
-                         {isOpen && (
-                             <>
-                                 <Button
-                                     variant="outline"
-                                     onClick={() => void load()}
-                                     disabled={loading || saving}
-                                 >
-                                     {t('staff.finance.shift.refresh', 'Обновить')}
-                                 </Button>
-                                 <Button
-                                     variant="primary"
-                                     onClick={handleCloseShift}
-                                     disabled={saving}
-                                     isLoading={saving}
-                                 >
-                                     {t('staff.finance.shift.close', 'Закрыть смену')}
-                                 </Button>
-                             </>
-                         )}
-                         {isClosed && (
-                             <>
-                                 <div className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                     {t('staff.finance.shift.closed', 'Смена закрыта')}
-                                 </div>
-                                 <Button
-                                     variant="outline"
-                                     onClick={handleOpenShift}
-                                     disabled={saving}
-                                     isLoading={saving}
-                                 >
-                                     {t('staff.finance.shift.reopen', 'Переоткрыть смену')}
-                                 </Button>
-                             </>
-                         )}
+                        <div className="flex gap-2 items-center flex-wrap">
+                            {!todayShift && (
+                                <>
+                                    {isDayOff ? (
+                                        <div className="text-sm text-amber-600 dark:text-amber-400 font-medium px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
+                                            {t('staff.finance.shift.dayOff', 'Выходной день')}
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleOpenShift}
+                                            disabled={loading || saving || isDayOff}
+                                            isLoading={saving}
+                                        >
+                                            {t('staff.finance.shift.open', 'Открыть смену')}
+                                        </Button>
+                                    )}
+                                </>
+                            )}
+                            {isOpen && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => void load()}
+                                        disabled={loading || saving}
+                                    >
+                                        {t('staff.finance.shift.refresh', 'Обновить')}
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        onClick={handleCloseShift}
+                                        disabled={saving}
+                                        isLoading={saving}
+                                    >
+                                        {t('staff.finance.shift.close', 'Закрыть смену')}
+                                    </Button>
+                                </>
+                            )}
+                            {isClosed && (
+                                <Button
+                                    variant="outline"
+                                    onClick={handleOpenShift}
+                                    disabled={saving}
+                                    isLoading={saving}
+                                >
+                                    {t('staff.finance.shift.reopen', 'Переоткрыть')}
+                                </Button>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                    {/* Краткое резюме по деньгам за смену */}
+                    {/* Основные метрики за смену */}
                     {todayShift && (() => {
                         // Общий оборот: для открытой смены - из items, для закрытой - из todayShift.total_amount
                         const displayTotalAmount = isOpen 
@@ -839,234 +826,211 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                             : (todayShift.total_amount ?? 0);
                         
                         return (
-                            <div className="mt-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/40 dark:to-gray-800/40 border border-gray-200 dark:border-gray-700 p-4">
-                                <div className="grid sm:grid-cols-3 gap-4">
-                                    <div className="space-y-1">
-                                        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                            {t('staff.finance.summary.totalTurnover', 'Общий оборот')}
-                                        </div>
-                                        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                            {displayTotalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-lg text-gray-500">{t('staff.finance.shift.som', 'сом')}</span>
-                                        </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                {/* Общий оборот */}
+                                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                                        {t('staff.finance.summary.totalTurnover', 'Общий оборот')}
                                     </div>
-                                    <div className="space-y-1 border-l border-gray-300 dark:border-gray-600 pl-4">
-                                        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                            {t('staff.finance.summary.toStaff', 'Сотруднику')}
-                                        </div>
-                                        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                                            {mShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-lg text-emerald-500">{t('staff.finance.shift.som', 'сом')}</span>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1 border-l border-gray-300 dark:border-gray-600 pl-4">
-                                        <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                            {t('staff.finance.summary.toBusiness', 'Бизнесу')}
-                                        </div>
-                                        <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                            {sShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-lg text-indigo-500">{t('staff.finance.shift.som', 'сом')}</span>
-                                        </div>
+                                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        {displayTotalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-base text-gray-500">{t('staff.finance.shift.som', 'сом')}</span>
                                     </div>
                                 </div>
-                                {/* Показываем оплату за выход только если она есть */}
-                                {((isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null) ||
-                                    (isClosed && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined && todayShift.guaranteed_amount !== null && todayShift.guaranteed_amount !== undefined)) && (
-                                    <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
-                                        <div className="flex items-center justify-between">
-                                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                {t('staff.finance.shift.guaranteedPayment', 'Оплата за выход')}
-                                                {isOpen && (
-                                                    <span className="ml-2 text-xs">
-                                                        ({currentHoursWorked?.toFixed(1) ?? '0.0'} {t('staff.finance.shift.hours', 'ч')} × {hourlyRate} {t('staff.finance.shift.somPerHour', 'сом/ч')})
-                                                    </span>
-                                                )}
-                                                {isClosed && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined && (
-                                                    <span className="ml-2 text-xs">
-                                                        ({todayShift.hours_worked.toFixed(1)} {t('staff.finance.shift.hours', 'ч')} × {todayShift.hourly_rate} {t('staff.finance.shift.somPerHour', 'сом/ч')})
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="text-sm font-semibold text-green-600 dark:text-green-400">
-                                                {isOpen
-                                                    ? currentGuaranteedAmount?.toFixed(2) ?? '0.00'
-                                                    : (todayShift.guaranteed_amount ?? 0).toFixed(2)}{' '}
-                                                {t('staff.finance.shift.som', 'сом')}
-                                            </div>
-                                        </div>
+                                
+                                {/* Сотруднику */}
+                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg border border-emerald-200 dark:border-emerald-800/50 p-4">
+                                    <div className="text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400 mb-2">
+                                        {t('staff.finance.summary.toStaff', 'Сотруднику')}
                                     </div>
-                                )}
-                            </div>
-                        );
-                    })()}
-
-                    {/* Детальная информация (раскрывается по кнопке) */}
-                    {showShiftDetails && (
-                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div className="grid sm:grid-cols-2 gap-4">
-                                {/* Левая колонка: Состав оборота */}
-                                <div className="space-y-3">
-                                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                                        {t('staff.finance.details.composition', 'Состав оборота')}
-                                    </h3>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {t('staff.finance.details.serviceAmount', 'Услуги')}
-                                            </span>
-                                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                {totalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {t('staff.finance.details.consumables', 'Расходники')}
-                                            </span>
-                                            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                                                {finalConsumables.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center py-2">
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                {t('staff.finance.details.total', 'Итого')}
-                                            </span>
-                                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                                {(totalAmount + finalConsumables).toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
-                                            </span>
-                                        </div>
+                                    <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                                        {mShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-base text-emerald-500">{t('staff.finance.shift.som', 'сом')}</span>
                                     </div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                        {t('staff.finance.details.autoCalculated', 'Считается автоматически по списку клиентов')}
-                                    </p>
-                                </div>
-
-                                {/* Правая колонка: Распределение */}
-                                <div className="space-y-3">
-                                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                                        {t('staff.finance.details.distribution', 'Распределение')}
-                                    </h3>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <div>
-                                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {t('staff.finance.details.staffShare', 'Сотрудник')}
-                                                </span>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                                                    ({staffPercentMaster}%)
-                                                </span>
-                                            </div>
-                                            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                                                {mShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center py-2">
-                                            <div>
-                                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {t('staff.finance.details.businessShare', 'Бизнес')}
-                                                </span>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                                                    ({staffPercentSalon}% + расходники)
-                                                </span>
-                                            </div>
-                                            <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                                                {sShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {/* Показываем доплату владельца только для закрытой смены, если она есть */}
-                                    {isClosed && todayShift && todayShift.topup_amount && todayShift.topup_amount > 0 && (
-                                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-xs text-amber-600 dark:text-amber-400">
-                                                    {t('staff.finance.details.ownerTopup', 'Доплата владельца')}
-                                                </span>
-                                                <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                                                    +{todayShift.topup_amount.toFixed(2)} {t('staff.finance.shift.som', 'сом')}
+                                    {/* Показываем оплату за выход компактно */}
+                                    {((isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null) ||
+                                        (isClosed && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined && todayShift.guaranteed_amount !== null && todayShift.guaranteed_amount !== undefined)) && (
+                                        <div className="mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-800/50">
+                                            <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                                                {t('staff.finance.shift.guaranteedPayment', 'За выход')}: <span className="font-semibold">
+                                                    {isOpen
+                                                        ? currentGuaranteedAmount?.toFixed(2) ?? '0.00'
+                                                        : (todayShift.guaranteed_amount ?? 0).toFixed(2)} {t('staff.finance.shift.som', 'сом')}
                                                 </span>
                                             </div>
                                         </div>
                                     )}
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                        {t('staff.finance.details.note', 'Примечание: расходники 100% идут бизнесу')}
-                                    </p>
+                                </div>
+                                
+                                {/* Бизнесу */}
+                                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 rounded-lg border border-indigo-200 dark:border-indigo-800/50 p-4">
+                                    <div className="text-xs uppercase tracking-wide text-indigo-600 dark:text-indigo-400 mb-2">
+                                        {t('staff.finance.summary.toBusiness', 'Бизнесу')}
+                                    </div>
+                                    <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                                        {sShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-base text-indigo-500">{t('staff.finance.shift.som', 'сом')}</span>
+                                    </div>
                                 </div>
                             </div>
+                        );
+                    })()}
+
+                    {/* Дополнительные детали (раскрываются по кнопке) */}
+                    {showShiftDetails && todayShift && (
+                        <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="grid sm:grid-cols-2 gap-6">
+                                {/* Состав оборота */}
+                                <div>
+                                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                                        {t('staff.finance.details.composition', 'Состав оборота')}
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 dark:text-gray-400">{t('staff.finance.details.serviceAmount', 'Услуги')}</span>
+                                            <span className="font-semibold">{totalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 dark:text-gray-400">{t('staff.finance.details.consumables', 'Расходники')}</span>
+                                            <span className="font-semibold text-amber-600 dark:text-amber-400">{finalConsumables.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                        </div>
+                                        <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700 font-medium">
+                                            <span>{t('staff.finance.details.total', 'Итого')}</span>
+                                            <span>{(totalAmount + finalConsumables).toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Распределение */}
+                                <div>
+                                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                                        {t('staff.finance.details.distribution', 'Распределение')}
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 dark:text-gray-400">
+                                                {t('staff.finance.details.staffShare', 'Сотрудник')} <span className="text-xs">({staffPercentMaster}%)</span>
+                                            </span>
+                                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{mShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 dark:text-gray-400">
+                                                {t('staff.finance.details.businessShare', 'Бизнес')} <span className="text-xs">({staffPercentSalon}% + расходники)</span>
+                                            </span>
+                                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">{sShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                        </div>
+                                        {isClosed && todayShift.topup_amount && todayShift.topup_amount > 0 && (
+                                            <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                <span className="text-xs text-amber-600 dark:text-amber-400">{t('staff.finance.details.ownerTopup', 'Доплата владельца')}</span>
+                                                <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">+{todayShift.topup_amount.toFixed(2)} {t('staff.finance.shift.som', 'сом')}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            {todayShift && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowShiftDetails(false)}
+                                    className="mt-4 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                                >
+                                    {t('staff.finance.shift.hideDetails', 'Скрыть детали')}
+                                </button>
+                            )}
                         </div>
                     )}
-                </Card>
+                    
+                    {/* Кнопка показать детали */}
+                    {todayShift && !showShiftDetails && (
+                        <button
+                            type="button"
+                            onClick={() => setShowShiftDetails(true)}
+                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                            {t('staff.finance.shift.showDetails', 'Показать детали расчета')}
+                        </button>
+                    )}
+                </div>
             )}
 
             {/* Таб: Клиенты */}
             {activeTab === 'clients' && (
-                <Card variant="elevated" className="p-6 space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {t('staff.finance.clients.title', 'Клиенты за смену')}
-                        </h2>
-                        {staffId && (
-                            <DatePickerPopover
-                                value={formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}
-                                onChange={(dateStr) => {
-                                    const [year, month, day] = dateStr.split('-').map(Number);
-                                    setShiftDate(new Date(year, month - 1, day));
-                                }}
-                                className="inline-block"
-                            />
+                <div className={`space-y-4 ${staffId ? 'p-6' : 'px-6 pb-6'}`}>
+                    {/* Компактный заголовок */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {t('staff.finance.clients.title', 'Клиенты за смену')}
+                                    </span>
+                                    {staffId && (
+                                        <DatePickerPopover
+                                            value={formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}
+                                            onChange={(dateStr) => {
+                                                const [year, month, day] = dateStr.split('-').map(Number);
+                                                setShiftDate(new Date(year, month - 1, day));
+                                            }}
+                                            className="inline-block"
+                                        />
+                                    )}
+                                </div>
+                                <div className="text-base text-gray-600 dark:text-gray-400">
+                                    {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
+                                </div>
+                            </div>
+                        </div>
+                        {isOpen && (
+                            <div className="flex items-center gap-2">
+                                {savingItems && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        {t('staff.finance.clients.saving', 'Сохранение...')}
+                                    </span>
+                                )}
+                                {!isReadOnly && (
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={() => {
+                                            setItems((prev) => {
+                                                // считаем следующий порядковый номер для анонимного клиента
+                                                // на основе существующих клиентов без bookingId
+                                                const clientLabel = t('staff.finance.clients.client', 'Клиент');
+                                                const existingClients = prev.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
+                                                const existingIndices = existingClients
+                                                    .map((it) => {
+                                                        // Используем динамический regex на основе перевода
+                                                        const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                                        const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
+                                                        const match = it.clientName?.match(regex);
+                                                        return match ? Number(match[1]) : 0;
+                                                    })
+                                                    .filter((n) => n > 0);
+                                                const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+                                                const nextIndex = maxIndex + 1;
+                                                const newItem: ShiftItem = {
+                                                    clientName: `${clientLabel} ${nextIndex}`,
+                                                    serviceName: '',
+                                                    serviceAmount: 0,
+                                                    consumablesAmount: 0,
+                                                    bookingId: null,
+                                                    createdAt: new Date().toISOString(), // Устанавливаем время сразу
+                                                };
+                                                // Добавляем в начало списка (новые сверху)
+                                                const next = [newItem, ...prev];
+                                                // сразу открываем форму редактирования для нового клиента
+                                                setExpandedItems(new Set([0]));
+                                                return next;
+                                            });
+                                        }}
+                                        disabled={saving || savingItems}
+                                    >
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        {t('staff.finance.clients.add', 'Добавить клиента')}
+                                    </Button>
+                                )}
+                            </div>
                         )}
                     </div>
-                    {isOpen && (
-                        <div className="flex items-center gap-2">
-                            {savingItems && (
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {t('staff.finance.clients.saving', 'Сохранение...')}
-                                </span>
-                            )}
-                            {!isReadOnly && (
-                                <Button
-                                    variant="primary"
-                                    size="sm"
-                                    className="shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-                                    onClick={() => {
-                                        setItems((prev) => {
-                                            // считаем следующий порядковый номер для анонимного клиента
-                                            // на основе существующих клиентов без bookingId
-                                            const clientLabel = t('staff.finance.clients.client', 'Клиент');
-                                            const existingClients = prev.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
-                                            const existingIndices = existingClients
-                                                .map((it) => {
-                                                    // Используем динамический regex на основе перевода
-                                                    const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                                    const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
-                                                    const match = it.clientName?.match(regex);
-                                                    return match ? Number(match[1]) : 0;
-                                                })
-                                                .filter((n) => n > 0);
-                                            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
-                                            const nextIndex = maxIndex + 1;
-                                            const newItem: ShiftItem = {
-                                                clientName: `${clientLabel} ${nextIndex}`,
-                                                serviceName: '',
-                                                serviceAmount: 0,
-                                                consumablesAmount: 0,
-                                                bookingId: null,
-                                                createdAt: new Date().toISOString(), // Устанавливаем время сразу
-                                            };
-                                            // Добавляем в начало списка (новые сверху)
-                                            const next = [newItem, ...prev];
-                                            // сразу открываем форму редактирования для нового клиента
-                                            setExpandedItems(new Set([0]));
-                                            return next;
-                                        });
-                                    }}
-                                    disabled={saving || savingItems}
-                                >
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    {t('staff.finance.clients.add', 'Добавить клиента')}
-                                </Button>
-                            )}
-                        </div>
-                    )}
-                </div>
 
                 {!todayShift || !isOpen ? (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
@@ -1483,7 +1447,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         })}
                     </div>
                 )}
-            </Card>
+                </div>
             )}
 
             {/* Таб: Статистика - показывается только для сотрудника (без staffId) */}
@@ -1627,7 +1591,6 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     </div>
                 </Card>
             )}
-            </main>
         </>
     );
 }

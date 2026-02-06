@@ -35,17 +35,24 @@ export default function StaffFinancePageClient({
                 </div>
             </div>
 
-            {/* Текущая смена и управление клиентами - для владельца */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+            {/* Основной контент - управление сменой и клиентами */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
                 <StaffFinanceView staffId={id} />
             </div>
 
-            {/* Статистика */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                    {t('finance.staffStats.title', 'Статистика по сотрудникам')}
-                </h2>
-                <StaffFinanceStats staffId={id} />
+            {/* Статистика - отдельный раздел */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        {t('finance.staffStats.title', 'Статистика по сотрудникам')}
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {t('finance.staffStats.subtitle', 'Детальная статистика по сменам и финансовым показателям')}
+                    </p>
+                </div>
+                <div className="p-6">
+                    <StaffFinanceStats staffId={id} />
+                </div>
             </div>
         </div>
     );
