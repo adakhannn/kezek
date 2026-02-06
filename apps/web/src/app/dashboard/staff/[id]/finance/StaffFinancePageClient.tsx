@@ -1,10 +1,7 @@
 'use client';
 
-import StaffFinanceStats from './components/StaffFinanceStats';
-
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import StaffFinanceView from '@/app/staff/StaffFinanceView';
-
 
 export default function StaffFinancePageClient({
     id,
@@ -29,30 +26,29 @@ export default function StaffFinancePageClient({
                         </svg>
                         {t('staff.detail.back.title', 'Вернуться к списку сотрудников')}
                     </a>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">
-                        {t('staff.finance', 'Финансы')}: {fullName ?? ''}
-                    </h1>
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                            {t('staff.finance.shift.title', 'Управление сменой')}: {fullName ?? ''}
+                        </h1>
+                        <a
+                            href={`/dashboard/staff/${id}/finance/stats`}
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            {t('finance.staffStats.title', 'Статистика')}
+                        </a>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {t('staff.finance.shift.subtitle', 'Управление текущей сменой, клиентами и расчетами')}
+                    </p>
                 </div>
             </div>
 
             {/* Основной контент - управление сменой и клиентами */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
                 <StaffFinanceView staffId={id} />
-            </div>
-
-            {/* Статистика - отдельный раздел */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                        {t('finance.staffStats.title', 'Статистика по сотрудникам')}
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {t('finance.staffStats.subtitle', 'Детальная статистика по сменам и финансовым показателям')}
-                    </p>
-                </div>
-                <div className="p-6">
-                    <StaffFinanceStats staffId={id} />
-                </div>
             </div>
         </div>
     );
