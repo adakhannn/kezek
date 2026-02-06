@@ -188,10 +188,13 @@ export default function QRCodeGenerator({
                                 <div className="text-center">
                                     {businessName && (
                                         <h2 
-                                            className="text-2xl font-bold mb-1"
+                                            className="text-2xl font-extrabold mb-2"
                                             style={{ 
                                                 color: '#ff6b35',
-                                                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                                textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.3), 0 0 8px rgba(0,0,0,0.5)',
+                                                fontWeight: '900',
+                                                letterSpacing: '1px',
+                                                WebkitTextStroke: '0.5px rgba(0,0,0,0.3)',
                                             }}
                                         >
                                             {businessName}
@@ -199,10 +202,13 @@ export default function QRCodeGenerator({
                                     )}
                                     {branchName && (
                                         <h3 
-                                            className="text-xl font-semibold mb-1"
+                                            className="text-xl font-extrabold mb-1"
                                             style={{ 
                                                 color: '#e91e63',
-                                                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                                textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.3), 0 0 8px rgba(0,0,0,0.5)',
+                                                fontWeight: '900',
+                                                letterSpacing: '1px',
+                                                WebkitTextStroke: '0.5px rgba(0,0,0,0.3)',
                                             }}
                                         >
                                             {branchName}
