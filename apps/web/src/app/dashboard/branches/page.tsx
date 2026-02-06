@@ -19,17 +19,31 @@ export default async function BranchesListPage() {
     const { data: isSuper } = await supabase.rpc('is_super_admin');
     const isSuperAdmin = !!isSuper;
 
-    const { data: branches, error } = await supabase
-        .from('branches')
-        .select('id,name,address,is_active')
-        .eq('biz_id', bizId)
-        .order('name');
+    const [
+        { data: branches, error },
+        { data: business },
+    ] = await Promise.all([
+        supabase
+            .from('branches')
+            .select('id,name,address,is_active')
+            .eq('biz_id', bizId)
+            .order('name'),
+        supabase
+            .from('businesses')
+            .select('slug')
+            .eq('id', bizId)
+            .maybeSingle(),
+    ]);
 
     if (error) {
         return <main className="p-6 text-red-600">Ошибка: {error.message}</main>;
     }
 
     return (
-        <BranchesListClient branches={(branches ?? []) as Branch[]} isSuperAdmin={isSuperAdmin} />
+        <BranchesListClient
+            branches={(branches ?? []) as Branch[]}
+            isSuperAdmin={isSuperAdmin}
+            businessSlug={business?.slug || null}
+        />
     );
 }

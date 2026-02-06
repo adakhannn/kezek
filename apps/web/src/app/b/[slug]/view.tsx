@@ -5,6 +5,7 @@ import { addDays, format } from 'date-fns';
 import { enGB } from 'date-fns/locale/en-GB';
 import { ru } from 'date-fns/locale/ru';
 import { formatInTimeZone } from 'date-fns-tz';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { BookingEmptyState } from './BookingEmptyState';
@@ -37,6 +38,7 @@ import { transliterate } from '@/lib/transliterate';
 export default function BookingForm({ data }: { data: Data }) {
     const { biz, branches, services, staff, promotions = [] } = data;
     const {t, locale} = useLanguage();
+    const searchParams = useSearchParams();
     
     // Функции для форматирования названий (используем нужный язык, если доступен)
     const formatBranchName = (name: string): string => {
@@ -101,7 +103,24 @@ export default function BookingForm({ data }: { data: Data }) {
     }, []);
 
     /* ---------- выбор филиала/услуги/мастера ---------- */
+    // Читаем параметр branch из URL при первой загрузке
+    const branchFromUrl = searchParams.get('branch');
     const [branchId, setBranchId] = useState<string>('');
+    const [initialBranchSet, setInitialBranchSet] = useState(false);
+
+    // Устанавливаем филиал из URL при первой загрузке
+    useEffect(() => {
+        if (!initialBranchSet && branchFromUrl) {
+            // Проверяем, что филиал существует в списке
+            const branchExists = branches.some((b) => b.id === branchFromUrl);
+            if (branchExists) {
+                setBranchId(branchFromUrl);
+                setInitialBranchSet(true);
+            }
+        } else if (!initialBranchSet && !branchFromUrl) {
+            setInitialBranchSet(true);
+        }
+    }, [branchFromUrl, branches, initialBranchSet]);
 
     const servicesByBranch = useMemo(
         () => services.filter((s) => s.branch_id === branchId),

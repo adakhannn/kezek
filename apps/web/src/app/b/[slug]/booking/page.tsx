@@ -1,4 +1,4 @@
-import { JSX } from 'react';
+import { JSX, Suspense } from 'react';
 
 import BookingForm from '../view';
 
@@ -64,7 +64,11 @@ export default async function Page({
     const { slug } = await params;
     const data = await getData(slug);
     if (!data) return <main className="p-6">Бизнес не найден</main>;
-    return <BookingForm data={data} />;
+    return (
+        <Suspense fallback={<main className="p-6">Загрузка...</main>}>
+            <BookingForm data={data} />
+        </Suspense>
+    );
 }
 
 
