@@ -466,10 +466,29 @@ export async function POST(req: Request) {
         const recipients: Recipient[] = [];
 
         // клиент — отдельное письмо с .ics (только если включены email уведомления)
+        console.log('[notify] Client email check:', {
+            hasClientId: !!raw.client_id,
+            hasClientEmail: !!clientEmail,
+            clientEmail: clientEmail,
+            clientNotifyEmail,
+            hasClientName: !!clientName,
+            clientName: clientName,
+            hasClientPhone: !!clientPhone,
+            clientPhone: clientPhone,
+            rawClientEmail: (raw as { client_email?: string | null }).client_email,
+            rawClientPhone: raw.client_phone,
+            rawClientName: raw.client_name,
+        });
         if (clientEmail && clientNotifyEmail) {
             recipients.push({ email: clientEmail, name: clientName, role: 'client', withIcs: true });
+            console.log('[notify] Added client to recipients:', clientEmail);
         } else if (clientEmail && !clientNotifyEmail) {
             console.log('[notify] Skipping email to client: notifications disabled');
+        } else if (!clientEmail) {
+            console.log('[notify] Skipping email to client: no email address', {
+                hasClientId: !!raw.client_id,
+                rawClientEmail: (raw as { client_email?: string | null }).client_email,
+            });
         }
 
         // мастер
