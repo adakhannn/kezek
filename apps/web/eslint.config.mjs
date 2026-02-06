@@ -31,6 +31,12 @@ const eslintConfig = [
       "no-console": ["warn", { 
         allow: ["error"] // console.error разрешен только в log.ts и logSafe.ts
       }],
+      // Запрещаем использование any в production коде
+      // Используйте конкретные типы или unknown
+      "@typescript-eslint/no-explicit-any": ["warn", {
+        fixToUnknown: true, // Предлагать замену на unknown
+        ignoreRestArgs: false, // Запрещаем any в rest параметрах
+      }],
     },
   },
 ];

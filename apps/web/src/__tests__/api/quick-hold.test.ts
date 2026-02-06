@@ -30,6 +30,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 
 describe('/api/quick-hold', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockSupabase: any = {
         auth: {
             getUser: jest.fn(),

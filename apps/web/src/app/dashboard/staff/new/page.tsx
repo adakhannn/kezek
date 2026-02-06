@@ -16,11 +16,11 @@ export default async function NewStaffPage() {
             .order('name');
 
         return <NewStaffPageClient branches={branches || []} />;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Нет доступа';
         return (
             <main className="p-6 text-red-600">
-                {e?.message || 'Нет доступа'}
+                {message}
             </main>
         );
     }

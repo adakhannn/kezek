@@ -6,18 +6,22 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+type FilterValue = string | number | boolean | null;
+
+// Используем более гибкий тип для Supabase клиента из SSR
+// createServerClient возвращает SupabaseClient с правильной типизацией
+type SupabaseServerClient = Awaited<ReturnType<typeof getBizContextForManagers>>['supabase'];
+
 async function count(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    supabase: any,
+    supabase: SupabaseServerClient,
     table: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    filters: { col: string; eq?: any; gte?: any; lte?: any }[] = []
+    filters: { col: string; eq?: FilterValue; gte?: FilterValue; lte?: FilterValue }[] = []
 ): Promise<number> {
     let q = supabase.from(table).select('id', { count: 'exact', head: true });
     for (const f of filters) {
-        if (f.eq !== undefined) q = q.eq(f.col, f.eq);
-        if (f.gte !== undefined) q = q.gte(f.col, f.gte);
-        if (f.lte !== undefined) q = q.lte(f.col, f.lte);
+        if (f.eq !== undefined && f.eq !== null) q = q.eq(f.col, f.eq);
+        if (f.gte !== undefined && f.gte !== null) q = q.gte(f.col, f.gte);
+        if (f.lte !== undefined && f.lte !== null) q = q.lte(f.col, f.lte);
     }
     const { count: c } = await q;
     return c ?? 0;

@@ -81,7 +81,8 @@ export async function POST(req: Request, context: unknown) {
             await (admin).auth.admin.signOut?.(targetId).catch(() => {
             });
             // Старый метод (может отсутствовать в типах, но существует в рантайме)
-            // @ts-expect-error - invalidateRefreshTokens может отсутствовать в типах
+            // @ts-expect-error - invalidateRefreshTokens может отсутствовать в типах @supabase/supabase-js,
+            // но метод существует в runtime для Supabase Auth Admin API
             await admin.auth.admin.invalidateRefreshTokens?.(targetId).catch(() => {
             });
 

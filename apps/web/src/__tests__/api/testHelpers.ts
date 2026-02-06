@@ -52,8 +52,12 @@ export function createMockNextRequest(
 
 /**
  * Стандартные моки для Supabase
+ * 
+ * Используем Record<string, unknown> вместо any для лучшей типизации,
+ * но сохраняем гибкость для тестов
  */
 export function createMockSupabase() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockSupabase: any = {
         auth: {
             getUser: jest.fn(),

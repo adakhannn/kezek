@@ -189,34 +189,66 @@ export async function GET(request: Request) {
                 .limit(100);
 
             if (usageData) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                result.promotionUsage = usageData.map((u: any) => ({
-                    id: u.id,
-                    promotion_id: u.promotion_id,
-                    promotion_type: u.promotion_type,
-                    booking_id: u.booking_id,
-                    used_at: u.used_at,
-                    usage_data: u.usage_data,
-                    promotion: u.branch_promotions
-                        ? {
-                              title_ru: u.branch_promotions.title_ru,
-                              title_ky: u.branch_promotions.title_ky || undefined,
-                              title_en: u.branch_promotions.title_en || undefined,
-                              promotion_type: u.branch_promotions.promotion_type,
-                              params: u.branch_promotions.params,
-                          }
-                        : undefined,
-                    booking: u.bookings
-                        ? {
-                              id: u.bookings.id,
-                              start_at: u.bookings.start_at,
-                              end_at: u.bookings.end_at,
-                              status: u.bookings.status,
-                              service_id: u.bookings.service_id,
-                              promotion_applied: u.bookings.promotion_applied,
-                          }
-                        : undefined,
-                }));
+                type UsageRow = {
+                    id: unknown;
+                    promotion_id: unknown;
+                    promotion_type: unknown;
+                    booking_id: unknown;
+                    used_at: unknown;
+                    usage_data: unknown;
+                    branch_promotions?: Array<{
+                        title_ru: unknown;
+                        title_ky?: unknown;
+                        title_en?: unknown;
+                        promotion_type: unknown;
+                        params: unknown;
+                    }> | null;
+                    bookings?: Array<{
+                        id: unknown;
+                        start_at: unknown;
+                        end_at: unknown;
+                        status: unknown;
+                        service_id: unknown;
+                        promotion_applied: unknown;
+                    }> | null;
+                };
+
+                result.promotionUsage = usageData.map((u: UsageRow) => {
+                    const promotion = Array.isArray(u.branch_promotions) && u.branch_promotions.length > 0
+                        ? u.branch_promotions[0]
+                        : null;
+                    const booking = Array.isArray(u.bookings) && u.bookings.length > 0
+                        ? u.bookings[0]
+                        : null;
+
+                    return {
+                        id: String(u.id),
+                        promotion_id: String(u.promotion_id),
+                        promotion_type: String(u.promotion_type),
+                        booking_id: u.booking_id ? String(u.booking_id) : null,
+                        used_at: String(u.used_at),
+                        usage_data: u.usage_data,
+                        promotion: promotion
+                            ? {
+                                  title_ru: String(promotion.title_ru),
+                                  title_ky: promotion.title_ky ? String(promotion.title_ky) : undefined,
+                                  title_en: promotion.title_en ? String(promotion.title_en) : undefined,
+                                  promotion_type: String(promotion.promotion_type),
+                                  params: promotion.params,
+                              }
+                            : undefined,
+                        booking: booking
+                            ? {
+                                  id: String(booking.id),
+                                  start_at: String(booking.start_at),
+                                  end_at: String(booking.end_at),
+                                  status: String(booking.status),
+                                  service_id: String(booking.service_id),
+                                  promotion_applied: booking.promotion_applied,
+                              }
+                            : undefined,
+                    };
+                });
             }
 
             // Получаем реферальные связи
@@ -246,28 +278,54 @@ export async function GET(request: Request) {
                 .limit(50);
 
             if (referralsData) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                result.referrals = referralsData.map((r: any) => ({
-                    id: r.id,
-                    referrer_id: r.referrer_id,
-                    referred_id: r.referred_id,
-                    referrer_booking_id: r.referrer_booking_id,
-                    referred_booking_id: r.referred_booking_id,
-                    referrer_bonus_used: r.referrer_bonus_used,
-                    created_at: r.created_at,
-                    referrer: r.referrer
-                        ? {
-                              email: r.referrer.email || undefined,
-                              phone: r.referrer.phone || undefined,
-                          }
-                        : undefined,
-                    referred: r.referred
-                        ? {
-                              email: r.referred.email || undefined,
-                              phone: r.referred.phone || undefined,
-                          }
-                        : undefined,
-                }));
+                type ReferralRow = {
+                    id: unknown;
+                    referrer_id: unknown;
+                    referred_id: unknown;
+                    referrer_booking_id: unknown;
+                    referred_booking_id: unknown;
+                    referrer_bonus_used: unknown;
+                    created_at: unknown;
+                    referrer?: Array<{
+                        email?: unknown;
+                        phone?: unknown;
+                    }> | null;
+                    referred?: Array<{
+                        email?: unknown;
+                        phone?: unknown;
+                    }> | null;
+                };
+
+                result.referrals = referralsData.map((r: ReferralRow) => {
+                    const referrer = Array.isArray(r.referrer) && r.referrer.length > 0
+                        ? r.referrer[0]
+                        : null;
+                    const referred = Array.isArray(r.referred) && r.referred.length > 0
+                        ? r.referred[0]
+                        : null;
+
+                    return {
+                        id: String(r.id),
+                        referrer_id: String(r.referrer_id),
+                        referred_id: String(r.referred_id),
+                        referrer_booking_id: r.referrer_booking_id ? String(r.referrer_booking_id) : null,
+                        referred_booking_id: r.referred_booking_id ? String(r.referred_booking_id) : null,
+                        referrer_bonus_used: Boolean(r.referrer_bonus_used),
+                        created_at: String(r.created_at),
+                        referrer: referrer
+                            ? {
+                                  email: referrer.email ? String(referrer.email) : undefined,
+                                  phone: referrer.phone ? String(referrer.phone) : undefined,
+                              }
+                            : undefined,
+                        referred: referred
+                            ? {
+                                  email: referred.email ? String(referred.email) : undefined,
+                                  phone: referred.phone ? String(referred.phone) : undefined,
+                              }
+                            : undefined,
+                    };
+                });
             }
 
             // Получаем бронирования с применёнными акциями
@@ -292,20 +350,37 @@ export async function GET(request: Request) {
                 .limit(50);
 
             if (bookingsData) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                result.bookings = bookingsData.map((b: any) => ({
-                    id: b.id,
-                    start_at: b.start_at,
-                    end_at: b.end_at,
-                    status: b.status,
-                    service_id: b.service_id,
-                    promotion_applied: b.promotion_applied,
-                    service: b.services
-                        ? {
-                              name_ru: b.services.name_ru,
-                          }
-                        : undefined,
-                }));
+                type BookingRow = {
+                    id: unknown;
+                    start_at: unknown;
+                    end_at: unknown;
+                    status: unknown;
+                    service_id: unknown;
+                    promotion_applied: unknown;
+                    services?: Array<{
+                        name_ru: unknown;
+                    }> | null;
+                };
+
+                result.bookings = bookingsData.map((b: BookingRow) => {
+                    const service = Array.isArray(b.services) && b.services.length > 0
+                        ? b.services[0]
+                        : null;
+
+                    return {
+                        id: String(b.id),
+                        start_at: String(b.start_at),
+                        end_at: String(b.end_at),
+                        status: String(b.status),
+                        service_id: String(b.service_id),
+                        promotion_applied: b.promotion_applied,
+                        service: service
+                            ? {
+                                  name_ru: String(service.name_ru),
+                              }
+                            : undefined,
+                    };
+                });
             }
         }
 

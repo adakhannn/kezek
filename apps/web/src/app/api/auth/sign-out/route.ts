@@ -36,7 +36,9 @@ export async function POST(req: Request) {
         if (user) {
             // Инвалидируем все refresh токены пользователя через Admin API
             try {
-                // @ts-expect-error - invalidateRefreshTokens может отсутствовать в типах, но существует
+                // @ts-expect-error - invalidateRefreshTokens может отсутствовать в типах @supabase/supabase-js,
+                // но метод существует в runtime для Supabase Auth Admin API
+                // См. https://supabase.com/docs/reference/javascript/auth-admin-invalidaterefreshtokens
                 await admin.auth.admin.invalidateRefreshTokens?.(user.id).catch(() => {});
                 logDebug('AuthSignOut', 'Invalidated refresh tokens for user', { userId: user.id });
             } catch (err) {
