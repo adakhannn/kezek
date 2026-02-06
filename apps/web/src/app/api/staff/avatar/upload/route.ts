@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { logDebug, logWarn, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
                 const oldPath = currentStaff.avatar_url.split('/').slice(-2).join('/');
                 await admin.storage.from('avatars').remove([oldPath]);
             } catch (error) {
-                console.warn('Failed to delete old avatar:', error);
+                logWarn('StaffAvatarUpload', 'Failed to delete old avatar', error);
             }
         }
 
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
         const buffer = Buffer.from(arrayBuffer);
 
         // Загружаем файл через service client (обходит RLS)
-        console.log('Uploading file:', { filePath, fileSize: file.size, fileType: file.type });
+        logDebug('StaffAvatarUpload', 'Uploading file', { filePath, fileSize: file.size, fileType: file.type });
         const { data: uploadData, error: uploadError } = await admin.storage
             .from('avatars')
             .upload(filePath, buffer, {
@@ -67,11 +68,11 @@ export async function POST(req: Request) {
             });
 
         if (uploadError) {
-            console.error('Upload error:', uploadError);
-            console.error('Error details:', JSON.stringify(uploadError, null, 2));
+            logError('StaffAvatarUpload', 'Upload error', uploadError);
+            logError('StaffAvatarUpload', 'Error details', { details: JSON.stringify(uploadError, null, 2) });
             // Проверяем, что используется service role
             const isServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith('eyJ');
-            console.log('Using service role:', isServiceRole);
+            logDebug('StaffAvatarUpload', 'Using service role', { isServiceRole });
             return NextResponse.json({ 
                 ok: false, 
                 error: uploadError.message,
@@ -91,13 +92,13 @@ export async function POST(req: Request) {
             .eq('id', staffId);
 
         if (updateError) {
-            console.error('Update error:', updateError);
+            logError('StaffAvatarUpload', 'Update error', updateError);
             return NextResponse.json({ ok: false, error: updateError.message }, { status: 400 });
         }
 
         return NextResponse.json({ ok: true, url: publicUrl });
     } catch (error) {
-        console.error('Error in avatar upload:', error);
+        logError('StaffAvatarUpload', 'Error in avatar upload', error);
         const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

@@ -26,7 +26,7 @@ import type { Data, Service, ServiceStaffRow, Slot, Staff } from './types';
 
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
-import { logDebug, logWarn } from '@/lib/log';
+import { logDebug, logWarn, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
@@ -343,7 +343,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 }
 
                 if (existingBookings && existingBookings.length > 0) {
-                    console.log('[Booking] Filtering slots, found', existingBookings.length, 'existing bookings');
+                    logDebug('Booking', 'Filtering slots, found existing bookings', { count: existingBookings.length });
                     const filtered = slotsFromHook.filter((slot) => {
                         const slotStart = new Date(slot.start_at);
                         const slotEnd = new Date(slot.end_at);
@@ -354,7 +354,7 @@ export default function BookingForm({ data }: { data: Data }) {
                             // Проверяем пересечение временных интервалов
                             const hasOverlap = slotStart < bookingEnd && slotEnd > bookingStart;
                             if (hasOverlap) {
-                                console.log('[Booking] Slot overlaps with booking:', {
+                                logDebug('Booking', 'Slot overlaps with booking', {
                                     slot: { start: slotStart.toISOString(), end: slotEnd.toISOString() },
                                     booking: { start: bookingStart.toISOString(), end: bookingEnd.toISOString(), status: booking.status },
                                 });
@@ -364,10 +364,10 @@ export default function BookingForm({ data }: { data: Data }) {
 
                         return !overlaps;
                     });
-                    console.log('[Booking] Filtered slots:', filtered.length, 'out of', slotsFromHook.length);
+                    logDebug('Booking', 'Filtered slots', { filtered: filtered.length, total: slotsFromHook.length });
                     setSlots(filtered);
                 } else {
-                    console.log('[Booking] No existing bookings found, showing all slots');
+                    logDebug('Booking', 'No existing bookings found, showing all slots');
                     setSlots(slotsFromHook);
                 }
             } catch (e) {
@@ -452,7 +452,7 @@ export default function BookingForm({ data }: { data: Data }) {
 
             window.localStorage.removeItem(key);
         } catch (e) {
-            console.error('restore booking state failed', e);
+            logError('Booking', 'restore booking state failed', e);
         } finally {
             setRestoredFromStorage(true);
         }
@@ -539,7 +539,7 @@ export default function BookingForm({ data }: { data: Data }) {
             };
             window.localStorage.setItem(key, JSON.stringify(payload));
         } catch (e) {
-            console.error('save booking state failed', e);
+            logError('Booking', 'save booking state failed', e);
         }
         const redirect = encodeURIComponent(window.location.pathname + window.location.search);
         window.location.href = `/auth/sign-in?mode=phone&redirect=${redirect}`;

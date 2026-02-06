@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import { logDebug, logWarn, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
 
@@ -77,10 +78,10 @@ export async function POST(req: Request) {
 
         try {
             await sendWhatsApp({ to: phoneE164, text: message });
-            console.log('[auth/whatsapp/send-otp] OTP sent successfully to:', phoneE164);
+            logDebug('WhatsAppAuth', 'OTP sent successfully', { phone: phoneE164 });
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
-            console.error('[auth/whatsapp/send-otp] Failed to send OTP:', errorMsg);
+            logError('WhatsAppAuth', 'Failed to send OTP', { error: errorMsg });
             return NextResponse.json(
                 { ok: false, error: 'send_failed', message: `Не удалось отправить код: ${errorMsg}` },
                 { status: 500 }
@@ -102,7 +103,7 @@ export async function POST(req: Request) {
 
         // Если таблица не существует, это не критично - используем user_metadata
         if (dbError && !dbError.message.includes('does not exist')) {
-            console.warn('[auth/whatsapp/send-otp] Failed to save OTP to DB:', dbError.message);
+            logWarn('WhatsAppAuth', 'Failed to save OTP to DB', { message: dbError.message });
         }
 
         return NextResponse.json({ 
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[auth/whatsapp/send-otp] error:', e);
+        logError('WhatsAppAuth', 'Error in send-otp', e);
         return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
     }
 }

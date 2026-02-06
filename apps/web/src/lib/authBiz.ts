@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 import { getSupabaseUrl, getSupabaseAnonKey } from './env';
+import { logWarn } from './log';
 
 const ROLE_KEYS_ALLOWED = new Set(['owner', 'admin', 'manager']);
 
@@ -158,7 +159,7 @@ export async function getStaffContext() {
                 });
             
             if (eRole) {
-                console.warn('Failed to auto-add staff role:', eRole.message);
+                logWarn('AuthBiz', 'Failed to auto-add staff role', { message: eRole.message });
                 // Не бросаем ошибку, т.к. запись staff есть - это главное
             }
         }

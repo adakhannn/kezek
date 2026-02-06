@@ -12,6 +12,8 @@
  * 3. Для Vercel: подключите Upstash через интеграцию или добавьте env vars
  */
 
+import { logWarn } from './log';
+
 type RateLimitConfig = {
     maxRequests: number; // Максимальное количество запросов
     windowMs: number; // Окно времени в миллисекундах
@@ -62,7 +64,7 @@ async function getRedisClient() {
         });
     } catch (error) {
         // Если пакет не установлен, используем fallback
-        console.warn('[rateLimit] @upstash/redis not available, using in-memory fallback');
+        logWarn('RateLimit', '@upstash/redis not available, using in-memory fallback', error);
         return null;
     }
 }
@@ -136,7 +138,7 @@ async function checkRateLimitWithRedis(
         };
     } catch (error) {
         // Если Redis недоступен, fallback на in-memory
-        console.warn('[rateLimit] Redis error, falling back to in-memory:', error);
+        logWarn('RateLimit', 'Redis error, falling back to in-memory', error);
         return null;
     }
 }

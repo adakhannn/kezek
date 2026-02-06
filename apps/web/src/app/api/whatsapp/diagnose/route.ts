@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { logError } from '@/lib/log';
+
 /**
  * GET /api/whatsapp/diagnose
  * Полная диагностика WhatsApp API: проверяет токен, получает все аккаунты и номера
@@ -111,7 +113,7 @@ export async function GET() {
                             }
                         } catch (e) {
                             // Игнорируем ошибки для отдельных аккаунтов
-                            console.error(`[whatsapp/diagnose] Error fetching phones for account ${account.id}:`, e);
+                            logError('WhatsAppDiagnose', 'Error fetching phones for account', { accountId: account.id, error: e });
                         }
                     }
                 }
@@ -233,7 +235,7 @@ export async function GET() {
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[whatsapp/diagnose] error:', e);
+        logError('WhatsAppDiagnose', 'Error in diagnose', e);
         return NextResponse.json(
             { ok: false, error: 'internal', message: msg },
             { status: 500 }

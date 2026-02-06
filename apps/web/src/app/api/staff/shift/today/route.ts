@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export async function GET() {
             .maybeSingle();
 
         if (staffError) {
-            console.error('Error loading staff for percent:', staffError);
+            logError('StaffShiftToday', 'Error loading staff for percent', staffError);
         }
 
         const staffPercentMaster = Number(staffData?.percent_master ?? 60);
@@ -89,7 +90,7 @@ export async function GET() {
             .maybeSingle();
 
         if (shiftError) {
-            console.error('Error loading today shift:', shiftError);
+            logError('StaffShiftToday', 'Error loading today shift', shiftError);
             return NextResponse.json(
                 { ok: false, error: shiftError.message },
                 { status: 500 }
@@ -106,7 +107,7 @@ export async function GET() {
                 .order('created_at', { ascending: true });
 
             if (itemsError) {
-                console.error('Error loading shift items:', itemsError);
+                logError('StaffShiftToday', 'Error loading shift items', itemsError);
             } else {
                 items = itemsData ?? [];
             }
@@ -125,7 +126,7 @@ export async function GET() {
             .order('start_at', { ascending: true });
 
         if (bookingsError) {
-            console.error('Error loading today bookings:', bookingsError);
+            logError('StaffShiftToday', 'Error loading today bookings', bookingsError);
         }
 
         // Услуги сотрудника для выпадающего списка
@@ -137,7 +138,7 @@ export async function GET() {
             .eq('services.active', true);
 
         if (servicesError) {
-            console.error('Error loading staff services:', servicesError);
+            logError('StaffShiftToday', 'Error loading staff services', servicesError);
         }
 
         const availableServices = (staffServices ?? [])
@@ -167,7 +168,7 @@ export async function GET() {
             .order('shift_date', { ascending: false });
 
         if (statsError) {
-            console.error('Error loading shifts stats:', statsError);
+            logError('StaffShiftToday', 'Error loading shifts stats', statsError);
             return NextResponse.json(
                 { ok: false, error: statsError.message },
                 { status: 500 }
@@ -237,7 +238,7 @@ export async function GET() {
             },
         });
     } catch (error) {
-        console.error('Unexpected error in /api/staff/shift/today:', error);
+        logError('StaffShiftToday', 'Unexpected error in /api/staff/shift/today', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }

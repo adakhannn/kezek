@@ -3,6 +3,8 @@ import crypto from 'crypto';
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { logWarn, logError } from '@/lib/log';
+
 // Временное хранилище для токенов (в продакшене лучше использовать Redis)
 const tokenStore = new Map<string, { accessToken: string; refreshToken: string; expiresAt: number; createdAt: number }>();
 
@@ -43,12 +45,12 @@ export async function POST(request: NextRequest) {
             createdAt: now,
         });
 
-        console.warn('[mobile-exchange] Token stored, code:', code, 'expires at:', new Date(now + 10 * 60 * 1000).toISOString());
+        logWarn('MobileExchange', 'Token stored', { code, expiresAt: new Date(now + 10 * 60 * 1000).toISOString() });
 
         return NextResponse.json({ code });
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-        console.error('[mobile-exchange] Error:', error);
+        logError('MobileExchange', 'Error in POST', error);
         return NextResponse.json(
             { error: errorMessage },
             { status: 500 }
@@ -131,7 +133,7 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-        console.error('[mobile-exchange] Error:', error);
+        logError('MobileExchange', 'Error in GET', error);
         return NextResponse.json(
             { error: errorMessage },
             { status: 500 }

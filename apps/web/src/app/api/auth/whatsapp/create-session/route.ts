@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import { logDebug, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
 /**
@@ -99,7 +100,7 @@ export async function POST(req: Request) {
             const phoneDigits = user.phone?.replace(/[^0-9]/g, '') || user.id.replace(/-/g, '');
             emailToUse = `${phoneDigits}@whatsapp.kezek.kg`;
             
-            console.log('[auth/whatsapp/create-session] Creating temp email:', emailToUse);
+            logDebug('WhatsAppAuth', 'Creating temp email', { email: emailToUse });
             
             // Обновляем пользователя, добавляя временный email
             const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
             });
             
             if (updateError) {
-                console.error('[auth/whatsapp/create-session] Failed to add temp email:', updateError);
+                logError('WhatsAppAuth', 'Failed to add temp email', updateError);
                 // Продолжаем, даже если не удалось добавить email
             }
         }
@@ -119,14 +120,14 @@ export async function POST(req: Request) {
         });
         
         if (passwordError) {
-            console.error('[auth/whatsapp/create-session] Failed to set temp password:', passwordError);
+            logError('WhatsAppAuth', 'Failed to set temp password', passwordError);
             return NextResponse.json(
                 { ok: false, error: 'password_failed', message: `Не удалось создать сессию: ${passwordError.message}` },
                 { status: 500 }
             );
         }
         
-        console.log('[auth/whatsapp/create-session] Temp password set, returning credentials');
+        logDebug('WhatsAppAuth', 'Temp password set, returning credentials');
         
         // Возвращаем email и пароль для входа на клиенте
         return NextResponse.json({
@@ -137,7 +138,7 @@ export async function POST(req: Request) {
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[auth/whatsapp/create-session] error:', e);
+        logError('WhatsAppAuth', 'Error in create-session', e);
         return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
     }
 }

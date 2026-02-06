@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { logDebug, logError } from '@/lib/log';
+
 /**
  * POST /api/auth/sign-out
  * Принудительный выход через Admin API
@@ -36,9 +38,9 @@ export async function POST(req: Request) {
             try {
                 // @ts-expect-error - invalidateRefreshTokens может отсутствовать в типах, но существует
                 await admin.auth.admin.invalidateRefreshTokens?.(user.id).catch(() => {});
-                console.log('[api/auth/sign-out] Invalidated refresh tokens for user:', user.id);
+                logDebug('AuthSignOut', 'Invalidated refresh tokens for user', { userId: user.id });
             } catch (err) {
-                console.error('[api/auth/sign-out] Error invalidating tokens:', err);
+                logError('AuthSignOut', 'Error invalidating tokens', err);
             }
         }
 
@@ -61,7 +63,7 @@ export async function POST(req: Request) {
         return response;
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[api/auth/sign-out] error:', e);
+        logError('AuthSignOut', 'Error in sign-out', e);
         return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
     }
 }

@@ -1,6 +1,8 @@
 // apps/web/src/lib/telegram/verify.ts
 import crypto from 'crypto';
 
+import { logError, logWarn } from '../log';
+
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 export type TelegramAuthData = {
@@ -19,14 +21,14 @@ export type TelegramAuthData = {
  */
 export function verifyTelegramAuth(data: TelegramAuthData): boolean {
     if (!TELEGRAM_BOT_TOKEN) {
-        console.error('[Telegram] TELEGRAM_BOT_TOKEN not configured');
+        logError('Telegram', 'TELEGRAM_BOT_TOKEN not configured');
         return false;
     }
 
     // 1) Проверяем, что данные не слишком старые (24 часа)
     const nowSec = Math.floor(Date.now() / 1000);
     if (nowSec - data.auth_date > 86400) {
-        console.warn('[Telegram] Auth data expired');
+        logWarn('Telegram', 'Auth data expired');
         return false;
     }
 
@@ -45,7 +47,7 @@ export function verifyTelegramAuth(data: TelegramAuthData): boolean {
     const hmac = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
 
     if (hmac !== data.hash) {
-        console.warn('[Telegram] Invalid hash', { expected: hmac, actual: data.hash });
+        logWarn('Telegram', 'Invalid hash', { expected: hmac, actual: data.hash });
         return false;
     }
 

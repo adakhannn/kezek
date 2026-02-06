@@ -1,5 +1,7 @@
 import { Resend } from 'resend';
 
+import { logDebug, logError } from './log';
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const ALERT_EMAIL_TO = process.env.ALERT_EMAIL_TO || process.env.EMAIL_FROM || 'admin@kezek.kg';
@@ -18,7 +20,7 @@ type Alert = {
  */
 export async function sendAlertEmail(alerts: Alert[]): Promise<{ success: boolean; error?: string }> {
     if (!process.env.RESEND_API_KEY) {
-        console.error('[Alerts] RESEND_API_KEY not configured, skipping email alert');
+        logError('Alerts', 'RESEND_API_KEY not configured, skipping email alert');
         return { success: false, error: 'RESEND_API_KEY not configured' };
     }
 
@@ -84,15 +86,15 @@ export async function sendAlertEmail(alerts: Alert[]): Promise<{ success: boolea
         });
 
         if (error) {
-        console.error('[Alerts] Failed to send email alert:', error);
+            logError('Alerts', 'Failed to send email alert', error);
             return { success: false, error: error.message };
         }
 
-        console.log('[Alerts] Email alert sent successfully:', data?.id);
+        logDebug('Alerts', 'Email alert sent successfully', { id: data?.id });
         return { success: true };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('[Alerts] Exception sending email alert:', message);
+        logError('Alerts', 'Exception sending email alert', { message, error });
         return { success: false, error: message };
     }
 }

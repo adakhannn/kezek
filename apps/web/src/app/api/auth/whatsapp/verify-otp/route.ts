@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import { logDebug, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
 /**
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (otpError && !otpError.message.includes('does not exist')) {
-            console.error('[auth/whatsapp/verify-otp] OTP lookup error:', otpError);
+            logError('WhatsAppAuth', 'OTP lookup error', otpError);
         }
 
         // Если таблица не существует или запись не найдена, проверяем user_metadata
@@ -169,19 +170,19 @@ export async function POST(req: Request) {
                     });
 
                     if (!user) {
-                        console.error('[auth/whatsapp/verify-otp] Phone already registered but user not found:', phoneE164);
-                        console.error('[auth/whatsapp/verify-otp] Available users with phones:', 
-                            allUsers?.users.map(u => ({ id: u.id, phone: u.phone, meta: u.user_metadata }))
-                        );
+                        logError('WhatsAppAuth', 'Phone already registered but user not found', { 
+                            phone: phoneE164,
+                            availableUsers: allUsers?.users.map(u => ({ id: u.id, phone: u.phone, meta: u.user_metadata }))
+                        });
                         return NextResponse.json(
                             { ok: false, error: 'phone_taken', message: 'Этот номер телефона уже зарегистрирован. Если это ваш номер, попробуйте войти через стандартную форму входа.' },
                             { status: 409 }
                         );
                     }
 
-                    console.log('[auth/whatsapp/verify-otp] Found existing user after create error:', user.id);
+                    logDebug('WhatsAppAuth', 'Found existing user after create error', { userId: user.id });
                 } else {
-                    console.error('[auth/whatsapp/verify-otp] Create user error:', createError);
+                    logError('WhatsAppAuth', 'Create user error', createError);
                     return NextResponse.json(
                         { ok: false, error: 'create_failed', message: createError.message },
                         { status: 500 }
@@ -190,10 +191,10 @@ export async function POST(req: Request) {
             } else {
                 user = newUser.user;
                 isNewUser = true;
-                console.log('[auth/whatsapp/verify-otp] New user created:', user.id);
+                logDebug('WhatsAppAuth', 'New user created', { userId: user.id });
             }
         } else {
-            console.log('[auth/whatsapp/verify-otp] Found existing user:', user.id);
+            logDebug('WhatsAppAuth', 'Found existing user', { userId: user.id });
         }
 
         // Обновляем профиль (для нового и существующего пользователя)
@@ -234,7 +235,7 @@ export async function POST(req: Request) {
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[auth/whatsapp/verify-otp] error:', e);
+        logError('WhatsAppAuth', 'Error in verify-otp', e);
         return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
     }
 }

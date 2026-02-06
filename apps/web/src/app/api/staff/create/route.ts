@@ -1,12 +1,12 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {NextResponse} from 'next/server';
 
+import {withErrorHandler, createErrorResponse, createSuccessResponse} from '@/lib/apiErrorHandler';
 import {getBizContextForManagers} from '@/lib/authBiz';
+import {logDebug, logWarn, logError} from '@/lib/log';
 import {initializeStaffSchedule} from '@/lib/staffSchedule';
 import {getServiceClient} from '@/lib/supabaseService';
-import {withErrorHandler, createErrorResponse, createSuccessResponse} from '@/lib/apiErrorHandler';
 
 /**
  * Добавляет роль staff пользователю в бизнесе (idempotent)
@@ -19,7 +19,7 @@ async function addStaffRole(admin: ReturnType<typeof getServiceClient>, userId: 
         .maybeSingle();
     
     if (!roleStaff?.id) {
-        console.warn('Staff role not found in roles table');
+        logWarn('StaffCreate', 'Staff role not found in roles table');
         return;
     }
 
@@ -42,7 +42,7 @@ async function addStaffRole(admin: ReturnType<typeof getServiceClient>, userId: 
                 // biz_key имеет DEFAULT значение, не вставляем явно
             });
         if (eRole) {
-            console.warn('Failed to add staff role:', eRole.message);
+            logWarn('StaffCreate', 'Failed to add staff role', { message: eRole.message });
         }
     }
 }
@@ -122,10 +122,10 @@ export async function POST(req: Request) {
                 valid_from: todayISO,
             });
             if (eAssign) {
-                console.warn('Failed to create initial staff_branch_assignments row:', eAssign.message);
+                logWarn('StaffCreate', 'Failed to create initial staff_branch_assignments row', { message: eAssign.message });
             }
         } catch (e) {
-            console.warn('Unexpected error while creating staff_branch_assignments row:', e);
+            logWarn('StaffCreate', 'Unexpected error while creating staff_branch_assignments row', e);
         }
 
         // Если нашли пользователя, добавляем роль staff
@@ -136,17 +136,17 @@ export async function POST(req: Request) {
         // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
         let scheduleResult: Awaited<ReturnType<typeof initializeStaffSchedule>> = { success: false, daysCreated: 0 };
         if (data?.id) {
-            console.log(`[staff/create] Initializing schedule for new staff ${data.id}, branch ${body.branch_id}`);
+            logDebug('StaffCreate', 'Initializing schedule for new staff', { staffId: data.id, branchId: body.branch_id });
             try {
                 scheduleResult = await initializeStaffSchedule(admin, bizId, data.id, body.branch_id);
-                console.log(`[staff/create] Schedule initialization completed for staff ${data.id}:`, scheduleResult);
+                logDebug('StaffCreate', 'Schedule initialization completed', { staffId: data.id, result: scheduleResult });
             } catch (scheduleError) {
                 const errorMsg = scheduleError instanceof Error ? scheduleError.message : String(scheduleError);
-                console.error(`[staff/create] Schedule initialization failed for staff ${data.id}:`, errorMsg);
+                logError('StaffCreate', 'Schedule initialization failed', { staffId: data.id, error: errorMsg });
                 scheduleResult = { success: false, daysCreated: 0, error: errorMsg };
             }
         } else {
-            console.warn('[staff/create] No staff ID returned, cannot initialize schedule');
+            logWarn('StaffCreate', 'No staff ID returned, cannot initialize schedule');
         }
 
         return createSuccessResponse({

@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 
 import type { ShiftItem } from '../types';
 
+import { logError } from '@/lib/log';
+
+
 interface UseShiftItemsOptions {
     items: ShiftItem[];
     isOpen: boolean;
@@ -54,10 +57,10 @@ export function useShiftItems({
                 });
                 const json = await res.json();
                 if (!json.ok) {
-                    console.error('Error auto-saving items:', json.error);
+                    logError('ShiftItems', 'Error auto-saving items', json.error);
                 }
             } catch (e) {
-                console.error('Error auto-saving items:', e);
+                logError('ShiftItems', 'Error auto-saving items', e);
             } finally {
                 setSavingItems(false);
             }

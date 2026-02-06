@@ -1,6 +1,7 @@
 import { startOfWeek, addDays, addWeeks } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
+import { logDebug, logError } from './log';
 import { getServiceClient } from './supabaseService';
 import { TZ } from './time';
 
@@ -22,7 +23,7 @@ export async function initializeStaffSchedule(
     branchId: string
 ): Promise<{ success: boolean; daysCreated: number; error?: string }> {
     try {
-        console.log(`[initializeStaffSchedule] Starting for staff ${staffId}, biz ${bizId}, branch ${branchId}`);
+        logDebug('StaffSchedule', 'Starting initialization', { staffId, bizId, branchId });
         
         const today = new Date();
         const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Понедельник
@@ -36,7 +37,7 @@ export async function initializeStaffSchedule(
             allDates.push(...dateStrings);
         }
 
-        console.log(`[initializeStaffSchedule] Generated ${allDates.length} dates: ${allDates[0]} to ${allDates[allDates.length - 1]}`);
+        logDebug('StaffSchedule', 'Generated dates', { count: allDates.length, first: allDates[0], last: allDates[allDates.length - 1] });
 
         // Проверяем, какие даты уже есть в расписании
         const startDate = allDates[0];
@@ -55,18 +56,18 @@ export async function initializeStaffSchedule(
             .lt('date_on', endDate);
 
         if (selectError) {
-            console.error('[initializeStaffSchedule] Failed to check existing rules:', selectError);
+            logError('StaffSchedule', 'Failed to check existing rules', selectError);
             throw new Error(`Failed to check existing schedule: ${selectError.message}`);
         }
 
         const existingDates = new Set((existingRules ?? []).map((r: { date_on: string }) => r.date_on));
         const missingDates = allDates.filter((d) => !existingDates.has(d));
 
-        console.log(`[initializeStaffSchedule] Found ${existingDates.size} existing dates, ${missingDates.length} missing dates`);
+        logDebug('StaffSchedule', 'Found existing and missing dates', { existing: existingDates.size, missing: missingDates.length });
 
         if (missingDates.length === 0) {
             // Расписание уже инициализировано
-            console.log(`[initializeStaffSchedule] Schedule already initialized for staff ${staffId}`);
+            logDebug('StaffSchedule', 'Schedule already initialized', { staffId });
             return { success: true, daysCreated: 0 };
         }
 
@@ -113,22 +114,22 @@ export async function initializeStaffSchedule(
             };
         });
 
-        console.log(`[initializeStaffSchedule] Inserting ${inserts.length} schedule rules...`);
+        logDebug('StaffSchedule', 'Inserting schedule rules', { count: inserts.length });
 
         // Вставляем все отсутствующие правила
         const { data: insertedData, error: insertError } = await admin.from('staff_schedule_rules').insert(inserts).select('id');
 
         if (insertError) {
-            console.error('[initializeStaffSchedule] Failed to insert schedule rules:', insertError);
+            logError('StaffSchedule', 'Failed to insert schedule rules', insertError);
             throw new Error(`Failed to initialize schedule: ${insertError.message}`);
         }
 
         const daysCreated = insertedData?.length || missingDates.length;
-        console.log(`[initializeStaffSchedule] Successfully initialized schedule for staff ${staffId}: ${daysCreated} days inserted`);
+        logDebug('StaffSchedule', 'Successfully initialized schedule', { staffId, daysCreated });
         return { success: true, daysCreated };
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error(`[initializeStaffSchedule] Error for staff ${staffId}:`, errorMsg, error);
+        logError('StaffSchedule', 'Error during initialization', { staffId, error: errorMsg, originalError: error });
         // Не пробрасываем ошибку дальше, чтобы не сломать создание сотрудника
         // Расписание можно будет создать позже при первом открытии страницы
         return { success: false, daysCreated: 0, error: errorMsg };

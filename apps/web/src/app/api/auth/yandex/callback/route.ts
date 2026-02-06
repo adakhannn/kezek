@@ -6,6 +6,8 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import { logDebug, logError } from '@/lib/log';
+
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
@@ -46,7 +48,7 @@ export async function GET(req: Request) {
 
         if (!tokenResponse.ok) {
             const errorText = await tokenResponse.text();
-            console.error('[yandex/callback] Token exchange error:', errorText);
+            logError('YandexAuth', 'Token exchange error', { errorText });
             throw new Error('Failed to exchange code for token');
         }
 
@@ -66,7 +68,7 @@ export async function GET(req: Request) {
 
         if (!userResponse.ok) {
             const errorText = await userResponse.text();
-            console.error('[yandex/callback] User info error:', errorText);
+            logError('YandexAuth', 'User info error', { errorText });
             throw new Error('Failed to get user info');
         }
 
@@ -85,7 +87,7 @@ export async function GET(req: Request) {
             .maybeSingle<{ id: string | null; yandex_id: string | null }>();
 
         if (profileSelectError) {
-            console.error('[yandex/callback] profile select error:', profileSelectError);
+            logError('YandexAuth', 'Profile select error', profileSelectError);
         }
 
         let userId: string;
@@ -105,7 +107,7 @@ export async function GET(req: Request) {
                 .eq('id', userId);
 
             if (profileUpdateError) {
-                console.error('[yandex/callback] profile update error:', profileUpdateError);
+                logError('YandexAuth', 'Profile update error', profileUpdateError);
             }
         } else {
             // Новый пользователь – создаём в Supabase Auth и в profiles
@@ -129,7 +131,7 @@ export async function GET(req: Request) {
                 if (authError.message?.includes('already registered') || 
                     authError.message?.includes('already exists') ||
                     authError.message?.includes('email address has already been registered')) {
-                    console.log('[yandex/callback] User already exists, trying to find by email:', email);
+                    logDebug('YandexAuth', 'User already exists, trying to find by email', { email });
                     
                     // Ищем пользователя по email через auth_users_view
                     try {
@@ -141,7 +143,7 @@ export async function GET(req: Request) {
                         
                         if (userByEmail?.id) {
                             userId = userByEmail.id;
-                            console.log('[yandex/callback] Found existing user by email in auth_users_view:', userId);
+                            logDebug('YandexAuth', 'Found existing user by email in auth_users_view', { userId });
                             
                             // Создаем профиль, если его нет
                             const { data: existingProfile } = await admin
@@ -166,7 +168,7 @@ export async function GET(req: Request) {
                             
                             if (existingUser) {
                                 userId = existingUser.id;
-                                console.log('[yandex/callback] Found existing user by email in auth:', userId);
+                                logDebug('YandexAuth', 'Found existing user by email in auth', { userId });
                                 
                                 // Создаем профиль, если его нет
                                 const { data: existingProfile } = await admin
@@ -185,28 +187,28 @@ export async function GET(req: Request) {
                                 }
                             } else {
                                 // Если не нашли, возвращаем ошибку
-                                console.error('[yandex/callback] User exists but not found:', authError);
+                                logError('YandexAuth', 'User exists but not found', authError);
                                 return NextResponse.redirect(
                                     `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
                                 );
                             }
                         }
                     } catch (listError) {
-                        console.error('[yandex/callback] Error finding user by email:', listError);
+                        logError('YandexAuth', 'Error finding user by email', listError);
                         return NextResponse.redirect(
                             `${origin}/auth/sign-in?error=${encodeURIComponent('Пользователь с таким email уже существует. Попробуйте войти через email.')}`
                         );
                     }
                 } else {
                     // Другая ошибка
-                    console.error('[yandex/callback] create user error:', authError);
+                    logError('YandexAuth', 'Create user error', authError);
                     const errorMessage = authError.message || 'Failed to create user';
                     return NextResponse.redirect(
                         `${origin}/auth/sign-in?error=${encodeURIComponent(`Ошибка создания пользователя: ${errorMessage}`)}`
                     );
                 }
             } else if (!authData?.user) {
-                console.error('[yandex/callback] create user returned no user data');
+                logError('YandexAuth', 'Create user returned no user data');
                 return NextResponse.redirect(
                     `${origin}/auth/sign-in?error=${encodeURIComponent('Ошибка создания пользователя: нет данных пользователя')}`
                 );
@@ -231,7 +233,7 @@ export async function GET(req: Request) {
                 });
 
                 if (profileInsertError) {
-                    console.error('[yandex/callback] profile insert error:', profileInsertError);
+                    logError('YandexAuth', 'Profile insert error', profileInsertError);
                     // Продолжаем, даже если профиль не создался - можно обновить позже
                 }
             } else {
@@ -251,7 +253,7 @@ export async function GET(req: Request) {
         // Получаем информацию о пользователе из Supabase Auth, чтобы узнать его email
         const { data: currentUser, error: getUserError } = await admin.auth.admin.getUserById(userId);
         if (getUserError) {
-            console.error('[yandex/callback] getUserById error:', getUserError);
+            logError('YandexAuth', 'getUserById error', getUserError);
             throw new Error('Failed to get user info');
         }
 
@@ -274,7 +276,7 @@ export async function GET(req: Request) {
         });
 
         if (passwordError) {
-            console.error('[yandex/callback] update password error:', passwordError);
+            logError('YandexAuth', 'Update password error', passwordError);
             throw new Error('Failed to set password for session');
         }
 
@@ -285,7 +287,7 @@ export async function GET(req: Request) {
         });
 
         if (signInError || !session) {
-            console.error('[yandex/callback] signInWithPassword error:', signInError);
+            logError('YandexAuth', 'signInWithPassword error', signInError);
             throw new Error('Failed to create session');
         }
 
@@ -298,12 +300,14 @@ export async function GET(req: Request) {
         const encodedRefreshToken = encodeURIComponent(session.refresh_token);
         redirectUrl.hash = `access_token=${encodedAccessToken}&refresh_token=${encodedRefreshToken}`;
         
-        console.log('[yandex/callback] Redirecting to callback with tokens, userId:', userId);
-        console.log('[yandex/callback] Redirect URL:', redirectUrl.toString().replace(/access_token=[^&]+/, 'access_token=***').replace(/refresh_token=[^&]+/, 'refresh_token=***'));
+        logDebug('YandexAuth', 'Redirecting to callback with tokens', { userId });
+        logDebug('YandexAuth', 'Redirect URL', { 
+            url: redirectUrl.toString().replace(/access_token=[^&]+/, 'access_token=***').replace(/refresh_token=[^&]+/, 'refresh_token=***') 
+        });
         
         return NextResponse.redirect(redirectUrl.toString());
     } catch (error) {
-        console.error('[yandex/callback] Error:', error);
+        logError('YandexAuth', 'Error in yandex callback', error);
         const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
         return NextResponse.redirect(
             `${origin}/auth/sign-in?error=${encodeURIComponent(error instanceof Error ? error.message : 'yandex_auth_failed')}`

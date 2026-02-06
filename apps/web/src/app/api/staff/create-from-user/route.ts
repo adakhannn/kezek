@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logDebug, logWarn, logError } from '@/lib/log';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -115,14 +116,11 @@ export async function POST(req: Request) {
                         valid_from: todayISO,
                     });
                     if (eAssign) {
-                        console.warn(
-                            'Failed to create staff_branch_assignments row in create-from-user:',
-                            eAssign.message
-                        );
+                        logWarn('StaffCreateFromUser', 'Failed to create staff_branch_assignments row', { message: eAssign.message });
                     }
                 }
             } catch (e) {
-                console.warn('Unexpected error while creating staff_branch_assignments row (create-from-user):', e);
+                logWarn('StaffCreateFromUser', 'Unexpected error while creating staff_branch_assignments row', e);
             }
         }
 
@@ -158,17 +156,17 @@ export async function POST(req: Request) {
         // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
         let scheduleResult: Awaited<ReturnType<typeof initializeStaffSchedule>> = { success: false, daysCreated: 0 };
         if (staffId) {
-            console.log(`[staff/create-from-user] Initializing schedule for new staff ${staffId}, branch ${body.branch_id}`);
+            logDebug('StaffCreateFromUser', 'Initializing schedule for new staff', { staffId, branchId: body.branch_id });
             try {
                 scheduleResult = await initializeStaffSchedule(admin, bizId, staffId, body.branch_id);
-                console.log(`[staff/create-from-user] Schedule initialization completed for staff ${staffId}:`, scheduleResult);
+                logDebug('StaffCreateFromUser', 'Schedule initialization completed', { staffId, result: scheduleResult });
             } catch (scheduleError) {
                 const errorMsg = scheduleError instanceof Error ? scheduleError.message : String(scheduleError);
-                console.error(`[staff/create-from-user] Schedule initialization failed for staff ${staffId}:`, errorMsg);
+                logError('StaffCreateFromUser', 'Schedule initialization failed', { staffId, error: errorMsg });
                 scheduleResult = { success: false, daysCreated: 0, error: errorMsg };
             }
         } else {
-            console.warn('[staff/create-from-user] No staff ID, cannot initialize schedule');
+            logWarn('StaffCreateFromUser', 'No staff ID, cannot initialize schedule');
         }
 
         return NextResponse.json({

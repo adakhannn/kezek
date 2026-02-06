@@ -1,6 +1,7 @@
 import { addMinutes } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 
+import { logDebug, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 type Slot = {
@@ -21,19 +22,8 @@ type Staff = {
     branch_id: string;
 };
 
-const isDev = process.env.NODE_ENV !== 'production';
-const debugLog = (...args: unknown[]) => {
-    if (isDev) {
-        // eslint-disable-next-line no-console
-        console.log(...args);
-    }
-};
-const debugWarn = (...args: unknown[]) => {
-    if (isDev) {
-         
-        console.warn(...args);
-    }
-};
+// Используем безопасное логирование из @/lib/log
+// debugLog и debugWarn удалены - используйте logDebug и logWarn из @/lib/log
 
 /**
  * Кэш для хранения загруженных слотов
@@ -111,7 +101,7 @@ export function useSlotsLoader(params: {
             if (cached) {
                 const age = Date.now() - cached.timestamp;
                 if (age < SLOTS_CACHE_TTL) {
-                    debugLog('[Booking] Using cached slots:', { cacheKey, age: `${Math.round(age / 1000)}s` });
+                    logDebug('Booking', 'Using cached slots', { cacheKey, age: `${Math.round(age / 1000)}s` });
                     setSlots(cached.slots);
                     setError(null);
                     setLoading(false);
@@ -119,13 +109,13 @@ export function useSlotsLoader(params: {
                 } else {
                     // Кэш устарел, удаляем
                     cacheRef.current.delete(cacheKey);
-                    debugLog('[Booking] Cache expired, removing:', { cacheKey, age: `${Math.round(age / 1000)}s` });
+                    logDebug('Booking', 'Cache expired, removing', { cacheKey, age: `${Math.round(age / 1000)}s` });
                 }
             }
         } else {
             // Принудительное обновление - очищаем кэш для этого ключа
             cacheRef.current.delete(cacheKey);
-            debugLog('[Booking] Force refresh, clearing cache:', { cacheKey });
+            logDebug('Booking', 'Force refresh, clearing cache', { cacheKey });
         }
 
         // Debounce: откладываем выполнение запроса
@@ -145,7 +135,7 @@ export function useSlotsLoader(params: {
             if (staffId !== 'any' && serviceStaff !== null) {
                 const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
                 if (!isServiceValid) {
-                    debugLog('[Booking] Slots loading: service not in servicesFiltered, skipping RPC call', {
+                    logDebug('Booking', 'Slots loading: service not in servicesFiltered, skipping RPC call', {
                         serviceId,
                         staffId,
                         servicesFiltered: servicesFiltered.map((s) => s.id),
@@ -155,17 +145,17 @@ export function useSlotsLoader(params: {
                     setLoading(false);
                     return;
                 }
-                debugLog('[Booking] Slots loading: service is valid (in servicesFiltered), proceeding with RPC call', {
+                logDebug('Booking', 'Slots loading: service is valid (in servicesFiltered), proceeding with RPC call', {
                     serviceId,
                     staffId,
                 });
             } else {
                 if (staffId === 'any') {
-                    debugLog('[Booking] Slots loading: any master selected, showing slots from all masters', {
+                    logDebug('Booking', 'Slots loading: any master selected, showing slots from all masters', {
                         serviceId,
                     });
                 } else {
-                    debugLog('[Booking] Slots loading: serviceStaff not loaded yet, proceeding with RPC call (will check validity)', {
+                    logDebug('Booking', 'Slots loading: serviceStaff not loaded yet, proceeding with RPC call (will check validity)', {
                         serviceId,
                         staffId,
                         serviceStaffLoaded: false,
@@ -193,7 +183,7 @@ export function useSlotsLoader(params: {
                     );
                     if (tempTransfer) {
                         targetBranchId = tempTransfer.branch_id;
-                        debugLog('[Booking] Temporary transfer found:', {
+                        logDebug('Booking', 'Temporary transfer found', {
                             staffId,
                             date: dayStr,
                             tempBranch: tempTransfer.branch_id,
@@ -216,7 +206,7 @@ export function useSlotsLoader(params: {
                         .eq('is_active', true)
                         .maybeSingle();
 
-                    debugLog('[Booking] Checking schedule for temporary transfer:', {
+                    logDebug('Booking', 'Checking schedule for temporary transfer', {
                         staffId,
                         date: dayStr,
                         tempBranch: targetBranchId,
@@ -225,16 +215,16 @@ export function useSlotsLoader(params: {
                     });
 
                     if (scheduleError) {
-                        debugWarn('[Booking] Error checking schedule:', scheduleError);
+                        logWarn('Booking', 'Error checking schedule', scheduleError);
                     }
 
                     if (!scheduleRule || !scheduleRule.intervals || (Array.isArray(scheduleRule.intervals) && scheduleRule.intervals.length === 0)) {
-                        debugWarn('[Booking] No schedule found for temporary transfer. Master may not have working hours set for this date in temporary branch.');
+                        logWarn('Booking', 'No schedule found for temporary transfer. Master may not have working hours set for this date in temporary branch.');
                     }
                 }
 
                 // Вызываем RPC для получения слотов
-                debugLog('[Booking] Calling RPC with params:', {
+                logDebug('Booking', 'Calling RPC with params', {
                     biz_id: bizId,
                     service_id: serviceId,
                     day: dayStr,
@@ -263,7 +253,7 @@ export function useSlotsLoader(params: {
                 if (ignore) return;
 
                 if (rpcError) {
-                    debugWarn('[get_free_slots_service_day_v2] error:', rpcError);
+                    logWarn('Booking', 'get_free_slots_service_day_v2 error', rpcError);
                     setSlots([]);
 
                     // Определяем тип ошибки для более детального сообщения
@@ -288,7 +278,7 @@ export function useSlotsLoader(params: {
                 const now = new Date();
                 const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
 
-                debugLog('[Booking] RPC returned slots:', {
+                logDebug('Booking', 'RPC returned slots', {
                     total: all.length,
                     slots: all.map((s) => ({ staff_id: s.staff_id, branch_id: s.branch_id, start_at: s.start_at })),
                     isTemporaryTransfer,
@@ -300,11 +290,11 @@ export function useSlotsLoader(params: {
                 const filtered = all.filter((s) => {
                     // Если выбран конкретный мастер, фильтруем по нему
                     if (staffId !== 'any' && s.staff_id !== staffId) {
-                        debugLog('[Booking] Slot filtered (wrong staff):', { slot_staff: s.staff_id, selected_staff: staffId });
+                        logDebug('Booking', 'Slot filtered (wrong staff)', { slot_staff: s.staff_id, selected_staff: staffId });
                         return false;
                     }
                     if (new Date(s.start_at) <= minTime) {
-                        debugLog('[Booking] Slot filtered (too early):', { start_at: s.start_at, minTime: minTime.toISOString() });
+                        logDebug('Booking', 'Slot filtered (too early)', { start_at: s.start_at, minTime: minTime.toISOString() });
                         return false;
                     }
 
@@ -312,19 +302,19 @@ export function useSlotsLoader(params: {
                     if (isTemporaryTransfer && targetBranchId) {
                         const matchesBranch = s.branch_id === targetBranchId;
                         if (!matchesBranch) {
-                            debugLog('[Booking] Slot filtered (wrong branch for temporary transfer):', {
+                            logDebug('Booking', 'Slot filtered (wrong branch for temporary transfer)', {
                                 slot_branch: s.branch_id,
                                 expected_branch: targetBranchId,
                             });
                             return false;
                         }
-                        debugLog('[Booking] Slot accepted (temporary transfer):', { slot_branch: s.branch_id, start_at: s.start_at });
+                        logDebug('Booking', 'Slot accepted (temporary transfer)', { slot_branch: s.branch_id, start_at: s.start_at });
                         return true;
                     }
 
                     // Для обычного мастера принимаем слоты из выбранного филиала
                     if (s.branch_id !== branchId) {
-                        debugLog('[Booking] Slot filtered (wrong branch):', { slot_branch: s.branch_id, selected_branch: branchId });
+                        logDebug('Booking', 'Slot filtered (wrong branch)', { slot_branch: s.branch_id, selected_branch: branchId });
                         return false;
                     }
 
@@ -338,14 +328,14 @@ export function useSlotsLoader(params: {
                     return timeA - timeB;
                 });
 
-                debugLog('[Booking] Filtered slots result:', { total: all.length, filtered: filtered.length });
+                logDebug('Booking', 'Filtered slots result', { total: all.length, filtered: filtered.length });
 
                 if (filtered.length === 0 && all.length > 0) {
-                    debugWarn('[Booking] No slots after filtering for temporary transfer. RPC may not be accounting for temporary transfers.');
+                    logWarn('Booking', 'No slots after filtering for temporary transfer. RPC may not be accounting for temporary transfers.');
                 }
 
                 if (all.length === 0 && isTemporaryTransfer) {
-                    debugWarn('[Booking] RPC returned 0 slots for temporary transfer. This likely means RPC does not account for temporary transfers.');
+                    logWarn('Booking', 'RPC returned 0 slots for temporary transfer. This likely means RPC does not account for temporary transfers.');
                 }
 
                 // Сохраняем в кэш
@@ -354,13 +344,13 @@ export function useSlotsLoader(params: {
                     slots: filtered,
                     timestamp: Date.now(),
                 });
-                debugLog('[Booking] Slots cached:', { cacheKey, count: filtered.length });
+                logDebug('Booking', 'Slots cached', { cacheKey, count: filtered.length });
 
                 setSlots(filtered);
                 setError(null);
             } catch (err) {
                 if (!ignore) {
-                    debugWarn('[Booking] Unexpected error loading slots:', err);
+                    logWarn('Booking', 'Unexpected error loading slots', err);
                     setError(t('booking.error.technical', 'Произошла техническая ошибка. Пожалуйста, обновите страницу или попробуйте позже.'));
                     setSlots([]);
                 }
@@ -392,7 +382,7 @@ export function useSlotsLoader(params: {
                 }
             }
             if (cleaned > 0) {
-                debugLog('[Booking] Cleaned expired cache entries:', { cleaned });
+                logDebug('Booking', 'Cleaned expired cache entries', { cleaned });
             }
         }, 60000); // Проверяем каждую минуту
 

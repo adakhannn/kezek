@@ -4,6 +4,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { getWhatsAppAccessToken } from '@/lib/env';
+import { logDebug, logError } from '@/lib/log';
+
 /**
  * GET /api/whatsapp/get-business-account
  * Получает WhatsApp Business Account ID и список номеров телефонов
@@ -11,7 +14,6 @@ import { NextResponse } from 'next/server';
  * Использование:
  * GET /api/whatsapp/get-business-account
  */
-import { getWhatsAppAccessToken } from '@/lib/env';
 
 export async function GET() {
     try {
@@ -32,7 +34,7 @@ export async function GET() {
         // Получаем список Business Accounts
         const url = 'https://graph.facebook.com/v21.0/me/businesses';
         
-        console.log('[whatsapp/get-business-account] Requesting:', url);
+        logDebug('WhatsAppAPI', 'Requesting business accounts', { url });
 
         const resp = await fetch(url, {
             method: 'GET',
@@ -125,7 +127,7 @@ export async function GET() {
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[whatsapp/get-business-account] error:', e);
+        logError('WhatsAppAPI', 'Error in get-business-account', e);
         return NextResponse.json(
             { ok: false, error: 'internal', message: msg },
             { status: 500 }

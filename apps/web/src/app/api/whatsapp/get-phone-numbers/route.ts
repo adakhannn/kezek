@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
+import { logDebug, logError } from '@/lib/log';
+
 /**
  * GET /api/whatsapp/get-phone-numbers?account_id=1185726307058446
  * Получает список номеров телефонов для WhatsApp Business Account
@@ -43,7 +45,7 @@ export async function GET(req: Request) {
         // Пробуем получить номера через account_id (может быть Phone Number ID или Business Account ID)
         const url = `https://graph.facebook.com/v21.0/${accountId}/phone_numbers`;
         
-        console.log('[whatsapp/get-phone-numbers] Requesting:', url);
+        logDebug('WhatsAppAPI', 'Requesting phone numbers', { url, accountId });
 
         const resp = await fetch(url, {
             method: 'GET',
@@ -117,7 +119,7 @@ export async function GET(req: Request) {
         });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('[whatsapp/get-phone-numbers] error:', e);
+        logError('WhatsAppAPI', 'Error in get-phone-numbers', e);
         return NextResponse.json(
             { ok: false, error: 'internal', message: msg },
             { status: 500 }

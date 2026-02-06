@@ -24,6 +24,15 @@ const eslintConfig = [
       "playwright.config.ts",
     ],
   },
+  {
+    rules: {
+      // Запрещаем console.log/warn/info/debug в production коде
+      // Используйте logDebug, logWarn, logError из @/lib/log
+      "no-console": ["warn", { 
+        allow: ["error"] // console.error разрешен только в log.ts и logSafe.ts
+      }],
+    },
+  },
 ];
 
 export default eslintConfig;
