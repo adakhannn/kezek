@@ -1,12 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
 
-import { logError } from '@/lib/log';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function GET(request: Request) {
-    try {
+    return withErrorHandler('PromotionsDebug', async () => {
         const cookieStore = await cookies();
         const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -23,7 +22,7 @@ export async function GET(request: Request) {
             data: { user },
         } = await supabase.auth.getUser();
         if (!user) {
-            return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         // Проверяем, что пользователь - суперадмин
@@ -35,7 +34,7 @@ export async function GET(request: Request) {
             .single();
 
         if (!roleData) {
-            return NextResponse.json({ ok: false, error: 'Forbidden: Super admin only' }, { status: 403 });
+            return createErrorResponse('forbidden', 'Доступ запрещен: только для суперадмина', undefined, 403);
         }
 
         const { searchParams } = new URL(request.url);
@@ -44,7 +43,7 @@ export async function GET(request: Request) {
         const bizId = searchParams.get('bizId');
 
         if (!clientId && !branchId && !bizId) {
-            return NextResponse.json({ ok: false, error: 'clientId, branchId, or bizId required' }, { status: 400 });
+            return createErrorResponse('validation', 'Требуется clientId, branchId или bizId', undefined, 400);
         }
 
         const serviceClient = getServiceClient();
@@ -506,13 +505,7 @@ export async function GET(request: Request) {
             }
         });
 
-        return NextResponse.json({ ok: true, data: result });
-    } catch (error) {
-        logError('PromotionsDebug', 'Unexpected error', error);
-        return NextResponse.json(
-            { ok: false, error: error instanceof Error ? error.message : 'Unknown error' },
-            { status: 500 }
-        );
-    }
+        return createSuccessResponse(result);
+    });
 }
 

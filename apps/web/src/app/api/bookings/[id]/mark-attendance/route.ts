@@ -2,8 +2,8 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
 
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -89,47 +89,44 @@ export async function POST(req: Request, context: unknown) {
         req,
         RateLimitConfigs.normal,
         async () => {
-            try {
+            return withErrorHandler('BookingsMarkAttendance', async () => {
                 const bookingId = await getRouteParamRequired(context, 'id');
                 const { bizId } = await getBizContextForManagers();
-        const admin = getServiceClient();
+                const admin = getServiceClient();
 
-        const body = await req.json().catch(() => ({} as Body));
-        const attended = body.attended === true;
+                const body = await req.json().catch(() => ({} as Body));
+                const attended = body.attended === true;
 
-        // Проверяем, что бронь принадлежит этому бизнесу
-        const { data: booking, error: bookingError } = await admin
-            .from('bookings')
-            .select('id, biz_id, start_at, status')
-            .eq('id', bookingId)
-            .maybeSingle();
+                // Проверяем, что бронь принадлежит этому бизнесу
+                const { data: booking, error: bookingError } = await admin
+                    .from('bookings')
+                    .select('id, biz_id, start_at, status')
+                    .eq('id', bookingId)
+                    .maybeSingle();
 
-        if (bookingError) {
-            return NextResponse.json({ ok: false, error: bookingError.message }, { status: 400 });
-        }
+                if (bookingError) {
+                    return createErrorResponse('validation', bookingError.message, undefined, 400);
+                }
 
-        if (!booking) {
-            return NextResponse.json({ ok: false, error: 'Бронь не найдена' }, { status: 404 });
-        }
+                if (!booking) {
+                    return createErrorResponse('not_found', 'Бронь не найдена', undefined, 404);
+                }
 
-        if (String(booking.biz_id) !== String(bizId)) {
-            return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
-        }
+                if (String(booking.biz_id) !== String(bizId)) {
+                    return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
+                }
 
-        // Если статус уже финальный, не пытаемся применять его повторно
-        if (booking.status === 'paid' || booking.status === 'no_show') {
-            return NextResponse.json({ ok: true, status: booking.status });
-        }
+                // Если статус уже финальный, не пытаемся применять его повторно
+                if (booking.status === 'paid' || booking.status === 'no_show') {
+                    return createSuccessResponse(undefined, { status: booking.status });
+                }
 
-        // Проверяем, что бронь уже прошла
-        const now = new Date();
-        const startAt = new Date(booking.start_at);
-        if (startAt > now) {
-            return NextResponse.json({
-                ok: false,
-                error: 'Можно отмечать посещение только для прошедших броней',
-            }, { status: 400 });
-        }
+                // Проверяем, что бронь уже прошла
+                const now = new Date();
+                const startAt = new Date(booking.start_at);
+                if (startAt > now) {
+                    return createErrorResponse('validation', 'Можно отмечать посещение только для прошедших броней', undefined, 400);
+                }
 
         // Обновляем статус: attended = true -> paid (выполнено/пришел), attended = false -> no_show
         // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
@@ -161,8 +158,7 @@ export async function POST(req: Request, context: unknown) {
             if (newStatus === 'paid' && result) {
                 const applied = result.applied || false;
                 
-                return NextResponse.json({ 
-                    ok: true, 
+                return createSuccessResponse(undefined, { 
                     status: newStatus,
                     promotion_applied: applied,
                     promotion_info: applied ? {
@@ -173,7 +169,7 @@ export async function POST(req: Request, context: unknown) {
                     } : null,
                 });
             }
-            return NextResponse.json({ ok: true, status: newStatus });
+            return createSuccessResponse(undefined, { status: newStatus });
         }
 
         // Если RPC функция не найдена или не работает, используем прямой update через service client
@@ -201,29 +197,23 @@ export async function POST(req: Request, context: unknown) {
                     
                     if (checkData && checkData.status === newStatus) {
                         // Статус обновился, несмотря на ошибку
-                        return NextResponse.json({ ok: true, status: newStatus });
+                        return createSuccessResponse(undefined, { status: newStatus });
                     }
                     
                     // Если статус не обновился, возвращаем ошибку
-                    return NextResponse.json({
-                        ok: false,
-                        error: 'Не удалось обновить статус. Возможно, сотрудник больше не назначен на филиал.',
-                    }, { status: 400 });
+                    return createErrorResponse('validation', 'Не удалось обновить статус. Возможно, сотрудник больше не назначен на филиал.', undefined, 400);
                 } else {
-                    return NextResponse.json({ ok: false, error: updateError.message }, { status: 400 });
+                    return createErrorResponse('validation', updateError.message, undefined, 400);
                 }
             }
             
             // Успешно обновлено
-            return NextResponse.json({ ok: true, status: newStatus });
+            return createSuccessResponse(undefined, { status: newStatus });
         }
 
                 // Если это не ошибка "функция не найдена", возвращаем ошибку RPC
-                return NextResponse.json({ ok: false, error: rpcError?.message || 'Неизвестная ошибка' }, { status: 400 });
-            } catch (e: unknown) {
-                const msg = e instanceof Error ? e.message : String(e);
-                return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-            }
+                return createErrorResponse('validation', rpcError?.message || 'Неизвестная ошибка', undefined, 400);
+            });
         }
     );
 }

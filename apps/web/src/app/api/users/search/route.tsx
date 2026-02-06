@@ -1,8 +1,8 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
 
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -16,7 +16,7 @@ import { getServiceClient } from '@/lib/supabaseService';
  * - если q задана → вернёт пользователей, у кого email/phone/имя содержит q.
  */
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('UsersSearch', async () => {
         // Доступ сюда уже ограничен getBizContextForManagers (owner/admin/manager ИЛИ владелец по owner_id)
         const { supabase, bizId } = await getBizContextForManagers();
 
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
         const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
 
         if (error) {
-            return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+            return createErrorResponse('validation', error.message, undefined, 400);
         }
 
         const users = data.users ?? [];
@@ -67,9 +67,6 @@ export async function POST(req: Request) {
             )
             : mapped;
 
-        return NextResponse.json({ ok: true, items, page, perPage });
-    } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : 'UNKNOWN';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse(undefined, { items, page, perPage });
+    });
 }

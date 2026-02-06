@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { logDebug, logError, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 import { validateName, validatePhone } from '@/lib/validation';
@@ -28,7 +29,7 @@ type RpcSlot = { staff_id: string; branch_id: string; start_at: string; end_at: 
 // ---------------- utils/notify ----------------
 async function notify(type: 'hold' | 'confirm' | 'cancel', bookingId: string) {
     try {
-        console.log('[dashboard/notify] Calling notify API:', { type, bookingId });
+        logDebug('DashboardNotify', 'Calling notify API', { type, bookingId });
         const response = await fetch('/api/notify', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
@@ -37,7 +38,7 @@ async function notify(type: 'hold' | 'confirm' | 'cancel', bookingId: string) {
         
         if (!response.ok) {
             const errorText = await response.text().catch(() => 'Unknown error');
-            console.error('[dashboard/notify] Notify API error:', { 
+            logError('DashboardNotify', 'Notify API error', { 
                 type, 
                 bookingId, 
                 status: response.status, 
@@ -45,10 +46,10 @@ async function notify(type: 'hold' | 'confirm' | 'cancel', bookingId: string) {
             });
         } else {
             const result = await response.json().catch(() => ({}));
-            console.log('[dashboard/notify] Notify API success:', { type, bookingId, result });
+            logDebug('DashboardNotify', 'Notify API success', { type, bookingId, result });
         }
     } catch (e) {
-        console.error('[dashboard/notify] Notify API exception:', { type, bookingId, error: e });
+        logError('DashboardNotify', 'Notify API exception', { type, bookingId, error: e });
     }
 }
 
@@ -136,7 +137,7 @@ function CalendarDay({ bizId, staff, branches }: { bizId: string; staff: StaffRo
                 .lte('start_at', endDay)
                 .order('start_at', { ascending: true });
             if (ignore) return;
-            if (error) { console.error(error); setItems([]); return; }
+            if (error) { logError('CalendarDay', 'Error loading bookings', error); setItems([]); return; }
             setItems((data ?? []).map(r => ({
                 id: String(r.id),
                 staff_id: String(r.staff_id),
@@ -248,12 +249,17 @@ function CalendarDay({ bizId, staff, branches }: { bizId: string; staff: StaffRo
 }
 
 // ---------------- List ----------------
+const ITEMS_PER_PAGE = 30;
+
 function ListTable({ bizId, initial, branches }: { bizId: string; initial: BookingItem[]; branches: BranchRow[] }) {
     const { t, locale } = useLanguage();
     const [list, setList] = useState<BookingItem[]>(initial);
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [branchFilter, setBranchFilter] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [totalCount, setTotalCount] = useState<number>(initial.length);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // Функция для получения названия услуги в зависимости от языка
     const getServiceName = (service: { name_ru: string; name_ky?: string | null } | undefined): string => {
@@ -263,55 +269,71 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
     };
 
     async function refresh() {
-        // Загружаем прошедшие брони (для отметки посещения) и будущие
-        let query = supabase
-            .from('bookings')
-            .select('id,status,start_at,end_at,branch_id,services(name_ru,name_ky),staff(full_name),client_name,client_phone')
-            .eq('biz_id', bizId);
-        
-        if (statusFilter !== 'all') {
-            if (statusFilter === 'active') {
-                query = query.in('status', ['confirmed']);
+        setIsLoading(true);
+        try {
+            // Загружаем прошедшие брони (для отметки посещения) и будущие
+            let query = supabase
+                .from('bookings')
+                .select('id,status,start_at,end_at,branch_id,services(name_ru,name_ky),staff(full_name),client_name,client_phone', { count: 'exact' })
+                .eq('biz_id', bizId);
+            
+            if (statusFilter !== 'all') {
+                if (statusFilter === 'active') {
+                    query = query.in('status', ['confirmed']);
+                } else {
+                    query = query.eq('status', statusFilter);
+                }
             } else {
-                query = query.eq('status', statusFilter);
+                query = query.neq('status', 'cancelled');
             }
-        } else {
-            query = query.neq('status', 'cancelled');
+            
+            if (branchFilter !== 'all') {
+                query = query.eq('branch_id', branchFilter);
+            }
+            
+            // Применяем поиск на сервере, если возможно, иначе на клиенте
+            // Для простоты оставляем поиск на клиенте, но ограничиваем количество загружаемых данных
+            const from = (currentPage - 1) * ITEMS_PER_PAGE;
+            const to = from + ITEMS_PER_PAGE - 1;
+            
+            const { data, count } = await query
+                .order('start_at', { ascending: false })
+                .range(from, to);
+            
+            setTotalCount(count ?? 0);
+            
+            // Фильтруем по поисковому запросу на клиенте
+            let filtered = data || [];
+            if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase().trim();
+                filtered = filtered.filter(b => {
+                    const service = Array.isArray(b.services) ? b.services[0] : b.services;
+                    const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
+                    return (
+                        (service?.name_ru?.toLowerCase().includes(q)) ||
+                        (master?.full_name?.toLowerCase().includes(q)) ||
+                        (b.client_name?.toLowerCase().includes(q)) ||
+                        (b.client_phone?.includes(q)) ||
+                        (String(b.id).toLowerCase().includes(q))
+                    );
+                });
+            }
+            
+            setList(filtered);
+        } finally {
+            setIsLoading(false);
         }
-        
-        if (branchFilter !== 'all') {
-            query = query.eq('branch_id', branchFilter);
-        }
-        
-        const { data } = await query
-            .order('start_at', { ascending: false })
-            .limit(100);
-        
-        // Фильтруем по поисковому запросу на клиенте
-        let filtered = data || [];
-        if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase().trim();
-            filtered = filtered.filter(b => {
-                const service = Array.isArray(b.services) ? b.services[0] : b.services;
-                const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
-                return (
-                    (service?.name_ru?.toLowerCase().includes(q)) ||
-                    (master?.full_name?.toLowerCase().includes(q)) ||
-                    (b.client_name?.toLowerCase().includes(q)) ||
-                    (b.client_phone?.includes(q)) ||
-                    (String(b.id).toLowerCase().includes(q))
-                );
-            });
-        }
-        
-        setList(filtered);
     }
     
     useEffect(() => {
-        refresh();
+        setCurrentPage(1); // Сбрасываем на первую страницу при изменении фильтров
     }, [statusFilter, branchFilter]);
+    
+    useEffect(() => {
+        refresh();
+    }, [statusFilter, branchFilter, currentPage, bizId]);
 
-    async function confirm(id: string) {
+    async function _confirm(id: string) {
         const { error } = await supabase.rpc('confirm_booking', { p_booking_id: id });
         if (error) return alert(error.message);
         await notify('confirm', id);
@@ -366,7 +388,7 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
     return (
         <section className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-3 sm:space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.list.title', 'Последние 30 броней')}</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.list.title', 'Брони')}</h2>
                 <button className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 flex items-center justify-center gap-2" onClick={refresh}>
                     <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -553,6 +575,40 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
                     })
                 )}
             </div>
+            
+            {/* Pagination */}
+            {totalCount > ITEMS_PER_PAGE && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {t('bookings.list.paginationInfo', 'Показано')} {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} {t('bookings.list.of', 'из')} {totalCount}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1 || isLoading}
+                            className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                        >
+                            {t('bookings.list.prev', 'Назад')}
+                        </button>
+                        <span className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300">
+                            {t('bookings.list.page', 'Страница')} {currentPage} {t('bookings.list.of', 'из')} {Math.ceil(totalCount / ITEMS_PER_PAGE)}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalCount / ITEMS_PER_PAGE), p + 1))}
+                            disabled={currentPage >= Math.ceil(totalCount / ITEMS_PER_PAGE) || isLoading}
+                            className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                        >
+                            {t('bookings.list.next', 'Вперед')}
+                        </button>
+                    </div>
+                </div>
+            )}
+            
+            {isLoading && (
+                <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                    {t('bookings.list.loading', 'Загрузка...')}
+                </div>
+            )}
         </section>
     );
 }
@@ -615,7 +671,7 @@ function QuickDesk({
             
             if (ignore) return;
             if (error) {
-                console.error('[QuickDesk] Error loading temporary transfers:', error);
+                logError('QuickDesk', 'Error loading temporary transfers', error);
                 setTemporaryTransfers([]);
                 return;
             }
@@ -655,7 +711,7 @@ function QuickDesk({
                 .in('staff_id', staffIds);
             if (ignore) return;
             if (error) {
-                console.warn('[QuickDesk] service_staff read error:', error.message);
+                logWarn('QuickDesk', 'service_staff read error', error);
                 setServiceStaff(null); // нет доступа — UI живёт без фильтра по навыкам
             } else {
                 setServiceStaff((data ?? []) as Array<{ service_id: string; staff_id: string; is_active: boolean }>);
@@ -780,7 +836,7 @@ function QuickDesk({
         // Если выбранная услуга не подходит под текущего мастера или дату — сбрасываем выбор услуги
         const isServiceValid = servicesByBranch.some((s) => s.id === serviceId);
         if (!isServiceValid) {
-            console.log('[QuickDesk] Service is not valid for current staff/date, clearing serviceId', { serviceId, staffId, date, servicesByBranch: servicesByBranch.map(s => s.id) });
+            logDebug('QuickDesk', 'Service is not valid for current staff/date, clearing serviceId', { serviceId, staffId, date, servicesByBranch: servicesByBranch.map(s => s.id) });
             setServiceId('');
         }
     }, [staffId, date, servicesByBranch, serviceId]);
@@ -863,7 +919,7 @@ function QuickDesk({
                 );
                 if (tempTransfer) {
                     targetBranchId = tempTransfer.branch_id;
-                    console.log('[QuickDesk] Temporary transfer found for slots loading:', { staffId, date, tempBranch: tempTransfer.branch_id, selectedBranch: branchId });
+                    logDebug('QuickDesk', 'Temporary transfer found for slots loading', { staffId, date, tempBranch: tempTransfer.branch_id, selectedBranch: branchId });
                 }
             }
             
@@ -877,7 +933,7 @@ function QuickDesk({
             });
             if (ignore) return;
             if (error) {
-                console.error('[QuickDesk] get_free_slots_service_day_v2 error:', error.message || error);
+                logError('QuickDesk', 'get_free_slots_service_day_v2 error', error);
                 setSlots([]); setSlotStartISO(''); setSlotsLoading(false);
                 return;
             }
@@ -947,7 +1003,7 @@ function QuickDesk({
             );
             if (tempTransfer) {
                 targetBranchId = tempTransfer.branch_id;
-                console.log('[QuickDesk] Creating booking with temporary branch:', { staffId, date, tempBranch: tempTransfer.branch_id, selectedBranch: branchId });
+                logDebug('QuickDesk', 'Creating booking with temporary branch', { staffId, date, tempBranch: tempTransfer.branch_id, selectedBranch: branchId });
             }
         }
 

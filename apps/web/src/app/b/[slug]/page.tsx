@@ -44,9 +44,10 @@ async function getData(slug: string) {
 
     if (branchIds.length > 0) {
         // Для фильтра in.(...) в PostgREST передаем UUID без кавычек и URL-кодирования
+        // Ограничиваем количество промоакций для оптимизации производительности
         const branchIdsStr = branchIds.join(',');
         promotions = await q(
-            `branch_promotions?select=id,branch_id,promotion_type,title_ru,params,branches(name)&branch_id=in.(${branchIdsStr})&is_active=eq.true&order=created_at.desc`
+            `branch_promotions?select=id,branch_id,promotion_type,title_ru,params,branches(name)&branch_id=in.(${branchIdsStr})&is_active=eq.true&order=created_at.desc&limit=50`
         );
     }
 

@@ -4,16 +4,16 @@ export const dynamic = 'force-dynamic';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
 
+import { createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 
 /**
  * POST /api/auth/sign-out
  * Принудительный выход через Admin API
  */
-export async function POST(req: Request) {
-    try {
+export async function POST(_req: Request) {
+    return withErrorHandler('AuthSignOut', async () => {
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         }
 
         // Очищаем все cookies Supabase
-        const response = NextResponse.json({ ok: true, message: 'Выход выполнен' });
+        const response = createSuccessResponse(undefined, { message: 'Выход выполнен' });
         
         // Удаляем все возможные cookies Supabase
         const projectRef = URL.split('//')[1].split('.')[0];
@@ -63,10 +63,6 @@ export async function POST(req: Request) {
         });
 
         return response;
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('AuthSignOut', 'Error in sign-out', e);
-        return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
-    }
+    });
 }
 
