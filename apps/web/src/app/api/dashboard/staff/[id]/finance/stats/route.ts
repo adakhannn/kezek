@@ -237,8 +237,13 @@ export async function GET(
             totalGuaranteedAmount, // Гарантированная сумма за выход
             hasGuaranteedPayment, // Есть ли гарантированная оплата, превышающая базовую долю
             shifts: finalShifts?.map(s => {
-                // Для открытых смен пересчитываем суммы из позиций
-                let displayTotalAmount = Number(s.total_amount ?? 0);
+                // Для всех смен (и открытых, и закрытых) пересчитываем суммы из позиций
+                // Это важно, так как в БД могут быть старые/неправильные значения
+                const shiftItems = shiftItemsMap[s.id] || [];
+                const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
+                const shiftConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
+                
+                let displayTotalAmount = shiftTotalAmount;
                 let displayMasterShare = Number(s.master_share ?? 0);
                 let displaySalonShare = Number(s.salon_share ?? 0);
                 
@@ -248,25 +253,19 @@ export async function GET(
                 const staffPercentMaster = staffData?.percent_master ? Number(staffData.percent_master) : null;
                 const staffPercentSalon = staffData?.percent_salon ? Number(staffData.percent_salon) : null;
                 
+                // Получаем проценты из shift, staff или используем дефолтные
+                const shiftPercentMaster = Number(s.percent_master ?? staffPercentMaster ?? 60);
+                const shiftPercentSalon = Number(s.percent_salon ?? staffPercentSalon ?? 40);
+                const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
+                const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
+                const normalizedSalon = (shiftPercentSalon / percentSum) * 100;
+                
+                // Базовая доля сотрудника от выручки
+                const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
+                const baseSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
+                
                 if (s.status === 'open') {
-                    const shiftItems = shiftItemsMap[s.id] || [];
-                    const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
-                    const shiftConsumables = shiftItems.reduce((sum, item) => sum + item.consumables_amount, 0);
-                    
-                    displayTotalAmount = shiftTotalAmount;
-                    
-                    // Получаем проценты из shift, staff или используем дефолтные
-                    const shiftPercentMaster = Number(s.percent_master ?? staffPercentMaster ?? 60);
-                    const shiftPercentSalon = Number(s.percent_salon ?? staffPercentSalon ?? 40);
-                    const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
-                    const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
-                    const normalizedSalon = (shiftPercentSalon / percentSum) * 100;
-                    
-                    // Базовая доля сотрудника от выручки
-                    const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
-                    const baseSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
-                    
-                    // Проверяем, есть ли гарантированная сумма (оплата за выход)
+                    // Для открытых смен проверяем гарантированную сумму
                     if (hourlyRate && s.opened_at) {
                         const openedAt = new Date(s.opened_at);
                         const now = new Date();
@@ -302,6 +301,35 @@ export async function GET(
                         displayMasterShare = baseMasterShare;
                         displaySalonShare = baseSalonShare;
                     }
+                } else {
+                    // Для закрытых смен используем пересчитанные значения из items
+                    // Если в БД есть гарантированная сумма, учитываем её
+                    const dbGuaranteedAmount = Number(s.guaranteed_amount ?? 0);
+                    const dbHoursWorked = s.hours_worked ? Number(s.hours_worked) : null;
+                    
+                    // Если есть гарантированная сумма в БД и она больше базовой доли, используем её
+                    if (dbGuaranteedAmount > 0 && dbGuaranteedAmount > baseMasterShare) {
+                        displayMasterShare = dbGuaranteedAmount;
+                        const topupAmount = displayMasterShare - baseMasterShare;
+                        displaySalonShare = Math.max(0, baseSalonShare - topupAmount);
+                    } else {
+                        // Иначе используем пересчитанные значения из items
+                        displayMasterShare = baseMasterShare;
+                        displaySalonShare = baseSalonShare;
+                    }
+                    
+                    logDebug('StaffFinanceStats', 'Closed shift calculation', {
+                        shiftId: s.id,
+                        shiftDate: s.shift_date,
+                        shiftTotalAmount,
+                        itemsCount: shiftItems.length,
+                        baseMasterShare,
+                        baseSalonShare,
+                        dbGuaranteedAmount,
+                        dbHoursWorked,
+                        displayMasterShare,
+                        displaySalonShare,
+                    });
                 }
                 
                 // Рассчитываем guaranteed_amount и hours_worked
@@ -318,8 +346,8 @@ export async function GET(
                     displayGuaranteedAmount = Math.round(displayHoursWorked * hourlyRate * 100) / 100;
                 }
                 
-                // Создаем items с явным типом ShiftItem[]
-                const shiftItems: ShiftItem[] = (shiftItemsMap[s.id] || []).map((item): ShiftItem => ({
+                // Создаем items с явным типом ShiftItem[] (используем уже объявленную переменную shiftItems)
+                const shiftItemsTyped: ShiftItem[] = shiftItems.map((item): ShiftItem => ({
                     id: item.id,
                     client_name: item.client_name || '',
                     service_name: item.service_name || '',
@@ -337,14 +365,14 @@ export async function GET(
                     opened_at: s.opened_at,
                     closed_at: s.closed_at,
                     total_amount: displayTotalAmount,
-                    consumables_amount: Number(s.consumables_amount ?? 0),
+                    consumables_amount: shiftConsumables, // Используем пересчитанное значение из items
                     master_share: displayMasterShare,
                     salon_share: displaySalonShare,
                     late_minutes: Number(s.late_minutes ?? 0),
                     hours_worked: displayHoursWorked,
                     hourly_rate: displayHourlyRate,
                     guaranteed_amount: displayGuaranteedAmount,
-                    items: shiftItems,
+                    items: shiftItemsTyped,
                 };
             }) || [],
         };
