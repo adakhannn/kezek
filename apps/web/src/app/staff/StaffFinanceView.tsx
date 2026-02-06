@@ -260,7 +260,15 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         ) || 0,
                     bookingId: it.bookingId ?? it.booking_id ?? null,
                     createdAt: it.createdAt ?? it.created_at ?? null,
-                }));
+                }))
+                // Сортируем по created_at в обратном порядке (новые сверху)
+                // Если created_at нет, такие элементы идут в конец
+                .sort((a, b) => {
+                    if (!a.createdAt && !b.createdAt) return 0;
+                    if (!a.createdAt) return 1; // элементы без времени в конец
+                    if (!b.createdAt) return -1; // элементы без времени в конец
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // новые сверху
+                });
                 setItems(loadedItems);
             } else {
                 setItems([]);
@@ -1116,7 +1124,9 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                                 serviceAmount: 0,
                                                 consumablesAmount: 0,
                                                 bookingId: null,
+                                                createdAt: new Date().toISOString(), // Устанавливаем время сразу
                                             };
+                                            // Добавляем в начало списка (новые сверху)
                                             const next = [newItem, ...prev];
                                             // сразу открываем форму редактирования для нового клиента
                                             setExpandedItems(new Set([0]));
