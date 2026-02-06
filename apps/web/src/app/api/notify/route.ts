@@ -685,6 +685,32 @@ export async function POST(req: Request) {
                     const emailId = (result as { id?: string })?.id || 'unknown';
                     console.log('[notify] Email sent successfully to', rcp.email, 'role:', rcp.role, 'result:', result);
                     console.log('[notify] Resend email ID:', emailId, '- Check delivery status in Resend Dashboard');
+                    
+                    // Проверяем статус доставки через Resend API (опционально, для отладки)
+                    if (emailId && emailId !== 'unknown' && rcp.role === 'owner') {
+                        try {
+                            // Небольшая задержка перед проверкой статуса
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            const statusResponse = await fetch(`https://api.resend.com/emails/${emailId}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${apiKey}`,
+                                },
+                            });
+                            if (statusResponse.ok) {
+                                const statusData = await statusResponse.json().catch(() => ({}));
+                                console.log('[notify] Owner email delivery status:', {
+                                    emailId,
+                                    status: (statusData as { last_event?: string })?.last_event || 'unknown',
+                                    fullStatus: statusData,
+                                });
+                            }
+                        } catch (statusError) {
+                            // Игнорируем ошибки проверки статуса - это не критично
+                            console.log('[notify] Could not check email delivery status:', statusError);
+                        }
+                    }
+                    
                     // Для владельца логируем более подробно
                     if (rcp.role === 'owner') {
                         console.log('[notify] Owner email sent successfully!', {
@@ -692,7 +718,8 @@ export async function POST(req: Request) {
                             owner_id: biz?.owner_id,
                             emailId,
                             result,
-                            note: 'Check Resend Dashboard for delivery status. Email may be in spam folder.',
+                            note: 'Check Resend Dashboard for delivery status. Email may be in spam folder. Verify domain SPF/DKIM records.',
+                            resendDashboardUrl: `https://resend.com/emails/${emailId}`,
                         });
                     }
                     sent += 1;
