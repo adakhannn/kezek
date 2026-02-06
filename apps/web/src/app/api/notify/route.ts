@@ -425,6 +425,23 @@ export async function POST(req: Request) {
             });
         }
         const adminEmails = biz?.email_notify_to ?? [];
+        
+        // Если в email_notify_to есть email, используем первый из них как основной email для владельца
+        // Это позволяет владельцу указать другой email для уведомлений, отличный от email аккаунта
+        // Например, если владелец авторизован через lowfade.9909@gmail.com, но хочет получать уведомления на low.low.fade.osh@gmail.com
+        if (adminEmails.length > 0) {
+            const normalizedAdminEmails = normalizeEmails(adminEmails);
+            if (normalizedAdminEmails.length > 0) {
+                const primaryNotifyEmail = normalizedAdminEmails[0];
+                console.log('[notify] Found email_notify_to, using first email for owner:', {
+                    originalEmail: ownerEmail,
+                    notifyEmail: primaryNotifyEmail,
+                    allNotifyEmails: normalizedAdminEmails,
+                    note: 'email_notify_to takes priority over auth.users email for owner notifications',
+                });
+                ownerEmail = primaryNotifyEmail;
+            }
+        }
 
         const title =
             body.type === 'hold'    ? 'Удержание слота' :
@@ -526,7 +543,16 @@ export async function POST(req: Request) {
         }
 
         // администраторы из списка
-        for (const em of normalizeEmails(adminEmails ?? [])) {
+        // Если первый email из email_notify_to уже используется как ownerEmail, не добавляем его как admin (избегаем дубликата)
+        const normalizedAdminEmails = normalizeEmails(adminEmails ?? []);
+        const ownerEmailNormalized = ownerEmail ? ownerEmail.toLowerCase().trim() : null;
+        for (const em of normalizedAdminEmails) {
+            const emNormalized = em.toLowerCase().trim();
+            // Пропускаем email, который уже используется как ownerEmail
+            if (ownerEmailNormalized && emNormalized === ownerEmailNormalized) {
+                console.log('[notify] Skipping admin email (already used as owner):', em);
+                continue;
+            }
             recipients.push({ email: em, name: null, role: 'admin' });
         }
 
