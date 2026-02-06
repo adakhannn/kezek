@@ -4,6 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { formatDate, formatDateBrowser, formatMonthYear } from '@/lib/dateFormat';
 import { TZ } from '@/lib/time';
 
 type ShiftItem = {
@@ -426,27 +427,11 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
         void loadStats();
     }, [loadStats]);
 
-    const formatDate = (dateStr: string) => {
-        try {
-            return new Date(dateStr + 'T12:00:00').toLocaleDateString(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-            });
-        } catch {
-            return dateStr;
-        }
-    };
-
     const formatPeriodLabel = () => {
         if (period === 'day') {
-            return formatDate(date);
+            return formatDateBrowser(date, locale);
         } else if (period === 'month') {
-            const [year, month] = date.split('-');
-            return new Date(`${year}-${month}-01`).toLocaleDateString(locale === 'ky' ? 'ky-KG' : locale === 'en' ? 'en-US' : 'ru-RU', {
-                month: 'long',
-                year: 'numeric',
-            });
+            return formatMonthYear(date, locale);
         } else {
             return date.split('-')[0];
         }

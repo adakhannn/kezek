@@ -18,14 +18,7 @@ function normStr(v?: string | null): string | null {
     return s.length ? s : null;
 }
 
-function isEmail(s: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-}
-
-function isE164Phone(s: string): boolean {
-    // +996..., до 15 цифр по E.164
-    return /^\+[1-9]\d{1,14}$/.test(s);
-}
+import { isE164, isEmail } from '@/lib/validation';
 
 export async function POST(req: Request) {
     try {
@@ -59,7 +52,7 @@ export async function POST(req: Request) {
         if (email && !isEmail(email)) {
             return NextResponse.json({ ok: false, error: 'Некорректный email' }, { status: 400 });
         }
-        if (phone && !isE164Phone(phone)) {
+        if (phone && !isE164(phone)) {
             return NextResponse.json(
                 { ok: false, error: 'Телефон должен быть в формате E.164 (например, +996...)' },
                 { status: 400 },
