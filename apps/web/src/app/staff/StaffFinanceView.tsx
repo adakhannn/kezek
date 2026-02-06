@@ -1,708 +1,167 @@
 'use client';
 
-import { startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useMemo } from 'react';
+
+import { ClientsList } from './finance/components/ClientsList';
+import { ClientsListHeader } from './finance/components/ClientsListHeader';
+import { ShiftControls } from './finance/components/ShiftControls';
+import { ShiftHeader } from './finance/components/ShiftHeader';
+import { ShiftSummary } from './finance/components/ShiftSummary';
+import { StatsView } from './finance/components/StatsView';
+import { Tabs } from './finance/components/Tabs';
+import { useServiceOptions } from './finance/hooks/useServiceOptions';
+import { useShiftCalculations } from './finance/hooks/useShiftCalculations';
+import { useShiftData } from './finance/hooks/useShiftData';
+import { useShiftItems } from './finance/hooks/useShiftItems';
+import { useShiftManagement } from './finance/hooks/useShiftManagement';
+import { useShiftStats } from './finance/hooks/useShiftStats';
+import type { TabKey, PeriodKey } from './finance/types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import DatePickerPopover from '@/components/pickers/DatePickerPopover';
-import MonthPickerPopover from '@/components/pickers/MonthPickerPopover';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { LoadingOverlay } from '@/components/ui/ProgressBar';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
-import { todayTz, TZ } from '@/lib/time';
-import { transliterate } from '@/lib/transliterate';
+import { todayTz } from '@/lib/time';
 
-type ShiftItem = {
-    id?: string;
-    clientName: string;
-    serviceName: string;
-    serviceAmount: number;
-    consumablesAmount: number;
-    bookingId?: string | null;
-    createdAt?: string | null;
-};
+// Импортируем типы
 
-type ServiceName = {
-    name_ru: string;
-    name_ky?: string | null;
-    name_en?: string | null;
-};
+// Импортируем хуки
 
-type Booking = {
-    id: string;
-    client_name: string | null;
-    client_phone: string | null;
-    start_at: string;
-    services: ServiceName | ServiceName[] | null;
-};
-
-type Shift = {
-    id: string;
-    shift_date: string;
-    opened_at: string | null;
-    closed_at: string | null;
-    expected_start: string | null;
-    late_minutes: number;
-    status: 'open' | 'closed';
-    total_amount: number;
-    consumables_amount: number;
-    master_share: number;
-    salon_share: number;
-    percent_master: number;
-    percent_salon: number;
-    hours_worked?: number | null;
-    hourly_rate?: number | null;
-    guaranteed_amount?: number;
-    topup_amount?: number;
-};
-
-type Stats = {
-    totalAmount: number;
-    totalMaster: number;
-    totalSalon: number;
-    totalLateMinutes: number;
-    shiftsCount: number;
-};
-
-type TodayResponse =
-    | {
-          ok: true;
-          today:
-              | { exists: false; status: 'none'; shift: null; items: ShiftItem[] }
-              | { exists: true; status: 'open' | 'closed'; shift: Shift; items: ShiftItem[] };
-          bookings?: Booking[];
-          services?: ServiceName[] | string[]; // Поддержка старого (string[]) и нового (ServiceName[]) форматов
-          allShifts?: Array<{
-              shift_date: string;
-              status: string;
-              total_amount: number;
-              master_share: number;
-              salon_share: number;
-              late_minutes: number;
-              guaranteed_amount?: number;
-              topup_amount?: number;
-          }>;
-          staffPercentMaster?: number;
-          staffPercentSalon?: number;
-          hourlyRate?: number | null;
-          currentHoursWorked?: number | null;
-          currentGuaranteedAmount?: number | null;
-          isDayOff?: boolean;
-          stats: Stats;
-      }
-    | { ok: false; error: string };
-
-function formatTime(iso: string | null, locale: string) {
-    if (!iso) return '—';
-    try {
-        const d = new Date(iso);
-        const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
-        return d.toLocaleTimeString(localeMap[locale] || 'ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    } catch {
-        return '—';
-    }
-}
-
-type TabKey = 'shift' | 'clients' | 'stats';
-type PeriodKey = 'day' | 'month' | 'year' | 'all';
+// Импортируем компоненты
 
 export default function StaffFinanceView({ staffId }: { staffId?: string }) {
-    const { t, locale } = useLanguage();
+    const { t } = useLanguage();
     const toast = useToast();
-    const [loading, setLoading] = useState(true);
-    const [today, setToday] = useState<TodayResponse | null>(null);
-    // По умолчанию открываем вкладку "Клиенты" для владельца, "Текущая смена" для сотрудника
+    
+    // Состояние для вкладок и дат
     const [activeTab, setActiveTab] = useState<TabKey>(staffId ? 'clients' : 'shift');
     const [statsPeriod, setStatsPeriod] = useState<PeriodKey>('all');
-    // Дата для вкладок "Клиенты" и "Текущая смена"
     const [shiftDate, setShiftDate] = useState<Date>(todayTz());
-    // Дата для статистики
     const [selectedDate, setSelectedDate] = useState<Date>(todayTz());
     const [selectedMonth, setSelectedMonth] = useState<Date>(todayTz());
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-    const [allShifts, setAllShifts] = useState<Array<{
-        shift_date: string;
-        status: string;
-        total_amount: number;
-        master_share: number;
-        salon_share: number;
-        late_minutes: number;
-        guaranteed_amount?: number;
-        topup_amount?: number;
-    }>>([]);
     const [showShiftDetails, setShowShiftDetails] = useState(false);
 
-    const [items, setItems] = useState<ShiftItem[]>([]);
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const [availableServices, setAvailableServices] = useState<ServiceName[]>([]);
-    const [staffPercentMaster, setStaffPercentMaster] = useState(60);
-    const [staffPercentSalon, setStaffPercentSalon] = useState(40);
-    const [hourlyRate, setHourlyRate] = useState<number | null>(null);
-    const [currentHoursWorked, setCurrentHoursWorked] = useState<number | null>(null);
-    const [currentGuaranteedAmount, setCurrentGuaranteedAmount] = useState<number | null>(null);
-    const [isDayOff, setIsDayOff] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
-    const [savingItems, setSavingItems] = useState(false);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
-    const [closingProgress, setClosingProgress] = useState<{ show: boolean; message: string; progress?: number } | null>(null);
-    
-    // Функция для получения правильного названия услуги с учетом языка
-    function getServiceName(service: ServiceName | string): string {
-        if (typeof service === 'string') {
-            // Если это строка (вручную введенное название), используем транслитерацию для английского
-            if (locale === 'en') return transliterate(service);
-            return service;
+    // Загрузка данных смены
+    const shiftData = useShiftData({ 
+        staffId, 
+        shiftDate,
+        onDataLoaded: () => {
+            // Данные загружены
         }
-        
-        if (locale === 'ky' && service.name_ky) return service.name_ky;
-        if (locale === 'en' && service.name_en) return service.name_en;
-        if (locale === 'en') return transliterate(service.name_ru);
-        return service.name_ru;
-    }
+    });
 
-    const serviceOptions = useMemo(() => {
-        const set = new Set<string>();
-        const serviceMap = new Map<string, ServiceName>();
-        
-        // Услуги сотрудника из настроек
-        for (const svc of availableServices) {
-            if (svc?.name_ru?.trim()) {
-                const key = svc.name_ru.trim();
-                set.add(key);
-                serviceMap.set(key, svc);
-            }
-        }
-        // Услуги из сегодняшних записей
-        for (const b of bookings) {
-            if (b.services) {
-                const list = Array.isArray(b.services) ? b.services : [b.services];
-                for (const s of list) {
-                    if (s?.name_ru?.trim()) {
-                        const key = s.name_ru.trim();
-                        set.add(key);
-                        serviceMap.set(key, s);
-                    }
-                }
-            }
-        }
-        // Учитываем уже введённые вручную названия услуг в строках смены
-        for (const it of items) {
-            if (it.serviceName?.trim()) {
-                const key = it.serviceName.trim();
-                set.add(key);
-                // Если это не было в списке услуг, создаем объект только с name_ru
-                if (!serviceMap.has(key)) {
-                    serviceMap.set(key, { name_ru: key });
-                }
-            }
-        }
-        
-        // Возвращаем массив объектов ServiceName, отсортированный по переведенному названию
-        return Array.from(set)
-            .map(key => serviceMap.get(key)!)
-            .sort((a, b) => {
-                const nameA = getServiceName(a);
-                const nameB = getServiceName(b);
-                return nameA.localeCompare(nameB, locale === 'ru' ? 'ru' : locale === 'ky' ? 'ky' : 'en');
-            });
-    }, [availableServices, bookings, items, locale]);
+    // Управление сменой
+    const shiftManagement = useShiftManagement(() => {
+        void shiftData.load();
+    });
 
-    const load = async (date?: Date) => {
-        setLoading(true);
-        try {
-            // Используем переданную дату или текущую дату для смены
-            const targetDate = date || shiftDate;
-            const dateStr = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
-            
-            // Если передан staffId, используем endpoint для владельца бизнеса
-            const apiUrl = staffId 
-                ? `/api/dashboard/staff/${staffId}/finance?date=${dateStr}`
-                : '/api/staff/shift/today';
-            const res = await fetch(apiUrl, { cache: 'no-store' });
-            const json: TodayResponse = await res.json();
-            setToday(json);
-            if (json.ok && json.today.exists && json.today.shift) {
-                const loadedItems = (json.today.items ?? []).map((it: {
-                    id?: string;
-                    clientName?: string;
-                    client_name?: string;
-                    serviceName?: string;
-                    service_name?: string;
-                    serviceAmount?: number;
-                    service_amount?: number; // из БД
-                    amount?: number; // для обратной совместимости
-                    consumablesAmount?: number;
-                    consumables_amount?: number; // из БД / для обратной совместимости
-                    bookingId?: string | null;
-                    booking_id?: string | null; // для обратной совместимости
-                    createdAt?: string | null;
-                    created_at?: string | null; // из БД
-                }) => ({
-                    id: it.id,
-                    clientName: it.clientName ?? it.client_name ?? '',
-                    serviceName: it.serviceName ?? it.service_name ?? '',
-                    // Сумма за услугу: сначала из поля service_amount (из БД),
-                    // затем из serviceAmount/amount для обратной совместимости
-                    serviceAmount:
-                        Number(
-                            it.service_amount ??
-                                it.serviceAmount ??
-                                it.amount ??
-                                0
-                        ) || 0,
-                    // Расходники: из consumables_amount (из БД) или других полей
-                    consumablesAmount:
-                        Number(
-                            it.consumables_amount ??
-                                it.consumablesAmount ??
-                                0
-                        ) || 0,
-                    bookingId: it.bookingId ?? it.booking_id ?? null,
-                    createdAt: it.createdAt ?? it.created_at ?? null,
-                }))
-                // Сортируем по created_at в обратном порядке (новые сверху)
-                // Если created_at нет, такие элементы идут в конец
-                .sort((a, b) => {
-                    if (!a.createdAt && !b.createdAt) return 0;
-                    if (!a.createdAt) return 1; // элементы без времени в конец
-                    if (!b.createdAt) return -1; // элементы без времени в конец
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // новые сверху
-                });
-                setItems(loadedItems);
-            } else {
-                setItems([]);
-            }
-            // Записи за сегодня для выбора клиентов
-            if (json.ok && 'bookings' in json && Array.isArray(json.bookings)) {
-                setBookings(json.bookings);
-            }
-            // Услуги сотрудника для выпадающего списка
-            if (json.ok && 'services' in json && Array.isArray(json.services)) {
-                // API может возвращать либо строки (старый формат), либо объекты ServiceName (новый формат)
-                const services = json.services.map((svc: string | ServiceName) => {
-                    if (typeof svc === 'string') {
-                        // Старый формат - строка, преобразуем в объект
-                        return { name_ru: svc };
-                    }
-                    // Новый формат - объект ServiceName
-                    return svc;
-                });
-                setAvailableServices(services);
-            }
-            // Проценты из настроек сотрудника (не из смены)
-            if (json.ok && 'staffPercentMaster' in json && 'staffPercentSalon' in json) {
-                setStaffPercentMaster(Number(json.staffPercentMaster ?? 60));
-                setStaffPercentSalon(Number(json.staffPercentSalon ?? 40));
-            }
-            // Выходной день
-            if (json.ok && 'isDayOff' in json) {
-                setIsDayOff(Boolean(json.isDayOff));
-            }
-            // Ставка за час и текущие часы работы
-            if (json.ok && 'hourlyRate' in json) {
-                setHourlyRate(json.hourlyRate ?? null);
-            }
-            if (json.ok && 'currentHoursWorked' in json) {
-                setCurrentHoursWorked(json.currentHoursWorked ?? null);
-            }
-            if (json.ok && 'currentGuaranteedAmount' in json) {
-                setCurrentGuaranteedAmount(json.currentGuaranteedAmount ?? null);
-            }
-            // Загружаем все смены для статистики
-            if (json.ok && 'allShifts' in json && Array.isArray(json.allShifts)) {
-                setAllShifts(json.allShifts);
-            } else {
-                console.warn('[StaffFinanceView] No allShifts in response:', json);
-                setAllShifts([]);
-            }
-        } catch (e) {
-            console.error('Error loading today shift:', e);
-            let errorMessage = t('staff.finance.error.loading', 'Не удалось загрузить данные смены');
-            
-            if (e instanceof TypeError && e.message.includes('fetch')) {
-                errorMessage = t('staff.finance.error.loading.network', 'Ошибка сети. Проверьте подключение к интернету.');
-            } else if (e instanceof Error) {
-                errorMessage = e.message;
-            }
-            
-            setToday({ ok: false, error: errorMessage });
-            toast.showError(errorMessage);
-        } finally {
-            setLoading(false);
-            setIsInitialLoad(false);
-        }
-    };
+    // Вычисляем состояние смены
+    const todayShift = shiftData.today && shiftData.today.ok && shiftData.today.today.exists 
+        ? shiftData.today.today.shift 
+        : null;
+    const isOpen = !!(todayShift && todayShift.status === 'open');
+    const isClosed = !!(todayShift && todayShift.status === 'closed');
 
-    useEffect(() => {
-        void load();
-    }, []);
+    // Управление клиентами
+    const shiftItems = useShiftItems({
+        items: shiftData.items,
+        isOpen,
+        isReadOnly: false,
+        isInitialLoad: shiftData.isInitialLoad,
+        staffId,
+    });
 
-    // Перезагружаем данные при изменении даты смены (только для владельца)
-    useEffect(() => {
-        if (!isInitialLoad && staffId) {
-            void load(shiftDate);
-        }
-    }, [shiftDate, staffId, isInitialLoad]);
+    // Расчеты финансов
+    const calculations = useShiftCalculations(
+        shiftItems.items,
+        todayShift,
+        isOpen,
+        shiftData.staffPercentMaster,
+        shiftData.staffPercentSalon,
+        shiftData.hourlyRate,
+        shiftData.currentGuaranteedAmount
+    );
 
-    // Вычисляем состояние смены для использования в useEffect
-    const todayShift = today && today.ok && today.today.exists ? today.today.shift : null;
-    const isOpen = todayShift && todayShift.status === 'open';
-    const isClosed = todayShift && todayShift.status === 'closed';
+    // Статистика
+    const stats = useShiftStats({
+        allShifts: shiftData.allShifts,
+        statsPeriod,
+        selectedDate,
+        selectedMonth,
+        selectedYear,
+    });
 
-    // Автосохранение клиентов при изменении (debounce)
-    // Владелец может редактировать, поэтому isReadOnly = false
-    const isReadOnly = false;
-    useEffect(() => {
-        // Не сохраняем при первой загрузке, если смена закрыта, или в режиме просмотра
-        if (isInitialLoad || !isOpen || isReadOnly) return;
-        
-        const timeoutId = setTimeout(async () => {
-            setSavingItems(true);
-            try {
-                const res = await fetch('/api/staff/shift/items', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items, staffId: staffId || undefined }),
-                });
-                const json = await res.json();
-                if (!json.ok) {
-                    console.error('Error auto-saving items:', json.error);
-                }
-            } catch (e) {
-                console.error('Error auto-saving items:', e);
-            } finally {
-                setSavingItems(false);
-            }
-        }, 1000); // сохраняем через 1 секунду после последнего изменения
-
-        return () => clearTimeout(timeoutId);
-    }, [items, isOpen, isInitialLoad, isReadOnly]);
-
-    // Автообновление часов работы для открытой смены (каждую минуту)
-    // НЕ обновляем автоматически, чтобы не сбрасывать открытые формы добавления клиентов
-    // useEffect(() => {
-    //     if (!isOpen || !hourlyRate) return;
-
-    //     const interval = setInterval(() => {
-    //         void load();
-    //     }, 60000); // обновляем каждую минуту
-
-    //     return () => clearInterval(interval);
-    // }, [isOpen, hourlyRate]);
-
-    const handleOpenShift = async () => {
-        setSaving(true);
-        try {
-            const res = await fetch('/api/staff/shift/open', { method: 'POST' });
-            const json = await res.json();
-            if (!json.ok) {
-                const errorMessage = json.error || json.message || t('staff.finance.error.openShift', 'Не удалось открыть смену');
-                toast.showError(errorMessage);
-            } else {
-                toast.showSuccess(t('staff.finance.success.shiftOpened', 'Смена успешно открыта'));
-                await load();
-            }
-        } catch (e) {
-            console.error('Error opening shift:', e);
-            const errorMessage = e instanceof Error ? e.message : t('staff.finance.error.openShift', 'Ошибка при открытии смены');
-            toast.showError(errorMessage);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleCloseShift = async () => {
-        setSaving(true);
-        setClosingProgress({
-            show: true,
-            message: t('staff.finance.closing.processing', 'Обработка данных смены...'),
-            progress: 0,
-        });
-
-        try {
-            // Показываем прогресс обработки
-            setClosingProgress({
-                show: true,
-                message: t('staff.finance.closing.calculating', `Расчет сумм для ${items.length} клиентов...`),
-                progress: 20,
-            });
-
-            const res = await fetch('/api/staff/shift/close', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    items,
-                }),
-            });
-
-            setClosingProgress({
-                show: true,
-                message: t('staff.finance.closing.saving', 'Сохранение результатов...'),
-                progress: 60,
-            });
-
-            const json = await res.json();
-            
-            if (!res.ok) {
-                setClosingProgress(null);
-                // Улучшенная обработка ошибок
-                let errorMessage = t('staff.finance.error.closeShift', 'Не удалось закрыть смену');
-                
-                if (json.error) {
-                    errorMessage = json.error;
-                } else if (json.message) {
-                    errorMessage = json.message;
-                } else if (res.status === 400) {
-                    errorMessage = t('staff.finance.error.closeShift.badRequest', 'Ошибка в данных. Проверьте суммы и попробуйте снова.');
-                } else if (res.status === 403) {
-                    errorMessage = t('staff.finance.error.closeShift.forbidden', 'У вас нет прав для закрытия смены.');
-                } else if (res.status === 500) {
-                    errorMessage = t('staff.finance.error.closeShift.serverError', 'Ошибка сервера. Попробуйте позже или обратитесь в поддержку.');
-                } else if (res.status >= 400) {
-                    errorMessage = t('staff.finance.error.closeShift.unknown', `Ошибка ${res.status}. Попробуйте позже.`);
-                }
-                
-                toast.showError(errorMessage);
-                return;
-            }
-
-            setClosingProgress({
-                show: true,
-                message: t('staff.finance.closing.success', 'Смена успешно закрыта!'),
-                progress: 100,
-            });
-
-            // Небольшая задержка для показа успешного сообщения
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            
-            setClosingProgress(null);
-            toast.showSuccess(t('staff.finance.success.shiftClosed', 'Смена успешно закрыта'));
-            
-            await load();
-        } catch (e) {
-            setClosingProgress(null);
-            console.error('Error closing shift:', e);
-            
-            let errorMessage = t('staff.finance.error.closeShift', 'Ошибка при закрытии смены');
-            
-            if (e instanceof TypeError && e.message.includes('fetch')) {
-                errorMessage = t('staff.finance.error.closeShift.network', 'Ошибка сети. Проверьте подключение к интернету.');
-            } else if (e instanceof Error) {
-                errorMessage = e.message;
-            }
-            
-            toast.showError(errorMessage);
-        } finally {
-            setSaving(false);
-        }
-    };
+    // Опции услуг
+    const serviceOptions = useServiceOptions(
+        shiftData.availableServices,
+        shiftData.bookings,
+        shiftItems.items
+    );
 
     // Вычисляем общее количество закрытых смен
     const allClosedShiftsCount = useMemo(() => {
-        if (!allShifts || allShifts.length === 0) return 0;
-        return allShifts.filter((s) => s.status === 'closed').length;
-    }, [allShifts]);
+        if (!shiftData.allShifts || shiftData.allShifts.length === 0) return 0;
+        return shiftData.allShifts.filter((s) => s.status === 'closed').length;
+    }, [shiftData.allShifts]);
 
-    // Вычисляем статистику в зависимости от выбранного периода
-    const filteredStats = useMemo(() => {
-        if (!allShifts || allShifts.length === 0) {
-            return {
-                totalAmount: 0,
-                totalMaster: 0,
-                totalSalon: 0,
-                totalLateMinutes: 0,
-                shiftsCount: 0,
-            };
-        }
-        
-        // Нормализуем shift_date - обрезаем время, если оно есть (формат YYYY-MM-DD)
-        // PostgreSQL date тип возвращается как строка 'YYYY-MM-DD', но может быть и с временем
-        const normalizedShifts = allShifts.map((s) => {
-            let normalizedDate = String(s.shift_date || '');
-            // Если есть время, обрезаем его
-            normalizedDate = normalizedDate.split('T')[0].split(' ')[0].trim();
-            return {
-                ...s,
-                shift_date: normalizedDate,
-            };
+    // Обработчики
+    const handleOpenShift = async () => {
+        await shiftManagement.handleOpenShift();
+        await shiftData.load();
+    };
+
+    const handleCloseShift = async () => {
+        await shiftManagement.handleCloseShift(shiftItems.items, () => {
+            void shiftData.load();
         });
-        
-        const closedShifts = normalizedShifts.filter((s) => s.status === 'closed');
-        
-        let filtered: typeof closedShifts = [];
-        
-        if (statsPeriod === 'day') {
-            const dayStr = formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd');
-            filtered = closedShifts.filter((s) => s.shift_date === dayStr);
-        } else if (statsPeriod === 'month') {
-            const monthStart = formatInTimeZone(startOfMonth(selectedMonth), TZ, 'yyyy-MM-dd');
-            const monthEnd = formatInTimeZone(endOfMonth(selectedMonth), TZ, 'yyyy-MM-dd');
-            filtered = closedShifts.filter((s) => s.shift_date >= monthStart && s.shift_date <= monthEnd);
-        } else if (statsPeriod === 'year') {
-            const yearStart = formatInTimeZone(startOfYear(new Date(selectedYear, 0, 1)), TZ, 'yyyy-MM-dd');
-            const yearEnd = formatInTimeZone(endOfYear(new Date(selectedYear, 11, 31)), TZ, 'yyyy-MM-dd');
-            filtered = closedShifts.filter((s) => s.shift_date >= yearStart && s.shift_date <= yearEnd);
-        } else {
-            filtered = closedShifts;
-        }
-        
-        const totalAmount = filtered.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
-        // Итоговая сумма сотрудника = гарантированная сумма (если есть и больше базовой доли) или базовая доля
-        const totalMaster = filtered.reduce((sum, s) => {
-            const guaranteed = Number(s.guaranteed_amount || 0);
-            const masterShare = Number(s.master_share || 0);
-            // Если есть гарантированная сумма и она больше базовой доли, используем гарантию
-            // Иначе используем базовую долю
-            return sum + (guaranteed > masterShare ? guaranteed : masterShare);
-        }, 0);
-        // Бизнес получает долю от выручки, но вычитает доплату владельца
-        const totalSalon = filtered.reduce((sum, s) => {
-            const salonShare = Number(s.salon_share || 0);
-            const topup = Number(s.topup_amount || 0);
-            return sum + salonShare - topup;
-        }, 0);
-        const totalLateMinutes = filtered.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
-        
-        // Отладочная информация
-        if (filtered.length > 0) {
-            console.warn('[StaffFinanceView] Filtered shifts:', filtered.length, 'of', closedShifts.length, 'closed shifts');
-            
-            // Проверяем, все ли суммы равны 0
-            if (totalAmount === 0 && totalMaster === 0 && totalSalon === 0) {
-                console.warn('[StaffFinanceView] All amounts are 0! Check if shifts have valid data in database.');
-                filtered.forEach(s => {
-                    console.warn('[StaffFinanceView] Shift data:', {
-                        shift_date: s.shift_date,
-                        total_amount: s.total_amount,
-                        master_share: s.master_share,
-                        salon_share: s.salon_share,
-                        raw_total_amount: s.total_amount,
-                        raw_master_share: s.master_share,
-                        raw_salon_share: s.salon_share
-                    });
-                });
-            }
-        } else if (closedShifts.length > 0) {
-            console.warn('[StaffFinanceView] No shifts match filter. Period:', statsPeriod, 'Total closed:', closedShifts.length);
-        }
-        
-        return {
-            totalAmount,
-            totalMaster,
-            totalSalon,
-            totalLateMinutes,
-            shiftsCount: filtered.length,
+    };
+
+    const handleAddClient = () => {
+        const clientLabel = t('staff.finance.clients.client', 'Клиент');
+        const existingClients = shiftItems.items.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
+        const existingIndices = existingClients
+            .map((it) => {
+                const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
+                const match = it.clientName?.match(regex);
+                return match ? Number(match[1]) : 0;
+            })
+            .filter((n) => n > 0);
+        const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+        const nextIndex = maxIndex + 1;
+        const newItem = {
+            clientName: `${clientLabel} ${nextIndex}`,
+            serviceName: '',
+            serviceAmount: 0,
+            consumablesAmount: 0,
+            bookingId: null,
+            createdAt: new Date().toISOString(),
         };
-    }, [allShifts, statsPeriod, selectedDate, selectedMonth, selectedYear]);
-    
-    const stats: Stats | null = filteredStats;
+        shiftItems.setItems((prev) => [newItem, ...prev]);
+        shiftItems.setExpandedItems(new Set([0]));
+    };
 
-    // Сумма услуг = сумма всех serviceAmount
-    const totalServiceFromItems = items.reduce(
-        (sum, it) => sum + (Number(it.serviceAmount ?? 0) || 0),
-        0
-    );
-    // Сумма расходников = сумма всех consumablesAmount
-    const totalConsumablesFromItems = items.reduce(
-        (sum, it) => sum + (Number(it.consumablesAmount ?? 0) || 0),
-        0
-    );
+    const handleUpdateItem = (idx: number, item: typeof shiftItems.items[0]) => {
+        shiftItems.setItems((prev) => prev.map((it, i) => (i === idx ? item : it)));
+    };
 
-    const totalAmount = totalServiceFromItems;
-    const finalConsumables = totalConsumablesFromItems;
-
-    // Проценты считаются от общей суммы услуг (до вычета расходников)
-    // Расходники добавляются к доле бизнеса сверху
-    const pM = staffPercentMaster;
-    const pS = staffPercentSalon;
-    const ps = pM + pS || 100;
-    // Базовая доля сотрудника = процент от общей суммы услуг
-    const baseStaffShare = Math.round((totalAmount * pM) / ps);
-    // Базовая доля бизнеса = процент от общей суммы услуг + 100% расходников
-    const baseBizShareFromAmount = Math.round((totalAmount * pS) / ps);
-    const baseBizShare = baseBizShareFromAmount + finalConsumables;
-
-    // С учётом оплаты за выход:
-    // если гарантированная сумма за выход больше базовой доли сотрудника,
-    // разница вычитается из доли бизнеса
-    let mShare = baseStaffShare;
-    let sShare = baseBizShare;
-
-    // Для открытой смены используем текущую гарантированную сумму
-    if (isOpen && hourlyRate && currentGuaranteedAmount !== null && currentGuaranteedAmount !== undefined) {
-        const guarantee = currentGuaranteedAmount;
-        if (guarantee > baseStaffShare) {
-            const diff = Math.round((guarantee - baseStaffShare) * 100) / 100;
-            mShare = Math.round(guarantee);
-            sShare = baseBizShare - diff;
-        }
-    }
-
-    // Для закрытой смены используем сохранённые значения из БД
-    if (isClosed && todayShift) {
-        // Используем сохранённые значения из смены (они уже правильно рассчитаны при закрытии)
-        mShare = Math.round((todayShift.master_share ?? 0) * 100) / 100;
-        sShare = Math.round((todayShift.salon_share ?? 0) * 100) / 100;
-        // Также обновляем totalAmount для отображения оборота
-        // totalAmount уже вычислен выше, но для закрытой смены используем значение из БД
-    }
-
-    const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
-
-    // Компонент табов
-    const Tabs = () => (
-        <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-            <button
-                onClick={() => setActiveTab('shift')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    activeTab === 'shift'
-                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-                }`}
-            >
-                {t('staff.finance.tabs.shift', 'Текущая смена')}
-            </button>
-            <button
-                onClick={() => setActiveTab('clients')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    activeTab === 'clients'
-                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-                }`}
-            >
-                {t('staff.finance.tabs.clients', 'Клиенты')} {items.length > 0 && `(${items.length})`}
-            </button>
-            {/* Вкладка "Статистика" показывается только для сотрудника (без staffId), 
-                так как для владельца статистика показывается отдельным компонентом StaffFinanceStats ниже */}
-            {stats && !staffId && (
-                <button
-                    onClick={() => setActiveTab('stats')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        activeTab === 'stats'
-                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
-                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                >
-                    {t('staff.finance.tabs.stats', 'Статистика')}
-                </button>
-            )}
-        </div>
-    );
+    const handleDeleteItem = (idx: number) => {
+        shiftItems.setItems((prev) => prev.filter((_, i) => i !== idx));
+        shiftItems.setExpandedItems((prev) => {
+            const next = new Set(prev);
+            next.delete(idx);
+            return next;
+        });
+    };
 
     return (
         <>
-            {(closingProgress?.show || (loading && isInitialLoad)) && (
+            {(shiftManagement.closingProgress?.show || (shiftData.loading && shiftData.isInitialLoad)) && (
                 <LoadingOverlay
-                    message={closingProgress?.message || t('staff.finance.loading', 'Загрузка данных смены...')}
-                    progress={closingProgress?.progress}
-                    showProgress={closingProgress?.progress !== undefined}
+                    message={shiftManagement.closingProgress?.message || t('staff.finance.loading', 'Загрузка данных смены...')}
+                    progress={shiftManagement.closingProgress?.progress}
+                    showProgress={shiftManagement.closingProgress?.progress !== undefined}
                 />
             )}
             <ToastContainer
@@ -723,155 +182,48 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             )}
 
             <div className={staffId ? '' : 'px-6'}>
-                <Tabs />
+                <Tabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    itemsCount={shiftItems.items.length}
+                    showStats={!!stats && !staffId}
+                />
             </div>
 
             {/* Таб: Текущая смена */}
             {activeTab === 'shift' && (
                 <div className={`space-y-4 ${staffId ? 'p-6' : 'px-6 pb-6'}`}>
-                    {/* Компактный заголовок смены */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center gap-4 flex-1">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {t('staff.finance.shift.current', 'Текущая смена')}
-                                    </span>
-                                    {staffId && (
-                                        <DatePickerPopover
-                                            value={formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}
-                                            onChange={(dateStr) => {
-                                                const [year, month, day] = dateStr.split('-').map(Number);
-                                                setShiftDate(new Date(year, month - 1, day));
-                                            }}
-                                            className="inline-block"
-                                        />
-                                    )}
-                                </div>
-                                <div className="text-base text-gray-600 dark:text-gray-400">
-                                    {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
-                                </div>
-                                {todayShift && (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        {t('staff.finance.shift.opened', 'Открыта')}: {formatTime(todayShift.opened_at, locale)}
-                                    </div>
-                                )}
-                            </div>
-                            {todayShift && (
-                                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                    isOpen 
-                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                                }`}>
-                                    {isOpen ? t('staff.finance.shift.status.open', 'Открыта') : t('staff.finance.shift.status.closed', 'Закрыта')}
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex gap-2 items-center flex-wrap">
-                            {!todayShift && (
-                                <>
-                                    {isDayOff ? (
-                                        <div className="text-sm text-amber-600 dark:text-amber-400 font-medium px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
-                                            {t('staff.finance.shift.dayOff', 'Выходной день')}
-                                        </div>
-                                    ) : (
-                                        <Button
-                                            variant="primary"
-                                            onClick={handleOpenShift}
-                                            disabled={loading || saving || isDayOff}
-                                            isLoading={saving}
-                                        >
-                                            {t('staff.finance.shift.open', 'Открыть смену')}
-                                        </Button>
-                                    )}
-                                </>
-                            )}
-                            {isOpen && (
-                                <>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => void load()}
-                                        disabled={loading || saving}
-                                    >
-                                        {t('staff.finance.shift.refresh', 'Обновить')}
-                                    </Button>
-                                    <Button
-                                        variant="primary"
-                                        onClick={handleCloseShift}
-                                        disabled={saving}
-                                        isLoading={saving}
-                                    >
-                                        {t('staff.finance.shift.close', 'Закрыть смену')}
-                                    </Button>
-                                </>
-                            )}
-                            {isClosed && (
-                                <Button
-                                    variant="outline"
-                                    onClick={handleOpenShift}
-                                    disabled={saving}
-                                    isLoading={saving}
-                                >
-                                    {t('staff.finance.shift.reopen', 'Переоткрыть')}
-                                </Button>
-                            )}
-                        </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <ShiftHeader
+                            shiftDate={shiftDate}
+                            onShiftDateChange={setShiftDate}
+                            shift={todayShift}
+                            isOpen={isOpen}
+                            staffId={staffId}
+                        />
+                        <ShiftControls
+                            hasShift={!!todayShift}
+                            isOpen={isOpen}
+                            isClosed={isClosed}
+                            isDayOff={shiftData.isDayOff}
+                            loading={shiftData.loading}
+                            saving={shiftManagement.saving}
+                            onOpenShift={handleOpenShift}
+                            onCloseShift={handleCloseShift}
+                            onRefresh={() => void shiftData.load()}
+                        />
                     </div>
 
-                    {/* Основные метрики за смену */}
-                    {todayShift && (() => {
-                        // Общий оборот: для открытой смены - из items, для закрытой - из todayShift.total_amount
-                        const displayTotalAmount = isOpen 
-                            ? totalAmount 
-                            : (todayShift.total_amount ?? 0);
-                        
-                        return (
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                {/* Общий оборот */}
-                                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                                        {t('staff.finance.summary.totalTurnover', 'Общий оборот')}
-                                    </div>
-                                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                        {displayTotalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-base text-gray-500">{t('staff.finance.shift.som', 'сом')}</span>
-                                    </div>
-                                </div>
-                                
-                                {/* Сотруднику */}
-                                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg border border-emerald-200 dark:border-emerald-800/50 p-4">
-                                    <div className="text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400 mb-2">
-                                        {t('staff.finance.summary.toStaff', 'Сотруднику')}
-                                    </div>
-                                    <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                                        {mShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-base text-emerald-500">{t('staff.finance.shift.som', 'сом')}</span>
-                                    </div>
-                                    {/* Показываем оплату за выход компактно */}
-                                    {((isOpen && hourlyRate && currentHoursWorked !== null && currentGuaranteedAmount !== null) ||
-                                        (isClosed && todayShift.hourly_rate && todayShift.hours_worked !== null && todayShift.hours_worked !== undefined && todayShift.guaranteed_amount !== null && todayShift.guaranteed_amount !== undefined)) && (
-                                        <div className="mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-800/50">
-                                            <div className="text-xs text-emerald-600 dark:text-emerald-400">
-                                                {t('staff.finance.shift.guaranteedPayment', 'За выход')}: <span className="font-semibold">
-                                                    {isOpen
-                                                        ? currentGuaranteedAmount?.toFixed(2) ?? '0.00'
-                                                        : (todayShift.guaranteed_amount ?? 0).toFixed(2)} {t('staff.finance.shift.som', 'сом')}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {/* Бизнесу */}
-                                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 rounded-lg border border-indigo-200 dark:border-indigo-800/50 p-4">
-                                    <div className="text-xs uppercase tracking-wide text-indigo-600 dark:text-indigo-400 mb-2">
-                                        {t('staff.finance.summary.toBusiness', 'Бизнесу')}
-                                    </div>
-                                    <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                        {sShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-base text-indigo-500">{t('staff.finance.shift.som', 'сом')}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })()}
+                    {todayShift && (
+                        <ShiftSummary
+                            calculations={calculations}
+                            shift={todayShift}
+                            isOpen={isOpen}
+                            hourlyRate={shiftData.hourlyRate}
+                            currentHoursWorked={shiftData.currentHoursWorked}
+                            currentGuaranteedAmount={shiftData.currentGuaranteedAmount}
+                        />
+                    )}
 
                     {/* Дополнительные детали (раскрываются по кнопке) */}
                     {showShiftDetails && todayShift && (
@@ -885,15 +237,15 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-gray-600 dark:text-gray-400">{t('staff.finance.details.serviceAmount', 'Услуги')}</span>
-                                            <span className="font-semibold">{totalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                            <span className="font-semibold">{calculations.totalAmount.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600 dark:text-gray-400">{t('staff.finance.details.consumables', 'Расходники')}</span>
-                                            <span className="font-semibold text-amber-600 dark:text-amber-400">{finalConsumables.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                            <span className="font-semibold text-amber-600 dark:text-amber-400">{calculations.totalConsumables.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
                                         </div>
                                         <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700 font-medium">
                                             <span>{t('staff.finance.details.total', 'Итого')}</span>
-                                            <span>{(totalAmount + finalConsumables).toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                            <span>{(calculations.totalAmount + calculations.totalConsumables).toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -906,15 +258,15 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-gray-600 dark:text-gray-400">
-                                                {t('staff.finance.details.staffShare', 'Сотрудник')} <span className="text-xs">({staffPercentMaster}%)</span>
+                                                {t('staff.finance.details.staffShare', 'Сотрудник')} <span className="text-xs">({shiftData.staffPercentMaster}%)</span>
                                             </span>
-                                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{mShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{calculations.masterShare.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600 dark:text-gray-400">
-                                                {t('staff.finance.details.businessShare', 'Бизнес')} <span className="text-xs">({staffPercentSalon}% + расходники)</span>
+                                                {t('staff.finance.details.businessShare', 'Бизнес')} <span className="text-xs">({shiftData.staffPercentSalon}% + расходники)</span>
                                             </span>
-                                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">{sShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
+                                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">{calculations.salonShare.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
                                         </div>
                                         {isClosed && todayShift.topup_amount && todayShift.topup_amount > 0 && (
                                             <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
@@ -925,19 +277,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                     </div>
                                 </div>
                             </div>
-                            {todayShift && (
-                                <button
-                                    type="button"
-                                    onClick={() => setShowShiftDetails(false)}
-                                    className="mt-4 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
-                                >
-                                    {t('staff.finance.shift.hideDetails', 'Скрыть детали')}
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                onClick={() => setShowShiftDetails(false)}
+                                className="mt-4 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                            >
+                                {t('staff.finance.shift.hideDetails', 'Скрыть детали')}
+                            </button>
                         </div>
                     )}
                     
-                    {/* Кнопка показать детали */}
                     {todayShift && !showShiftDetails && (
                         <button
                             type="button"
@@ -953,646 +302,55 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             {/* Таб: Клиенты */}
             {activeTab === 'clients' && (
                 <div className={`space-y-4 ${staffId ? 'p-6' : 'px-6 pb-6'}`}>
-                    {/* Компактный заголовок */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {t('staff.finance.clients.title', 'Клиенты за смену')}
-                                    </span>
-                                    {staffId && (
-                                        <DatePickerPopover
-                                            value={formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}
-                                            onChange={(dateStr) => {
-                                                const [year, month, day] = dateStr.split('-').map(Number);
-                                                setShiftDate(new Date(year, month - 1, day));
-                                            }}
-                                            className="inline-block"
-                                        />
-                                    )}
-                                </div>
-                                <div className="text-base text-gray-600 dark:text-gray-400">
-                                    {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
-                                </div>
-                            </div>
-                        </div>
-                        {isOpen && (
-                            <div className="flex items-center gap-2">
-                                {savingItems && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                        {t('staff.finance.clients.saving', 'Сохранение...')}
-                                    </span>
-                                )}
-                                {!isReadOnly && (
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        onClick={() => {
-                                            setItems((prev) => {
-                                                // считаем следующий порядковый номер для анонимного клиента
-                                                // на основе существующих клиентов без bookingId
-                                                const clientLabel = t('staff.finance.clients.client', 'Клиент');
-                                                const existingClients = prev.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
-                                                const existingIndices = existingClients
-                                                    .map((it) => {
-                                                        // Используем динамический regex на основе перевода
-                                                        const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                                        const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
-                                                        const match = it.clientName?.match(regex);
-                                                        return match ? Number(match[1]) : 0;
-                                                    })
-                                                    .filter((n) => n > 0);
-                                                const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
-                                                const nextIndex = maxIndex + 1;
-                                                const newItem: ShiftItem = {
-                                                    clientName: `${clientLabel} ${nextIndex}`,
-                                                    serviceName: '',
-                                                    serviceAmount: 0,
-                                                    consumablesAmount: 0,
-                                                    bookingId: null,
-                                                    createdAt: new Date().toISOString(), // Устанавливаем время сразу
-                                                };
-                                                // Добавляем в начало списка (новые сверху)
-                                                const next = [newItem, ...prev];
-                                                // сразу открываем форму редактирования для нового клиента
-                                                setExpandedItems(new Set([0]));
-                                                return next;
-                                            });
-                                        }}
-                                        disabled={saving || savingItems}
-                                    >
-                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        {t('staff.finance.clients.add', 'Добавить клиента')}
-                                    </Button>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                    <ClientsListHeader
+                        shiftDate={shiftDate}
+                        onShiftDateChange={setShiftDate}
+                        isOpen={isOpen}
+                        savingItems={shiftItems.savingItems}
+                        saving={shiftManagement.saving}
+                        staffId={staffId}
+                        onAddClient={handleAddClient}
+                    />
 
-                {!todayShift || !isOpen ? (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
-                        {t('staff.finance.clients.shiftNotOpen', 'Чтобы добавлять клиентов, необходимо сначала открыть смену на вкладке «Текущая смена».')}
-                    </div>
-                ) : items.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {t('staff.finance.clients.empty', 'Пока нет добавленных клиентов. Добавьте клиента из записей или введите вручную, укажите суммы за услугу и расходники.')}
-                    </p>
-                ) : (
-                    <div className="space-y-2 text-sm">
-                        {/* Заголовок колонок (для понимания структуры) */}
-                        <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
-                            <span>{t('staff.finance.clients.client', 'Клиент')}</span>
-                            <span>{t('staff.finance.clients.service', 'Услуга / комментарий')}</span>
-                            <span className="text-right">{t('staff.finance.clients.amount', 'Сумма')}</span>
-                            <span className="text-right">{t('staff.finance.clients.consumables', 'Расходники')}</span>
-                            <span className="text-right">{t('staff.finance.clients.createdAt', 'Время заполнения')}</span>
-                            <span className="text-center">{isOpen && !isReadOnly ? t('staff.finance.clients.actions', 'Действия') : ''}</span>
-                        </div>
-
-                        {items.map((item, idx) => {
-                            const usedBookingIds = items.filter((it, i) => i !== idx && it.bookingId).map(it => it.bookingId);
-                            const now = new Date();
-                            // В выпадающем списке показываем только тех клиентов, чьё время уже наступило
-                            const availableBookings = bookings.filter((b) => {
-                                if (usedBookingIds.includes(b.id)) return false;
-                                try {
-                                    const start = new Date(b.start_at);
-                                    return start <= now;
-                                } catch {
-                                    return false;
-                                }
+                    <ClientsList
+                        items={shiftItems.items}
+                        bookings={shiftData.bookings}
+                        serviceOptions={serviceOptions}
+                        shift={todayShift}
+                        isOpen={isOpen}
+                        isReadOnly={false}
+                        expandedItems={shiftItems.expandedItems}
+                        onExpand={(idx) => shiftItems.setExpandedItems((prev) => new Set(prev).add(idx))}
+                        onCollapse={(idx) => {
+                            shiftItems.setExpandedItems((prev) => {
+                                const next = new Set(prev);
+                                next.delete(idx);
+                                return next;
                             });
-                            const isExpanded = expandedItems.has(idx);
-                            
-                            // Компактная строка (свернутое состояние)
-                            if (!isExpanded) {
-                                const hasBooking = !!item.bookingId;
-                                
-                                return (
-                                    <div
-                                        key={item.id ?? idx}
-                                        className={`group flex items-center justify-between py-3 px-4 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all ${
-                                            isOpen && !isReadOnly 
-                                                ? 'border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600 cursor-pointer hover:shadow-md hover:shadow-indigo-100 dark:hover:shadow-indigo-900/20' 
-                                                : 'border-gray-200 dark:border-gray-700'
-                                        }`}
-                                        onClick={() => isOpen && !isReadOnly && setExpandedItems((prev) => new Set(prev).add(idx))}
-                                    >
-                                        {/* Desktop view - grid */}
-                                        <div className="hidden sm:flex flex-1 grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-3 items-center min-w-0">
-                                            <div className="min-w-0 flex items-center gap-2">
-                                                {hasBooking && (
-                                                    <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500" title={t('staff.finance.clients.fromBooking', 'Из записи')} />
-                                                )}
-                                                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                                    {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
-                                                </div>
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                                                    {item.serviceName || <span className="text-gray-400 italic">—</span>}
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className={`text-sm font-bold ${(item.serviceAmount ?? 0) > 0 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
-                                                    {(item.serviceAmount ?? 0) === 0 && !item.serviceName
-                                                        ? <span className="text-gray-400">—</span>
-                                                        : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${t('staff.finance.shift.som', 'сом')}`}
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className={`text-sm font-semibold ${(item.consumablesAmount ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>
-                                                    {(item.consumablesAmount ?? 0) === 0
-                                                        ? <span className="text-gray-400">0</span>
-                                                        : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {t('staff.finance.shift.som', 'сом')}
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                                    {item.createdAt ? formatTime(item.createdAt, locale) : <span className="text-gray-400">—</span>}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Mobile view - stacked */}
-                                        <div className="sm:hidden flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-2 mb-2">
-                                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                    {hasBooking && (
-                                                        <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500" title={t('staff.finance.clients.fromBooking', 'Из записи')} />
-                                                    )}
-                                                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                                        {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
-                                                    </div>
-                                                </div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 font-medium flex-shrink-0">
-                                                    {item.createdAt ? formatTime(item.createdAt, locale) : <span className="text-gray-400">—</span>}
-                                                </div>
-                                            </div>
-                                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-2 truncate">
-                                                {item.serviceName || <span className="text-gray-400 italic">—</span>}
-                                            </div>
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{t('staff.finance.clients.amount', 'Сумма')}</div>
-                                                    <div className={`text-sm font-bold ${(item.serviceAmount ?? 0) > 0 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
-                                                        {(item.serviceAmount ?? 0) === 0 && !item.serviceName
-                                                            ? <span className="text-gray-400">—</span>
-                                                            : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${t('staff.finance.shift.som', 'сом')}`}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{t('staff.finance.clients.consumables', 'Расходники')}</div>
-                                                    <div className={`text-sm font-semibold ${(item.consumablesAmount ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>
-                                                        {(item.consumablesAmount ?? 0) === 0
-                                                            ? <span className="text-gray-400">0</span>
-                                                            : `${(item.consumablesAmount ?? 0).toLocaleString('ru-RU')}`} {t('staff.finance.shift.som', 'сом')}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {isOpen && !isReadOnly && (
-                                            <div className="flex items-center gap-2 ml-3 flex-shrink-0">
-                                                <button
-                                                    type="button"
-                                                    className="p-2 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-lg transition-all shadow-sm hover:shadow"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setExpandedItems((prev) => new Set(prev).add(idx));
-                                                    }}
-                                                    title={t('staff.finance.clients.edit', 'Редактировать')}
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="p-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-all shadow-sm hover:shadow"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (confirm(t('staff.finance.clients.confirmDelete', 'Удалить этого клиента?'))) {
-                                                            setItems((prev) => prev.filter((_, i) => i !== idx));
-                                                            setExpandedItems((prev) => {
-                                                                const next = new Set(prev);
-                                                                next.delete(idx);
-                                                                return next;
-                                                            });
-                                                        }
-                                                    }}
-                                                    title={t('staff.finance.clients.delete', 'Удалить')}
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            }
-                            
-                            // Раскрытая форма редактирования
-                            return (
-                                <div
-                                    key={item.id ?? idx}
-                                    className="p-5 bg-gradient-to-br from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-gray-900 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 shadow-lg space-y-5"
-                                >
-                                    <div className="flex items-center justify-between pb-3 border-b-2 border-indigo-200 dark:border-indigo-800">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
-                                                {t('staff.finance.clients.editing', 'Редактирование клиента')}
-                                            </h3>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                                            onClick={() => setExpandedItems((prev) => {
-                                                const next = new Set(prev);
-                                                next.delete(idx);
-                                                return next;
-                                            })}
-                                            title={t('staff.finance.clients.collapse', 'Свернуть')}
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        {/* Левая колонка */}
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                    {t('staff.finance.clients.client', 'Клиент')}
-                                                    <span className="text-red-500 ml-1">*</span>
-                                                </label>
-                                                <select
-                                                    className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
-                                                    value={item.bookingId ?? ''}
-                                                    onChange={(e) => {
-                                                        const bookingId = e.target.value || null;
-                                                        const booking = bookingId
-                                                            ? bookings.find((b) => b.id === bookingId)
-                                                            : null;
-                                                        const service = booking?.services
-                                                            ? Array.isArray(booking.services)
-                                                                ? booking.services[0]
-                                                                : booking.services
-                                                            : null;
-                                                        
-                                                        // Если bookingId убран, генерируем автоматическое имя "Клиент N"
-                                                        let newClientName = item.clientName;
-                                                        if (!bookingId && !booking) {
-                                                            // Считаем порядковый номер для автоматического имени
-                                                            // на основе существующих клиентов без bookingId (кроме текущего)
-                                                            const clientLabel = t('staff.finance.clients.client', 'Клиент');
-                                                            const existingClients = items
-                                                                .filter((it, i) => i !== idx && !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
-                                                            const existingIndices = existingClients
-                                                                .map((it) => {
-                                                                    // Используем динамический regex на основе перевода
-                                                                    const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                                                    const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
-                                                                    const match = it.clientName?.match(regex);
-                                                                    return match ? Number(match[1]) : 0;
-                                                                })
-                                                                .filter((n) => n > 0);
-                                                            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
-                                                            const nextIndex = maxIndex + 1;
-                                                            newClientName = `${clientLabel} ${nextIndex}`;
-                                                        }
-                                                        
-                                                        setItems((prev) =>
-                                                            prev.map((it, i) =>
-                                                                i === idx
-                                                                    ? {
-                                                                          ...it,
-                                                                          bookingId,
-                                                                          clientName: booking
-                                                                              ? booking.client_name ||
-                                                                                booking.client_phone ||
-                                                                                it.clientName
-                                                                              : newClientName,
-                                                                          serviceName: service
-                                                                              ? service.name_ru
-                                                                              : it.serviceName,
-                                                                      }
-                                                                    : it
-                                                            )
-                                                        );
-                                                    }}
-                                                    disabled={!isOpen || isReadOnly}
-                                                >
-                                                    <option value="">{t('staff.finance.clients.selectFromBookings', 'Выберите клиента из записей...')}</option>
-                                                    {availableBookings.map((b) => {
-                                                        const service = b.services
-                                                            ? Array.isArray(b.services)
-                                                                ? b.services[0]
-                                                                : b.services
-                                                            : null;
-                                                        const clientLabel = b.client_name || b.client_phone || t('staff.finance.clients.client', 'Клиент');
-                                                        const serviceLabel = service ? getServiceName(service) : '';
-                                                        const time = formatInTimeZone(new Date(b.start_at), TZ, 'HH:mm');
-                                                        return (
-                                                            <option key={b.id} value={b.id}>
-                                                                {clientLabel} - {serviceLabel} ({time})
-                                                            </option>
-                                                        );
-                                                    })}
-                                                </select>
-                                                {!item.bookingId && (
-                                                    <div className="mt-2">
-                                                        <div className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 text-sm text-gray-700 dark:text-gray-400">
-                                                            {item.clientName || `${t('staff.finance.clients.client', 'Клиент')} 1`}
-                                                        </div>
-                                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                            {t('staff.finance.clients.walkInHint', 'Имя формируется автоматически для клиентов «с улицы»')}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                    {t('staff.finance.clients.service', 'Услуга')}
-                                                </label>
-                                                <select
-                                                    className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
-                                                    value={item.serviceName}
-                                                    onChange={(e) => {
-                                                        const value = e.target.value;
-                                                        setItems((prev) =>
-                                                            prev.map((it, i) =>
-                                                                i === idx ? { ...it, serviceName: value } : it
-                                                            )
-                                                        );
-                                                    }}
-                                                    disabled={!isOpen || isReadOnly}
-                                                >
-                                                    <option value="">{t('staff.finance.clients.selectService', 'Выберите услугу...')}</option>
-                                                    {serviceOptions.map((svc) => {
-                                                        const displayName = getServiceName(svc);
-                                                        const value = svc.name_ru;
-                                                        return (
-                                                            <option key={value} value={value}>
-                                                                {displayName}
-                                                            </option>
-                                                        );
-                                                    })}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {/* Правая колонка */}
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                    {t('staff.finance.clients.servicePrice', 'Цена за услугу')}
-                                                    <span className="text-gray-500 ml-1">(сом)</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        step="50"
-                                                        placeholder="0"
-                                                        className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
-                                                        value={item.serviceAmount || ''}
-                                                        onChange={(e) => {
-                                                            const v = Number(e.target.value || 0);
-                                                            setItems((prev) =>
-                                                                prev.map((it, i) =>
-                                                                    i === idx ? { ...it, serviceAmount: v } : it
-                                                                )
-                                                            );
-                                                        }}
-                                                        disabled={!isOpen || isReadOnly}
-                                                    />
-                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
-                                                        сом
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                    {t('staff.finance.clients.consumablesAmount', 'Расходники')}
-                                                    <span className="text-gray-500 ml-1">(сом)</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        step="10"
-                                                        placeholder="0"
-                                                        className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-sm hover:shadow"
-                                                        value={item.consumablesAmount || ''}
-                                                        onChange={(e) => {
-                                                            const v = Number(e.target.value || 0);
-                                                            setItems((prev) =>
-                                                                prev.map((it, i) =>
-                                                                    i === idx ? { ...it, consumablesAmount: v } : it
-                                                                )
-                                                            );
-                                                        }}
-                                                        disabled={!isOpen || isReadOnly}
-                                                    />
-                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
-                                                        сом
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                    
-                                    {isOpen && !isReadOnly && (
-                                        <div className="flex items-center justify-end gap-3 pt-4 border-t-2 border-indigo-200 dark:border-indigo-800">
-                                            <button
-                                                type="button"
-                                                className="px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all shadow-sm hover:shadow"
-                                                onClick={() => {
-                                                    setExpandedItems((prev) => {
-                                                        const next = new Set(prev);
-                                                        next.delete(idx);
-                                                        return next;
-                                                    });
-                                                }}
-                                            >
-                                                {t('staff.finance.clients.cancel', 'Отмена')}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transform hover:scale-105"
-                                                onClick={() => {
-                                                    setExpandedItems((prev) => {
-                                                        const next = new Set(prev);
-                                                        next.delete(idx);
-                                                        return next;
-                                                    });
-                                                }}
-                                            >
-                                                {t('staff.finance.clients.save', 'Сохранить')}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+                        }}
+                        onUpdateItem={handleUpdateItem}
+                        onDeleteItem={handleDeleteItem}
+                    />
                 </div>
             )}
 
-            {/* Таб: Статистика - показывается только для сотрудника (без staffId) */}
+            {/* Таб: Статистика */}
             {activeTab === 'stats' && stats && !staffId && (
-                <Card variant="elevated" className="p-6 space-y-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {t('staff.finance.stats.title', 'Общая статистика по сменам')}
-                        </h2>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {t('staff.finance.stats.totalShifts', 'Всего закрытых смен')}: {allClosedShiftsCount}
-                        </div>
-                    </div>
-                    
-                    {/* Фильтры по периодам */}
-                    <div className="space-y-3">
-                        <div className="flex flex-wrap gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setStatsPeriod('day')}
-                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                    statsPeriod === 'day'
-                                        ? 'bg-indigo-600 text-white border-indigo-600'
-                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                }`}
-                            >
-                                {t('staff.finance.stats.period.day', 'День')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setStatsPeriod('month')}
-                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                    statsPeriod === 'month'
-                                        ? 'bg-indigo-600 text-white border-indigo-600'
-                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                }`}
-                            >
-                                {t('staff.finance.stats.period.month', 'Месяц')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setStatsPeriod('year')}
-                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                    statsPeriod === 'year'
-                                        ? 'bg-indigo-600 text-white border-indigo-600'
-                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                }`}
-                            >
-                                {t('staff.finance.stats.period.year', 'Год')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setStatsPeriod('all')}
-                                className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                                    statsPeriod === 'all'
-                                        ? 'bg-indigo-600 text-white border-indigo-600'
-                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                }`}
-                            >
-                                {t('staff.finance.stats.period.all', 'Все время')}
-                            </button>
-                        </div>
-                        
-                        {/* Фильтры для выбранного периода */}
-                        {statsPeriod === 'day' && (
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm text-gray-600 dark:text-gray-400">
-                                    {t('staff.finance.stats.selectDate', 'Выберите дату')}:
-                                </label>
-                                <DatePickerPopover
-                                    value={formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd')}
-                                    onChange={(dateStr) => {
-                                        const [year, month, day] = dateStr.split('-').map(Number);
-                                        setSelectedDate(new Date(year, month - 1, day));
-                                    }}
-                                    className="inline-block"
-                                />
-                            </div>
-                        )}
-                        
-                        {statsPeriod === 'month' && (
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm text-gray-600 dark:text-gray-400">
-                                    {t('staff.finance.stats.selectMonth', 'Выберите месяц')}:
-                                </label>
-                                <MonthPickerPopover
-                                    value={formatInTimeZone(selectedMonth, TZ, 'yyyy-MM-dd')}
-                                    onChange={(dateStr) => {
-                                        const [year, month] = dateStr.split('-').map(Number);
-                                        setSelectedMonth(new Date(year, month - 1, 1));
-                                    }}
-                                    className="inline-block"
-                                />
-                            </div>
-                        )}
-                        
-                        {statsPeriod === 'year' && (
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm text-gray-600 dark:text-gray-400">
-                                    {t('staff.finance.stats.selectYear', 'Выберите год')}:
-                                </label>
-                                <select
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                    className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                >
-                                    {Array.from({ length: 10 }, (_, i) => {
-                                        const year = new Date().getFullYear() - 5 + i;
-                                        return (
-                                            <option key={year} value={year}>
-                                                {year}
-                                            </option>
-                                        );
-                                    })}
-                                </select>
-                            </div>
-                        )}
-                    </div>
-                    <div className="grid sm:grid-cols-3 gap-4 text-sm">
-                        <div className="space-y-1">
-                            <div className="text-gray-600 dark:text-gray-400">{t('staff.finance.stats.totalRevenue', 'Общая выручка')}</div>
-                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                {stats.totalAmount} {t('staff.finance.shift.som', 'сом')}
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-gray-600 dark:text-gray-400">{t('staff.finance.stats.staffAmount', 'Сумма сотрудника')}</div>
-                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                {stats.totalMaster} {t('staff.finance.shift.som', 'сом')}
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-gray-600 dark:text-gray-400">{t('staff.finance.stats.businessAmount', 'Сумма бизнеса')}</div>
-                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                {stats.totalSalon} {t('staff.finance.shift.som', 'сом')}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                        {t('staff.finance.stats.totalLate', 'Суммарное опоздание')}: {stats.totalLateMinutes} {t('staff.finance.shift.minutes', 'минут')}
-                    </div>
-                </Card>
+                <div className={`${staffId ? 'p-6' : 'px-6 pb-6'}`}>
+                    <StatsView
+                        stats={stats}
+                        allShiftsCount={allClosedShiftsCount}
+                        statsPeriod={statsPeriod}
+                        onPeriodChange={setStatsPeriod}
+                        selectedDate={selectedDate}
+                        onDateChange={setSelectedDate}
+                        selectedMonth={selectedMonth}
+                        onMonthChange={setSelectedMonth}
+                        selectedYear={selectedYear}
+                        onYearChange={setSelectedYear}
+                    />
+                </div>
             )}
         </>
     );
 }
-
-

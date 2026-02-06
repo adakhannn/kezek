@@ -1,0 +1,244 @@
+// apps/web/src/app/staff/finance/components/ClientEditForm.tsx
+
+import { formatInTimeZone } from 'date-fns-tz';
+
+import type { ShiftItem, Booking, ServiceName } from '../types';
+import { getServiceName } from '../utils';
+
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { TZ } from '@/lib/time';
+
+interface ClientEditFormProps {
+    item: ShiftItem;
+    idx: number;
+    allItems: ShiftItem[];
+    bookings: Booking[];
+    serviceOptions: ServiceName[];
+    isOpen: boolean;
+    isReadOnly: boolean;
+    onUpdate: (idx: number, item: ShiftItem) => void;
+    onCollapse: (idx: number) => void;
+}
+
+export function ClientEditForm({
+    item,
+    idx,
+    allItems,
+    bookings,
+    serviceOptions,
+    isOpen,
+    isReadOnly,
+    onUpdate,
+    onCollapse,
+}: ClientEditFormProps) {
+    const { t, locale } = useLanguage();
+
+    const handleBookingChange = (bookingId: string | null) => {
+        const booking = bookingId ? bookings.find((b) => b.id === bookingId) : null;
+        const service = booking?.services
+            ? Array.isArray(booking.services)
+                ? booking.services[0]
+                : booking.services
+            : null;
+        
+        // Если bookingId убран, генерируем автоматическое имя "Клиент N"
+        let newClientName = item.clientName;
+        if (!bookingId && !booking) {
+            const clientLabel = t('staff.finance.clients.client', 'Клиент');
+            // Считаем порядковый номер для автоматического имени
+            // на основе существующих клиентов без bookingId (кроме текущего)
+            const existingClients = allItems
+                .filter((it, i) => i !== idx && !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
+            const existingIndices = existingClients
+                .map((it) => {
+                    const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
+                    const match = it.clientName?.match(regex);
+                    return match ? Number(match[1]) : 0;
+                })
+                .filter((n) => n > 0);
+            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+            const nextIndex = maxIndex + 1;
+            newClientName = `${clientLabel} ${nextIndex}`;
+        }
+        
+        onUpdate(idx, {
+            ...item,
+            bookingId,
+            clientName: booking
+                ? booking.client_name || booking.client_phone || item.clientName
+                : newClientName,
+            serviceName: service ? service.name_ru : item.serviceName,
+        });
+    };
+
+    const handleServiceChange = (serviceName: string) => {
+        onUpdate(idx, { ...item, serviceName });
+    };
+
+    const handleServiceAmountChange = (serviceAmount: number) => {
+        onUpdate(idx, { ...item, serviceAmount });
+    };
+
+    const handleConsumablesAmountChange = (consumablesAmount: number) => {
+        onUpdate(idx, { ...item, consumablesAmount });
+    };
+
+    return (
+        <div className="p-5 bg-gradient-to-br from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-gray-900 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 shadow-lg space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b-2 border-indigo-200 dark:border-indigo-800">
+                <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                        {t('staff.finance.clients.editing', 'Редактирование клиента')}
+                    </h3>
+                </div>
+                <button
+                    type="button"
+                    className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    onClick={() => onCollapse(idx)}
+                    title={t('staff.finance.clients.collapse', 'Свернуть')}
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Левая колонка */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            {t('staff.finance.clients.client', 'Клиент')}
+                            <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <select
+                            className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
+                            value={item.bookingId ?? ''}
+                            onChange={(e) => handleBookingChange(e.target.value || null)}
+                            disabled={!isOpen || isReadOnly}
+                        >
+                            <option value="">{t('staff.finance.clients.selectFromBookings', 'Выберите клиента из записей...')}</option>
+                            {bookings.map((b) => {
+                                const service = b.services
+                                    ? Array.isArray(b.services)
+                                        ? b.services[0]
+                                        : b.services
+                                    : null;
+                                const clientLabel = b.client_name || b.client_phone || t('staff.finance.clients.client', 'Клиент');
+                                const serviceLabel = service ? getServiceName(service, locale) : '';
+                                const time = formatInTimeZone(new Date(b.start_at), TZ, 'HH:mm');
+                                return (
+                                    <option key={b.id} value={b.id}>
+                                        {clientLabel} - {serviceLabel} ({time})
+                                    </option>
+                                );
+                            })}
+                        </select>
+                        {!item.bookingId && (
+                            <div className="mt-2">
+                                <div className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 text-sm text-gray-700 dark:text-gray-400">
+                                    {item.clientName || `${t('staff.finance.clients.client', 'Клиент')} 1`}
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {t('staff.finance.clients.walkInHint', 'Имя формируется автоматически для клиентов «с улицы»')}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            {t('staff.finance.clients.service', 'Услуга')}
+                        </label>
+                        <select
+                            className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
+                            value={item.serviceName}
+                            onChange={(e) => handleServiceChange(e.target.value)}
+                            disabled={!isOpen || isReadOnly}
+                        >
+                            <option value="">{t('staff.finance.clients.selectService', 'Выберите услугу...')}</option>
+                            {serviceOptions.map((svc) => {
+                                const displayName = getServiceName(svc, locale);
+                                const value = svc.name_ru;
+                                return (
+                                    <option key={value} value={value}>
+                                        {displayName}
+                                    </option>
+                                );
+                            })}
+                        </select>
+                    </div>
+                </div>
+
+                {/* Правая колонка */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            {t('staff.finance.clients.servicePrice', 'Цена за услугу')}
+                            <span className="text-gray-500 ml-1">(сом)</span>
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                min={0}
+                                step="50"
+                                placeholder="0"
+                                className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
+                                value={item.serviceAmount || ''}
+                                onChange={(e) => handleServiceAmountChange(Number(e.target.value || 0))}
+                                disabled={!isOpen || isReadOnly}
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
+                                сом
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            {t('staff.finance.clients.consumablesAmount', 'Расходники')}
+                            <span className="text-gray-500 ml-1">(сом)</span>
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                min={0}
+                                step="10"
+                                placeholder="0"
+                                className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-sm hover:shadow"
+                                value={item.consumablesAmount || ''}
+                                onChange={(e) => handleConsumablesAmountChange(Number(e.target.value || 0))}
+                                disabled={!isOpen || isReadOnly}
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
+                                сом
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {isOpen && !isReadOnly && (
+                <div className="flex items-center justify-end gap-3 pt-4 border-t-2 border-indigo-200 dark:border-indigo-800">
+                    <button
+                        type="button"
+                        className="px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all shadow-sm hover:shadow"
+                        onClick={() => onCollapse(idx)}
+                    >
+                        {t('staff.finance.clients.cancel', 'Отмена')}
+                    </button>
+                    <button
+                        type="button"
+                        className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transform hover:scale-105"
+                        onClick={() => onCollapse(idx)}
+                    >
+                        {t('staff.finance.clients.save', 'Сохранить')}
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+

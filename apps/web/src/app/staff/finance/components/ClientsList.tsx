@@ -1,0 +1,114 @@
+// apps/web/src/app/staff/finance/components/ClientsList.tsx
+
+import type { ShiftItem, Booking, ServiceName, Shift } from '../types';
+
+import { ClientEditForm } from './ClientEditForm';
+import { ClientItem } from './ClientItem';
+
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
+interface ClientsListProps {
+    items: ShiftItem[];
+    bookings: Booking[];
+    serviceOptions: ServiceName[];
+    shift: Shift | null;
+    isOpen: boolean;
+    isReadOnly: boolean;
+    expandedItems: Set<number>;
+    onExpand: (idx: number) => void;
+    onCollapse: (idx: number) => void;
+    onUpdateItem: (idx: number, item: ShiftItem) => void;
+    onDeleteItem: (idx: number) => void;
+}
+
+export function ClientsList({
+    items,
+    bookings,
+    serviceOptions,
+    shift,
+    isOpen,
+    isReadOnly,
+    expandedItems,
+    onExpand,
+    onCollapse,
+    onUpdateItem,
+    onDeleteItem,
+}: ClientsListProps) {
+    const { t, locale } = useLanguage();
+
+    if (!shift || !isOpen) {
+        return (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+                {t('staff.finance.clients.shiftNotOpen', 'Чтобы добавлять клиентов, необходимо сначала открыть смену на вкладке «Текущая смена».')}
+            </div>
+        );
+    }
+
+    if (items.length === 0) {
+        return (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('staff.finance.clients.empty', 'Пока нет добавленных клиентов. Добавьте клиента из записей или введите вручную, укажите суммы за услугу и расходники.')}
+            </p>
+        );
+    }
+
+    const now = new Date();
+
+    return (
+        <div className="space-y-2 text-sm">
+            {/* Заголовок колонок */}
+            <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+                <span>{t('staff.finance.clients.client', 'Клиент')}</span>
+                <span>{t('staff.finance.clients.service', 'Услуга / комментарий')}</span>
+                <span className="text-right">{t('staff.finance.clients.amount', 'Сумма')}</span>
+                <span className="text-right">{t('staff.finance.clients.consumables', 'Расходники')}</span>
+                <span className="text-right">{t('staff.finance.clients.createdAt', 'Время заполнения')}</span>
+                <span className="text-center">{isOpen && !isReadOnly ? t('staff.finance.clients.actions', 'Действия') : ''}</span>
+            </div>
+
+            {items.map((item, idx) => {
+                const usedBookingIds = items.filter((it, i) => i !== idx && it.bookingId).map(it => it.bookingId);
+                const availableBookings = bookings.filter((b) => {
+                    if (usedBookingIds.includes(b.id)) return false;
+                    try {
+                        const start = new Date(b.start_at);
+                        return start <= now;
+                    } catch {
+                        return false;
+                    }
+                });
+                const isExpanded = expandedItems.has(idx);
+
+                if (isExpanded) {
+                    return (
+                        <ClientEditForm
+                            key={item.id ?? idx}
+                            item={item}
+                            idx={idx}
+                            allItems={items}
+                            bookings={availableBookings}
+                            serviceOptions={serviceOptions}
+                            isOpen={isOpen}
+                            isReadOnly={isReadOnly}
+                            onUpdate={onUpdateItem}
+                            onCollapse={onCollapse}
+                        />
+                    );
+                }
+
+                return (
+                    <ClientItem
+                        key={item.id ?? idx}
+                        item={item}
+                        idx={idx}
+                        isOpen={isOpen}
+                        isReadOnly={isReadOnly}
+                        onEdit={() => onExpand(idx)}
+                        onDelete={() => onDeleteItem(idx)}
+                    />
+                );
+            })}
+        </div>
+    );
+}
+
