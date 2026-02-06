@@ -11,12 +11,24 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id: staffId } = await params;
         const { supabase, bizId } = await getBizContextForManagers();
+
+        // Получаем параметр date из query string, если он есть
+        const { searchParams } = new URL(req.url);
+        const dateParam = searchParams.get('date');
+        let targetDate: Date;
+        if (dateParam) {
+            // Парсим дату из параметра (формат YYYY-MM-DD)
+            const [year, month, day] = dateParam.split('-').map(Number);
+            targetDate = new Date(year, month - 1, day);
+        } else {
+            targetDate = new Date();
+        }
 
         // Проверяем, что сотрудник принадлежит этому бизнесу
         const { data: staff, error: staffError } = await supabase
@@ -36,46 +48,46 @@ export async function GET(
         const staffPercentSalon = Number(staff.percent_salon ?? 40);
         const hourlyRate = staff.hourly_rate ? Number(staff.hourly_rate) : null;
 
-        // Текущая дата в локальной TZ (без времени)
-        const now = new Date();
-        const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
-        const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
+        // Дата в локальной TZ (без времени)
+        const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
 
-        // Проверяем, выходной ли сегодня
+        // Проверяем, выходной ли для выбранной даты (только если это сегодня)
         let isDayOff = false;
-
-        // 1. Проверяем staff_time_off
-        const { data: timeOffs } = await supabase
-            .from('staff_time_off')
-            .select('id')
-            .eq('biz_id', bizId)
-            .eq('staff_id', staffId)
-            .lte('date_from', ymd)
-            .gte('date_to', ymd);
-
-        if (timeOffs && timeOffs.length > 0) {
-            isDayOff = true;
-        } else {
-            // 2. Проверяем staff_schedule_rules для конкретной даты
-            const { data: dateRule } = await supabase
-                .from('staff_schedule_rules')
-                .select('intervals')
+        const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+        if (ymd === today) {
+            // 1. Проверяем staff_time_off
+            const { data: timeOffs } = await supabase
+                .from('staff_time_off')
+                .select('id')
                 .eq('biz_id', bizId)
                 .eq('staff_id', staffId)
-                .eq('kind', 'date')
-                .eq('date_on', ymd)
-                .eq('is_active', true)
-                .maybeSingle();
+                .lte('date_from', ymd)
+                .gte('date_to', ymd);
 
-            if (dateRule && Array.isArray(dateRule.intervals) && dateRule.intervals.length === 0) {
+            if (timeOffs && timeOffs.length > 0) {
                 isDayOff = true;
+            } else {
+                // 2. Проверяем staff_schedule_rules для конкретной даты
+                const { data: dateRule } = await supabase
+                    .from('staff_schedule_rules')
+                    .select('intervals')
+                    .eq('biz_id', bizId)
+                    .eq('staff_id', staffId)
+                    .eq('kind', 'date')
+                    .eq('date_on', ymd)
+                    .eq('is_active', true)
+                    .maybeSingle();
+
+                if (dateRule && Array.isArray(dateRule.intervals) && dateRule.intervals.length === 0) {
+                    isDayOff = true;
+                }
             }
         }
 
         // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
         const admin = getServiceClient();
 
-        // Смена за сегодня
+        // Смена за выбранную дату
         const { data: shift, error: shiftError } = await admin
             .from('staff_shifts')
             .select('*')
@@ -85,7 +97,7 @@ export async function GET(
             .maybeSingle();
 
         if (shiftError) {
-            logError('StaffFinance', 'Error loading today shift', shiftError);
+            logError('StaffFinance', 'Error loading shift', shiftError);
             return NextResponse.json(
                 { ok: false, error: shiftError.message },
                 { status: 500 }
@@ -109,20 +121,20 @@ export async function GET(
             }
         }
 
-        // Записи (bookings) сотрудника за сегодня для выбора клиентов
-        const todayStart = `${ymd}T00:00:00`;
-        const todayEnd = `${ymd}T23:59:59`;
-        const { data: todayBookings, error: bookingsError } = await supabase
+        // Записи (bookings) сотрудника за выбранную дату для выбора клиентов
+        const dateStart = `${ymd}T00:00:00`;
+        const dateEnd = `${ymd}T23:59:59`;
+        const { data: dateBookings, error: bookingsError } = await supabase
             .from('bookings')
             .select('id, client_name, client_phone, start_at, services:services!bookings_service_id_fkey (name_ru, name_ky, name_en)')
             .eq('staff_id', staffId)
-            .gte('start_at', todayStart)
-            .lte('start_at', todayEnd)
+            .gte('start_at', dateStart)
+            .lte('start_at', dateEnd)
             .neq('status', 'cancelled')
             .order('start_at', { ascending: true });
 
         if (bookingsError) {
-            logError('StaffFinance', 'Error loading today bookings', bookingsError);
+            logError('StaffFinance', 'Error loading bookings', bookingsError);
         }
 
         // Услуги сотрудника для выпадающего списка
@@ -158,7 +170,7 @@ export async function GET(
         }
 
         // Статистика за последние 30 дней
-        const thirtyDaysAgo = new Date(now);
+        const thirtyDaysAgo = new Date(targetDate);
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const statsStart = formatInTimeZone(thirtyDaysAgo, TZ, 'yyyy-MM-dd');
 
@@ -238,7 +250,7 @@ export async function GET(
                       shift: null,
                       items: [],
                   },
-            bookings: todayBookings ?? [],
+            bookings: dateBookings ?? [],
             services: availableServices,
             // Возвращаем все смены (не только закрытые), фильтрация по статусу на клиенте
             allShifts: (allShifts ?? []).map((s) => ({
