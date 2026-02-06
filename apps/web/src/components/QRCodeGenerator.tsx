@@ -178,44 +178,7 @@ export default function QRCodeGenerator({
                             </div>
 
                             {/* Контент поверх изображения */}
-                            <div className="relative z-10 h-full flex flex-col items-center justify-between p-8">
-                                {/* Верхняя часть - логотип (скрыта, так как уже на изображении) */}
-                                <div className="text-center mt-4 opacity-0 pointer-events-none">
-                                    <div className="h-20"></div>
-                                </div>
-
-                                {/* Название филиала и бизнеса поверх изображения */}
-                                <div className="text-center">
-                                    {businessName && (
-                                        <h2 
-                                            className="text-2xl font-extrabold mb-2"
-                                            style={{ 
-                                                color: '#ff6b35',
-                                                textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.3), 0 0 8px rgba(0,0,0,0.5)',
-                                                fontWeight: '900',
-                                                letterSpacing: '1px',
-                                                WebkitTextStroke: '0.5px rgba(0,0,0,0.3)',
-                                            }}
-                                        >
-                                            {businessName}
-                                        </h2>
-                                    )}
-                                    {branchName && (
-                                        <h3 
-                                            className="text-xl font-extrabold mb-1"
-                                            style={{ 
-                                                color: '#e91e63',
-                                                textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.3), 0 0 8px rgba(0,0,0,0.5)',
-                                                fontWeight: '900',
-                                                letterSpacing: '1px',
-                                                WebkitTextStroke: '0.5px rgba(0,0,0,0.3)',
-                                            }}
-                                        >
-                                            {branchName}
-                                        </h3>
-                                    )}
-                                </div>
-
+                            <div className="relative z-10 h-full flex flex-col items-center justify-center p-8">
                                 {/* QR код в белом квадрате - позиционируем в нужном месте */}
                                 <div 
                                     className="relative"
@@ -224,10 +187,10 @@ export default function QRCodeGenerator({
                                         marginBottom: '120px', // Позиционируем QR код в нужном месте
                                     }}
                                 >
-                                    <div className="bg-white p-4 rounded-2xl shadow-xl">
+                                    <div className="bg-white p-3 rounded-2xl shadow-xl">
                                         <QRCodeSVG
                                             value={url}
-                                            size={220}
+                                            size={180}
                                             level="H"
                                             includeMargin={true}
                                             fgColor="#000000"
@@ -235,9 +198,6 @@ export default function QRCodeGenerator({
                                         />
                                     </div>
                                 </div>
-
-                                {/* Нижняя часть (скрыта, так как уже на изображении) */}
-                                <div className="h-8"></div>
                             </div>
                         </div>
                     </div>
