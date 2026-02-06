@@ -153,6 +153,11 @@ export async function POST(req: Request) {
         const origin = originEnv.includes('vercel.app') ? 'https://kezek.kg' : originEnv;
         
         console.log('[notify] Resend API key found, from:', from);
+        console.log('[notify] Email configuration:', {
+            from,
+            domain: from.includes('@') ? from.split('@')[1] : 'unknown',
+            note: 'Make sure domain is verified in Resend Dashboard with SPF/DKIM records',
+        });
 
         // Supabase client (SSR)
         const url = getSupabaseUrl();
@@ -677,13 +682,17 @@ export async function POST(req: Request) {
                     }
                 } else {
                     const result = await emailResponse.json().catch(() => ({}));
+                    const emailId = (result as { id?: string })?.id || 'unknown';
                     console.log('[notify] Email sent successfully to', rcp.email, 'role:', rcp.role, 'result:', result);
+                    console.log('[notify] Resend email ID:', emailId, '- Check delivery status in Resend Dashboard');
                     // Для владельца логируем более подробно
                     if (rcp.role === 'owner') {
                         console.log('[notify] Owner email sent successfully!', {
                             email: rcp.email,
                             owner_id: biz?.owner_id,
+                            emailId,
                             result,
+                            note: 'Check Resend Dashboard for delivery status. Email may be in spam folder.',
                         });
                     }
                     sent += 1;
