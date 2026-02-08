@@ -160,8 +160,15 @@
 - Использовать виртуализацию для длинных списков
 
 **Примеры проблемных мест:**
-- `apps/web/src/app/dashboard/staff/[id]/page.tsx` - множественные запросы
+- `apps/web/src/app/dashboard/staff/[id]/page.tsx` - множественные запросы ✅ **ИСПРАВЛЕНО**: Объединены 3 запроса в 1 с JOIN
 - `apps/web/src/app/b/[slug]/view.tsx` - большой компонент с множеством данных
+- `apps/web/src/app/dashboard/bookings/view.tsx` - отсутствие пагинации ✅ **ИСПРАВЛЕНО**: Добавлена пагинация (30 элементов на страницу)
+- `apps/web/src/app/b/[slug]/page.tsx` - промоакции без лимита ✅ **ИСПРАВЛЕНО**: Добавлен лимит 50 промоакций
+
+**Выполненные оптимизации:**
+1. ✅ `dashboard/staff/[id]/page.tsx`: Объединены запросы bookings, reviews и services в один запрос с JOIN, что уменьшило количество запросов к БД с 3 до 1
+2. ✅ `b/[slug]/page.tsx`: Добавлен лимит 50 для промоакций, чтобы избежать загрузки слишком большого количества данных
+3. ✅ `dashboard/bookings/view.tsx`: Добавлена пагинация с 30 элементами на страницу, включая UI для навигации и отображение общего количества записей
 
 ---
 
@@ -184,6 +191,15 @@
 - Маскировать чувствительные данные в ошибках
 
 **Документация:** `apps/web/src/lib/ERROR_HANDLING_GUIDE.md`
+
+**Выполненные миграции:**
+1. ✅ `api/admin/promotions/debug/route.ts`: Мигрирован на `withErrorHandler`, все ошибки используют `createErrorResponse`
+2. ✅ `api/users/search/route.tsx`: Мигрирован на `withErrorHandler`, стандартизированы ответы об ошибках
+3. ✅ `api/auth/sign-out/route.ts`: Мигрирован на `withErrorHandler`, сохранено логирование
+4. ✅ `api/bookings/[id]/mark-attendance/route.ts`: Мигрирован на `withErrorHandler`, все ошибки используют стандартный формат
+
+**Осталось:**
+- Проверить и мигрировать остальные API endpoints (приоритет: критичные endpoints для бизнес-логики)
 
 ---
 
@@ -210,6 +226,19 @@
 - Форматирование дат в разных компонентах
 - Логика работы с бронированиями
 
+**Выполненные улучшения:**
+1. ✅ Унифицирована валидация телефонов: удалена дублирующаяся функция `isE164Phone` из `api/admin/users/create/route.ts`, используется общая функция `isE164` из `@/lib/validation`
+2. ✅ Созданы общие утилиты для форматирования дат (`apps/web/src/lib/dateFormat.ts`):
+   - `formatDate` - форматирование даты в формате DD.MM.YYYY
+   - `formatDateBrowser` - форматирование с учетом локали браузера
+   - `formatMonthYear` - форматирование месяца и года
+   - `formatDateTime` - форматирование даты и времени
+   - `formatTime` - форматирование только времени
+3. ✅ Рефакторинг компонентов: `StaffFinanceStats.tsx` теперь использует общие утилиты вместо дублирующегося кода
+
+**Осталось:**
+- Вынести повторяющиеся паттерны запросов к БД в переиспользуемые утилиты (приоритет: низкий, так как большинство запросов специфичны)
+
 ---
 
 ### 9. Проблемы с безопасностью (потенциальные)
@@ -234,6 +263,28 @@
 - `apps/web/src/lib/SECURITY.md`
 - `RLS_AUDIT_REPORT.md`
 - Скрипты проверки: `scripts/check-service-key-security.*`
+
+**Выполненные улучшения безопасности:**
+1. ✅ Добавлена валидация UUID для route параметров:
+   - Создана функция `getRouteParamUuid` в `@/lib/routeParams` для безопасного извлечения и валидации UUID из route параметров
+   - Обновлены критичные endpoints для использования валидации UUID:
+     - `api/bookings/[id]/mark-attendance/route.ts`
+     - `api/bookings/[id]/cancel/route.ts`
+     - `api/staff/[id]/update/route.ts`
+     - `api/staff/[id]/delete/route.ts`
+     - `api/branches/[id]/delete/route.ts`
+     - `api/branches/[id]/schedule/route.ts`
+
+2. ✅ Добавлена валидация query параметров:
+   - `api/admin/promotions/debug/route.ts`: валидация UUID для clientId, branchId, bizId
+   - `api/users/search/route.tsx`: санитизация и ограничение длины поискового запроса, валидация page и perPage
+
+3. ✅ Проверка использования service client:
+   - Все endpoints, использующие service client, проверяют права доступа через `getBizContextForManagers` или проверку super_admin
+   - `api/auth/sign-out/route.ts`: использует service client только для инвалидации токенов текущего пользователя (безопасно)
+
+**Осталось:**
+- Продолжить миграцию остальных endpoints на использование `getRouteParamUuid` (приоритет: средний, так как Supabase защищает от SQL injection через параметризованные запросы)
 
 ---
 

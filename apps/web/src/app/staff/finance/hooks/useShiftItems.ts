@@ -17,6 +17,7 @@ interface UseShiftItemsOptions {
     staffId?: string;
     shiftDate?: Date;
     onSaveSuccess?: () => void;
+    onSaveError?: (error: string) => void;
 }
 
 interface UseShiftItemsReturn {
@@ -37,7 +38,8 @@ export function useShiftItems({
     isInitialLoad,
     staffId,
     shiftDate,
-    onSaveSuccess
+    onSaveSuccess,
+    onSaveError
 }: UseShiftItemsOptions): UseShiftItemsReturn {
     const [items, setItems] = useState<ShiftItem[]>(initialItems);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
@@ -45,9 +47,14 @@ export function useShiftItems({
     
     // Сохраняем callback в ref, чтобы избежать повторных вызовов useEffect
     const onSaveSuccessRef = useRef(onSaveSuccess);
+    const onSaveErrorRef = useRef(onSaveError);
     useEffect(() => {
         onSaveSuccessRef.current = onSaveSuccess;
-    }, [onSaveSuccess]);
+        onSaveErrorRef.current = onSaveError;
+    }, [onSaveSuccess, onSaveError]);
+    
+    // Сохраняем предыдущее состояние для отката при ошибке
+    const previousItemsRef = useRef<ShiftItem[]>([]);
 
     // Синхронизируем items с внешним состоянием с умным слиянием
     useEffect(() => {
@@ -232,6 +239,8 @@ export function useShiftItems({
             return;
         }
         
+        // Сохраняем текущее состояние перед отправкой для возможного отката
+        previousItemsRef.current = [...items];
         prevItemsRef.current = itemsStr;
         
         const timeoutId = setTimeout(async () => {
@@ -280,13 +289,33 @@ export function useShiftItems({
                 });
                 const json = await res.json();
                 if (!json.ok) {
-                    // Не логируем ошибку, если смена не открыта - это нормальная ситуация
+                    // Откатываем изменения при ошибке
+                    setItems(previousItemsRef.current);
+                    const previousItemsStr = JSON.stringify(previousItemsRef.current.map(it => ({ 
+                        id: it.id, 
+                        clientName: it.clientName, 
+                        serviceName: it.serviceName,
+                        serviceAmount: it.serviceAmount,
+                        consumablesAmount: it.consumablesAmount,
+                        bookingId: it.bookingId
+                    })));
+                    prevItemsRef.current = previousItemsStr;
+                    
+                    // Показываем ошибку пользователю
+                    const errorMessage = json.error && typeof json.error === 'string' 
+                        ? json.error 
+                        : 'Не удалось сохранить изменения';
+                    
+                    // Не показываем ошибку, если смена не открыта - это нормальная ситуация
                     // (например, владелец просматривает закрытую смену)
-                    if (json.error && typeof json.error === 'string' && json.error.includes('Нет открытой смены')) {
-                        // Игнорируем эту ошибку - смена закрыта или не существует
+                    if (errorMessage.includes('Нет открытой смены') || errorMessage.includes('закрыта')) {
+                        // Показываем ошибку, но не логируем как критическую
+                        onSaveErrorRef.current?.(errorMessage);
                         return;
                     }
+                    
                     logError('ShiftItems', 'Error auto-saving items', json.error);
+                    onSaveErrorRef.current?.(errorMessage);
                 } else {
                     // Перезагружаем данные только если нет локальных items без id
                     // (то есть все изменения сохранены и пользователь не редактирует)
@@ -300,7 +329,21 @@ export function useShiftItems({
                     }
                 }
             } catch (e) {
+                // Откатываем изменения при ошибке
+                setItems(previousItemsRef.current);
+                const previousItemsStr = JSON.stringify(previousItemsRef.current.map(it => ({ 
+                    id: it.id, 
+                    clientName: it.clientName, 
+                    serviceName: it.serviceName,
+                    serviceAmount: it.serviceAmount,
+                    consumablesAmount: it.consumablesAmount,
+                    bookingId: it.bookingId
+                })));
+                prevItemsRef.current = previousItemsStr;
+                
+                const errorMessage = e instanceof Error ? e.message : 'Не удалось сохранить изменения';
                 logError('ShiftItems', 'Error auto-saving items', e);
+                onSaveErrorRef.current?.(errorMessage);
             } finally {
                 isSavingRef.current = false;
                 setSavingItems(false);

@@ -86,6 +86,11 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         });
     }, [shiftData]);
     
+    const handleSaveError = useCallback((error: string) => {
+        // Показываем ошибку пользователю
+        toast.showError(error);
+    }, [toast]);
+    
     const shiftItems = useShiftItems({
         items: shiftData.items,
         isOpen,
@@ -94,6 +99,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         staffId,
         shiftDate,
         onSaveSuccess: handleSaveSuccess,
+        onSaveError: handleSaveError,
     });
 
     // Расчеты финансов
