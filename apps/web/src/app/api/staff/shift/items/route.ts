@@ -250,33 +250,33 @@ export async function POST(req: Request) {
             }
         }
 
-        // Вставляем новые позиции (фильтруем только для сохранения в БД)
-        if (items.length > 0) {
-            // Получаем информацию о примененных акциях для booking_id
-            const bookingIdsWithPromotion = items
-                .map((it: { bookingId?: string | null; booking_id?: string | null }) => it.bookingId ?? it.booking_id ?? null)
-                .filter((id: string | null): id is string => !!id);
+        // Получаем информацию о примененных акциях для booking_id (если есть items)
+        const bookingIdsWithPromotion = items
+            .map((it: { bookingId?: string | null; booking_id?: string | null }) => it.bookingId ?? it.booking_id ?? null)
+            .filter((id: string | null): id is string => !!id);
+        
+        const promotionMap = new Map<string, number>(); // booking_id -> final_amount
+        
+        if (bookingIdsWithPromotion.length > 0) {
+            const { data: bookingsWithPromotion } = await supabase
+                .from('bookings')
+                .select('id, promotion_applied')
+                .in('id', bookingIdsWithPromotion);
             
-            const promotionMap = new Map<string, number>(); // booking_id -> final_amount
-            
-            if (bookingIdsWithPromotion.length > 0) {
-                const { data: bookingsWithPromotion } = await supabase
-                    .from('bookings')
-                    .select('id, promotion_applied')
-                    .in('id', bookingIdsWithPromotion);
-                
-                if (bookingsWithPromotion) {
-                    for (const booking of bookingsWithPromotion) {
-                        if (booking.promotion_applied && typeof booking.promotion_applied === 'object' && 'final_amount' in booking.promotion_applied) {
-                            const finalAmount = Number(booking.promotion_applied.final_amount);
-                            if (!isNaN(finalAmount) && finalAmount >= 0) {
-                                promotionMap.set(booking.id, finalAmount);
-                            }
+            if (bookingsWithPromotion) {
+                for (const booking of bookingsWithPromotion) {
+                    if (booking.promotion_applied && typeof booking.promotion_applied === 'object' && 'final_amount' in booking.promotion_applied) {
+                        const finalAmount = Number(booking.promotion_applied.final_amount);
+                        if (!isNaN(finalAmount) && finalAmount >= 0) {
+                            promotionMap.set(booking.id, finalAmount);
                         }
                     }
                 }
             }
-            
+        }
+        
+        // Вставляем новые позиции (фильтруем только для сохранения в БД)
+        if (items.length > 0) {
             // Разделяем на существующие (с id) и новые (без id) записи
             const existingItems = items.filter((it: { id?: string }) => !!it.id);
             const newItems = items.filter((it: { id?: string }) => !it.id);
@@ -360,32 +360,35 @@ export async function POST(req: Request) {
                     );
                 }
             }
-            
-            // Удаляем записи, которых нет в новом списке
-            const newItemIds = new Set<string>();
-            for (const it of items) {
-                if ((it as { id?: string }).id) {
-                    newItemIds.add((it as { id?: string }).id!);
-                }
+        }
+        
+        // Удаляем записи, которых нет в новом списке (выполняется всегда, даже если список пустой)
+        const newItemIds = new Set<string>();
+        for (const it of items) {
+            if ((it as { id?: string }).id) {
+                newItemIds.add((it as { id?: string }).id!);
             }
-            
-            const itemsToDelete: string[] = [];
-            for (const existingId of existingItemIds) {
-                if (!newItemIds.has(existingId)) {
-                    itemsToDelete.push(existingId);
-                }
+        }
+        
+        const itemsToDelete: string[] = [];
+        for (const existingId of existingItemIds) {
+            if (!newItemIds.has(existingId)) {
+                itemsToDelete.push(existingId);
             }
+        }
+        
+        if (itemsToDelete.length > 0) {
+            const { error: deleteError } = await writeClient
+                .from('staff_shift_items')
+                .delete()
+                .in('id', itemsToDelete);
             
-            if (itemsToDelete.length > 0) {
-                const { error: deleteError } = await writeClient
-                    .from('staff_shift_items')
-                    .delete()
-                    .in('id', itemsToDelete);
-                
-                if (deleteError) {
-                    logError('StaffShiftItems', 'Error deleting removed items', deleteError);
-                    // Не возвращаем ошибку, так как основные данные уже сохранены
-                }
+            if (deleteError) {
+                logError('StaffShiftItems', 'Error deleting removed items', deleteError);
+                return NextResponse.json(
+                    { ok: false, error: 'Не удалось удалить позиции' },
+                    { status: 500 }
+                );
             }
         }
 
