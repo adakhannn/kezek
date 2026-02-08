@@ -387,31 +387,8 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                 throw new Error(json.error || t('finance.loading', 'Не удалось загрузить статистику'));
             }
             
-            // Если есть открытая смена на сегодня, но мы смотрим на другую дату,
-            // автоматически переключаемся на сегодня
-            const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
-            if (period === 'day' && date !== today && json.stats?.openShiftsCount === 0) {
-                // Проверяем, есть ли открытая смена на сегодня через отдельный запрос
-                const todayRes = await fetch(
-                    `/api/dashboard/staff/${staffId}/finance/stats?period=day&date=${today}`,
-                    { cache: 'no-store' }
-                );
-                const todayJson = await todayRes.json();
-                if (todayJson.ok && todayJson.stats?.openShiftsCount > 0) {
-                    // Есть открытая смена на сегодня - переключаемся на сегодня
-                    setDate(today);
-                    // Загружаем данные для сегодня
-                    const resToday = await fetch(
-                        `/api/dashboard/staff/${staffId}/finance/stats?period=day&date=${today}`,
-                        { cache: 'no-store' }
-                    );
-                    const jsonToday = await resToday.json();
-                    if (jsonToday.ok) {
-                        setStats(jsonToday.stats);
-                        return;
-                    }
-                }
-            }
+            // УБИРАЕМ автоматическое переключение на сегодня - это вызывает бесконечный цикл
+            // Если нужно, пользователь может переключиться вручную
             
             setStats(json.stats);
         } catch (e) {
