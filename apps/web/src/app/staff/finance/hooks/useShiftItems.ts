@@ -161,12 +161,38 @@ export function useShiftItems({
     }, [initialItems, isInitialLoad]);
 
     // Автосохранение клиентов при изменении (debounce)
+    // Используем ref для отслеживания предыдущего состояния, чтобы избежать лишних сохранений
+    const prevItemsRef = useRef<string>('');
+    const isSavingRef = useRef(false);
+    
     useEffect(() => {
         // Не сохраняем при первой загрузке, если смена закрыта, или в режиме просмотра
         if (isInitialLoad || !isOpen || isReadOnly) return;
         
         // Не сохраняем, если нет items для сохранения
         if (items.length === 0) return;
+        
+        // Проверяем, изменились ли items (сравниваем JSON строку)
+        const itemsStr = JSON.stringify(items.map(it => ({ 
+            id: it.id, 
+            clientName: it.clientName, 
+            serviceName: it.serviceName,
+            serviceAmount: it.serviceAmount,
+            consumablesAmount: it.consumablesAmount,
+            bookingId: it.bookingId
+        })));
+        
+        // Если items не изменились, не сохраняем
+        if (itemsStr === prevItemsRef.current) {
+            return;
+        }
+        
+        // Если уже идет сохранение, не запускаем новое
+        if (isSavingRef.current) {
+            return;
+        }
+        
+        prevItemsRef.current = itemsStr;
         
         const timeoutId = setTimeout(async () => {
             // Дополнительная проверка перед отправкой - если смена закрыта, не отправляем запрос
@@ -175,6 +201,7 @@ export function useShiftItems({
                 return;
             }
             
+            isSavingRef.current = true;
             setSavingItems(true);
             try {
                 // Дедупликация: удаляем items без id, если есть соответствующий item с id
@@ -235,12 +262,21 @@ export function useShiftItems({
             } catch (e) {
                 logError('ShiftItems', 'Error auto-saving items', e);
             } finally {
+                isSavingRef.current = false;
                 setSavingItems(false);
             }
         }, 1000); // сохраняем через 1 секунду после последнего изменения
 
         return () => clearTimeout(timeoutId);
-    }, [items, isOpen, isInitialLoad, isReadOnly, staffId, shiftDate]);
+    }, [items, isOpen, isInitialLoad, isReadOnly, staffId]);
+    
+    // Используем строковое представление даты для зависимостей, чтобы избежать пересоздания объекта Date
+    const shiftDateStr = shiftDate ? formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd') : undefined;
+    
+    // Обновляем prevItemsRef при изменении даты, чтобы сбросить проверку
+    useEffect(() => {
+        prevItemsRef.current = '';
+    }, [shiftDateStr]);
 
     return {
         items,

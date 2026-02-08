@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 
 import { ClientsList } from './finance/components/ClientsList';
 import { ClientsListHeader } from './finance/components/ClientsListHeader';
@@ -69,9 +69,18 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const isReadOnlyForOwner = !!staffId && !isOpen;
     
     // Мемоизируем callback для предотвращения бесконечных циклов
+    // Используем ref для предотвращения повторных вызовов во время загрузки
+    const isLoadingRef = useRef(false);
     const handleSaveSuccess = useCallback(() => {
+        // Предотвращаем повторные вызовы, если уже идет загрузка
+        if (isLoadingRef.current) {
+            return;
+        }
+        isLoadingRef.current = true;
         // Перезагружаем данные после успешного сохранения, чтобы получить id для новых клиентов
-        void shiftData.load();
+        shiftData.load().finally(() => {
+            isLoadingRef.current = false;
+        });
     }, [shiftData]);
     
     const shiftItems = useShiftItems({
