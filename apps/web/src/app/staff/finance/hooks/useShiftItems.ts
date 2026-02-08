@@ -155,6 +155,9 @@ export function useShiftItems({
         // Не сохраняем при первой загрузке, если смена закрыта, или в режиме просмотра
         if (isInitialLoad || !isOpen || isReadOnly) return;
         
+        // Не сохраняем, если нет items для сохранения
+        if (items.length === 0) return;
+        
         const timeoutId = setTimeout(async () => {
             setSavingItems(true);
             try {
@@ -187,6 +190,12 @@ export function useShiftItems({
                 });
                 const json = await res.json();
                 if (!json.ok) {
+                    // Не логируем ошибку, если смена не открыта - это нормальная ситуация
+                    // (например, владелец просматривает закрытую смену)
+                    if (json.error && typeof json.error === 'string' && json.error.includes('Нет открытой смены')) {
+                        // Игнорируем эту ошибку - смена закрыта или не существует
+                        return;
+                    }
                     logError('ShiftItems', 'Error auto-saving items', json.error);
                 } else {
                     // Перезагружаем данные только если нет локальных items без id
