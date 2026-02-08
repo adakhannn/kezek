@@ -206,7 +206,10 @@ export function useShiftItems({
     
     useEffect(() => {
         // Не сохраняем при первой загрузке, если смена закрыта, или в режиме просмотра
-        if (isInitialLoad || !isOpen || isReadOnly) {
+        // Для владельца: разрешаем сохранение, даже если смена еще не открыта (но не закрыта)
+        // Для сотрудника: разрешаем сохранение только если смена открыта
+        const shouldBlockSave = isInitialLoad || isReadOnly || (!staffId && !isOpen);
+        if (shouldBlockSave) {
             // Обновляем prevItemsRef, чтобы при следующем изменении не отправлять запрос
             if (!isInitialLoad) {
                 const itemsStr = JSON.stringify(items.map(it => ({ 
@@ -278,7 +281,10 @@ export function useShiftItems({
             
             // Дополнительная проверка перед отправкой - если смена закрыта, не отправляем запрос
             // Это предотвращает ошибки 400 в консоли браузера
-            if (!isOpen || isReadOnly) {
+            // Для владельца: разрешаем сохранение, даже если смена еще не открыта (но не закрыта)
+            // Для сотрудника: разрешаем сохранение только если смена открыта
+            const shouldBlockSave = isReadOnly || (!staffId && !isOpen);
+            if (shouldBlockSave) {
                 saveAbortControllerRef.current = null;
                 return;
             }

@@ -71,10 +71,11 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const isClosed = !!(todayShift && todayShift.status === 'closed');
 
     // Управление клиентами
-    // Для владельца: режим только для чтения, если смена закрыта или не открыта
-    // Владелец может редактировать только открытые смены сотрудников
+    // Для владельца: режим только для чтения, если смена закрыта
+    // Владелец может редактировать открытые смены сотрудников (даже если смена еще не создана, он может её открыть)
     // Если staffId не передан, это сотрудник редактирует свою смену - всегда может редактировать открытые смены
-    const isReadOnlyForOwner = !!staffId && (!isOpen || isClosed);
+    // Владелец НЕ может редактировать только закрытые смены
+    const isReadOnlyForOwner = !!staffId && isClosed;
     
     // Мемоизируем callback для предотвращения бесконечных циклов
     // Используем ref для предотвращения повторных вызовов во время загрузки
@@ -154,12 +155,20 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
     const handleAddClient = () => {
         // Проверяем, открыта ли смена
-        if (!isOpen || isReadOnlyForOwner) {
-            const errorMessage = isClosed 
-                ? t('staff.finance.error.shiftClosed', 'Смена закрыта. Невозможно добавить клиента.')
-                : t('staff.finance.error.noOpenShift', 'Нет открытой смены. Сначала откройте смену.');
-            toast.showError(errorMessage);
-            return;
+        // Для владельца: разрешаем добавление, если смена не закрыта (может быть открыта или еще не создана)
+        // Для сотрудника: разрешаем добавление только если смена открыта
+        if (staffId) {
+            // Владелец: может добавлять клиентов, если смена не закрыта
+            if (isClosed || isReadOnlyForOwner) {
+                toast.showError(t('staff.finance.error.shiftClosed', 'Смена закрыта. Невозможно добавить клиента.'));
+                return;
+            }
+        } else {
+            // Сотрудник: может добавлять клиентов только если смена открыта
+            if (!isOpen) {
+                toast.showError(t('staff.finance.error.noOpenShift', 'Нет открытой смены. Сначала откройте смену.'));
+                return;
+            }
         }
         
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
@@ -203,12 +212,20 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
     const handleDeleteItem = (idx: number) => {
         // Проверяем, открыта ли смена
-        if (!isOpen || isReadOnlyForOwner) {
-            const errorMessage = isClosed 
-                ? t('staff.finance.error.shiftClosedDelete', 'Смена закрыта. Невозможно удалить клиента.')
-                : t('staff.finance.error.noOpenShiftDelete', 'Нет открытой смены. Невозможно удалить клиента.');
-            toast.showError(errorMessage);
-            return;
+        // Для владельца: разрешаем удаление, если смена не закрыта (может быть открыта или еще не создана)
+        // Для сотрудника: разрешаем удаление только если смена открыта
+        if (staffId) {
+            // Владелец: может удалять клиентов, если смена не закрыта
+            if (isClosed || isReadOnlyForOwner) {
+                toast.showError(t('staff.finance.error.shiftClosedDelete', 'Смена закрыта. Невозможно удалить клиента.'));
+                return;
+            }
+        } else {
+            // Сотрудник: может удалять клиентов только если смена открыта
+            if (!isOpen) {
+                toast.showError(t('staff.finance.error.noOpenShiftDelete', 'Нет открытой смены. Невозможно удалить клиента.'));
+                return;
+            }
         }
         
         shiftItems.setItems((prev) => prev.filter((_, i) => i !== idx));
@@ -407,6 +424,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         shiftDate={shiftDate}
                         onShiftDateChange={setShiftDate}
                         isOpen={isOpen}
+                        isClosed={isClosed}
                         savingItems={shiftItems.savingItems}
                         saving={shiftManagement.saving}
                         staffId={staffId}

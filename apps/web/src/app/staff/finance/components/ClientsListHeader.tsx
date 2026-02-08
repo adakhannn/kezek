@@ -12,6 +12,7 @@ interface ClientsListHeaderProps {
     shiftDate: Date;
     onShiftDateChange: (date: Date) => void;
     isOpen: boolean;
+    isClosed: boolean;
     savingItems: boolean;
     saving: boolean;
     staffId?: string;
@@ -22,6 +23,7 @@ export function ClientsListHeader({
     shiftDate,
     onShiftDateChange,
     isOpen,
+    isClosed,
     savingItems,
     saving,
     staffId,
@@ -53,7 +55,9 @@ export function ClientsListHeader({
                     </div>
                 </div>
             </div>
-            {isOpen && (
+            {/* Для владельца: показываем кнопку, если смена не закрыта (может быть открыта или еще не создана) */}
+            {/* Для сотрудника: показываем кнопку только если смена открыта */}
+            {((staffId && !isClosed) || (!staffId && isOpen)) && (
                 <div className="flex items-center gap-2">
                     {savingItems && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">

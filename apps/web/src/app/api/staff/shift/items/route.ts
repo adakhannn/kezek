@@ -144,6 +144,8 @@ export async function POST(req: Request) {
             );
         }
 
+        let shiftId: string;
+        
         if (!existing) {
             // Проверяем, есть ли смена за эту дату вообще (может быть закрыта)
             const { data: anyShift } = await supabase
@@ -154,6 +156,7 @@ export async function POST(req: Request) {
                 .maybeSingle();
             
             if (anyShift) {
+                // Смена существует, но закрыта
                 logError('StaffShiftItems', 'Shift exists but is not open', { 
                     staffId, 
                     ymd, 
@@ -166,14 +169,48 @@ export async function POST(req: Request) {
                 );
             }
             
-            logError('StaffShiftItems', 'No shift found for date', { staffId, ymd, targetShiftDate });
-            return NextResponse.json(
-                { ok: false, error: 'Нет открытой смены. Сначала откройте смену.' },
-                { status: 400 }
-            );
+            // Смена не существует
+            // Для владельца: автоматически создаем и открываем смену
+            if (isOwnerMode) {
+                const writeClient = useServiceClient ? getServiceClient() : supabase;
+                const now = new Date().toISOString();
+                
+                const { data: newShift, error: createError } = await writeClient
+                    .from('staff_shifts')
+                    .insert({
+                        staff_id: staffId,
+                        shift_date: ymd,
+                        status: 'open',
+                        opened_at: now,
+                    })
+                    .select('id')
+                    .single();
+                
+                if (createError || !newShift) {
+                    logError('StaffShiftItems', 'Error creating shift for owner', { 
+                        error: createError, 
+                        staffId, 
+                        ymd, 
+                        targetShiftDate 
+                    });
+                    return NextResponse.json(
+                        { ok: false, error: 'Не удалось создать смену' },
+                        { status: 500 }
+                    );
+                }
+                
+                shiftId = newShift.id;
+            } else {
+                // Для сотрудника: требуем, чтобы смена была открыта заранее
+                logError('StaffShiftItems', 'No shift found for date', { staffId, ymd, targetShiftDate });
+                return NextResponse.json(
+                    { ok: false, error: 'Нет открытой смены. Сначала откройте смену.' },
+                    { status: 400 }
+                );
+            }
+        } else {
+            shiftId = existing.id;
         }
-
-        const shiftId = existing.id;
 
         // Для операций записи в режиме владельца используем service client
         const writeClient = useServiceClient ? getServiceClient() : supabase;
@@ -432,7 +469,7 @@ export async function POST(req: Request) {
             if (itemsToDelete.length === existingItemIds.size && existingItemIds.size > 10) {
                 logError('StaffShiftItems', 'Attempted to delete all items - preventing deletion', {
                     staffId,
-                    shiftId: existing.id,
+                    shiftId,
                     itemsToDeleteCount: itemsToDelete.length,
                     totalItemsCount: existingItemIds.size
                 });
@@ -459,7 +496,7 @@ export async function POST(req: Request) {
             // Это может быть ошибка синхронизации - логируем, но не удаляем для безопасности
             logError('StaffShiftItems', 'Items to delete but no items with id in request - skipping deletion', {
                 staffId,
-                shiftId: existing.id,
+                shiftId,
                 itemsToDeleteCount: itemsToDelete.length,
                 itemsCount: items.length,
                 existingItemIdsCount: existingItemIds.size
