@@ -1,10 +1,12 @@
 // apps/web/src/app/staff/finance/hooks/useShiftItems.ts
 
+import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useState } from 'react';
 
 import type { ShiftItem } from '../types';
 
 import { logError } from '@/lib/log';
+import { TZ } from '@/lib/time';
 
 
 interface UseShiftItemsOptions {
@@ -13,6 +15,7 @@ interface UseShiftItemsOptions {
     isReadOnly: boolean;
     isInitialLoad: boolean;
     staffId?: string;
+    shiftDate?: Date;
     onSaveSuccess?: () => void;
 }
 
@@ -33,6 +36,7 @@ export function useShiftItems({
     isReadOnly, 
     isInitialLoad,
     staffId,
+    shiftDate,
     onSaveSuccess
 }: UseShiftItemsOptions): UseShiftItemsReturn {
     const [items, setItems] = useState<ShiftItem[]>(initialItems);
@@ -159,6 +163,12 @@ export function useShiftItems({
         if (items.length === 0) return;
         
         const timeoutId = setTimeout(async () => {
+            // Дополнительная проверка перед отправкой - если смена закрыта, не отправляем запрос
+            // Это предотвращает ошибки 400 в консоли браузера
+            if (!isOpen || isReadOnly) {
+                return;
+            }
+            
             setSavingItems(true);
             try {
                 // Дедупликация: удаляем items без id, если есть соответствующий item с id
@@ -183,10 +193,17 @@ export function useShiftItems({
                     return !hasDuplicateWithId;
                 });
 
+                // Форматируем дату для передачи в API
+                const dateStr = shiftDate ? formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd') : undefined;
+                
                 const res = await fetch('/api/staff/shift/items', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items: deduplicatedItems, staffId: staffId || undefined }),
+                    body: JSON.stringify({ 
+                        items: deduplicatedItems, 
+                        staffId: staffId || undefined,
+                        shiftDate: dateStr
+                    }),
                 });
                 const json = await res.json();
                 if (!json.ok) {
@@ -214,7 +231,7 @@ export function useShiftItems({
         }, 1000); // сохраняем через 1 секунду после последнего изменения
 
         return () => clearTimeout(timeoutId);
-    }, [items, isOpen, isInitialLoad, isReadOnly, staffId, onSaveSuccess]);
+    }, [items, isOpen, isInitialLoad, isReadOnly, staffId, shiftDate, onSaveSuccess]);
 
     return {
         items,

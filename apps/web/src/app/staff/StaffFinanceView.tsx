@@ -64,12 +64,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const isClosed = !!(todayShift && todayShift.status === 'closed');
 
     // Управление клиентами
+    // Для владельца: режим только для чтения, если смена закрыта, не существует, или не открыта
+    // Владелец может редактировать только открытые смены
+    const isReadOnlyForOwner = !!staffId && !isOpen;
     const shiftItems = useShiftItems({
         items: shiftData.items,
         isOpen,
-        isReadOnly: false,
+        isReadOnly: isReadOnlyForOwner,
         isInitialLoad: shiftData.isInitialLoad,
         staffId,
+        shiftDate,
         onSaveSuccess: () => {
             // Перезагружаем данные после успешного сохранения, чтобы получить id для новых клиентов
             void shiftData.load();

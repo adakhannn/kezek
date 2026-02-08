@@ -22,6 +22,7 @@ export async function POST(req: Request) {
                 const body = await req.json().catch(() => ({}));
                 const items = Array.isArray(body.items) ? body.items : [];
                 const targetStaffId = body.staffId as string | undefined;
+                const targetShiftDate = body.shiftDate as string | undefined;
 
         // Валидация
         for (const it of items) {
@@ -98,9 +99,10 @@ export async function POST(req: Request) {
             staffId = context.staffId;
         }
 
-        // Находим открытую смену за сегодня
-        const now = new Date();
-        const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        // Находим открытую смену за указанную дату или за сегодня
+        // Если передана дата (для владельца, просматривающего другую дату), используем её
+        const targetDate = targetShiftDate ? new Date(targetShiftDate + 'T00:00:00') : new Date();
+        const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
 
         // Получаем настройки сотрудника для расчета процентов
         const { data: staffData, error: staffError } = await supabase
