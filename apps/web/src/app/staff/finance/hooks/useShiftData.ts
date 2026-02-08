@@ -48,6 +48,15 @@ interface UseShiftDataReturn {
 export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataOptions): UseShiftDataReturn {
     const { t } = useLanguage();
     const toast = useToast();
+    
+    // Сохраняем t и toast в ref, чтобы избежать пересоздания load
+    const tRef = useRef(t);
+    const toastRef = useRef(toast);
+    useEffect(() => {
+        tRef.current = t;
+        toastRef.current = toast;
+    }, [t, toast]);
+    
     const [loading, setLoading] = useState(true);
     const [today, setToday] = useState<TodayResponse | null>(null);
     const [items, setItems] = useState<ShiftItem[]>([]);
@@ -76,12 +85,20 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
     useEffect(() => {
         onDataLoadedRef.current = onDataLoaded;
     }, [onDataLoaded]);
+    
+    // Флаг для предотвращения повторных вызовов load во время загрузки
+    const isLoadingRef = useRef(false);
 
     const load = useCallback(async (date?: Date) => {
+        // Предотвращаем повторные вызовы, если уже идет загрузка
+        if (isLoadingRef.current) {
+            return;
+        }
+        isLoadingRef.current = true;
         setLoading(true);
         try {
-            // Используем переданную дату или текущую дату для смены
-            const targetDate = date || shiftDate;
+            // Используем переданную дату или текущую дату для смены из ref
+            const targetDate = date || shiftDateRef.current;
             const dateStr = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
             
             // Если передан staffId, используем endpoint для владельца бизнеса
@@ -199,25 +216,32 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
                 setAllShifts([]);
             }
         } catch (e) {
-            let errorMessage = t('staff.finance.error.loading', 'Не удалось загрузить данные смены');
+            let errorMessage = tRef.current('staff.finance.error.loading', 'Не удалось загрузить данные смены');
             
             if (e instanceof TypeError && e.message.includes('fetch')) {
-                errorMessage = t('staff.finance.error.loading.network', 'Ошибка сети. Проверьте подключение к интернету.');
+                errorMessage = tRef.current('staff.finance.error.loading.network', 'Ошибка сети. Проверьте подключение к интернету.');
             } else if (e instanceof Error) {
                 errorMessage = e.message;
             }
             
             setToday({ ok: false, error: errorMessage });
-            toast.showError(errorMessage);
+            toastRef.current.showError(errorMessage);
         } finally {
+            isLoadingRef.current = false;
             setLoading(false);
             setIsInitialLoad(false);
             onDataLoadedRef.current?.();
         }
-    }, [staffId, shiftDate, t, toast]);
+    }, [staffId]);
 
     // Используем строковое представление даты для зависимостей, чтобы избежать пересоздания объекта Date
     const shiftDateStr = formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd');
+    
+    // Сохраняем shiftDate в ref, чтобы использовать актуальное значение без пересоздания load
+    const shiftDateRef = useRef(shiftDate);
+    useEffect(() => {
+        shiftDateRef.current = shiftDate;
+    }, [shiftDate]);
     
     useEffect(() => {
         void load();
@@ -227,9 +251,9 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
     // Используем только shiftDateStr в зависимостях, чтобы избежать пересоздания объекта Date
     useEffect(() => {
         if (!isInitialLoad && staffId) {
-            void load(shiftDate);
+            void load(shiftDateRef.current);
         }
-    }, [shiftDateStr, staffId, isInitialLoad, load, shiftDate]);
+    }, [shiftDateStr, staffId, isInitialLoad, load]);
 
     return {
         loading,
