@@ -240,11 +240,8 @@ export function useShiftItems({
         }
         
         // Сохраняем текущее состояние перед отправкой для возможного отката
-        // НО только если смена открыта и не в режиме только для чтения
-        // Если смена закрыта, не сохраняем предыдущее состояние, чтобы не откатывать изменения
-        if (isOpen && !isReadOnly) {
-            previousItemsRef.current = [...items];
-        }
+        // Всегда сохраняем, чтобы можно было откатить при ошибке
+        previousItemsRef.current = [...items];
         prevItemsRef.current = itemsStr;
         
         const timeoutId = setTimeout(async () => {
@@ -298,12 +295,23 @@ export function useShiftItems({
                         ? json.error 
                         : 'Не удалось сохранить изменения';
                     
-                    // Если смена закрыта или не найдена - это нормальная ситуация
-                    // Не откатываем изменения, просто показываем ошибку
+                    // Если смена закрыта или не найдена - откатываем изменения
+                    // Это важно, чтобы UI соответствовал реальному состоянию на сервере
                     if (errorMessage.includes('Нет открытой смены') || errorMessage.includes('закрыта')) {
+                        // Откатываем изменения, если есть сохраненное состояние
+                        if (previousItemsRef.current.length > 0) {
+                            setItems(previousItemsRef.current);
+                            const previousItemsStr = JSON.stringify(previousItemsRef.current.map(it => ({ 
+                                id: it.id, 
+                                clientName: it.clientName, 
+                                serviceName: it.serviceName,
+                                serviceAmount: it.serviceAmount,
+                                consumablesAmount: it.consumablesAmount,
+                                bookingId: it.bookingId
+                            })));
+                            prevItemsRef.current = previousItemsStr;
+                        }
                         onSaveErrorRef.current?.(errorMessage);
-                        // Не откатываем изменения, так как смена закрыта
-                        // UI останется как есть, но изменения не сохранятся
                         return;
                     }
                     
