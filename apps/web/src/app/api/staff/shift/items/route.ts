@@ -101,8 +101,29 @@ export async function POST(req: Request) {
 
         // Находим открытую смену за указанную дату или за сегодня
         // Если передана дата (для владельца, просматривающего другую дату), используем её
-        const targetDate = targetShiftDate ? new Date(targetShiftDate + 'T00:00:00') : new Date();
-        const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
+        let ymd: string;
+        if (targetShiftDate) {
+            // Если дата передана как строка в формате YYYY-MM-DD, используем её напрямую
+            // Проверяем формат даты
+            if (/^\d{4}-\d{2}-\d{2}$/.test(targetShiftDate)) {
+                ymd = targetShiftDate;
+            } else {
+                // Пытаемся распарсить дату
+                const parsedDate = new Date(targetShiftDate);
+                if (isNaN(parsedDate.getTime())) {
+                    logError('StaffShiftItems', 'Invalid date format', targetShiftDate);
+                    return NextResponse.json(
+                        { ok: false, error: 'Неверный формат даты' },
+                        { status: 400 }
+                    );
+                }
+                ymd = formatInTimeZone(parsedDate, TZ, 'yyyy-MM-dd');
+            }
+        } else {
+            // Используем текущую дату
+            const now = new Date();
+            ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        }
 
         // Получаем настройки сотрудника для расчета процентов
         const { data: staffData, error: staffError } = await supabase
@@ -120,7 +141,7 @@ export async function POST(req: Request) {
 
         const { data: existing, error: findError } = await supabase
             .from('staff_shifts')
-            .select('id')
+            .select('id, status, shift_date')
             .eq('staff_id', staffId)
             .eq('status', 'open')
             // Ищем открытую смену строго по дате смены в TZ, без сравнения с временем,
@@ -129,7 +150,7 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (findError) {
-            logError('StaffShiftItems', 'Error finding open shift', findError);
+            logError('StaffShiftItems', 'Error finding open shift', { error: findError, staffId, ymd, targetShiftDate });
             return NextResponse.json(
                 { ok: false, error: 'Не удалось найти открытую смену' },
                 { status: 500 }
@@ -137,6 +158,28 @@ export async function POST(req: Request) {
         }
 
         if (!existing) {
+            // Проверяем, есть ли смена за эту дату вообще (может быть закрыта)
+            const { data: anyShift } = await supabase
+                .from('staff_shifts')
+                .select('id, status, shift_date')
+                .eq('staff_id', staffId)
+                .eq('shift_date', ymd)
+                .maybeSingle();
+            
+            if (anyShift) {
+                logError('StaffShiftItems', 'Shift exists but is not open', { 
+                    staffId, 
+                    ymd, 
+                    shiftStatus: anyShift.status,
+                    targetShiftDate 
+                });
+                return NextResponse.json(
+                    { ok: false, error: `Смена за ${ymd} закрыта. Откройте смену для редактирования.` },
+                    { status: 400 }
+                );
+            }
+            
+            logError('StaffShiftItems', 'No shift found for date', { staffId, ymd, targetShiftDate });
             return NextResponse.json(
                 { ok: false, error: 'Нет открытой смены. Сначала откройте смену.' },
                 { status: 400 }
