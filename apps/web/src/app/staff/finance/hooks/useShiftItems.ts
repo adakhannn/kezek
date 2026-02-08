@@ -54,6 +54,18 @@ export function useShiftItems({
         // Если это первая загрузка или items пустые, просто устанавливаем initialItems
         if (isInitialLoad || initialItems.length === 0) {
             setItems(initialItems);
+            // Инициализируем prevItemsRef при первой загрузке, чтобы избежать отправки запроса
+            if (isInitialLoad) {
+                const itemsStr = JSON.stringify(initialItems.map(it => ({ 
+                    id: it.id, 
+                    clientName: it.clientName, 
+                    serviceName: it.serviceName,
+                    serviceAmount: it.serviceAmount,
+                    consumablesAmount: it.consumablesAmount,
+                    bookingId: it.bookingId
+                })));
+                prevItemsRef.current = itemsStr;
+            }
             return;
         }
 
@@ -156,6 +168,20 @@ export function useShiftItems({
                 return timeDiff;
             });
 
+            // Обновляем prevItemsRef сразу после слияния, чтобы избежать отправки запроса
+            const mergedStr = JSON.stringify(merged.map(it => ({ 
+                id: it.id, 
+                clientName: it.clientName, 
+                serviceName: it.serviceName,
+                serviceAmount: it.serviceAmount,
+                consumablesAmount: it.consumablesAmount,
+                bookingId: it.bookingId
+            })));
+            // Используем setTimeout, чтобы обновить ref после того, как setItems выполнится
+            setTimeout(() => {
+                prevItemsRef.current = mergedStr;
+            }, 0);
+            
             return merged;
         });
     }, [initialItems, isInitialLoad]);
@@ -167,7 +193,21 @@ export function useShiftItems({
     
     useEffect(() => {
         // Не сохраняем при первой загрузке, если смена закрыта, или в режиме просмотра
-        if (isInitialLoad || !isOpen || isReadOnly) return;
+        if (isInitialLoad || !isOpen || isReadOnly) {
+            // Обновляем prevItemsRef, чтобы при следующем изменении не отправлять запрос
+            if (!isInitialLoad) {
+                const itemsStr = JSON.stringify(items.map(it => ({ 
+                    id: it.id, 
+                    clientName: it.clientName, 
+                    serviceName: it.serviceName,
+                    serviceAmount: it.serviceAmount,
+                    consumablesAmount: it.consumablesAmount,
+                    bookingId: it.bookingId
+                })));
+                prevItemsRef.current = itemsStr;
+            }
+            return;
+        }
         
         // Не сохраняем, если нет items для сохранения
         if (items.length === 0) return;
