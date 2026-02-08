@@ -240,7 +240,11 @@ export function useShiftItems({
         }
         
         // Сохраняем текущее состояние перед отправкой для возможного отката
-        previousItemsRef.current = [...items];
+        // НО только если смена открыта и не в режиме только для чтения
+        // Если смена закрыта, не сохраняем предыдущее состояние, чтобы не откатывать изменения
+        if (isOpen && !isReadOnly) {
+            previousItemsRef.current = [...items];
+        }
         prevItemsRef.current = itemsStr;
         
         const timeoutId = setTimeout(async () => {
@@ -289,7 +293,47 @@ export function useShiftItems({
                 });
                 const json = await res.json();
                 if (!json.ok) {
-                    // Откатываем изменения при ошибке
+                    // Показываем ошибку пользователю
+                    const errorMessage = json.error && typeof json.error === 'string' 
+                        ? json.error 
+                        : 'Не удалось сохранить изменения';
+                    
+                    // Если смена закрыта или не найдена - это нормальная ситуация
+                    // Не откатываем изменения, просто показываем ошибку
+                    if (errorMessage.includes('Нет открытой смены') || errorMessage.includes('закрыта')) {
+                        onSaveErrorRef.current?.(errorMessage);
+                        // Не откатываем изменения, так как смена закрыта
+                        // UI останется как есть, но изменения не сохранятся
+                        return;
+                    }
+                    
+                    // Для других ошибок откатываем изменения только если есть сохраненное состояние
+                    if (previousItemsRef.current.length > 0) {
+                        setItems(previousItemsRef.current);
+                        const previousItemsStr = JSON.stringify(previousItemsRef.current.map(it => ({ 
+                            id: it.id, 
+                            clientName: it.clientName, 
+                            serviceName: it.serviceName,
+                            serviceAmount: it.serviceAmount,
+                            consumablesAmount: it.consumablesAmount,
+                            bookingId: it.bookingId
+                        })));
+                        prevItemsRef.current = previousItemsStr;
+                    }
+                    
+                    logError('ShiftItems', 'Error auto-saving items', json.error);
+                    onSaveErrorRef.current?.(errorMessage);
+                } else {
+                    // При успешном сохранении всегда перезагружаем данные с сервера
+                    // Это гарантирует, что UI обновляется только после успешного сохранения
+                    // Используем setTimeout и ref, чтобы избежать вызова во время рендера и бесконечных циклов
+                    setTimeout(() => {
+                        onSaveSuccessRef.current?.();
+                    }, 100);
+                }
+            } catch (e) {
+                // Откатываем изменения при ошибке только если есть сохраненное состояние
+                if (previousItemsRef.current.length > 0) {
                     setItems(previousItemsRef.current);
                     const previousItemsStr = JSON.stringify(previousItemsRef.current.map(it => ({ 
                         id: it.id, 
@@ -300,46 +344,7 @@ export function useShiftItems({
                         bookingId: it.bookingId
                     })));
                     prevItemsRef.current = previousItemsStr;
-                    
-                    // Показываем ошибку пользователю
-                    const errorMessage = json.error && typeof json.error === 'string' 
-                        ? json.error 
-                        : 'Не удалось сохранить изменения';
-                    
-                    // Не показываем ошибку, если смена не открыта - это нормальная ситуация
-                    // (например, владелец просматривает закрытую смену)
-                    if (errorMessage.includes('Нет открытой смены') || errorMessage.includes('закрыта')) {
-                        // Показываем ошибку, но не логируем как критическую
-                        onSaveErrorRef.current?.(errorMessage);
-                        return;
-                    }
-                    
-                    logError('ShiftItems', 'Error auto-saving items', json.error);
-                    onSaveErrorRef.current?.(errorMessage);
-                } else {
-                    // Перезагружаем данные только если нет локальных items без id
-                    // (то есть все изменения сохранены и пользователь не редактирует)
-                    const hasUnsavedItems = deduplicatedItems.some((it) => !it.id);
-                    if (!hasUnsavedItems) {
-                        // Вызываем callback после успешного сохранения для перезагрузки данных
-                        // Используем setTimeout и ref, чтобы избежать вызова во время рендера и бесконечных циклов
-                        setTimeout(() => {
-                            onSaveSuccessRef.current?.();
-                        }, 100);
-                    }
                 }
-            } catch (e) {
-                // Откатываем изменения при ошибке
-                setItems(previousItemsRef.current);
-                const previousItemsStr = JSON.stringify(previousItemsRef.current.map(it => ({ 
-                    id: it.id, 
-                    clientName: it.clientName, 
-                    serviceName: it.serviceName,
-                    serviceAmount: it.serviceAmount,
-                    consumablesAmount: it.consumablesAmount,
-                    bookingId: it.bookingId
-                })));
-                prevItemsRef.current = previousItemsStr;
                 
                 const errorMessage = e instanceof Error ? e.message : 'Не удалось сохранить изменения';
                 logError('ShiftItems', 'Error auto-saving items', e);
