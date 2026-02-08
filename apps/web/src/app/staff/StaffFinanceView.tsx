@@ -148,6 +148,15 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     };
 
     const handleAddClient = () => {
+        // Проверяем, открыта ли смена
+        if (!isOpen || isReadOnlyForOwner) {
+            const errorMessage = isClosed 
+                ? t('staff.finance.error.shiftClosed', 'Смена закрыта. Невозможно добавить клиента.')
+                : t('staff.finance.error.noOpenShift', 'Нет открытой смены. Сначала откройте смену.');
+            toast.showError(errorMessage);
+            return;
+        }
+        
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
         const existingClients = shiftItems.items.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
         const existingIndices = existingClients
@@ -188,6 +197,15 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     };
 
     const handleDeleteItem = (idx: number) => {
+        // Проверяем, открыта ли смена
+        if (!isOpen || isReadOnlyForOwner) {
+            const errorMessage = isClosed 
+                ? t('staff.finance.error.shiftClosedDelete', 'Смена закрыта. Невозможно удалить клиента.')
+                : t('staff.finance.error.noOpenShiftDelete', 'Нет открытой смены. Невозможно удалить клиента.');
+            toast.showError(errorMessage);
+            return;
+        }
+        
         shiftItems.setItems((prev) => prev.filter((_, i) => i !== idx));
         shiftItems.setExpandedItems((prev) => {
             const next = new Set(prev);
