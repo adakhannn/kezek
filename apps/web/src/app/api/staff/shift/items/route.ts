@@ -409,69 +409,67 @@ export async function POST(req: Request) {
         
         // Удаляем записи, которых нет в новом списке
         // ВАЖНО: Защита от случайного удаления всех клиентов
-        // Если в запросе нет ни одного item с id, не удаляем ничего
-        // (это может быть ошибка синхронизации или пустой список при первой загрузке)
         const newItemIds = new Set<string>();
-        let hasItemsWithId = false;
         for (const it of items) {
             if ((it as { id?: string }).id) {
                 newItemIds.add((it as { id?: string }).id!);
-                hasItemsWithId = true;
             }
         }
         
-        // Удаляем только если в запросе есть хотя бы один item с id
-        // Это предотвращает случайное удаление всех клиентов при ошибках синхронизации
-        // ВАЖНО: Если items пустой и нет items с id, НЕ удаляем ничего - это может быть ошибка
-        if (items.length === 0 && !hasItemsWithId) {
-            // Пустой список без items с id - это может быть ошибка синхронизации
-            // Не удаляем ничего для безопасности
-            logError('StaffShiftItems', 'Empty items list received - skipping deletion to prevent data loss', {
-                staffId,
-                shiftId: existing.id,
-                existingItemIds: Array.from(existingItemIds)
-            });
-        } else if (hasItemsWithId) {
-            // Есть items с id - безопасно удалять те, которых нет в новом списке
-            const itemsToDelete: string[] = [];
-            for (const existingId of existingItemIds) {
-                if (!newItemIds.has(existingId)) {
-                    itemsToDelete.push(existingId);
-                }
-            }
-            
-            if (itemsToDelete.length > 0) {
-                // Дополнительная защита: не удаляем все items за раз, если их больше 10
-                // Это может быть признаком ошибки
-                if (itemsToDelete.length === existingItemIds.size && existingItemIds.size > 10) {
-                    logError('StaffShiftItems', 'Attempted to delete all items - preventing deletion', {
-                        staffId,
-                        shiftId: existing.id,
-                        itemsToDeleteCount: itemsToDelete.length,
-                        totalItemsCount: existingItemIds.size
-                    });
-                    return NextResponse.json(
-                        { ok: false, error: 'Попытка удалить все клиенты. Операция заблокирована для безопасности.' },
-                        { status: 400 }
-                    );
-                }
-                
-                const { error: deleteError } = await writeClient
-                    .from('staff_shift_items')
-                    .delete()
-                    .in('id', itemsToDelete);
-                
-                if (deleteError) {
-                    logError('StaffShiftItems', 'Error deleting removed items', deleteError);
-                    return NextResponse.json(
-                        { ok: false, error: 'Не удалось удалить позиции' },
-                        { status: 500 }
-                    );
-                }
+        // Определяем, какие существующие items нужно удалить
+        const itemsToDelete: string[] = [];
+        for (const existingId of existingItemIds) {
+            if (!newItemIds.has(existingId)) {
+                itemsToDelete.push(existingId);
             }
         }
-        // Если items.length > 0, но нет items с id - это новые items, которые будут добавлены ниже
-        // В этом случае не удаляем существующие items
+        
+        // Удаляем только если:
+        // 1. Есть items для удаления
+        // 2. В запросе есть хотя бы один item с id ИЛИ список пустой (пользователь удалил всех клиентов)
+        // Это предотвращает случайное удаление при ошибках синхронизации, но позволяет удалять клиентов
+        const hasItemsWithId = newItemIds.size > 0;
+        const shouldDelete = itemsToDelete.length > 0 && (hasItemsWithId || items.length === 0);
+        
+        if (shouldDelete) {
+            // Дополнительная защита: не удаляем все items за раз, если их больше 10
+            // Это может быть признаком ошибки
+            if (itemsToDelete.length === existingItemIds.size && existingItemIds.size > 10) {
+                logError('StaffShiftItems', 'Attempted to delete all items - preventing deletion', {
+                    staffId,
+                    shiftId: existing.id,
+                    itemsToDeleteCount: itemsToDelete.length,
+                    totalItemsCount: existingItemIds.size
+                });
+                return NextResponse.json(
+                    { ok: false, error: 'Попытка удалить все клиенты. Операция заблокирована для безопасности.' },
+                    { status: 400 }
+                );
+            }
+            
+            const { error: deleteError } = await writeClient
+                .from('staff_shift_items')
+                .delete()
+                .in('id', itemsToDelete);
+            
+            if (deleteError) {
+                logError('StaffShiftItems', 'Error deleting removed items', deleteError);
+                return NextResponse.json(
+                    { ok: false, error: 'Не удалось удалить позиции' },
+                    { status: 500 }
+                );
+            }
+        } else if (itemsToDelete.length > 0 && !hasItemsWithId && items.length > 0) {
+            // Если есть items для удаления, но в запросе нет items с id, и список не пустой
+            // Это может быть ошибка синхронизации - логируем, но не удаляем для безопасности
+            logError('StaffShiftItems', 'Items to delete but no items with id in request - skipping deletion', {
+                staffId,
+                shiftId: existing.id,
+                itemsToDeleteCount: itemsToDelete.length,
+                itemsCount: items.length,
+                existingItemIdsCount: existingItemIds.size
+            });
+        }
 
         // Пересчитываем суммы для открытой смены на основе позиций
         // Это нужно, чтобы владелец мог видеть актуальные данные до закрытия смены
