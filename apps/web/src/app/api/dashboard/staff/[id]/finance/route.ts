@@ -3,7 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logError } from '@/lib/log';
+import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -23,9 +23,49 @@ export async function GET(
         const dateParam = searchParams.get('date');
         let targetDate: Date;
         if (dateParam) {
+            // Валидация формата даты (YYYY-MM-DD)
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(dateParam)) {
+                logError('StaffFinance', 'Invalid date format', { dateParam });
+                return NextResponse.json(
+                    { ok: false, error: 'Invalid date format. Expected YYYY-MM-DD' },
+                    { status: 400 }
+                );
+            }
+            
             // Парсим дату из параметра (формат YYYY-MM-DD)
             const [year, month, day] = dateParam.split('-').map(Number);
+            
+            // Валидация значений даты
+            if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+                logError('StaffFinance', 'Invalid date values', { dateParam, year, month, day });
+                return NextResponse.json(
+                    { ok: false, error: 'Invalid date values' },
+                    { status: 400 }
+                );
+            }
+            
+            // Проверяем диапазоны значений
+            if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+                logError('StaffFinance', 'Date out of valid range', { dateParam, year, month, day });
+                return NextResponse.json(
+                    { ok: false, error: 'Date out of valid range' },
+                    { status: 400 }
+                );
+            }
+            
             targetDate = new Date(year, month - 1, day);
+            
+            // Проверяем, что дата валидна (например, 2024-02-30 будет невалидной)
+            if (targetDate.getFullYear() !== year || 
+                targetDate.getMonth() !== month - 1 || 
+                targetDate.getDate() !== day) {
+                logError('StaffFinance', 'Invalid date (e.g., Feb 30)', { dateParam, year, month, day });
+                return NextResponse.json(
+                    { ok: false, error: 'Invalid date (e.g., day does not exist in month)' },
+                    { status: 400 }
+                );
+            }
         } else {
             targetDate = new Date();
         }
@@ -37,7 +77,40 @@ export async function GET(
             .eq('id', staffId)
             .maybeSingle();
 
-        if (staffError || !staff || String(staff.biz_id) !== String(bizId)) {
+        if (staffError) {
+            logError('StaffFinance', 'Error loading staff', { 
+                error: staffError.message, 
+                staffId,
+                bizId 
+            });
+            return NextResponse.json(
+                { ok: false, error: 'Staff not found or access denied' },
+                { status: 404 }
+            );
+        }
+
+        if (!staff) {
+            logDebug('StaffFinance', 'Staff not found', { staffId, bizId });
+            return NextResponse.json(
+                { ok: false, error: 'Staff not found or access denied' },
+                { status: 404 }
+            );
+        }
+
+        // Нормализуем значения для надежного сравнения
+        // bizId из getBizContextForManagers всегда строка, но нормализуем на всякий случай
+        const normalizedBizId = bizId ? String(bizId).trim() : null;
+        const normalizedStaffBizId = staff.biz_id != null ? String(staff.biz_id).trim() : null;
+
+        // Проверяем принадлежность к бизнесу
+        if (!normalizedStaffBizId || !normalizedBizId || normalizedStaffBizId !== normalizedBizId) {
+            logError('StaffFinance', 'Staff business mismatch', {
+                staffId,
+                staffBizId: normalizedStaffBizId,
+                requestedBizId: normalizedBizId,
+                staffBizIdType: typeof staff.biz_id,
+                bizIdType: typeof bizId,
+            });
             return NextResponse.json(
                 { ok: false, error: 'Staff not found or access denied' },
                 { status: 404 }
@@ -106,8 +179,19 @@ export async function GET(
 
         // Позиции по клиентам для текущей смены
         // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
-        let items: unknown[] = [];
-        if (shift) {
+        type ShiftItemRow = {
+            id: string;
+            client_name: string | null;
+            service_name: string | null;
+            service_amount: number;
+            consumables_amount: number;
+            note: string | null;
+            booking_id: string | null;
+            created_at: string | null;
+        };
+        
+        let items: ShiftItemRow[] = [];
+        if (shift && shift.id) {
             const { data: itemsData, error: itemsError } = await admin
                 .from('staff_shift_items')
                 .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
@@ -118,7 +202,7 @@ export async function GET(
             if (itemsError) {
                 logError('StaffFinance', 'Error loading shift items', itemsError);
             } else {
-                items = itemsData ?? [];
+                items = Array.isArray(itemsData) ? itemsData : [];
             }
         }
 
@@ -150,12 +234,54 @@ export async function GET(
             logError('StaffFinance', 'Error loading staff services', servicesError);
         }
 
-        const availableServices = (staffServices ?? [])
-            .map((ss: { services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null }) => {
-                const svc = Array.isArray(ss.services) ? ss.services[0] : ss.services;
-                return svc ? { name_ru: svc.name_ru, name_ky: svc.name_ky ?? null, name_en: svc.name_en ?? null } : null;
+        type ServiceStaffRow = {
+            services: {
+                name_ru: string;
+                name_ky?: string | null;
+                name_en?: string | null;
+            } | {
+                name_ru: string;
+                name_ky?: string | null;
+                name_en?: string | null;
+            }[] | null;
+        };
+        
+        type ServiceNameResult = {
+            name_ru: string;
+            name_ky: string | null;
+            name_en: string | null;
+        };
+        
+        const availableServices = (Array.isArray(staffServices) ? staffServices : [])
+            .map((ss: ServiceStaffRow): ServiceNameResult | null => {
+                // Проверяем наличие services
+                if (!ss || !ss.services) {
+                    return null;
+                }
+                
+                // Обрабатываем массив или одиночный объект
+                const svc = Array.isArray(ss.services) 
+                    ? (ss.services.length > 0 ? ss.services[0] : null)
+                    : ss.services;
+                
+                // Проверяем наличие обязательного поля name_ru
+                if (!svc || typeof svc !== 'object' || !svc.name_ru || typeof svc.name_ru !== 'string') {
+                    return null;
+                }
+                
+                return { 
+                    name_ru: svc.name_ru, 
+                    name_ky: (svc.name_ky && typeof svc.name_ky === 'string') ? svc.name_ky : null, 
+                    name_en: (svc.name_en && typeof svc.name_en === 'string') ? svc.name_en : null 
+                };
             })
-            .filter((svc): svc is { name_ru: string; name_ky: string | null; name_en: string | null } => !!svc);
+            .filter((svc): svc is ServiceNameResult => 
+                svc !== null && 
+                typeof svc === 'object' && 
+                'name_ru' in svc && 
+                typeof svc.name_ru === 'string' &&
+                svc.name_ru.length > 0
+            );
 
         // Расчет текущих часов работы и суммы за выход для открытой смены
         let currentHoursWorked: number | null = null;
@@ -208,12 +334,26 @@ export async function GET(
             shiftsCount: 0,
         };
 
-        if (recentShifts) {
+        // Тип для статистики смены
+        type ShiftStatsRow = {
+            total_amount: number | null;
+            master_share: number | null;
+            salon_share: number | null;
+            late_minutes: number | null;
+        };
+
+        if (Array.isArray(recentShifts)) {
             for (const s of recentShifts) {
-                stats.totalAmount += Number(s.total_amount ?? 0);
-                stats.totalMaster += Number(s.master_share ?? 0);
-                stats.totalSalon += Number(s.salon_share ?? 0);
-                stats.totalLateMinutes += Number(s.late_minutes ?? 0);
+                // Безопасное преобразование с проверками на null/undefined
+                const totalAmount = typeof s.total_amount === 'number' && !isNaN(s.total_amount) ? s.total_amount : 0;
+                const masterShare = typeof s.master_share === 'number' && !isNaN(s.master_share) ? s.master_share : 0;
+                const salonShare = typeof s.salon_share === 'number' && !isNaN(s.salon_share) ? s.salon_share : 0;
+                const lateMinutes = typeof s.late_minutes === 'number' && !isNaN(s.late_minutes) ? s.late_minutes : 0;
+                
+                stats.totalAmount += totalAmount;
+                stats.totalMaster += masterShare;
+                stats.totalSalon += salonShare;
+                stats.totalLateMinutes += lateMinutes;
                 stats.shiftsCount += 1;
             }
         }
@@ -227,23 +367,23 @@ export async function GET(
                       shift: {
                           id: shift.id,
                           shift_date: shift.shift_date,
-                          opened_at: shift.opened_at,
-                          closed_at: shift.closed_at,
-                          expected_start: shift.expected_start,
-                          late_minutes: shift.late_minutes ?? 0,
-                          status: shift.status,
-                          total_amount: shift.total_amount ?? 0,
-                          consumables_amount: shift.consumables_amount ?? 0,
-                          master_share: shift.master_share ?? 0,
-                          salon_share: shift.salon_share ?? 0,
+                          opened_at: shift.opened_at ?? null,
+                          closed_at: shift.closed_at ?? null,
+                          expected_start: shift.expected_start ?? null,
+                          late_minutes: typeof shift.late_minutes === 'number' && !isNaN(shift.late_minutes) ? shift.late_minutes : 0,
+                          status: shift.status as 'open' | 'closed',
+                          total_amount: typeof shift.total_amount === 'number' && !isNaN(shift.total_amount) ? shift.total_amount : 0,
+                          consumables_amount: typeof shift.consumables_amount === 'number' && !isNaN(shift.consumables_amount) ? shift.consumables_amount : 0,
+                          master_share: typeof shift.master_share === 'number' && !isNaN(shift.master_share) ? shift.master_share : 0,
+                          salon_share: typeof shift.salon_share === 'number' && !isNaN(shift.salon_share) ? shift.salon_share : 0,
                           percent_master: staffPercentMaster,
                           percent_salon: staffPercentSalon,
-                          hours_worked: shift.hours_worked,
+                          hours_worked: (shift.hours_worked && typeof shift.hours_worked === 'number' && !isNaN(shift.hours_worked)) ? shift.hours_worked : null,
                           hourly_rate: hourlyRate,
-                          guaranteed_amount: shift.guaranteed_amount,
-                          topup_amount: shift.topup_amount,
+                          guaranteed_amount: (shift.guaranteed_amount && typeof shift.guaranteed_amount === 'number' && !isNaN(shift.guaranteed_amount)) ? shift.guaranteed_amount : undefined,
+                          topup_amount: (shift.topup_amount && typeof shift.topup_amount === 'number' && !isNaN(shift.topup_amount)) ? shift.topup_amount : undefined,
                       },
-                      items: items,
+                      items: Array.isArray(items) ? items : [],
                   }
                 : {
                       exists: false,
@@ -254,14 +394,22 @@ export async function GET(
             bookings: dateBookings ?? [],
             services: availableServices,
             // Возвращаем все смены (не только закрытые), фильтрация по статусу на клиенте
-            allShifts: (allShifts ?? []).map((s) => ({
-                shift_date: s.shift_date,
-                status: s.status,
-                total_amount: Number(s.total_amount ?? 0),
-                master_share: Number(s.master_share ?? 0),
-                salon_share: Number(s.salon_share ?? 0),
-                late_minutes: Number(s.late_minutes ?? 0),
-            })),
+            allShifts: (Array.isArray(allShifts) ? allShifts : []).map((s) => {
+                // Безопасное преобразование с проверками на null/undefined
+                const totalAmount = typeof s.total_amount === 'number' && !isNaN(s.total_amount) ? s.total_amount : 0;
+                const masterShare = typeof s.master_share === 'number' && !isNaN(s.master_share) ? s.master_share : 0;
+                const salonShare = typeof s.salon_share === 'number' && !isNaN(s.salon_share) ? s.salon_share : 0;
+                const lateMinutes = typeof s.late_minutes === 'number' && !isNaN(s.late_minutes) ? s.late_minutes : 0;
+                
+                return {
+                    shift_date: typeof s.shift_date === 'string' ? s.shift_date : '',
+                    status: typeof s.status === 'string' ? s.status : 'closed',
+                    total_amount: totalAmount,
+                    master_share: masterShare,
+                    salon_share: salonShare,
+                    late_minutes: lateMinutes,
+                };
+            }),
             staffPercentMaster,
             staffPercentSalon,
             hourlyRate,

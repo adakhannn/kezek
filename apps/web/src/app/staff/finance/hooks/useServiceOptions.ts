@@ -22,36 +22,42 @@ export function useServiceOptions(
         const serviceMap = new Map<string, ServiceName>();
         
         // Услуги сотрудника из настроек
-        for (const svc of availableServices) {
-            if (svc?.name_ru?.trim()) {
-                const key = svc.name_ru.trim();
-                set.add(key);
-                serviceMap.set(key, svc);
+        if (Array.isArray(availableServices)) {
+            for (const svc of availableServices) {
+                if (svc && typeof svc === 'object' && svc.name_ru && typeof svc.name_ru === 'string' && svc.name_ru.trim()) {
+                    const key = svc.name_ru.trim();
+                    set.add(key);
+                    serviceMap.set(key, svc);
+                }
             }
         }
         
         // Услуги из сегодняшних записей
-        for (const b of bookings) {
-            if (b.services) {
-                const list = Array.isArray(b.services) ? b.services : [b.services];
-                for (const s of list) {
-                    if (s?.name_ru?.trim()) {
-                        const key = s.name_ru.trim();
-                        set.add(key);
-                        serviceMap.set(key, s);
+        if (Array.isArray(bookings)) {
+            for (const b of bookings) {
+                if (b && typeof b === 'object' && b.services) {
+                    const list = Array.isArray(b.services) ? b.services : [b.services];
+                    for (const s of list) {
+                        if (s && typeof s === 'object' && s.name_ru && typeof s.name_ru === 'string' && s.name_ru.trim()) {
+                            const key = s.name_ru.trim();
+                            set.add(key);
+                            serviceMap.set(key, s);
+                        }
                     }
                 }
             }
         }
         
         // Учитываем уже введённые вручную названия услуг в строках смены
-        for (const it of items) {
-            if (it.serviceName?.trim()) {
-                const key = it.serviceName.trim();
-                set.add(key);
-                // Если это не было в списке услуг, создаем объект только с name_ru
-                if (!serviceMap.has(key)) {
-                    serviceMap.set(key, { name_ru: key });
+        if (Array.isArray(items)) {
+            for (const it of items) {
+                if (it && typeof it === 'object' && it.serviceName && typeof it.serviceName === 'string' && it.serviceName.trim()) {
+                    const key = it.serviceName.trim();
+                    set.add(key);
+                    // Если это не было в списке услуг, создаем объект только с name_ru
+                    if (!serviceMap.has(key)) {
+                        serviceMap.set(key, { name_ru: key });
+                    }
                 }
             }
         }

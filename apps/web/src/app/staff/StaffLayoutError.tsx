@@ -13,9 +13,12 @@ export default function StaffLayoutError() {
                 {t('staff.layout.noAccess.title', 'Нет доступа к кабинету сотрудника')}
             </h1>
             <p className="text-sm text-gray-600">
-                <span dangerouslySetInnerHTML={{ 
-                    __html: t('staff.layout.noAccess.desc', 'У вашей учётной записи нет роли <code>staff</code> ни в одном бизнесе.')
-                }} />
+                {t('staff.layout.noAccess.desc.prefix', 'У вашей учётной записи нет роли')}{' '}
+                <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono">
+                    staff
+                </code>
+                {' '}
+                {t('staff.layout.noAccess.desc.suffix', 'ни в одном бизнесе.')}
             </p>
             <div className="mt-4">
                 <Link className="underline" href="/">

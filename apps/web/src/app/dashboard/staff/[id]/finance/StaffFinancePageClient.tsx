@@ -2,6 +2,7 @@
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import StaffFinanceView from '@/app/staff/StaffFinanceView';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function StaffFinancePageClient({
     id,
@@ -48,7 +49,40 @@ export default function StaffFinancePageClient({
 
             {/* Основной контент - управление сменой и клиентами */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-                <StaffFinanceView staffId={id} />
+                <ErrorBoundary
+                    onError={(error, errorInfo) => {
+                        // Дополнительное логирование для finance компонентов
+                        console.error('StaffFinanceView error:', error, errorInfo);
+                    }}
+                    fallback={
+                        <div className="p-6">
+                            <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 px-4 py-3">
+                                <div className="flex items-start gap-3">
+                                    <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                                            {t('staff.finance.error.boundary.title', 'Ошибка в компоненте управления сменой')}
+                                        </p>
+                                        <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                                            {t('staff.finance.error.boundary.message', 'Произошла ошибка при отображении компонента. Попробуйте обновить страницу.')}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => window.location.reload()}
+                                            className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 underline"
+                                        >
+                                            {t('staff.finance.error.boundary.reload', 'Обновить страницу')}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                >
+                    <StaffFinanceView staffId={id} />
+                </ErrorBoundary>
             </div>
         </div>
     );

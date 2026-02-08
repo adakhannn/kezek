@@ -7,6 +7,8 @@ import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { saveShiftItemsSchema } from '@/lib/validation/schemas';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -19,22 +21,21 @@ export async function POST(req: Request) {
         RateLimitConfigs.normal,
         async () => {
             try {
-                const body = await req.json().catch(() => ({}));
-                const items = Array.isArray(body.items) ? body.items : [];
-                const targetStaffId = body.staffId as string | undefined;
-                const targetShiftDate = body.shiftDate as string | undefined;
-
-        // Валидация
-        for (const it of items) {
-            const serviceAmt = Number((it as { serviceAmount?: number }).serviceAmount ?? 0);
-            const consumablesAmt = Number((it as { consumablesAmount?: number }).consumablesAmount ?? 0);
-            if (serviceAmt < 0 || consumablesAmt < 0) {
-                return NextResponse.json(
-                    { ok: false, error: 'Суммы не могут быть отрицательными' },
-                    { status: 400 }
-                );
-            }
-        }
+                // Валидация входных данных с помощью Zod схемы
+                const validationResult = await validateRequest(req, saveShiftItemsSchema);
+                if (!validationResult.success) {
+                    // Форматируем ошибки валидации для более понятного сообщения
+                    const errorResponse = await validationResult.response.json();
+                    const errorMessage = errorResponse.errors 
+                        ? `Ошибка валидации: ${errorResponse.errors.map((e: { path: string; message: string }) => `${e.path}: ${e.message}`).join(', ')}`
+                        : errorResponse.message || 'Ошибка валидации данных';
+                    return NextResponse.json(
+                        { ok: false, error: errorMessage },
+                        { status: 400 }
+                    );
+                }
+                
+                const { items, staffId: targetStaffId, shiftDate: targetShiftDate } = validationResult.data;
 
         let supabase;
         let staffId: string;
@@ -101,24 +102,10 @@ export async function POST(req: Request) {
 
         // Находим открытую смену за указанную дату или за сегодня
         // Если передана дата (для владельца, просматривающего другую дату), используем её
+        // Дата уже валидирована через Zod схему, поэтому она гарантированно в формате YYYY-MM-DD или undefined
         let ymd: string;
         if (targetShiftDate) {
-            // Если дата передана как строка в формате YYYY-MM-DD, используем её напрямую
-            // Проверяем формат даты
-            if (/^\d{4}-\d{2}-\d{2}$/.test(targetShiftDate)) {
-                ymd = targetShiftDate;
-            } else {
-                // Пытаемся распарсить дату
-                const parsedDate = new Date(targetShiftDate);
-                if (isNaN(parsedDate.getTime())) {
-                    logError('StaffShiftItems', 'Invalid date format', targetShiftDate);
-                    return NextResponse.json(
-                        { ok: false, error: 'Неверный формат даты' },
-                        { status: 400 }
-                    );
-                }
-                ymd = formatInTimeZone(parsedDate, TZ, 'yyyy-MM-dd');
-            }
+            ymd = targetShiftDate; // Дата уже валидирована и в правильном формате
         } else {
             // Используем текущую дату
             const now = new Date();
@@ -323,8 +310,14 @@ export async function POST(req: Request) {
         // Вставляем новые позиции (фильтруем только для сохранения в БД)
         if (items.length > 0) {
             // Разделяем на существующие (с id) и новые (без id) записи
-            const existingItems = items.filter((it: { id?: string }) => !!it.id);
-            const newItems = items.filter((it: { id?: string }) => !it.id);
+            const existingItems = items.filter((it) => {
+                const item = it as { id?: string | null };
+                return !!item.id;
+            });
+            const newItems = items.filter((it) => {
+                const item = it as { id?: string | null };
+                return !item.id;
+            });
             
             // Для существующих записей делаем UPDATE, сохраняя их created_at
             if (existingItems.length > 0) {
@@ -354,24 +347,26 @@ export async function POST(req: Request) {
             
             // Для новых записей делаем INSERT с разным created_at
             const cleanItems = newItems
-                .map((it: {
-                    clientName?: string;
-                    client_name?: string;
-                    serviceName?: string;
-                    service_name?: string;
-                    serviceAmount?: number;
-                    amount?: number;
-                    consumablesAmount?: number;
-                    consumables_amount?: number;
-                    bookingId?: string | null;
-                    booking_id?: string | null;
-                }, index: number) => {
-                    const bookingId = it.bookingId ?? it.booking_id ?? null;
+                .map((it, index: number) => {
+                    // Типизируем item с учетом возможных null значений
+                    const item = it as {
+                        clientName?: string | null;
+                        client_name?: string | null;
+                        serviceName?: string | null;
+                        service_name?: string | null;
+                        serviceAmount?: number | null;
+                        amount?: number | null;
+                        consumablesAmount?: number | null;
+                        consumables_amount?: number | null;
+                        bookingId?: string | null;
+                        booking_id?: string | null;
+                    };
+                    const bookingId = item.bookingId ?? item.booking_id ?? null;
                     // Если есть примененная акция для этого booking_id, используем её сумму
                     // Иначе используем сумму, указанную сотрудником
                     const serviceAmount = bookingId && promotionMap.has(bookingId)
                         ? promotionMap.get(bookingId)!
-                        : Number(it.serviceAmount ?? it.amount ?? 0) || 0;
+                        : Number(item.serviceAmount ?? item.amount ?? 0) || 0;
                     
                     // Для новых записей устанавливаем текущее время с небольшой задержкой для каждого элемента
                     // чтобы время было разным даже при массовом добавлении
@@ -379,10 +374,10 @@ export async function POST(req: Request) {
                     
                     return {
                         shift_id: shiftId,
-                        client_name: (it.clientName ?? it.client_name ?? '').trim() || null,
-                        service_name: (it.serviceName ?? it.service_name ?? '').trim() || null,
+                        client_name: (item.clientName ?? item.client_name ?? '').trim() || null,
+                        service_name: (item.serviceName ?? item.service_name ?? '').trim() || null,
                         service_amount: serviceAmount,
-                        consumables_amount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
+                        consumables_amount: Number(item.consumablesAmount ?? item.consumables_amount ?? 0) || 0,
                         booking_id: bookingId,
                         created_at: createdAt,
                     };

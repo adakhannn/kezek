@@ -26,13 +26,24 @@ export function useShiftCalculations(
 ): ShiftCalculations {
     return useMemo(() => {
         // Сумма услуг = сумма всех serviceAmount
+        // Безопасное преобразование с проверками на null/undefined
         const totalServiceFromItems = items.reduce(
-            (sum, it) => sum + (Number(it.serviceAmount ?? 0) || 0),
+            (sum: number, it: ShiftItem) => {
+                const amount = typeof it.serviceAmount === 'number' && !isNaN(it.serviceAmount)
+                    ? it.serviceAmount
+                    : 0;
+                return sum + (amount >= 0 ? amount : 0);
+            },
             0
         );
         // Сумма расходников = сумма всех consumablesAmount
         const totalConsumablesFromItems = items.reduce(
-            (sum, it) => sum + (Number(it.consumablesAmount ?? 0) || 0),
+            (sum: number, it: ShiftItem) => {
+                const amount = typeof it.consumablesAmount === 'number' && !isNaN(it.consumablesAmount)
+                    ? it.consumablesAmount
+                    : 0;
+                return sum + (amount >= 0 ? amount : 0);
+            },
             0
         );
 
@@ -69,14 +80,23 @@ export function useShiftCalculations(
         // Для закрытой смены используем сохранённые значения из БД
         if (!isOpen && shift) {
             // Используем сохранённые значения из смены (они уже правильно рассчитаны при закрытии)
-            mShare = Math.round((shift.master_share ?? 0) * 100) / 100;
-            sShare = Math.round((shift.salon_share ?? 0) * 100) / 100;
+            // Безопасное извлечение с проверками на null/undefined
+            const masterShare = typeof shift.master_share === 'number' && !isNaN(shift.master_share)
+                ? shift.master_share
+                : 0;
+            const salonShare = typeof shift.salon_share === 'number' && !isNaN(shift.salon_share)
+                ? shift.salon_share
+                : 0;
+            mShare = Math.round(masterShare * 100) / 100;
+            sShare = Math.round(salonShare * 100) / 100;
         }
 
         // Общий оборот: для открытой смены - из items, для закрытой - из shift.total_amount
         const displayTotalAmount = isOpen 
             ? totalAmount 
-            : (shift?.total_amount ?? 0);
+            : (shift && typeof shift.total_amount === 'number' && !isNaN(shift.total_amount)
+                ? shift.total_amount
+                : 0);
 
         return {
             totalAmount,

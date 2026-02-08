@@ -52,7 +52,116 @@ export async function GET(req: Request) {
         // Получаем параметры запроса
         const { searchParams } = new URL(req.url);
         const period = (searchParams.get('period') || 'day') as Period;
-        const date = searchParams.get('date') || formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+        const dateParam = searchParams.get('date');
+        let date: string;
+        
+        if (dateParam) {
+            // Валидация формата даты в зависимости от периода
+            if (period === 'day') {
+                // Для дня требуется полная дата YYYY-MM-DD
+                const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                if (!dateRegex.test(dateParam)) {
+                    logError('FinanceAll', 'Invalid date format for day period', { dateParam, period });
+                    return NextResponse.json(
+                        { ok: false, error: 'Invalid date format. Expected YYYY-MM-DD for day period' },
+                        { status: 400 }
+                    );
+                }
+                
+                const [year, month, day] = dateParam.split('-').map(Number);
+                
+                // Валидация значений даты
+                if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+                    logError('FinanceAll', 'Invalid date values', { dateParam, year, month, day });
+                    return NextResponse.json(
+                        { ok: false, error: 'Invalid date values' },
+                        { status: 400 }
+                    );
+                }
+                
+                // Проверяем диапазоны значений
+                if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+                    logError('FinanceAll', 'Date out of valid range', { dateParam, year, month, day });
+                    return NextResponse.json(
+                        { ok: false, error: 'Date out of valid range' },
+                        { status: 400 }
+                    );
+                }
+                
+                // Проверяем, что дата валидна
+                const testDate = new Date(year, month - 1, day);
+                if (testDate.getFullYear() !== year || 
+                    testDate.getMonth() !== month - 1 || 
+                    testDate.getDate() !== day) {
+                    logError('FinanceAll', 'Invalid date (e.g., Feb 30)', { dateParam, year, month, day });
+                    return NextResponse.json(
+                        { ok: false, error: 'Invalid date (e.g., day does not exist in month)' },
+                        { status: 400 }
+                    );
+                }
+            } else if (period === 'month') {
+                // Для месяца требуется YYYY-MM
+                const monthRegex = /^\d{4}-\d{2}$/;
+                if (!monthRegex.test(dateParam)) {
+                    logError('FinanceAll', 'Invalid date format for month period', { dateParam, period });
+                    return NextResponse.json(
+                        { ok: false, error: 'Invalid date format. Expected YYYY-MM for month period' },
+                        { status: 400 }
+                    );
+                }
+                
+                const [year, month] = dateParam.split('-').map(Number);
+                
+                if (!Number.isFinite(year) || !Number.isFinite(month)) {
+                    logError('FinanceAll', 'Invalid month values', { dateParam, year, month });
+                    return NextResponse.json(
+                        { ok: false, error: 'Invalid month values' },
+                        { status: 400 }
+                    );
+                }
+                
+                if (year < 1900 || year > 2100 || month < 1 || month > 12) {
+                    logError('FinanceAll', 'Month out of valid range', { dateParam, year, month });
+                    return NextResponse.json(
+                        { ok: false, error: 'Month out of valid range' },
+                        { status: 400 }
+                    );
+                }
+            } else if (period === 'year') {
+                // Для года требуется YYYY
+                const yearRegex = /^\d{4}$/;
+                if (!yearRegex.test(dateParam)) {
+                    logError('FinanceAll', 'Invalid date format for year period', { dateParam, period });
+                    return NextResponse.json(
+                        { ok: false, error: 'Invalid date format. Expected YYYY for year period' },
+                        { status: 400 }
+                    );
+                }
+                
+                const year = Number(dateParam);
+                
+                if (!Number.isFinite(year)) {
+                    logError('FinanceAll', 'Invalid year value', { dateParam, year });
+                    return NextResponse.json(
+                        { ok: false, error: 'Invalid year value' },
+                        { status: 400 }
+                    );
+                }
+                
+                if (year < 1900 || year > 2100) {
+                    logError('FinanceAll', 'Year out of valid range', { dateParam, year });
+                    return NextResponse.json(
+                        { ok: false, error: 'Year out of valid range' },
+                        { status: 400 }
+                    );
+                }
+            }
+            
+            date = dateParam;
+        } else {
+            date = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+        }
+        
         const branchId = searchParams.get('branchId');
 
         // Определяем диапазон дат в зависимости от периода

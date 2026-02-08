@@ -30,14 +30,32 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        // Логируем ошибку
-        // Используем безопасное логирование
-        const { logError } = require('@/lib/log');
-        logError('ErrorBoundary', 'Caught an error', { error, errorInfo });
+        // Логируем ошибку с детальной информацией
+        try {
+            const { logError } = require('@/lib/log');
+            logError('ErrorBoundary', 'Caught an error', { 
+                error: {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
+                },
+                errorInfo: {
+                    componentStack: errorInfo.componentStack,
+                },
+                timestamp: new Date().toISOString(),
+            });
+        } catch (logErr) {
+            // Если логирование не удалось, используем console.error
+            console.error('ErrorBoundary caught an error:', error, errorInfo);
+        }
         
         // Вызываем callback если передан
         if (this.props.onError) {
-            this.props.onError(error, errorInfo);
+            try {
+                this.props.onError(error, errorInfo);
+            } catch (callbackError) {
+                console.error('Error in onError callback:', callbackError);
+            }
         }
 
         // В продакшене можно отправить ошибку в систему мониторинга (Sentry, LogRocket и т.д.)

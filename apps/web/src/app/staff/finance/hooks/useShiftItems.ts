@@ -197,6 +197,12 @@ export function useShiftItems({
     // Используем ref для отслеживания предыдущего состояния, чтобы избежать лишних сохранений
     const prevItemsRef = useRef<string>('');
     const isSavingRef = useRef(false);
+    // AbortController для отмены предыдущих запросов сохранения
+    const saveAbortControllerRef = useRef<AbortController | null>(null);
+    // Отслеживаем последний сохраненный items для предотвращения дублирующихся запросов
+    const lastSavedItemsRef = useRef<string>('');
+    // Таймаут для debounce
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     
     useEffect(() => {
         // Не сохраняем при первой загрузке, если смена закрыта, или в режиме просмотра
@@ -239,15 +245,63 @@ export function useShiftItems({
             return;
         }
         
+        // Отменяем предыдущий таймаут, если он есть
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+        
+        // Отменяем предыдущий запрос сохранения, если он еще выполняется
+        if (saveAbortControllerRef.current) {
+            saveAbortControllerRef.current.abort();
+        }
+        
+        // Проверяем, не сохраняем ли мы те же данные
+        if (itemsStr === lastSavedItemsRef.current) {
+            prevItemsRef.current = itemsStr;
+            return;
+        }
+        
         // Сохраняем текущее состояние перед отправкой для возможного отката
         // Всегда сохраняем, чтобы можно было откатить при ошибке
         previousItemsRef.current = [...items];
         prevItemsRef.current = itemsStr;
         
-        const timeoutId = setTimeout(async () => {
+        // Создаем новый AbortController для этого запроса сохранения
+        const abortController = new AbortController();
+        saveAbortControllerRef.current = abortController;
+        
+        saveTimeoutRef.current = setTimeout(async () => {
+            // Проверяем, не был ли запрос отменен
+            if (abortController.signal.aborted) {
+                return;
+            }
+            
             // Дополнительная проверка перед отправкой - если смена закрыта, не отправляем запрос
             // Это предотвращает ошибки 400 в консоли браузера
             if (!isOpen || isReadOnly) {
+                saveAbortControllerRef.current = null;
+                return;
+            }
+            
+            // Проверяем, не изменились ли items снова (еще одна проверка на актуальность)
+            const currentItemsStr = JSON.stringify(items.map(it => ({ 
+                id: it.id, 
+                clientName: it.clientName, 
+                serviceName: it.serviceName,
+                serviceAmount: it.serviceAmount,
+                consumablesAmount: it.consumablesAmount,
+                bookingId: it.bookingId
+            })));
+            
+            if (currentItemsStr !== itemsStr) {
+                // Items изменились, не сохраняем старую версию
+                saveAbortControllerRef.current = null;
+                return;
+            }
+            
+            // Проверяем, не сохраняем ли мы те же данные (еще одна проверка)
+            if (currentItemsStr === lastSavedItemsRef.current) {
+                saveAbortControllerRef.current = null;
                 return;
             }
             
@@ -279,6 +333,11 @@ export function useShiftItems({
                 // Форматируем дату для передачи в API
                 const dateStr = shiftDate ? formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd') : undefined;
                 
+                // Проверяем, не был ли запрос отменен перед отправкой
+                if (abortController.signal.aborted) {
+                    return;
+                }
+                
                 const res = await fetch('/api/staff/shift/items', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -287,17 +346,50 @@ export function useShiftItems({
                         staffId: staffId || undefined,
                         shiftDate: dateStr
                     }),
+                    signal: abortController.signal,
                 });
-                const json = await res.json();
-                if (!json.ok) {
-                    // Показываем ошибку пользователю
-                    const errorMessage = json.error && typeof json.error === 'string' 
-                        ? json.error 
-                        : 'Не удалось сохранить изменения';
+                
+                // Проверяем, не был ли запрос отменен после получения ответа
+                if (abortController.signal.aborted) {
+                    return;
+                }
+                
+                // Проверяем HTTP статус перед парсингом JSON
+                if (!res.ok) {
+                    let errorMessage = 'Не удалось сохранить изменения';
+                    
+                    // Пытаемся получить сообщение об ошибке из ответа
+                    try {
+                        const errorJson = await res.json();
+                        if (errorJson?.error) {
+                            errorMessage = errorJson.error;
+                        } else if (errorJson?.message) {
+                            errorMessage = errorJson.message;
+                        }
+                    } catch {
+                        // Если не удалось распарсить JSON, используем стандартные сообщения по статусу
+                    }
+                    
+                    // Улучшенные сообщения для разных HTTP статусов
+                    if (res.status === 404) {
+                        errorMessage = 'Смена не найдена. Возможно, смена была закрыта или удалена.';
+                    } else if (res.status === 401) {
+                        errorMessage = 'Сессия истекла. Пожалуйста, войдите в систему снова.';
+                    } else if (res.status === 403) {
+                        errorMessage = 'У вас нет прав для сохранения изменений.';
+                    } else if (res.status === 400) {
+                        errorMessage = errorMessage || 'Некорректные данные. Проверьте введенную информацию.';
+                    } else if (res.status === 429) {
+                        errorMessage = 'Слишком много запросов. Пожалуйста, подождите немного.';
+                    } else if (res.status >= 500) {
+                        errorMessage = 'Временная ошибка сервера. Изменения не были сохранены. Попробуйте снова через несколько секунд.';
+                    } else if (res.status >= 400) {
+                        errorMessage = errorMessage || 'Ошибка при сохранении. Проверьте подключение к интернету.';
+                    }
                     
                     // Если смена закрыта или не найдена - откатываем изменения
                     // Это важно, чтобы UI соответствовал реальному состоянию на сервере
-                    if (errorMessage.includes('Нет открытой смены') || errorMessage.includes('закрыта')) {
+                    if (errorMessage.includes('Нет открытой смены') || errorMessage.includes('закрыта') || errorMessage.includes('не найдена')) {
                         // Откатываем изменения, если есть сохраненное состояние
                         if (previousItemsRef.current.length > 0) {
                             setItems(previousItemsRef.current);
@@ -329,15 +421,78 @@ export function useShiftItems({
                         prevItemsRef.current = previousItemsStr;
                     }
                     
+                    logError('ShiftItems', 'Error auto-saving items', { error: errorMessage, status: res.status });
+                    onSaveErrorRef.current?.(errorMessage);
+                    saveAbortControllerRef.current = null;
+                    return;
+                }
+                
+                // Проверяем, не был ли запрос отменен перед парсингом JSON
+                if (abortController.signal.aborted) {
+                    return;
+                }
+                
+                const json = await res.json();
+                
+                // Проверяем, не был ли запрос отменен после парсинга
+                if (abortController.signal.aborted) {
+                    return;
+                }
+                
+                if (!json.ok) {
+                    // Показываем ошибку пользователю
+                    const errorMessage = json.error && typeof json.error === 'string' 
+                        ? json.error 
+                        : 'Не удалось сохранить изменения';
+                    
+                    // Если смена закрыта или не найдена - откатываем изменения
+                    if (errorMessage.includes('Нет открытой смены') || errorMessage.includes('закрыта') || errorMessage.includes('не найдена')) {
+                        if (previousItemsRef.current.length > 0) {
+                            setItems(previousItemsRef.current);
+                            const previousItemsStr = JSON.stringify(previousItemsRef.current.map(it => ({ 
+                                id: it.id, 
+                                clientName: it.clientName, 
+                                serviceName: it.serviceName,
+                                serviceAmount: it.serviceAmount,
+                                consumablesAmount: it.consumablesAmount,
+                                bookingId: it.bookingId
+                            })));
+                            prevItemsRef.current = previousItemsStr;
+                        }
+                        onSaveErrorRef.current?.(errorMessage);
+                        return;
+                    }
+                    
+                    // Для других ошибок откатываем изменения
+                    if (previousItemsRef.current.length > 0) {
+                        setItems(previousItemsRef.current);
+                        const previousItemsStr = JSON.stringify(previousItemsRef.current.map(it => ({ 
+                            id: it.id, 
+                            clientName: it.clientName, 
+                            serviceName: it.serviceName,
+                            serviceAmount: it.serviceAmount,
+                            consumablesAmount: it.consumablesAmount,
+                            bookingId: it.bookingId
+                        })));
+                        prevItemsRef.current = previousItemsStr;
+                    }
+                    
                     logError('ShiftItems', 'Error auto-saving items', json.error);
                     onSaveErrorRef.current?.(errorMessage);
+                    saveAbortControllerRef.current = null;
                 } else {
+                    // При успешном сохранении обновляем lastSavedItemsRef
+                    lastSavedItemsRef.current = currentItemsStr;
+                    
                     // При успешном сохранении всегда перезагружаем данные с сервера
                     // Это гарантирует, что UI обновляется только после успешного сохранения
                     // Используем setTimeout и ref, чтобы избежать вызова во время рендера и бесконечных циклов
                     setTimeout(() => {
-                        onSaveSuccessRef.current?.();
+                        if (!abortController.signal.aborted) {
+                            onSaveSuccessRef.current?.();
+                        }
                     }, 100);
+                    saveAbortControllerRef.current = null;
                 }
             } catch (e) {
                 // Откатываем изменения при ошибке только если есть сохраненное состояние
@@ -354,16 +509,47 @@ export function useShiftItems({
                     prevItemsRef.current = previousItemsStr;
                 }
                 
-                const errorMessage = e instanceof Error ? e.message : 'Не удалось сохранить изменения';
+                // Улучшенная обработка различных типов ошибок
+                let errorMessage = 'Не удалось сохранить изменения';
+                
+                if (e instanceof TypeError) {
+                    if (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed to fetch')) {
+                        errorMessage = 'Ошибка подключения к серверу. Проверьте подключение к интернету и попробуйте снова.';
+                    } else {
+                        errorMessage = 'Ошибка при сохранении. Попробуйте обновить страницу.';
+                    }
+                } else if (e instanceof Error) {
+                    if (e.message) {
+                        errorMessage = e.message;
+                    } else {
+                        errorMessage = 'Произошла ошибка при сохранении. Попробуйте снова.';
+                    }
+                } else {
+                    errorMessage = 'Произошла неожиданная ошибка. Попробуйте обновить страницу.';
+                }
+                
                 logError('ShiftItems', 'Error auto-saving items', e);
                 onSaveErrorRef.current?.(errorMessage);
             } finally {
                 isSavingRef.current = false;
                 setSavingItems(false);
+                // Очищаем AbortController только если это был последний запрос
+                if (saveAbortControllerRef.current === abortController) {
+                    saveAbortControllerRef.current = null;
+                }
             }
         }, 1000); // сохраняем через 1 секунду после последнего изменения
 
-        return () => clearTimeout(timeoutId);
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+            // Отменяем запрос при размонтировании или изменении зависимостей
+            if (saveAbortControllerRef.current) {
+                saveAbortControllerRef.current.abort();
+                saveAbortControllerRef.current = null;
+            }
+        };
     }, [items, isOpen, isInitialLoad, isReadOnly, staffId]);
     
     // Используем строковое представление даты для зависимостей, чтобы избежать пересоздания объекта Date

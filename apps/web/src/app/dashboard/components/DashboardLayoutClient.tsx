@@ -19,7 +19,22 @@ export function DashboardLayoutClient({ errorType, errorMessage }: DashboardLayo
                     {t('dashboard.error.noAccess', 'Нет доступа к кабинету')}
                 </h1>
                 <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                    <p dangerouslySetInnerHTML={{ __html: t('dashboard.error.noAccessDesc', 'У вашей учётной записи нет ролей <code>owner / admin / manager</code> ни в одном бизнесе.') }} />
+                    <p>
+                        {t('dashboard.error.noAccessDesc.prefix', 'У вашей учётной записи нет ролей')}{' '}
+                        <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono">
+                            owner
+                        </code>
+                        {' / '}
+                        <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono">
+                            admin
+                        </code>
+                        {' / '}
+                        <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono">
+                            manager
+                        </code>
+                        {' '}
+                        {t('dashboard.error.noAccessDesc.suffix', 'ни в одном бизнесе.')}
+                    </p>
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                         <p className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
                             {t('dashboard.error.troubleshooting', 'Что делать:')}

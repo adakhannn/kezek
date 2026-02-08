@@ -59,17 +59,22 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         void shiftData.load();
     });
 
-    // Вычисляем состояние смены
-    const todayShift = shiftData.today && shiftData.today.ok && shiftData.today.today.exists 
+    // Вычисляем состояние смены с улучшенными проверками на null/undefined
+    const todayShift = shiftData.today && 
+        shiftData.today.ok && 
+        shiftData.today.today && 
+        shiftData.today.today.exists && 
+        shiftData.today.today.shift
         ? shiftData.today.today.shift 
         : null;
     const isOpen = !!(todayShift && todayShift.status === 'open');
     const isClosed = !!(todayShift && todayShift.status === 'closed');
 
     // Управление клиентами
-    // Для владельца: режим только для чтения, если смена закрыта, не существует, или не открыта
-    // Владелец может редактировать только открытые смены
-    const isReadOnlyForOwner = !!staffId && !isOpen;
+    // Для владельца: режим только для чтения, если смена закрыта или не открыта
+    // Владелец может редактировать только открытые смены сотрудников
+    // Если staffId не передан, это сотрудник редактирует свою смену - всегда может редактировать открытые смены
+    const isReadOnlyForOwner = !!staffId && (!isOpen || isClosed);
     
     // Мемоизируем callback для предотвращения бесконечных циклов
     // Используем ref для предотвращения повторных вызовов во время загрузки
@@ -214,9 +219,21 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         });
     };
 
+    // Определяем, нужно ли показывать индикатор загрузки
+    // Показываем при:
+    // 1. Прогресс закрытия смены
+    // 2. Начальной загрузке данных
+    // 3. Последующих загрузках (но только если нет данных или произошла ошибка)
+    const shouldShowLoading = shiftManagement.closingProgress?.show || 
+        (shiftData.loading && (
+            shiftData.isInitialLoad || 
+            !shiftData.today || 
+            (shiftData.today && !shiftData.today.ok)
+        ));
+
     return (
         <>
-            {(shiftManagement.closingProgress?.show || (shiftData.loading && shiftData.isInitialLoad)) && (
+            {shouldShowLoading && (
                 <LoadingOverlay
                     message={shiftManagement.closingProgress?.message || t('staff.finance.loading', 'Загрузка данных смены...')}
                     progress={shiftManagement.closingProgress?.progress}
@@ -252,6 +269,31 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             {/* Таб: Текущая смена */}
             {activeTab === 'shift' && (
                 <div className={`space-y-4 ${staffId ? 'p-6' : 'px-6 pb-6'}`}>
+                    {/* Показываем ошибку загрузки, если она есть и не идет загрузка */}
+                    {!shiftData.loading && shiftData.today && !shiftData.today.ok && shiftData.today.error && (
+                        <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 px-4 py-3">
+                            <div className="flex items-start gap-3">
+                                <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                                        {t('staff.finance.error.title', 'Ошибка загрузки данных')}
+                                    </p>
+                                    <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                                        {shiftData.today.error}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => void shiftData.load()}
+                                        className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 underline"
+                                    >
+                                        {t('staff.finance.error.retry', 'Попробовать снова')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <ShiftHeader
                             shiftDate={shiftDate}
@@ -327,7 +369,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                                             </span>
                                             <span className="font-semibold text-indigo-600 dark:text-indigo-400">{calculations.salonShare.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
                                         </div>
-                                        {isClosed && todayShift.topup_amount && todayShift.topup_amount > 0 && (
+                                        {isClosed && todayShift && typeof todayShift.topup_amount === 'number' && todayShift.topup_amount > 0 && (
                                             <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
                                                 <span className="text-xs text-amber-600 dark:text-amber-400">{t('staff.finance.details.ownerTopup', 'Доплата владельца')}</span>
                                                 <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">+{todayShift.topup_amount.toFixed(2)} {t('staff.finance.shift.som', 'сом')}</span>
@@ -377,7 +419,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         serviceOptions={serviceOptions}
                         shift={todayShift}
                         isOpen={isOpen}
-                        isReadOnly={false}
+                        isReadOnly={isReadOnlyForOwner}
                         expandedItems={shiftItems.expandedItems}
                         onExpand={(idx) => shiftItems.setExpandedItems((prev) => new Set(prev).add(idx))}
                         onCollapse={(idx) => {

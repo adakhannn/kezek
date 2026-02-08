@@ -8,6 +8,8 @@ import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { closeShiftSchema } from '@/lib/validation/schemas';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -47,10 +49,21 @@ export async function POST(req: Request) {
             try {
                 const { supabase, staffId } = await getStaffContext();
 
-        const body = await req.json().catch(() => ({}));
-        const totalAmountRaw = Number(body.totalAmount ?? 0);
-        const consumablesAmount = Number(body.consumablesAmount ?? 0); // для обратной совместимости
-        const items = Array.isArray(body.items) ? body.items : [];
+                // Валидация входных данных с помощью Zod схемы
+                const validationResult = await validateRequest(req, closeShiftSchema);
+                if (!validationResult.success) {
+                    // Форматируем ошибки валидации для более понятного сообщения
+                    const errorResponse = await validationResult.response.json();
+                    const errorMessage = errorResponse.errors 
+                        ? `Ошибка валидации: ${errorResponse.errors.map((e: { path: string; message: string }) => `${e.path}: ${e.message}`).join(', ')}`
+                        : errorResponse.message || 'Ошибка валидации данных';
+                    return NextResponse.json(
+                        { ok: false, error: errorMessage },
+                        { status: 400 }
+                    );
+                }
+                
+                const { items = [], totalAmount: totalAmountRaw = 0, consumablesAmount = 0 } = validationResult.data;
 
         // Получаем проценты и ставку за час из настроек сотрудника
         const { data: staffData, error: staffError } = await supabase
@@ -72,25 +85,6 @@ export async function POST(req: Request) {
 
         const percentMaster = Number(staffData?.percent_master ?? 60);
         const percentSalon = Number(staffData?.percent_salon ?? 40);
-
-        // Валидация: проверяем суммы в items, если они переданы
-        if (items.length > 0) {
-            for (const it of items) {
-                const serviceAmt = Number((it as { serviceAmount?: number }).serviceAmount ?? 0);
-                const consumablesAmt = Number((it as { consumablesAmount?: number }).consumablesAmount ?? 0);
-                if (serviceAmt < 0 || consumablesAmt < 0) {
-                    return NextResponse.json(
-                        { ok: false, error: 'Суммы не могут быть отрицательными' },
-                        { status: 400 }
-                    );
-                }
-            }
-        } else if (totalAmountRaw < 0 || consumablesAmount < 0) {
-            return NextResponse.json(
-                { ok: false, error: 'Суммы не могут быть отрицательными' },
-                { status: 400 }
-            );
-        }
 
         const now = new Date();
         const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
@@ -334,27 +328,31 @@ export async function POST(req: Request) {
 
         if (items.length > 0) {
             const cleanItems = items
-                .map((it: {
-                    clientName?: string;
-                    client_name?: string;
-                    serviceName?: string;
-                    service_name?: string;
-                    serviceAmount?: number;
-                    amount?: number; // для обратной совместимости
-                    consumablesAmount?: number;
-                    consumables_amount?: number; // для обратной совместимости
-                    bookingId?: string;
-                    booking_id?: string; // для обратной совместимости
-                    note?: string;
-                }) => ({
-                    shift_id: shiftId,
-                    client_name: it.clientName ?? it.client_name ?? null,
-                    service_name: it.serviceName ?? it.service_name ?? null,
-                    service_amount: Number(it.serviceAmount ?? it.amount ?? 0) || 0,
-                    consumables_amount: Number(it.consumablesAmount ?? it.consumables_amount ?? 0) || 0,
-                    booking_id: it.bookingId ?? it.booking_id ?? null,
-                    note: it.note ?? null,
-                }))
+                .map((it) => {
+                    // Типизируем item с учетом возможных null значений
+                    const item = it as {
+                        clientName?: string | null;
+                        client_name?: string | null;
+                        serviceName?: string | null;
+                        service_name?: string | null;
+                        serviceAmount?: number | null;
+                        amount?: number | null;
+                        consumablesAmount?: number | null;
+                        consumables_amount?: number | null;
+                        bookingId?: string | null;
+                        booking_id?: string | null;
+                        note?: string | null;
+                    };
+                    return {
+                        shift_id: shiftId,
+                        client_name: item.clientName ?? item.client_name ?? null,
+                        service_name: item.serviceName ?? item.service_name ?? null,
+                        service_amount: Number(item.serviceAmount ?? item.amount ?? 0) || 0,
+                        consumables_amount: Number(item.consumablesAmount ?? item.consumables_amount ?? 0) || 0,
+                        booking_id: item.bookingId ?? item.booking_id ?? null,
+                        note: item.note ?? null,
+                    };
+                })
                 // Сохраняем позиции, если есть суммы ИЛИ booking_id (чтобы сохранить связь с записью, даже если суммы еще не заполнены)
                 .filter((it: { service_amount: number; consumables_amount: number; booking_id: string | null }) => 
                     it.service_amount > 0 || it.consumables_amount > 0 || it.booking_id !== null

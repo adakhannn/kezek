@@ -857,7 +857,10 @@ export default function Client({
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-blue-700 dark:text-blue-300">
                             <li>{t('staff.schedule.instructions.default', 'По умолчанию все дни рабочие (09:00-21:00)')}</li>
                             <li>{t('staff.schedule.instructions.dayOff', 'Отметьте чекбокс "Выходной день", чтобы сделать день нерабочим')}</li>
-                            <li dangerouslySetInnerHTML={{ __html: t('staff.schedule.instructions.transfer', '<strong>Временный перевод:</strong> Выберите филиал в выпадающем списке "Филиал" для любого дня, чтобы временно перевести сотрудника в другой филиал. Основной филиал отмечен как "(основной)".') }} />
+                            <li>
+                                <strong>{t('staff.schedule.instructions.transfer.prefix', 'Временный перевод:')}</strong>{' '}
+                                {t('staff.schedule.instructions.transfer.suffix', 'Выберите филиал в выпадающем списке "Филиал" для любого дня, чтобы временно перевести сотрудника в другой филиал. Основной филиал отмечен как "(основной)".')}
+                            </li>
                             <li>{t('staff.schedule.instructions.weeks', 'Можно управлять расписанием только на текущую и следующую неделю')}</li>
                             <li>{t('staff.schedule.instructions.past', 'Прошедшие даты недоступны для редактирования')}</li>
                             <li>{t('staff.schedule.instructions.transfersTab', 'Все временные переводы отображаются во вкладке "Временные переводы"')}</li>

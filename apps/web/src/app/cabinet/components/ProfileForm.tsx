@@ -411,7 +411,19 @@ export default function ProfileForm() {
                                             {t('cabinet.profile.telegram.alreadyLinked.desc', 'Чтобы использовать другой Telegram аккаунт:')}
                                         </p>
                                         <ol className="text-xs text-amber-700 dark:text-amber-300 list-decimal list-inside space-y-1 ml-2">
-                                            <li dangerouslySetInnerHTML={{ __html: t('cabinet.profile.telegram.alreadyLinked.step1', 'Откройте <a href="https://web.telegram.org" target="_blank" rel="noopener noreferrer" class="underline">web.telegram.org</a> в новой вкладке') }} />
+                                            <li>
+                                                {t('cabinet.profile.telegram.alreadyLinked.step1.prefix', 'Откройте')}{' '}
+                                                <a 
+                                                    href="https://web.telegram.org" 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className="underline"
+                                                >
+                                                    web.telegram.org
+                                                </a>
+                                                {' '}
+                                                {t('cabinet.profile.telegram.alreadyLinked.step1.suffix', 'в новой вкладке')}
+                                            </li>
                                             <li>{t('cabinet.profile.telegram.alreadyLinked.step2', 'Выйдите из текущего Telegram аккаунта')}</li>
                                             <li>{t('cabinet.profile.telegram.alreadyLinked.step3', 'Войдите в нужный Telegram аккаунт')}</li>
                                             <li>{t('cabinet.profile.telegram.alreadyLinked.step4', 'Вернитесь на эту страницу и попробуйте снова')}</li>

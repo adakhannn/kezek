@@ -73,3 +73,76 @@ export const lonSchema = z.number().min(-180, 'Longitude must be between -180 an
  */
 export const uuidArraySchema = z.array(uuidSchema).min(1, 'At least one UUID required');
 
+/**
+ * Дата в формате YYYY-MM-DD
+ */
+export const dateStringSchema = z.string().regex(
+    /^\d{4}-\d{2}-\d{2}$/,
+    'Date must be in YYYY-MM-DD format'
+).refine(
+    (val) => {
+        const [year, month, day] = val.split('-').map(Number);
+        if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+            return false;
+        }
+        if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+            return false;
+        }
+        const testDate = new Date(year, month - 1, day);
+        return testDate.getFullYear() === year && 
+               testDate.getMonth() === month - 1 && 
+               testDate.getDate() === day;
+    },
+    { message: 'Invalid date (e.g., day does not exist in month)' }
+);
+
+/**
+ * Схема для одного элемента смены (shift item)
+ */
+export const shiftItemSchema = z.object({
+    id: z.string().uuid().optional().nullable(),
+    clientName: z.union([
+        z.string().max(500, 'Client name too long'),
+        z.literal(''),
+        z.null(),
+    ]).optional(),
+    serviceName: z.union([
+        z.string().max(500, 'Service name too long'),
+        z.literal(''),
+        z.null(),
+    ]).optional(),
+    serviceAmount: z.number().nonnegative('Service amount cannot be negative').default(0),
+    consumablesAmount: z.number().nonnegative('Consumables amount cannot be negative').default(0),
+    bookingId: z.string().uuid().optional().nullable(),
+    createdAt: z.string().optional().nullable(),
+}).strict();
+
+/**
+ * Схема для массива элементов смены
+ */
+export const shiftItemsArraySchema = z.array(shiftItemSchema).max(1000, 'Too many items (maximum 1000)');
+
+/**
+ * Схема для запроса сохранения элементов смены
+ */
+export const saveShiftItemsSchema = z.object({
+    items: shiftItemsArraySchema,
+    staffId: z.string().uuid().optional(),
+    shiftDate: dateStringSchema.optional(),
+}).strict();
+
+/**
+ * Схема для запроса закрытия смены
+ */
+export const closeShiftSchema = z.object({
+    items: shiftItemsArraySchema.optional(),
+    totalAmount: z.number().nonnegative('Total amount cannot be negative').optional(),
+    consumablesAmount: z.number().nonnegative('Consumables amount cannot be negative').optional(),
+}).strict().refine(
+    (data) => {
+        // Либо items, либо totalAmount должны быть указаны
+        return (data.items && data.items.length > 0) || (data.totalAmount !== undefined && data.totalAmount !== null);
+    },
+    { message: 'Either items array or totalAmount must be provided' }
+);
+

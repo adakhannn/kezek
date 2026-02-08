@@ -27,6 +27,42 @@ export function useShiftManagement(onShiftChanged?: () => void): UseShiftManagem
         setSaving(true);
         try {
             const res = await fetch('/api/staff/shift/open', { method: 'POST' });
+            
+            // Проверяем HTTP статус перед парсингом JSON
+            if (!res.ok) {
+                let errorMessage = t('staff.finance.error.openShift', 'Не удалось открыть смену');
+                
+                // Пытаемся получить сообщение об ошибке из ответа
+                try {
+                    const errorJson = await res.json();
+                    if (errorJson?.error) {
+                        errorMessage = errorJson.error;
+                    } else if (errorJson?.message) {
+                        errorMessage = errorJson.message;
+                    }
+                } catch {
+                    // Если не удалось распарсить JSON, используем стандартные сообщения по статусу
+                }
+                
+                // Улучшенные сообщения для разных HTTP статусов
+                if (res.status === 400) {
+                    errorMessage = errorMessage || t('staff.finance.error.openShift.badRequest', 'Невозможно открыть смену. Проверьте, не открыта ли уже смена или не является ли сегодня выходным днем.');
+                } else if (res.status === 401) {
+                    errorMessage = t('staff.finance.error.openShift.unauthorized', 'Сессия истекла. Пожалуйста, войдите в систему снова.');
+                } else if (res.status === 403) {
+                    errorMessage = t('staff.finance.error.openShift.forbidden', 'У вас нет прав для открытия смены.');
+                } else if (res.status === 429) {
+                    errorMessage = t('staff.finance.error.openShift.rateLimit', 'Слишком много запросов. Пожалуйста, подождите немного.');
+                } else if (res.status >= 500) {
+                    errorMessage = t('staff.finance.error.openShift.server', 'Временная ошибка сервера. Попробуйте через несколько секунд.');
+                } else if (res.status >= 400) {
+                    errorMessage = errorMessage || t('staff.finance.error.openShift.client', 'Ошибка при открытии смены. Проверьте подключение к интернету.');
+                }
+                
+                toast.showError(errorMessage);
+                return;
+            }
+            
             const json = await res.json();
             if (!json.ok) {
                 const errorMessage = json.error || json.message || t('staff.finance.error.openShift', 'Не удалось открыть смену');
@@ -36,7 +72,21 @@ export function useShiftManagement(onShiftChanged?: () => void): UseShiftManagem
                 onShiftChanged?.();
             }
         } catch (e) {
-            const errorMessage = e instanceof Error ? e.message : t('staff.finance.error.openShift', 'Ошибка при открытии смены');
+            let errorMessage = t('staff.finance.error.openShift', 'Ошибка при открытии смены');
+            
+            // Улучшенная обработка различных типов ошибок
+            if (e instanceof TypeError) {
+                if (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed to fetch')) {
+                    errorMessage = t('staff.finance.error.openShift.network', 'Ошибка подключения к серверу. Проверьте подключение к интернету и попробуйте снова.');
+                } else {
+                    errorMessage = t('staff.finance.error.openShift.unknown', 'Произошла ошибка при открытии смены. Попробуйте обновить страницу.');
+                }
+            } else if (e instanceof Error) {
+                if (e.message) {
+                    errorMessage = e.message;
+                }
+            }
+            
             toast.showError(errorMessage);
         } finally {
             setSaving(false);
@@ -111,10 +161,21 @@ export function useShiftManagement(onShiftChanged?: () => void): UseShiftManagem
             setClosingProgress(null);
             let errorMessage = t('staff.finance.error.closeShift', 'Ошибка при закрытии смены');
             
-            if (e instanceof TypeError && e.message.includes('fetch')) {
-                errorMessage = t('staff.finance.error.closeShift.network', 'Ошибка сети. Проверьте подключение к интернету.');
+            // Улучшенная обработка различных типов ошибок
+            if (e instanceof TypeError) {
+                if (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed to fetch')) {
+                    errorMessage = t('staff.finance.error.closeShift.network', 'Ошибка подключения к серверу. Проверьте подключение к интернету и попробуйте снова.');
+                } else {
+                    errorMessage = t('staff.finance.error.closeShift.unknown', 'Произошла ошибка при закрытии смены. Попробуйте обновить страницу.');
+                }
             } else if (e instanceof Error) {
-                errorMessage = e.message;
+                if (e.message) {
+                    errorMessage = e.message;
+                } else {
+                    errorMessage = t('staff.finance.error.closeShift.unknown', 'Произошла неожиданная ошибка. Попробуйте снова.');
+                }
+            } else {
+                errorMessage = t('staff.finance.error.closeShift.unknown', 'Произошла неожиданная ошибка. Попробуйте обновить страницу.');
             }
             
             toast.showError(errorMessage);
