@@ -70,6 +70,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         isReadOnly: false,
         isInitialLoad: shiftData.isInitialLoad,
         staffId,
+        onSaveSuccess: () => {
+            // Перезагружаем данные после успешного сохранения, чтобы получить id для новых клиентов
+            void shiftData.load();
+        },
     });
 
     // Расчеты финансов

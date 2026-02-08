@@ -342,9 +342,9 @@ export async function POST(req: Request) {
                         created_at: createdAt,
                     };
                 })
-                .filter((it: { service_amount: number; consumables_amount: number; booking_id: string | null }) => 
-                    // Сохраняем в БД только если есть сумма ИЛИ booking_id (чтобы сохранить связь с записью)
-                    it.service_amount > 0 || it.consumables_amount > 0 || it.booking_id !== null
+                .filter((it: { shift_id: string; client_name: string | null; service_amount: number; consumables_amount: number; booking_id: string | null }) => 
+                    // Сохраняем в БД если есть сумма ИЛИ booking_id ИЛИ client_name (чтобы сохранить добавленных клиентов даже без сумм)
+                    it.service_amount > 0 || it.consumables_amount > 0 || it.booking_id !== null || (it.client_name !== null && it.client_name !== '')
                 );
 
             if (cleanItems.length > 0) {

@@ -13,6 +13,7 @@ interface UseShiftItemsOptions {
     isReadOnly: boolean;
     isInitialLoad: boolean;
     staffId?: string;
+    onSaveSuccess?: () => void;
 }
 
 interface UseShiftItemsReturn {
@@ -31,7 +32,8 @@ export function useShiftItems({
     isOpen, 
     isReadOnly, 
     isInitialLoad,
-    staffId 
+    staffId,
+    onSaveSuccess
 }: UseShiftItemsOptions): UseShiftItemsReturn {
     const [items, setItems] = useState<ShiftItem[]>(initialItems);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
@@ -58,6 +60,9 @@ export function useShiftItems({
                 const json = await res.json();
                 if (!json.ok) {
                     logError('ShiftItems', 'Error auto-saving items', json.error);
+                } else {
+                    // Вызываем callback после успешного сохранения для перезагрузки данных
+                    onSaveSuccess?.();
                 }
             } catch (e) {
                 logError('ShiftItems', 'Error auto-saving items', e);
@@ -67,7 +72,7 @@ export function useShiftItems({
         }, 1000); // сохраняем через 1 секунду после последнего изменения
 
         return () => clearTimeout(timeoutId);
-    }, [items, isOpen, isInitialLoad, isReadOnly, staffId]);
+    }, [items, isOpen, isInitialLoad, isReadOnly, staffId, onSaveSuccess]);
 
     return {
         items,
