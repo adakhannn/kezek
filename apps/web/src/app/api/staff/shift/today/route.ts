@@ -104,7 +104,8 @@ export async function GET() {
                 .from('staff_shift_items')
                 .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
                 .eq('shift_id', shift.id)
-                .order('created_at', { ascending: true });
+                .order('created_at', { ascending: false })
+                .order('id', { ascending: false });
 
             if (itemsError) {
                 logError('StaffShiftToday', 'Error loading shift items', itemsError);

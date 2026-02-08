@@ -134,13 +134,24 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             .filter((n) => n > 0);
         const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
         const nextIndex = maxIndex + 1;
+        
+        // Устанавливаем время с небольшой задержкой относительно последнего добавленного клиента
+        // чтобы обеспечить правильный порядок сортировки
+        const now = Date.now();
+        const lastItemTime = shiftItems.items.length > 0 && shiftItems.items[0].createdAt
+            ? new Date(shiftItems.items[0].createdAt).getTime()
+            : now;
+        // Если последний клиент был добавлен недавно (в пределах 1 секунды), добавляем задержку
+        const timeOffset = (now - lastItemTime < 1000) ? 100 : 0;
+        const createdAt = new Date(now + timeOffset).toISOString();
+        
         const newItem = {
             clientName: `${clientLabel} ${nextIndex}`,
             serviceName: '',
             serviceAmount: 0,
             consumablesAmount: 0,
             bookingId: null,
-            createdAt: new Date().toISOString(),
+            createdAt,
         };
         shiftItems.setItems((prev) => [newItem, ...prev]);
         shiftItems.setExpandedItems(new Set([0]));

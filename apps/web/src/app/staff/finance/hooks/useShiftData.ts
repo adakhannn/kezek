@@ -123,10 +123,25 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
                     createdAt: it.createdAt ?? it.created_at ?? null,
                 }))
                 .sort((a, b) => {
-                    if (!a.createdAt && !b.createdAt) return 0;
+                    // Сначала сортируем по createdAt (новые сверху)
+                    if (!a.createdAt && !b.createdAt) {
+                        // Если оба без времени, сортируем по id (для стабильности)
+                        if (!a.id && !b.id) return 0;
+                        if (!a.id) return 1;
+                        if (!b.id) return -1;
+                        return b.id.localeCompare(a.id);
+                    }
                     if (!a.createdAt) return 1;
                     if (!b.createdAt) return -1;
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                    const timeDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                    // Если время одинаковое (в пределах 1 секунды), сортируем по id
+                    if (Math.abs(timeDiff) < 1000) {
+                        if (!a.id && !b.id) return 0;
+                        if (!a.id) return 1;
+                        if (!b.id) return -1;
+                        return b.id.localeCompare(a.id);
+                    }
+                    return timeDiff;
                 });
                 setItems(loadedItems);
             } else {
