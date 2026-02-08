@@ -1,7 +1,7 @@
 // apps/web/src/app/staff/finance/hooks/useShiftItems.ts
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import type { ShiftItem } from '../types';
 
@@ -42,6 +42,12 @@ export function useShiftItems({
     const [items, setItems] = useState<ShiftItem[]>(initialItems);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
     const [savingItems, setSavingItems] = useState(false);
+    
+    // Сохраняем callback в ref, чтобы избежать повторных вызовов useEffect
+    const onSaveSuccessRef = useRef(onSaveSuccess);
+    useEffect(() => {
+        onSaveSuccessRef.current = onSaveSuccess;
+    }, [onSaveSuccess]);
 
     // Синхронизируем items с внешним состоянием с умным слиянием
     useEffect(() => {
@@ -217,10 +223,13 @@ export function useShiftItems({
                 } else {
                     // Перезагружаем данные только если нет локальных items без id
                     // (то есть все изменения сохранены и пользователь не редактирует)
-                    const hasUnsavedItems = items.some((it) => !it.id);
+                    const hasUnsavedItems = deduplicatedItems.some((it) => !it.id);
                     if (!hasUnsavedItems) {
                         // Вызываем callback после успешного сохранения для перезагрузки данных
-                        onSaveSuccess?.();
+                        // Используем setTimeout и ref, чтобы избежать вызова во время рендера и бесконечных циклов
+                        setTimeout(() => {
+                            onSaveSuccessRef.current?.();
+                        }, 100);
                     }
                 }
             } catch (e) {
@@ -231,7 +240,7 @@ export function useShiftItems({
         }, 1000); // сохраняем через 1 секунду после последнего изменения
 
         return () => clearTimeout(timeoutId);
-    }, [items, isOpen, isInitialLoad, isReadOnly, staffId, shiftDate, onSaveSuccess]);
+    }, [items, isOpen, isInitialLoad, isReadOnly, staffId, shiftDate]);
 
     return {
         items,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 import { ClientsList } from './finance/components/ClientsList';
 import { ClientsListHeader } from './finance/components/ClientsListHeader';
@@ -67,6 +67,13 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     // Для владельца: режим только для чтения, если смена закрыта, не существует, или не открыта
     // Владелец может редактировать только открытые смены
     const isReadOnlyForOwner = !!staffId && !isOpen;
+    
+    // Мемоизируем callback для предотвращения бесконечных циклов
+    const handleSaveSuccess = useCallback(() => {
+        // Перезагружаем данные после успешного сохранения, чтобы получить id для новых клиентов
+        void shiftData.load();
+    }, [shiftData]);
+    
     const shiftItems = useShiftItems({
         items: shiftData.items,
         isOpen,
@@ -74,10 +81,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         isInitialLoad: shiftData.isInitialLoad,
         staffId,
         shiftDate,
-        onSaveSuccess: () => {
-            // Перезагружаем данные после успешного сохранения, чтобы получить id для новых клиентов
-            void shiftData.load();
-        },
+        onSaveSuccess: handleSaveSuccess,
     });
 
     // Расчеты финансов
