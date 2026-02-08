@@ -78,7 +78,7 @@ export async function POST(req: Request, context: unknown) {
 
 export async function GET(req: Request, context: unknown) {
     try {
-        const branchId = await getRouteParamRequired(context, 'id');
+        const branchId = await getRouteParamUuid(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
