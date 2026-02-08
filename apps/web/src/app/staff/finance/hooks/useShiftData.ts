@@ -1,7 +1,7 @@
 // apps/web/src/app/staff/finance/hooks/useShiftData.ts
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 import type { TodayResponse, ShiftItem, Booking, ServiceName } from '../types';
 
@@ -70,6 +70,12 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
         topup_amount?: number;
     }>>([]);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    
+    // Сохраняем callback в ref, чтобы избежать пересоздания load
+    const onDataLoadedRef = useRef(onDataLoaded);
+    useEffect(() => {
+        onDataLoadedRef.current = onDataLoaded;
+    }, [onDataLoaded]);
 
     const load = useCallback(async (date?: Date) => {
         setLoading(true);
@@ -206,9 +212,9 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
         } finally {
             setLoading(false);
             setIsInitialLoad(false);
-            onDataLoaded?.();
+            onDataLoadedRef.current?.();
         }
-    }, [staffId, shiftDate, onDataLoaded, t, toast]);
+    }, [staffId, shiftDate, t, toast]);
 
     // Используем строковое представление даты для зависимостей, чтобы избежать пересоздания объекта Date
     const shiftDateStr = formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd');
@@ -218,6 +224,7 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
     }, []);
 
     // Перезагружаем данные при изменении даты смены (только для владельца)
+    // Используем только shiftDateStr в зависимостях, чтобы избежать пересоздания объекта Date
     useEffect(() => {
         if (!isInitialLoad && staffId) {
             void load(shiftDate);

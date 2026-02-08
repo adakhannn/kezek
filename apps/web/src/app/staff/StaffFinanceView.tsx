@@ -42,13 +42,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [showShiftDetails, setShowShiftDetails] = useState(false);
 
+    // Мемоизируем callback для onDataLoaded, чтобы избежать пересоздания load
+    const handleDataLoaded = useCallback(() => {
+        // Данные загружены
+    }, []);
+    
     // Загрузка данных смены
     const shiftData = useShiftData({ 
         staffId, 
         shiftDate,
-        onDataLoaded: () => {
-            // Данные загружены
-        }
+        onDataLoaded: handleDataLoaded
     });
 
     // Управление сменой
