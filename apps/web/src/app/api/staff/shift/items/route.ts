@@ -175,10 +175,30 @@ export async function POST(req: Request) {
                 const writeClient = useServiceClient ? getServiceClient() : supabase;
                 const now = new Date().toISOString();
                 
+                // Получаем biz_id и branch_id из данных сотрудника
+                const { data: staffForShift, error: staffForShiftError } = await supabase
+                    .from('staff')
+                    .select('biz_id, branch_id')
+                    .eq('id', staffId)
+                    .maybeSingle();
+                
+                if (staffForShiftError || !staffForShift) {
+                    logError('StaffShiftItems', 'Error loading staff for shift creation', { 
+                        error: staffForShiftError, 
+                        staffId 
+                    });
+                    return NextResponse.json(
+                        { ok: false, error: 'Не удалось загрузить данные сотрудника' },
+                        { status: 500 }
+                    );
+                }
+                
                 const { data: newShift, error: createError } = await writeClient
                     .from('staff_shifts')
                     .insert({
                         staff_id: staffId,
+                        biz_id: staffForShift.biz_id,
+                        branch_id: staffForShift.branch_id,
                         shift_date: ymd,
                         status: 'open',
                         opened_at: now,
@@ -191,7 +211,9 @@ export async function POST(req: Request) {
                         error: createError, 
                         staffId, 
                         ymd, 
-                        targetShiftDate 
+                        targetShiftDate,
+                        bizId: staffForShift.biz_id,
+                        branchId: staffForShift.branch_id
                     });
                     return NextResponse.json(
                         { ok: false, error: 'Не удалось создать смену' },
