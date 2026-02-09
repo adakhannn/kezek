@@ -160,7 +160,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
         });
     };
 
-    const handleAddClient = () => {
+    const handleAddClient = async () => {
         // Проверяем, открыта ли смена
         // Для владельца: разрешаем добавление, если смена не закрыта (может быть открыта или еще не создана)
         // Для сотрудника: разрешаем добавление только если смена открыта
@@ -209,15 +209,21 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             bookingId: null,
             createdAt,
         };
-        shiftItems.setItems((prev) => [newItem, ...prev]);
-        shiftItems.setExpandedItems(new Set([0]));
+        
+        // Используем функцию addClient для прямого вызова API с блокировкой экрана
+        await shiftItems.addClient(newItem);
+        // После успешного добавления данные перезагрузятся через onSaveSuccess
+        // Раскрываем первый элемент после перезагрузки
+        setTimeout(() => {
+            shiftItems.setExpandedItems(new Set([0]));
+        }, 200);
     };
 
     const handleUpdateItem = (idx: number, item: typeof shiftItems.items[0]) => {
         shiftItems.setItems((prev) => prev.map((it, i) => (i === idx ? item : it)));
     };
 
-    const handleDeleteItem = (idx: number) => {
+    const handleDeleteItem = async (idx: number) => {
         // Проверяем, открыта ли смена
         // Для владельца: разрешаем удаление, если смена не закрыта (может быть открыта или еще не создана)
         // Для сотрудника: разрешаем удаление только если смена открыта
@@ -235,12 +241,9 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
             }
         }
         
-        shiftItems.setItems((prev) => prev.filter((_, i) => i !== idx));
-        shiftItems.setExpandedItems((prev) => {
-            const next = new Set(prev);
-            next.delete(idx);
-            return next;
-        });
+        // Используем функцию deleteClient для прямого вызова API с блокировкой экрана
+        await shiftItems.deleteClient(idx);
+        // После успешного удаления данные перезагрузятся через onSaveSuccess
     };
 
     // Определяем, нужно ли показывать индикатор загрузки
@@ -248,7 +251,10 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     // 1. Прогресс закрытия смены
     // 2. Начальной загрузке данных
     // 3. Последующих загрузках (но только если нет данных или произошла ошибка)
+    // 4. Добавлении или удалении клиента
     const shouldShowLoading = shiftManagement.closingProgress?.show || 
+        shiftItems.addingClient ||
+        shiftItems.deletingClient ||
         (shiftData.loading && (
             shiftData.isInitialLoad || 
             !shiftData.today || 
