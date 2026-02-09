@@ -228,8 +228,38 @@ export function useShiftItems({
         // Не сохраняем, если нет items для сохранения
         if (items.length === 0) return;
         
-        // Проверяем, изменились ли items (сравниваем JSON строку)
-        const itemsStr = JSON.stringify(items.map(it => ({ 
+        // Фильтруем items: сохраняем только те, которые имеют данные для сохранения
+        // (имеют id ИЛИ bookingId ИЛИ суммы больше 0 ИЛИ заполнено имя клиента)
+        const itemsToSave = items.filter(it => {
+            // Если есть id - это существующий item, сохраняем его
+            if (it.id) return true;
+            // Если есть bookingId - это запись из бронирования, сохраняем
+            if (it.bookingId) return true;
+            // Если есть суммы - сохраняем
+            if ((it.serviceAmount ?? 0) > 0 || (it.consumablesAmount ?? 0) > 0) return true;
+            // Если заполнено имя клиента - сохраняем (для клиентов "с улицы")
+            if (it.clientName && it.clientName.trim() !== '') return true;
+            // Иначе - это пустая форма, не сохраняем
+            return false;
+        });
+        
+        // Если нет items для сохранения, не отправляем запрос
+        if (itemsToSave.length === 0) {
+            // Обновляем prevItemsRef, чтобы не отправлять запрос при следующем изменении
+            const itemsStr = JSON.stringify(items.map(it => ({ 
+                id: it.id, 
+                clientName: it.clientName, 
+                serviceName: it.serviceName,
+                serviceAmount: it.serviceAmount,
+                consumablesAmount: it.consumablesAmount,
+                bookingId: it.bookingId
+            })));
+            prevItemsRef.current = itemsStr;
+            return;
+        }
+        
+        // Проверяем, изменились ли items для сохранения (сравниваем JSON строку)
+        const itemsStr = JSON.stringify(itemsToSave.map(it => ({ 
             id: it.id, 
             clientName: it.clientName, 
             serviceName: it.serviceName,
@@ -289,8 +319,23 @@ export function useShiftItems({
                 return;
             }
             
+            // Фильтруем items для сохранения (те же условия, что и выше)
+            const currentItemsToSave = items.filter(it => {
+                if (it.id) return true;
+                if (it.bookingId) return true;
+                if ((it.serviceAmount ?? 0) > 0 || (it.consumablesAmount ?? 0) > 0) return true;
+                if (it.clientName && it.clientName.trim() !== '') return true;
+                return false;
+            });
+            
+            // Если нет items для сохранения, не отправляем запрос
+            if (currentItemsToSave.length === 0) {
+                saveAbortControllerRef.current = null;
+                return;
+            }
+            
             // Проверяем, не изменились ли items снова (еще одна проверка на актуальность)
-            const currentItemsStr = JSON.stringify(items.map(it => ({ 
+            const currentItemsStr = JSON.stringify(currentItemsToSave.map(it => ({ 
                 id: it.id, 
                 clientName: it.clientName, 
                 serviceName: it.serviceName,
@@ -315,7 +360,8 @@ export function useShiftItems({
             setSavingItems(true);
             try {
                 // Дедупликация: удаляем items без id, если есть соответствующий item с id
-                const deduplicatedItems = items.filter((item, index, arr) => {
+                // Используем currentItemsToSave вместо items, чтобы отправлять только заполненные формы
+                const deduplicatedItems = currentItemsToSave.filter((item, index, arr) => {
                     if (item.id) {
                         // Item с id - оставляем
                         return true;
