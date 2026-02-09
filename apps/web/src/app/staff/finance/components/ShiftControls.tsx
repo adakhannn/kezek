@@ -10,6 +10,7 @@ interface ShiftControlsProps {
     isDayOff: boolean;
     loading: boolean;
     saving: boolean;
+    staffId?: string;
     onOpenShift: () => void;
     onCloseShift: () => void;
     onRefresh: () => void;
@@ -22,15 +23,20 @@ export function ShiftControls({
     isDayOff,
     loading,
     saving,
+    staffId,
     onOpenShift,
     onCloseShift,
     onRefresh,
 }: ShiftControlsProps) {
     const { t } = useLanguage();
 
+    // Для владельца: показываем кнопку, если смена не открыта (может быть не создана или закрыта)
+    // Для сотрудника: показываем кнопку только если смена не создана
+    const canShowOpenButton = staffId ? (!isOpen && !isDayOff) : (!hasShift && !isDayOff);
+
     return (
         <div className="flex gap-2 items-center flex-wrap">
-            {!hasShift && (
+            {canShowOpenButton && (
                 <>
                     {isDayOff ? (
                         <div className="text-sm text-amber-600 dark:text-amber-400 font-medium px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">

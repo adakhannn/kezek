@@ -14,6 +14,7 @@ interface ClientsListProps {
     shift: Shift | null;
     isOpen: boolean;
     isReadOnly: boolean;
+    staffId?: string;
     expandedItems: Set<number>;
     onExpand: (idx: number) => void;
     onCollapse: (idx: number) => void;
@@ -28,6 +29,7 @@ export function ClientsList({
     shift,
     isOpen,
     isReadOnly,
+    staffId,
     expandedItems,
     onExpand,
     onCollapse,
@@ -36,7 +38,9 @@ export function ClientsList({
 }: ClientsListProps) {
     const { t, locale } = useLanguage();
 
-    if (!shift || !isOpen) {
+    // Для владельца: показываем список, даже если смена не открыта (может быть не создана)
+    // Для сотрудника: показываем сообщение, если смена не открыта
+    if (!staffId && (!shift || !isOpen)) {
         return (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
                 {t('staff.finance.clients.shiftNotOpen', 'Чтобы добавлять клиентов, необходимо сначала открыть смену на вкладке «Текущая смена».')}
@@ -63,7 +67,13 @@ export function ClientsList({
                 <span className="text-right">{t('staff.finance.clients.amount', 'Сумма')}</span>
                 <span className="text-right">{t('staff.finance.clients.consumables', 'Расходники')}</span>
                 <span className="text-right">{t('staff.finance.clients.createdAt', 'Время заполнения')}</span>
-                <span className="text-center">{isOpen && !isReadOnly ? t('staff.finance.clients.actions', 'Действия') : ''}</span>
+                <span className="text-center">
+                    {/* Для владельца: показываем заголовок, если смена не закрыта (может быть открыта или еще не создана) */}
+                    {/* Для сотрудника: показываем заголовок только если смена открыта */}
+                    {((staffId && !isReadOnly) || (!staffId && isOpen && !isReadOnly)) 
+                        ? t('staff.finance.clients.actions', 'Действия') 
+                        : ''}
+                </span>
             </div>
 
             {items.map((item, idx) => {
@@ -103,6 +113,7 @@ export function ClientsList({
                         idx={idx}
                         isOpen={isOpen}
                         isReadOnly={isReadOnly}
+                        staffId={staffId}
                         onEdit={() => onExpand(idx)}
                         onDelete={() => onDeleteItem(idx)}
                     />

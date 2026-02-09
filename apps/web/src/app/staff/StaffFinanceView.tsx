@@ -57,6 +57,9 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     // Управление сменой
     const shiftManagement = useShiftManagement(() => {
         void shiftData.load();
+    }, {
+        staffId,
+        shiftDate,
     });
 
     // Вычисляем состояние смены с улучшенными проверками на null/undefined
@@ -326,6 +329,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                             isDayOff={shiftData.isDayOff}
                             loading={shiftData.loading}
                             saving={shiftManagement.saving}
+                            staffId={staffId}
                             onOpenShift={handleOpenShift}
                             onCloseShift={handleCloseShift}
                             onRefresh={() => void shiftData.load()}
@@ -438,6 +442,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         shift={todayShift}
                         isOpen={isOpen}
                         isReadOnly={isReadOnlyForOwner}
+                        staffId={staffId}
                         expandedItems={shiftItems.expandedItems}
                         onExpand={(idx) => shiftItems.setExpandedItems((prev) => new Set(prev).add(idx))}
                         onCollapse={(idx) => {

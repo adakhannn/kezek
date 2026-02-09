@@ -1,11 +1,18 @@
 // apps/web/src/app/staff/finance/hooks/useShiftManagement.ts
 
+import { formatInTimeZone } from 'date-fns-tz';
 import { useState } from 'react';
 
 import type { ShiftItem } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useToast } from '@/hooks/useToast';
+import { TZ } from '@/lib/time';
+
+interface UseShiftManagementOptions {
+    staffId?: string;
+    shiftDate?: Date;
+}
 
 interface UseShiftManagementReturn {
     saving: boolean;
@@ -17,7 +24,10 @@ interface UseShiftManagementReturn {
 /**
  * Хук для управления сменой (открытие/закрытие)
  */
-export function useShiftManagement(onShiftChanged?: () => void): UseShiftManagementReturn {
+export function useShiftManagement(
+    onShiftChanged?: () => void,
+    options?: UseShiftManagementOptions
+): UseShiftManagementReturn {
     const { t } = useLanguage();
     const toast = useToast();
     const [saving, setSaving] = useState(false);
@@ -26,7 +36,14 @@ export function useShiftManagement(onShiftChanged?: () => void): UseShiftManagem
     const handleOpenShift = async () => {
         setSaving(true);
         try {
-            const res = await fetch('/api/staff/shift/open', { method: 'POST' });
+            // Если передан staffId, используем endpoint для владельца
+            let url = '/api/staff/shift/open';
+            if (options?.staffId && options?.shiftDate) {
+                const dateStr = formatInTimeZone(options.shiftDate, TZ, 'yyyy-MM-dd');
+                url = `/api/dashboard/staff/${options.staffId}/shift/open?date=${dateStr}`;
+            }
+            
+            const res = await fetch(url, { method: 'POST' });
             
             // Проверяем HTTP статус перед парсингом JSON
             if (!res.ok) {

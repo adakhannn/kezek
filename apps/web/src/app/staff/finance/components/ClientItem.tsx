@@ -10,22 +10,27 @@ interface ClientItemProps {
     idx: number;
     isOpen: boolean;
     isReadOnly: boolean;
+    staffId?: string;
     onEdit: () => void;
     onDelete: () => void;
 }
 
-export function ClientItem({ item, idx, isOpen, isReadOnly, onEdit, onDelete }: ClientItemProps) {
+export function ClientItem({ item, idx, isOpen, isReadOnly, staffId, onEdit, onDelete }: ClientItemProps) {
     const { t, locale } = useLanguage();
     const hasBooking = !!item.bookingId;
+    
+    // Для владельца: разрешаем редактирование, если смена не закрыта (может быть открыта или еще не создана)
+    // Для сотрудника: разрешаем редактирование только если смена открыта
+    const canEdit = staffId ? !isReadOnly : (isOpen && !isReadOnly);
 
     return (
         <div
             className={`group flex items-center justify-between py-3 px-4 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all ${
-                isOpen && !isReadOnly 
+                canEdit
                     ? 'border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600 cursor-pointer hover:shadow-md hover:shadow-indigo-100 dark:hover:shadow-indigo-900/20' 
                     : 'border-gray-200 dark:border-gray-700'
             }`}
-            onClick={() => isOpen && !isReadOnly && onEdit()}
+            onClick={() => canEdit && onEdit()}
         >
             {/* Desktop view - grid */}
             <div className="hidden sm:flex flex-1 grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-3 items-center min-w-0">
@@ -101,7 +106,7 @@ export function ClientItem({ item, idx, isOpen, isReadOnly, onEdit, onDelete }: 
                 </div>
             </div>
             
-            {isOpen && !isReadOnly && (
+            {canEdit && (
                 <div className="flex items-center gap-2 ml-3 flex-shrink-0">
                     <button
                         type="button"
