@@ -147,12 +147,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     // Обработчики
     const handleOpenShift = async () => {
         await shiftManagement.handleOpenShift();
-        await shiftData.load();
+        // Инвалидируем кэш и принудительно перезагружаем данные
+        shiftData.invalidateCache(shiftDate);
+        await shiftData.load(shiftDate, true);
     };
 
     const handleCloseShift = async () => {
         await shiftManagement.handleCloseShift(shiftItems.items, () => {
-            void shiftData.load();
+            // Инвалидируем кэш и принудительно перезагружаем данные
+            shiftData.invalidateCache(shiftDate);
+            void shiftData.load(shiftDate, true);
         });
     };
 

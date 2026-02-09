@@ -38,7 +38,8 @@ interface UseShiftDataReturn {
         guaranteed_amount?: number;
         topup_amount?: number;
     }>;
-    load: (date?: Date) => Promise<void>;
+    load: (date?: Date, force?: boolean) => Promise<void>;
+    invalidateCache: (date?: Date) => void;
     isInitialLoad: boolean;
 }
 
@@ -614,6 +615,17 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
         }
     }, [shiftDateStr, staffId, isInitialLoad, load]);
 
+    // Функция для инвалидации кэша
+    const invalidateCache = useCallback((date?: Date) => {
+        if (date) {
+            const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+            cacheRef.current.delete(dateStr);
+        } else {
+            // Инвалидируем весь кэш
+            cacheRef.current.clear();
+        }
+    }, []);
+
     return {
         loading,
         today,
@@ -628,6 +640,7 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
         isDayOff,
         allShifts,
         load,
+        invalidateCache,
         isInitialLoad,
     };
 }
