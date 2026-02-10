@@ -340,169 +340,169 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
                 if (!res.ok) {
                     let errorMessage = tRef.current('staff.finance.error.loading', 'Не удалось загрузить данные смены');
                     let errorDetails: string | undefined;
+                    
+                    // Пытаемся получить сообщение об ошибке из ответа
+                    try {
+                        const errorJson = await res.json();
+                        if (errorJson?.error) {
+                            errorMessage = errorJson.error;
+                        } else if (errorJson?.message) {
+                            errorMessage = errorJson.message;
+                        }
+                        // Дополнительные детали об ошибке, если есть
+                        if (errorJson?.details) {
+                            errorDetails = errorJson.details;
+                        }
+                    } catch {
+                        // Если не удалось распарсить JSON, используем стандартные сообщения по статусу
+                    }
+                    
+                    // Улучшенные сообщения для разных HTTP статусов с более понятными формулировками
+                    if (res.status === 404) {
+                        errorMessage = staffId 
+                            ? tRef.current('staff.finance.error.notFound', 'Сотрудник или данные смены не найдены. Проверьте правильность выбранной даты.')
+                            : tRef.current('staff.finance.error.shiftNotFound', 'Смена не найдена. Возможно, смена еще не была открыта.');
+                    } else if (res.status === 401) {
+                        errorMessage = tRef.current('staff.finance.error.unauthorized', 'Сессия истекла. Пожалуйста, войдите в систему снова.');
+                    } else if (res.status === 403) {
+                        errorMessage = tRef.current('staff.finance.error.forbidden', 'У вас нет доступа к этой информации. Обратитесь к администратору.');
+                    } else if (res.status === 400) {
+                        errorMessage = errorMessage || tRef.current('staff.finance.error.badRequest', 'Некорректный запрос. Проверьте выбранную дату и попробуйте снова.');
+                    } else if (res.status === 429) {
+                        errorMessage = tRef.current('staff.finance.error.rateLimit', 'Слишком много запросов. Пожалуйста, подождите немного и попробуйте снова.');
+                    } else if (res.status >= 500) {
+                        errorMessage = tRef.current('staff.finance.error.server', 'Временная ошибка сервера. Пожалуйста, попробуйте через несколько секунд.');
+                    } else if (res.status >= 400) {
+                        errorMessage = errorMessage || tRef.current('staff.finance.error.client', 'Ошибка при загрузке данных. Проверьте подключение к интернету и попробуйте снова.');
+                    }
+                    
+                    // Добавляем детали, если они есть
+                    if (errorDetails) {
+                        errorMessage = `${errorMessage} ${errorDetails}`;
+                    }
+                    
+                    // Проверяем актуальность перед установкой ошибки
+                    if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
+                        setToday({ ok: false, error: errorMessage });
+                        toastRef.current.showError(errorMessage);
+                    }
+                    return;
+                }
                 
-                // Пытаемся получить сообщение об ошибке из ответа
+                // Парсим JSON ответ
+                let json: TodayResponse;
                 try {
-                    const errorJson = await res.json();
-                    if (errorJson?.error) {
-                        errorMessage = errorJson.error;
-                    } else if (errorJson?.message) {
-                        errorMessage = errorJson.message;
+                    json = await res.json();
+                } catch (parseError) {
+                    // Проверяем актуальность перед установкой ошибки парсинга
+                    if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
+                        const errorMessage = tRef.current('staff.finance.error.parse', 'Ошибка обработки ответа сервера');
+                        setToday({ ok: false, error: errorMessage });
+                        toastRef.current.showError(errorMessage);
                     }
-                    // Дополнительные детали об ошибке, если есть
-                    if (errorJson?.details) {
-                        errorDetails = errorJson.details;
+                    return;
+                }
+                
+                // Проверяем актуальность запроса: дата и счетчик должны совпадать
+                if (abortController.signal.aborted || 
+                    lastRequestedDateRef.current !== dateStr || 
+                    requestCounterRef.current !== currentRequestId) {
+                    // Запрос устарел - был запрошен новый запрос
+                    return;
+                }
+                
+                // Проверяем, что ответ содержит ok: false
+                if (!json.ok) {
+                    // Проверяем актуальность перед установкой ошибки
+                    if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
+                        const errorMessage = json.error || tRef.current('staff.finance.error.loading', 'Не удалось загрузить данные смены');
+                        setToday({ ok: false, error: errorMessage });
+                        toastRef.current.showError(errorMessage);
                     }
-                } catch {
-                    // Если не удалось распарсить JSON, используем стандартные сообщения по статусу
+                    return;
                 }
                 
-                // Улучшенные сообщения для разных HTTP статусов с более понятными формулировками
-                if (res.status === 404) {
-                    errorMessage = staffId 
-                        ? tRef.current('staff.finance.error.notFound', 'Сотрудник или данные смены не найдены. Проверьте правильность выбранной даты.')
-                        : tRef.current('staff.finance.error.shiftNotFound', 'Смена не найдена. Возможно, смена еще не была открыта.');
-                } else if (res.status === 401) {
-                    errorMessage = tRef.current('staff.finance.error.unauthorized', 'Сессия истекла. Пожалуйста, войдите в систему снова.');
-                } else if (res.status === 403) {
-                    errorMessage = tRef.current('staff.finance.error.forbidden', 'У вас нет доступа к этой информации. Обратитесь к администратору.');
-                } else if (res.status === 400) {
-                    errorMessage = errorMessage || tRef.current('staff.finance.error.badRequest', 'Некорректный запрос. Проверьте выбранную дату и попробуйте снова.');
-                } else if (res.status === 429) {
-                    errorMessage = tRef.current('staff.finance.error.rateLimit', 'Слишком много запросов. Пожалуйста, подождите немного и попробуйте снова.');
-                } else if (res.status >= 500) {
-                    errorMessage = tRef.current('staff.finance.error.server', 'Временная ошибка сервера. Пожалуйста, попробуйте через несколько секунд.');
-                } else if (res.status >= 400) {
-                    errorMessage = errorMessage || tRef.current('staff.finance.error.client', 'Ошибка при загрузке данных. Проверьте подключение к интернету и попробуйте снова.');
+                // Проверяем актуальность перед установкой данных
+                if (lastRequestedDateRef.current !== dateStr || requestCounterRef.current !== currentRequestId) {
+                    // Запрос устарел - был запрошен новый запрос
+                    return;
                 }
                 
-                // Добавляем детали, если они есть
-                if (errorDetails) {
-                    errorMessage = `${errorMessage} ${errorDetails}`;
-                }
+                setToday(json);
                 
-                // Проверяем актуальность перед установкой ошибки
-                if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
-                    setToday({ ok: false, error: errorMessage });
-                    toastRef.current.showError(errorMessage);
-                }
-                return;
-            }
-            
-            // Парсим JSON ответ
-            let json: TodayResponse;
-            try {
-                json = await res.json();
-            } catch (parseError) {
-                // Проверяем актуальность перед установкой ошибки парсинга
-                if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
-                    const errorMessage = tRef.current('staff.finance.error.parse', 'Ошибка обработки ответа сервера');
-                    setToday({ ok: false, error: errorMessage });
-                    toastRef.current.showError(errorMessage);
-                }
-                return;
-            }
-            
-            // Проверяем актуальность запроса: дата и счетчик должны совпадать
-            if (abortController.signal.aborted || 
-                lastRequestedDateRef.current !== dateStr || 
-                requestCounterRef.current !== currentRequestId) {
-                // Запрос устарел - был запрошен новый запрос
-                return;
-            }
-            
-            // Проверяем, что ответ содержит ok: false
-            if (!json.ok) {
-                // Проверяем актуальность перед установкой ошибки
-                if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
-                    const errorMessage = json.error || tRef.current('staff.finance.error.loading', 'Не удалось загрузить данные смены');
-                    setToday({ ok: false, error: errorMessage });
-                    toastRef.current.showError(errorMessage);
-                }
-                return;
-            }
-            
-            // Проверяем актуальность перед установкой данных
-            if (lastRequestedDateRef.current !== dateStr || requestCounterRef.current !== currentRequestId) {
-                // Запрос устарел - был запрошен новый запрос
-                return;
-            }
-            
-            setToday(json);
-            
-            if (json.ok && json.today.exists && json.today.shift) {
-                // Тип для элемента смены из API (может быть в разных форматах)
-                type ApiShiftItem = {
-                    id?: string | null;
-                    clientName?: string | null;
-                    client_name?: string | null;
-                    serviceName?: string | null;
-                    service_name?: string | null;
-                    serviceAmount?: number | null;
-                    service_amount?: number | null;
-                    amount?: number | null;
-                    consumablesAmount?: number | null;
-                    consumables_amount?: number | null;
-                    bookingId?: string | null;
-                    booking_id?: string | null;
-                    createdAt?: string | null;
-                    created_at?: string | null;
-                };
-                
-                const itemsArray = Array.isArray(json.today.items) ? json.today.items : [];
-                const loadedItems = itemsArray.map((it: ApiShiftItem): ShiftItem => {
-                    // Безопасное извлечение значений с проверками на null/undefined
-                    const id = it.id && typeof it.id === 'string' ? it.id : undefined;
-                    const clientName = (it.clientName ?? it.client_name ?? '') || '';
-                    const serviceName = (it.serviceName ?? it.service_name ?? '') || '';
-                    
-                    // Безопасное преобразование чисел
-                    const serviceAmount = Number(
-                        it.service_amount ?? it.serviceAmount ?? it.amount ?? 0
-                    ) || 0;
-                    const consumablesAmount = Number(
-                        it.consumables_amount ?? it.consumablesAmount ?? 0
-                    ) || 0;
-                    
-                    // Безопасное извлечение bookingId и createdAt
-                    const bookingId = (it.bookingId ?? it.booking_id) && typeof (it.bookingId ?? it.booking_id) === 'string'
-                        ? (it.bookingId ?? it.booking_id)
-                        : null;
-                    const createdAt = (it.createdAt ?? it.created_at) && typeof (it.createdAt ?? it.created_at) === 'string'
-                        ? (it.createdAt ?? it.created_at)
-                        : null;
-                    
-                    return {
-                        id,
-                        clientName,
-                        serviceName,
-                        serviceAmount,
-                        consumablesAmount,
-                        bookingId,
-                        createdAt,
+                if (json.ok && json.today.exists && json.today.shift) {
+                    // Тип для элемента смены из API (может быть в разных форматах)
+                    type ApiShiftItem = {
+                        id?: string | null;
+                        clientName?: string | null;
+                        client_name?: string | null;
+                        serviceName?: string | null;
+                        service_name?: string | null;
+                        serviceAmount?: number | null;
+                        service_amount?: number | null;
+                        amount?: number | null;
+                        consumablesAmount?: number | null;
+                        consumables_amount?: number | null;
+                        bookingId?: string | null;
+                        booking_id?: string | null;
+                        createdAt?: string | null;
+                        created_at?: string | null;
                     };
-                })
-                .sort((a, b) => {
-                    // Сначала сортируем по createdAt (новые сверху)
-                    if (!a.createdAt && !b.createdAt) {
-                        // Если оба без времени, сортируем по id (для стабильности)
-                        if (!a.id && !b.id) return 0;
-                        if (!a.id) return 1;
-                        if (!b.id) return -1;
-                        return b.id.localeCompare(a.id);
-                    }
-                    if (!a.createdAt) return 1;
-                    if (!b.createdAt) return -1;
-                    const timeDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                    // Если время одинаковое (в пределах 1 секунды), сортируем по id
-                    if (Math.abs(timeDiff) < 1000) {
-                        if (!a.id && !b.id) return 0;
-                        if (!a.id) return 1;
-                        if (!b.id) return -1;
-                        return b.id.localeCompare(a.id);
-                    }
-                    return timeDiff;
-                });
+                    
+                    const itemsArray = Array.isArray(json.today.items) ? json.today.items : [];
+                    const loadedItems = itemsArray.map((it: ApiShiftItem): ShiftItem => {
+                        // Безопасное извлечение значений с проверками на null/undefined
+                        const id = it.id && typeof it.id === 'string' ? it.id : undefined;
+                        const clientName = (it.clientName ?? it.client_name ?? '') || '';
+                        const serviceName = (it.serviceName ?? it.service_name ?? '') || '';
+                        
+                        // Безопасное преобразование чисел
+                        const serviceAmount = Number(
+                            it.service_amount ?? it.serviceAmount ?? it.amount ?? 0
+                        ) || 0;
+                        const consumablesAmount = Number(
+                            it.consumables_amount ?? it.consumablesAmount ?? 0
+                        ) || 0;
+                        
+                        // Безопасное извлечение bookingId и createdAt
+                        const bookingId = (it.bookingId ?? it.booking_id) && typeof (it.bookingId ?? it.booking_id) === 'string'
+                            ? (it.bookingId ?? it.booking_id)
+                            : null;
+                        const createdAt = (it.createdAt ?? it.created_at) && typeof (it.createdAt ?? it.created_at) === 'string'
+                            ? (it.createdAt ?? it.created_at)
+                            : null;
+                        
+                        return {
+                            id,
+                            clientName,
+                            serviceName,
+                            serviceAmount,
+                            consumablesAmount,
+                            bookingId,
+                            createdAt,
+                        };
+                    })
+                    .sort((a, b) => {
+                        // Сначала сортируем по createdAt (новые сверху)
+                        if (!a.createdAt && !b.createdAt) {
+                            // Если оба без времени, сортируем по id (для стабильности)
+                            if (!a.id && !b.id) return 0;
+                            if (!a.id) return 1;
+                            if (!b.id) return -1;
+                            return b.id.localeCompare(a.id);
+                        }
+                        if (!a.createdAt) return 1;
+                        if (!b.createdAt) return -1;
+                        const timeDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                        // Если время одинаковое (в пределах 1 секунды), сортируем по id
+                        if (Math.abs(timeDiff) < 1000) {
+                            if (!a.id && !b.id) return 0;
+                            if (!a.id) return 1;
+                            if (!b.id) return -1;
+                            return b.id.localeCompare(a.id);
+                        }
+                        return timeDiff;
+                    });
                     // Проверяем актуальность перед установкой items
                     if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
                         setItems(loadedItems);
@@ -694,21 +694,21 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
                 }
             } finally {
                 // Очищаем AbortController только если это был последний запрос
-            if (abortControllerRef.current === abortController && 
-                lastRequestedDateRef.current === dateStr &&
-                requestCounterRef.current === currentRequestId) {
-                abortControllerRef.current = null;
-                setLoading(false);
-                setIsInitialLoad(false);
-                onDataLoadedRef.current?.();
+                if (abortControllerRef.current === abortController && 
+                    lastRequestedDateRef.current === dateStr &&
+                    requestCounterRef.current === currentRequestId) {
+                    abortControllerRef.current = null;
+                    setLoading(false);
+                    setIsInitialLoad(false);
+                    onDataLoadedRef.current?.();
+                }
+                // Очищаем ссылку на текущий запрос только если это был актуальный запрос
+                if (currentRequestRef.current && 
+                    currentRequestRef.current.dateStr === dateStr &&
+                    currentRequestRef.current.requestId === currentRequestId) {
+                    currentRequestRef.current = null;
+                }
             }
-            // Очищаем ссылку на текущий запрос только если это был актуальный запрос
-            if (currentRequestRef.current && 
-                currentRequestRef.current.dateStr === dateStr &&
-                currentRequestRef.current.requestId === currentRequestId) {
-                currentRequestRef.current = null;
-            }
-        }
         })();
         
         // Сохраняем промис текущего запроса с requestId
