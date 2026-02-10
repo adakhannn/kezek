@@ -3,10 +3,10 @@
  * Унифицированная логика для использования в разных API endpoints
  */
 
-import { formatInTimeZone } from 'date-fns-tz';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { formatInTimeZone } from 'date-fns-tz';
 
-import { logError, logDebug } from '@/lib/log';
+import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
 export interface ShiftDataServiceOptions {
@@ -219,7 +219,7 @@ export async function getShiftData({
     // Записи (bookings) сотрудника за выбранную дату
     const dateStart = `${ymd}T00:00:00`;
     const dateEnd = `${ymd}T23:59:59`;
-    const { data: dateBookings, error: bookingsError } = await client
+    const { data: dateBookingsRaw, error: bookingsError } = await client
         .from('bookings')
         .select('id, client_name, client_phone, start_at, services:services!bookings_service_id_fkey (name_ru, name_ky, name_en)')
         .eq('staff_id', staffId)
@@ -231,6 +231,30 @@ export async function getShiftData({
     if (bookingsError) {
         logError('ShiftDataService', 'Error loading bookings', bookingsError);
     }
+
+    // Преобразуем bookings: services может быть массивом из-за join, но нам нужен объект или null
+    const dateBookings = (dateBookingsRaw ?? []).map((booking: {
+        id: string;
+        client_name: string | null;
+        client_phone: string | null;
+        start_at: string;
+        services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
+    }) => {
+        const services = Array.isArray(booking.services) 
+            ? (booking.services.length > 0 ? booking.services[0] : null)
+            : booking.services;
+        return {
+            id: booking.id,
+            client_name: booking.client_name,
+            client_phone: booking.client_phone,
+            start_at: booking.start_at,
+            services: services ? {
+                name_ru: services.name_ru || '',
+                name_ky: services.name_ky ?? null,
+                name_en: services.name_en ?? null,
+            } : null,
+        };
+    });
 
     // Услуги сотрудника для выпадающего списка
     const { data: staffServices, error: servicesError } = await client

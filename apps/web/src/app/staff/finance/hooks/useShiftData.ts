@@ -174,9 +174,9 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
             if (cached && staticDataValid && bookingsValid && shiftDataValid && allShiftsValid) {
                 // Используем кэшированные данные (проверяем актуальность через requestId)
                 if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
-                setToday(cached.data);
-                // Восстанавливаем данные из кэша
-                if (cached.data.ok && cached.data.today.exists && cached.data.today.shift) {
+                    setToday(cached.data);
+                    // Восстанавливаем данные из кэша
+                    if (cached.data.ok && cached.data.today.exists && cached.data.today.shift) {
                     const itemsArray = Array.isArray(cached.data.today.items) ? cached.data.today.items : [];
                     type ApiShiftItem = {
                         id?: string | null;
@@ -207,55 +207,56 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
                             ? (it.createdAt ?? it.created_at)
                             : null,
                     })));
-                } else {
-                    setItems([]);
+                    } else {
+                        setItems([]);
+                    }
+                    if (cached.data.ok && 'bookings' in cached.data && Array.isArray(cached.data.bookings)) {
+                        setBookings(cached.data.bookings.filter((b): b is Booking => 
+                            b !== null && 
+                            typeof b === 'object' && 
+                            'id' in b && 
+                            typeof b.id === 'string' &&
+                            'start_at' in b &&
+                            typeof b.start_at === 'string'
+                        ));
+                    }
+                    if (cached.data.ok && 'services' in cached.data && Array.isArray(cached.data.services)) {
+                        setAvailableServices(cached.data.services.map((svc: string | ServiceName): ServiceName => {
+                            if (typeof svc === 'string') {
+                                return { name_ru: svc };
+                            }
+                            return {
+                                name_ru: svc.name_ru || '',
+                                name_ky: (svc.name_ky && typeof svc.name_ky === 'string') ? svc.name_ky : null,
+                                name_en: (svc.name_en && typeof svc.name_en === 'string') ? svc.name_en : null,
+                            };
+                        }));
+                    }
+                    if (cached.data.ok && 'staffPercentMaster' in cached.data && 'staffPercentSalon' in cached.data) {
+                        setStaffPercentMaster(Number(cached.data.staffPercentMaster ?? 60));
+                        setStaffPercentSalon(Number(cached.data.staffPercentSalon ?? 40));
+                    }
+                    if (cached.data.ok && 'isDayOff' in cached.data) {
+                        setIsDayOff(Boolean(cached.data.isDayOff));
+                    }
+                    if (cached.data.ok && 'hourlyRate' in cached.data) {
+                        setHourlyRate(cached.data.hourlyRate ?? null);
+                    }
+                    if (cached.data.ok && 'currentHoursWorked' in cached.data) {
+                        setCurrentHoursWorked(cached.data.currentHoursWorked ?? null);
+                    }
+                    if (cached.data.ok && 'currentGuaranteedAmount' in cached.data) {
+                        setCurrentGuaranteedAmount(cached.data.currentGuaranteedAmount ?? null);
+                    }
+                    if (cached.data.ok && 'allShifts' in cached.data && Array.isArray(cached.data.allShifts)) {
+                        setAllShifts(cached.data.allShifts);
+                    } else {
+                        setAllShifts([]);
+                    }
+                    setLoading(false);
+                    setIsInitialLoad(false);
+                    onDataLoadedRef.current?.();
                 }
-                if (cached.data.ok && 'bookings' in cached.data && Array.isArray(cached.data.bookings)) {
-                    setBookings(cached.data.bookings.filter((b): b is Booking => 
-                        b !== null && 
-                        typeof b === 'object' && 
-                        'id' in b && 
-                        typeof b.id === 'string' &&
-                        'start_at' in b &&
-                        typeof b.start_at === 'string'
-                    ));
-                }
-                if (cached.data.ok && 'services' in cached.data && Array.isArray(cached.data.services)) {
-                    setAvailableServices(cached.data.services.map((svc: string | ServiceName): ServiceName => {
-                        if (typeof svc === 'string') {
-                            return { name_ru: svc };
-                        }
-                        return {
-                            name_ru: svc.name_ru || '',
-                            name_ky: (svc.name_ky && typeof svc.name_ky === 'string') ? svc.name_ky : null,
-                            name_en: (svc.name_en && typeof svc.name_en === 'string') ? svc.name_en : null,
-                        };
-                    }));
-                }
-                if (cached.data.ok && 'staffPercentMaster' in cached.data && 'staffPercentSalon' in cached.data) {
-                    setStaffPercentMaster(Number(cached.data.staffPercentMaster ?? 60));
-                    setStaffPercentSalon(Number(cached.data.staffPercentSalon ?? 40));
-                }
-                if (cached.data.ok && 'isDayOff' in cached.data) {
-                    setIsDayOff(Boolean(cached.data.isDayOff));
-                }
-                if (cached.data.ok && 'hourlyRate' in cached.data) {
-                    setHourlyRate(cached.data.hourlyRate ?? null);
-                }
-                if (cached.data.ok && 'currentHoursWorked' in cached.data) {
-                    setCurrentHoursWorked(cached.data.currentHoursWorked ?? null);
-                }
-                if (cached.data.ok && 'currentGuaranteedAmount' in cached.data) {
-                    setCurrentGuaranteedAmount(cached.data.currentGuaranteedAmount ?? null);
-                }
-                if (cached.data.ok && 'allShifts' in cached.data && Array.isArray(cached.data.allShifts)) {
-                    setAllShifts(cached.data.allShifts);
-                } else {
-                    setAllShifts([]);
-                }
-                setLoading(false);
-                setIsInitialLoad(false);
-                onDataLoadedRef.current?.();
             }
             return;
         }
@@ -276,7 +277,13 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
             }
             // Проверяем кэш еще раз после завершения запроса
             const cachedAfterWait = cacheRef.current.get(dateStr);
-            if (cachedAfterWait && Date.now() - cachedAfterWait.timestamp < CACHE_TTL) {
+            const nowAfterWait = Date.now();
+            const staticDataValidAfterWait = cachedAfterWait && cachedAfterWait.staticDataTimestamp && (nowAfterWait - cachedAfterWait.staticDataTimestamp < CACHE_TTL_STATIC);
+            const bookingsValidAfterWait = cachedAfterWait && cachedAfterWait.bookingsTimestamp && (nowAfterWait - cachedAfterWait.bookingsTimestamp < CACHE_TTL_BOOKINGS);
+            const shiftDataValidAfterWait = cachedAfterWait && cachedAfterWait.shiftDataTimestamp && (nowAfterWait - cachedAfterWait.shiftDataTimestamp < CACHE_TTL_SHIFT);
+            const allShiftsValidAfterWait = cachedAfterWait && cachedAfterWait.allShiftsTimestamp && (nowAfterWait - cachedAfterWait.allShiftsTimestamp < CACHE_TTL_ALL_SHIFTS);
+            
+            if (cachedAfterWait && staticDataValidAfterWait && bookingsValidAfterWait && shiftDataValidAfterWait && allShiftsValidAfterWait) {
                 // Проверяем актуальность перед использованием кэша
                 if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
                     setToday(cachedAfterWait.data);
@@ -393,7 +400,7 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
                 let json: TodayResponse;
                 try {
                     json = await res.json();
-                } catch (parseError) {
+                } catch {
                     // Проверяем актуальность перед установкой ошибки парсинга
                     if (lastRequestedDateRef.current === dateStr && requestCounterRef.current === currentRequestId) {
                         const errorMessage = tRef.current('staff.finance.error.parse', 'Ошибка обработки ответа сервера');

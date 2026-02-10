@@ -18,7 +18,7 @@ interface ClientItemProps {
     onDelete: () => void;
 }
 
-export function ClientItem({ item, _idx, isOpen, isClosed, isReadOnly, staffId, isPending = false, onEdit, onDelete }: ClientItemProps) {
+export function ClientItem({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, isPending = false, onEdit, onDelete }: ClientItemProps) {
     const { t, locale } = useLanguage();
     const hasBooking = !!item.bookingId;
     // Элемент считается новым (не сохранен), если у него нет id

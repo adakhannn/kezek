@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import type { ShiftItem } from '../types';
 import { fetchWithRetry, isNetworkError, isAbortError } from '../utils/networkRetry';
 
+import { useToast } from '@/hooks/useToast';
 import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
@@ -46,6 +47,12 @@ export function useShiftItems({
     onSaveSuccess,
     onSaveError
 }: UseShiftItemsOptions): UseShiftItemsReturn {
+    const toast = useToast();
+    const toastRef = useRef(toast);
+    useEffect(() => {
+        toastRef.current = toast;
+    }, [toast]);
+    
     const [items, setItems] = useState<ShiftItem[]>(initialItems);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
     const [savingItems, setSavingItems] = useState(false);
