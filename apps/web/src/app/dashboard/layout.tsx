@@ -27,8 +27,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
             if (e.message === 'UNAUTHORIZED') {
                 redirect('/b/kezek');
             }
-            // Нет доступа к бизнесу → показываем сообщение
+            // Нет доступа к бизнесу → показываем сообщение с улучшенными инструкциями
             if (e.message === 'NO_BIZ_ACCESS') {
+                // Диагностическая информация уже логируется в getBizContextForManagers()
+                // В dev режиме можно было бы извлечь её из логов, но для простоты
+                // показываем общее сообщение с инструкциями
                 return <DashboardLayoutClient errorType="NO_BIZ_ACCESS" />;
             }
         }

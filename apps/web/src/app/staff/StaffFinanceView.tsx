@@ -161,21 +161,24 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     };
 
     const handleAddClient = async () => {
-        // Проверяем, открыта ли смена
-        // Для владельца: разрешаем добавление, если смена не закрыта (может быть открыта или еще не создана)
-        // Для сотрудника: разрешаем добавление только если смена открыта
-        if (staffId) {
-            // Владелец: может добавлять клиентов, если смена не закрыта
-            if (isClosed || isReadOnlyForOwner) {
-                toast.showError(t('staff.finance.error.shiftClosed', 'Смена закрыта. Невозможно добавить клиента.'));
-                return;
-            }
-        } else {
-            // Сотрудник: может добавлять клиентов только если смена открыта
-            if (!isOpen) {
-                toast.showError(t('staff.finance.error.noOpenShift', 'Нет открытой смены. Сначала откройте смену.'));
-                return;
-            }
+        // Проверяем права доступа перед добавлением клиента
+        const { checkPermissions, getPermissionMessage } = await import('./finance/utils/permissions');
+        const permissions = checkPermissions({
+            staffId,
+            isOpen,
+            isClosed,
+            isReadOnly: isReadOnlyForOwner
+        });
+        
+        if (!permissions.canAdd) {
+            const message = getPermissionMessage('add', {
+                staffId,
+                isOpen,
+                isClosed,
+                isReadOnly: isReadOnlyForOwner
+            });
+            toast.showError(message || t('staff.finance.error.cannotAdd', 'Невозможно добавить клиента.'));
+            return;
         }
         
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
@@ -224,21 +227,24 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     };
 
     const handleDeleteItem = async (idx: number) => {
-        // Проверяем, открыта ли смена
-        // Для владельца: разрешаем удаление, если смена не закрыта (может быть открыта или еще не создана)
-        // Для сотрудника: разрешаем удаление только если смена открыта
-        if (staffId) {
-            // Владелец: может удалять клиентов, если смена не закрыта
-            if (isClosed || isReadOnlyForOwner) {
-                toast.showError(t('staff.finance.error.shiftClosedDelete', 'Смена закрыта. Невозможно удалить клиента.'));
-                return;
-            }
-        } else {
-            // Сотрудник: может удалять клиентов только если смена открыта
-            if (!isOpen) {
-                toast.showError(t('staff.finance.error.noOpenShiftDelete', 'Нет открытой смены. Невозможно удалить клиента.'));
-                return;
-            }
+        // Проверяем права доступа перед удалением клиента
+        const { checkPermissions, getPermissionMessage } = await import('./finance/utils/permissions');
+        const permissions = checkPermissions({
+            staffId,
+            isOpen,
+            isClosed,
+            isReadOnly: isReadOnlyForOwner
+        });
+        
+        if (!permissions.canDelete) {
+            const message = getPermissionMessage('delete', {
+                staffId,
+                isOpen,
+                isClosed,
+                isReadOnly: isReadOnlyForOwner
+            });
+            toast.showError(message || t('staff.finance.error.cannotDelete', 'Невозможно удалить клиента.'));
+            return;
         }
         
         // Используем функцию deleteClient для прямого вызова API с блокировкой экрана
@@ -268,6 +274,8 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                     message={shiftManagement.closingProgress?.message || t('staff.finance.loading', 'Загрузка данных смены...')}
                     progress={shiftManagement.closingProgress?.progress}
                     showProgress={shiftManagement.closingProgress?.progress !== undefined}
+                    onCancel={shiftManagement.closingProgress?.canCancel ? shiftManagement.cancelCloseShift : undefined}
+                    canCancel={shiftManagement.closingProgress?.canCancel ?? false}
                 />
             )}
             <ToastContainer
@@ -439,6 +447,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         onShiftDateChange={setShiftDate}
                         isOpen={isOpen}
                         isClosed={isClosed}
+                        isReadOnly={isReadOnlyForOwner}
                         savingItems={shiftItems.savingItems}
                         saving={shiftManagement.saving}
                         staffId={staffId}
@@ -451,6 +460,7 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
                         serviceOptions={serviceOptions}
                         shift={todayShift}
                         isOpen={isOpen}
+                        isClosed={isClosed}
                         isReadOnly={isReadOnlyForOwner}
                         staffId={staffId}
                         expandedItems={shiftItems.expandedItems}

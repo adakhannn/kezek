@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation';
 
 import StaffLayoutClient from './StaffLayoutClient';
-import StaffLayoutError from './StaffLayoutError';
+import { ErrorDisplay } from '@/app/_components/ErrorDisplay';
 
 import { getStaffContext } from '@/lib/authBiz';
 
@@ -15,10 +15,17 @@ export default async function StaffLayout({ children }: { children: React.ReactN
 
         return <StaffLayoutClient staffId={staffId}>{children}</StaffLayoutClient>;
     } catch (e: unknown) {
-        if (e instanceof Error && (e.message === 'UNAUTHORIZED' || e.message === 'NO_STAFF_ACCESS' || e.message === 'NO_STAFF_RECORD')) {
-            redirect('/');
+        if (e instanceof Error) {
+            // Для критических ошибок авторизации - показываем страницу ошибки вместо редиректа
+            // Это обеспечивает лучший UX и консистентность с dashboard
+            if (e.message === 'UNAUTHORIZED') {
+                return <ErrorDisplay errorType="UNAUTHORIZED" context="staff" />;
+            }
+            if (e.message === 'NO_STAFF_RECORD' || e.message === 'NO_STAFF_ACCESS') {
+                return <ErrorDisplay errorType="NO_STAFF_RECORD" context="staff" />;
+            }
         }
-        return <StaffLayoutError />;
+        return <ErrorDisplay errorType="GENERAL" context="staff" errorMessage={e instanceof Error ? e.message : undefined} />;
     }
 }
 

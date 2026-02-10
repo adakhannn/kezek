@@ -13,6 +13,7 @@ interface ClientsListProps {
     serviceOptions: ServiceName[];
     shift: Shift | null;
     isOpen: boolean;
+    isClosed: boolean;
     isReadOnly: boolean;
     staffId?: string;
     expandedItems: Set<number>;
@@ -28,6 +29,7 @@ export function ClientsList({
     serviceOptions,
     shift,
     isOpen,
+    isClosed,
     isReadOnly,
     staffId,
     expandedItems,
@@ -36,7 +38,7 @@ export function ClientsList({
     onUpdateItem,
     onDeleteItem,
 }: ClientsListProps) {
-    const { t, locale } = useLanguage();
+    const { t } = useLanguage();
 
     // Для владельца: показываем список, даже если смена не открыта (может быть не создана)
     // Для сотрудника: показываем сообщение, если смена не открыта
@@ -112,6 +114,7 @@ export function ClientsList({
                         item={item}
                         idx={idx}
                         isOpen={isOpen}
+                        isClosed={isClosed}
                         isReadOnly={isReadOnly}
                         staffId={staffId}
                         onEdit={() => onExpand(idx)}

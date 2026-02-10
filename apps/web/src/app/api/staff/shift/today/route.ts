@@ -1,15 +1,25 @@
+/**
+ * @deprecated Используйте /api/staff/finance вместо этого endpoint
+ * Этот endpoint сохранен для обратной совместимости
+ * 
+ * Миграция:
+ * - Старый: GET /api/staff/shift/today
+ * - Новый: GET /api/staff/finance
+ */
 // apps/web/src/app/api/staff/shift/today/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getStaffContext } from '@/lib/authBiz';
-import { logError } from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET() {
+    // Предупреждение о deprecated endpoint
+    logWarn('StaffShiftToday', 'Deprecated endpoint used. Please migrate to /api/staff/finance');
     try {
         const { supabase, staffId, bizId } = await getStaffContext();
 

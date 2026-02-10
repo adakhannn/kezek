@@ -4,6 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useState, useRef } from 'react';
 
 import type { ShiftItem } from '../types';
+import { fetchWithRetry, isNetworkError, isAbortError } from '../utils/networkRetry';
 
 import { logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
@@ -325,6 +326,10 @@ export function useShiftItems({
         saveAbortControllerRef.current = abortController;
         
         saveTimeoutRef.current = setTimeout(async () => {
+            // Очищаем ссылку на таймер сразу после начала выполнения
+            // Это предотвращает попытки очистки уже выполняющегося таймера
+            saveTimeoutRef.current = null;
+            
             // Проверяем, не был ли запрос отменен
             if (abortController.signal.aborted) {
                 return;
@@ -390,6 +395,27 @@ export function useShiftItems({
                 return;
             }
             
+            // Валидация перед отправкой
+            const { validateShiftItems } = await import('../utils/validation');
+            const validation = validateShiftItems(currentItemsToSave);
+            
+            if (!validation.valid) {
+                // Есть ошибки валидации - не отправляем запрос
+                const errorMessages = validation.errors.map(({ index, errors }) => {
+                    const item = currentItemsToSave[index];
+                    const clientName = item.clientName || `Клиент #${index + 1}`;
+                    const errorList = Object.values(errors).filter(Boolean).join(', ');
+                    return `${clientName}: ${errorList}`;
+                });
+                
+                const errorMessage = `Ошибки валидации:\n${errorMessages.join('\n')}`;
+                toastRef.current.showError(errorMessage);
+                saveAbortControllerRef.current = null;
+                isSavingRef.current = false;
+                setSavingItems(false);
+                return;
+            }
+            
             isSavingRef.current = true;
             setSavingItems(true);
             try {
@@ -424,16 +450,25 @@ export function useShiftItems({
                     return;
                 }
                 
-                const res = await fetch('/api/staff/shift/items', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        items: deduplicatedItems, 
-                        staffId: staffId || undefined,
-                        shiftDate: dateStr
-                    }),
-                    signal: abortController.signal,
-                });
+                const res = await fetchWithRetry(
+                    '/api/staff/shift/items',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            items: deduplicatedItems, 
+                            staffId: staffId || undefined,
+                            shiftDate: dateStr
+                        }),
+                        signal: abortController.signal,
+                    },
+                    {
+                        retries: 2, // Меньше попыток для сохранения, чтобы не задерживать пользователя
+                        baseDelayMs: 500,
+                        maxDelayMs: 5000,
+                        scope: 'ShiftItemsAutoSave'
+                    }
+                );
                 
                 // Проверяем, не был ли запрос отменен после получения ответа
                 if (abortController.signal.aborted) {
@@ -595,14 +630,33 @@ export function useShiftItems({
                     prevItemsRef.current = previousItemsStr;
                 }
                 
+                // Игнорируем ошибки отмены запроса
+                if (isAbortError(e)) {
+                    saveAbortControllerRef.current = null;
+                    return;
+                }
+                
                 // Улучшенная обработка различных типов ошибок
                 let errorMessage = 'Не удалось сохранить изменения';
                 
-                if (e instanceof TypeError) {
-                    if (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed to fetch')) {
-                        errorMessage = 'Ошибка подключения к серверу. Проверьте подключение к интернету и попробуйте снова.';
+                if (e instanceof Error && e.name === 'RateLimitError') {
+                    // Ошибка rate limiting
+                    errorMessage = e.message || 'Слишком много запросов. Пожалуйста, подождите немного и попробуйте снова.';
+                    onSaveErrorRef.current?.(errorMessage);
+                    logError('ShiftItems', 'Rate limit exceeded during auto-save', e);
+                    return;
+                } else if (isNetworkError(e)) {
+                    // Сетевые ошибки (fetchWithRetry уже попытался повторить)
+                    errorMessage = 'Проблема с подключением к интернету. Изменения не были сохранены. Проверьте соединение и попробуйте снова.';
+                    logError('ShiftItems', 'Network error auto-saving items after retries', e);
+                } else if (e instanceof Response) {
+                    // Response от fetchWithRetry при исчерпании попыток
+                    if (e.status >= 500) {
+                        errorMessage = 'Временная ошибка сервера. Изменения не были сохранены. Попробуйте снова через несколько секунд.';
+                    } else if (e.status === 429) {
+                        errorMessage = 'Слишком много запросов. Пожалуйста, подождите немного.';
                     } else {
-                        errorMessage = 'Ошибка при сохранении. Попробуйте обновить страницу.';
+                        errorMessage = 'Ошибка сервера. Изменения не были сохранены.';
                     }
                 } else if (e instanceof Error) {
                     if (e.message) {
@@ -627,8 +681,10 @@ export function useShiftItems({
         }, 1000); // сохраняем через 1 секунду после последнего изменения
 
         return () => {
+            // Очищаем таймер при размонтировании или изменении зависимостей
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = null; // Явно очищаем ссылку
             }
             // Отменяем запрос при размонтировании или изменении зависимостей
             if (saveAbortControllerRef.current) {
@@ -651,14 +707,25 @@ export function useShiftItems({
         setAddingClient(true);
         // Сохраняем текущее состояние для отката при ошибке
         const previousItems = [...items];
+        
+        // Оптимистичное обновление UI - сразу добавляем клиента в список
+        const newItemWithId: ShiftItem = { ...newItem, id: undefined };
+        const optimisticItems: ShiftItem[] = [newItemWithId, ...items];
+        setItems(optimisticItems);
+        // Автоматически разворачиваем форму редактирования для нового клиента
+        setExpandedItems((prev) => {
+            const next = new Set(prev);
+            // Добавляем индекс 0, так как новый клиент добавлен в начало списка
+            next.add(0);
+            return next;
+        });
+        
         try {
             // Форматируем дату для передачи в API
             const dateStr = shiftDate ? formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd') : undefined;
             
-            // Подготавливаем новый список items с добавленным клиентом
-            // Преобразуем newItem в ShiftItem (может быть без id)
-            const newItemWithId: ShiftItem = { ...newItem, id: undefined };
-            const newItems: ShiftItem[] = [newItemWithId, ...items];
+            // Используем оптимистично обновленный список для сохранения
+            const newItems = optimisticItems;
             
             // Фильтруем items для сохранения (те же условия, что и в auto-save)
             const itemsToSave = newItems.filter(it => {
@@ -698,15 +765,24 @@ export function useShiftItems({
                 return !hasDuplicateWithId;
             });
             
-            const res = await fetch('/api/staff/shift/items', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    items: deduplicatedItems, 
-                    staffId: staffId || undefined,
-                    shiftDate: dateStr
-                }),
-            });
+            const res = await fetchWithRetry(
+                '/api/staff/shift/items',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        items: deduplicatedItems, 
+                        staffId: staffId || undefined,
+                        shiftDate: dateStr
+                    }),
+                },
+                {
+                    retries: 3,
+                    baseDelayMs: 1000,
+                    maxDelayMs: 10000,
+                    scope: 'ShiftItemsAddClient'
+                }
+            );
             
             if (!res.ok) {
                 let errorMessage = 'Не удалось добавить клиента';
@@ -730,10 +806,17 @@ export function useShiftItems({
                     errorMessage = 'У вас нет прав для добавления клиентов.';
                 } else if (res.status === 400) {
                     errorMessage = errorMessage || 'Некорректные данные. Проверьте введенную информацию.';
-                } else if (res.status >= 500) {
+                } else                 if (res.status >= 500) {
                     errorMessage = 'Временная ошибка сервера. Попробуйте снова через несколько секунд.';
                 }
                 
+                // Откатываем оптимистичное обновление при ошибке
+                setItems(previousItems);
+                setExpandedItems((prev) => {
+                    const next = new Set(prev);
+                    next.delete(0); // Удаляем индекс 0, так как новый клиент был добавлен в начало
+                    return next;
+                });
                 onSaveErrorRef.current?.(errorMessage);
                 return;
             }
@@ -744,20 +827,54 @@ export function useShiftItems({
                 const errorMessage = json.error && typeof json.error === 'string' 
                     ? json.error 
                     : 'Не удалось добавить клиента';
+                // Откатываем оптимистичное обновление при ошибке
+                setItems(previousItems);
+                setExpandedItems((prev) => {
+                    const next = new Set(prev);
+                    next.delete(0); // Удаляем индекс 0, так как новый клиент был добавлен в начало
+                    return next;
+                });
                 onSaveErrorRef.current?.(errorMessage);
                 return;
             }
             
             // При успешном добавлении обновляем UI через перезагрузку данных
+            // (оптимистичное обновление уже было применено, но нужно получить актуальные данные с сервера)
             onSaveSuccessRef.current?.();
         } catch (e) {
+            // Игнорируем ошибки отмены запроса
+            if (isAbortError(e)) {
+                setAddingClient(false);
+                return;
+            }
+            
             let errorMessage = 'Не удалось добавить клиента';
             
-            if (e instanceof TypeError) {
-                if (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed to fetch')) {
-                    errorMessage = 'Ошибка подключения к серверу. Проверьте подключение к интернету и попробуйте снова.';
+            if (e instanceof Error && e.name === 'RateLimitError') {
+                // Ошибка rate limiting
+                errorMessage = e.message || 'Слишком много запросов. Пожалуйста, подождите немного и попробуйте снова.';
+                // Откатываем оптимистичное обновление при ошибке
+                setItems(previousItems);
+                setExpandedItems((prev) => {
+                    const next = new Set(prev);
+                    next.delete(0); // Удаляем индекс 0, так как новый клиент был добавлен в начало
+                    return next;
+                });
+                onSaveErrorRef.current?.(errorMessage);
+                logError('ShiftItems', 'Rate limit exceeded when adding client', e);
+                return;
+            } else if (isNetworkError(e)) {
+                // Сетевые ошибки (fetchWithRetry уже попытался повторить)
+                errorMessage = 'Проблема с подключением к интернету. Проверьте соединение и попробуйте снова.';
+                logError('ShiftItems', 'Network error adding client after retries', e);
+            } else if (e instanceof Response) {
+                // Response от fetchWithRetry при исчерпании попыток
+                if (e.status >= 500) {
+                    errorMessage = 'Временная ошибка сервера. Попробуйте снова через несколько секунд.';
+                } else if (e.status === 429) {
+                    errorMessage = 'Слишком много запросов. Пожалуйста, подождите немного.';
                 } else {
-                    errorMessage = 'Ошибка при добавлении клиента. Попробуйте обновить страницу.';
+                    errorMessage = 'Ошибка сервера. Попробуйте обновить страницу.';
                 }
             } else if (e instanceof Error) {
                 if (e.message) {
@@ -766,6 +883,13 @@ export function useShiftItems({
             }
             
             logError('ShiftItems', 'Error adding client', e);
+            // Откатываем оптимистичное обновление при ошибке
+            setItems(previousItems);
+            setExpandedItems((prev) => {
+                const next = new Set(prev);
+                next.delete(0); // Удаляем индекс 0, так как новый клиент был добавлен в начало
+                return next;
+            });
             onSaveErrorRef.current?.(errorMessage);
         } finally {
             setAddingClient(false);
@@ -777,6 +901,8 @@ export function useShiftItems({
         setDeletingClient(true);
         // Сохраняем текущее состояние для отката при ошибке
         const previousItems = [...items];
+        const previousExpandedItems = new Set(expandedItems);
+        
         try {
             const itemToDelete = items[idx];
             
@@ -786,17 +912,41 @@ export function useShiftItems({
                 setExpandedItems((prev) => {
                     const next = new Set(prev);
                     next.delete(idx);
-                    return next;
+                    // Обновляем индексы для остальных элементов
+                    const updated = new Set<number>();
+                    prev.forEach((i) => {
+                        if (i < idx) {
+                            updated.add(i);
+                        } else if (i > idx) {
+                            updated.add(i - 1);
+                        }
+                    });
+                    return updated;
                 });
                 setDeletingClient(false);
                 return;
             }
             
+            // Оптимистичное обновление UI - сразу удаляем клиента из списка
+            const newItems = items.filter((_, i) => i !== idx);
+            setItems(newItems);
+            setExpandedItems((prev) => {
+                const next = new Set(prev);
+                next.delete(idx);
+                // Обновляем индексы для остальных элементов
+                const updated = new Set<number>();
+                prev.forEach((i) => {
+                    if (i < idx) {
+                        updated.add(i);
+                    } else if (i > idx) {
+                        updated.add(i - 1);
+                    }
+                });
+                return updated;
+            });
+            
             // Форматируем дату для передачи в API
             const dateStr = shiftDate ? formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd') : undefined;
-            
-            // Подготавливаем новый список items без удаленного клиента
-            const newItems = items.filter((_, i) => i !== idx);
             
             // Фильтруем items для сохранения (те же условия, что и в auto-save)
             const itemsToSave = newItems.filter(it => {
@@ -836,15 +986,24 @@ export function useShiftItems({
                 return !hasDuplicateWithId;
             });
             
-            const res = await fetch('/api/staff/shift/items', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    items: deduplicatedItems, 
-                    staffId: staffId || undefined,
-                    shiftDate: dateStr
-                }),
-            });
+            const res = await fetchWithRetry(
+                '/api/staff/shift/items',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        items: deduplicatedItems, 
+                        staffId: staffId || undefined,
+                        shiftDate: dateStr
+                    }),
+                },
+                {
+                    retries: 3,
+                    baseDelayMs: 1000,
+                    maxDelayMs: 10000,
+                    scope: 'ShiftItemsDeleteClient'
+                }
+            );
             
             if (!res.ok) {
                 let errorMessage = 'Не удалось удалить клиента';
@@ -868,12 +1027,13 @@ export function useShiftItems({
                     errorMessage = 'У вас нет прав для удаления клиентов.';
                 } else if (res.status === 400) {
                     errorMessage = errorMessage || 'Некорректные данные. Проверьте введенную информацию.';
-                } else if (res.status >= 500) {
+                } else                 if (res.status >= 500) {
                     errorMessage = 'Временная ошибка сервера. Попробуйте снова через несколько секунд.';
                 }
                 
-                // Откатываем изменения при ошибке
+                // Откатываем оптимистичное обновление при ошибке
                 setItems(previousItems);
+                setExpandedItems(previousExpandedItems);
                 onSaveErrorRef.current?.(errorMessage);
                 return;
             }
@@ -884,22 +1044,46 @@ export function useShiftItems({
                 const errorMessage = json.error && typeof json.error === 'string' 
                     ? json.error 
                     : 'Не удалось удалить клиента';
-                // Откатываем изменения при ошибке
+                // Откатываем оптимистичное обновление при ошибке
                 setItems(previousItems);
+                setExpandedItems(previousExpandedItems);
                 onSaveErrorRef.current?.(errorMessage);
                 return;
             }
             
             // При успешном удалении обновляем UI через перезагрузку данных
+            // (оптимистичное обновление уже было применено, но нужно получить актуальные данные с сервера)
             onSaveSuccessRef.current?.();
         } catch (e) {
+            // Игнорируем ошибки отмены запроса
+            if (isAbortError(e)) {
+                setDeletingClient(false);
+                return;
+            }
+            
             let errorMessage = 'Не удалось удалить клиента';
             
-            if (e instanceof TypeError) {
-                if (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed to fetch')) {
-                    errorMessage = 'Ошибка подключения к серверу. Проверьте подключение к интернету и попробуйте снова.';
+            if (e instanceof Error && e.name === 'RateLimitError') {
+                // Ошибка rate limiting
+                errorMessage = e.message || 'Слишком много запросов. Пожалуйста, подождите немного и попробуйте снова.';
+                // Откатываем оптимистичное обновление при ошибке
+                setItems(previousItems);
+                setExpandedItems(previousExpandedItems);
+                onSaveErrorRef.current?.(errorMessage);
+                logError('ShiftItems', 'Rate limit exceeded when deleting client', e);
+                return;
+            } else if (isNetworkError(e)) {
+                // Сетевые ошибки (fetchWithRetry уже попытался повторить)
+                errorMessage = 'Проблема с подключением к интернету. Проверьте соединение и попробуйте снова.';
+                logError('ShiftItems', 'Network error deleting client after retries', e);
+            } else if (e instanceof Response) {
+                // Response от fetchWithRetry при исчерпании попыток
+                if (e.status >= 500) {
+                    errorMessage = 'Временная ошибка сервера. Попробуйте снова через несколько секунд.';
+                } else if (e.status === 429) {
+                    errorMessage = 'Слишком много запросов. Пожалуйста, подождите немного.';
                 } else {
-                    errorMessage = 'Ошибка при удалении клиента. Попробуйте обновить страницу.';
+                    errorMessage = 'Ошибка сервера. Попробуйте обновить страницу.';
                 }
             } else if (e instanceof Error) {
                 if (e.message) {
@@ -908,8 +1092,9 @@ export function useShiftItems({
             }
             
             logError('ShiftItems', 'Error deleting client', e);
-            // Откатываем изменения при ошибке (используем previousItems, сохраненный в начале функции)
+            // Откатываем оптимистичное обновление при ошибке
             setItems(previousItems);
+            setExpandedItems(previousExpandedItems);
             onSaveErrorRef.current?.(errorMessage);
         } finally {
             setDeletingClient(false);

@@ -6,6 +6,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { Button } from '@/components/ui/Button';
 import { TZ } from '@/lib/time';
+import { checkPermissions, getPermissionMessage, type PermissionContext } from '../utils/permissions';
 
 
 interface ClientsListHeaderProps {
@@ -13,6 +14,7 @@ interface ClientsListHeaderProps {
     onShiftDateChange: (date: Date) => void;
     isOpen: boolean;
     isClosed: boolean;
+    isReadOnly?: boolean;
     savingItems: boolean;
     saving: boolean;
     staffId?: string;
@@ -24,12 +26,24 @@ export function ClientsListHeader({
     onShiftDateChange,
     isOpen,
     isClosed,
+    isReadOnly = false,
     savingItems,
     saving,
     staffId,
     onAddClient,
 }: ClientsListHeaderProps) {
     const { t } = useLanguage();
+    
+    // Проверяем права доступа
+    const permissionContext: PermissionContext = {
+        staffId,
+        isOpen,
+        isClosed,
+        isReadOnly
+    };
+    const permissions = checkPermissions(permissionContext);
+    const canAdd = permissions.canAdd;
+    const addMessage = getPermissionMessage('add', permissionContext);
 
     return (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -55,26 +69,41 @@ export function ClientsListHeader({
                     </div>
                 </div>
             </div>
-            {/* Для владельца: показываем кнопку, если смена не закрыта (может быть открыта или еще не создана) */}
-            {/* Для сотрудника: показываем кнопку только если смена открыта */}
-            {((staffId && !isClosed) || (!staffId && isOpen)) && (
+            {/* Показываем кнопку добавления клиента, если есть права или для показа сообщения */}
+            {(canAdd || addMessage) && (
                 <div className="flex items-center gap-2">
                     {savingItems && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                             {t('staff.finance.clients.saving', 'Сохранение...')}
                         </span>
                     )}
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={onAddClient}
-                        disabled={saving || savingItems}
-                    >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        {t('staff.finance.clients.add', 'Добавить клиента')}
-                    </Button>
+                    {canAdd ? (
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={onAddClient}
+                            disabled={saving || savingItems}
+                            title={t('staff.finance.clients.add', 'Добавить клиента')}
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            {t('staff.finance.clients.add', 'Добавить клиента')}
+                        </Button>
+                    ) : addMessage ? (
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            disabled
+                            title={addMessage}
+                            className="opacity-50 cursor-not-allowed"
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            {t('staff.finance.clients.add', 'Добавить клиента')}
+                        </Button>
+                    ) : null}
                 </div>
             )}
         </div>

@@ -2,6 +2,8 @@
 
 import { clsx } from 'clsx';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 interface ProgressBarProps {
     progress: number; // 0-100
     label?: string;
@@ -36,9 +38,13 @@ interface LoadingOverlayProps {
     message?: string;
     progress?: number;
     showProgress?: boolean;
+    onCancel?: () => void;
+    canCancel?: boolean;
 }
 
-export function LoadingOverlay({ message, progress, showProgress = false }: LoadingOverlayProps) {
+export function LoadingOverlay({ message, progress, showProgress = false, onCancel, canCancel = false }: LoadingOverlayProps) {
+    const { t } = useLanguage();
+    
     return (
         <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
@@ -62,6 +68,15 @@ export function LoadingOverlay({ message, progress, showProgress = false }: Load
                         <div className="w-full mt-2" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
                             <ProgressBar progress={progress} showPercentage={true} />
                         </div>
+                    )}
+                    {canCancel && onCancel && (
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            className="mt-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                        >
+                            {t('staff.finance.closing.cancel', 'Отменить')}
+                        </button>
                     )}
                 </div>
             </div>

@@ -1,9 +1,11 @@
 // apps/web/src/app/staff/finance/components/ClientEditForm.tsx
 
 import { formatInTimeZone } from 'date-fns-tz';
+import { useState, useEffect, useMemo } from 'react';
 
 import type { ShiftItem, Booking, ServiceName } from '../types';
 import { getServiceName } from '../utils';
+import { validateShiftItem } from '../utils/validation';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { TZ } from '@/lib/time';
@@ -32,6 +34,29 @@ export function ClientEditForm({
     onCollapse,
 }: ClientEditFormProps) {
     const { t, locale } = useLanguage();
+    
+    // Валидация item с debounce для избежания лишних проверок
+    const [validationErrors, setValidationErrors] = useState<{
+        clientName?: string;
+        serviceName?: string;
+        serviceAmount?: string;
+        consumablesAmount?: string;
+    }>({});
+    
+    // Валидируем item при изменении (с небольшой задержкой для избежания лишних проверок)
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            const validation = validateShiftItem(item);
+            setValidationErrors(validation.errors);
+        }, 300); // 300ms debounce
+        
+        return () => clearTimeout(timeoutId);
+    }, [item]);
+    
+    // Проверяем, есть ли ошибки валидации
+    const hasErrors = useMemo(() => {
+        return Object.keys(validationErrors).length > 0;
+    }, [validationErrors]);
 
     const handleBookingChange = (bookingId: string | null) => {
         const booking = bookingId ? bookings.find((b) => b.id === bookingId) : null;
@@ -114,7 +139,11 @@ export function ClientEditForm({
                             <span className="text-red-500 ml-1">*</span>
                         </label>
                         <select
-                            className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
+                            className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
+                                validationErrors.clientName
+                                    ? 'border-red-500 dark:border-red-600 focus:border-red-500 focus:ring-red-500/20'
+                                    : 'border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-indigo-500/20'
+                            }`}
                             value={item.bookingId ?? ''}
                             onChange={(e) => handleBookingChange(e.target.value || null)}
                             disabled={!isOpen || isReadOnly}
@@ -146,6 +175,11 @@ export function ClientEditForm({
                                 </p>
                             </div>
                         )}
+                        {validationErrors.clientName && (
+                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                                {validationErrors.clientName}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -153,7 +187,11 @@ export function ClientEditForm({
                             {t('staff.finance.clients.service', 'Услуга')}
                         </label>
                         <select
-                            className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
+                            className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
+                                validationErrors.serviceName
+                                    ? 'border-red-500 dark:border-red-600 focus:border-red-500 focus:ring-red-500/20'
+                                    : 'border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-indigo-500/20'
+                            }`}
                             value={item.serviceName}
                             onChange={(e) => handleServiceChange(e.target.value)}
                             disabled={!isOpen || isReadOnly}
@@ -185,7 +223,11 @@ export function ClientEditForm({
                                 min={0}
                                 step="50"
                                 placeholder="0"
-                                className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm hover:shadow"
+                                className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
+                                    validationErrors.serviceAmount
+                                        ? 'border-red-500 dark:border-red-600 focus:border-red-500 focus:ring-red-500/20'
+                                        : 'border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-indigo-500/20'
+                                }`}
                                 value={item.serviceAmount || ''}
                                 onChange={(e) => handleServiceAmountChange(Number(e.target.value || 0))}
                                 disabled={!isOpen || isReadOnly}
@@ -207,7 +249,11 @@ export function ClientEditForm({
                                 min={0}
                                 step="10"
                                 placeholder="0"
-                                className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-sm hover:shadow"
+                                className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
+                                    validationErrors.consumablesAmount
+                                        ? 'border-red-500 dark:border-red-600 focus:border-red-500 focus:ring-red-500/20'
+                                        : 'border-gray-300 dark:border-gray-600 focus:border-amber-500 focus:ring-amber-500/20'
+                                }`}
                                 value={item.consumablesAmount || ''}
                                 onChange={(e) => handleConsumablesAmountChange(Number(e.target.value || 0))}
                                 disabled={!isOpen || isReadOnly}
@@ -216,9 +262,29 @@ export function ClientEditForm({
                                 сом
                             </span>
                         </div>
+                        {validationErrors.consumablesAmount && (
+                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                                {validationErrors.consumablesAmount}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
+            
+            {/* Общее сообщение об ошибках валидации */}
+            {hasErrors && (
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-xs font-semibold text-red-800 dark:text-red-200 mb-1">
+                        {t('staff.finance.validation.errors', 'Обнаружены ошибки валидации')}
+                    </p>
+                    <ul className="text-xs text-red-700 dark:text-red-300 list-disc list-inside space-y-0.5">
+                        {validationErrors.clientName && <li>{validationErrors.clientName}</li>}
+                        {validationErrors.serviceName && <li>{validationErrors.serviceName}</li>}
+                        {validationErrors.serviceAmount && <li>{validationErrors.serviceAmount}</li>}
+                        {validationErrors.consumablesAmount && <li>{validationErrors.consumablesAmount}</li>}
+                    </ul>
+                </div>
+            )}
             
             {isOpen && !isReadOnly && (
                 <div className="flex items-center justify-end gap-3 pt-4 border-t-2 border-indigo-200 dark:border-indigo-800">

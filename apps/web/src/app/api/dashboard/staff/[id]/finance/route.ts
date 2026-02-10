@@ -1,9 +1,17 @@
+/**
+ * @deprecated Используйте /api/staff/finance?staffId={id}&date={date} вместо этого endpoint
+ * Этот endpoint сохранен для обратной совместимости
+ * 
+ * Миграция:
+ * - Старый: GET /api/dashboard/staff/[id]/finance?date=YYYY-MM-DD
+ * - Новый: GET /api/staff/finance?staffId={id}&date=YYYY-MM-DD
+ */
 // apps/web/src/app/api/dashboard/staff/[id]/finance/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logError, logDebug } from '@/lib/log';
+import { logError, logDebug, logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -15,6 +23,9 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Предупреждение о deprecated endpoint
+        logWarn('StaffFinance', 'Deprecated endpoint used. Please migrate to /api/staff/finance?staffId={id}');
+        
         const { id: staffId } = await params;
         const { supabase, bizId } = await getBizContextForManagers();
 
