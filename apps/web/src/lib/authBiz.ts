@@ -6,6 +6,27 @@ import { logWarn, logDebug, logError } from './log';
 
 const ROLE_KEYS_ALLOWED = new Set(['owner', 'admin', 'manager']);
 
+/**
+ * Кастомный класс ошибки для передачи диагностической информации
+ */
+export class BizAccessError extends Error {
+    public readonly diagnostics?: {
+        checkedSuperAdmin?: boolean;
+        checkedUserRoles?: boolean;
+        checkedOwnerId?: boolean;
+        userRolesFound?: number;
+        eligibleRolesFound?: number;
+        ownedBusinessesFound?: number;
+        errorsCount?: number;
+    };
+
+    constructor(message: string, diagnostics?: BizAccessError['diagnostics']) {
+        super(message);
+        this.name = 'BizAccessError';
+        this.diagnostics = diagnostics;
+    }
+}
+
 export async function getSupabaseServer() {
     const url  = getSupabaseUrl();
     const anon = getSupabaseAnonKey();
@@ -42,7 +63,9 @@ export async function getBizContextForManagers() {
             errorCode: eUser?.code,
             errorStatus: eUser?.status
         });
-        throw new Error('UNAUTHORIZED');
+        const error = new Error('UNAUTHORIZED');
+        error.name = 'UnauthorizedError';
+        throw error;
     }
     const userId = userData.user.id;
     const userEmail = userData.user.email;
@@ -322,6 +345,15 @@ export async function getBizContextForManagers() {
 
     if (!bizId) {
         const totalTime = Date.now() - startTime;
+        const diagnosticsData = {
+            checkedSuperAdmin: diagnostics.checkedSuperAdmin,
+            checkedUserRoles: diagnostics.checkedUserRoles,
+            checkedOwnerId: diagnostics.checkedOwnerId,
+            userRolesFound: diagnostics.userRolesCount ?? 0,
+            eligibleRolesFound: diagnostics.eligibleRolesCount ?? 0,
+            ownedBusinessesFound: diagnostics.ownedBusinessesCount ?? 0,
+            errorsCount: diagnostics.errors?.length ?? 0
+        };
         logError('AuthBiz', 'NO_BIZ_ACCESS: Business not found for user', {
             userId,
             userEmail,
@@ -330,17 +362,9 @@ export async function getBizContextForManagers() {
                 ...diagnostics,
                 totalResolutionTimeMs: totalTime
             },
-            resolutionSteps: {
-                checkedSuperAdmin: diagnostics.checkedSuperAdmin,
-                checkedUserRoles: diagnostics.checkedUserRoles,
-                checkedOwnerId: diagnostics.checkedOwnerId,
-                userRolesFound: diagnostics.userRolesCount ?? 0,
-                eligibleRolesFound: diagnostics.eligibleRolesCount ?? 0,
-                ownedBusinessesFound: diagnostics.ownedBusinessesCount ?? 0,
-                errorsCount: diagnostics.errors?.length ?? 0
-            }
+            resolutionSteps: diagnosticsData
         });
-        throw new Error('NO_BIZ_ACCESS');
+        throw new BizAccessError('NO_BIZ_ACCESS', diagnosticsData);
     }
 
     const totalTime = Date.now() - startTime;

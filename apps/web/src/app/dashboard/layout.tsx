@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { DashboardLayoutClient } from './components/DashboardLayoutClient';
 import { MobileSidebar } from './components/MobileSidebar';
 
-import { getBizContextForManagers } from '@/lib/authBiz';
+import { getBizContextForManagers, BizAccessError } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,10 +29,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             }
             // Нет доступа к бизнесу → показываем сообщение с улучшенными инструкциями
             if (e.message === 'NO_BIZ_ACCESS') {
-                // Диагностическая информация уже логируется в getBizContextForManagers()
-                // В dev режиме можно было бы извлечь её из логов, но для простоты
-                // показываем общее сообщение с инструкциями
-                return <DashboardLayoutClient errorType="NO_BIZ_ACCESS" />;
+                // Извлекаем диагностическую информацию из ошибки, если она есть
+                const diagnostics = e instanceof BizAccessError ? e.diagnostics : undefined;
+                return <DashboardLayoutClient errorType="NO_BIZ_ACCESS" diagnostics={diagnostics} />;
             }
         }
         // Другие ошибки → показываем общее сообщение
