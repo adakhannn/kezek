@@ -48,16 +48,26 @@ export function ShiftHeader({ shiftDate, onShiftDateChange, shift, isOpen, staff
                             {t('staff.finance.shift.opened', 'Открыта')}: {formatTime(shift.opened_at, locale)}
                         </div>
                     )}
+                    {!shift && (
+                        <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                            {t('staff.finance.shift.notCreated', 'Смена не открыта')}
+                        </div>
+                    )}
                 </div>
-                {shift && (
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        isOpen 
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                    }`}>
-                        {isOpen ? t('staff.finance.shift.status.open', 'Открыта') : t('staff.finance.shift.status.closed', 'Закрыта')}
-                    </div>
-                )}
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    isOpen 
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : shift
+                            ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                }`}>
+                    {isOpen 
+                        ? t('staff.finance.shift.status.open', 'Открыта') 
+                        : shift
+                            ? t('staff.finance.shift.status.closed', 'Закрыта')
+                            : t('staff.finance.shift.status.notCreated', 'Не открыта')
+                    }
+                </div>
             </div>
         </div>
     );
