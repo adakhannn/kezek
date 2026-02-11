@@ -72,7 +72,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     useEffect(() => {
         if (financeData.data?.items) {
             const serverItems = financeData.data.items;
-            const currentLocalItems = previousLocalItemsRef.current.length > 0 ? previousLocalItemsRef.current : localItems;
+            // Используем текущие localItems для слияния
+            const currentLocalItems = localItems;
             const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
             const localItemsById = new Map(currentLocalItems.filter((item) => item.id).map((item) => [item.id!, item]));
             
@@ -84,12 +85,11 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 if (serverItem.id) {
                     const localItem = localItemsById.get(serverItem.id);
                     if (localItem) {
-                        // Объединяем: используем локальные данные, если они более полные, иначе серверные
+                        // Объединяем: приоритет локальным данным, если они не пустые
                         mergedItems.push({
-                            ...serverItem,
-                            // Сохраняем локальные данные, если они более полные
-                            clientName: localItem.clientName || serverItem.clientName || '',
-                            serviceName: localItem.serviceName || serverItem.serviceName || '',
+                            id: serverItem.id,
+                            clientName: (localItem.clientName && localItem.clientName.trim()) || serverItem.clientName || '',
+                            serviceName: (localItem.serviceName && localItem.serviceName.trim()) || serverItem.serviceName || '',
                             serviceAmount: localItem.serviceAmount ?? serverItem.serviceAmount ?? 0,
                             consumablesAmount: localItem.consumablesAmount ?? serverItem.consumablesAmount ?? 0,
                             bookingId: localItem.bookingId ?? serverItem.bookingId ?? null,
@@ -102,7 +102,6 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 }
             }
             
-            previousLocalItemsRef.current = mergedItems;
             setLocalItems(mergedItems);
             
             // Закрываем формы только для элементов, которые были только что сохранены
@@ -120,9 +119,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             }
         } else if (financeData.data && !financeData.isLoading) {
             // Если данных нет, но загрузка завершена, сохраняем только локальные элементы без id
-            const currentLocalItems = previousLocalItemsRef.current.length > 0 ? previousLocalItemsRef.current : localItems;
-            const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
-            previousLocalItemsRef.current = localItemsWithoutId;
+            const localItemsWithoutId = localItems.filter((item) => !item.id);
             setLocalItems(localItemsWithoutId);
             // Не закрываем формы, если есть локальные элементы
             if (localItemsWithoutId.length === 0) {
@@ -130,12 +127,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 savedItemsWithoutIdRef.current.clear();
             }
         }
-    }, [financeData.data?.items, financeData.data, financeData.isLoading]);
-    
-    // Обновляем ref при изменении localItems (но не из useEffect синхронизации)
-    useEffect(() => {
-        previousLocalItemsRef.current = localItems;
-    }, [localItems]);
+    }, [financeData.data?.items, financeData.data, financeData.isLoading, localItems]);
 
     // Вычисляем состояние смены
     const shift = financeData.data?.shift ?? null;

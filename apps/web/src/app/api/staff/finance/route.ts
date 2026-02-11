@@ -7,13 +7,11 @@
  * - date (опционально) - дата в формате YYYY-MM-DD (по умолчанию сегодня)
  */
 
-import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
+import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
 import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
-import { TZ } from '@/lib/time';
-import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -151,10 +149,33 @@ export async function GET(req: Request) {
             useServiceClient,
         });
 
+        // Преобразуем items из snake_case в camelCase
+        const items = (result.today.items || []).map((item: {
+            id: string;
+            client_name: string | null;
+            service_name: string | null;
+            service_amount: number;
+            consumables_amount: number;
+            note: string | null;
+            booking_id: string | null;
+            created_at: string;
+        }) => ({
+            id: item.id,
+            clientName: item.client_name || '',
+            serviceName: item.service_name || '',
+            serviceAmount: item.service_amount || 0,
+            consumablesAmount: item.consumables_amount || 0,
+            bookingId: item.booking_id || null,
+            createdAt: item.created_at || null,
+        }));
+
         // Форматируем ответ в едином формате
         return NextResponse.json({
             ok: true,
-            today: result.today,
+            today: {
+                ...result.today,
+                items,
+            },
             bookings: result.bookings,
             services: result.services,
             allShifts: result.allShifts,
