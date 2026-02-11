@@ -350,21 +350,20 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
         try {
             // Отмечаем, что этот элемент был сохранен (если он новый, без id)
-            if (!item.id) {
+            const wasNewItem = !item.id;
+            if (wasNewItem) {
                 savedItemsWithoutIdRef.current.add(idx);
             }
             
             await mutations.saveItems(localItems);
-            // После успешного сохранения закрываем форму
-            // Если элемент был новым (без id), форма закроется после refetch через useEffect
-            // Если элемент был существующим (с id), закрываем сразу
-            if (item.id) {
-                setExpandedItems((prev) => {
-                    const next = new Set(prev);
-                    next.delete(idx);
-                    return next;
-                });
-            }
+            
+            // После успешного сохранения всегда закрываем форму сразу
+            // Это нужно, чтобы пользователь видел обновленный список клиентов
+            setExpandedItems((prev) => {
+                const next = new Set(prev);
+                next.delete(idx);
+                return next;
+            });
         } catch (error) {
             // При ошибке убираем из списка сохраненных
             savedItemsWithoutIdRef.current.delete(idx);
