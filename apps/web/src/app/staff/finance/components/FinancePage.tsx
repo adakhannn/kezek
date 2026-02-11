@@ -69,8 +69,28 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     // Синхронизируем локальные items с данными из сервера
     useEffect(() => {
         if (financeData.data?.items) {
-            const previousItems = localItems;
-            setLocalItems(financeData.data.items);
+            const serverItems = financeData.data.items;
+            const hasLocalItemsWithoutId = localItems.some((item) => !item.id);
+            
+            // Если есть локальные элементы без id (новые, еще не сохраненные), сохраняем их
+            if (hasLocalItemsWithoutId) {
+                // Объединяем: локальные элементы без id + элементы с сервера
+                const localItemsWithoutId = localItems.filter((item) => !item.id);
+                const serverItemsById = new Map(serverItems.map((item) => [item.id, item]));
+                
+                // Добавляем элементы с сервера, исключая те, которые уже есть в локальных (по id)
+                const mergedItems = [...localItemsWithoutId];
+                for (const serverItem of serverItems) {
+                    if (serverItem.id && !localItems.some((item) => item.id === serverItem.id)) {
+                        mergedItems.push(serverItem);
+                    }
+                }
+                
+                setLocalItems(mergedItems);
+            } else {
+                // Если нет локальных элементов без id, просто синхронизируем с сервером
+                setLocalItems(serverItems);
+            }
             
             // Закрываем формы только для элементов, которые были только что сохранены
             // (новые элементы без id, которые теперь имеют id)
@@ -86,12 +106,16 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 });
             }
         } else if (financeData.data && !financeData.isLoading) {
-            // Если данных нет, но загрузка завершена, устанавливаем пустой массив
-            setLocalItems([]);
-            setExpandedItems(new Set());
-            savedItemsWithoutIdRef.current.clear();
+            // Если данных нет, но загрузка завершена, сохраняем только локальные элементы без id
+            const localItemsWithoutId = localItems.filter((item) => !item.id);
+            setLocalItems(localItemsWithoutId);
+            // Не закрываем формы, если есть локальные элементы
+            if (localItemsWithoutId.length === 0) {
+                setExpandedItems(new Set());
+                savedItemsWithoutIdRef.current.clear();
+            }
         }
-    }, [financeData.data?.items, financeData.data, financeData.isLoading, localItems]);
+    }, [financeData.data?.items, financeData.data, financeData.isLoading]);
 
     // Вычисляем состояние смены
     const shift = financeData.data?.shift ?? null;
