@@ -22,6 +22,7 @@ export function ClientItem({ item, idx: _idx, isOpen, isClosed, isReadOnly, staf
     const { t, locale } = useLanguage();
     const hasBooking = !!item.bookingId;
     // Элемент считается новым (не сохранен), если у него нет id
+    // Но не показываем индикатор сохранения, так как есть полноэкранный лоадер
     const isNew = !item.id;
     
     // Проверяем права доступа
@@ -45,21 +46,9 @@ export function ClientItem({ item, idx: _idx, isOpen, isClosed, isReadOnly, staf
                 canEdit
                     ? 'border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600 cursor-pointer hover:shadow-md hover:shadow-indigo-100 dark:hover:shadow-indigo-900/20' 
                     : 'border-gray-200 dark:border-gray-700'
-            } ${isPending || isNew ? 'opacity-75' : ''}`}
+            }`}
             onClick={() => canEdit && onEdit()}
         >
-            {/* Индикатор сохранения для новых элементов или элементов в процессе сохранения */}
-            {(isPending || isNew) && (
-                <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-md">
-                    <svg className="animate-spin h-3 w-3 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                        {isNew ? t('staff.finance.clients.saving', 'Сохранение...') : t('staff.finance.clients.pending', 'Обработка...')}
-                    </span>
-                </div>
-            )}
             {/* Desktop view - grid */}
             <div className="hidden sm:flex flex-1 grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-3 items-center min-w-0">
                 <div className="min-w-0 flex items-center gap-2">
