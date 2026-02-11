@@ -55,6 +55,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
     // Отслеживаем, какие элементы были только что сохранены (новые элементы без id)
     const savedItemsWithoutIdRef = useRef<Set<number>>(new Set());
+    // Ref для отслеживания предыдущих localItems, чтобы избежать бесконечного цикла
+    const previousLocalItemsRef = useRef<ShiftItem[]>([]);
 
     // Загрузка данных через React Query
     const financeData = useFinanceData({
@@ -70,27 +72,38 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     useEffect(() => {
         if (financeData.data?.items) {
             const serverItems = financeData.data.items;
-            const hasLocalItemsWithoutId = localItems.some((item) => !item.id);
+            const currentLocalItems = previousLocalItemsRef.current.length > 0 ? previousLocalItemsRef.current : localItems;
+            const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
+            const localItemsById = new Map(currentLocalItems.filter((item) => item.id).map((item) => [item.id!, item]));
             
-            // Если есть локальные элементы без id (новые, еще не сохраненные), сохраняем их
-            if (hasLocalItemsWithoutId) {
-                // Объединяем: локальные элементы без id + элементы с сервера
-                const localItemsWithoutId = localItems.filter((item) => !item.id);
-                const serverItemsById = new Map(serverItems.map((item) => [item.id, item]));
-                
-                // Добавляем элементы с сервера, исключая те, которые уже есть в локальных (по id)
-                const mergedItems = [...localItemsWithoutId];
-                for (const serverItem of serverItems) {
-                    if (serverItem.id && !localItems.some((item) => item.id === serverItem.id)) {
+            // Объединяем данные: сохраняем локальные элементы без id и объединяем элементы с id
+            const mergedItems: ShiftItem[] = [...localItemsWithoutId];
+            
+            // Для элементов с сервера: объединяем с локальными данными, если они есть
+            for (const serverItem of serverItems) {
+                if (serverItem.id) {
+                    const localItem = localItemsById.get(serverItem.id);
+                    if (localItem) {
+                        // Объединяем: используем локальные данные, если они более полные, иначе серверные
+                        mergedItems.push({
+                            ...serverItem,
+                            // Сохраняем локальные данные, если они более полные
+                            clientName: localItem.clientName || serverItem.clientName || '',
+                            serviceName: localItem.serviceName || serverItem.serviceName || '',
+                            serviceAmount: localItem.serviceAmount ?? serverItem.serviceAmount ?? 0,
+                            consumablesAmount: localItem.consumablesAmount ?? serverItem.consumablesAmount ?? 0,
+                            bookingId: localItem.bookingId ?? serverItem.bookingId ?? null,
+                            createdAt: localItem.createdAt || serverItem.createdAt || null,
+                        });
+                    } else {
+                        // Новый элемент с сервера (не был в локальных)
                         mergedItems.push(serverItem);
                     }
                 }
-                
-                setLocalItems(mergedItems);
-            } else {
-                // Если нет локальных элементов без id, просто синхронизируем с сервером
-                setLocalItems(serverItems);
             }
+            
+            previousLocalItemsRef.current = mergedItems;
+            setLocalItems(mergedItems);
             
             // Закрываем формы только для элементов, которые были только что сохранены
             // (новые элементы без id, которые теперь имеют id)
@@ -107,7 +120,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             }
         } else if (financeData.data && !financeData.isLoading) {
             // Если данных нет, но загрузка завершена, сохраняем только локальные элементы без id
-            const localItemsWithoutId = localItems.filter((item) => !item.id);
+            const currentLocalItems = previousLocalItemsRef.current.length > 0 ? previousLocalItemsRef.current : localItems;
+            const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
+            previousLocalItemsRef.current = localItemsWithoutId;
             setLocalItems(localItemsWithoutId);
             // Не закрываем формы, если есть локальные элементы
             if (localItemsWithoutId.length === 0) {
@@ -116,6 +131,11 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             }
         }
     }, [financeData.data?.items, financeData.data, financeData.isLoading]);
+    
+    // Обновляем ref при изменении localItems (но не из useEffect синхронизации)
+    useEffect(() => {
+        previousLocalItemsRef.current = localItems;
+    }, [localItems]);
 
     // Вычисляем состояние смены
     const shift = financeData.data?.shift ?? null;
