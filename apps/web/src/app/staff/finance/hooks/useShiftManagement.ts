@@ -38,6 +38,7 @@ export function useShiftManagement(
 
     const handleOpenShift = async () => {
         setSaving(true);
+        let errorOccurred = false;
         try {
             // Если передан staffId, используем endpoint для владельца
             let url = '/api/staff/shift/open';
@@ -46,22 +47,61 @@ export function useShiftManagement(
                 url = `/api/dashboard/staff/${options.staffId}/shift/open?date=${dateStr}`;
             }
             
-            const res = await fetch(url, { method: 'POST' });
+            let res: Response;
+            try {
+                res = await fetch(url, { method: 'POST' });
+            } catch (fetchError) {
+                // Ошибка сети или другая ошибка fetch
+                errorOccurred = true;
+                let errorMessage = t('staff.finance.error.openShift', 'Ошибка при открытии смены');
+                
+                if (fetchError instanceof TypeError) {
+                    if (fetchError.message.includes('fetch') || fetchError.message.includes('network') || fetchError.message.includes('Failed to fetch')) {
+                        errorMessage = t('staff.finance.error.openShift.network', 'Ошибка подключения к серверу. Проверьте подключение к интернету и попробуйте снова.');
+                    } else {
+                        errorMessage = t('staff.finance.error.openShift.unknown', 'Произошла ошибка при открытии смены. Попробуйте обновить страницу.');
+                    }
+                } else if (fetchError instanceof Error) {
+                    if (fetchError.name === 'RateLimitError') {
+                        errorMessage = fetchError.message || t('staff.finance.error.rateLimit', 'Слишком много запросов. Пожалуйста, подождите немного и попробуйте снова.');
+                        toast.showWarning(errorMessage);
+                        return;
+                    } else if (fetchError.message) {
+                        errorMessage = fetchError.message;
+                    }
+                }
+                
+                toast.showError(errorMessage);
+                console.error('Error opening shift (fetch):', fetchError);
+                return;
+            }
             
             // Проверяем HTTP статус перед парсингом JSON
             if (!res.ok) {
+                errorOccurred = true;
                 let errorMessage = t('staff.finance.error.openShift', 'Не удалось открыть смену');
                 
                 // Пытаемся получить сообщение об ошибке из ответа
                 try {
-                    const errorJson = await res.json();
-                    if (errorJson?.error) {
-                        errorMessage = errorJson.error;
-                    } else if (errorJson?.message) {
-                        errorMessage = errorJson.message;
+                    const errorText = await res.text();
+                    if (errorText) {
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            if (errorJson?.error) {
+                                errorMessage = errorJson.error;
+                            } else if (errorJson?.message) {
+                                errorMessage = errorJson.message;
+                            }
+                        } catch {
+                            // Если не JSON, используем текст как есть (если он не пустой)
+                            if (errorText.trim().length > 0 && errorText.trim().length < 200) {
+                                errorMessage = errorText.trim();
+                            }
+                        }
                     }
-                } catch {
-                    // Если не удалось распарсить JSON, используем стандартные сообщения по статусу
+                } catch (parseError) {
+                    // Если не удалось распарсить ответ, используем стандартные сообщения по статусу
+                    console.warn('Failed to parse error response:', parseError);
                 }
                 
                 // Улучшенные сообщения для разных HTTP статусов
@@ -71,27 +111,60 @@ export function useShiftManagement(
                     errorMessage = t('staff.finance.error.openShift.unauthorized', 'Сессия истекла. Пожалуйста, войдите в систему снова.');
                 } else if (res.status === 403) {
                     errorMessage = t('staff.finance.error.openShift.forbidden', 'У вас нет прав для открытия смены.');
+                } else if (res.status === 404) {
+                    errorMessage = errorMessage || t('staff.finance.error.openShift.notFound', 'Сотрудник или ресурс не найден.');
                 } else if (res.status === 429) {
                     errorMessage = t('staff.finance.error.openShift.rateLimit', 'Слишком много запросов. Пожалуйста, подождите немного.');
                 } else if (res.status >= 500) {
-                    errorMessage = t('staff.finance.error.openShift.server', 'Временная ошибка сервера. Попробуйте через несколько секунд.');
+                    errorMessage = errorMessage || t('staff.finance.error.openShift.server', 'Временная ошибка сервера. Попробуйте через несколько секунд.');
                 } else if (res.status >= 400) {
                     errorMessage = errorMessage || t('staff.finance.error.openShift.client', 'Ошибка при открытии смены. Проверьте подключение к интернету.');
                 }
                 
                 toast.showError(errorMessage);
+                console.error('Error opening shift (HTTP):', {
+                    status: res.status,
+                    statusText: res.statusText,
+                    url,
+                    errorMessage,
+                });
                 return;
             }
             
-            const json = await res.json();
+            // Парсим успешный ответ
+            let json: { ok?: boolean; error?: string; message?: string; shift?: unknown };
+            try {
+                const jsonText = await res.text();
+                if (!jsonText) {
+                    errorOccurred = true;
+                    const errorMessage = t('staff.finance.error.openShift.emptyResponse', 'Сервер вернул пустой ответ. Попробуйте снова.');
+                    toast.showError(errorMessage);
+                    console.error('Empty response from server');
+                    return;
+                }
+                json = JSON.parse(jsonText);
+            } catch (parseError) {
+                errorOccurred = true;
+                const errorMessage = t('staff.finance.error.openShift.invalidResponse', 'Сервер вернул некорректный ответ. Попробуйте снова.');
+                toast.showError(errorMessage);
+                console.error('Failed to parse response JSON:', parseError);
+                return;
+            }
+            
+            // Проверяем результат в JSON
             if (!json.ok) {
+                errorOccurred = true;
                 const errorMessage = json.error || json.message || t('staff.finance.error.openShift', 'Не удалось открыть смену');
                 toast.showError(errorMessage);
-            } else {
-                toast.showSuccess(t('staff.finance.success.shiftOpened', 'Смена успешно открыта'));
-                onShiftChanged?.();
+                console.error('Error in response JSON:', json);
+                return;
             }
+            
+            // Успешное открытие смены
+            toast.showSuccess(t('staff.finance.success.shiftOpened', 'Смена успешно открыта'));
+            onShiftChanged?.();
         } catch (e) {
+            errorOccurred = true;
             let errorMessage = t('staff.finance.error.openShift', 'Ошибка при открытии смены');
             
             // Улучшенная обработка различных типов ошибок
@@ -113,6 +186,7 @@ export function useShiftManagement(
             }
             
             toast.showError(errorMessage);
+            console.error('Unexpected error opening shift:', e);
         } finally {
             setSaving(false);
         }

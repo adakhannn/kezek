@@ -146,10 +146,16 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
 
     // Обработчики
     const handleOpenShift = async () => {
-        await shiftManagement.handleOpenShift();
-        // Инвалидируем кэш и принудительно перезагружаем данные
-        shiftData.invalidateCache(shiftDate);
-        await shiftData.load(shiftDate, true);
+        try {
+            await shiftManagement.handleOpenShift();
+            // Инвалидируем кэш и принудительно перезагружаем данные только при успехе
+            shiftData.invalidateCache(shiftDate);
+            await shiftData.load(shiftDate, true);
+        } catch (error) {
+            // Ошибка уже обработана в useShiftManagement, но на всякий случай логируем
+            console.error('Error in handleOpenShift:', error);
+            // Не показываем toast здесь, так как useShiftManagement уже показал ошибку
+        }
     };
 
     const handleCloseShift = async () => {

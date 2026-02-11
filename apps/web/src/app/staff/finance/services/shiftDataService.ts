@@ -106,13 +106,88 @@ export async function getShiftData({
         client = getServiceClient();
     }
     
-    // Получаем проценты и ставку за час из настроек сотрудника
-    const { data: staffData, error: staffError } = await client
-        .from('staff')
-        .select('percent_master, percent_salon, hourly_rate')
-        .eq('id', staffId)
-        .maybeSingle();
+    // Дата в локальной TZ (без времени)
+    const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
+    const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
+    const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const dateStart = `${ymd}T00:00:00`;
+    const dateEnd = `${ymd}T23:59:59`;
 
+    // Выполняем все независимые запросы параллельно для ускорения загрузки
+    const basePromises = [
+        // 1. Настройки сотрудника (проценты и ставка)
+        client
+            .from('staff')
+            .select('percent_master, percent_salon, hourly_rate')
+            .eq('id', staffId)
+            .maybeSingle(),
+        
+        // 2. Смена за выбранную дату
+        client
+            .from('staff_shifts')
+            .select('*')
+            .eq('staff_id', staffId)
+            .eq('shift_date', ymd)
+            .maybeSingle(),
+        
+        // 3. Записи (bookings) сотрудника за выбранную дату
+        client
+            .from('bookings')
+            .select('id, client_name, client_phone, start_at, services:services!bookings_service_id_fkey (name_ru, name_ky, name_en)')
+            .eq('staff_id', staffId)
+            .gte('start_at', dateStart)
+            .lte('start_at', dateEnd)
+            .neq('status', 'cancelled')
+            .order('start_at', { ascending: true }),
+        
+        // 4. Услуги сотрудника для выпадающего списка
+        client
+            .from('service_staff')
+            .select('services:services!inner (name_ru, name_ky, name_en)')
+            .eq('staff_id', staffId)
+            .eq('is_active', true)
+            .eq('services.active', true),
+    ];
+
+    // Добавляем проверку выходного дня только если это сегодня
+    const dayOffPromises = ymd === today ? [
+        // 5. Проверяем staff_time_off
+        client
+            .from('staff_time_off')
+            .select('id')
+            .eq('biz_id', bizId)
+            .eq('staff_id', staffId)
+            .lte('date_from', ymd)
+            .gte('date_to', ymd),
+        
+        // 6. Проверяем staff_schedule_rules для конкретной даты
+        client
+            .from('staff_schedule_rules')
+            .select('intervals, is_active')
+            .eq('biz_id', bizId)
+            .eq('staff_id', staffId)
+            .eq('kind', 'date')
+            .eq('date_on', ymd)
+            .eq('is_active', true)
+            .maybeSingle(),
+        
+        // 7. Проверяем еженедельное расписание
+        client
+            .from('working_hours')
+            .select('intervals')
+            .eq('biz_id', bizId)
+            .eq('staff_id', staffId)
+            .eq('day_of_week', dow)
+            .maybeSingle(),
+    ] : [];
+
+    const allPromises = [...basePromises, ...dayOffPromises];
+    const results = await Promise.all(allPromises);
+
+    // Обрабатываем результаты
+    const [staffDataResult, shiftResult, bookingsResult, servicesResult, ...dayOffResults] = results;
+    
+    const { data: staffData, error: staffError } = staffDataResult;
     if (staffError) {
         logError('ShiftDataService', 'Error loading staff for percent', staffError);
     }
@@ -121,39 +196,33 @@ export async function getShiftData({
     const staffPercentSalon = Number(staffData?.percent_salon ?? 40);
     const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
 
-    // Дата в локальной TZ (без времени)
-    const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
-    const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
+    const { data: shift, error: shiftError } = shiftResult;
+    if (shiftError) {
+        logError('ShiftDataService', 'Error loading shift', shiftError);
+        throw new Error(`Failed to load shift: ${shiftError.message}`);
+    }
 
-    // Проверяем, выходной ли для выбранной даты
+    const { data: dateBookingsRaw, error: bookingsError } = bookingsResult;
+    if (bookingsError) {
+        logError('ShiftDataService', 'Error loading bookings', bookingsError);
+    }
+
+    const { data: staffServices, error: servicesError } = servicesResult;
+    if (servicesError) {
+        logError('ShiftDataService', 'Error loading staff services', servicesError);
+    }
+
+    // Обрабатываем проверку выходного дня
     let isDayOff = false;
-    const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
-    
-    // Проверяем выходной только если это сегодня (для оптимизации)
-    if (ymd === today) {
-        // 1. Проверяем staff_time_off
-        const { data: timeOffs } = await client
-            .from('staff_time_off')
-            .select('id')
-            .eq('biz_id', bizId)
-            .eq('staff_id', staffId)
-            .lte('date_from', ymd)
-            .gte('date_to', ymd);
+    if (ymd === today && dayOffResults.length >= 3) {
+        const [timeOffsResult, dateRuleResult, whRowResult] = dayOffResults;
 
-        if (timeOffs && timeOffs.length > 0) {
+        // 1. Проверяем staff_time_off
+        if (timeOffsResult.data && Array.isArray(timeOffsResult.data) && timeOffsResult.data.length > 0) {
             isDayOff = true;
         } else {
             // 2. Проверяем staff_schedule_rules для конкретной даты
-            const { data: dateRule } = await client
-                .from('staff_schedule_rules')
-                .select('intervals, is_active')
-                .eq('biz_id', bizId)
-                .eq('staff_id', staffId)
-                .eq('kind', 'date')
-                .eq('date_on', ymd)
-                .eq('is_active', true)
-                .maybeSingle();
-
+            const dateRule = dateRuleResult.data as { intervals: unknown; is_active: boolean } | null;
             if (dateRule && dateRule.is_active) {
                 const intervals = (dateRule.intervals ?? []) as { start: string; end: string }[];
                 if (!Array.isArray(intervals) || intervals.length === 0) {
@@ -161,14 +230,7 @@ export async function getShiftData({
                 }
             } else {
                 // 3. Проверяем еженедельное расписание
-                const { data: whRow } = await client
-                    .from('working_hours')
-                    .select('intervals')
-                    .eq('biz_id', bizId)
-                    .eq('staff_id', staffId)
-                    .eq('day_of_week', dow)
-                    .maybeSingle();
-
+                const whRow = whRowResult.data as { intervals: unknown } | null;
                 const intervals = (whRow?.intervals ?? []) as { start: string; end: string }[];
                 if (!Array.isArray(intervals) || intervals.length === 0) {
                     isDayOff = true;
@@ -177,20 +239,65 @@ export async function getShiftData({
         }
     }
 
-    // Смена за выбранную дату
-    const { data: shift, error: shiftError } = await client
-        .from('staff_shifts')
-        .select('*')
-        .eq('staff_id', staffId)
-        .eq('shift_date', ymd)
-        .maybeSingle();
-
-    if (shiftError) {
-        logError('ShiftDataService', 'Error loading shift', shiftError);
-        throw new Error(`Failed to load shift: ${shiftError.message}`);
+    // Загружаем items для смены и allShifts параллельно (если смена существует)
+    type ItemsResult = { data: Array<{
+        id: string;
+        client_name: string;
+        service_name: string;
+        service_amount: number;
+        consumables_amount: number;
+        note: string | null;
+        booking_id: string | null;
+        created_at: string;
+    }> | null; error: unknown };
+    
+    type AllShiftsResult = { data: Array<{
+        shift_date: string | Date;
+        status: string;
+        total_amount: number | null;
+        master_share: number | null;
+        salon_share: number | null;
+        late_minutes: number | null;
+        guaranteed_amount?: number | null;
+        topup_amount?: number | null;
+    }> | null; error: unknown };
+    
+    const secondaryPromises: Promise<ItemsResult | AllShiftsResult>[] = [];
+    
+    // Items зависит от shift, поэтому загружаем только если смена существует
+    if (shift) {
+        secondaryPromises.push(
+            client
+                .from('staff_shift_items')
+                .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
+                .eq('shift_id', shift.id)
+                .order('created_at', { ascending: false })
+                .order('id', { ascending: false })
+                .then((result) => result as ItemsResult)
+        );
+    } else {
+        // Если смены нет, добавляем пустой промис для сохранения индекса
+        secondaryPromises.push(Promise.resolve({ data: [], error: null } as ItemsResult));
     }
-
-    // Позиции по клиентам для текущей смены
+    
+    // AllShifts можно загружать параллельно с items (только если запрашивается сегодня)
+    if (ymd === today) {
+        secondaryPromises.push(
+            client
+                .from('staff_shifts')
+                .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
+                .eq('staff_id', staffId)
+                .order('shift_date', { ascending: false })
+                .then((result) => result as AllShiftsResult)
+        );
+    } else {
+        // Если не сегодня, добавляем пустой промис для сохранения индекса
+        secondaryPromises.push(Promise.resolve({ data: [], error: null } as AllShiftsResult));
+    }
+    
+    const [itemsResult, allShiftsResult] = await Promise.all(secondaryPromises);
+    
+    // Обрабатываем items
     let items: Array<{
         id: string;
         client_name: string;
@@ -201,35 +308,14 @@ export async function getShiftData({
         booking_id: string | null;
         created_at: string;
     }> = [];
-    if (shift) {
-        const { data: itemsData, error: itemsError } = await client
-            .from('staff_shift_items')
-            .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
-            .eq('shift_id', shift.id)
-            .order('created_at', { ascending: false })
-            .order('id', { ascending: false });
-
+    
+    if (shift && itemsResult && 'data' in itemsResult) {
+        const { data: itemsData, error: itemsError } = itemsResult as ItemsResult;
         if (itemsError) {
             logError('ShiftDataService', 'Error loading shift items', itemsError);
         } else {
-            items = itemsData ?? [];
+            items = (itemsData as typeof items) ?? [];
         }
-    }
-
-    // Записи (bookings) сотрудника за выбранную дату
-    const dateStart = `${ymd}T00:00:00`;
-    const dateEnd = `${ymd}T23:59:59`;
-    const { data: dateBookingsRaw, error: bookingsError } = await client
-        .from('bookings')
-        .select('id, client_name, client_phone, start_at, services:services!bookings_service_id_fkey (name_ru, name_ky, name_en)')
-        .eq('staff_id', staffId)
-        .gte('start_at', dateStart)
-        .lte('start_at', dateEnd)
-        .neq('status', 'cancelled')
-        .order('start_at', { ascending: true });
-
-    if (bookingsError) {
-        logError('ShiftDataService', 'Error loading bookings', bookingsError);
     }
 
     // Преобразуем bookings: services может быть массивом из-за join, но нам нужен объект или null
@@ -256,18 +342,6 @@ export async function getShiftData({
         };
     });
 
-    // Услуги сотрудника для выпадающего списка
-    const { data: staffServices, error: servicesError } = await client
-        .from('service_staff')
-        .select('services:services!inner (name_ru, name_ky, name_en)')
-        .eq('staff_id', staffId)
-        .eq('is_active', true)
-        .eq('services.active', true);
-
-    if (servicesError) {
-        logError('ShiftDataService', 'Error loading staff services', servicesError);
-    }
-
     const availableServices = (staffServices ?? [])
         .map((ss: { services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null }) => {
             const svc = Array.isArray(ss.services) ? ss.services[0] : ss.services;
@@ -287,7 +361,7 @@ export async function getShiftData({
         currentGuaranteedAmount = Math.round(currentHoursWorked * hourlyRate * 100) / 100;
     }
 
-    // Общая статистика по всем закрытым сменам сотрудника (только если запрашивается сегодня)
+    // Обрабатываем allShifts и статистику (только если запрашивается сегодня)
     let allShifts: Array<{
         shift_date: string;
         status: string;
@@ -307,18 +381,22 @@ export async function getShiftData({
         shiftsCount: number;
     } | undefined;
 
-    // Загружаем статистику только если запрашивается сегодня (для оптимизации)
-    if (ymd === today) {
-        const { data: allShiftsData, error: statsError } = await client
-            .from('staff_shifts')
-            .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
-            .eq('staff_id', staffId)
-            .order('shift_date', { ascending: false });
-
+    if (ymd === today && allShiftsResult && 'data' in allShiftsResult) {
+        const { data: allShiftsData, error: statsError } = allShiftsResult as AllShiftsResult;
+        
         if (statsError) {
             logError('ShiftDataService', 'Error loading shifts stats', statsError);
         } else {
-            allShifts = (allShiftsData ?? []).map((s) => ({
+            allShifts = ((allShiftsData as Array<{
+                shift_date: string | Date;
+                status: string;
+                total_amount: number | null;
+                master_share: number | null;
+                salon_share: number | null;
+                late_minutes: number | null;
+                guaranteed_amount?: number | null;
+                topup_amount?: number | null;
+            }>) ?? []).map((s) => ({
                 shift_date: String(s.shift_date || '').split('T')[0].split(' ')[0], // Нормализуем дату в формат YYYY-MM-DD
                 status: s.status,
                 total_amount: Number(s.total_amount ?? 0),
