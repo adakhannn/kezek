@@ -64,25 +64,41 @@ async function closeShift(
     // (владелец не может закрывать смены сотрудников - только сотрудник может закрыть свою смену)
     const url = '/api/staff/shift/close';
 
-    // API ожидает items в camelCase формате согласно closeShiftSchema
+    // Преобразуем items в camelCase формат согласно closeShiftSchema
+    const formattedItems = items.map((item) => ({
+        id: item.id,
+        clientName: item.clientName,
+        serviceName: item.serviceName,
+        serviceAmount: item.serviceAmount,
+        consumablesAmount: item.consumablesAmount,
+        bookingId: item.bookingId,
+    }));
+
+    // Согласно closeShiftSchema: либо items (массив), либо totalAmount должны быть указаны
+    // Если items пустой, передаем totalAmount: 0
+    const body: { items?: typeof formattedItems; totalAmount?: number } = {};
+    
+    if (formattedItems.length > 0) {
+        body.items = formattedItems;
+    } else {
+        body.totalAmount = 0;
+    }
+
     const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            items: items.map((item) => ({
-                id: item.id,
-                clientName: item.clientName,
-                serviceName: item.serviceName,
-                serviceAmount: item.serviceAmount,
-                consumablesAmount: item.consumablesAmount,
-                bookingId: item.bookingId,
-            })),
-        }),
+        body: JSON.stringify(body),
     });
 
     if (!res.ok) {
-        const json = await res.json();
-        throw new Error(json.error || 'Не удалось закрыть смену');
+        let errorMessage = 'Не удалось закрыть смену';
+        try {
+            const json = await res.json();
+            errorMessage = json.error || json.message || errorMessage;
+        } catch {
+            // Используем стандартное сообщение
+        }
+        throw new Error(errorMessage);
     }
 }
 

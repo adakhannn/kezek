@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useMemo, useState, useCallback, memo, useRef } from 'react';
+import { useMemo, useState, useCallback, memo, useRef, useEffect } from 'react';
 
 import { useFinanceData } from '../hooks/useFinanceData';
 import { useFinanceMutations } from '../hooks/useFinanceMutations';
@@ -64,11 +64,14 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const mutations = useFinanceMutations({ staffId, date: shiftDate });
 
     // Синхронизируем локальные items с данными из сервера
-    useMemo(() => {
+    useEffect(() => {
         if (financeData.data?.items) {
             setLocalItems(financeData.data.items);
+        } else if (financeData.data && !financeData.isLoading) {
+            // Если данных нет, но загрузка завершена, устанавливаем пустой массив
+            setLocalItems([]);
         }
-    }, [financeData.data?.items]);
+    }, [financeData.data?.items, financeData.data, financeData.isLoading]);
 
     // Вычисляем состояние смены
     const shift = financeData.data?.shift ?? null;
