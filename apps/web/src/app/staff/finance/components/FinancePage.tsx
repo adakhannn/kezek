@@ -383,15 +383,25 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
     // Определяем, нужно ли показывать индикатор загрузки
     const shouldShowLoading = financeData.isLoading || mutations.isOpening || mutations.isClosing || mutations.isSaving;
+    
+    // Определяем сообщение для лоадера
+    const loadingMessage = useMemo(() => {
+        if (mutations.isClosing) {
+            return t('staff.finance.shift.closing', 'Закрытие смены...');
+        }
+        if (mutations.isOpening) {
+            return t('staff.finance.shift.opening', 'Открытие смены...');
+        }
+        if (mutations.isSaving) {
+            return t('staff.finance.clients.saving', 'Сохранение клиента...');
+        }
+        return t('staff.finance.loading', 'Загрузка данных смены...');
+    }, [mutations.isClosing, mutations.isOpening, mutations.isSaving, t]);
 
     return (
         <>
             {shouldShowLoading && (
-                <LoadingOverlay
-                    message={mutations.isClosing 
-                        ? t('staff.finance.shift.closing', 'Закрытие смены...')
-                        : t('staff.finance.loading', 'Загрузка данных смены...')}
-                />
+                <LoadingOverlay message={loadingMessage} />
             )}
             <ToastContainer
                 toasts={toast.toasts}
