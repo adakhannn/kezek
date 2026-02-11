@@ -281,15 +281,45 @@ export function useFinanceMutations({ staffId, date }: UseFinanceMutationsOption
     // Мутация сохранения списка клиентов (синхронизация)
     const saveItemsMutation = useMutation({
         mutationFn: (items: ShiftItem[]) => saveShiftItems(staffId, date, items),
-        onError: (error: Error) => {
-            toast.showError(error.message);
+        onMutate: async (items) => {
+            // Отменяем любые исходящие запросы
+            await queryClient.cancelQueries({ queryKey });
+            
+            // Снапшот предыдущих данных
+            const previousData = queryClient.getQueryData<FinanceDataResponse>(queryKey);
+            
+            // Проверяем, есть ли новые элементы без id (для них нужен refetch)
+            const hasNewItems = items.some((item) => !item.id);
+            
+            // Если все элементы имеют id, делаем оптимистичное обновление без refetch
+            if (!hasNewItems && previousData) {
+                queryClient.setQueryData<FinanceDataResponse>(queryKey, (old) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        today: {
+                            ...old.today,
+                            items: items, // Обновляем items оптимистично
+                        },
+                    };
+                });
+            }
+            
+            return { previousData, hasNewItems };
         },
-        onSuccess: () => {
-            // Инвалидируем кэш для получения актуальных данных с сервера (особенно id для новых элементов)
-            // Но делаем это с небольшой задержкой, чтобы не было двойного запроса
-            setTimeout(() => {
+        onError: (error: Error, variables, context) => {
+            toast.showError(error.message);
+            // Откатываем оптимистичное обновление при ошибке
+            if (context?.previousData) {
+                queryClient.setQueryData(queryKey, context.previousData);
+            }
+        },
+        onSuccess: (data, variables, context) => {
+            // Инвалидируем кэш только если есть новые элементы без id
+            // Для существующих элементов мы уже сделали оптимистичное обновление
+            if (context?.hasNewItems) {
                 queryClient.invalidateQueries({ queryKey });
-            }, 100);
+            }
         },
     });
 
