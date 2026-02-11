@@ -189,41 +189,55 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }
     }, [mutations, localItems]);
 
-    const handleAddClient = useCallback(async () => {
+    const handleAddClient = useCallback(() => {
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
-        const existingClients = localItems.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
-        const existingIndices = existingClients
-            .map((it) => {
-                const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
-                const match = it.clientName?.match(regex);
-                return match ? Number(match[1]) : 0;
-            })
-            .filter((n) => n > 0);
-        const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
-        const nextIndex = maxIndex + 1;
+        
+        // Используем функциональное обновление для получения актуального состояния
+        setLocalItems((prev) => {
+            const existingClients = prev.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
+            const existingIndices = existingClients
+                .map((it) => {
+                    const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
+                    const match = it.clientName?.match(regex);
+                    return match ? Number(match[1]) : 0;
+                })
+                .filter((n) => n > 0);
+            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
+            const nextIndex = maxIndex + 1;
 
-        const now = Date.now();
-        const lastItemTime = localItems.length > 0 && localItems[0].createdAt
-            ? new Date(localItems[0].createdAt).getTime()
-            : now;
-        const timeOffset = (now - lastItemTime < 1000) ? 100 : 0;
-        const createdAt = new Date(now + timeOffset).toISOString();
+            const now = Date.now();
+            const lastItemTime = prev.length > 0 && prev[0].createdAt
+                ? new Date(prev[0].createdAt).getTime()
+                : now;
+            const timeOffset = (now - lastItemTime < 1000) ? 100 : 0;
+            const createdAt = new Date(now + timeOffset).toISOString();
 
-        const newItem: ShiftItem = {
-            clientName: `${clientLabel} ${nextIndex}`,
-            serviceName: '',
-            serviceAmount: 0,
-            consumablesAmount: 0,
-            bookingId: null,
-            createdAt,
-        };
+            const newItem: ShiftItem = {
+                clientName: `${clientLabel} ${nextIndex}`,
+                serviceName: '',
+                serviceAmount: 0,
+                consumablesAmount: 0,
+                bookingId: null,
+                createdAt,
+            };
 
-        // Только локальное обновление - добавляем элемент и раскрываем форму
-        // Сохранение на сервер произойдет автоматически через handleUpdateItem при изменении полей
-        setLocalItems((prev) => [newItem, ...prev]);
-        setExpandedItems((prev) => new Set([0, ...Array.from(prev).map((i) => i + 1)]));
-    }, [localItems, t]);
+            // Добавляем новый элемент в начало массива
+            const updatedItems = [newItem, ...prev];
+            
+            // Открываем форму для нового элемента (индекс 0) и сдвигаем остальные индексы
+            setExpandedItems((expanded) => {
+                const newExpanded = new Set([0]);
+                // Сдвигаем все существующие открытые формы на +1
+                expanded.forEach((idx) => {
+                    newExpanded.add(idx + 1);
+                });
+                return newExpanded;
+            });
+            
+            return updatedItems;
+        });
+    }, [t]);
 
     // Обновление элемента без сохранения на сервер (только локальное состояние)
     const handleUpdateItem = useCallback((idx: number, item: ShiftItem) => {
