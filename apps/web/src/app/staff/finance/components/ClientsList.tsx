@@ -20,6 +20,7 @@ interface ClientsListProps {
     onExpand: (idx: number) => void;
     onCollapse: (idx: number) => void;
     onUpdateItem: (idx: number, item: ShiftItem) => void;
+    onSaveItem?: (idx: number) => void;
     onDeleteItem: (idx: number) => void;
 }
 
@@ -36,6 +37,7 @@ export function ClientsList({
     onExpand,
     onCollapse,
     onUpdateItem,
+    onSaveItem,
     onDeleteItem,
 }: ClientsListProps) {
     const { t } = useLanguage();
@@ -103,6 +105,7 @@ export function ClientsList({
                             isOpen={isOpen}
                             isReadOnly={isReadOnly}
                             onUpdate={onUpdateItem}
+                            onSave={onSaveItem}
                             onCollapse={onCollapse}
                         />
                     );

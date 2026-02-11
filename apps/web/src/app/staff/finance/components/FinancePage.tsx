@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useMemo, useState, useCallback, memo, useRef, useEffect } from 'react';
+import { useMemo, useState, useCallback, memo, useEffect } from 'react';
 
 import { useFinanceData } from '../hooks/useFinanceData';
 import { useFinanceMutations } from '../hooks/useFinanceMutations';
@@ -169,23 +169,18 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         setExpandedItems((prev) => new Set([0, ...Array.from(prev).map((i) => i + 1)]));
     }, [localItems, t]);
 
-    // Ref для хранения таймеров автосохранения
-    const saveTimersRef = useRef(new Map<number, NodeJS.Timeout>());
-
+    // Обновление элемента без сохранения на сервер (только локальное состояние)
     const handleUpdateItem = useCallback((idx: number, item: ShiftItem) => {
-        const previousItem = localItems[idx];
-        
-        // Отменяем предыдущий таймер для этого индекса
-        const existingTimer = saveTimersRef.current.get(idx);
-        if (existingTimer) {
-            clearTimeout(existingTimer);
-        }
-        
-        // Оптимистичное обновление
+        // Только локальное обновление - без сохранения на сервер
         setLocalItems((prev) => prev.map((it, i) => (i === idx ? item : it)));
-        
-        // Автосохранение с debounce (1 секунда) - только если есть изменения
-        // Не сохраняем пустые элементы (без id и без данных)
+    }, []);
+
+    // Явное сохранение элемента на сервер (при клике на кнопку "Сохранить")
+    const handleSaveItem = useCallback(async (idx: number) => {
+        const item = localItems[idx];
+        if (!item) return;
+
+        // Проверяем, есть ли данные для сохранения
         const hasData = item.id || 
             item.bookingId || 
             (item.serviceAmount && item.serviceAmount > 0) || 
@@ -193,34 +188,27 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             (item.serviceName && item.serviceName.trim() !== '') ||
             (item.clientName && item.clientName.trim() !== '' && !item.clientName.match(/^Клиент \d+$/));
         
-        if (hasData) {
-            const timeoutId = setTimeout(async () => {
-                // Получаем актуальное состояние items на момент сохранения
-                setLocalItems((current) => {
-                    const updatedItems = [...current];
-                    
-                    // Сохраняем асинхронно
-                    mutations.saveItems(updatedItems).catch((error) => {
-                        // Откатываем при ошибке
-                        setLocalItems((prev) => prev.map((it, i) => (i === idx ? previousItem : it)));
-                    });
-                    
-                    return current; // Не изменяем состояние здесь
-                });
-                saveTimersRef.current.delete(idx);
-            }, 1000);
-            
-            saveTimersRef.current.set(idx, timeoutId);
+        if (!hasData) {
+            // Если нет данных, просто закрываем форму
+            setExpandedItems((prev) => {
+                const next = new Set(prev);
+                next.delete(idx);
+                return next;
+            });
+            return;
         }
 
-        // Возвращаем функцию очистки для компонента
-        return () => {
-            const timer = saveTimersRef.current.get(idx);
-            if (timer) {
-                clearTimeout(timer);
-                saveTimersRef.current.delete(idx);
-            }
-        };
+        try {
+            await mutations.saveItems(localItems);
+            // После успешного сохранения закрываем форму
+            setExpandedItems((prev) => {
+                const next = new Set(prev);
+                next.delete(idx);
+                return next;
+            });
+        } catch (error) {
+            // Ошибка уже обработана в мутации
+        }
     }, [localItems, mutations]);
 
     const handleDeleteItem = useCallback(async (idx: number) => {
@@ -446,6 +434,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                             });
                         }}
                         onUpdateItem={handleUpdateItem}
+                        onSaveItem={handleSaveItem}
                         onDeleteItem={handleDeleteItem}
                     />
                 </div>

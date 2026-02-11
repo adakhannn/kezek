@@ -19,6 +19,7 @@ interface ClientEditFormProps {
     isOpen: boolean;
     isReadOnly: boolean;
     onUpdate: (idx: number, item: ShiftItem) => void;
+    onSave?: (idx: number) => void;
     onCollapse: (idx: number) => void;
 }
 
@@ -31,6 +32,7 @@ export function ClientEditForm({
     isOpen,
     isReadOnly,
     onUpdate,
+    onSave,
     onCollapse,
 }: ClientEditFormProps) {
     const { t, locale } = useLanguage();
@@ -298,7 +300,13 @@ export function ClientEditForm({
                     <button
                         type="button"
                         className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transform hover:scale-105"
-                        onClick={() => onCollapse(idx)}
+                        onClick={() => {
+                            if (onSave) {
+                                void onSave(idx);
+                            } else {
+                                onCollapse(idx);
+                            }
+                        }}
                     >
                         {t('staff.finance.clients.save', 'Сохранить')}
                     </button>

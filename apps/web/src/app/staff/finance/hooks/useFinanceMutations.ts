@@ -285,8 +285,11 @@ export function useFinanceMutations({ staffId, date }: UseFinanceMutationsOption
             toast.showError(error.message);
         },
         onSuccess: () => {
-            // Инвалидируем кэш для получения актуальных данных с сервера
-            queryClient.invalidateQueries({ queryKey });
+            // Инвалидируем кэш для получения актуальных данных с сервера (особенно id для новых элементов)
+            // Но делаем это с небольшой задержкой, чтобы не было двойного запроса
+            setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey });
+            }, 100);
         },
     });
 
