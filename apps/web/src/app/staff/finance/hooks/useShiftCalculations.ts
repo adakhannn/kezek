@@ -31,20 +31,20 @@ export function useShiftCalculations(
     const itemsSignature = useMemo(() => {
         // Создаем стабильную сигнатуру массива items для сравнения
         // Используем только те поля, которые влияют на расчеты
-        return items.map((it) => ({
+        return JSON.stringify(items.map((it) => ({
             serviceAmount: typeof it.serviceAmount === 'number' && !isNaN(it.serviceAmount) ? it.serviceAmount : 0,
             consumablesAmount: typeof it.consumablesAmount === 'number' && !isNaN(it.consumablesAmount) ? it.consumablesAmount : 0,
-        }));
+        })));
     }, [items]);
 
     // Мемоизируем стабильные значения из shift
     const shiftSignature = useMemo(() => {
         if (!shift) return null;
-        return {
+        return JSON.stringify({
             total_amount: typeof shift.total_amount === 'number' && !isNaN(shift.total_amount) ? shift.total_amount : 0,
             master_share: typeof shift.master_share === 'number' && !isNaN(shift.master_share) ? shift.master_share : 0,
             salon_share: typeof shift.salon_share === 'number' && !isNaN(shift.salon_share) ? shift.salon_share : 0,
-        };
+        });
     }, [shift]);
 
     return useMemo(() => {
