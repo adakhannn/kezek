@@ -8,6 +8,8 @@ import { formatInTimeZone } from 'date-fns-tz';
 
 import type { ShiftItem } from '../types';
 
+import type { FinanceDataResponse } from './useFinanceData';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useToast } from '@/hooks/useToast';
 import { TZ } from '@/lib/time';
@@ -151,24 +153,128 @@ export function useFinanceMutations({ staffId, date }: UseFinanceMutationsOption
     // Мутация открытия смены
     const openShiftMutation = useMutation({
         mutationFn: () => openShift(staffId, date),
+        onMutate: async () => {
+            // Отменяем исходящие запросы для оптимистичного обновления
+            await queryClient.cancelQueries({ queryKey });
+
+            // Сохраняем предыдущее состояние
+            const previousData = queryClient.getQueryData(queryKey);
+
+            // Оптимистично обновляем кэш - устанавливаем смену как открытую
+            queryClient.setQueryData(queryKey, (old: FinanceDataResponse | undefined) => {
+                if (!old) return old;
+                
+                const now = new Date().toISOString();
+                const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
+                
+                // Создаем оптимистичную смену
+                const optimisticShift = {
+                    id: old.today?.shift?.id || `temp-${Date.now()}`,
+                    shift_date: dateStr,
+                    opened_at: now,
+                    closed_at: null,
+                    expected_start: null,
+                    late_minutes: 0,
+                    status: 'open' as const,
+                    total_amount: 0,
+                    consumables_amount: 0,
+                    master_share: 0,
+                    salon_share: 0,
+                    percent_master: old.staffPercentMaster ?? 60,
+                    percent_salon: old.staffPercentSalon ?? 40,
+                    hours_worked: null,
+                    hourly_rate: old.hourlyRate ?? null,
+                    guaranteed_amount: null,
+                    topup_amount: null,
+                };
+
+                return {
+                    ...old,
+                    today: {
+                        exists: true,
+                        status: 'open' as const,
+                        shift: optimisticShift,
+                        items: old.today?.items || [],
+                    },
+                };
+            });
+
+            return { previousData };
+        },
+        onError: (error: Error, variables, context) => {
+            // Откатываем изменения при ошибке
+            if (context?.previousData) {
+                queryClient.setQueryData(queryKey, context.previousData);
+            }
+            toast.showError(error.message);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
             toast.showSuccess(t('staff.finance.shift.opened', 'Смена успешно открыта'));
-        },
-        onError: (error: Error) => {
-            toast.showError(error.message);
         },
     });
 
     // Мутация закрытия смены
     const closeShiftMutation = useMutation({
         mutationFn: (items: ShiftItem[]) => closeShift(staffId, date, items),
+        onMutate: async (items) => {
+            // Отменяем исходящие запросы для оптимистичного обновления
+            await queryClient.cancelQueries({ queryKey });
+
+            // Сохраняем предыдущее состояние
+            const previousData = queryClient.getQueryData(queryKey);
+
+            // Вычисляем суммы из items для оптимистичного обновления
+            const totalAmount = items.reduce((sum, item) => sum + (item.serviceAmount || 0), 0);
+            const consumablesAmount = items.reduce((sum, item) => sum + (item.consumablesAmount || 0), 0);
+            
+            // Оптимистично обновляем кэш - устанавливаем смену как закрытую
+            queryClient.setQueryData(queryKey, (old: FinanceDataResponse | undefined) => {
+                if (!old || !old.today?.shift) return old;
+                
+                const now = new Date().toISOString();
+                
+                // Вычисляем доли (упрощенно, без учета гарантированной суммы)
+                const percentMaster = old.staffPercentMaster ?? 60;
+                const percentSalon = old.staffPercentSalon ?? 40;
+                const percentSum = percentMaster + percentSalon || 100;
+                const masterShare = Math.round((totalAmount * percentMaster) / percentSum);
+                const salonShare = Math.round((totalAmount * percentSalon) / percentSum) + consumablesAmount;
+
+                // Обновляем смену
+                const optimisticShift = {
+                    ...old.today.shift,
+                    status: 'closed' as const,
+                    closed_at: now,
+                    total_amount: totalAmount,
+                    consumables_amount: consumablesAmount,
+                    master_share: masterShare,
+                    salon_share: salonShare,
+                };
+
+                return {
+                    ...old,
+                    today: {
+                        exists: true,
+                        status: 'closed' as const,
+                        shift: optimisticShift,
+                        items: old.today.items || [],
+                    },
+                };
+            });
+
+            return { previousData };
+        },
+        onError: (error: Error, variables, context) => {
+            // Откатываем изменения при ошибке
+            if (context?.previousData) {
+                queryClient.setQueryData(queryKey, context.previousData);
+            }
+            toast.showError(error.message);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
             toast.showSuccess(t('staff.finance.shift.closed', 'Смена успешно закрыта'));
-        },
-        onError: (error: Error) => {
-            toast.showError(error.message);
         },
     });
 

@@ -38,7 +38,7 @@ export interface FinanceData {
     stats?: Stats;
 }
 
-interface FinanceDataResponse {
+export interface FinanceDataResponse {
     ok: true;
     today: {
         exists: boolean;
