@@ -57,6 +57,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const savedItemsWithoutIdRef = useRef<Set<number>>(new Set());
     // Ref для отслеживания предыдущих localItems, чтобы избежать бесконечного цикла
     const previousLocalItemsRef = useRef<ShiftItem[]>([]);
+    // Флаг для предотвращения синхронизации сразу после добавления нового элемента
+    const skipNextSyncRef = useRef(false);
 
     // Загрузка данных через React Query
     const financeData = useFinanceData({
@@ -70,39 +72,46 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
     // Синхронизируем локальные items с данными из сервера
     useEffect(() => {
+        // Пропускаем синхронизацию, если только что добавили новый элемент
+        if (skipNextSyncRef.current) {
+            skipNextSyncRef.current = false;
+            return;
+        }
+        
         if (financeData.data?.items) {
             const serverItems = financeData.data.items;
-            // Используем текущие localItems для слияния
-            const currentLocalItems = localItems;
-            const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
-            const localItemsById = new Map(currentLocalItems.filter((item) => item.id).map((item) => [item.id!, item]));
-            
-            // Объединяем данные: сохраняем локальные элементы без id и объединяем элементы с id
-            const mergedItems: ShiftItem[] = [...localItemsWithoutId];
-            
-            // Для элементов с сервера: объединяем с локальными данными, если они есть
-            for (const serverItem of serverItems) {
-                if (serverItem.id) {
-                    const localItem = localItemsById.get(serverItem.id);
-                    if (localItem) {
-                        // Объединяем: приоритет локальным данным, если они не пустые
-                        mergedItems.push({
-                            id: serverItem.id,
-                            clientName: (localItem.clientName && localItem.clientName.trim()) || serverItem.clientName || '',
-                            serviceName: (localItem.serviceName && localItem.serviceName.trim()) || serverItem.serviceName || '',
-                            serviceAmount: localItem.serviceAmount ?? serverItem.serviceAmount ?? 0,
-                            consumablesAmount: localItem.consumablesAmount ?? serverItem.consumablesAmount ?? 0,
-                            bookingId: localItem.bookingId ?? serverItem.bookingId ?? null,
-                            createdAt: localItem.createdAt || serverItem.createdAt || null,
-                        });
-                    } else {
-                        // Новый элемент с сервера (не был в локальных)
-                        mergedItems.push(serverItem);
+            // Используем функциональное обновление для получения актуального состояния
+            setLocalItems((currentLocalItems) => {
+                const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
+                const localItemsById = new Map(currentLocalItems.filter((item) => item.id).map((item) => [item.id!, item]));
+                
+                // Объединяем данные: сохраняем локальные элементы без id и объединяем элементы с id
+                const mergedItems: ShiftItem[] = [...localItemsWithoutId];
+                
+                // Для элементов с сервера: объединяем с локальными данными, если они есть
+                for (const serverItem of serverItems) {
+                    if (serverItem.id) {
+                        const localItem = localItemsById.get(serverItem.id);
+                        if (localItem) {
+                            // Объединяем: приоритет локальным данным, если они не пустые
+                            mergedItems.push({
+                                id: serverItem.id,
+                                clientName: (localItem.clientName && localItem.clientName.trim()) || serverItem.clientName || '',
+                                serviceName: (localItem.serviceName && localItem.serviceName.trim()) || serverItem.serviceName || '',
+                                serviceAmount: localItem.serviceAmount ?? serverItem.serviceAmount ?? 0,
+                                consumablesAmount: localItem.consumablesAmount ?? serverItem.consumablesAmount ?? 0,
+                                bookingId: localItem.bookingId ?? serverItem.bookingId ?? null,
+                                createdAt: localItem.createdAt || serverItem.createdAt || null,
+                            });
+                        } else {
+                            // Новый элемент с сервера (не был в локальных)
+                            mergedItems.push(serverItem);
+                        }
                     }
                 }
-            }
-            
-            setLocalItems(mergedItems);
+                
+                return mergedItems;
+            });
             
             // Закрываем формы только для элементов, которые были только что сохранены
             // (новые элементы без id, которые теперь имеют id)
@@ -119,15 +128,17 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             }
         } else if (financeData.data && !financeData.isLoading) {
             // Если данных нет, но загрузка завершена, сохраняем только локальные элементы без id
-            const localItemsWithoutId = localItems.filter((item) => !item.id);
-            setLocalItems(localItemsWithoutId);
-            // Не закрываем формы, если есть локальные элементы
-            if (localItemsWithoutId.length === 0) {
-                setExpandedItems(new Set());
-                savedItemsWithoutIdRef.current.clear();
-            }
+            setLocalItems((currentLocalItems) => {
+                const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
+                // Не закрываем формы, если есть локальные элементы
+                if (localItemsWithoutId.length === 0) {
+                    setExpandedItems(new Set());
+                    savedItemsWithoutIdRef.current.clear();
+                }
+                return localItemsWithoutId;
+            });
         }
-    }, [financeData.data?.items, financeData.data, financeData.isLoading, localItems]);
+    }, [financeData.data?.items, financeData.data, financeData.isLoading]);
 
     // Вычисляем состояние смены
     const shift = financeData.data?.shift ?? null;
@@ -224,6 +235,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
             // Добавляем новый элемент в начало массива
             const updatedItems = [newItem, ...prev];
+            
+            // Пропускаем следующую синхронизацию с сервером, чтобы не потерять новый элемент
+            skipNextSyncRef.current = true;
             
             // Открываем форму для нового элемента (индекс 0) и сдвигаем остальные индексы
             setExpandedItems((expanded) => {
