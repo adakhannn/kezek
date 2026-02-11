@@ -22,46 +22,60 @@ interface UseFinanceMutationsOptions {
  */
 async function openShift(staffId: string | undefined, date: Date): Promise<void> {
     const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    const url = staffId
-        ? `/api/dashboard/staff/${staffId}/shift/open`
-        : '/api/staff/shift/open';
+    
+    if (staffId) {
+        // Для владельца: дата передается через query параметр
+        const url = `/api/dashboard/staff/${staffId}/shift/open?date=${dateStr}`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
 
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: dateStr }),
-    });
+        if (!res.ok) {
+            const json = await res.json();
+            throw new Error(json.error || 'Не удалось открыть смену');
+        }
+    } else {
+        // Для сотрудника: всегда открывает на сегодня, не принимает параметры
+        const url = '/api/staff/shift/open';
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
 
-    if (!res.ok) {
-        const json = await res.json();
-        throw new Error(json.error || 'Не удалось открыть смену');
+        if (!res.ok) {
+            const json = await res.json();
+            throw new Error(json.error || 'Не удалось открыть смену');
+        }
     }
 }
 
 /**
  * Закрытие смены
+ * Примечание: для владельца также используется /api/staff/shift/close,
+ * так как отдельного endpoint для владельца нет
  */
 async function closeShift(
     staffId: string | undefined,
     date: Date,
     items: ShiftItem[]
 ): Promise<void> {
-    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
-    const url = staffId
-        ? `/api/dashboard/staff/${staffId}/shift/close`
-        : '/api/staff/shift/close';
+    // Всегда используем endpoint для сотрудника
+    // (владелец не может закрывать смены сотрудников - только сотрудник может закрыть свою смену)
+    const url = '/api/staff/shift/close';
 
+    // API ожидает items в camelCase формате согласно closeShiftSchema
     const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            date: dateStr,
             items: items.map((item) => ({
-                client_name: item.clientName,
-                service_name: item.serviceName,
-                service_amount: item.serviceAmount,
-                consumables_amount: item.consumablesAmount,
-                booking_id: item.bookingId,
+                id: item.id,
+                clientName: item.clientName,
+                serviceName: item.serviceName,
+                serviceAmount: item.serviceAmount,
+                consumablesAmount: item.consumablesAmount,
+                bookingId: item.bookingId,
             })),
         }),
     });
@@ -83,17 +97,18 @@ async function saveShiftItems(
     const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
     const url = '/api/staff/shift/items';
 
+    // API ожидает items в camelCase формате согласно saveShiftItemsSchema
     const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             items: items.map((item) => ({
                 id: item.id,
-                client_name: item.clientName,
-                service_name: item.serviceName,
-                service_amount: item.serviceAmount,
-                consumables_amount: item.consumablesAmount,
-                booking_id: item.bookingId,
+                clientName: item.clientName,
+                serviceName: item.serviceName,
+                serviceAmount: item.serviceAmount,
+                consumablesAmount: item.consumablesAmount,
+                bookingId: item.bookingId,
             })),
             staffId: staffId || undefined,
             shiftDate: dateStr,
