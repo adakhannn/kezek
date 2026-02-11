@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useMemo, useState, useCallback, memo, useEffect } from 'react';
+import { useMemo, useState, useCallback, memo, useEffect, useRef } from 'react';
 
 import { useFinanceData } from '../hooks/useFinanceData';
 import { useFinanceMutations } from '../hooks/useFinanceMutations';
@@ -53,6 +53,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     // Локальное состояние для items (для оптимистичных обновлений)
     const [localItems, setLocalItems] = useState<ShiftItem[]>([]);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
+    // Отслеживаем, какие элементы были только что сохранены (новые элементы без id)
+    const savedItemsWithoutIdRef = useRef<Set<number>>(new Set());
 
     // Загрузка данных через React Query
     const financeData = useFinanceData({
@@ -67,12 +69,29 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     // Синхронизируем локальные items с данными из сервера
     useEffect(() => {
         if (financeData.data?.items) {
+            const previousItems = localItems;
             setLocalItems(financeData.data.items);
+            
+            // Закрываем формы только для элементов, которые были только что сохранены
+            // (новые элементы без id, которые теперь имеют id)
+            if (savedItemsWithoutIdRef.current.size > 0) {
+                setExpandedItems((prev) => {
+                    const next = new Set(prev);
+                    // Закрываем все формы, которые были открыты для сохраненных элементов
+                    savedItemsWithoutIdRef.current.forEach((idx) => {
+                        next.delete(idx);
+                    });
+                    savedItemsWithoutIdRef.current.clear();
+                    return next;
+                });
+            }
         } else if (financeData.data && !financeData.isLoading) {
             // Если данных нет, но загрузка завершена, устанавливаем пустой массив
             setLocalItems([]);
+            setExpandedItems(new Set());
+            savedItemsWithoutIdRef.current.clear();
         }
-    }, [financeData.data?.items, financeData.data, financeData.isLoading]);
+    }, [financeData.data?.items, financeData.data, financeData.isLoading, localItems]);
 
     // Вычисляем состояние смены
     const shift = financeData.data?.shift ?? null;
@@ -214,14 +233,25 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }
 
         try {
+            // Отмечаем, что этот элемент был сохранен (если он новый, без id)
+            if (!item.id) {
+                savedItemsWithoutIdRef.current.add(idx);
+            }
+            
             await mutations.saveItems(localItems);
             // После успешного сохранения закрываем форму
-            setExpandedItems((prev) => {
-                const next = new Set(prev);
-                next.delete(idx);
-                return next;
-            });
+            // Если элемент был новым (без id), форма закроется после refetch через useEffect
+            // Если элемент был существующим (с id), закрываем сразу
+            if (item.id) {
+                setExpandedItems((prev) => {
+                    const next = new Set(prev);
+                    next.delete(idx);
+                    return next;
+                });
+            }
         } catch (error) {
+            // При ошибке убираем из списка сохраненных
+            savedItemsWithoutIdRef.current.delete(idx);
             // Ошибка уже обработана в мутации
         }
     }, [localItems, mutations, toast, t]);
