@@ -169,14 +169,15 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             // Закрываем все открытые формы после синхронизации с сервером
             // Это нужно, чтобы пользователь видел окончательный список клиентов
             // и формы не оставались открытыми с устаревшими данными
+            // Закрываем формы только если были сохранены новые элементы (без id)
+            // или если есть открытые формы (чтобы показать обновленный список)
             setExpandedItems((prev) => {
-                if (prev.size === 0) return prev;
-                
-                const next = new Set(prev);
-                // Закрываем все формы после синхронизации
-                next.clear();
-                savedItemsWithoutIdRef.current.clear();
-                return next;
+                // Если были сохранены новые элементы или есть открытые формы, закрываем их
+                if (savedItemsWithoutIdRef.current.size > 0 || prev.size > 0) {
+                    savedItemsWithoutIdRef.current.clear();
+                    return new Set();
+                }
+                return prev;
             });
         } else if (financeData.data && !financeData.isLoading) {
             // Если данных нет, но загрузка завершена, сохраняем только локальные элементы без id
