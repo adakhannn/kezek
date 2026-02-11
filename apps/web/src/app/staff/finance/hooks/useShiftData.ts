@@ -715,6 +715,22 @@ export function useShiftData({ staffId, shiftDate, onDataLoaded }: UseShiftDataO
                     currentRequestRef.current.requestId === currentRequestId) {
                     currentRequestRef.current = null;
                 }
+                
+                // Дополнительная проверка: если loading все еще true после таймаута, сбрасываем его
+                // Это защита от зависания при failed запросах, которые не попали в catch
+                setTimeout(() => {
+                    if (lastRequestedDateRef.current === dateStr && 
+                        requestCounterRef.current === currentRequestId &&
+                        abortControllerRef.current === abortController) {
+                        // Если через 10 секунд запрос все еще в процессе, принудительно завершаем
+                        console.warn('[useShiftData] Request timeout protection triggered', { dateStr, requestId: currentRequestId });
+                        setLoading(false);
+                        setIsInitialLoad(false);
+                        if (!currentRequestRef.current || currentRequestRef.current.requestId === currentRequestId) {
+                            currentRequestRef.current = null;
+                        }
+                    }
+                }, 10000); // 10 секунд таймаут
             }
         })();
         

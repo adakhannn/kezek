@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 
 import { ClientsList } from './finance/components/ClientsList';
 import { ClientsListHeader } from './finance/components/ClientsListHeader';
@@ -258,14 +258,42 @@ export default function StaffFinanceView({ staffId }: { staffId?: string }) {
     // 2. Начальной загрузке данных
     // 3. Последующих загрузках (но только если нет данных или произошла ошибка)
     // 4. Добавлении или удалении клиента
-    const shouldShowLoading = shiftManagement.closingProgress?.show || 
+    // 5. Защита от зависания: если loading слишком долго, скрываем индикатор
+    const loadingTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [forceHideLoading, setForceHideLoading] = useState(false);
+    
+    useEffect(() => {
+        if (shiftData.loading && shiftData.isInitialLoad) {
+            // Если начальная загрузка длится больше 15 секунд, принудительно скрываем
+            loadingTimeout.current = setTimeout(() => {
+                console.warn('[StaffFinanceView] Initial load timeout, hiding loading indicator');
+                setForceHideLoading(true);
+            }, 15000);
+        } else {
+            setForceHideLoading(false);
+            if (loadingTimeout.current) {
+                clearTimeout(loadingTimeout.current);
+                loadingTimeout.current = null;
+            }
+        }
+        
+        return () => {
+            if (loadingTimeout.current) {
+                clearTimeout(loadingTimeout.current);
+            }
+        };
+    }, [shiftData.loading, shiftData.isInitialLoad]);
+    
+    const shouldShowLoading = !forceHideLoading && (
+        shiftManagement.closingProgress?.show || 
         shiftItems.addingClient ||
         shiftItems.deletingClient ||
         (shiftData.loading && (
             shiftData.isInitialLoad || 
             !shiftData.today || 
             (shiftData.today && !shiftData.today.ok)
-        ));
+        ))
+    );
 
     return (
         <>
