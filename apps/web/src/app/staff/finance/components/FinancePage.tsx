@@ -118,20 +118,20 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const handleOpenShift = useCallback(async () => {
         try {
             await mutations.openShift();
-            await financeData.refetch();
+            // invalidateQueries в мутации автоматически вызовет refetch, дополнительный вызов не нужен
         } catch (error) {
             // Ошибка уже обработана в мутации
         }
-    }, [mutations, financeData]);
+    }, [mutations]);
 
     const handleCloseShift = useCallback(async () => {
         try {
             await mutations.closeShift(localItems);
-            await financeData.refetch();
+            // invalidateQueries в мутации автоматически вызовет refetch, дополнительный вызов не нужен
         } catch (error) {
             // Ошибка уже обработана в мутации
         }
-    }, [mutations, localItems, financeData]);
+    }, [mutations, localItems]);
 
     const handleAddClient = useCallback(async () => {
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
@@ -170,7 +170,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         // Сохраняем на сервере
         try {
             await mutations.saveItems([newItem, ...localItems]);
-            await financeData.refetch();
+            // invalidateQueries в мутации автоматически вызовет refetch
         } catch (error) {
             // Откатываем при ошибке
             setLocalItems((prev) => prev.filter((it) => it !== newItem));
@@ -180,7 +180,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 return new Set(Array.from(next).map((i) => i - 1).filter((i) => i >= 0));
             });
         }
-    }, [localItems, mutations, financeData, t]);
+    }, [localItems, mutations, t]);
 
     // Ref для хранения таймеров автосохранения
     const saveTimersRef = useRef(new Map<number, NodeJS.Timeout>());
@@ -240,7 +240,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         try {
             const updatedItems = localItems.filter((_, i) => i !== idx);
             await mutations.saveItems(updatedItems);
-            await financeData.refetch();
+            // invalidateQueries в мутации автоматически вызовет refetch
         } catch (error) {
             // Откатываем при ошибке
             setLocalItems((prev) => {
@@ -249,7 +249,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 return result;
             });
         }
-    }, [localItems, mutations, financeData]);
+    }, [localItems, mutations]);
 
     // Определяем, нужно ли показывать индикатор загрузки
     const shouldShowLoading = financeData.isLoading || mutations.isOpening || mutations.isClosing || mutations.isSaving;
