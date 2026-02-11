@@ -163,24 +163,11 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             createdAt,
         };
 
-        // Оптимистичное обновление
+        // Только локальное обновление - добавляем элемент и раскрываем форму
+        // Сохранение на сервер произойдет автоматически через handleUpdateItem при изменении полей
         setLocalItems((prev) => [newItem, ...prev]);
         setExpandedItems((prev) => new Set([0, ...Array.from(prev).map((i) => i + 1)]));
-
-        // Сохраняем на сервере
-        try {
-            await mutations.saveItems([newItem, ...localItems]);
-            // invalidateQueries в мутации автоматически вызовет refetch
-        } catch (error) {
-            // Откатываем при ошибке
-            setLocalItems((prev) => prev.filter((it) => it !== newItem));
-            setExpandedItems((prev) => {
-                const next = new Set(prev);
-                next.delete(0);
-                return new Set(Array.from(next).map((i) => i - 1).filter((i) => i >= 0));
-            });
-        }
-    }, [localItems, mutations, t]);
+    }, [localItems, t]);
 
     // Ref для хранения таймеров автосохранения
     const saveTimersRef = useRef(new Map<number, NodeJS.Timeout>());
@@ -197,23 +184,34 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         // Оптимистичное обновление
         setLocalItems((prev) => prev.map((it, i) => (i === idx ? item : it)));
         
-        // Автосохранение с debounce (1 секунда)
-        const timeoutId = setTimeout(async () => {
-            setLocalItems((current) => {
-                const updatedItems = [...current];
-                
-                // Сохраняем асинхронно
-                mutations.saveItems(updatedItems).catch((error) => {
-                    // Откатываем при ошибке
-                    setLocalItems((prev) => prev.map((it, i) => (i === idx ? previousItem : it)));
-                });
-                
-                return current; // Не изменяем состояние здесь
-            });
-            saveTimersRef.current.delete(idx);
-        }, 1000);
+        // Автосохранение с debounce (1 секунда) - только если есть изменения
+        // Не сохраняем пустые элементы (без id и без данных)
+        const hasData = item.id || 
+            item.bookingId || 
+            (item.serviceAmount && item.serviceAmount > 0) || 
+            (item.consumablesAmount && item.consumablesAmount > 0) ||
+            (item.serviceName && item.serviceName.trim() !== '') ||
+            (item.clientName && item.clientName.trim() !== '' && !item.clientName.match(/^Клиент \d+$/));
         
-        saveTimersRef.current.set(idx, timeoutId);
+        if (hasData) {
+            const timeoutId = setTimeout(async () => {
+                // Получаем актуальное состояние items на момент сохранения
+                setLocalItems((current) => {
+                    const updatedItems = [...current];
+                    
+                    // Сохраняем асинхронно
+                    mutations.saveItems(updatedItems).catch((error) => {
+                        // Откатываем при ошибке
+                        setLocalItems((prev) => prev.map((it, i) => (i === idx ? previousItem : it)));
+                    });
+                    
+                    return current; // Не изменяем состояние здесь
+                });
+                saveTimersRef.current.delete(idx);
+            }, 1000);
+            
+            saveTimersRef.current.set(idx, timeoutId);
+        }
 
         // Возвращаем функцию очистки для компонента
         return () => {
