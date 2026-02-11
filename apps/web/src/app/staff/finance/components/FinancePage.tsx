@@ -43,12 +43,24 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
     // Состояние для вкладок и дат
     const [activeTab, setActiveTab] = useState<TabKey>(staffId ? 'clients' : 'shift');
+    const activeTabRef = useRef<TabKey>(staffId ? 'clients' : 'shift');
     const [statsPeriod, setStatsPeriod] = useState<PeriodKey>('all');
     const [shiftDate, setShiftDate] = useState<Date>(todayTz());
     const [selectedDate, setSelectedDate] = useState<Date>(todayTz());
     const [selectedMonth, setSelectedMonth] = useState<Date>(todayTz());
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [showShiftDetails, setShowShiftDetails] = useState(false);
+    
+    // Обновляем ref при изменении activeTab
+    useEffect(() => {
+        activeTabRef.current = activeTab;
+    }, [activeTab]);
+    
+    // Обертка для setActiveTab, которая также обновляет ref
+    const handleTabChange = useCallback((tab: TabKey) => {
+        activeTabRef.current = tab;
+        setActiveTab(tab);
+    }, []);
 
     // Локальное состояние для items (для оптимистичных обновлений)
     const [localItems, setLocalItems] = useState<ShiftItem[]>([]);
@@ -401,7 +413,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             <div className={staffId ? '' : 'px-6'}>
                 <Tabs
                     activeTab={activeTab}
-                    onTabChange={setActiveTab}
+                    onTabChange={handleTabChange}
                     itemsCount={localItems.length}
                     showStats={!!stats && !staffId}
                 />
