@@ -166,19 +166,18 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 return mergedItems;
             });
             
-            // Закрываем формы только для элементов, которые были только что сохранены
-            // (новые элементы без id, которые теперь имеют id)
-            if (savedItemsWithoutIdRef.current.size > 0) {
-                setExpandedItems((prev) => {
-                    const next = new Set(prev);
-                    // Закрываем все формы, которые были открыты для сохраненных элементов
-                    savedItemsWithoutIdRef.current.forEach((idx) => {
-                        next.delete(idx);
-                    });
-                    savedItemsWithoutIdRef.current.clear();
-                    return next;
-                });
-            }
+            // Закрываем все открытые формы после синхронизации с сервером
+            // Это нужно, чтобы пользователь видел окончательный список клиентов
+            // и формы не оставались открытыми с устаревшими данными
+            setExpandedItems((prev) => {
+                if (prev.size === 0) return prev;
+                
+                const next = new Set(prev);
+                // Закрываем все формы после синхронизации
+                next.clear();
+                savedItemsWithoutIdRef.current.clear();
+                return next;
+            });
         } else if (financeData.data && !financeData.isLoading) {
             // Если данных нет, но загрузка завершена, сохраняем только локальные элементы без id
             setLocalItems((currentLocalItems) => {
