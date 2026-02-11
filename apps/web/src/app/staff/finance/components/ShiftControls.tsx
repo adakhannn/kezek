@@ -46,7 +46,7 @@ export function ShiftControls({
                         <Button
                             variant="primary"
                             onClick={onOpenShift}
-                            disabled={loading || saving || isDayOff}
+                            disabled={saving || isDayOff}
                             isLoading={saving}
                         >
                             {t('staff.finance.shift.open', 'Открыть смену')}
