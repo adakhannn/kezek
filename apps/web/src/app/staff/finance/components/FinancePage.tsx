@@ -42,8 +42,20 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const toast = useToast();
 
     // Состояние для вкладок и дат
-    const [activeTab, setActiveTab] = useState<TabKey>(staffId ? 'clients' : 'shift');
-    const activeTabRef = useRef<TabKey>(staffId ? 'clients' : 'shift');
+    // Сохраняем активную вкладку в sessionStorage для сохранения после перезагрузки
+    const getInitialTab = useCallback(() => {
+        if (typeof window === 'undefined') {
+            return staffId ? 'clients' : 'shift';
+        }
+        const savedTab = sessionStorage.getItem(`finance-active-tab-${staffId || 'current'}`);
+        if (savedTab && (savedTab === 'shift' || savedTab === 'clients' || savedTab === 'stats')) {
+            return savedTab as TabKey;
+        }
+        return staffId ? 'clients' : 'shift';
+    }, [staffId]);
+    
+    const [activeTab, setActiveTab] = useState<TabKey>(getInitialTab);
+    const activeTabRef = useRef<TabKey>(getInitialTab());
     const [statsPeriod, setStatsPeriod] = useState<PeriodKey>('all');
     const [shiftDate, setShiftDate] = useState<Date>(todayTz());
     const [selectedDate, setSelectedDate] = useState<Date>(todayTz());
@@ -51,16 +63,22 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [showShiftDetails, setShowShiftDetails] = useState(false);
     
-    // Обновляем ref при изменении activeTab
+    // Обновляем ref и sessionStorage при изменении activeTab
     useEffect(() => {
         activeTabRef.current = activeTab;
-    }, [activeTab]);
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem(`finance-active-tab-${staffId || 'current'}`, activeTab);
+        }
+    }, [activeTab, staffId]);
     
-    // Обертка для setActiveTab, которая также обновляет ref
+    // Обертка для setActiveTab, которая также обновляет ref и sessionStorage
     const handleTabChange = useCallback((tab: TabKey) => {
         activeTabRef.current = tab;
         setActiveTab(tab);
-    }, []);
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem(`finance-active-tab-${staffId || 'current'}`, tab);
+        }
+    }, [staffId]);
 
     // Локальное состояние для items (для оптимистичных обновлений)
     const [localItems, setLocalItems] = useState<ShiftItem[]>([]);
