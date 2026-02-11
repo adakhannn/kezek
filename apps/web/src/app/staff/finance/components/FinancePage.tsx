@@ -13,6 +13,7 @@ import { useServiceOptions } from '../hooks/useServiceOptions';
 import { useShiftCalculations } from '../hooks/useShiftCalculations';
 import { useShiftStats } from '../hooks/useShiftStats';
 import type { TabKey, PeriodKey, ShiftItem } from '../types';
+import { validateShiftItem } from '../utils/validation';
 
 import { ClientsList } from './ClientsList';
 import { ClientsListHeader } from './ClientsListHeader';
@@ -180,6 +181,20 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         const item = localItems[idx];
         if (!item) return;
 
+        // Валидируем элемент перед сохранением
+        const validation = validateShiftItem(item);
+        
+        if (!validation.valid) {
+            // Если есть ошибки валидации, не сохраняем
+            const errorMessages = Object.values(validation.errors).filter(Boolean);
+            if (errorMessages.length > 0) {
+                toast.showError(errorMessages[0]);
+            } else {
+                toast.showError(t('staff.finance.clients.validationError', 'Обнаружены ошибки валидации'));
+            }
+            return;
+        }
+
         // Проверяем, есть ли данные для сохранения
         const hasData = item.id || 
             item.bookingId || 
@@ -209,7 +224,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         } catch (error) {
             // Ошибка уже обработана в мутации
         }
-    }, [localItems, mutations]);
+    }, [localItems, mutations, toast, t]);
 
     const handleDeleteItem = useCallback(async (idx: number) => {
         const itemToDelete = localItems[idx];

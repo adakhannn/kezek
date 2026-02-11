@@ -299,8 +299,16 @@ export function ClientEditForm({
                     </button>
                     <button
                         type="button"
-                        className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transform hover:scale-105"
+                        disabled={hasErrors}
+                        className={`px-5 py-2.5 text-sm font-semibold rounded-lg shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 transform ${
+                            hasErrors
+                                ? 'text-gray-400 bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                                : 'text-white bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg focus:ring-indigo-500 hover:scale-105'
+                        }`}
                         onClick={() => {
+                            if (hasErrors) {
+                                return; // Не сохраняем при наличии ошибок
+                            }
                             if (onSave) {
                                 void onSave(idx);
                             } else {
