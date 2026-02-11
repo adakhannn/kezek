@@ -1,7 +1,7 @@
 'use client';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import StaffFinanceView from '@/app/staff/StaffFinanceView';
+import { FinancePage } from '@/app/staff/finance/components/FinancePage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function StaffFinancePageClient({
@@ -52,7 +52,7 @@ export default function StaffFinancePageClient({
                 <ErrorBoundary
                     onError={(error, errorInfo) => {
                         // Дополнительное логирование для finance компонентов
-                        console.error('StaffFinanceView error:', error, errorInfo);
+                        console.error('FinancePage error:', error, errorInfo);
                     }}
                     fallback={
                         <div className="p-6">
@@ -81,7 +81,7 @@ export default function StaffFinancePageClient({
                         </div>
                     }
                 >
-                    <StaffFinanceView staffId={id} />
+                    <FinancePage staffId={id} showHeader={false} />
                 </ErrorBoundary>
             </div>
         </div>

@@ -1,5 +1,5 @@
 // apps/web/src/app/staff/finance/page.tsx
-import StaffFinanceView from '../StaffFinanceView';
+import { FinancePage } from './components/FinancePage';
 
 import { getStaffContext } from '@/lib/authBiz';
 
@@ -10,7 +10,7 @@ export default async function StaffFinancePage() {
     // Просто проверяем доступ к кабинету сотрудника
     await getStaffContext();
 
-    return <StaffFinanceView />;
+    return <FinancePage showHeader={true} />;
 }
 
 
