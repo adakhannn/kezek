@@ -85,10 +85,10 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
                 const localItemsById = new Map(currentLocalItems.filter((item) => item.id).map((item) => [item.id!, item]));
                 
-                // Объединяем данные: сохраняем локальные элементы без id и объединяем элементы с id
-                const mergedItems: ShiftItem[] = [...localItemsWithoutId];
+                // Объединяем данные: сохраняем только те локальные элементы без id, которых нет на сервере
+                const mergedItems: ShiftItem[] = [];
                 
-                // Для элементов с сервера: объединяем с локальными данными, если они есть
+                // Сначала добавляем элементы с сервера
                 for (const serverItem of serverItems) {
                     if (serverItem.id) {
                         const localItem = localItemsById.get(serverItem.id);
@@ -107,6 +107,29 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                             // Новый элемент с сервера (не был в локальных)
                             mergedItems.push(serverItem);
                         }
+                    }
+                }
+                
+                // Затем добавляем локальные элементы без id, которые еще не сохранены на сервере
+                // Проверяем по содержимому (createdAt, clientName, serviceAmount и т.д.)
+                for (const localItemWithoutId of localItemsWithoutId) {
+                    // Проверяем, нет ли на сервере элемента с таким же содержимым
+                    const isOnServer = serverItems.some((serverItem) => {
+                        if (!serverItem.id) return false;
+                        // Сравниваем по основным полям
+                        return (
+                            serverItem.clientName === localItemWithoutId.clientName &&
+                            serverItem.serviceName === localItemWithoutId.serviceName &&
+                            serverItem.serviceAmount === localItemWithoutId.serviceAmount &&
+                            serverItem.consumablesAmount === localItemWithoutId.consumablesAmount &&
+                            serverItem.bookingId === localItemWithoutId.bookingId &&
+                            serverItem.createdAt === localItemWithoutId.createdAt
+                        );
+                    });
+                    
+                    // Добавляем только если элемента нет на сервере
+                    if (!isOnServer) {
+                        mergedItems.push(localItemWithoutId);
                     }
                 }
                 
