@@ -267,13 +267,14 @@ export async function getShiftData({
     // Items зависит от shift, поэтому загружаем только если смена существует
     if (shift) {
         secondaryPromises.push(
-            client
-                .from('staff_shift_items')
-                .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
-                .eq('shift_id', shift.id)
-                .order('created_at', { ascending: false })
-                .order('id', { ascending: false })
-                .then((result) => result as ItemsResult)
+            Promise.resolve(
+                client
+                    .from('staff_shift_items')
+                    .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
+                    .eq('shift_id', shift.id)
+                    .order('created_at', { ascending: false })
+                    .order('id', { ascending: false })
+            ).then((result) => result as ItemsResult)
         );
     } else {
         // Если смены нет, добавляем пустой промис для сохранения индекса
@@ -283,12 +284,13 @@ export async function getShiftData({
     // AllShifts можно загружать параллельно с items (только если запрашивается сегодня)
     if (ymd === today) {
         secondaryPromises.push(
-            client
-                .from('staff_shifts')
-                .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
-                .eq('staff_id', staffId)
-                .order('shift_date', { ascending: false })
-                .then((result) => result as AllShiftsResult)
+            Promise.resolve(
+                client
+                    .from('staff_shifts')
+                    .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
+                    .eq('staff_id', staffId)
+                    .order('shift_date', { ascending: false })
+            ).then((result) => result as AllShiftsResult)
         );
     } else {
         // Если не сегодня, добавляем пустой промис для сохранения индекса
@@ -347,7 +349,7 @@ export async function getShiftData({
             const svc = Array.isArray(ss.services) ? ss.services[0] : ss.services;
             return svc ? { name_ru: svc.name_ru, name_ky: svc.name_ky ?? null, name_en: svc.name_en ?? null } : null;
         })
-        .filter((svc): svc is { name_ru: string; name_ky: string | null; name_en: string | null } => !!svc);
+        .filter((svc: { name_ru: string; name_ky: string | null; name_en: string | null } | null): svc is { name_ru: string; name_ky: string | null; name_en: string | null } => !!svc);
 
     // Расчет текущих часов работы и суммы за выход для открытой смены
     let currentHoursWorked: number | null = null;
