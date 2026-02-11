@@ -28,6 +28,7 @@ interface UseShiftStatsOptions {
 
 /**
  * Хук для расчета статистики по сменам
+ * Оптимизирован: нормализует Date объекты в строки для стабильных зависимостей
  */
 export function useShiftStats({
     allShifts,
@@ -36,8 +37,28 @@ export function useShiftStats({
     selectedMonth,
     selectedYear,
 }: UseShiftStatsOptions): Stats {
+    // Нормализуем Date объекты в строки для стабильных зависимостей
+    // Это предотвращает пересчет при каждом рендере, даже если Date объекты технически "новые"
+    const dateStr = useMemo(() => formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd'), [selectedDate]);
+    const monthStr = useMemo(() => formatInTimeZone(selectedMonth, TZ, 'yyyy-MM'), [selectedMonth]);
+    const yearStr = useMemo(() => String(selectedYear), [selectedYear]);
+
+    // Мемоизируем стабильную сигнатуру allShifts
+    const shiftsSignature = useMemo(() => {
+        return allShifts.map((s) => ({
+            shift_date: String(s.shift_date || '').split('T')[0].split(' ')[0].trim(),
+            status: s.status,
+            total_amount: Number(s.total_amount || 0),
+            master_share: Number(s.master_share || 0),
+            salon_share: Number(s.salon_share || 0),
+            late_minutes: Number(s.late_minutes || 0),
+            guaranteed_amount: Number(s.guaranteed_amount || 0),
+            topup_amount: Number(s.topup_amount || 0),
+        }));
+    }, [allShifts]);
+
     return useMemo(() => {
-        if (!allShifts || allShifts.length === 0) {
+        if (!shiftsSignature || shiftsSignature.length === 0) {
             return {
                 totalAmount: 0,
                 totalMaster: 0,
@@ -47,23 +68,12 @@ export function useShiftStats({
             };
         }
         
-        // Нормализуем shift_date - обрезаем время, если оно есть
-        const normalizedShifts = allShifts.map((s) => {
-            let normalizedDate = String(s.shift_date || '');
-            normalizedDate = normalizedDate.split('T')[0].split(' ')[0].trim();
-            return {
-                ...s,
-                shift_date: normalizedDate,
-            };
-        });
-        
-        const closedShifts = normalizedShifts.filter((s) => s.status === 'closed');
+        const closedShifts = shiftsSignature.filter((s) => s.status === 'closed');
         
         let filtered: typeof closedShifts = [];
         
         if (statsPeriod === 'day') {
-            const dayStr = formatInTimeZone(selectedDate, TZ, 'yyyy-MM-dd');
-            filtered = closedShifts.filter((s) => s.shift_date === dayStr);
+            filtered = closedShifts.filter((s) => s.shift_date === dateStr);
         } else if (statsPeriod === 'month') {
             const monthStart = formatInTimeZone(startOfMonth(selectedMonth), TZ, 'yyyy-MM-dd');
             const monthEnd = formatInTimeZone(endOfMonth(selectedMonth), TZ, 'yyyy-MM-dd');
@@ -76,20 +86,16 @@ export function useShiftStats({
             filtered = closedShifts;
         }
         
-        const totalAmount = filtered.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
+        const totalAmount = filtered.reduce((sum, s) => sum + s.total_amount, 0);
         // Итоговая сумма сотрудника = гарантированная сумма (если есть и больше базовой доли) или базовая доля
         const totalMaster = filtered.reduce((sum, s) => {
-            const guaranteed = Number(s.guaranteed_amount || 0);
-            const masterShare = Number(s.master_share || 0);
-            return sum + (guaranteed > masterShare ? guaranteed : masterShare);
+            return sum + (s.guaranteed_amount > s.master_share ? s.guaranteed_amount : s.master_share);
         }, 0);
         // Бизнес получает долю от выручки, но вычитает доплату владельца
         const totalSalon = filtered.reduce((sum, s) => {
-            const salonShare = Number(s.salon_share || 0);
-            const topup = Number(s.topup_amount || 0);
-            return sum + salonShare - topup;
+            return sum + s.salon_share - s.topup_amount;
         }, 0);
-        const totalLateMinutes = filtered.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
+        const totalLateMinutes = filtered.reduce((sum, s) => sum + s.late_minutes, 0);
         
         return {
             totalAmount,
@@ -98,6 +104,6 @@ export function useShiftStats({
             totalLateMinutes,
             shiftsCount: filtered.length,
         };
-    }, [allShifts, statsPeriod, selectedDate, selectedMonth, selectedYear]);
+    }, [shiftsSignature, statsPeriod, dateStr, monthStr, yearStr, selectedMonth, selectedYear]);
 }
 
