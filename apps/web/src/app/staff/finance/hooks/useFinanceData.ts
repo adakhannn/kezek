@@ -130,6 +130,7 @@ async function fetchFinanceData(
 
 /**
  * Оптимизированный хук для загрузки данных финансов
+ * Использует адаптивные настройки кэширования в зависимости от даты
  */
 export function useFinanceData({
     staffId,
@@ -143,14 +144,31 @@ export function useFinanceData({
     const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
     const queryKey = ['finance', staffId || 'current', dateStr];
 
+    // Определяем, является ли дата сегодняшней
+    const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const isToday = dateStr === todayStr;
+
+    // Адаптивные настройки кэширования:
+    // - Для сегодняшней смены: данные могут обновляться чаще (5 секунд)
+    // - Для прошлых дат: данные редко меняются (30 секунд)
+    // - Для статистики (allShifts): данные меняются редко (5 минут)
+    const staleTime = isToday 
+        ? 5 * 1000  // 5 секунд для текущей смены
+        : 30 * 1000; // 30 секунд для прошлых дат
+    
+    const gcTime = isToday
+        ? 5 * 60 * 1000  // 5 минут для текущей смены
+        : 10 * 60 * 1000; // 10 минут для прошлых дат (можно хранить дольше)
+
     const query = useQuery({
         queryKey,
         queryFn: ({ signal }) => fetchFinanceData(staffId, date, signal),
         enabled,
-        staleTime: 10 * 1000, // 10 секунд - данные считаются свежими
-        gcTime: 5 * 60 * 1000, // 5 минут - время хранения в кэше
-        refetchOnWindowFocus: false, // Не рефетчить при фокусе
-        refetchOnReconnect: true, // Рефетчить при переподключении
+        staleTime,
+        gcTime,
+        refetchOnWindowFocus: false, // Не рефетчить при фокусе (полагаемся на invalidateQueries)
+        refetchOnReconnect: isToday, // Рефетчить при переподключении только для текущей смены
+        refetchOnMount: false, // Не рефетчить при монтировании, если данные свежие
         retry: (failureCount, error) => {
             // Не повторяем для ошибок авторизации
             if (error instanceof Error) {

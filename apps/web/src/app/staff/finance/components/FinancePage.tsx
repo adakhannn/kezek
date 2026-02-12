@@ -491,7 +491,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                             staffId={staffId}
                             onOpenShift={handleOpenShift}
                             onCloseShift={handleCloseShift}
-                            onRefresh={() => void financeData.refetch()}
+                            onRefresh={() => financeData.invalidate()}
                         />
                     </div>
 
