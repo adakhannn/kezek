@@ -400,6 +400,50 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }
     }, [localItems, mutations]);
 
+    const handleDuplicateItem = useCallback((idx: number) => {
+        const itemToDuplicate = localItems[idx];
+        if (!itemToDuplicate) return;
+
+        // Создаем копию элемента без id (новый элемент)
+        const now = Date.now();
+        const lastItemTime = localItems.length > 0 && localItems[0].createdAt
+            ? new Date(localItems[0].createdAt).getTime()
+            : now;
+        const timeOffset = (now - lastItemTime < 1000) ? 100 : 0;
+        const createdAt = new Date(now + timeOffset).toISOString();
+
+        const duplicatedItem: ShiftItem = {
+            // Убираем id, чтобы создать новый элемент
+            // id: undefined,
+            clientName: itemToDuplicate.clientName || '',
+            serviceName: itemToDuplicate.serviceName || '',
+            serviceAmount: itemToDuplicate.serviceAmount ?? 0,
+            consumablesAmount: itemToDuplicate.consumablesAmount ?? 0,
+            bookingId: null, // Убираем bookingId, так как это новая запись
+            createdAt,
+        };
+
+        // Добавляем дубликат сразу после исходного элемента
+        setLocalItems((prev) => {
+            const result = [...prev];
+            result.splice(idx + 1, 0, duplicatedItem);
+            return result;
+        });
+
+        // Открываем форму редактирования для дубликата
+        setExpandedItems((prev) => {
+            const next = new Set(prev);
+            // Сдвигаем все индексы после idx на +1
+            const shifted = Array.from(next).map((i) => i > idx ? i + 1 : i);
+            // Добавляем новый индекс для дубликата
+            shifted.push(idx + 1);
+            return new Set(shifted);
+        });
+
+        // Пропускаем следующую синхронизацию с сервером
+        skipNextSyncRef.current = true;
+    }, [localItems]);
+
     // Определяем, нужно ли показывать индикатор загрузки
     const shouldShowLoading = financeData.isLoading || mutations.isOpening || mutations.isClosing || mutations.isSaving;
     

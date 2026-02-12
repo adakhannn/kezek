@@ -17,9 +17,10 @@ interface ClientItemProps {
     staffId?: string;
     onEdit: () => void;
     onDelete: () => void;
+    onDuplicate?: () => void;
 }
 
-function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete }: ClientItemProps) {
+function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete, onDuplicate }: ClientItemProps) {
     const { t, locale } = useLanguage();
     const hasBooking = !!item.bookingId;
     // Элемент считается новым (не сохранен), если у него нет id
@@ -229,7 +230,7 @@ export const ClientItem = memo(ClientItemComponent, (prevProps, nextProps) => {
         prevProps.isReadOnly === nextProps.isReadOnly &&
         prevProps.staffId === nextProps.staffId &&
         prevProps.idx === nextProps.idx
-        // onEdit и onDelete должны быть стабильными функциями из useCallback
+        // onEdit, onDelete и onDuplicate должны быть стабильными функциями из useCallback
     );
 });
 

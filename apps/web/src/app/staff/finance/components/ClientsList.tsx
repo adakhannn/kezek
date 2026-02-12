@@ -24,6 +24,7 @@ interface ClientsListProps {
     onUpdateItem: (idx: number, item: ShiftItem) => void;
     onSaveItem?: (idx: number) => void;
     onDeleteItem: (idx: number) => void;
+    onDuplicateItem?: (idx: number) => void;
 }
 
 export function ClientsList({
@@ -42,6 +43,7 @@ export function ClientsList({
     onUpdateItem,
     onSaveItem,
     onDeleteItem,
+    onDuplicateItem,
 }: ClientsListProps) {
     const { t } = useLanguage();
 
