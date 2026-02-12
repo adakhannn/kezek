@@ -3,7 +3,13 @@
 import { useMemo } from 'react';
 
 import type { ShiftItem, Shift } from '../types';
-import { calculateShiftFinancials } from '../utils/calculations';
+
+import {
+    calculateTotalServiceAmount,
+    calculateTotalConsumables,
+    calculateBaseShares,
+    calculateDisplayShares,
+} from '@/lib/financeDomain';
 
 export interface ShiftCalculations {
     totalAmount: number;
@@ -48,15 +54,51 @@ export function useShiftCalculations(
     }, [shift]);
 
     return useMemo(() => {
-        return calculateShiftFinancials(
-            items,
-            shift,
-            isOpen,
+        // Вычисляем суммы
+        const totalAmount = calculateTotalServiceAmount(items);
+        const totalConsumables = calculateTotalConsumables(items);
+
+        // Для закрытой смены используем сохранённые значения из БД
+        if (!isOpen && shift) {
+            const masterShare = typeof shift.master_share === 'number' && !isNaN(shift.master_share)
+                ? shift.master_share
+                : 0;
+            const salonShare = typeof shift.salon_share === 'number' && !isNaN(shift.salon_share)
+                ? shift.salon_share
+                : 0;
+            
+            return {
+                totalAmount,
+                totalConsumables,
+                masterShare: Math.round(masterShare * 100) / 100,
+                salonShare: Math.round(salonShare * 100) / 100,
+                displayTotalAmount: isOpen ? totalAmount : (shift.total_amount || 0),
+            };
+        }
+
+        // Вычисляем базовые доли
+        const { masterShare: baseMasterShare, salonShare: baseSalonShare } = calculateBaseShares(
+            totalAmount,
+            totalConsumables,
             staffPercentMaster,
-            staffPercentSalon,
-            hourlyRate,
-            currentGuaranteedAmount
+            staffPercentSalon
         );
+
+        // Для открытой смены вычисляем с учетом гарантий
+        const { masterShare, salonShare } = calculateDisplayShares(
+            baseMasterShare,
+            baseSalonShare,
+            currentGuaranteedAmount,
+            isOpen
+        );
+
+        return {
+            totalAmount,
+            totalConsumables,
+            masterShare,
+            salonShare,
+            displayTotalAmount: totalAmount,
+        };
     }, [
         itemsSignature,
         shiftSignature,
