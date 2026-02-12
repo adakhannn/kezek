@@ -1,6 +1,7 @@
 // apps/web/src/app/staff/finance/components/ClientsList.tsx
 
 import type { ShiftItem, Booking, ServiceName, Shift } from '../types';
+import { getItemKey } from '../utils/itemKeys';
 
 import { ClientEditForm } from './ClientEditForm';
 import { ClientItem } from './ClientItem';
@@ -93,10 +94,13 @@ export function ClientsList({
                 });
                 const isExpanded = expandedItems.has(idx);
 
+                // Используем стабильный ключ для элемента списка
+                const itemKey = getItemKey(item, idx);
+
                 if (isExpanded) {
                     return (
                         <ClientEditForm
-                            key={item.id ?? idx}
+                            key={itemKey}
                             item={item}
                             idx={idx}
                             allItems={items}
@@ -113,7 +117,7 @@ export function ClientsList({
 
                 return (
                     <ClientItem
-                        key={item.id ?? idx}
+                        key={itemKey}
                         item={item}
                         idx={idx}
                         isOpen={isOpen}

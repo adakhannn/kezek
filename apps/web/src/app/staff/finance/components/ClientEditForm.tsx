@@ -1,7 +1,7 @@
 // apps/web/src/app/staff/finance/components/ClientEditForm.tsx
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 
 import type { ShiftItem, Booking, ServiceName } from '../types';
 import { getServiceName } from '../utils';
@@ -23,7 +23,7 @@ interface ClientEditFormProps {
     onCollapse: (idx: number) => void;
 }
 
-export function ClientEditForm({
+function ClientEditFormInner({
     item,
     idx,
     allItems,
@@ -323,4 +323,30 @@ export function ClientEditForm({
         </div>
     );
 }
+
+/**
+ * Оптимизированный компонент формы редактирования клиента
+ * Мемоизирован для предотвращения лишних ре-рендеров при изменении других элементов списка
+ */
+export const ClientEditForm = memo(ClientEditFormInner, (prevProps: ClientEditFormProps, nextProps: ClientEditFormProps) => {
+    // Сравниваем только те пропсы, которые влияют на рендер
+    // Для ClientEditForm важно сравнивать item более детально, так как форма может быть открыта
+    return (
+        prevProps.item.id === nextProps.item.id &&
+        prevProps.item.clientName === nextProps.item.clientName &&
+        prevProps.item.serviceName === nextProps.item.serviceName &&
+        prevProps.item.serviceAmount === nextProps.item.serviceAmount &&
+        prevProps.item.consumablesAmount === nextProps.item.consumablesAmount &&
+        prevProps.item.bookingId === nextProps.item.bookingId &&
+        prevProps.item.createdAt === nextProps.item.createdAt &&
+        prevProps.idx === nextProps.idx &&
+        prevProps.isOpen === nextProps.isOpen &&
+        prevProps.isReadOnly === nextProps.isReadOnly &&
+        // allItems, bookings, serviceOptions могут изменяться, но это редко
+        // onUpdate, onSave, onCollapse должны быть стабильными функциями из useCallback
+        prevProps.allItems.length === nextProps.allItems.length &&
+        prevProps.bookings.length === nextProps.bookings.length &&
+        prevProps.serviceOptions.length === nextProps.serviceOptions.length
+    );
+});
 

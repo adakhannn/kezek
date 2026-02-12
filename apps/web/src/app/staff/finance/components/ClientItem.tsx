@@ -1,5 +1,7 @@
 // apps/web/src/app/staff/finance/components/ClientItem.tsx
 
+import { memo } from 'react';
+
 import type { ShiftItem } from '../types';
 import { formatTime } from '../utils';
 import { checkPermissions, getPermissionMessage, type PermissionContext } from '../utils/permissions';
@@ -17,7 +19,7 @@ interface ClientItemProps {
     onDelete: () => void;
 }
 
-export function ClientItem({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete }: ClientItemProps) {
+function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete }: ClientItemProps) {
     const { t, locale } = useLanguage();
     const hasBooking = !!item.bookingId;
     // Элемент считается новым (не сохранен), если у него нет id
@@ -183,4 +185,27 @@ export function ClientItem({ item, idx: _idx, isOpen, isClosed, isReadOnly, staf
         </div>
     );
 }
+
+/**
+ * Оптимизированный компонент элемента клиента
+ * Мемоизирован для предотвращения лишних ре-рендеров при изменении других элементов списка
+ */
+export const ClientItem = memo(ClientItemComponent, (prevProps, nextProps) => {
+    // Сравниваем только те пропсы, которые влияют на рендер
+    return (
+        prevProps.item.id === nextProps.item.id &&
+        prevProps.item.clientName === nextProps.item.clientName &&
+        prevProps.item.serviceName === nextProps.item.serviceName &&
+        prevProps.item.serviceAmount === nextProps.item.serviceAmount &&
+        prevProps.item.consumablesAmount === nextProps.item.consumablesAmount &&
+        prevProps.item.bookingId === nextProps.item.bookingId &&
+        prevProps.item.createdAt === nextProps.item.createdAt &&
+        prevProps.isOpen === nextProps.isOpen &&
+        prevProps.isClosed === nextProps.isClosed &&
+        prevProps.isReadOnly === nextProps.isReadOnly &&
+        prevProps.staffId === nextProps.staffId &&
+        prevProps.idx === nextProps.idx
+        // onEdit и onDelete должны быть стабильными функциями из useCallback
+    );
+});
 
