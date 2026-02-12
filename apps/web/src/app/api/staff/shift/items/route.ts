@@ -2,6 +2,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
+import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -15,6 +16,14 @@ export const runtime = 'nodejs';
 
 // POST - сохранить список клиентов для открытой смены
 export async function POST(req: Request) {
+    const startTime = Date.now();
+    const endpoint = '/api/staff/shift/items';
+    let statusCode = 500;
+    let staffId: string | undefined;
+    let bizId: string | undefined;
+    let userId: string | undefined;
+    let errorMessage: string | undefined;
+    
     // Применяем rate limiting для обычной операции
     return withRateLimit(
         req,
@@ -29,29 +38,67 @@ export async function POST(req: Request) {
                     const errorMessage = errorResponse.errors 
                         ? `Ошибка валидации: ${errorResponse.errors.map((e: { path: string; message: string }) => `${e.path}: ${e.message}`).join(', ')}`
                         : errorResponse.message || 'Ошибка валидации данных';
-                    return NextResponse.json(
+                    statusCode = 400;
+                    
+                    const response = NextResponse.json(
                         { ok: false, error: errorMessage },
-                        { status: 400 }
+                        { status: statusCode }
                     );
+                    
+                    // Логируем метрику
+                    logApiMetric({
+                        endpoint,
+                        method: 'POST',
+                        statusCode,
+                        durationMs: Date.now() - startTime,
+                        userId,
+                        staffId,
+                        bizId,
+                        errorMessage,
+                        errorType: 'validation',
+                        ipAddress: getIpAddress(req),
+                        userAgent: req.headers.get('user-agent') || undefined,
+                    }).catch(() => {});
+                    
+                    return response;
                 }
                 
                 const { items, staffId: targetStaffId, shiftDate: targetShiftDate } = validationResult.data;
 
         let supabase;
-        let staffId: string;
         let isOwnerMode = false;
         let useServiceClient = false;
 
         // Если передан staffId, проверяем права владельца/менеджера
         if (targetStaffId) {
-            const { supabase: managerSupabase, bizId } = await getBizContextForManagers();
+            const { supabase: managerSupabase, bizId: ctxBizId } = await getBizContextForManagers();
             supabase = managerSupabase;
+            bizId = ctxBizId;
             useServiceClient = true; // Используем service client для операций записи
             
             // Проверяем права владельца/админа/менеджера
             const { data: { user } } = await supabase.auth.getUser();
+            userId = user?.id;
             if (!user) {
-                return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+                statusCode = 401;
+                const response = NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: statusCode });
+                
+                // Логируем метрику
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    errorMessage: 'UNAUTHORIZED',
+                    errorType: 'auth',
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {});
+                
+                return response;
             }
 
             const { data: roles } = await supabase
@@ -77,7 +124,25 @@ export async function POST(req: Request) {
                 .maybeSingle();
 
             if (!hasPermission && !owned) {
-                return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
+                statusCode = 403;
+                const response = NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: statusCode });
+                
+                // Логируем метрику
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    errorMessage: 'FORBIDDEN',
+                    errorType: 'auth',
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {});
+                
+                return response;
             }
 
             // Проверяем, что сотрудник принадлежит бизнесу
@@ -88,7 +153,25 @@ export async function POST(req: Request) {
                 .maybeSingle();
 
             if (!staff || String(staff.biz_id) !== String(bizId)) {
-                return NextResponse.json({ ok: false, error: 'STAFF_NOT_IN_THIS_BUSINESS' }, { status: 403 });
+                statusCode = 403;
+                const response = NextResponse.json({ ok: false, error: 'STAFF_NOT_IN_THIS_BUSINESS' }, { status: statusCode });
+                
+                // Логируем метрику
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId: targetStaffId,
+                    bizId,
+                    errorMessage: 'STAFF_NOT_IN_THIS_BUSINESS',
+                    errorType: 'auth',
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {});
+                
+                return response;
             }
 
             staffId = targetStaffId;
@@ -98,6 +181,11 @@ export async function POST(req: Request) {
             const context = await getStaffContext();
             supabase = context.supabase;
             staffId = context.staffId;
+            bizId = context.bizId;
+            
+            // Получаем user_id из сессии для логирования
+            const { data: { user } } = await supabase.auth.getUser();
+            userId = user?.id;
         }
 
         // Находим открытую смену за указанную дату или за сегодня
@@ -138,10 +226,30 @@ export async function POST(req: Request) {
 
         if (findError) {
             logError('StaffShiftItems', 'Error finding open shift', { error: findError, staffId, ymd, targetShiftDate });
-            return NextResponse.json(
-                { ok: false, error: 'Не удалось найти открытую смену' },
-                { status: 500 }
+            statusCode = 500;
+            errorMessage = 'Не удалось найти открытую смену';
+            
+            const response = NextResponse.json(
+                { ok: false, error: errorMessage },
+                { status: statusCode }
             );
+            
+            // Логируем метрику
+            logApiMetric({
+                endpoint,
+                method: 'POST',
+                statusCode,
+                durationMs: Date.now() - startTime,
+                userId,
+                staffId,
+                bizId,
+                errorMessage,
+                errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                ipAddress: getIpAddress(req),
+                userAgent: req.headers.get('user-agent') || undefined,
+            }).catch(() => {});
+            
+            return response;
         }
 
         let shiftId: string;
@@ -163,10 +271,30 @@ export async function POST(req: Request) {
                     shiftStatus: anyShift.status,
                     targetShiftDate 
                 });
-                return NextResponse.json(
-                    { ok: false, error: `Смена за ${ymd} закрыта. Откройте смену для редактирования.` },
-                    { status: 400 }
+                statusCode = 400;
+                errorMessage = `Смена за ${ymd} закрыта. Откройте смену для редактирования.`;
+                
+                const response = NextResponse.json(
+                    { ok: false, error: errorMessage },
+                    { status: statusCode }
                 );
+                
+                // Логируем метрику
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    errorMessage,
+                    errorType: 'validation',
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {});
+                
+                return response;
             }
             
             // Смена не существует
@@ -187,10 +315,30 @@ export async function POST(req: Request) {
                         error: staffForShiftError, 
                         staffId 
                     });
-                    return NextResponse.json(
-                        { ok: false, error: 'Не удалось загрузить данные сотрудника' },
-                        { status: 500 }
+                    statusCode = 500;
+                    errorMessage = 'Не удалось загрузить данные сотрудника';
+                    
+                    const response = NextResponse.json(
+                        { ok: false, error: errorMessage },
+                        { status: statusCode }
                     );
+                    
+                    // Логируем метрику
+                    logApiMetric({
+                        endpoint,
+                        method: 'POST',
+                        statusCode,
+                        durationMs: Date.now() - startTime,
+                        userId,
+                        staffId,
+                        bizId,
+                        errorMessage,
+                        errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                        ipAddress: getIpAddress(req),
+                        userAgent: req.headers.get('user-agent') || undefined,
+                    }).catch(() => {});
+                    
+                    return response;
                 }
                 
                 const { data: newShift, error: createError } = await writeClient
@@ -215,20 +363,60 @@ export async function POST(req: Request) {
                         bizId: staffForShift.biz_id,
                         branchId: staffForShift.branch_id
                     });
-                    return NextResponse.json(
-                        { ok: false, error: 'Не удалось создать смену' },
-                        { status: 500 }
+                    statusCode = 500;
+                    errorMessage = 'Не удалось создать смену';
+                    
+                    const response = NextResponse.json(
+                        { ok: false, error: errorMessage },
+                        { status: statusCode }
                     );
+                    
+                    // Логируем метрику
+                    logApiMetric({
+                        endpoint,
+                        method: 'POST',
+                        statusCode,
+                        durationMs: Date.now() - startTime,
+                        userId,
+                        staffId,
+                        bizId,
+                        errorMessage,
+                        errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                        ipAddress: getIpAddress(req),
+                        userAgent: req.headers.get('user-agent') || undefined,
+                    }).catch(() => {});
+                    
+                    return response;
                 }
                 
                 shiftId = newShift.id;
             } else {
                 // Для сотрудника: требуем, чтобы смена была открыта заранее
                 logError('StaffShiftItems', 'No shift found for date', { staffId, ymd, targetShiftDate });
-                return NextResponse.json(
-                    { ok: false, error: 'Нет открытой смены. Сначала откройте смену.' },
-                    { status: 400 }
+                statusCode = 400;
+                errorMessage = 'Нет открытой смены. Сначала откройте смену.';
+                
+                const response = NextResponse.json(
+                    { ok: false, error: errorMessage },
+                    { status: statusCode }
                 );
+                
+                // Логируем метрику
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    errorMessage,
+                    errorType: 'validation',
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {});
+                
+                return response;
             }
         } else {
             shiftId = existing.id;
@@ -495,10 +683,30 @@ export async function POST(req: Request) {
                     itemsToDeleteCount: itemsToDelete.length,
                     totalItemsCount: existingItemIds.size
                 });
-                return NextResponse.json(
-                    { ok: false, error: 'Попытка удалить все клиенты. Операция заблокирована для безопасности.' },
-                    { status: 400 }
+                statusCode = 400;
+                errorMessage = 'Попытка удалить все клиенты. Операция заблокирована для безопасности.';
+                
+                const response = NextResponse.json(
+                    { ok: false, error: errorMessage },
+                    { status: statusCode }
                 );
+                
+                // Логируем метрику
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    errorMessage,
+                    errorType: 'validation',
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {});
+                
+                return response;
             }
             
             const { error: deleteError } = await writeClient
@@ -508,10 +716,30 @@ export async function POST(req: Request) {
             
             if (deleteError) {
                 logError('StaffShiftItems', 'Error deleting removed items', deleteError);
-                return NextResponse.json(
-                    { ok: false, error: 'Не удалось удалить позиции' },
-                    { status: 500 }
+                statusCode = 500;
+                errorMessage = 'Не удалось удалить позиции';
+                
+                const response = NextResponse.json(
+                    { ok: false, error: errorMessage },
+                    { status: statusCode }
                 );
+                
+                // Логируем метрику
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    errorMessage,
+                    errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {});
+                
+                return response;
             }
         } else if (itemsToDelete.length > 0 && !hasItemsWithId && items.length > 0) {
             // Если есть items для удаления, но в запросе нет items с id, и список не пустой

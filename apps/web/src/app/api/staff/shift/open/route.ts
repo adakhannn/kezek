@@ -2,6 +2,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
+import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug, logWarn } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -59,13 +60,28 @@ export const runtime = 'nodejs';
  *               $ref: '#/components/schemas/Error'
  */
 export async function POST(req: Request) {
+    const startTime = Date.now();
+    const endpoint = '/api/staff/shift/open';
+    let statusCode = 500;
+    let staffId: string | undefined;
+    let bizId: string | undefined;
+    let userId: string | undefined;
+    let errorMessage: string | undefined;
+    
     // Применяем rate limiting для критичной операции
     return withRateLimit(
         req,
         RateLimitConfigs.critical,
         async () => {
             try {
-                const { supabase, staffId, bizId, branchId } = await getStaffContext();
+                const context = await getStaffContext();
+                const { supabase, staffId: ctxStaffId, bizId: ctxBizId, branchId } = context;
+                staffId = ctxStaffId;
+                bizId = ctxBizId;
+                
+                // Получаем user_id из сессии для логирования
+                const { data: { user } } = await supabase.auth.getUser();
+                userId = user?.id;
 
         const now = new Date();
         const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
@@ -88,10 +104,28 @@ export async function POST(req: Request) {
         }
 
         if (timeOffs && timeOffs.length > 0) {
-            return NextResponse.json(
+            statusCode = 400;
+            const response = NextResponse.json(
                 { ok: false, error: 'Сегодня у вас выходной день. Нельзя открыть смену.' },
-                { status: 400 }
+                { status: statusCode }
             );
+            
+            // Логируем метрику
+            logApiMetric({
+                endpoint,
+                method: 'POST',
+                statusCode,
+                durationMs: Date.now() - startTime,
+                userId,
+                staffId,
+                bizId,
+                errorMessage: 'Сегодня у вас выходной день. Нельзя открыть смену.',
+                errorType: 'validation',
+                ipAddress: getIpAddress(req),
+                userAgent: req.headers.get('user-agent') || undefined,
+            }).catch(() => {});
+            
+            return response;
         }
 
         // 2. Проверяем staff_schedule_rules для конкретной даты (приоритет выше еженедельного)
@@ -160,10 +194,28 @@ export async function POST(req: Request) {
 
         // Если нет рабочих часов - это выходной
         if (!hasWorkingHours) {
-            return NextResponse.json(
+            statusCode = 400;
+            const response = NextResponse.json(
                 { ok: false, error: 'Сегодня у вас выходной день. Нельзя открыть смену.' },
-                { status: 400 }
+                { status: statusCode }
             );
+            
+            // Логируем метрику
+            logApiMetric({
+                endpoint,
+                method: 'POST',
+                statusCode,
+                durationMs: Date.now() - startTime,
+                userId,
+                staffId,
+                bizId,
+                errorMessage: 'Сегодня у вас выходной день. Нельзя открыть смену.',
+                errorType: 'validation',
+                ipAddress: getIpAddress(req),
+                userAgent: req.headers.get('user-agent') || undefined,
+            }).catch(() => {});
+            
+            return response;
         }
 
         const openedAt = now;
@@ -188,23 +240,83 @@ export async function POST(req: Request) {
 
         if (rpcError) {
             logError('StaffShiftOpen', 'Error calling open_staff_shift_safe RPC', rpcError);
-            return NextResponse.json(
-                { ok: false, error: rpcError.message || 'Не удалось открыть смену' },
-                { status: 500 }
+            statusCode = 500;
+            errorMessage = rpcError.message || 'Не удалось открыть смену';
+            
+            const response = NextResponse.json(
+                { ok: false, error: errorMessage },
+                { status: statusCode }
             );
+            
+            // Логируем метрику
+            logApiMetric({
+                endpoint,
+                method: 'POST',
+                statusCode,
+                durationMs: Date.now() - startTime,
+                userId,
+                staffId,
+                bizId,
+                errorMessage,
+                errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                ipAddress: getIpAddress(req),
+                userAgent: req.headers.get('user-agent') || undefined,
+            }).catch(() => {});
+            
+            return response;
         }
 
         // Проверяем результат RPC
         if (!rpcResult || !rpcResult.ok) {
             const errorMsg = (rpcResult as { error?: string })?.error || 'Не удалось открыть смену';
             logError('StaffShiftOpen', 'RPC returned error', { error: errorMsg, result: rpcResult });
-            return NextResponse.json({ ok: false, error: errorMsg }, { status: 500 });
+            statusCode = 500;
+            errorMessage = errorMsg;
+            
+            const response = NextResponse.json({ ok: false, error: errorMsg }, { status: statusCode });
+            
+            // Логируем метрику
+            logApiMetric({
+                endpoint,
+                method: 'POST',
+                statusCode,
+                durationMs: Date.now() - startTime,
+                userId,
+                staffId,
+                bizId,
+                errorMessage,
+                errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                ipAddress: getIpAddress(req),
+                userAgent: req.headers.get('user-agent') || undefined,
+            }).catch(() => {});
+            
+            return response;
         }
 
         const shift = (rpcResult as { shift?: unknown }).shift;
         if (!shift) {
             logError('StaffShiftOpen', 'RPC returned ok but no shift data', rpcResult);
-            return NextResponse.json({ ok: false, error: 'Не удалось получить данные смены' }, { status: 500 });
+            statusCode = 500;
+            errorMessage = 'Не удалось получить данные смены';
+            
+            const response = NextResponse.json({ ok: false, error: errorMessage }, { status: statusCode });
+            
+            // Логируем метрику
+            logApiMetric({
+                endpoint,
+                method: 'POST',
+                statusCode,
+                durationMs: Date.now() - startTime,
+                userId,
+                staffId,
+                bizId,
+                errorMessage,
+                errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                ipAddress: getIpAddress(req),
+                userAgent: req.headers.get('user-agent') || undefined,
+            }).catch(() => {});
+            
+            return response;
         }
 
         logDebug('StaffShiftOpen', 'Shift opened successfully', {
@@ -212,11 +324,45 @@ export async function POST(req: Request) {
             shiftId: (shift as { id?: string })?.id,
         });
 
-                return NextResponse.json({ ok: true, shift });
+        statusCode = 200;
+        const response = NextResponse.json({ ok: true, shift });
+        
+        // Логируем метрику
+        logApiMetric({
+            endpoint,
+            method: 'POST',
+            statusCode,
+            durationMs: Date.now() - startTime,
+            userId,
+            staffId,
+            bizId,
+            ipAddress: getIpAddress(req),
+            userAgent: req.headers.get('user-agent') || undefined,
+        }).catch(() => {});
+        
+        return response;
             } catch (error) {
                 logError('StaffShiftOpen', 'Unexpected error', error);
                 const message = error instanceof Error ? error.message : 'Unknown error';
-                return NextResponse.json({ ok: false, error: message }, { status: 500 });
+                errorMessage = message;
+                statusCode = 500;
+                
+                // Логируем метрику с ошибкой
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    errorMessage,
+                    errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {});
+                
+                return NextResponse.json({ ok: false, error: message }, { status: statusCode });
             }
         }
     );

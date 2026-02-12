@@ -10,6 +10,7 @@
 import { NextResponse } from 'next/server';
 
 import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
+import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
 
@@ -17,6 +18,14 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
+    const startTime = Date.now();
+    const endpoint = '/api/staff/finance';
+    let statusCode = 500;
+    let staffId: string | undefined;
+    let bizId: string | undefined;
+    let userId: string | undefined;
+    let errorMessage: string | undefined;
+    
     try {
         const { searchParams } = new URL(req.url);
         const staffIdParam = searchParams.get('staffId');
@@ -138,6 +147,9 @@ export async function GET(req: Request) {
             staffId = context.staffId;
             bizId = context.bizId;
             useServiceClient = false; // Сотрудник использует обычный клиент с RLS
+            // Получаем user_id из сессии для логирования
+            const { data: { user } } = await supabase.auth.getUser();
+            userId = user?.id;
         }
 
         // Используем сервисный слой для получения данных
@@ -170,7 +182,7 @@ export async function GET(req: Request) {
         }));
 
         // Форматируем ответ в едином формате
-        return NextResponse.json({
+        const response = NextResponse.json({
             ok: true,
             today: {
                 ...result.today,
@@ -187,21 +199,58 @@ export async function GET(req: Request) {
             isDayOff: result.isDayOff,
             stats: result.stats,
         });
+        
+        statusCode = 200;
+        
+        // Логируем метрику асинхронно (не блокируем ответ)
+        logApiMetric({
+            endpoint,
+            method: 'GET',
+            statusCode,
+            durationMs: Date.now() - startTime,
+            userId,
+            staffId,
+            bizId,
+            ipAddress: getIpAddress(req),
+            userAgent: req.headers.get('user-agent') || undefined,
+        }).catch(() => {
+            // Игнорируем ошибки логирования
+        });
+        
+        return response;
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         logError('StaffFinance', 'Unexpected error in /api/staff/finance', e);
         
+        errorMessage = msg;
+        
         // Проверяем, не является ли это ошибкой авторизации
         if (e instanceof Error && (e.message === 'UNAUTHORIZED' || e.message === 'NO_STAFF_RECORD' || e.message === 'NO_BIZ_ACCESS')) {
-            return NextResponse.json(
-                { ok: false, error: 'Unauthorized' },
-                { status: 401 }
-            );
+            statusCode = 401;
+        } else {
+            statusCode = 500;
         }
+        
+        // Логируем метрику с ошибкой
+        logApiMetric({
+            endpoint,
+            method: 'GET',
+            statusCode,
+            durationMs: Date.now() - startTime,
+            userId,
+            staffId,
+            bizId,
+            errorMessage,
+            errorType: determineErrorType(statusCode, errorMessage) || undefined,
+            ipAddress: getIpAddress(req),
+            userAgent: req.headers.get('user-agent') || undefined,
+        }).catch(() => {
+            // Игнорируем ошибки логирования
+        });
         
         return NextResponse.json(
             { ok: false, error: msg },
-            { status: 500 }
+            { status: statusCode }
         );
     }
 }

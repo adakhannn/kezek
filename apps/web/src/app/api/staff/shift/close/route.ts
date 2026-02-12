@@ -2,6 +2,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
+import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
 import { measurePerformance } from '@/lib/performance';
@@ -41,13 +42,28 @@ type CloseStaffShiftRpcResult = {
 };
 
 export async function POST(req: Request) {
+    const startTime = Date.now();
+    const endpoint = '/api/staff/shift/close';
+    let statusCode = 500;
+    let staffId: string | undefined;
+    let bizId: string | undefined;
+    let userId: string | undefined;
+    let errorMessage: string | undefined;
+    
     // Применяем rate limiting для критичной операции
     return withRateLimit(
         req,
         RateLimitConfigs.critical,
         async () => {
             try {
-                const { supabase, staffId } = await getStaffContext();
+                const context = await getStaffContext();
+                const { supabase, staffId: ctxStaffId, bizId: ctxBizId } = context;
+                staffId = ctxStaffId;
+                bizId = ctxBizId;
+                
+                // Получаем user_id из сессии для логирования
+                const { data: { user } } = await supabase.auth.getUser();
+                userId = user?.id;
 
                 // Валидация входных данных с помощью Zod схемы
                 const validationResult = await validateRequest(req, closeShiftSchema);
@@ -496,11 +512,49 @@ export async function POST(req: Request) {
             }
         }
 
-                return NextResponse.json({ ok: true, shift: updated });
+                statusCode = 200;
+                const response = NextResponse.json({ ok: true, shift: updated });
+                
+                // Логируем метрику асинхронно (не блокируем ответ)
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {
+                    // Игнорируем ошибки логирования
+                });
+                
+                return response;
             } catch (error) {
                 logError('StaffShiftClose', 'Unexpected error', error);
                 const message = error instanceof Error ? error.message : 'Unknown error';
-                return NextResponse.json({ ok: false, error: message }, { status: 500 });
+                errorMessage = message;
+                statusCode = 500;
+                
+                // Логируем метрику с ошибкой
+                logApiMetric({
+                    endpoint,
+                    method: 'POST',
+                    statusCode,
+                    durationMs: Date.now() - startTime,
+                    userId,
+                    staffId,
+                    bizId,
+                    errorMessage,
+                    errorType: determineErrorType(statusCode, errorMessage) || undefined,
+                    ipAddress: getIpAddress(req),
+                    userAgent: req.headers.get('user-agent') || undefined,
+                }).catch(() => {
+                    // Игнорируем ошибки логирования
+                });
+                
+                return NextResponse.json({ ok: false, error: message }, { status: statusCode });
             }
         }
     );
