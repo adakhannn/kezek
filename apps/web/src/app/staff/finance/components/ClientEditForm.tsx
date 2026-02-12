@@ -1,7 +1,7 @@
 // apps/web/src/app/staff/finance/components/ClientEditForm.tsx
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 
 import type { ShiftItem, Booking, ServiceName } from '../types';
 import { getServiceName } from '../utils';
@@ -47,20 +47,50 @@ function ClientEditFormInner({
         consumablesAmount?: string;
     }>({});
     
+    // Отслеживаем, какие поля были "тронуты" (получили фокус и потеряли его)
+    const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+    
     // Валидируем item при изменении (с небольшой задержкой для избежания лишних проверок)
+    // Но показываем ошибки только для "тронутых" полей
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             const validation = validateShiftItem(item);
-            setValidationErrors(validation.errors);
+            // Показываем ошибки только для тронутых полей
+            const filteredErrors: typeof validationErrors = {};
+            if (touchedFields.has('clientName') && validation.errors.clientName) {
+                filteredErrors.clientName = validation.errors.clientName;
+            }
+            if (touchedFields.has('serviceName') && validation.errors.serviceName) {
+                filteredErrors.serviceName = validation.errors.serviceName;
+            }
+            if (touchedFields.has('serviceAmount') && validation.errors.serviceAmount) {
+                filteredErrors.serviceAmount = validation.errors.serviceAmount;
+            }
+            if (touchedFields.has('consumablesAmount') && validation.errors.consumablesAmount) {
+                filteredErrors.consumablesAmount = validation.errors.consumablesAmount;
+            }
+            setValidationErrors(filteredErrors);
         }, 300); // 300ms debounce
         
         return () => clearTimeout(timeoutId);
+    }, [item, touchedFields]);
+    
+    // Обработчик потери фокуса - помечаем поле как "тронутое" и валидируем его
+    const handleBlur = useCallback((fieldName: string) => {
+        setTouchedFields((prev) => new Set(prev).add(fieldName));
+        // Немедленная валидация поля при потере фокуса
+        const validation = validateShiftItem(item);
+        setValidationErrors((prev) => ({
+            ...prev,
+            [fieldName]: validation.errors[fieldName as keyof typeof validation.errors],
+        }));
     }, [item]);
     
-    // Проверяем, есть ли ошибки валидации
+    // Проверяем, есть ли ошибки валидации (для всех полей, не только тронутых)
     const hasErrors = useMemo(() => {
-        return Object.keys(validationErrors).length > 0;
-    }, [validationErrors]);
+        const fullValidation = validateShiftItem(item);
+        return Object.keys(fullValidation.errors).length > 0;
+    }, [item]);
 
     const handleBookingChange = (bookingId: string | null) => {
         const booking = bookingId ? bookings.find((b) => b.id === bookingId) : null;
@@ -189,6 +219,9 @@ function ClientEditFormInner({
                     <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             {t('staff.finance.clients.service', 'Услуга')}
+                            <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                                ({t('staff.finance.clients.serviceHint', 'опционально, до 200 символов')})
+                            </span>
                         </label>
                         <select
                             className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
@@ -198,6 +231,7 @@ function ClientEditFormInner({
                             }`}
                             value={item.serviceName}
                             onChange={(e) => handleServiceChange(e.target.value)}
+                            onBlur={() => handleBlur('serviceName')}
                             disabled={!isOpen || isReadOnly}
                         >
                             <option value="">{t('staff.finance.clients.selectService', 'Выберите услугу...')}</option>
@@ -246,11 +280,15 @@ function ClientEditFormInner({
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             {t('staff.finance.clients.consumablesAmount', 'Расходники')}
                             <span className="text-gray-500 ml-1">(сом)</span>
+                            <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                                ({t('staff.finance.clients.amountHint', '0 - 100,000,000')})
+                            </span>
                         </label>
                         <div className="relative">
                             <input
                                 type="number"
                                 min={0}
+                                max={100000000}
                                 step="10"
                                 placeholder="0"
                                 className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
@@ -260,6 +298,7 @@ function ClientEditFormInner({
                                 }`}
                                 value={item.consumablesAmount || ''}
                                 onChange={(e) => handleConsumablesAmountChange(Number(e.target.value || 0))}
+                                onBlur={() => handleBlur('consumablesAmount')}
                                 disabled={!isOpen || isReadOnly}
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
