@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useMemo, useState, useCallback, memo, useEffect, useRef, lazy } from 'react';
+import { useMemo, useState, useCallback, memo, useEffect, useRef, lazy, Suspense } from 'react';
 
 import { useFinanceData } from '../hooks/useFinanceData';
 import { useFinanceMutations } from '../hooks/useFinanceMutations';
@@ -616,18 +616,28 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             {/* Таб: Статистика */}
             {activeTab === 'stats' && stats && !staffId && (
                 <div className={`${staffId ? 'p-6' : 'px-6 pb-6'}`}>
-                    <StatsView
-                        stats={stats}
-                        allShiftsCount={allClosedShiftsCount}
-                        statsPeriod={statsPeriod}
-                        onPeriodChange={setStatsPeriod}
-                        selectedDate={selectedDate}
-                        onDateChange={setSelectedDate}
-                        selectedMonth={selectedMonth}
-                        onMonthChange={setSelectedMonth}
-                        selectedYear={selectedYear}
-                        onYearChange={setSelectedYear}
-                    />
+                    <Suspense
+                        fallback={
+                            <div className="flex items-center justify-center py-12">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {t('staff.finance.stats.loading', 'Загрузка статистики...')}
+                                </div>
+                            </div>
+                        }
+                    >
+                        <StatsView
+                            stats={stats}
+                            allShiftsCount={allClosedShiftsCount}
+                            statsPeriod={statsPeriod}
+                            onPeriodChange={setStatsPeriod}
+                            selectedDate={selectedDate}
+                            onDateChange={setSelectedDate}
+                            selectedMonth={selectedMonth}
+                            onMonthChange={setSelectedMonth}
+                            selectedYear={selectedYear}
+                            onYearChange={setSelectedYear}
+                        />
+                    </Suspense>
                 </div>
             )}
         </>
