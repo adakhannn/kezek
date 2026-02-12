@@ -171,6 +171,9 @@ function ClientEditFormInner({
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             {t('staff.finance.clients.client', 'Клиент')}
                             <span className="text-red-500 ml-1">*</span>
+                            <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                                ({t('staff.finance.clients.clientHint', 'обязательно, если не выбран из записей')})
+                            </span>
                         </label>
                         <select
                             className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
@@ -201,9 +204,20 @@ function ClientEditFormInner({
                         </select>
                         {!item.bookingId && (
                             <div className="mt-2">
-                                <div className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 text-sm text-gray-700 dark:text-gray-400">
-                                    {item.clientName || `${t('staff.finance.clients.client', 'Клиент')} 1`}
-                                </div>
+                                <input
+                                    type="text"
+                                    className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
+                                        validationErrors.clientName
+                                            ? 'border-red-500 dark:border-red-600 focus:border-red-500 focus:ring-red-500/20'
+                                            : 'border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-indigo-500/20'
+                                    }`}
+                                    value={item.clientName || ''}
+                                    onChange={(e) => onUpdate(idx, { ...item, clientName: e.target.value })}
+                                    onBlur={() => handleBlur('clientName')}
+                                    disabled={!isOpen || isReadOnly}
+                                    placeholder={t('staff.finance.clients.clientPlaceholder', 'Введите имя клиента')}
+                                    maxLength={200}
+                                />
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     {t('staff.finance.clients.walkInHint', 'Имя формируется автоматически для клиентов «с улицы»')}
                                 </p>
@@ -254,11 +268,15 @@ function ClientEditFormInner({
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             {t('staff.finance.clients.servicePrice', 'Цена за услугу')}
                             <span className="text-gray-500 ml-1">(сом)</span>
+                            <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                                ({t('staff.finance.clients.amountHint', '0 - 100,000,000')})
+                            </span>
                         </label>
                         <div className="relative">
                             <input
                                 type="number"
                                 min={0}
+                                max={100000000}
                                 step="50"
                                 placeholder="0"
                                 className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 pr-12 text-sm text-right font-bold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
@@ -268,6 +286,7 @@ function ClientEditFormInner({
                                 }`}
                                 value={item.serviceAmount || ''}
                                 onChange={(e) => handleServiceAmountChange(Number(e.target.value || 0))}
+                                onBlur={() => handleBlur('serviceAmount')}
                                 disabled={!isOpen || isReadOnly}
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
