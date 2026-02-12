@@ -596,6 +596,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                         isOpen={isOpen ?? false}
                         isClosed={isClosed ?? false}
                         isReadOnly={isReadOnlyForOwner}
+                        isSaving={mutations.isSaving}
                         staffId={staffId}
                         expandedItems={expandedItems}
                         onExpand={(idx) => setExpandedItems((prev) => new Set(prev).add(idx))}

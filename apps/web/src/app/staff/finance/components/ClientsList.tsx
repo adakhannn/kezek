@@ -16,6 +16,7 @@ interface ClientsListProps {
     isOpen: boolean;
     isClosed: boolean;
     isReadOnly: boolean;
+    isSaving?: boolean; // Флаг для блокировки кнопок сохранения
     staffId?: string;
     expandedItems: Set<number>;
     onExpand: (idx: number) => void;
@@ -33,6 +34,7 @@ export function ClientsList({
     isOpen,
     isClosed,
     isReadOnly,
+    isSaving = false,
     staffId,
     expandedItems,
     onExpand,
@@ -108,6 +110,7 @@ export function ClientsList({
                             serviceOptions={serviceOptions}
                             isOpen={isOpen}
                             isReadOnly={isReadOnly}
+                            isSaving={isSaving}
                             onUpdate={onUpdateItem}
                             onSave={onSaveItem}
                             onCollapse={onCollapse}

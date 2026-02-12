@@ -18,6 +18,7 @@ interface ClientEditFormProps {
     serviceOptions: ServiceName[];
     isOpen: boolean;
     isReadOnly: boolean;
+    isSaving?: boolean; // Флаг для блокировки кнопки сохранения
     onUpdate: (idx: number, item: ShiftItem) => void;
     onSave?: (idx: number) => void;
     onCollapse: (idx: number) => void;
@@ -31,6 +32,7 @@ function ClientEditFormInner({
     serviceOptions,
     isOpen,
     isReadOnly,
+    isSaving = false,
     onUpdate,
     onSave,
     onCollapse,
@@ -299,15 +301,15 @@ function ClientEditFormInner({
                     </button>
                     <button
                         type="button"
-                        disabled={hasErrors}
+                        disabled={hasErrors || isSaving}
                         className={`px-5 py-2.5 text-sm font-semibold rounded-lg shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 transform ${
-                            hasErrors
+                            hasErrors || isSaving
                                 ? 'text-gray-400 bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
                                 : 'text-white bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg focus:ring-indigo-500 hover:scale-105'
                         }`}
                         onClick={() => {
-                            if (hasErrors) {
-                                return; // Не сохраняем при наличии ошибок
+                            if (hasErrors || isSaving) {
+                                return; // Не сохраняем при наличии ошибок или во время сохранения
                             }
                             if (onSave) {
                                 void onSave(idx);
@@ -316,7 +318,10 @@ function ClientEditFormInner({
                             }
                         }}
                     >
-                        {t('staff.finance.clients.save', 'Сохранить')}
+                        {isSaving 
+                            ? t('staff.finance.clients.saving', 'Сохранение...')
+                            : t('staff.finance.clients.save', 'Сохранить')
+                        }
                     </button>
                 </div>
             )}
@@ -342,6 +347,7 @@ export const ClientEditForm = memo(ClientEditFormInner, (prevProps: ClientEditFo
         prevProps.idx === nextProps.idx &&
         prevProps.isOpen === nextProps.isOpen &&
         prevProps.isReadOnly === nextProps.isReadOnly &&
+        prevProps.isSaving === nextProps.isSaving &&
         // allItems, bookings, serviceOptions могут изменяться, но это редко
         // onUpdate, onSave, onCollapse должны быть стабильными функциями из useCallback
         prevProps.allItems.length === nextProps.allItems.length &&

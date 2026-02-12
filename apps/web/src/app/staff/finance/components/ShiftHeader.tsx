@@ -54,18 +54,33 @@ export function ShiftHeader({ shiftDate, onShiftDateChange, shift, isOpen, staff
                         </div>
                     )}
                 </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                <div className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${
                     isOpen 
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-700'
                         : shift
-                            ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                            ? 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                            : 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-300 dark:border-amber-700'
                 }`}>
                     {isOpen 
-                        ? t('staff.finance.shift.status.open', 'Открыта') 
+                        ? (
+                            <span className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400"></span>
+                                {t('staff.finance.shift.status.open', 'Открыта')}
+                            </span>
+                        )
                         : shift
-                            ? t('staff.finance.shift.status.closed', 'Закрыта')
-                            : t('staff.finance.shift.status.notCreated', 'Не открыта')
+                            ? (
+                                <span className="flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-gray-500 dark:bg-gray-400"></span>
+                                    {t('staff.finance.shift.status.closed', 'Закрыта')}
+                                </span>
+                            )
+                            : (
+                                <span className="flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400"></span>
+                                    {t('staff.finance.shift.status.notCreated', 'Не открыта')}
+                                </span>
+                            )
                     }
                 </div>
             </div>

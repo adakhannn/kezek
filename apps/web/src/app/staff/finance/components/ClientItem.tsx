@@ -53,8 +53,20 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
             {/* Desktop view - grid */}
             <div className="hidden sm:flex flex-1 grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-3 items-center min-w-0">
                 <div className="min-w-0 flex items-center gap-2">
-                    {hasBooking && (
-                        <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500" title={t('staff.finance.clients.fromBooking', 'Из записи')} />
+                    {hasBooking ? (
+                        <span 
+                            className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800"
+                            title={t('staff.finance.clients.fromBooking', 'Из записи')}
+                        >
+                            {t('staff.finance.clients.fromBooking', 'Из записи')}
+                        </span>
+                    ) : (
+                        <span 
+                            className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                            title={t('staff.finance.clients.manual', 'Добавлен вручную')}
+                        >
+                            {t('staff.finance.clients.manual', 'Вручную')}
+                        </span>
                     )}
                     <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                         {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
@@ -90,8 +102,20 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
             <div className="sm:hidden flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                        {hasBooking && (
-                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500" title={t('staff.finance.clients.fromBooking', 'Из записи')} />
+                        {hasBooking ? (
+                            <span 
+                                className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800"
+                                title={t('staff.finance.clients.fromBooking', 'Из записи')}
+                            >
+                                {t('staff.finance.clients.fromBooking', 'Из записи')}
+                            </span>
+                        ) : (
+                            <span 
+                                className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                                title={t('staff.finance.clients.manual', 'Добавлен вручную')}
+                            >
+                                {t('staff.finance.clients.manual', 'Вручную')}
+                            </span>
                         )}
                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                             {item.clientName || t('staff.finance.clients.notSpecified', 'Клиент не указан')}
