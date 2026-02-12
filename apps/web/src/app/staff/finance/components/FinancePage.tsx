@@ -5,6 +5,9 @@
 
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
+import { addDays, subDays } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { useMemo, useState, useCallback, memo, useEffect, useRef, lazy, Suspense } from 'react';
 
 import { useFinanceData } from '../hooks/useFinanceData';
@@ -29,7 +32,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { LoadingOverlay } from '@/components/ui/ProgressBar';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
-import { todayTz } from '@/lib/time';
+import { todayTz, TZ } from '@/lib/time';
 
 interface FinancePageProps {
     staffId?: string;
@@ -101,6 +104,83 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
     // Мутации
     const mutations = useFinanceMutations({ staffId, date: shiftDate });
+
+    // Предзагрузка данных для соседних дат для мгновенного переключения
+    const queryClient = useQueryClient();
+    useEffect(() => {
+        // Предзагружаем данные для предыдущего и следующего дня
+        const prevDate = subDays(shiftDate, 1);
+        const nextDate = addDays(shiftDate, 1);
+        
+        const prevDateStr = formatInTimeZone(prevDate, TZ, 'yyyy-MM-dd');
+        const nextDateStr = formatInTimeZone(nextDate, TZ, 'yyyy-MM-dd');
+        const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+        
+        // Предзагружаем предыдущий день (если он не в будущем)
+        if (prevDateStr <= todayStr) {
+            const prevQueryKey = ['finance', staffId || 'current', prevDateStr];
+            queryClient.prefetchQuery({
+                queryKey: prevQueryKey,
+                queryFn: async ({ signal }: { signal?: AbortSignal }) => {
+                    const dateStr = formatInTimeZone(prevDate, TZ, 'yyyy-MM-dd');
+                    const apiUrl = staffId
+                        ? `/api/staff/finance?staffId=${encodeURIComponent(staffId)}&date=${dateStr}`
+                        : `/api/staff/finance?date=${dateStr}`;
+                    
+                    const res = await fetch(apiUrl, {
+                        cache: 'no-store',
+                        signal,
+                    });
+                    
+                    if (!res.ok) {
+                        throw new Error('Не удалось загрузить данные');
+                    }
+                    
+                    const json = await res.json();
+                    if (!json.ok) {
+                        throw new Error(json.error || 'Не удалось загрузить данные');
+                    }
+                    
+                    return json;
+                },
+                staleTime: 30 * 1000, // 30 секунд для прошлых дат
+                gcTime: 60 * 60 * 1000, // 60 минут в кэше
+            });
+        }
+        
+        // Предзагружаем следующий день (если он не слишком далеко в будущем, максимум +7 дней)
+        const maxFutureDate = addDays(new Date(), 7);
+        if (nextDateStr <= formatInTimeZone(maxFutureDate, TZ, 'yyyy-MM-dd')) {
+            const nextQueryKey = ['finance', staffId || 'current', nextDateStr];
+            queryClient.prefetchQuery({
+                queryKey: nextQueryKey,
+                queryFn: async ({ signal }: { signal?: AbortSignal }) => {
+                    const dateStr = formatInTimeZone(nextDate, TZ, 'yyyy-MM-dd');
+                    const apiUrl = staffId
+                        ? `/api/staff/finance?staffId=${encodeURIComponent(staffId)}&date=${dateStr}`
+                        : `/api/staff/finance?date=${dateStr}`;
+                    
+                    const res = await fetch(apiUrl, {
+                        cache: 'no-store',
+                        signal,
+                    });
+                    
+                    if (!res.ok) {
+                        throw new Error('Не удалось загрузить данные');
+                    }
+                    
+                    const json = await res.json();
+                    if (!json.ok) {
+                        throw new Error(json.error || 'Не удалось загрузить данные');
+                    }
+                    
+                    return json;
+                },
+                staleTime: nextDateStr === todayStr ? 5 * 1000 : 30 * 1000,
+                gcTime: nextDateStr === todayStr ? 5 * 60 * 1000 : 60 * 60 * 1000,
+            });
+        }
+    }, [shiftDate, staffId, queryClient]);
 
     // Синхронизируем локальные items с данными из сервера
     useEffect(() => {
