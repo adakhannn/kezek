@@ -122,10 +122,10 @@ export async function getShiftData({
             .eq('id', staffId)
             .maybeSingle(),
         
-        // 2. Смена за выбранную дату
+        // 2. Смена за выбранную дату с позициями (объединенный запрос для уменьшения количества запросов)
         client
             .from('staff_shifts')
-            .select('*')
+            .select('id, shift_date, opened_at, closed_at, expected_start, late_minutes, status, total_amount, consumables_amount, master_share, salon_share, percent_master, percent_salon, hours_worked, hourly_rate, guaranteed_amount, topup_amount, staff_shift_items(id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at)')
             .eq('staff_id', staffId)
             .eq('shift_date', ymd)
             .maybeSingle(),
@@ -184,8 +184,20 @@ export async function getShiftData({
     const allPromises = [...basePromises, ...dayOffPromises];
     const results = await Promise.all(allPromises);
 
-    // Обрабатываем результаты
-    const [staffDataResult, shiftResult, bookingsResult, servicesResult, ...dayOffResults] = results;
+    // Обрабатываем результаты с явной типизацией
+    const staffDataResult = results[0] as { data: { percent_master: number | null; percent_salon: number | null; hourly_rate: number | null } | null; error: unknown };
+    const shiftResult = results[1] as { data: unknown; error: { message?: string } | null };
+    const bookingsResult = results[2] as { data: Array<{
+        id: string;
+        client_name: string | null;
+        client_phone: string | null;
+        start_at: string;
+        services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
+    }> | null; error: unknown };
+    const servicesResult = results[3] as { data: Array<{
+        services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
+    }> | null; error: unknown };
+    const dayOffResults = results.slice(4) as Array<{ data: unknown; error: unknown }>;
     
     const { data: staffData, error: staffError } = staffDataResult;
     if (staffError) {
@@ -196,11 +208,66 @@ export async function getShiftData({
     const staffPercentSalon = Number(staffData?.percent_salon ?? 40);
     const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
 
-    const { data: shift, error: shiftError } = shiftResult;
+    const { data: shiftRaw, error: shiftError } = shiftResult;
     if (shiftError) {
         logError('ShiftDataService', 'Error loading shift', shiftError);
-        throw new Error(`Failed to load shift: ${shiftError.message}`);
+        throw new Error(`Failed to load shift: ${shiftError?.message || 'Unknown error'}`);
     }
+
+    // Извлекаем items из объединенного запроса и отделяем их от данных смены
+    type ShiftWithItems = {
+        id: string;
+        shift_date: string;
+        opened_at: string | null;
+        closed_at: string | null;
+        expected_start: string | null;
+        late_minutes: number;
+        status: 'open' | 'closed';
+        total_amount: number;
+        consumables_amount: number;
+        master_share: number;
+        salon_share: number;
+        percent_master: number;
+        percent_salon: number;
+        hours_worked?: number | null;
+        hourly_rate?: number | null;
+        guaranteed_amount?: number;
+        topup_amount?: number;
+        staff_shift_items?: Array<{
+            id: string;
+            client_name: string;
+            service_name: string;
+            service_amount: number;
+            consumables_amount: number;
+            note: string | null;
+            booking_id: string | null;
+            created_at: string;
+        }> | null;
+    };
+
+    const shiftWithItems = shiftRaw as ShiftWithItems | null;
+    const shift = shiftWithItems ? {
+        id: shiftWithItems.id,
+        shift_date: shiftWithItems.shift_date,
+        opened_at: shiftWithItems.opened_at,
+        closed_at: shiftWithItems.closed_at,
+        expected_start: shiftWithItems.expected_start,
+        late_minutes: shiftWithItems.late_minutes,
+        status: shiftWithItems.status,
+        total_amount: shiftWithItems.total_amount,
+        consumables_amount: shiftWithItems.consumables_amount,
+        master_share: shiftWithItems.master_share,
+        salon_share: shiftWithItems.salon_share,
+        percent_master: shiftWithItems.percent_master,
+        percent_salon: shiftWithItems.percent_salon,
+        hours_worked: shiftWithItems.hours_worked,
+        hourly_rate: shiftWithItems.hourly_rate,
+        guaranteed_amount: shiftWithItems.guaranteed_amount,
+        topup_amount: shiftWithItems.topup_amount,
+    } : null;
+
+    // Извлекаем items из объединенного запроса
+    const itemsFromJoin = shiftWithItems?.staff_shift_items ?? null;
 
     const { data: dateBookingsRaw, error: bookingsError } = bookingsResult;
     if (bookingsError) {
@@ -239,67 +306,8 @@ export async function getShiftData({
         }
     }
 
-    // Загружаем items для смены и allShifts параллельно (если смена существует)
-    type ItemsResult = { data: Array<{
-        id: string;
-        client_name: string;
-        service_name: string;
-        service_amount: number;
-        consumables_amount: number;
-        note: string | null;
-        booking_id: string | null;
-        created_at: string;
-    }> | null; error: unknown };
-    
-    type AllShiftsResult = { data: Array<{
-        shift_date: string | Date;
-        status: string;
-        total_amount: number | null;
-        master_share: number | null;
-        salon_share: number | null;
-        late_minutes: number | null;
-        guaranteed_amount?: number | null;
-        topup_amount?: number | null;
-    }> | null; error: unknown };
-    
-    const secondaryPromises: Promise<ItemsResult | AllShiftsResult>[] = [];
-    
-    // Items зависит от shift, поэтому загружаем только если смена существует
-    if (shift) {
-        secondaryPromises.push(
-            Promise.resolve(
-                client
-                    .from('staff_shift_items')
-                    .select('id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at')
-                    .eq('shift_id', shift.id)
-                    .order('created_at', { ascending: false })
-                    .order('id', { ascending: false })
-            ).then((result) => result as ItemsResult)
-        );
-    } else {
-        // Если смены нет, добавляем пустой промис для сохранения индекса
-        secondaryPromises.push(Promise.resolve({ data: [], error: null } as ItemsResult));
-    }
-    
-    // AllShifts можно загружать параллельно с items (только если запрашивается сегодня)
-    if (ymd === today) {
-        secondaryPromises.push(
-            Promise.resolve(
-                client
-                    .from('staff_shifts')
-                    .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
-                    .eq('staff_id', staffId)
-                    .order('shift_date', { ascending: false })
-            ).then((result) => result as AllShiftsResult)
-        );
-    } else {
-        // Если не сегодня, добавляем пустой промис для сохранения индекса
-        secondaryPromises.push(Promise.resolve({ data: [], error: null } as AllShiftsResult));
-    }
-    
-    const [itemsResult, allShiftsResult] = await Promise.all(secondaryPromises);
-    
-    // Обрабатываем items
+    // Обрабатываем items из объединенного запроса
+    // Items уже загружены вместе со сменой через JOIN, сортируем их
     let items: Array<{
         id: string;
         client_name: string;
@@ -311,13 +319,41 @@ export async function getShiftData({
         created_at: string;
     }> = [];
     
-    if (shift && itemsResult && 'data' in itemsResult) {
-        const { data: itemsData, error: itemsError } = itemsResult as ItemsResult;
-        if (itemsError) {
-            logError('ShiftDataService', 'Error loading shift items', itemsError);
-        } else {
-            items = (itemsData as typeof items) ?? [];
-        }
+    if (itemsFromJoin && Array.isArray(itemsFromJoin)) {
+        // Сортируем items по created_at и id (descending)
+        items = [...itemsFromJoin].sort((a, b) => {
+            const dateA = new Date(a.created_at).getTime();
+            const dateB = new Date(b.created_at).getTime();
+            if (dateB !== dateA) {
+                return dateB - dateA; // Сначала более новые
+            }
+            // Если даты равны, сортируем по id
+            return b.id.localeCompare(a.id);
+        });
+    }
+
+    // Загружаем allShifts (только если запрашивается сегодня)
+    type AllShiftsResult = { data: Array<{
+        shift_date: string | Date;
+        status: string;
+        total_amount: number | null;
+        master_share: number | null;
+        salon_share: number | null;
+        late_minutes: number | null;
+        guaranteed_amount?: number | null;
+        topup_amount?: number | null;
+    }> | null; error: unknown };
+    
+    let allShiftsResult: AllShiftsResult | null = null;
+    
+    if (ymd === today) {
+        const result = await client
+            .from('staff_shifts')
+            .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
+            .eq('staff_id', staffId)
+            .order('shift_date', { ascending: false });
+        
+        allShiftsResult = result as AllShiftsResult;
     }
 
     // Преобразуем bookings: services может быть массивом из-за join, но нам нужен объект или null
@@ -383,7 +419,7 @@ export async function getShiftData({
         shiftsCount: number;
     } | undefined;
 
-    if (ymd === today && allShiftsResult && 'data' in allShiftsResult) {
+    if (ymd === today && allShiftsResult) {
         const { data: allShiftsData, error: statsError } = allShiftsResult as AllShiftsResult;
         
         if (statsError) {
