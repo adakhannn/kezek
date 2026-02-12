@@ -98,21 +98,33 @@ export const dateStringSchema = z.string().regex(
 
 /**
  * Схема для одного элемента смены (shift item)
+ * 
+ * Синхронизирована с TypeScript типом ShiftItem и валидацией на фронтенде.
+ * Поля clientName и serviceName опциональны, так как:
+ * - clientName может быть пустым, если есть bookingId
+ * - serviceName опционально
+ * - Максимальная длина 200 символов (как в валидации на фронтенде)
  */
 export const shiftItemSchema = z.object({
     id: z.string().uuid().optional().nullable(),
     clientName: z.union([
-        z.string().max(500, 'Client name too long'),
+        z.string().max(200, 'Client name too long (maximum 200 characters)'),
         z.literal(''),
         z.null(),
     ]).optional(),
     serviceName: z.union([
-        z.string().max(500, 'Service name too long'),
+        z.string().max(200, 'Service name too long (maximum 200 characters)'),
         z.literal(''),
         z.null(),
     ]).optional(),
-    serviceAmount: z.number().nonnegative('Service amount cannot be negative').default(0),
-    consumablesAmount: z.number().nonnegative('Consumables amount cannot be negative').default(0),
+    serviceAmount: z.number()
+        .nonnegative('Service amount cannot be negative')
+        .max(100000000, 'Service amount too large (maximum 100,000,000)')
+        .default(0),
+    consumablesAmount: z.number()
+        .nonnegative('Consumables amount cannot be negative')
+        .max(100000000, 'Consumables amount too large (maximum 100,000,000)')
+        .default(0),
     bookingId: z.string().uuid().optional().nullable(),
     createdAt: z.string().optional().nullable(),
 }).strict();

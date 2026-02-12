@@ -1,13 +1,27 @@
 // apps/web/src/app/staff/finance/types.ts
 
-export type ShiftItem = {
-    id?: string;
-    clientName: string;
-    serviceName: string;
-    serviceAmount: number;
-    consumablesAmount: number;
-    bookingId?: string | null;
-    createdAt?: string | null;
+/**
+ * Типы для финансового модуля
+ * 
+ * ВАЖНО: ShiftItem теперь генерируется из Zod-схемы для обеспечения синхронизации
+ * типов и валидации. Используйте типы из @/lib/validation/types.
+ */
+
+// Импортируем типы из validation
+import type { ShiftItem as ValidationShiftItem } from '@/lib/validation/types';
+
+// Реэкспортируем типы из validation для единообразия
+export type { ShiftItem, SaveShiftItemsRequest, CloseShiftRequest } from '@/lib/validation/types';
+
+/**
+ * Расширенный тип ShiftItem для использования на фронтенде
+ * Добавляет поля, которые могут быть использованы в UI, но не отправляются на сервер
+ */
+export type ShiftItemExtended = ValidationShiftItem & {
+    // Дополнительные поля для UI (не валидируются на сервере)
+    _isNew?: boolean;
+    _isEditing?: boolean;
+    _isSaving?: boolean;
 };
 
 export type ServiceName = {
@@ -56,8 +70,8 @@ export type TodayResponse =
     | {
           ok: true;
           today:
-              | { exists: false; status: 'none'; shift: null; items: ShiftItem[] }
-              | { exists: true; status: 'open' | 'closed'; shift: Shift; items: ShiftItem[] };
+              | { exists: false; status: 'none'; shift: null; items: ValidationShiftItem[] }
+              | { exists: true; status: 'open' | 'closed'; shift: Shift; items: ValidationShiftItem[] };
           bookings?: Booking[];
           services?: ServiceName[] | string[]; // Поддержка старого (string[]) и нового (ServiceName[]) форматов
           allShifts?: Array<{
