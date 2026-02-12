@@ -131,6 +131,7 @@ export function ClientsList({
                         staffId={staffId}
                         onEdit={() => onExpand(idx)}
                         onDelete={() => onDeleteItem(idx)}
+                        onDuplicate={onDuplicateItem ? () => onDuplicateItem(idx) : undefined}
                     />
                 );
             })}

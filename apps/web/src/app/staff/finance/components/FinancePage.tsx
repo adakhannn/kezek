@@ -654,6 +654,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                         onUpdateItem={handleUpdateItem}
                         onSaveItem={handleSaveItem}
                         onDeleteItem={handleDeleteItem}
+                        onDuplicateItem={handleDuplicateItem}
                     />
                 </div>
             )}
