@@ -143,6 +143,48 @@ function ClientEditFormInner({
         onUpdate(idx, { ...item, consumablesAmount });
     };
 
+    // Обработка горячих клавиш
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Enter = Сохранить (только если форма открыта и не в режиме только чтения)
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                // Проверяем, что фокус не в textarea или другом элементе, где Enter имеет другое значение
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'TEXTAREA' || (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'text')) {
+                    // Если в текстовом поле, Enter работает как обычно
+                    return;
+                }
+                
+                // Предотвращаем стандартное поведение
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Сохраняем, если нет ошибок и форма открыта
+                if (isOpen && !isReadOnly && !hasErrors && onSave) {
+                    void onSave(idx);
+                }
+            }
+            
+            // Esc = Отмена
+            if (e.key === 'Escape') {
+                // Предотвращаем стандартное поведение
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Закрываем форму
+                onCollapse(idx);
+            }
+        };
+
+        // Добавляем обработчик только если форма открыта
+        if (isOpen) {
+            window.addEventListener('keydown', handleKeyDown);
+            return () => {
+                window.removeEventListener('keydown', handleKeyDown);
+            };
+        }
+    }, [isOpen, isReadOnly, hasErrors, onSave, onCollapse, idx]);
+
     return (
         <div className="p-5 bg-gradient-to-br from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-gray-900 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 shadow-lg space-y-5">
             <div className="flex items-center justify-between pb-3 border-b-2 border-indigo-200 dark:border-indigo-800">
