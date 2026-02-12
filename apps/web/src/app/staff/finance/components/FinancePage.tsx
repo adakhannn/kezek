@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useMemo, useState, useCallback, memo, useEffect, useRef } from 'react';
+import { useMemo, useState, useCallback, memo, useEffect, useRef, lazy } from 'react';
 
 import { useFinanceData } from '../hooks/useFinanceData';
 import { useFinanceMutations } from '../hooks/useFinanceMutations';
@@ -20,8 +20,10 @@ import { ClientsListHeader } from './ClientsListHeader';
 import { ShiftControls } from './ShiftControls';
 import { ShiftHeader } from './ShiftHeader';
 import { ShiftSummary } from './ShiftSummary';
-import { StatsView } from './StatsView';
 import { Tabs } from './Tabs';
+
+// Ленивая загрузка компонента статистики - загружается только при переключении на вкладку "Статистика"
+const StatsView = lazy(() => import('./StatsView').then((module) => ({ default: module.StatsView })));
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { LoadingOverlay } from '@/components/ui/ProgressBar';
