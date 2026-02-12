@@ -2,49 +2,48 @@
 
 import type { ShiftItem, Shift } from '../types';
 
+import {
+    calculateTotalServiceAmount,
+    calculateTotalConsumables,
+    calculateBaseShares,
+    calculateDisplayShares,
+} from '@/lib/financeDomain';
+
 /**
  * Чистые функции для финансовых расчетов
- * Можно использовать как на клиенте, так и на сервере
+ * Используют единый доменный слой financeDomain
+ * 
+ * @deprecated Используйте функции напрямую из @/lib/financeDomain
  */
 
 /**
  * Вычисляет общую сумму услуг из массива items
+ * @deprecated Используйте calculateTotalServiceAmount из @/lib/financeDomain
  */
-export function calculateTotalServiceAmount(items: ShiftItem[]): number {
-    return items.reduce((sum, it) => {
-        const amount = typeof it.serviceAmount === 'number' && !isNaN(it.serviceAmount)
-            ? it.serviceAmount
-            : 0;
-        return sum + (amount >= 0 ? amount : 0);
-    }, 0);
-}
+export { calculateTotalServiceAmount };
 
 /**
  * Вычисляет общую сумму расходников из массива items
+ * @deprecated Используйте calculateTotalConsumables из @/lib/financeDomain
  */
-export function calculateTotalConsumables(items: ShiftItem[]): number {
-    return items.reduce((sum, it) => {
-        const amount = typeof it.consumablesAmount === 'number' && !isNaN(it.consumablesAmount)
-            ? it.consumablesAmount
-            : 0;
-        return sum + (amount >= 0 ? amount : 0);
-    }, 0);
-}
+export { calculateTotalConsumables };
 
 /**
  * Вычисляет базовую долю сотрудника от общей суммы услуг
+ * @deprecated Используйте calculateBaseShares из @/lib/financeDomain
  */
 export function calculateBaseStaffShare(
     totalAmount: number,
     staffPercentMaster: number,
     staffPercentSalon: number
 ): number {
-    const ps = staffPercentMaster + staffPercentSalon || 100;
-    return Math.round((totalAmount * staffPercentMaster) / ps);
+    const { masterShare } = calculateBaseShares(totalAmount, 0, staffPercentMaster, staffPercentSalon);
+    return masterShare;
 }
 
 /**
  * Вычисляет базовую долю бизнеса от общей суммы услуг + расходники
+ * @deprecated Используйте calculateBaseShares из @/lib/financeDomain
  */
 export function calculateBaseBizShare(
     totalAmount: number,
@@ -52,13 +51,13 @@ export function calculateBaseBizShare(
     staffPercentMaster: number,
     staffPercentSalon: number
 ): number {
-    const ps = staffPercentMaster + staffPercentSalon || 100;
-    const shareFromAmount = Math.round((totalAmount * staffPercentSalon) / ps);
-    return shareFromAmount + totalConsumables;
+    const { salonShare } = calculateBaseShares(totalAmount, totalConsumables, staffPercentMaster, staffPercentSalon);
+    return salonShare;
 }
 
 /**
  * Вычисляет финальные доли с учетом гарантированной суммы
+ * @deprecated Используйте calculateDisplayShares из @/lib/financeDomain
  */
 export function calculateFinalShares(
     baseStaffShare: number,
@@ -67,23 +66,7 @@ export function calculateFinalShares(
     currentGuaranteedAmount: number | null,
     isOpen: boolean
 ): { masterShare: number; salonShare: number } {
-    let masterShare = baseStaffShare;
-    let salonShare = baseBizShare;
-
-    // Для открытой смены используем текущую гарантированную сумму
-    if (isOpen && hourlyRate && currentGuaranteedAmount !== null && currentGuaranteedAmount !== undefined) {
-        const guarantee = currentGuaranteedAmount;
-        if (guarantee > baseStaffShare) {
-            const diff = Math.round((guarantee - baseStaffShare) * 100) / 100;
-            masterShare = Math.round(guarantee);
-            salonShare = baseBizShare - diff;
-        }
-    }
-
-    return {
-        masterShare: Math.round(masterShare * 100) / 100,
-        salonShare: Math.round(salonShare * 100) / 100,
-    };
+    return calculateDisplayShares(baseStaffShare, baseBizShare, currentGuaranteedAmount, isOpen);
 }
 
 /**
@@ -130,8 +113,12 @@ export function calculateShiftFinancials(
     const totalConsumables = calculateTotalConsumables(items);
 
     // Вычисляем базовые доли
-    const baseStaffShare = calculateBaseStaffShare(totalAmount, staffPercentMaster, staffPercentSalon);
-    const baseBizShare = calculateBaseBizShare(totalAmount, totalConsumables, staffPercentMaster, staffPercentSalon);
+    const { masterShare: baseMasterShare, salonShare: baseSalonShare } = calculateBaseShares(
+        totalAmount,
+        totalConsumables,
+        staffPercentMaster,
+        staffPercentSalon
+    );
 
     // Для закрытой смены используем сохранённые значения из БД
     if (!isOpen && shift) {
@@ -152,10 +139,9 @@ export function calculateShiftFinancials(
     }
 
     // Для открытой смены вычисляем с учетом гарантий
-    const { masterShare, salonShare } = calculateFinalShares(
-        baseStaffShare,
-        baseBizShare,
-        hourlyRate,
+    const { masterShare, salonShare } = calculateDisplayShares(
+        baseMasterShare,
+        baseSalonShare,
         currentGuaranteedAmount,
         isOpen
     );

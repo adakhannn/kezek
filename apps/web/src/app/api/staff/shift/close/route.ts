@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getStaffContext } from '@/lib/authBiz';
+import { calculateShiftFinancials } from '@/lib/financeDomain';
 import { logError, logDebug } from '@/lib/log';
 import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -163,28 +164,9 @@ export async function POST(req: Request) {
         const totalAmount = items.length > 0 ? totalServiceAmount : totalAmountRaw;
         const finalConsumablesAmount = items.length > 0 ? totalConsumablesFromItems : consumablesAmount;
 
-        // Проценты считаются от общей суммы услуг (до вычета расходников)
-        // Расходники добавляются к доле салона сверху
-        
-        // Проценты из настроек сотрудника (уже должны быть 100% в сумме)
-        const safePercentMaster = Number.isFinite(percentMaster) ? percentMaster : 60;
-        const safePercentSalon = Number.isFinite(percentSalon) ? percentSalon : 40;
-        const percentSum = safePercentMaster + safePercentSalon || 100;
-
-        const normalizedMaster = (safePercentMaster / percentSum) * 100;
-        const normalizedSalon = (safePercentSalon / percentSum) * 100;
-
-        // Доля мастера = процент от общей суммы услуг
-        const masterShare = Math.round((totalAmount * normalizedMaster) / 100);
-        // Доля салона = процент от общей суммы услуг + 100% расходников
-        const salonShareFromAmount = Math.round((totalAmount * normalizedSalon) / 100);
-        const salonShare = salonShareFromAmount + finalConsumablesAmount; // расходники 100% идут салону
-
         // Расчет оплаты за выход (если указана ставка за час)
         const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
         let hoursWorked: number | null = null;
-        let guaranteedAmount = 0;
-        let topupAmount = 0;
 
         // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
         // Правильно вычисляем следующую дату в часовом поясе TZ
@@ -215,21 +197,17 @@ export async function POST(req: Request) {
                 diffMs,
                 hoursWorked,
             });
-
-            // Гарантированная сумма за выход
-            guaranteedAmount = Math.round(hoursWorked * hourlyRate * 100) / 100;
-
-            // Если гарантированная сумма больше доли сотрудника, владелец доплачивает разницу
-            if (guaranteedAmount > masterShare) {
-                topupAmount = Math.round((guaranteedAmount - masterShare) * 100) / 100;
-            }
         }
 
-        // Финальные значения для сохранения
-        // Если есть гарантированная сумма и она больше базовой доли, используем её
-        const finalMasterShare = (guaranteedAmount > masterShare) ? guaranteedAmount : masterShare;
-        // Скорректированная доля бизнеса (вычитаем доплату за выход, если она была)
-        const finalSalonShare = Math.max(0, salonShare - topupAmount);
+        // Используем единый доменный слой для расчета всех финансовых показателей
+        const financials = calculateShiftFinancials({
+            totalAmount,
+            totalConsumables: finalConsumablesAmount,
+            percentMaster,
+            percentSalon,
+            hoursWorked,
+            hourlyRate,
+        });
 
         const updatePayload: {
             total_amount: number;
@@ -245,16 +223,16 @@ export async function POST(req: Request) {
             status: 'closed';
             closed_at: string;
         } = {
-            total_amount: totalAmount,
-            consumables_amount: finalConsumablesAmount,
-            percent_master: normalizedMaster,
-            percent_salon: normalizedSalon,
-            master_share: finalMasterShare,
-            salon_share: finalSalonShare,
+            total_amount: financials.totalAmount,
+            consumables_amount: financials.totalConsumables,
+            percent_master: financials.normalizedPercentMaster,
+            percent_salon: financials.normalizedPercentSalon,
+            master_share: financials.finalMasterShare,
+            salon_share: financials.finalSalonShare,
             hours_worked: hoursWorked,
             hourly_rate: hourlyRate,
-            guaranteed_amount: guaranteedAmount,
-            topup_amount: topupAmount,
+            guaranteed_amount: financials.guaranteedAmount,
+            topup_amount: financials.topupAmount,
             status: 'closed' as const,
             closed_at: closedAt,
         };
@@ -267,16 +245,16 @@ export async function POST(req: Request) {
             async () => {
                 return await supabase.rpc('close_staff_shift_safe', {
                     p_shift_id: existing.id,
-                    p_total_amount: totalAmount,
-                    p_consumables_amount: finalConsumablesAmount,
-                    p_percent_master: normalizedMaster,
-                    p_percent_salon: normalizedSalon,
-                    p_master_share: finalMasterShare,
-                    p_salon_share: finalSalonShare,
+                    p_total_amount: financials.totalAmount,
+                    p_consumables_amount: financials.totalConsumables,
+                    p_percent_master: financials.normalizedPercentMaster,
+                    p_percent_salon: financials.normalizedPercentSalon,
+                    p_master_share: financials.finalMasterShare,
+                    p_salon_share: financials.finalSalonShare,
                     p_hours_worked: hoursWorked,
                     p_hourly_rate: hourlyRate,
-                    p_guaranteed_amount: guaranteedAmount,
-                    p_topup_amount: topupAmount,
+                    p_guaranteed_amount: financials.guaranteedAmount,
+                    p_topup_amount: financials.topupAmount,
                     p_closed_at: closedAt,
                 });
             },

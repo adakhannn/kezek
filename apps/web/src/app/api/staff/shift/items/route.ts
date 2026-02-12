@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
+import { calculateBaseShares, normalizePercentages } from '@/lib/financeDomain';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -768,19 +769,14 @@ export async function POST(req: Request) {
             finalConsumablesAmount = savedItems.reduce((sum, item) => sum + Number(item.consumables_amount ?? 0), 0);
         }
 
-        // Нормализуем проценты
-        const safePercentMaster = Number.isFinite(percentMaster) ? percentMaster : 60;
-        const safePercentSalon = Number.isFinite(percentSalon) ? percentSalon : 40;
-        const percentSum = safePercentMaster + safePercentSalon || 100;
-
-        const normalizedMaster = (safePercentMaster / percentSum) * 100;
-        const normalizedSalon = (safePercentSalon / percentSum) * 100;
-
-        // Доля мастера = процент от общей суммы услуг
-        const masterShare = Math.round((totalAmount * normalizedMaster) / 100);
-        // Доля салона = процент от общей суммы услуг + 100% расходников
-        const salonShareFromAmount = Math.round((totalAmount * normalizedSalon) / 100);
-        const salonShare = salonShareFromAmount + finalConsumablesAmount; // расходники 100% идут салону
+        // Используем единый доменный слой для расчета базовых долей
+        const normalized = normalizePercentages(percentMaster, percentSalon);
+        const { masterShare, salonShare } = calculateBaseShares(
+            totalAmount,
+            finalConsumablesAmount,
+            percentMaster,
+            percentSalon
+        );
 
         // Обновляем суммы в открытой смене
         const { error: updateShiftError } = await writeClient
@@ -788,8 +784,8 @@ export async function POST(req: Request) {
             .update({
                 total_amount: totalAmount,
                 consumables_amount: finalConsumablesAmount,
-                percent_master: normalizedMaster,
-                percent_salon: normalizedSalon,
+                percent_master: normalized.master,
+                percent_salon: normalized.salon,
                 master_share: masterShare,
                 salon_share: salonShare,
             })
