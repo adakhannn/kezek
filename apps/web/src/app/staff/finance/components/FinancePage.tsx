@@ -629,6 +629,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                             hourlyRate={financeData.data?.hourlyRate ?? null}
                             currentHoursWorked={financeData.data?.currentHoursWorked ?? null}
                             currentGuaranteedAmount={financeData.data?.currentGuaranteedAmount ?? null}
+                            items={localItems}
+                            shiftDate={shiftDate}
                         />
                     )}
 
@@ -710,6 +712,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                         saving={mutations.isOpening || mutations.isClosing}
                         staffId={staffId}
                         onAddClient={handleAddClient}
+                        items={localItems}
+                        shift={shift}
                     />
 
                     <ClientsList

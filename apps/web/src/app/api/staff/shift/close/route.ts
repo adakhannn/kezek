@@ -6,6 +6,7 @@ import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics
 import { getStaffContext } from '@/lib/authBiz';
 import { calculateShiftFinancials } from '@/lib/financeDomain';
 import { logError, logDebug } from '@/lib/log';
+import { sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
 import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -82,10 +83,10 @@ export async function POST(req: Request) {
                 
                 const { items = [], totalAmount: totalAmountRaw = 0, consumablesAmount = 0 } = validationResult.data;
 
-        // Получаем проценты и ставку за час из настроек сотрудника
+        // Получаем проценты, ставку за час и имя из настроек сотрудника
         const { data: staffData, error: staffError } = await supabase
             .from('staff')
-            .select('percent_master, percent_salon, hourly_rate')
+            .select('percent_master, percent_salon, hourly_rate, full_name, user_id')
             .eq('id', staffId)
             .maybeSingle();
 
@@ -209,33 +210,7 @@ export async function POST(req: Request) {
             hourlyRate,
         });
 
-        const updatePayload: {
-            total_amount: number;
-            consumables_amount: number;
-            percent_master: number;
-            percent_salon: number;
-            master_share: number;
-            salon_share: number;
-            hours_worked: number | null;
-            hourly_rate: number | null;
-            guaranteed_amount: number;
-            topup_amount: number;
-            status: 'closed';
-            closed_at: string;
-        } = {
-            total_amount: financials.totalAmount,
-            consumables_amount: financials.totalConsumables,
-            percent_master: financials.normalizedPercentMaster,
-            percent_salon: financials.normalizedPercentSalon,
-            master_share: financials.finalMasterShare,
-            salon_share: financials.finalSalonShare,
-            hours_worked: hoursWorked,
-            hourly_rate: hourlyRate,
-            guaranteed_amount: financials.guaranteedAmount,
-            topup_amount: financials.topupAmount,
-            status: 'closed' as const,
-            closed_at: closedAt,
-        };
+        // Данные для обновления смены (используются в RPC вызове)
 
         // Используем безопасную SQL функцию с защитой от race conditions
         // Функция проверяет статус в WHERE и использует SELECT FOR UPDATE
@@ -492,6 +467,49 @@ export async function POST(req: Request) {
 
                 statusCode = 200;
                 const response = NextResponse.json({ ok: true, shift: updated });
+                
+                // Отправляем уведомления о закрытии смены (асинхронно, не блокируем ответ)
+                const adminClient = getServiceClient();
+                
+                // Получаем email сотрудника
+                let staffEmail: string | null = null;
+                if (staffData?.user_id) {
+                    const { data: userData } = await adminClient.auth.admin.getUserById(staffData.user_id);
+                    staffEmail = userData?.user?.email || null;
+                }
+                
+                // Получаем email владельца
+                let ownerEmail: string | null = null;
+                const { data: ownerData } = await adminClient
+                    .from('businesses')
+                    .select('owner_id')
+                    .eq('id', bizId)
+                    .maybeSingle();
+                
+                if (ownerData?.owner_id) {
+                    const { data: ownerUserData } = await adminClient.auth.admin.getUserById(ownerData.owner_id);
+                    ownerEmail = ownerUserData?.user?.email || null;
+                }
+                
+                // Отправляем уведомления асинхронно (не блокируем ответ)
+                if (staffEmail) {
+                    sendShiftCloseNotification({
+                        staffName: staffData?.full_name || 'Сотрудник',
+                        staffEmail,
+                        ownerEmail,
+                        shiftDate: ymd,
+                        totalAmount: financials.totalAmount,
+                        masterShare: financials.finalMasterShare,
+                        salonShare: financials.finalSalonShare,
+                        itemsCount: items.length,
+                        hoursWorked,
+                        guaranteedAmount: financials.guaranteedAmount,
+                        topupAmount: financials.topupAmount,
+                    }).catch((error) => {
+                        // Логируем ошибку, но не блокируем ответ
+                        logError('StaffShiftClose', 'Failed to send shift close notification', error);
+                    });
+                }
                 
                 // Логируем метрику асинхронно (не блокируем ответ)
                 logApiMetric({

@@ -1,9 +1,11 @@
 // apps/web/src/app/staff/finance/components/ShiftSummary.tsx
 
 import type { ShiftCalculations } from '../hooks/useShiftCalculations';
-import type { Shift } from '../types';
+import type { Shift, ShiftItem } from '../types';
+import { exportShiftSummaryToCSV } from '../utils/export';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { Button } from '@/components/ui/Button';
 
 interface ShiftSummaryProps {
     calculations: ShiftCalculations;
@@ -12,6 +14,8 @@ interface ShiftSummaryProps {
     hourlyRate: number | null;
     currentHoursWorked: number | null;
     currentGuaranteedAmount: number | null;
+    items: ShiftItem[];
+    shiftDate: Date;
 }
 
 export function ShiftSummary({
@@ -21,11 +25,47 @@ export function ShiftSummary({
     hourlyRate,
     currentHoursWorked,
     currentGuaranteedAmount,
+    items,
+    shiftDate,
 }: ShiftSummaryProps) {
     const { t, locale } = useLanguage();
 
+    const handleExportSummary = () => {
+        exportShiftSummaryToCSV(
+            shift,
+            {
+                displayTotalAmount: calculations.displayTotalAmount,
+                masterShare: calculations.masterShare,
+                salonShare: calculations.salonShare,
+                totalConsumables: calculations.totalConsumables,
+            },
+            items,
+            shiftDate,
+            undefined // staff_name не доступен в типе Shift, передается отдельно если нужно
+        );
+    };
+
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {t('staff.finance.summary.title', 'Сводка по смене')}
+                </h3>
+                {shift && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleExportSummary}
+                        title={t('staff.finance.summary.export', 'Экспорт сводки в CSV')}
+                    >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        {t('staff.finance.summary.export', 'Экспорт')}
+                    </Button>
+                )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Общий оборот */}
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                 <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
@@ -67,6 +107,7 @@ export function ShiftSummary({
                 <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                     {calculations.salonShare.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} <span className="text-base text-indigo-500">{t('staff.finance.shift.som', 'сом')}</span>
                 </div>
+            </div>
             </div>
         </div>
     );
