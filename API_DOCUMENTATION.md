@@ -287,17 +287,123 @@ OpenAPI спецификация доступна в формате JSON: `/api/
 
 ---
 
+### GET `/api/staff/finance`
+
+Получение данных смены сотрудника для финансового модуля.
+
+**Rate Limiting:** `normal` (60 req/min)
+
+**Query параметры:**
+- `staffId` (опционально) - ID сотрудника (для менеджеров/владельцев)
+- `date` (опционально) - дата в формате `YYYY-MM-DD` (по умолчанию сегодня)
+
+**Требования:**
+- Для сотрудников: авторизация через `getStaffContext` (получает данные своей смены)
+- Для менеджеров: авторизация через `getBizContextForManagers` (может указать `staffId`)
+
+**Ответ:**
+```json
+{
+  "ok": true,
+  "data": {
+    "shift": {
+      "id": "uuid",
+      "shift_date": "2024-01-26",
+      "status": "open" | "closed",
+      "total_amount": 10000,
+      "consumables_amount": 500,
+      "master_share": 6000,
+      "salon_share": 4500,
+      "percent_master": 60,
+      "percent_salon": 40,
+      "hours_worked": 8.5,
+      "hourly_rate": 500,
+      "guaranteed_amount": 4250,
+      "topup_amount": 0
+    } | null,
+    "items": [
+      {
+        "id": "uuid",
+        "client_name": "Иван Иванов",
+        "service_name": "Стрижка",
+        "service_amount": 1000,
+        "consumables_amount": 100,
+        "booking_id": "uuid" | null,
+        "created_at": "2024-01-26T10:00:00+06:00"
+      }
+    ],
+    "bookings": [
+      {
+        "id": "uuid",
+        "client_name": "Петр Петров",
+        "client_phone": "+996555123456",
+        "start_at": "2024-01-26T14:00:00+06:00",
+        "services": {
+          "name_ru": "Окрашивание"
+        }
+      }
+    ],
+    "services": [
+      {
+        "name_ru": "Стрижка",
+        "name_ky": "Кесим",
+        "name_en": "Haircut"
+      }
+    ],
+    "staffPercentMaster": 60,
+    "staffPercentSalon": 40,
+    "hourlyRate": 500,
+    "currentHoursWorked": 8.5,
+    "currentGuaranteedAmount": 4250,
+    "isDayOff": false,
+    "allShifts": [
+      {
+        "shift_date": "2024-01-25",
+        "status": "closed",
+        "total_amount": 8000,
+        "master_share": 4800,
+        "salon_share": 3200
+      }
+    ]
+  }
+}
+```
+
+**Ошибки:**
+- `400` - Неверный формат даты
+- `401` - Не авторизован
+- `403` - Нет доступа к данным сотрудника
+- `500` - Ошибка получения данных
+
+**Особенности:**
+- Использует единый доменный слой `financeDomain` для расчетов
+- Поддерживает как сотрудников, так и менеджеров
+- Автоматически определяет контекст (сотрудник или менеджер) по наличию `staffId` в query параметрах
+
+---
+
 ### POST `/api/staff/shift/close`
 
-Закрытие смены сотрудника.
+Закрытие смены сотрудника с расчетом всех финансовых показателей.
 
 **Rate Limiting:** `critical` (30 req/min)
 
 **Параметры запроса:**
 ```json
 {
-  "hours_worked": 8.5, // опционально, для ручной корректировки
-  "topup_amount": 500 // опционально, доплата
+  "items": [
+    {
+      "id": "uuid" | null, // null для новых клиентов
+      "clientName": "Иван Иванов",
+      "serviceName": "Стрижка",
+      "serviceAmount": 1000,
+      "consumablesAmount": 100,
+      "bookingId": "uuid" | null
+    }
+  ],
+  "totalAmount": 10000, // опционально, если items пустой
+  "consumablesAmount": 500, // опционально
+  "hoursWorked": 8.5 // опционально, для ручной корректировки
 }
 ```
 
@@ -307,18 +413,85 @@ OpenAPI спецификация доступна в формате JSON: `/api/
   "ok": true,
   "shift": {
     "id": "uuid",
-    "total_amount": 5000,
-    "master_share": 3000,
-    "salon_share": 2000,
+    "shift_date": "2024-01-26",
+    "status": "closed",
+    "total_amount": 10000,
+    "consumables_amount": 500,
+    "master_share": 6000,
+    "salon_share": 4500,
     "hours_worked": 8.5,
-    "guaranteed_amount": 0
+    "hourly_rate": 500,
+    "guaranteed_amount": 4250,
+    "topup_amount": 0,
+    "closed_at": "2024-01-26T18:00:00+06:00"
   }
 }
 ```
 
 **Ошибки:**
-- `400` - Смена не найдена, ошибка расчета
+- `400` - Смена не найдена, ошибка валидации данных
 - `403` - Нет доступа
+- `500` - Ошибка расчета или сохранения
+
+**Особенности:**
+- Автоматически рассчитывает все финансовые показатели через `financeDomain`
+- Обновляет статус связанных бронирований на `paid`
+- Отправляет email уведомления сотруднику и владельцу бизнеса
+- Использует транзакции для обеспечения целостности данных
+
+---
+
+### POST `/api/staff/shift/items`
+
+Сохранение списка клиентов для открытой смены.
+
+**Rate Limiting:** `normal` (60 req/min)
+
+**Параметры запроса:**
+```json
+{
+  "items": [
+    {
+      "id": "uuid" | null, // null для новых клиентов
+      "clientName": "Иван Иванов",
+      "serviceName": "Стрижка",
+      "serviceAmount": 1000,
+      "consumablesAmount": 100,
+      "bookingId": "uuid" | null
+    }
+  ]
+}
+```
+
+**Валидация:**
+- `clientName`: обязательное, максимум 255 символов
+- `serviceName`: обязательное, максимум 255 символов
+- `serviceAmount`: обязательное, число >= 0, максимум 1000000
+- `consumablesAmount`: опциональное, число >= 0, максимум 1000000
+
+**Ответ:**
+```json
+{
+  "ok": true,
+  "shift": {
+    "id": "uuid",
+    "total_amount": 10000,
+    "consumables_amount": 500,
+    "master_share": 6000,
+    "salon_share": 4500
+  }
+}
+```
+
+**Ошибки:**
+- `400` - Смена не открыта, ошибка валидации
+- `403` - Нет доступа
+- `500` - Ошибка сохранения
+
+**Особенности:**
+- Автоматически пересчитывает доли смены при сохранении
+- Поддерживает как создание новых клиентов, так и обновление существующих
+- Использует единый доменный слой `financeDomain` для расчетов
 
 ---
 
@@ -335,30 +508,6 @@ OpenAPI спецификация доступна в формате JSON: `/api/
     "status": "open",
     "items_count": 5
   } | null
-}
-```
-
----
-
-### GET `/api/staff/shift/items`
-
-Получение списка клиентов в открытой смене.
-
-**Ответ:**
-```json
-{
-  "items": [
-    {
-      "id": "uuid",
-      "booking_id": "uuid",
-      "client_name": "string",
-      "client_phone": "string",
-      "service_name": "string",
-      "total_amount": 1000,
-      "master_share": 600,
-      "salon_share": 400
-    }
-  ]
 }
 ```
 

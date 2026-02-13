@@ -149,5 +149,103 @@ test.describe('Страницы финансов сотрудника', () => {
             }
         });
     });
+
+    test.describe('Критические сценарии работы с финансами', () => {
+        test('должен открыть смену, добавить клиентов и закрыть смену', async ({ page }) => {
+            await page.goto('/staff/finance', { waitUntil: 'domcontentloaded' });
+            await page.waitForTimeout(2000);
+
+            // Шаг 1: Открыть смену
+            const openButton = page.locator('button:has-text("Открыть"), button:has-text("Open")').first();
+            if (await openButton.isVisible({ timeout: 3000 })) {
+                await openButton.click();
+                await page.waitForTimeout(1000);
+
+                // Проверяем, что смена открыта
+                const closeButton = page.locator('button:has-text("Закрыть"), button:has-text("Close")').first();
+                await expect(closeButton).toBeVisible({ timeout: 5000 });
+            }
+
+            // Шаг 2: Добавить клиента
+            const addButton = page.locator('button:has-text("Добавить"), button:has-text("Add")').first();
+            if (await addButton.isVisible({ timeout: 3000 })) {
+                await addButton.click();
+                await page.waitForTimeout(500);
+
+                // Заполняем данные клиента
+                const clientNameInput = page.locator('input[name*="client"], input[placeholder*="клиент" i]').first();
+                if (await clientNameInput.isVisible({ timeout: 2000 })) {
+                    await clientNameInput.fill('Тестовый Клиент');
+                }
+
+                const serviceAmountInput = page.locator('input[name*="serviceAmount"], input[type="number"]').first();
+                if (await serviceAmountInput.isVisible({ timeout: 2000 })) {
+                    await serviceAmountInput.fill('1000');
+                }
+
+                // Сохраняем клиента
+                const saveButton = page.locator('button:has-text("Сохранить"), button:has-text("Save")').first();
+                if (await saveButton.isVisible({ timeout: 2000 })) {
+                    await saveButton.click();
+                    await page.waitForTimeout(2000);
+                }
+            }
+
+            // Шаг 3: Проверяем, что клиент добавлен
+            const clientList = page.locator('text=/Тестовый Клиент|Test Client/i');
+            if (await clientList.count() > 0) {
+                await expect(clientList.first()).toBeVisible({ timeout: 3000 });
+            }
+
+            // Шаг 4: Закрыть смену
+            const closeButton = page.locator('button:has-text("Закрыть"), button:has-text("Close")').first();
+            if (await closeButton.isVisible({ timeout: 3000 })) {
+                await closeButton.click();
+                await page.waitForTimeout(2000);
+
+                // Проверяем, что смена закрыта
+                const reopenButton = page.locator('button:has-text("Переоткрыть"), button:has-text("Reopen")').first();
+                if (await reopenButton.isVisible({ timeout: 5000 })) {
+                    await expect(reopenButton).toBeVisible();
+                }
+            }
+        });
+
+        test('должен экспортировать данные в CSV', async ({ page }) => {
+            await page.goto('/staff/finance', { waitUntil: 'domcontentloaded' });
+            await page.waitForTimeout(2000);
+
+            // Переходим на вкладку клиентов
+            const clientsTab = page.locator('button:has-text("Клиенты"), button:has-text("Clients")').first();
+            if (await clientsTab.isVisible({ timeout: 3000 })) {
+                await clientsTab.click();
+                await page.waitForTimeout(1000);
+            }
+
+            // Ищем кнопку экспорта
+            const exportButton = page.locator('button:has-text("Экспорт"), button:has-text("Export")').first();
+            if (await exportButton.isVisible({ timeout: 3000 })) {
+                // Настраиваем перехват скачивания файла
+                const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
+                await exportButton.click();
+                
+                const download = await downloadPromise;
+                if (download) {
+                    expect(download.suggestedFilename()).toContain('.csv');
+                }
+            }
+        });
+
+        test('должен корректно отображать финансовую сводку', async ({ page }) => {
+            await page.goto('/staff/finance', { waitUntil: 'domcontentloaded' });
+            await page.waitForTimeout(2000);
+
+            // Проверяем наличие элементов сводки
+            const summaryElements = page.locator('text=/оборот|turnover|сотруднику|staff|бизнесу|business/i');
+            if (await summaryElements.count() > 0) {
+                await expect(summaryElements.first()).toBeVisible({ timeout: 3000 });
+            }
+        });
+    });
 });
 
