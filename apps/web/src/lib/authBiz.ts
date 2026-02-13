@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-import { getSupabaseUrl, getSupabaseAnonKey } from './env';
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from './env';
 import { logWarn, logDebug, logError } from './log';
 
 const ROLE_KEYS_ALLOWED = new Set(['owner', 'admin', 'manager']);
@@ -71,6 +72,14 @@ export async function getBizContextForManagers() {
     const userEmail = userData.user.email;
     logDebug('AuthBiz', 'User authenticated', { userId, email: userEmail });
 
+    // Создаем service client для обхода RLS при проверке доступа к бизнесу
+    // Это необходимо, так как RLS политики могут блокировать доступ к user_roles и businesses
+    const serviceClient = createClient(
+        getSupabaseUrl(),
+        getSupabaseServiceRoleKey(),
+        { auth: { persistSession: false } }
+    );
+
     // 2) super_admin через RPC (быстро и без RLS-заморочек)
     let isSuper = false;
     const superAdminCheckStart = Date.now();
@@ -126,11 +135,12 @@ export async function getBizContextForManagers() {
         checkedOwnerId: false,
     };
 
-    if (isSuper) {
+        if (isSuper) {
         logDebug('AuthBiz', 'Processing super admin business selection', { userId });
         // Kezek в приоритете
+        // Используем service client для обхода RLS
         const kezekCheckStart = Date.now();
-        const { data: bizKezek, error: kezekError } = await supabase
+        const { data: bizKezek, error: kezekError } = await serviceClient
             .from('businesses')
             .select('id, slug, name')
             .eq('slug', 'kezek')
@@ -159,7 +169,7 @@ export async function getBizContextForManagers() {
                 kezekCheckTimeMs: Date.now() - kezekCheckStart
             });
             const anyBizCheckStart = Date.now();
-            const { data: anyBiz, error: anyBizError } = await supabase
+            const { data: anyBiz, error: anyBizError } = await serviceClient
                 .from('businesses')
                 .select('id, slug, name')
                 .limit(1)
@@ -194,10 +204,11 @@ export async function getBizContextForManagers() {
     } else {
         logDebug('AuthBiz', 'Processing regular user business selection', { userId });
         // (a) ищем по user_roles, но без JOIN, затем мапим role_id -> key
+        // Используем service client для обхода RLS при проверке доступа
         const userRolesCheckStart = Date.now();
         const [{ data: ur, error: urError }, { data: roleRows, error: rolesError }] = await Promise.all([
-            supabase.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
-            supabase.from('roles').select('id, key'),
+            serviceClient.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
+            serviceClient.from('roles').select('id, key'),
         ]);
 
         diagnostics.checkedUserRoles = true;
@@ -243,25 +254,35 @@ export async function getBizContextForManagers() {
                 checkTimeMs: userRolesCheckTime
             });
 
-            const eligible = ur.find((r: { role_id: string | number; biz_id?: string | null }) => {
+            // Ищем подходящие роли: сначала с biz_id, потом без (глобальные)
+            const eligibleRoles = ur.filter((r: { role_id: string | number; biz_id?: string | null }) => {
                 const roleKey = rolesMap.get(String(r.role_id)) || '';
                 return ROLE_KEYS_ALLOWED.has(roleKey);
             });
             
-            if (eligible) {
-                diagnostics.eligibleRolesCount = ur.filter((r: { role_id: string | number; biz_id?: string | null }) => {
-                    const roleKey = rolesMap.get(String(r.role_id)) || '';
-                    return ROLE_KEYS_ALLOWED.has(roleKey);
-                }).length;
-            }
+            diagnostics.eligibleRolesCount = eligibleRoles.length;
 
-            if (eligible?.biz_id) {
-                bizId = String(eligible.biz_id);
-                const roleKey = rolesMap.get(String(eligible.role_id)) || 'unknown';
-                logDebug('AuthBiz', 'Business found via user_roles', { 
+            // Приоритет: роли с конкретным biz_id
+            const eligibleWithBizId = eligibleRoles.find((r: { role_id: string | number; biz_id?: string | null }) => r.biz_id != null);
+            
+            if (eligibleWithBizId?.biz_id) {
+                bizId = String(eligibleWithBizId.biz_id);
+                const roleKey = rolesMap.get(String(eligibleWithBizId.role_id)) || 'unknown';
+                logDebug('AuthBiz', 'Business found via user_roles (with biz_id)', { 
                     bizId, 
                     roleKey,
                     eligibleRolesCount: diagnostics.eligibleRolesCount,
+                    checkTimeMs: userRolesCheckTime
+                });
+            } else if (eligibleRoles.length > 0) {
+                // Если есть глобальные роли (biz_id = null), но нет конкретного бизнеса,
+                // ищем бизнес через owner_id как fallback
+                logDebug('AuthBiz', 'Found eligible roles but no biz_id, will check owner_id', { 
+                    userId,
+                    eligibleRolesCount: eligibleRoles.length,
+                    eligibleRoleKeys: eligibleRoles.map((r: { role_id: string | number }) => 
+                        rolesMap.get(String(r.role_id)) || 'unknown'
+                    ),
                     checkTimeMs: userRolesCheckTime
                 });
             } else {
@@ -284,12 +305,13 @@ export async function getBizContextForManagers() {
             });
         }
 
-        // (b) если ролей нет — фоллбек по полю owner_id
+        // (b) если ролей нет или нет конкретного biz_id — фоллбек по полю owner_id
         if (!bizId) {
             logDebug('AuthBiz', 'No business found via user_roles, checking owner_id', { userId });
             diagnostics.checkedOwnerId = true;
             const ownerCheckStart = Date.now();
-            const { data: owned, error: ownedError } = await supabase
+            // Используем service client для обхода RLS
+            const { data: owned, error: ownedError } = await serviceClient
                 .from('businesses')
                 .select('id, slug, name')
                 .eq('owner_id', userId)
@@ -319,7 +341,8 @@ export async function getBizContextForManagers() {
             } else {
                 // Проверяем, сколько бизнесов пользователь владеет (для диагностики)
                 const countCheckStart = Date.now();
-                const { count, error: countError } = await supabase
+                // Используем service client для обхода RLS
+                const { count, error: countError } = await serviceClient
                     .from('businesses')
                     .select('*', { count: 'exact', head: true })
                     .eq('owner_id', userId);
