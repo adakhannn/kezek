@@ -1,8 +1,6 @@
 // apps/web/src/app/api/dashboard/branches/[branchId]/promotions/[promotionId]/route.ts
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -30,7 +28,7 @@ type PromotionUpdateBody = {
  * Обновляет акцию филиала
  */
 export async function PATCH(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('BranchPromotion', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'branchId');
         const promotionId = await getRouteParamUuid(context, 'promotionId');
@@ -47,7 +45,7 @@ export async function PATCH(req: Request, context: unknown) {
             .maybeSingle();
 
         if (promotionError || !promotion) {
-            return NextResponse.json({ ok: false, error: 'PROMOTION_NOT_FOUND_OR_ACCESS_DENIED' }, { status: 404 });
+            return createErrorResponse('not_found', 'Акция не найдена или доступ запрещен', undefined, 404);
         }
 
         const body = (await req.json()) as PromotionUpdateBody;
@@ -60,14 +58,14 @@ export async function PATCH(req: Request, context: unknown) {
             if (promotionType === 'free_after_n_visits') {
                 const visitCount = params?.visit_count;
                 if (visitCount !== undefined && (typeof visitCount !== 'number' || visitCount < 1)) {
-                    return NextResponse.json({ ok: false, error: 'INVALID_VISIT_COUNT' }, { status: 400 });
+                    return createErrorResponse('validation', 'Количество визитов должно быть больше 0', undefined, 400);
                 }
             }
 
             if (promotionType === 'birthday_discount' || promotionType === 'first_visit_discount') {
                 const discountPercent = params?.discount_percent;
                 if (discountPercent !== undefined && (typeof discountPercent !== 'number' || discountPercent < 1 || discountPercent > 100)) {
-                    return NextResponse.json({ ok: false, error: 'INVALID_DISCOUNT_PERCENT' }, { status: 400 });
+                    return createErrorResponse('validation', 'Процент скидки должен быть от 1 до 100', undefined, 400);
                 }
             }
         }
@@ -96,18 +94,11 @@ export async function PATCH(req: Request, context: unknown) {
             .single();
 
         if (updateError) {
-            return NextResponse.json({ ok: false, error: updateError.message }, { status: 500 });
+            return createErrorResponse('internal', updateError.message, undefined, 500);
         }
 
-        return NextResponse.json({
-            ok: true,
-            promotion: updatedPromotion,
-        });
-    } catch (error) {
-        logError('BranchPromotion', 'Unexpected error in PATCH promotions API', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse({ promotion: updatedPromotion });
+    });
 }
 
 /**
@@ -115,7 +106,7 @@ export async function PATCH(req: Request, context: unknown) {
  * Удаляет акцию филиала
  */
 export async function DELETE(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('BranchPromotion', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'branchId');
         const promotionId = await getRouteParamUuid(context, 'promotionId');
@@ -132,7 +123,7 @@ export async function DELETE(req: Request, context: unknown) {
             .maybeSingle();
 
         if (promotionError || !promotion) {
-            return NextResponse.json({ ok: false, error: 'PROMOTION_NOT_FOUND_OR_ACCESS_DENIED' }, { status: 404 });
+            return createErrorResponse('not_found', 'Акция не найдена или доступ запрещен', undefined, 404);
         }
 
         // Удаляем акцию
@@ -142,16 +133,10 @@ export async function DELETE(req: Request, context: unknown) {
             .eq('id', promotionId);
 
         if (deleteError) {
-            return NextResponse.json({ ok: false, error: deleteError.message }, { status: 500 });
+            return createErrorResponse('internal', deleteError.message, undefined, 500);
         }
 
-        return NextResponse.json({
-            ok: true,
-        });
-    } catch (error) {
-        logError('BranchPromotion', 'Unexpected error in DELETE promotions API', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse();
+    });
 }
 

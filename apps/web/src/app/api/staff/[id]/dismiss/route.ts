@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
@@ -10,7 +9,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(_: Request, context: unknown) {
-    try {
+    return withErrorHandler('StaffDismiss', async () => {
         const staffId = await getRouteParamRequired(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
@@ -24,7 +23,7 @@ export async function POST(_: Request, context: unknown) {
         'id, biz_id, user_id, is_active, full_name'
     );
     if (staffCheck.error || !staffCheck.data) {
-        return NextResponse.json({ ok: false, error: 'STAFF_NOT_FOUND' }, { status: 404 });
+        return createErrorResponse('not_found', 'Сотрудник не найден', undefined, 404);
     }
     const staff = staffCheck.data;
 
@@ -38,9 +37,11 @@ export async function POST(_: Request, context: unknown) {
         .neq('status', 'cancelled')
         .gt('start_at', nowIso);
 
-    if (eBooks) return NextResponse.json({ ok: false, error: eBooks.message }, { status: 400 });
+    if (eBooks) {
+        return createErrorResponse('validation', eBooks.message, undefined, 400);
+    }
     if ((count ?? 0) > 0) {
-        return NextResponse.json({ ok: false, error: 'HAS_FUTURE_BOOKINGS' }, { status: 409 });
+        return createErrorResponse('conflict', 'У сотрудника есть будущие брони', undefined, 409);
     }
 
     // 3) деактивируем сотрудника (используем service client)
@@ -50,7 +51,9 @@ export async function POST(_: Request, context: unknown) {
         .eq('id', staffId)
         .eq('biz_id', bizId);
 
-    if (eDeactivate) return NextResponse.json({ ok: false, error: eDeactivate.message }, { status: 400 });
+    if (eDeactivate) {
+        return createErrorResponse('validation', eDeactivate.message, undefined, 400);
+    }
 
     // 4) если привязан к пользователю — понизить роли до client
     if (staff.user_id) {
@@ -65,7 +68,7 @@ export async function POST(_: Request, context: unknown) {
             .maybeSingle();
 
         if (eRoleCli || !roleClient?.id) {
-            return NextResponse.json({ ok: false, error: 'ROLE_CLIENT_NOT_FOUND' }, { status: 500 });
+            return createErrorResponse('internal', 'Роль client не найдена', undefined, 500);
         }
 
         // снимем все бизнес-роли, кроме client
@@ -77,7 +80,7 @@ export async function POST(_: Request, context: unknown) {
             .neq('role_id', roleClient.id);
 
         if (eDelete) {
-            return NextResponse.json({ ok: false, error: eDelete.message }, { status: 400 });
+            return createErrorResponse('validation', eDelete.message, undefined, 400);
         }
 
         // гарантируем, что client есть
@@ -95,9 +98,6 @@ export async function POST(_: Request, context: unknown) {
             );
     }
 
-        return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+        return createSuccessResponse();
+    });
 }

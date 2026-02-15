@@ -2,8 +2,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
@@ -19,7 +18,7 @@ function isoDate(d: Date) {
 }
 
 export async function POST(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('StaffTransfer', async () => {
         const staffId = await getRouteParamRequired(context, 'id');
 
         const { bizId } = await getBizContextForManagers();
@@ -29,7 +28,9 @@ export async function POST(req: Request, context: unknown) {
         const target = body.target_branch_id?.trim();
         const copySchedule = !!body.copy_schedule;
 
-        if (!target) return NextResponse.json({ ok: false, error: 'TARGET_BRANCH_REQUIRED' }, { status: 400 });
+        if (!target) {
+            return createErrorResponse('validation', 'Необходимо указать целевой филиал', undefined, 400);
+        }
 
         // 1) валидируем сотрудника (используем унифицированную утилиту)
         const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; branch_id: string }>(
@@ -40,11 +41,11 @@ export async function POST(req: Request, context: unknown) {
             'id, biz_id, branch_id'
         );
         if (staffCheck.error || !staffCheck.data) {
-            return NextResponse.json({ ok: false, error: 'STAFF_NOT_IN_THIS_BUSINESS' }, { status: 403 });
+            return createErrorResponse('forbidden', 'Сотрудник не принадлежит этому бизнесу', undefined, 403);
         }
         const st = staffCheck.data;
         if (String(st.branch_id) === String(target)) {
-            return NextResponse.json({ ok: false, error: 'ALREADY_IN_TARGET_BRANCH' }, { status: 400 });
+            return createErrorResponse('validation', 'Сотрудник уже находится в целевом филиале', undefined, 400);
         }
 
         // 2) цель валидна/активна (используем унифицированную утилиту)
@@ -56,11 +57,11 @@ export async function POST(req: Request, context: unknown) {
             'id, biz_id, is_active'
         );
         if (branchCheck.error || !branchCheck.data) {
-            return NextResponse.json({ ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS' }, { status: 400 });
+            return createErrorResponse('forbidden', 'Филиал не принадлежит этому бизнесу', undefined, 403);
         }
         const br = branchCheck.data;
         if (br.is_active === false) {
-            return NextResponse.json({ ok: false, error: 'TARGET_BRANCH_INACTIVE' }, { status: 400 });
+            return createErrorResponse('validation', 'Целевой филиал неактивен', undefined, 400);
         }
 
         // 3) текущая активная запись (valid_to IS NULL)
@@ -78,7 +79,7 @@ export async function POST(req: Request, context: unknown) {
         if (currentAssign) {
             // если активная запись уже про этот же филиал — это гонка
             if (String(currentAssign.branch_id) === String(target)) {
-                return NextResponse.json({ ok: true, note: 'ALREADY_ACTIVE_IN_TARGET' });
+                return createSuccessResponse({ note: 'ALREADY_ACTIVE_IN_TARGET' });
             }
 
             // закрываем активную запись:
@@ -113,7 +114,9 @@ export async function POST(req: Request, context: unknown) {
                 branch_id: target,
                 valid_from: startNextDay,
             });
-            if (eInsFuture) return NextResponse.json({ ok: false, error: eInsFuture.message }, { status: 400 });
+            if (eInsFuture) {
+                return createErrorResponse('validation', eInsFuture.message, undefined, 400);
+            }
         } else {
             // обычный случай: стартуем сегодня
             const { error: eIns } = await admin.from('staff_branch_assignments').insert({
@@ -132,7 +135,9 @@ export async function POST(req: Request, context: unknown) {
                     branch_id: target,
                     valid_from: startNextDay,
                 });
-                if (eIns2) return NextResponse.json({ ok: false, error: eIns2.message }, { status: 400 });
+                if (eIns2) {
+                    return createErrorResponse('validation', eIns2.message, undefined, 400);
+                }
             }
         }
 
@@ -142,7 +147,9 @@ export async function POST(req: Request, context: unknown) {
             .update({ branch_id: target })
             .eq('id', staffId)
             .eq('biz_id', bizId);
-        if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });
+        if (eUpd) {
+            return createErrorResponse('validation', eUpd.message, undefined, 400);
+        }
 
         // 6) по желанию копируем расписание
         if (copySchedule && st.branch_id) {
@@ -164,14 +171,11 @@ export async function POST(req: Request, context: unknown) {
                 }));
                 const { error: eCopy } = await admin.from('working_hours').insert(rows);
                 if (eCopy) {
-                    return NextResponse.json({ ok: true, warning: 'SCHEDULE_COPY_FAILED', detail: eCopy.message });
+                    return createSuccessResponse({ warning: 'SCHEDULE_COPY_FAILED', detail: eCopy.message });
                 }
             }
         }
 
-        return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+        return createSuccessResponse();
+    });
 }

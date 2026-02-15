@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import {logError} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 type CatRow = { id: string; slug: string; name_ru: string; is_active: boolean };
@@ -61,7 +62,7 @@ export default function NewBizPage() {
                 .order('name_ru', { ascending: true });
 
             if (error) {
-                console.error(error);
+                logError('BusinessNew', 'Failed to load categories', error);
                 setErr(error.message);
                 return;
             }

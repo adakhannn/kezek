@@ -2,8 +2,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 
 /**
@@ -11,16 +10,12 @@ import { logError } from '@/lib/log';
  * Полная диагностика WhatsApp API: проверяет токен, получает все аккаунты и номера
  */
 export async function GET() {
-    try {
+    return withErrorHandler('WhatsAppDiagnose', async () => {
         const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
         const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
         if (!accessToken) {
-            return NextResponse.json({
-                ok: false,
-                error: 'no_token',
-                message: 'WHATSAPP_ACCESS_TOKEN не установлен',
-            }, { status: 500 });
+            return createErrorResponse('internal', 'WHATSAPP_ACCESS_TOKEN не установлен', { code: 'no_token' }, 500);
         }
 
         const results: {
@@ -223,8 +218,7 @@ export async function GET() {
             };
         }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             ...results,
             summary: {
                 tokenValid: results.tokenCheck && typeof results.tokenCheck === 'object' && 'ok' in results.tokenCheck && results.tokenCheck.ok === true,
@@ -233,13 +227,6 @@ export async function GET() {
                 phoneNumberIdValid: results.currentPhoneNumberId && typeof results.currentPhoneNumberId === 'object' && 'ok' in results.currentPhoneNumberId && results.currentPhoneNumberId.ok === true,
             },
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('WhatsAppDiagnose', 'Error in diagnose', e);
-        return NextResponse.json(
-            { ok: false, error: 'internal', message: msg },
-            { status: 500 }
-        );
-    }
+    });
 }
 

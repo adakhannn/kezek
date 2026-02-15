@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
+import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 type Mode = 'phone' | 'email';
@@ -29,7 +30,7 @@ export default function SignInPage() {
     const fetchIsSuper = useCallback(async (): Promise<boolean> => {
         const {data, error} = await supabase.rpc('is_super_admin');
         if (error) {
-            console.warn('is_super_admin error:', error.message);
+            logWarn('SignIn', 'is_super_admin error', { error: error.message });
             return false;
         }
         return !!data;
@@ -44,7 +45,7 @@ export default function SignInPage() {
                 .select('id', {count: 'exact', head: true})
                 .eq('owner_id', userId);
             if (error) {
-                console.warn('owner check error:', error.message);
+                logWarn('SignIn', 'owner check error', { userId, error: error.message });
                 return false;
             }
             return (count ?? 0) > 0;
@@ -56,7 +57,7 @@ export default function SignInPage() {
     const fetchMyRoles = useCallback(async (): Promise<string[]> => {
         const {data, error} = await supabase.rpc('my_role_keys');
         if (error) {
-            console.warn('my_role_keys error:', error.message);
+            logWarn('SignIn', 'my_role_keys error', { error: error.message });
             return [];
         }
         return Array.isArray(data) ? (data as string[]) : [];
@@ -79,7 +80,7 @@ export default function SignInPage() {
                     
                     if (staff) return '/staff';
                 } catch (error) {
-                    console.warn('decideRedirect: error checking staff', error);
+                    logWarn('SignIn', 'decideRedirect: error checking staff', error);
                 }
             }
             

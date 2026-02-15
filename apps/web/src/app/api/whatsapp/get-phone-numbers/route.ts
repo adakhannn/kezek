@@ -2,9 +2,8 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
-import { logDebug, logError } from '@/lib/log';
+import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
+import { logDebug } from '@/lib/log';
 
 /**
  * GET /api/whatsapp/get-phone-numbers?account_id=1185726307058446
@@ -14,32 +13,20 @@ import { logDebug, logError } from '@/lib/log';
  * GET /api/whatsapp/get-phone-numbers?account_id=1185726307058446
  */
 export async function GET(req: Request) {
-    try {
+    return withErrorHandler<ApiSuccessResponse<{ phone_numbers: unknown; message: string; instructions: { step1: string; step2: string; step3: string } } | { data: unknown; message: string }>>('WhatsAppAPI', async () => {
         const { searchParams } = new URL(req.url);
         const accountId = searchParams.get('account_id');
         
         if (!accountId) {
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'missing_account_id',
-                    message: 'Укажите account_id в query параметрах',
-                    example: '/api/whatsapp/get-phone-numbers?account_id=1185726307058446'
-                },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Укажите account_id в query параметрах', { 
+                code: 'missing_account_id',
+                example: '/api/whatsapp/get-phone-numbers?account_id=1185726307058446'
+            }, 400);
         }
 
         const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
         if (!accessToken) {
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'no_token',
-                    message: 'WHATSAPP_ACCESS_TOKEN не установлен в переменных окружения'
-                },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', 'WHATSAPP_ACCESS_TOKEN не установлен в переменных окружения', { code: 'no_token' }, 500);
         }
 
         // Пробуем получить номера через account_id (может быть Phone Number ID или Business Account ID)
@@ -83,24 +70,18 @@ export async function GET(req: Request) {
                 errorMessage += ` — ${errText.slice(0, 500)}`;
             }
             
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'api_error',
-                    message: errorMessage,
-                    details: errorDetails,
-                    url
-                },
-                { status: resp.status }
-            );
+            return createErrorResponse('validation', errorMessage, { 
+                code: 'api_error',
+                details: errorDetails,
+                url
+            }, resp.status);
         }
 
         const data = await resp.json();
         
         // Если это список номеров
         if (data.data && Array.isArray(data.data)) {
-            return NextResponse.json({
-                ok: true,
+            return createSuccessResponse({
                 phone_numbers: data.data,
                 message: `Найдено ${data.data.length} номер(ов)`,
                 instructions: {
@@ -112,18 +93,10 @@ export async function GET(req: Request) {
         }
         
         // Если это один номер
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             data,
             message: 'Данные получены успешно',
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('WhatsAppAPI', 'Error in get-phone-numbers', e);
-        return NextResponse.json(
-            { ok: false, error: 'internal', message: msg },
-            { status: 500 }
-        );
-    }
+    });
 }
 

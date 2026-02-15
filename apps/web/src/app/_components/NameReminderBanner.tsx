@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 /**
@@ -61,7 +62,7 @@ export function NameReminderBanner() {
                     setLoading(false);
                 }
             } catch (error) {
-                console.warn('NameReminderBanner: error checking name', error);
+                logWarn('NameReminderBanner', 'error checking name', error);
                 if (mounted) {
                     setLoading(false);
                 }

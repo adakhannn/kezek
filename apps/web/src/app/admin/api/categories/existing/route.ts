@@ -7,6 +7,8 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
+
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -55,7 +57,7 @@ export async function GET() {
         return NextResponse.json({ok: true, data: Array.from(set).sort()});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('categories suggest error', e);
+        logError('CategorySuggest', 'Failed to suggest categories', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

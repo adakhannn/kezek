@@ -8,8 +8,8 @@
  */
 // apps/web/src/app/api/staff/shift/today/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logWarn } from '@/lib/log';
 import { TZ } from '@/lib/time';
@@ -20,7 +20,7 @@ export const runtime = 'nodejs';
 export async function GET() {
     // Предупреждение о deprecated endpoint
     logWarn('StaffShiftToday', 'Deprecated endpoint used. Please migrate to /api/staff/finance');
-    try {
+    return withErrorHandler('StaffShiftToday', async () => {
         const { supabase, staffId, bizId } = await getStaffContext();
 
         // Получаем проценты и ставку за час из настроек сотрудника
@@ -101,10 +101,7 @@ export async function GET() {
 
         if (shiftError) {
             logError('StaffShiftToday', 'Error loading today shift', shiftError);
-            return NextResponse.json(
-                { ok: false, error: shiftError.message },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', shiftError.message, undefined, 500);
         }
 
         // Позиции по клиентам для текущей смены
@@ -180,10 +177,7 @@ export async function GET() {
 
         if (statsError) {
             logError('StaffShiftToday', 'Error loading shifts stats', statsError);
-            return NextResponse.json(
-                { ok: false, error: statsError.message },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', statsError.message, undefined, 500);
         }
 
         const closed = (allShifts ?? []).filter((s) => s.status === 'closed');
@@ -207,7 +201,7 @@ export async function GET() {
         }, 0);
         const totalLateMinutes = closed.reduce((sum, s) => sum + Number(s.late_minutes || 0), 0);
 
-        return NextResponse.json({
+        return createSuccessResponse({
             allShifts: (allShifts ?? []).map((s) => ({
                 shift_date: String(s.shift_date || '').split('T')[0].split(' ')[0], // Нормализуем дату в формат YYYY-MM-DD
                 status: s.status,
@@ -218,7 +212,6 @@ export async function GET() {
                 guaranteed_amount: Number(s.guaranteed_amount ?? 0),
                 topup_amount: Number(s.topup_amount ?? 0),
             })),
-            ok: true,
             today: shift
                 ? {
                       exists: true,
@@ -248,11 +241,7 @@ export async function GET() {
                 shiftsCount: closed.length,
             },
         });
-    } catch (error) {
-        logError('StaffShiftToday', 'Unexpected error in /api/staff/shift/today', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+    });
 }
 
 

@@ -14,6 +14,8 @@ import {
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
+
 
 // Админ-клиент без явных дженериков (избегаем TS2344/TS2589)
 type AdminClient = SupabaseClient;
@@ -174,7 +176,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ok: true, owner_id: ownerId});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('owner upsert error', e);
+        logError('OwnerUpsert', 'Failed to upsert owner', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

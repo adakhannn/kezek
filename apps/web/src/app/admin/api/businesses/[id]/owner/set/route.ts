@@ -9,6 +9,7 @@ import {createClient, type SupabaseClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 
@@ -196,7 +197,7 @@ export async function POST(req: Request, context: unknown) {
         });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('owner set error', e);
+        logError('OwnerSet', 'Failed to set owner', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

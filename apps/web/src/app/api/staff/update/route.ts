@@ -1,10 +1,8 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {NextResponse} from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import {getBizContextForManagers} from '@/lib/authBiz';
-import { formatErrorSimple } from '@/lib/errors';
 import { logWarn } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import {getServiceClient} from '@/lib/supabaseService';
@@ -57,7 +55,7 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('StaffUpdate', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const staffId = await getRouteParamUuid(context, 'id');
         const {supabase, userId, bizId} = await getBizContextForManagers();
@@ -75,11 +73,11 @@ export async function POST(req: Request, context: unknown) {
             const key = roleObj.key;
             return typeof key === 'string' && ['owner', 'admin', 'manager'].includes(key);
         });
-        if (!ok) return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+        if (!ok) return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
 
         const body = (await req.json()) as Body;
         if (!body.full_name || !body.branch_id) {
-            return NextResponse.json({ok: false, error: 'INVALID_BODY'}, {status: 400});
+            return createErrorResponse('validation', 'Необходимо указать имя и филиал', undefined, 400);
         }
 
         // Используем service client для поиска пользователя и добавления роли
@@ -112,15 +110,13 @@ export async function POST(req: Request, context: unknown) {
             .eq('id', staffId)
             .eq('biz_id', bizId);
 
-        if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        if (error) return createErrorResponse('internal', error.message, undefined, 400);
 
         // Если нашли пользователя и привязали, добавляем роль staff
         if (linkedUserId) {
             await addStaffRole(admin, linkedUserId, bizId);
         }
 
-        return NextResponse.json({ok: true, user_linked: !!linkedUserId});
-    } catch (e: unknown) {
-        return NextResponse.json({ok: false, error: formatErrorSimple(e) || 'UNKNOWN'}, {status: 500});
-    }
+        return createSuccessResponse({ user_linked: !!linkedUserId });
+    });
 }

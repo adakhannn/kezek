@@ -1,8 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {NextResponse} from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
 import {getBizContextForManagers} from '@/lib/authBiz';
 import {getServiceClient} from '@/lib/supabaseService';
 
@@ -10,12 +9,12 @@ import {getServiceClient} from '@/lib/supabaseService';
  * Синхронизирует роли staff для всех сотрудников бизнеса, у которых есть user_id, но нет роли staff
  */
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler<ApiSuccessResponse<{ synced: number; message: string } | { synced: number; total: number; errors: string[] | undefined }>>('StaffSyncRoles', async () => {
         const {supabase, bizId} = await getBizContextForManagers();
 
         // Проверяем доступ (только владельцы, админы, менеджеры)
         const {data: {user}} = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ok: false, error: 'UNAUTHORIZED'}, {status: 401});
+        if (!user) return createErrorResponse('auth', 'Не авторизован', undefined, 401);
 
         const {data: roles} = await supabase
             .from('user_roles')
@@ -30,7 +29,7 @@ export async function POST(req: Request) {
             const key = roleObj.key;
             return typeof key === 'string' && ['owner', 'admin', 'manager'].includes(key);
         });
-        if (!ok) return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+        if (!ok) return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
 
         const admin = getServiceClient();
 
@@ -42,7 +41,7 @@ export async function POST(req: Request) {
             .maybeSingle();
         
         if (!roleStaff?.id) {
-            return NextResponse.json({ok: false, error: 'ROLE_STAFF_NOT_FOUND'}, {status: 400});
+            return createErrorResponse('not_found', 'Роль staff не найдена', undefined, 400);
         }
 
         // Получаем всех активных сотрудников с user_id
@@ -54,11 +53,11 @@ export async function POST(req: Request) {
             .not('user_id', 'is', null);
 
         if (staffError) {
-            return NextResponse.json({ok: false, error: staffError.message}, {status: 400});
+            return createErrorResponse('internal', staffError.message, undefined, 400);
         }
 
         if (!staffList || staffList.length === 0) {
-            return NextResponse.json({ok: true, synced: 0, message: 'No staff with user_id found'});
+            return createSuccessResponse({ synced: 0, message: 'No staff with user_id found' });
         }
 
         // Для каждого сотрудника проверяем и добавляем роль, если её нет
@@ -96,15 +95,11 @@ export async function POST(req: Request) {
             }
         }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             synced,
             total: staffList.length,
             errors: errors.length > 0 ? errors : undefined,
         });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'UNKNOWN';
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+    });
 }
 

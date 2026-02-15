@@ -1,8 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -16,13 +15,13 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('ProfileUpdate', async () => {
         // Используем унифицированную утилиту для создания Supabase клиента
         const supabase = await createSupabaseServerClient();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            return NextResponse.json({ ok: false, error: 'auth', message: 'Не авторизован' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         const body = (await req.json()) as Body;
@@ -72,10 +71,7 @@ export async function POST(req: Request) {
 
         if (profileError) {
             logError('ProfileUpdate', 'profile error', profileError);
-            return NextResponse.json(
-                { ok: false, error: 'profile_update_failed', message: profileError.message },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', profileError.message, undefined, 400);
         }
 
         // Также обновляем user_metadata для совместимости
@@ -89,11 +85,7 @@ export async function POST(req: Request) {
             // Не критично, продолжаем
         }
 
-        return NextResponse.json({ ok: true });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('ProfileUpdate', 'Unexpected error', e);
-        return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
-    }
+        return createSuccessResponse();
+    });
 }
 

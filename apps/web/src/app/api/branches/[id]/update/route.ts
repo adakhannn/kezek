@@ -1,8 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
@@ -18,13 +17,15 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('BranchesUpdate', async () => {
         const branchId = await getRouteParamRequired(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
         const body = await req.json().catch(() => ({} as Body));
-        if (!body.name?.trim()) return NextResponse.json({ ok: false, error: 'NAME_REQUIRED' }, { status: 400 });
+        if (!body.name?.trim()) {
+            return createErrorResponse('validation', 'Имя обязательно', undefined, 400);
+        }
 
         // проверим, что филиал принадлежит этому бизнесу (используем унифицированную утилиту)
         const branchCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
@@ -35,12 +36,10 @@ export async function POST(req: Request, context: unknown) {
             'id, biz_id'
         );
         if (branchCheck.error || !branchCheck.data) {
-            const statusCode = branchCheck.error === 'Resource not found' ? 404 : 403;
-            return NextResponse.json({ 
-                ok: false, 
-                error: branchCheck.error === 'Resource not found' ? 'Филиал не найден' : 'BRANCH_NOT_IN_THIS_BUSINESS',
-                details: branchCheck.error === 'Resource not found' ? undefined : { currentBizId: bizId }
-            }, { status: statusCode });
+            if (branchCheck.error === 'Resource not found') {
+                return createErrorResponse('not_found', 'Филиал не найден', undefined, 404);
+            }
+            return createErrorResponse('forbidden', 'Филиал не принадлежит этому бизнесу', { currentBizId: bizId }, 403);
         }
 
         const updateData: {
@@ -59,7 +58,7 @@ export async function POST(req: Request, context: unknown) {
             if (body.lat != null && body.lon != null) {
                 const v = validateLatLon(body.lat, body.lon);
                 if (!v.ok) {
-                    return NextResponse.json({ ok: false, error: 'Некорректные координаты' }, { status: 400 });
+                    return createErrorResponse('validation', 'Некорректные координаты', undefined, 400);
                 }
                 updateData.coords = coordsToEWKT(v.lat, v.lon);
             } else {
@@ -73,11 +72,10 @@ export async function POST(req: Request, context: unknown) {
             .eq('id', branchId)
             .eq('biz_id', bizId);
 
-        if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });
+        if (eUpd) {
+            return createErrorResponse('validation', eUpd.message, undefined, 400);
+        }
 
-        return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+        return createSuccessResponse();
+    });
 }

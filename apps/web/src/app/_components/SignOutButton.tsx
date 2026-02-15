@@ -2,6 +2,7 @@
 
 import { useLanguage } from './i18n/LanguageProvider';
 
+import {logError} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 export function SignOutButton({ className, onAction }: { className?: string; onAction?: () => void }) {
@@ -10,7 +11,7 @@ export function SignOutButton({ className, onAction }: { className?: string; onA
         onAction?.();
         
         // Выполняем выход (не ждем завершения)
-        supabase.auth.signOut().catch(console.error);
+        supabase.auth.signOut().catch((err) => logError('SignOutButton', 'Error signing out', err));
         
         // Очищаем данные сессии
         try {

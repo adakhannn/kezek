@@ -2,8 +2,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -14,7 +13,7 @@ import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
  * Не требует авторизации
  */
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('WhatsAppAuth', async () => {
         // Используем унифицированную утилиту для создания admin клиента
         const admin = createSupabaseAdminClient();
         
@@ -26,26 +25,17 @@ export async function POST(req: Request) {
         // body уже получен выше
 
         if (!phone || !code) {
-            return NextResponse.json(
-                { ok: false, error: 'missing_data', message: 'Номер телефона и код обязательны' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Номер телефона и код обязательны', { code: 'missing_data' }, 400);
         }
 
         if (!/^\d{6}$/.test(code)) {
-            return NextResponse.json(
-                { ok: false, error: 'invalid_code', message: 'Неверный формат кода. Введите 6 цифр.' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Неверный формат кода. Введите 6 цифр.', { code: 'invalid_code' }, 400);
         }
 
         // Нормализуем номер телефона
         const phoneE164 = normalizePhoneToE164(phone);
         if (!phoneE164) {
-            return NextResponse.json(
-                { ok: false, error: 'invalid_phone', message: 'Неверный формат номера телефона' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Неверный формат номера телефона', { code: 'invalid_phone' }, 400);
         }
 
         // Проверяем OTP код в базе данных
@@ -104,10 +94,7 @@ export async function POST(req: Request) {
         }
 
         if (!isValidOtp) {
-            return NextResponse.json(
-                { ok: false, error: 'invalid_code', message: 'Неверный или истекший код. Запросите новый код.' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Неверный или истекший код. Запросите новый код.', { code: 'invalid_code' }, 400);
         }
 
         // OTP код верный - создаем или находим пользователя
@@ -172,19 +159,13 @@ export async function POST(req: Request) {
                             phone: phoneE164,
                             availableUsers: allUsers?.users.map(u => ({ id: u.id, phone: u.phone, meta: u.user_metadata }))
                         });
-                        return NextResponse.json(
-                            { ok: false, error: 'phone_taken', message: 'Этот номер телефона уже зарегистрирован. Если это ваш номер, попробуйте войти через стандартную форму входа.' },
-                            { status: 409 }
-                        );
+                        return createErrorResponse('conflict', 'Этот номер телефона уже зарегистрирован. Если это ваш номер, попробуйте войти через стандартную форму входа.', { code: 'phone_taken' }, 409);
                     }
 
                     logDebug('WhatsAppAuth', 'Found existing user after create error', { userId: user.id });
                 } else {
                     logError('WhatsAppAuth', 'Create user error', createError);
-                    return NextResponse.json(
-                        { ok: false, error: 'create_failed', message: createError.message },
-                        { status: 500 }
-                    );
+                    return createErrorResponse('internal', createError.message, { code: 'create_failed' }, 500);
                 }
             } else {
                 user = newUser.user;
@@ -221,8 +202,7 @@ export async function POST(req: Request) {
         // Клиент должен будет использовать стандартный Supabase phone auth для создания сессии
         // Но так как OTP уже проверен через WhatsApp, можно использовать прямой вход
         
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             message: isNewUser ? 'Регистрация успешна' : 'Вход выполнен успешно',
             userId: user.id,
             phone: phoneE164,
@@ -231,10 +211,6 @@ export async function POST(req: Request) {
             // Но так как OTP уже проверен через WhatsApp, можно использовать прямой вход
             // Или клиент может перейти на страницу входа и использовать стандартный метод
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('WhatsAppAuth', 'Error in verify-otp', e);
-        return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
-    }
+    });
 }
 

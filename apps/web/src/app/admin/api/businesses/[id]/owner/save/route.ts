@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import {logWarn} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 type Body = {
@@ -116,7 +117,7 @@ export async function POST(req: Request, ctx: unknown) {
                 .eq('id', bizId);
 
             if (updateErr) {
-                console.warn('Failed to update owner_id in businesses:', updateErr);
+                logWarn('OwnerSave', 'Failed to update owner_id in businesses', { bizId, error: updateErr });
             }
         } else {
             // Если владельцев нет, очищаем owner_id
@@ -126,7 +127,7 @@ export async function POST(req: Request, ctx: unknown) {
                 .eq('id', bizId);
 
             if (updateErr) {
-                console.warn('Failed to clear owner_id in businesses:', updateErr);
+                logWarn('OwnerSave', 'Failed to clear owner_id in businesses', { bizId, error: updateErr });
             }
         }
 

@@ -4,8 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import crypto from 'crypto';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -16,16 +15,13 @@ import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
  * Использует Admin API для генерации access token
  */
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('WhatsAppAuth', async () => {
         const body = await req.json();
         const { phone, userId, redirect: redirectParam } = body as { phone?: string; userId?: string; redirect?: string };
         const finalRedirect = redirectParam || '/';
 
         if (!phone && !userId) {
-            return NextResponse.json(
-                { ok: false, error: 'missing_data', message: 'Номер телефона или ID пользователя обязательны' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Номер телефона или ID пользователя обязательны', { code: 'missing_data' }, 400);
         }
 
         // Используем унифицированную утилиту для создания admin клиента
@@ -36,19 +32,13 @@ export async function POST(req: Request) {
         if (userId) {
             const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
             if (userError || !userData?.user) {
-                return NextResponse.json(
-                    { ok: false, error: 'user_not_found', message: 'Пользователь не найден' },
-                    { status: 404 }
-                );
+                return createErrorResponse('not_found', 'Пользователь не найден', { code: 'user_not_found' }, 404);
             }
             user = userData.user;
         } else if (phone) {
             const phoneE164 = normalizePhoneToE164(phone);
             if (!phoneE164) {
-                return NextResponse.json(
-                    { ok: false, error: 'invalid_phone', message: 'Неверный формат номера телефона' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Неверный формат номера телефона', { code: 'invalid_phone' }, 400);
             }
 
             const { data: users } = await admin.auth.admin.listUsers();
@@ -60,16 +50,10 @@ export async function POST(req: Request) {
             });
 
             if (!user) {
-                return NextResponse.json(
-                    { ok: false, error: 'user_not_found', message: 'Пользователь не найден' },
-                    { status: 404 }
-                );
+                return createErrorResponse('not_found', 'Пользователь не найден', { code: 'user_not_found' }, 404);
             }
         } else {
-            return NextResponse.json(
-                { ok: false, error: 'missing_data', message: 'Номер телефона или ID пользователя обязательны' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Номер телефона или ID пользователя обязательны', { code: 'missing_data' }, 400);
         }
 
         // Генерируем magic link для создания сессии
@@ -119,25 +103,17 @@ export async function POST(req: Request) {
         
         if (passwordError) {
             logError('WhatsAppAuth', 'Failed to set temp password', passwordError);
-            return NextResponse.json(
-                { ok: false, error: 'password_failed', message: `Не удалось создать сессию: ${passwordError.message}` },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', `Не удалось создать сессию: ${passwordError.message}`, { code: 'password_failed' }, 500);
         }
         
         logDebug('WhatsAppAuth', 'Temp password set, returning credentials');
         
         // Возвращаем email и пароль для входа на клиенте
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             email: emailToUse,
             password: tempPassword,
             needsSignIn: true,
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('WhatsAppAuth', 'Error in create-session', e);
-        return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
-    }
+    });
 }
 

@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-import {NextResponse} from "next/server";
 
-import { createErrorResponse } from '@/lib/apiErrorHandler';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -97,6 +96,7 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.public,
         async () => {
+            return withErrorHandler('QuickHold', async () => {
             const url = getSupabaseUrl();
             const anon = getSupabaseAnonKey();
             
@@ -269,10 +269,10 @@ export async function POST(req: Request) {
         // Не возвращаем ошибку, так как бронирование уже создано и подтверждено
     }
 
-            return NextResponse.json({
-                ok: true, 
+            return createSuccessResponse({
                 booking_id: bookingId,
                 confirmed: true,
+            });
             });
         }
     );

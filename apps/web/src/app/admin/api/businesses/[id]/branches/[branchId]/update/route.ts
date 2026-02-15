@@ -7,6 +7,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import {logError} from '@/lib/log';
+
 type Body = {
     name?: string | null;
     address?: string | null;
@@ -89,7 +91,7 @@ async function handler(req: Request) {
         return NextResponse.json({ ok: true, updated: true });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('branch update error', e);
+        logError('BranchUpdate', 'Failed to update branch', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import EditServicePageClient from './EditServicePageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import {logError} from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 
@@ -36,24 +37,24 @@ export default async function EditServicePage({
 
     // Логируем ошибки для отладки
     if (svcError) {
-        console.error('[EditServicePage] Error loading service:', svcError);
+        logError('EditServicePage', 'Error loading service', { serviceId: id, error: svcError });
         return notFound();
     }
 
     if (branchesError) {
-        console.error('[EditServicePage] Error loading branches:', branchesError);
+        logError('EditServicePage', 'Error loading branches', { error: branchesError });
         // Не возвращаем 404, т.к. это не критично
     }
 
     // Проверяем, найдена ли услуга
     if (!svc) {
-        console.error('[EditServicePage] Service not found:', id);
+        logError('EditServicePage', 'Service not found', { serviceId: id });
         return notFound();
     }
 
     // Проверяем, принадлежит ли услуга текущему бизнесу
     if (String(svc.biz_id) !== String(bizId)) {
-        console.error('[EditServicePage] Service belongs to different business:', {
+        logError('EditServicePage', 'Service belongs to different business', {
             serviceBizId: svc.biz_id,
             currentBizId: bizId,
             serviceId: id,

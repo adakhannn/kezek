@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import {logWarn} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 type OwnerInfo = {
@@ -98,7 +99,7 @@ export async function GET(req: Request, ctx: unknown) {
                     full_name: profile?.full_name ?? (userData.user.user_metadata?.full_name as string | undefined) ?? null,
                 });
             } catch (e) {
-                console.warn(`Failed to fetch owner ${ownerId}:`, e);
+                logWarn('OwnerList', `Failed to fetch owner ${ownerId}`, e);
             }
         }
 

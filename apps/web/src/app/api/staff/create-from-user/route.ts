@@ -1,8 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logDebug, logWarn, logError } from '@/lib/log';
@@ -16,13 +15,13 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler<ApiSuccessResponse<{ id: string; warn: string; error: string } | { id: string; schedule_initialized: boolean; schedule_days_created: number; schedule_error: string | null }>>('StaffCreateFromUser', async () => {
         // Доступ уже проверен внутри (владелец по owner_id ИЛИ owner/admin/manager по user_roles)
         const {bizId } = await getBizContextForManagers();
 
         const body = (await req.json()) as Body;
         if (!body.user_id || !body.branch_id) {
-            return NextResponse.json({ ok: false, error: 'INVALID_BODY' }, { status: 400 });
+            return createErrorResponse('validation', 'user_id и branch_id обязательны', undefined, 400);
         }
 
         // service-клиентом обойдём RLS для мутаций
@@ -37,14 +36,18 @@ export async function POST(req: Request) {
             'id, biz_id'
         );
         if (branchCheck.error || !branchCheck.data) {
-            return NextResponse.json({ ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS' }, { status: 400 });
+            return createErrorResponse('forbidden', 'Филиал не принадлежит этому бизнесу', undefined, 403);
         }
 
         // 2) Подтянем пользователя из Auth Admin API
         const { data: list, error: eList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-        if (eList) return NextResponse.json({ ok: false, error: eList.message }, { status: 400 });
+        if (eList) {
+            return createErrorResponse('validation', eList.message, undefined, 400);
+        }
         const u = (list.users ?? []).find(x => x.id === body.user_id);
-        if (!u) return NextResponse.json({ ok: false, error: 'USER_NOT_FOUND' }, { status: 404 });
+        if (!u) {
+            return createErrorResponse('not_found', 'Пользователь не найден', undefined, 404);
+        }
 
         const meta = (u.user_metadata ?? {});
         const full_name = String(meta.full_name ?? meta.fullName ?? u.email ?? 'Без имени');
@@ -76,7 +79,9 @@ export async function POST(req: Request) {
                 })
                 .select('id')
                 .single();
-            if (eIns) return NextResponse.json({ ok: false, error: eIns.message }, { status: 400 });
+            if (eIns) {
+                return createErrorResponse('validation', eIns.message, undefined, 400);
+            }
             staffId = inserted?.id as string;
         } else {
             // Если сотрудник уже существует, обновляем user_id, если его еще нет
@@ -131,7 +136,9 @@ export async function POST(req: Request) {
             .select('id')
             .eq('key', 'staff')
             .maybeSingle();
-        if (!roleStaff?.id) return NextResponse.json({ ok: false, error: 'ROLE_STAFF_NOT_FOUND' }, { status: 400 });
+        if (!roleStaff?.id) {
+            return createErrorResponse('internal', 'Роль staff не найдена', undefined, 500);
+        }
 
         // upsert вручную: если записи нет — вставим
         const { data: existsRole } = await admin
@@ -151,7 +158,9 @@ export async function POST(req: Request) {
                     biz_id: bizId,
                     // biz_key имеет DEFAULT значение, не вставляем явно
                 });
-            if (eRole) return NextResponse.json({ ok: true, id: staffId, warn: 'ROLE_NOT_GRANTED', error: eRole.message });
+            if (eRole) {
+                return createSuccessResponse({ id: staffId, warn: 'ROLE_NOT_GRANTED', error: eRole.message });
+            }
         }
 
         // Инициализируем расписание для нового сотрудника (текущая и следующая недели)
@@ -170,15 +179,11 @@ export async function POST(req: Request) {
             logWarn('StaffCreateFromUser', 'No staff ID, cannot initialize schedule');
         }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             id: staffId,
             schedule_initialized: scheduleResult.success,
             schedule_days_created: scheduleResult.daysCreated,
             schedule_error: scheduleResult.error || null,
         });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+    });
 }

@@ -1,29 +1,28 @@
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('UserUpdatePhone', async () => {
         // Используем унифицированные утилиты для создания клиентов
         const { supabase, admin } = await createSupabaseClients();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            return NextResponse.json({ ok: false, error: 'Не авторизован' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         const body = await req.json();
         const phone = typeof body.phone === 'string' ? body.phone.trim() : null;
 
         if (!phone) {
-            return NextResponse.json({ ok: false, error: 'Телефон обязателен' }, { status: 400 });
+            return createErrorResponse('validation', 'Телефон обязателен', undefined, 400);
         }
 
         // Проверяем формат E.164
         if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
-            return NextResponse.json({ ok: false, error: 'Некорректный формат телефона' }, { status: 400 });
+            return createErrorResponse('validation', 'Некорректный формат телефона', undefined, 400);
         }
 
         // Обновляем телефон пользователя
@@ -33,13 +32,10 @@ export async function POST(req: Request) {
         });
 
         if (updateError) {
-            return NextResponse.json({ ok: false, error: updateError.message }, { status: 400 });
+            return createErrorResponse('validation', updateError.message, undefined, 400);
         }
 
-        return NextResponse.json({ ok: true });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+        return createSuccessResponse();
+    });
 }
 

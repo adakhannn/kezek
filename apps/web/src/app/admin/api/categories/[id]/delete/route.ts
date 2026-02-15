@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 type Body = { force?: boolean };
@@ -78,7 +79,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ ok: true, removed: count ?? 0 });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('categories delete error', e);
+        logError('CategoryDelete', 'Failed to delete category', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

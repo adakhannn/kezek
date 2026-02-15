@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, useCallback } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 function AuthCallbackContent() {
@@ -17,7 +18,7 @@ function AuthCallbackContent() {
     const fetchIsSuper = useCallback(async (): Promise<boolean> => {
         const { data, error } = await supabase.rpc('is_super_admin');
         if (error) {
-            console.warn('[callback] is_super_admin error:', error.message);
+            logWarn('Callback', 'is_super_admin error', { error: error.message });
             return false;
         }
         return !!data;
@@ -30,7 +31,7 @@ function AuthCallbackContent() {
             .select('id', { count: 'exact', head: true })
             .eq('owner_id', userId);
         if (error) {
-            console.warn('[callback] owner check error:', error.message);
+            logWarn('Callback', 'owner check error', { userId, error: error.message });
             return false;
         }
         return (count ?? 0) > 0;
@@ -53,7 +54,7 @@ function AuthCallbackContent() {
                     
                     if (staff) return '/staff';
                 } catch (error) {
-                    console.warn('[callback] decideRedirect: error checking staff', error);
+                    logWarn('Callback', 'decideRedirect: error checking staff', error);
                 }
             }
             
@@ -65,7 +66,7 @@ function AuthCallbackContent() {
                 if (keys.includes('staff')) return '/staff';
                 if (keys.some(r => ['admin', 'manager'].includes(r))) return '/dashboard';
             } catch (error) {
-                console.warn('[callback] decideRedirect: error checking roles', error);
+                logWarn('Callback', 'decideRedirect: error checking roles', error);
             }
             
             return fallback || '/';
@@ -81,19 +82,20 @@ function AuthCallbackContent() {
 
             const checkSession = async () => {
                 try {
-                    console.log('[callback] Attempt:', attempts + 1, 'URL:', window.location.href);
+                    logDebug('Callback', 'Attempt', { attempt: attempts + 1, url: window.location.href });
                     
                     // 1. Проверяем hash с токенами (старый способ)
                     const hash = window.location.hash.substring(1);
-                    console.log('[callback] Hash:', hash ? hash.substring(0, 50) + '...' : 'empty');
+                    logDebug('Callback', 'Hash check', { hash: hash ? hash.substring(0, 50) + '...' : 'empty' });
                     const hashParams = new URLSearchParams(hash);
                     const accessToken = hashParams.get('access_token');
                     const refreshToken = hashParams.get('refresh_token');
 
                     if (accessToken && refreshToken) {
-                        console.log('[callback] Found tokens in hash, setting session');
-                        console.log('[callback] Access token length:', accessToken.length);
-                        console.log('[callback] Refresh token length:', refreshToken.length);
+                        logDebug('Callback', 'Found tokens in hash, setting session', { 
+                            accessTokenLength: accessToken.length,
+                            refreshTokenLength: refreshToken.length 
+                        });
                         
                         const { data: sessionData, error } = await supabase.auth.setSession({
                             access_token: accessToken,
@@ -101,30 +103,30 @@ function AuthCallbackContent() {
                         });
                         
                         if (error) {
-                            console.error('[callback] setSession error:', error);
+                            logError('Callback', 'setSession error', error);
                             throw error;
                         }
                         
-                        console.log('[callback] Session set successfully, session data:', sessionData?.session ? 'present' : 'missing');
+                        logDebug('Callback', 'Session set successfully', { hasSession: !!sessionData?.session });
                         
                         // Проверяем, что сессия действительно установлена
                         const { data: { user }, error: userError } = await supabase.auth.getUser();
                         if (userError) {
-                            console.error('[callback] getUser error after setSession:', userError);
+                            logError('Callback', 'getUser error after setSession', userError);
                             throw userError;
                         }
                         
                         if (!user) {
-                            console.error('[callback] No user after setSession');
+                            logError('Callback', 'No user after setSession');
                             throw new Error('No user after setting session');
                         }
                         
-                        console.log('[callback] User confirmed:', user.id);
+                        logDebug('Callback', 'User confirmed', { userId: user.id });
                         
                         // Теперь используем постоянный баннер вместо модального окна
                         
                         const targetPath = await decideRedirect(nextParam || '/', user?.id);
-                        console.log('[callback] Session set from hash, redirecting to:', targetPath);
+                        logDebug('Callback', 'Session set from hash, redirecting', { targetPath });
                         setStatus('success');
                         // Принудительно обновляем страницу для обновления хедера
                         router.refresh();
@@ -137,7 +139,7 @@ function AuthCallbackContent() {
                     // 2. Если есть code в URL, пытаемся обменять (для OAuth providers)
                     const code = searchParams.get('code');
                     if (code) {
-                        console.log('[callback] Found code parameter, attempting exchange');
+                        logDebug('Callback', 'Found code parameter, attempting exchange');
                         try {
                             const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
                             if (!exchangeError && sessionData?.session) {
@@ -146,7 +148,7 @@ function AuthCallbackContent() {
                                 // Теперь используем постоянный баннер вместо модального окна
                                 
                                 const targetPath = await decideRedirect(nextParam || '/', user?.id);
-                                console.log('[callback] Code exchanged successfully, redirecting to:', targetPath);
+                                logDebug('Callback', 'Code exchanged successfully, redirecting', { targetPath });
                                 setStatus('success');
                                 // Принудительно обновляем страницу для обновления хедера
                                 router.refresh();
@@ -155,11 +157,11 @@ function AuthCallbackContent() {
                                 window.location.href = targetPath;
                                 return;
                             } else {
-                                console.warn('[callback] exchangeCodeForSession error:', exchangeError);
+                                logWarn('Callback', 'exchangeCodeForSession error', exchangeError);
                                 // Продолжаем - возможно Supabase обработал на сервере
                             }
                         } catch (e) {
-                            console.warn('[callback] exchangeCodeForSession exception:', e);
+                            logWarn('Callback', 'exchangeCodeForSession exception', e);
                             // Продолжаем проверку
                         }
                     }
@@ -173,7 +175,7 @@ function AuthCallbackContent() {
                         // Теперь используем постоянный баннер вместо модального окна
                         
                         const targetPath = await decideRedirect(nextParam || '/', user?.id);
-                        console.log('[callback] Session found, redirecting to:', targetPath);
+                        logDebug('Callback', 'Session found, redirecting', { targetPath });
                         setStatus('success');
                         // Принудительно обновляем страницу для обновления хедера
                         router.refresh();
@@ -186,26 +188,26 @@ function AuthCallbackContent() {
                     // 4. Если сессии нет, ждем и проверяем снова
                     attempts++;
                     if (attempts < maxAttempts) {
-                        console.log('[callback] No session yet, waiting... (attempt', attempts, 'of', maxAttempts, ')');
+                        logDebug('Callback', 'No session yet, waiting', { attempt: attempts, maxAttempts });
                         setTimeout(checkSession, 1000); // Увеличил до 1 секунды
                     } else {
                         // После всех попыток редиректим - если авторизация произошла, middleware перенаправит
                         const { data: { user } } = await supabase.auth.getUser();
                         const targetPath = await decideRedirect(nextParam || '/', user?.id);
-                        console.warn('[callback] Max attempts reached, redirecting anyway to:', targetPath);
+                        logWarn('Callback', 'Max attempts reached, redirecting anyway', { targetPath });
                         setStatus('success');
                         router.refresh();
                         router.replace(targetPath);
                     }
                 } catch (e) {
-                    console.error('[callback] Error in checkSession:', e);
+                    logError('Callback', 'Error in checkSession', e);
                     attempts++;
                     if (attempts < maxAttempts) {
                         setTimeout(checkSession, 1000);
                     } else {
                         const { data: { user } } = await supabase.auth.getUser();
                         const targetPath = await decideRedirect(nextParam || '/', user?.id);
-                        console.warn('[callback] Max attempts reached after error, redirecting to:', targetPath);
+                        logWarn('Callback', 'Max attempts reached after error, redirecting', { targetPath });
                         setStatus('success');
                         router.refresh();
                         router.replace(targetPath);

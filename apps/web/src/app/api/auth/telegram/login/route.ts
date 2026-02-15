@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { withErrorHandler, createErrorResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import {
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.auth,
         async () => {
-            try {
+            return withErrorHandler('TelegramLogin', async () => {
                 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
                 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
@@ -159,9 +159,7 @@ export async function POST(req: Request) {
             needsSignIn: true,
                 redirect: '/',
             });
-            } catch (error) {
-                return handleApiError(error, 'TelegramLogin', 'Внутренняя ошибка при входе через Telegram');
-            }
+            });
         }
     );
 }

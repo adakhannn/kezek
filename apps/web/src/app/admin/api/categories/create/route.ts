@@ -7,6 +7,8 @@ import {createClient, PostgrestError} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
+
 type Body = { name_ru: string; slug?: string | null; is_active?: boolean };
 type InsertedId = { id: string };
 
@@ -87,7 +89,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ok: true, id: data?.id});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('categories create error', e);
+        logError('CategoryCreate', 'Failed to create category', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

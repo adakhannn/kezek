@@ -2,8 +2,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
@@ -15,24 +14,18 @@ import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
  * Не требует авторизации
  */
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('WhatsAppAuth', async () => {
         const body = await req.json();
         const { phone } = body as { phone?: string };
 
         if (!phone) {
-            return NextResponse.json(
-                { ok: false, error: 'no_phone', message: 'Номер телефона не указан' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Номер телефона не указан', { code: 'no_phone' }, 400);
         }
 
         // Нормализуем номер телефона
         const phoneE164 = normalizePhoneToE164(phone);
         if (!phoneE164) {
-            return NextResponse.json(
-                { ok: false, error: 'invalid_phone', message: 'Неверный формат номера телефона' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Неверный формат номера телефона', { code: 'invalid_phone' }, 400);
         }
 
         // Используем унифицированную утилиту для создания admin клиента
@@ -79,10 +72,7 @@ export async function POST(req: Request) {
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             logError('WhatsAppAuth', 'Failed to send OTP', { error: errorMsg });
-            return NextResponse.json(
-                { ok: false, error: 'send_failed', message: `Не удалось отправить код: ${errorMsg}` },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', `Не удалось отправить код: ${errorMsg}`, { code: 'send_failed' }, 500);
         }
 
         // Сохраняем OTP в базе данных (временное решение)
@@ -103,15 +93,10 @@ export async function POST(req: Request) {
             logWarn('WhatsAppAuth', 'Failed to save OTP to DB', { message: dbError.message });
         }
 
-        return NextResponse.json({ 
-            ok: true, 
+        return createSuccessResponse({ 
             message: 'Код отправлен на WhatsApp',
             // Не возвращаем код в ответе для безопасности
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('WhatsAppAuth', 'Error in send-otp', e);
-        return NextResponse.json({ ok: false, error: 'internal', message: msg }, { status: 500 });
-    }
+    });
 }
 

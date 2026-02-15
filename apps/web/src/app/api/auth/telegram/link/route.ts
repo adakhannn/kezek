@@ -1,9 +1,8 @@
 // apps/web/src/app/api/auth/telegram/link/route.ts
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
 
-import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.auth,
         async () => {
-            try {
+            return withErrorHandler('TelegramLink', async () => {
                 // Используем унифицированные утилиты для создания клиентов
                 const { supabase, admin } = await createSupabaseClients();
 
@@ -93,13 +92,8 @@ export async function POST(req: Request) {
             // Не критично, продолжаем
         }
 
-                return NextResponse.json({
-                    ok: true,
-                    message: 'Telegram успешно привязан',
-                });
-            } catch (error) {
-                return handleApiError(error, 'TelegramLink', 'Внутренняя ошибка при привязке Telegram');
-            }
+                return createSuccessResponse({ message: 'Telegram успешно привязан' });
+            });
         }
     );
 }

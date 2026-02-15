@@ -4,6 +4,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function VerifyOtpPage() {
@@ -52,7 +53,7 @@ export default function VerifyOtpPage() {
                         });
                     }
                 } catch (e) {
-                    console.warn('Failed to update phone after OTP verification:', e);
+                    logWarn('VerifyOtp', 'Failed to update phone after OTP verification', e);
                 }
             }
             

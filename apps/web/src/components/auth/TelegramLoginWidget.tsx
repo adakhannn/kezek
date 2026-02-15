@@ -5,6 +5,8 @@
 import { useRouter } from 'next/navigation';
 import { memo, useEffect, useRef, useState } from 'react';
 
+import {logError} from '@/lib/log';
+
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'kezek_auth_bot';
 
 type TelegramUser = {
@@ -103,7 +105,7 @@ function TelegramLoginWidgetComponent({
                 router.push(data.redirect || redirectToRef.current);
             } catch (e) {
                 const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
-                console.error('[TelegramLoginWidget] error:', e);
+                logError('TelegramLoginWidget', 'Error during login', e);
                 onErrorRef.current?.(msg);
             } finally {
                 setLoading(false);
@@ -123,7 +125,7 @@ function TelegramLoginWidgetComponent({
         script.async = true;
         
         script.onerror = () => {
-            console.error('[TelegramLoginWidget] Failed to load Telegram widget script');
+            logError('TelegramLoginWidget', 'Failed to load Telegram widget script');
             onErrorRef.current?.('Не удалось загрузить виджет Telegram. Проверьте подключение к интернету.');
         };
 

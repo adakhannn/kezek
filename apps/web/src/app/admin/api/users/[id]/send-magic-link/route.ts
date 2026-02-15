@@ -7,6 +7,8 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
+
 export async function POST(_req: Request, context: unknown) {
     const params =
         typeof context === 'object' &&
@@ -65,7 +67,7 @@ export async function POST(_req: Request, context: unknown) {
         return NextResponse.json({ok: true, link: actionLink});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('send-magic-link error', e);
+        logError('SendMagicLink', 'Failed to send magic link', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

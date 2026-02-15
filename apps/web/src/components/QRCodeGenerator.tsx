@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
+import {logError} from '@/lib/log';
 
 type QRCodeGeneratorProps = {
     url: string;
@@ -106,13 +107,13 @@ export default function QRCodeGenerator({
                             setDownloading(false);
                         }, 'image/png');
                     } catch (error) {
-                        console.error('Error processing image:', error);
+                        logError('QRCodeGenerator', 'Error processing image', error);
                         setDownloading(false);
                     }
                 };
 
                 img.onerror = () => {
-                    console.error('Error loading SVG image');
+                    logError('QRCodeGenerator', 'Error loading SVG image');
                     URL.revokeObjectURL(svgUrl);
                     setDownloading(false);
                 };
@@ -120,7 +121,7 @@ export default function QRCodeGenerator({
                 img.src = svgUrl;
             }
         } catch (error) {
-            console.error('Error downloading QR code:', error);
+            logError('QRCodeGenerator', 'Error downloading QR code', error);
             setDownloading(false);
         }
     };

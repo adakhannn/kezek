@@ -2,17 +2,16 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {NextResponse} from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = { booking_id: string; rating: number; comment?: string };
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('ReviewsCreate', async () => {
         const body = (await req.json()) as Body;
         if (!body.booking_id || !body.rating) {
-            return NextResponse.json({ok: false, error: 'BAD_REQUEST'}, {status: 400});
+            return createErrorResponse('validation', 'booking_id и rating обязательны', undefined, 400);
         }
 
         // Используем унифицированную утилиту для создания Supabase клиента
@@ -21,7 +20,7 @@ export async function POST(req: Request) {
         // Получаем текущего пользователя
         const { data: auth } = await supabase.auth.getUser();
         if (!auth.user) {
-            return NextResponse.json({ok: false, error: 'UNAUTHORIZED'}, {status: 401});
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         const userId = auth.user.id;
@@ -34,12 +33,12 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (bookingError || !booking) {
-            return NextResponse.json({ok: false, error: 'BOOKING_NOT_FOUND'}, {status: 404});
+            return createErrorResponse('not_found', 'Бронирование не найдено', undefined, 404);
         }
 
         // Проверяем, что запись принадлежит текущему пользователю
         if (booking.client_id !== userId) {
-            return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
         }
 
         // Проверяем, что отзыв еще не существует
@@ -63,12 +62,14 @@ export async function POST(req: Request) {
                     .select('id')
                     .single();
 
-                if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+                if (error) {
+                    return createErrorResponse('validation', error.message, undefined, 400);
+                }
 
-                return NextResponse.json({ok: true, id: data?.id, updated: true});
+                return createSuccessResponse({ id: data?.id, updated: true });
             } else {
                 // Отзыв существует, но принадлежит другому пользователю
-                return NextResponse.json({ok: false, error: 'REVIEW_ALREADY_EXISTS'}, {status: 400});
+                return createErrorResponse('conflict', 'Отзыв уже существует', undefined, 409);
             }
         }
 
@@ -84,11 +85,10 @@ export async function POST(req: Request) {
             .select('id')
             .single();
 
-        if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        if (error) {
+            return createErrorResponse('validation', error.message, undefined, 400);
+        }
 
-        return NextResponse.json({ok: true, id: data?.id, updated: false});
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+        return createSuccessResponse({ id: data?.id, updated: false });
+    });
 }

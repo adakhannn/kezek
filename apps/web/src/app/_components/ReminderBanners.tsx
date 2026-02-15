@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { NameReminderBanner } from './NameReminderBanner';
 import { TelegramReminderBanner } from './TelegramReminderBanner';
 
+import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 type BannerState = {
@@ -81,7 +82,7 @@ export function ReminderBanners() {
                     }
                 }
             } catch (error) {
-                console.warn('ReminderBanners: error checking banners', error);
+                logWarn('ReminderBanners', 'error checking banners', error);
                 if (mounted) {
                     setState({ showName: false, showWhatsApp: false, showTelegram: false, loading: false });
                 }

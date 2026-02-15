@@ -8,6 +8,7 @@ import MapDialog from './MapDialog';
 import ReviewDialog from './ReviewDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import {logError} from '@/lib/log';
 import { transliterate } from '@/lib/transliterate';
 
 const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
@@ -88,7 +89,7 @@ export default function BookingCard({
                 window.localStorage.setItem(key, JSON.stringify(payload));
             }
         } catch (e) {
-            console.error('repeatBooking: failed to save state', e);
+            logError('BookingCard', 'repeatBooking: failed to save state', e);
         }
         window.location.href = `/b/${business.slug}`;
     }

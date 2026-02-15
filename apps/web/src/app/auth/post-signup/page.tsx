@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function PostSignup() {
@@ -24,7 +25,7 @@ export default function PostSignup() {
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
                 
                 if (userError || !user) {
-                    console.warn('[post-signup] User not authenticated:', userError);
+                    logWarn('PostSignup', 'User not authenticated', userError);
                     if (mounted) {
                         router.replace('/auth/sign-in');
                     }
@@ -39,7 +40,7 @@ export default function PostSignup() {
                     .maybeSingle();
 
                 if (profileError) {
-                    console.error('[post-signup] Error loading profile:', profileError);
+                    logError('PostSignup', 'Error loading profile', profileError);
                 }
 
                 if (!mounted) return;
@@ -63,7 +64,7 @@ export default function PostSignup() {
                     }, 500);
                 }
             } catch (error) {
-                console.error('[post-signup] Error in useEffect:', error);
+                logError('PostSignup', 'Error in useEffect', error);
             } finally {
                 if (mounted) {
                     setLoading(false);
@@ -95,7 +96,7 @@ export default function PostSignup() {
                 throw new Error('Не авторизован');
             }
 
-            console.log('[post-signup] Saving profile:', { fullName: fullName.trim() });
+            logDebug('PostSignup', 'Saving profile', { fullName: fullName.trim() });
 
             // Обновляем профиль
             const res = await fetch('/api/profile/update', {
@@ -107,7 +108,7 @@ export default function PostSignup() {
                 }),
             });
 
-            console.log('[post-signup] Response status:', res.status);
+            logDebug('PostSignup', 'Response status', { status: res.status });
 
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({ message: 'Ошибка при сохранении' }));
@@ -115,7 +116,7 @@ export default function PostSignup() {
             }
 
             const data = await res.json();
-            console.log('[post-signup] Response data:', data);
+            logDebug('PostSignup', 'Response data', data);
             
             if (!data.ok) {
                 throw new Error(data.message || data.error || 'Ошибка при сохранении');
@@ -137,7 +138,7 @@ export default function PostSignup() {
             }, 500);
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
-            console.error('[post-signup] Error:', e);
+            logError('PostSignup', 'Error saving profile', e);
             setError(msg);
             setSaving(false); // Убеждаемся, что состояние сбрасывается при ошибке
         } finally {

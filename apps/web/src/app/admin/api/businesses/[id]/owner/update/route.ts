@@ -7,6 +7,7 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 type Body = { full_name?: string | null; email?: string | null; phone?: string | null };
@@ -79,7 +80,7 @@ export async function POST(req: Request, context: unknown) {
 
         return NextResponse.json({ok: true, updated: true, user: upd?.user?.id ?? ownerId});
     } catch (e: unknown) {
-        console.error('owner update error', e);
+        logError('OwnerUpdate', 'Failed to update owner', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

@@ -2,6 +2,8 @@ import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
+
 export async function POST(
     req: Request,
     {params}: { params: Promise<{ id: string }> }
@@ -56,11 +58,11 @@ export async function POST(
                 .eq('client_id', user.id);
             
             if (updateError) {
-                console.error(updateError);
+                logError('BookingCancel', 'Failed to update booking status', updateError);
                 return NextResponse.json({ok: false, error: updateError.message}, {status: 400});
             }
         } else {
-            console.error(error);
+            logError('BookingCancel', 'Failed to fetch booking', error);
             return NextResponse.json({ok: false, error: error.message}, {status: 400});
         }
     }

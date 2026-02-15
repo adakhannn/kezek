@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import {logWarn} from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -32,7 +33,7 @@ export default function VerifyPage() {
     const fetchIsSuper = useCallback(async (): Promise<boolean> => {
         const { data, error } = await supabase.rpc('is_super_admin');
         if (error) {
-            console.warn('is_super_admin error:', error.message);
+            logWarn('Verify', 'is_super_admin error', { error: error.message });
             return false;
         }
         return !!data;
@@ -45,7 +46,7 @@ export default function VerifyPage() {
             .select('id', { count: 'exact', head: true })
             .eq('owner_id', userId);
         if (error) {
-            console.warn('owner check error:', error.message);
+            logWarn('Verify', 'owner check error', { userId, error: error.message });
             return false;
         }
         return (count ?? 0) > 0;

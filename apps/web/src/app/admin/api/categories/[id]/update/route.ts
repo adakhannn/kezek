@@ -7,6 +7,8 @@ import {createClient, PostgrestError} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
+
 type Body = {
     name_ru?: string | null;
     slug?: string | null;         // null => сгенерировать из name_ru/текущего имени
@@ -149,7 +151,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ok: true, updated: true, slug: patch.slug ?? cur.slug});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('categories update error', e);
+        logError('CategoryUpdate', 'Failed to update category', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import {logError} from '@/lib/log';
+
 type ScheduleItem = {
     day_of_week: number;
     intervals: Array<{ start: string; end: string }>;
@@ -88,7 +90,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: true });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('branch schedule save error', e);
+        logError('BranchSchedule', 'Failed to save branch schedule', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }
@@ -144,7 +146,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ ok: true, schedule: schedule || [] });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('branch schedule load error', e);
+        logError('BranchSchedule', 'Failed to load branch schedule', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

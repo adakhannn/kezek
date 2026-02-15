@@ -1,6 +1,5 @@
 // apps/web/src/app/api/staff/avatar/upload/route.ts
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getStaffContext } from '@/lib/authBiz';
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -9,24 +8,24 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('StaffAvatarUpload', async () => {
         const { staffId } = await getStaffContext();
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
 
         if (!file) {
-            return NextResponse.json({ ok: false, error: 'Файл не предоставлен' }, { status: 400 });
+            return createErrorResponse('validation', 'Файл не предоставлен', undefined, 400);
         }
 
         // Проверяем тип файла
         if (!file.type.startsWith('image/')) {
-            return NextResponse.json({ ok: false, error: 'Файл должен быть изображением' }, { status: 400 });
+            return createErrorResponse('validation', 'Файл должен быть изображением', undefined, 400);
         }
 
         // Проверяем размер (макс 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            return NextResponse.json({ ok: false, error: 'Размер файла не должен превышать 5MB' }, { status: 400 });
+            return createErrorResponse('validation', 'Размер файла не должен превышать 5MB', undefined, 400);
         }
 
         const admin = getServiceClient();
@@ -73,11 +72,7 @@ export async function POST(req: Request) {
             // Проверяем, что используется service role
             const isServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith('eyJ');
             logDebug('StaffAvatarUpload', 'Using service role', { isServiceRole });
-            return NextResponse.json({ 
-                ok: false, 
-                error: uploadError.message,
-                details: uploadError 
-            }, { status: 400 });
+            return createErrorResponse('validation', uploadError.message, uploadError, 400);
         }
 
         // Получаем публичный URL
@@ -93,14 +88,10 @@ export async function POST(req: Request) {
 
         if (updateError) {
             logError('StaffAvatarUpload', 'Update error', updateError);
-            return NextResponse.json({ ok: false, error: updateError.message }, { status: 400 });
+            return createErrorResponse('validation', updateError.message, undefined, 400);
         }
 
-        return NextResponse.json({ ok: true, url: publicUrl });
-    } catch (error) {
-        logError('StaffAvatarUpload', 'Error in avatar upload', error);
-        const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse({ url: publicUrl });
+    });
 }
 

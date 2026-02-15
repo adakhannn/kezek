@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import {logDebug, logWarn} from '@/lib/log';
 
 type Branch = { id: string; name: string };
 type FoundUser = { id: string; email: string | null; phone: string | null; full_name: string };
@@ -59,18 +60,18 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
             return alert(j.error ?? t('staff.new.errors.createFailed', 'Не удалось создать сотрудника'));
         }
         
-        // Логируем результат инициализации расписания в консоль браузера
+        // Логируем результат инициализации расписания
         if (j.schedule_initialized !== undefined) {
-            console.log('[Staff Creation] Schedule initialization result:', {
+            logDebug('StaffCreation', 'Schedule initialization result', {
                 success: j.schedule_initialized,
                 daysCreated: j.schedule_days_created,
                 error: j.schedule_error,
             });
             if (!j.schedule_initialized) {
-                console.warn('[Staff Creation] Schedule was NOT initialized!', j.schedule_error);
+                logWarn('StaffCreation', 'Schedule was NOT initialized', { error: j.schedule_error });
             }
         } else {
-            console.warn('[Staff Creation] No schedule initialization info in response');
+            logWarn('StaffCreation', 'No schedule initialization info in response');
         }
         
         r.push('/dashboard/staff');

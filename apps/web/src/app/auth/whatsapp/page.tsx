@@ -4,6 +4,8 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 
+import {logDebug, logError} from '@/lib/log';
+
 function WhatsAppAuthContent() {
     const router = useRouter();
     const sp = useSearchParams();
@@ -92,7 +94,7 @@ function WhatsAppAuthContent() {
             const sessionData = await sessionResponse.json();
             
             if (!sessionData.ok) {
-                console.error('[whatsapp] Failed to create session:', sessionData);
+                logError('WhatsAppAuth', 'Failed to create session', sessionData);
                 setError(sessionData.message || 'Не удалось создать сессию');
                 return;
             }
@@ -101,14 +103,14 @@ function WhatsAppAuthContent() {
             
             // Если есть готовые токены, используем их
             if (sessionData.session?.access_token && sessionData.session?.refresh_token) {
-                console.log('[whatsapp] Setting session with tokens');
+                logDebug('WhatsAppAuth', 'Setting session with tokens');
                 const { data: sessionResult, error: sessionError } = await supabase.auth.setSession({
                     access_token: sessionData.session.access_token,
                     refresh_token: sessionData.session.refresh_token,
                 });
                 
                 if (sessionError) {
-                    console.error('[whatsapp] Failed to set session:', sessionError);
+                    logError('WhatsAppAuth', 'Failed to set session', sessionError);
                     setError('Не удалось установить сессию: ' + sessionError.message);
                     return;
                 }
@@ -116,12 +118,12 @@ function WhatsAppAuthContent() {
                 // Проверяем, что сессия действительно установлена
                 const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
                 if (userError || !currentUser) {
-                    console.error('[whatsapp] Session set but user not found:', userError);
+                    logError('WhatsAppAuth', 'Session set but user not found', userError);
                     setError('Сессия не была создана. Попробуйте еще раз.');
                     return;
                 }
                 
-                console.log('[whatsapp] Session created successfully, user:', currentUser.id);
+                logDebug('WhatsAppAuth', 'Session created successfully', { userId: currentUser.id });
                 
                 // Сессия создана успешно
                 router.refresh();
@@ -131,14 +133,14 @@ function WhatsAppAuthContent() {
             
             // Если нужно войти через email и пароль
             if (sessionData.email && sessionData.password && sessionData.needsSignIn) {
-                console.log('[whatsapp] Signing in with email and password');
+                logDebug('WhatsAppAuth', 'Signing in with email and password');
                 const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
                     email: sessionData.email,
                     password: sessionData.password,
                 });
                 
                 if (signInError) {
-                    console.error('[whatsapp] Failed to sign in:', signInError);
+                    logError('WhatsAppAuth', 'Failed to sign in', signInError);
                     setError('Не удалось войти: ' + signInError.message);
                     return;
                 }
@@ -146,12 +148,12 @@ function WhatsAppAuthContent() {
                 // Проверяем, что сессия создана
                 const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
                 if (userError || !currentUser) {
-                    console.error('[whatsapp] Sign in successful but user not found:', userError);
+                    logError('WhatsAppAuth', 'Sign in successful but user not found', userError);
                     setError('Вход выполнен, но сессия не была создана. Попробуйте еще раз.');
                     return;
                 }
                 
-                console.log('[whatsapp] Sign in successful, user:', currentUser.id);
+                logDebug('WhatsAppAuth', 'Sign in successful', { userId: currentUser.id });
                 
                 // Сессия создана успешно
                 router.refresh();
@@ -161,14 +163,14 @@ function WhatsAppAuthContent() {
             
             // Если есть magic link, переходим по нему
             if (sessionData.magicLink) {
-                console.log('[whatsapp] Redirecting to magic link:', sessionData.magicLink);
+                logDebug('WhatsAppAuth', 'Redirecting to magic link', { magicLink: sessionData.magicLink });
                 // Переходим по magic link - Supabase создаст сессию автоматически
                 window.location.href = sessionData.magicLink;
                 return;
             }
             
             // Если ничего не сработало, показываем ошибку
-            console.error('[whatsapp] No valid session data received:', sessionData);
+            logError('WhatsAppAuth', 'No valid session data received', sessionData);
             setError('Не удалось создать сессию. Попробуйте еще раз.');
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));

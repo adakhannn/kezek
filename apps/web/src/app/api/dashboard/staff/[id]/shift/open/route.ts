@@ -1,7 +1,7 @@
 // apps/web/src/app/api/dashboard/staff/[id]/shift/open/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
-import { NextResponse } from 'next/server';
 
+import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -49,17 +49,11 @@ export async function POST(
                         staffId,
                         bizId 
                     });
-                    return NextResponse.json(
-                        { ok: false, error: 'Не удалось загрузить данные сотрудника' },
-                        { status: 500 }
-                    );
+                    return createErrorResponse('internal', 'Не удалось загрузить данные сотрудника', undefined, 500);
                 }
 
                 if (!staff) {
-                    return NextResponse.json(
-                        { ok: false, error: 'Сотрудник не найден' },
-                        { status: 404 }
-                    );
+                    return createErrorResponse('not_found', 'Сотрудник не найден', undefined, 404);
                 }
 
                 // Нормализуем значения для надежного сравнения
@@ -73,10 +67,7 @@ export async function POST(
                         staffBizId: normalizedStaffBizId,
                         requestedBizId: normalizedBizId,
                     });
-                    return NextResponse.json(
-                        { ok: false, error: 'Сотрудник не принадлежит этому бизнесу' },
-                        { status: 403 }
-                    );
+                    return createErrorResponse('forbidden', 'Сотрудник не принадлежит этому бизнесу', undefined, 403);
                 }
 
                 // Проверяем, не открыта ли уже смена за эту дату
@@ -89,24 +80,15 @@ export async function POST(
 
                 if (checkError) {
                     logError('OwnerShiftOpen', 'Error checking existing shift', checkError);
-                    return NextResponse.json(
-                        { ok: false, error: 'Не удалось проверить существующую смену' },
-                        { status: 500 }
-                    );
+                    return createErrorResponse('internal', 'Не удалось проверить существующую смену', undefined, 500);
                 }
 
                 if (existingShift) {
                     if (existingShift.status === 'open') {
-                        return NextResponse.json(
-                            { ok: false, error: 'Смена уже открыта' },
-                            { status: 400 }
-                        );
+                        return createErrorResponse('validation', 'Смена уже открыта', undefined, 400);
                     }
                     if (existingShift.status === 'closed') {
-                        return NextResponse.json(
-                            { ok: false, error: 'Смена уже закрыта. Используйте функцию переоткрытия.' },
-                            { status: 400 }
-                        );
+                        return createErrorResponse('validation', 'Смена уже закрыта. Используйте функцию переоткрытия.', undefined, 400);
                     }
                 }
 
@@ -196,10 +178,7 @@ export async function POST(
 
                     if (updateError) {
                         logError('OwnerShiftOpen', 'Error updating shift', updateError);
-                        return NextResponse.json(
-                            { ok: false, error: 'Не удалось открыть смену' },
-                            { status: 500 }
-                        );
+                        return createErrorResponse('internal', 'Не удалось открыть смену', undefined, 500);
                     }
 
                     logDebug('OwnerShiftOpen', 'Shift reopened successfully', {
@@ -208,7 +187,7 @@ export async function POST(
                         ymd,
                     });
 
-                    return NextResponse.json({ ok: true, shift: updatedShift });
+                    return createSuccessResponse({ shift: updatedShift });
                 }
 
                 // Создаем новую смену
@@ -228,10 +207,7 @@ export async function POST(
 
                 if (createError) {
                     logError('OwnerShiftOpen', 'Error creating shift', createError);
-                    return NextResponse.json(
-                        { ok: false, error: 'Не удалось создать смену' },
-                        { status: 500 }
-                    );
+                    return createErrorResponse('internal', 'Не удалось создать смену', undefined, 500);
                 }
 
                 logDebug('OwnerShiftOpen', 'Shift opened successfully', {
@@ -240,11 +216,11 @@ export async function POST(
                     ymd,
                 });
 
-                return NextResponse.json({ ok: true, shift: newShift });
+                return createSuccessResponse({ shift: newShift });
             } catch (error) {
                 logError('OwnerShiftOpen', 'Unexpected error', error);
                 const message = error instanceof Error ? error.message : 'Unknown error';
-                return NextResponse.json({ ok: false, error: message }, { status: 500 });
+                return createErrorResponse('internal', message, undefined, 500);
             }
         }
     );

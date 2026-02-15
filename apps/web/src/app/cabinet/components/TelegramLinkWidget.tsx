@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import {logError} from '@/lib/log';
+
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'kezek_auth_bot';
 
 type TelegramUser = {
@@ -79,7 +81,7 @@ export function TelegramLinkWidget({
                 onSuccessRef.current?.();
             } catch (e) {
                 const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
-                console.error('[TelegramLinkWidget] error:', e);
+                logError('TelegramLinkWidget', 'Error linking Telegram', e);
                 onErrorRef.current?.(msg);
             } finally {
                 setLoading(false);

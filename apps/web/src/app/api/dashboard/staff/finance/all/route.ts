@@ -2,6 +2,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -46,7 +47,7 @@ type BusinessFinanceStatsResult = {
 };
 
 export async function GET(req: Request) {
-    try {
+    return withErrorHandler('FinanceAll', async () => {
         const { supabase, bizId } = await getBizContextForManagers();
 
         // Получаем параметры запроса
@@ -62,10 +63,7 @@ export async function GET(req: Request) {
                 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
                 if (!dateRegex.test(dateParam)) {
                     logError('FinanceAll', 'Invalid date format for day period', { dateParam, period });
-                    return NextResponse.json(
-                        { ok: false, error: 'Invalid date format. Expected YYYY-MM-DD for day period' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY-MM-DD для периода "день"', undefined, 400);
                 }
                 
                 const [year, month, day] = dateParam.split('-').map(Number);
@@ -73,19 +71,13 @@ export async function GET(req: Request) {
                 // Валидация значений даты
                 if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
                     logError('FinanceAll', 'Invalid date values', { dateParam, year, month, day });
-                    return NextResponse.json(
-                        { ok: false, error: 'Invalid date values' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Неверные значения даты', undefined, 400);
                 }
                 
                 // Проверяем диапазоны значений
                 if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
                     logError('FinanceAll', 'Date out of valid range', { dateParam, year, month, day });
-                    return NextResponse.json(
-                        { ok: false, error: 'Date out of valid range' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Дата вне допустимого диапазона', undefined, 400);
                 }
                 
                 // Проверяем, что дата валидна
@@ -94,66 +86,45 @@ export async function GET(req: Request) {
                     testDate.getMonth() !== month - 1 || 
                     testDate.getDate() !== day) {
                     logError('FinanceAll', 'Invalid date (e.g., Feb 30)', { dateParam, year, month, day });
-                    return NextResponse.json(
-                        { ok: false, error: 'Invalid date (e.g., day does not exist in month)' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Неверная дата (например, 30 февраля)', undefined, 400);
                 }
             } else if (period === 'month') {
                 // Для месяца требуется YYYY-MM
                 const monthRegex = /^\d{4}-\d{2}$/;
                 if (!monthRegex.test(dateParam)) {
                     logError('FinanceAll', 'Invalid date format for month period', { dateParam, period });
-                    return NextResponse.json(
-                        { ok: false, error: 'Invalid date format. Expected YYYY-MM for month period' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY-MM для периода "месяц"', undefined, 400);
                 }
                 
                 const [year, month] = dateParam.split('-').map(Number);
                 
                 if (!Number.isFinite(year) || !Number.isFinite(month)) {
                     logError('FinanceAll', 'Invalid month values', { dateParam, year, month });
-                    return NextResponse.json(
-                        { ok: false, error: 'Invalid month values' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Неверные значения месяца', undefined, 400);
                 }
                 
                 if (year < 1900 || year > 2100 || month < 1 || month > 12) {
                     logError('FinanceAll', 'Month out of valid range', { dateParam, year, month });
-                    return NextResponse.json(
-                        { ok: false, error: 'Month out of valid range' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Месяц вне допустимого диапазона', undefined, 400);
                 }
             } else if (period === 'year') {
                 // Для года требуется YYYY
                 const yearRegex = /^\d{4}$/;
                 if (!yearRegex.test(dateParam)) {
                     logError('FinanceAll', 'Invalid date format for year period', { dateParam, period });
-                    return NextResponse.json(
-                        { ok: false, error: 'Invalid date format. Expected YYYY for year period' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY для периода "год"', undefined, 400);
                 }
                 
                 const year = Number(dateParam);
                 
                 if (!Number.isFinite(year)) {
                     logError('FinanceAll', 'Invalid year value', { dateParam, year });
-                    return NextResponse.json(
-                        { ok: false, error: 'Invalid year value' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Неверное значение года', undefined, 400);
                 }
                 
                 if (year < 1900 || year > 2100) {
                     logError('FinanceAll', 'Year out of valid range', { dateParam, year });
-                    return NextResponse.json(
-                        { ok: false, error: 'Year out of valid range' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Год вне допустимого диапазона', undefined, 400);
                 }
             }
             
@@ -193,10 +164,7 @@ export async function GET(req: Request) {
 
         if (branchesError) {
             logError('FinanceAll', 'Error loading branches', branchesError);
-            return NextResponse.json(
-                { ok: false, error: branchesError.message },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', branchesError.message, undefined, 500);
         }
 
         // Получаем всех сотрудников бизнеса (с optional фильтром по филиалу)
@@ -214,10 +182,7 @@ export async function GET(req: Request) {
 
         if (staffError) {
             logError('FinanceAll', 'Error loading staff', staffError);
-            return NextResponse.json(
-                { ok: false, error: staffError.message },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', staffError.message, undefined, 500);
         }
 
         // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
@@ -249,16 +214,11 @@ export async function GET(req: Request) {
                 fullError: statsError,
             });
             // Возвращаем ошибку с деталями вместо fallback
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'get_business_finance_stats_failed',
-                    message: statsError.message || 'Failed to get finance stats',
-                    details: statsError.details,
-                    hint: statsError.hint,
-                    code: statsError.code,
-                },
-                { status: 500 }
+            return createErrorResponse(
+                'internal',
+                statsError.message || 'Не удалось получить финансовую статистику',
+                { details: statsError.details, hint: statsError.hint, code: statsError.code },
+                500
             );
         }
         
@@ -415,8 +375,7 @@ export async function GET(req: Request) {
             totalClosedShifts: staffStats.reduce((sum, s) => sum + s.closedShiftsCount, 0),
         };
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             period,
             dateFrom,
             dateTo,
@@ -428,14 +387,7 @@ export async function GET(req: Request) {
             staffStats,
             totalStats,
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('FinanceAll', 'Unexpected error', e);
-        return NextResponse.json(
-            { ok: false, error: msg },
-            { status: 500 }
-        );
-    }
+    });
 }
 
 // Fallback функция для обратной совместимости (старый метод)

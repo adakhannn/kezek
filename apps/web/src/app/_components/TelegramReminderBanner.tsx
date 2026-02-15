@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { useLanguage } from './i18n/LanguageProvider';
 
+import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 /**
@@ -50,7 +51,7 @@ export function TelegramReminderBanner() {
                     .maybeSingle<{ telegram_id: number | null; telegram_verified: boolean | null }>();
 
                 if (error) {
-                    console.warn('TelegramReminderBanner: failed to load profile', error);
+                    logWarn('TelegramReminderBanner', 'failed to load profile', error);
                 }
 
                 const hasTelegram = !!profile?.telegram_id && !!profile?.telegram_verified;
@@ -61,7 +62,7 @@ export function TelegramReminderBanner() {
                     setLoading(false);
                 }
             } catch (error) {
-                console.warn('TelegramReminderBanner: error checking telegram', error);
+                logWarn('TelegramReminderBanner', 'error checking telegram', error);
                 if (mounted) {
                     setLoading(false);
                 }

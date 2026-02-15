@@ -2,10 +2,9 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
 import { getWhatsAppAccessToken } from '@/lib/env';
-import { logDebug, logError } from '@/lib/log';
+import { logDebug } from '@/lib/log';
 
 /**
  * GET /api/whatsapp/get-business-account
@@ -16,19 +15,12 @@ import { logDebug, logError } from '@/lib/log';
  */
 
 export async function GET() {
-    try {
+    return withErrorHandler<ApiSuccessResponse<{ business_accounts: unknown; selected_account: { id: unknown; name: unknown }; phone_numbers: unknown[]; instructions: { step1: string; step2: string; step3: string } } | { business_accounts: unknown; message: string }>>('WhatsAppAPI', async () => {
         let accessToken: string;
         try {
             accessToken = getWhatsAppAccessToken();
         } catch {
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'no_token',
-                    message: 'WHATSAPP_ACCESS_TOKEN не установлен в переменных окружения'
-                },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', 'WHATSAPP_ACCESS_TOKEN не установлен в переменных окружения', { code: 'no_token' }, 500);
         }
 
         // Получаем список Business Accounts
@@ -71,16 +63,11 @@ export async function GET() {
                 errorMessage += ` — ${errText.slice(0, 500)}`;
             }
             
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'api_error',
-                    message: errorMessage,
-                    details: errorDetails,
-                    troubleshooting: troubleshooting.length > 0 ? troubleshooting : undefined,
-                },
-                { status: resp.status }
-            );
+            return createErrorResponse('validation', errorMessage, { 
+                code: 'api_error',
+                details: errorDetails,
+                troubleshooting: troubleshooting.length > 0 ? troubleshooting : undefined,
+            }, resp.status);
         }
 
         const data = await resp.json();
@@ -104,8 +91,7 @@ export async function GET() {
                 phoneNumbers = phoneData.data || [];
             }
 
-            return NextResponse.json({
-                ok: true,
+            return createSuccessResponse({
                 business_accounts: data.data,
                 selected_account: {
                     id: businessAccountId,
@@ -120,18 +106,10 @@ export async function GET() {
             });
         }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             business_accounts: data.data || [],
             message: 'Бизнес-аккаунты получены, но номера не найдены',
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('WhatsAppAPI', 'Error in get-business-account', e);
-        return NextResponse.json(
-            { ok: false, error: 'internal', message: msg },
-            { status: 500 }
-        );
-    }
+    });
 }
 

@@ -4,10 +4,13 @@ import { createServerClient } from '@supabase/ssr';
 import { unstable_noStore as noStore } from 'next/cache';
 import { cookies } from 'next/headers';
 
+
 import { PersonalCabinetButton } from './PersonalCabinetButton';
 import { SignInButton } from './SignInButton';
 import { SignOutButton } from './SignOutButton';
 import { StaffCabinetButton } from './StaffCabinetButton';
+
+import {logWarn} from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,7 +101,7 @@ export async function AuthStatusServer() {
         
         isStaff = !!staff;
     } catch (error) {
-        console.warn('AuthStatusServer: error checking staff record', error);
+        logWarn('AuthStatusServer', 'error checking staff record', error);
         // Fallback: проверяем через user_roles
         try {
             const [{ data: ur }, { data: roleRows }] = await Promise.all([
@@ -112,7 +115,7 @@ export async function AuthStatusServer() {
                 isStaff = !!staffRole?.biz_id;
             }
         } catch (fallbackError) {
-            console.warn('AuthStatusServer: fallback check also failed', fallbackError);
+            logWarn('AuthStatusServer', 'fallback check also failed', fallbackError);
         }
     }
 

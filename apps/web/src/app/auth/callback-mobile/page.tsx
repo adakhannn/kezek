@@ -4,6 +4,8 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 
+import {logDebug, logError, logWarn} from '@/lib/log';
+
 /**
  * Промежуточная страница для редиректа с веб-сайта на мобильное приложение
  * Извлекает токены из URL и редиректит на deep link
@@ -14,11 +16,8 @@ function CallbackMobileContent() {
     useEffect(() => {
         const redirect = searchParams.get('redirect') || 'kezek://auth/callback';
         
-        // Логирование для отладки (только в dev режиме)
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('[callback-mobile] Starting redirect, redirect param:', redirect);
-            console.warn('[callback-mobile] Current URL:', window.location.href);
-        }
+        // Логирование для отладки
+        logDebug('CallbackMobile', 'Starting redirect', { redirect, url: window.location.href });
         
         // Извлекаем токены из hash или query параметров
         const hash = window.location.hash.substring(1);
@@ -30,13 +29,11 @@ function CallbackMobileContent() {
         const code = queryParams.get('code');
 
         // Логирование для отладки
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('[callback-mobile] Extracted:', { 
-                hasAccessToken: !!accessToken, 
-                hasRefreshToken: !!refreshToken, 
-                hasCode: !!code 
-            });
-        }
+        logDebug('CallbackMobile', 'Extracted tokens', { 
+            hasAccessToken: !!accessToken, 
+            hasRefreshToken: !!refreshToken, 
+            hasCode: !!code 
+        });
 
         // Формируем deep link заранее (будет обновлен после получения exchange code)
         let deepLink = redirect;
@@ -63,10 +60,10 @@ function CallbackMobileContent() {
                         exchangeCode = data.code;
                     } else {
                         const errorText = await response.text();
-                        console.error('[callback-mobile] Failed to store tokens:', errorText);
+                        logError('CallbackMobile', 'Failed to store tokens', { error: errorText });
                     }
                 } catch (error) {
-                    console.error('[callback-mobile] Error storing tokens:', error);
+                    logError('CallbackMobile', 'Error storing tokens', error);
                 }
             }
 
@@ -90,9 +87,9 @@ function CallbackMobileContent() {
                 try {
                     fn();
                     redirectAttempted = true;
-                    console.warn(`[callback-mobile] Redirect attempted via ${method}`);
+                    logDebug('CallbackMobile', `Redirect attempted via ${method}`);
                 } catch (e) {
-                    console.warn(`[callback-mobile] ${method} failed:`, e);
+                    logWarn('CallbackMobile', `${method} failed`, e);
                 }
             };
 

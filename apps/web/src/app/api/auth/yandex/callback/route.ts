@@ -6,10 +6,11 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import { withErrorHandler } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 
 export async function GET(req: Request) {
-    try {
+    return withErrorHandler('YandexAuth', async () => {
         const { searchParams } = new URL(req.url);
         const code = searchParams.get('code');
         const error = searchParams.get('error');
@@ -306,12 +307,6 @@ export async function GET(req: Request) {
         });
         
         return NextResponse.redirect(redirectUrl.toString());
-    } catch (error) {
-        logError('YandexAuth', 'Error in yandex callback', error);
-        const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN || 'https://kezek.kg';
-        return NextResponse.redirect(
-            `${origin}/auth/sign-in?error=${encodeURIComponent(error instanceof Error ? error.message : 'yandex_auth_failed')}`
-        );
-    }
+    });
 }
 

@@ -1,6 +1,5 @@
 // apps/web/src/app/api/dashboard/staff-shifts/[id]/update-hours/route.ts
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
@@ -15,7 +14,7 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('UpdateShiftHours', async () => {
         const shiftId = await getRouteParamRequired(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
@@ -25,15 +24,12 @@ export async function POST(req: Request, context: unknown) {
             body = await req.json();
         } catch (e) {
             logError('UpdateShiftHours', 'Invalid JSON body', e);
-            return NextResponse.json({ ok: false, error: 'INVALID_JSON' }, { status: 400 });
+            return createErrorResponse('validation', 'Неверный формат JSON', undefined, 400);
         }
 
         const rawHours = Number(body.hours_worked);
         if (!Number.isFinite(rawHours) || rawHours < 0 || rawHours > 24 * 2) {
-            return NextResponse.json(
-                { ok: false, error: 'INVALID_HOURS_VALUE' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Количество часов должно быть от 0 до 48', undefined, 400);
         }
 
         // Округляем до двух знаков после запятой
@@ -62,19 +58,13 @@ export async function POST(req: Request, context: unknown) {
             'id,biz_id,staff_id,status,total_amount,consumables_amount,percent_master,percent_salon,hourly_rate,guaranteed_amount,master_share,salon_share,topup_amount'
         );
         if (shiftCheck.error || !shiftCheck.data) {
-            return NextResponse.json(
-                { ok: false, error: 'SHIFT_NOT_FOUND_OR_FORBIDDEN' },
-                { status: 404 }
-            );
+            return createErrorResponse('not_found', 'Смена не найдена или доступ запрещен', undefined, 404);
         }
 
         const shift = shiftCheck.data;
 
         if (shift.status !== 'closed') {
-            return NextResponse.json(
-                { ok: false, error: 'ONLY_CLOSED_SHIFTS_CAN_BE_ADJUSTED' },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Можно изменять только закрытые смены', undefined, 400);
         }
 
         const totalAmount = Number(shift.total_amount ?? 0);
@@ -127,21 +117,11 @@ export async function POST(req: Request, context: unknown) {
 
         if (updateError || !updated) {
             logError('UpdateShiftHours', 'Error updating shift', updateError);
-            return NextResponse.json(
-                { ok: false, error: updateError?.message || 'UPDATE_FAILED' },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', updateError?.message || 'Не удалось обновить смену', undefined, 500);
         }
 
-        return NextResponse.json({
-            ok: true,
-            shift: updated,
-        });
-    } catch (e) {
-        logError('UpdateShiftHours', 'Unexpected error', e);
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+        return createSuccessResponse({ shift: updated });
+    });
 }
 
 

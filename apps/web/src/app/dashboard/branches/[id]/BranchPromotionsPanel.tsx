@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import {logError} from '@/lib/log';
 
 type PromotionType = 'free_after_n_visits' | 'referral_free' | 'referral_discount_50' | 'birthday_discount' | 'first_visit_discount';
 
@@ -69,11 +70,11 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
             if (data.ok) {
                 setPromotions(data.promotions || []);
             } else {
-                console.error('Failed to load promotions:', data.error);
+                logError('BranchPromotions', 'Failed to load promotions', { error: data.error });
                 alert(data.error || t('branches.promotions.error.load', 'Ошибка загрузки акций'));
             }
         } catch (error) {
-            console.error('Failed to load promotions:', error);
+            logError('BranchPromotions', 'Failed to load promotions', error);
             alert(t('branches.promotions.error.load', 'Ошибка загрузки акций'));
         } finally {
             setLoading(false);
@@ -152,7 +153,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                 alert(data.error || t('branches.promotions.error.save', 'Ошибка сохранения акции'));
             }
         } catch (error) {
-            console.error('Failed to save promotion:', error);
+            logError('BranchPromotions', 'Failed to save promotion', error);
             alert(t('branches.promotions.error.save', 'Ошибка сохранения акции'));
         }
     }
@@ -173,7 +174,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                 alert(data.error || t('branches.promotions.error.delete', 'Ошибка удаления акции'));
             }
         } catch (error) {
-            console.error('Failed to delete promotion:', error);
+            logError('BranchPromotions', 'Failed to delete promotion', error);
             alert(t('branches.promotions.error.delete', 'Ошибка удаления акции'));
         }
     }
@@ -193,7 +194,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                 }
             })
             .catch((error) => {
-                console.error('Failed to toggle promotion:', error);
+                logError('BranchPromotions', 'Failed to toggle promotion', error);
                 alert(t('branches.promotions.error.update', 'Ошибка обновления акции'));
             });
     }

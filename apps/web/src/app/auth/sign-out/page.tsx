@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function SignOutPage() {
@@ -12,7 +13,7 @@ export default function SignOutPage() {
         // Таймаут для гарантированного редиректа через 1.5 секунды
         const forceRedirectTimeout = setTimeout(() => {
             if (mounted) {
-                console.log('[sign-out] Force redirect after timeout');
+                logDebug('SignOut', 'Force redirect after timeout');
                 window.location.replace('/');
             }
         }, 1500);
@@ -26,7 +27,7 @@ export default function SignOutPage() {
                         signal: AbortSignal.timeout(1000), // Таймаут 1 секунда
                     });
                 } catch (apiErr) {
-                    console.warn('[sign-out] API sign-out error:', apiErr);
+                    logWarn('SignOut', 'API sign-out error', apiErr);
                 }
 
                 // 2. Выполняем выход через клиент
@@ -36,7 +37,7 @@ export default function SignOutPage() {
                         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1000)),
                     ]);
                 } catch (clientErr) {
-                    console.warn('[sign-out] Client sign-out error:', clientErr);
+                    logWarn('SignOut', 'Client sign-out error', clientErr);
                 }
 
                 if (!mounted) return;
@@ -56,7 +57,7 @@ export default function SignOutPage() {
                     // Очищаем sessionStorage
                     sessionStorage.clear();
                 } catch (err) {
-                    console.warn('[sign-out] Storage clear error:', err);
+                    logWarn('SignOut', 'Storage clear error', err);
                 }
 
                 // 4. Удаляем cookies
@@ -68,7 +69,7 @@ export default function SignOutPage() {
                         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
                     });
                 } catch (cookieErr) {
-                    console.warn('[sign-out] Cookie clear error:', cookieErr);
+                    logWarn('SignOut', 'Cookie clear error', cookieErr);
                 }
 
                 if (!mounted) return;
@@ -77,7 +78,7 @@ export default function SignOutPage() {
                 clearTimeout(forceRedirectTimeout);
                 window.location.replace('/');
             } catch (err) {
-                console.error('[sign-out] Error:', err);
+                logError('SignOut', 'Error during sign out', err);
                 if (mounted) {
                     clearTimeout(forceRedirectTimeout);
                     window.location.replace('/');

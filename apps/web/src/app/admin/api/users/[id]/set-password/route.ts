@@ -7,6 +7,8 @@ import {createClient} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logError} from '@/lib/log';
+
 type Body = { password: string };
 
 export async function POST(req: Request, context: unknown) {
@@ -58,7 +60,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ok: true});
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('set-password error', e);
+        logError('SetPassword', 'Failed to set password', e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }
 }

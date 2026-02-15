@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import {logDebug} from '@/lib/log';
 import { validateEmail, validateName, validatePercent, validatePercentSum, validatePhone, validatePositiveNumber } from '@/lib/validation';
 
 type Staff = {
@@ -113,7 +114,7 @@ export default function StaffForm({
             }
             
             const requestBody = JSON.stringify(form);
-            console.log('Sending form data:', requestBody);
+            logDebug('StaffForm', 'Sending form data', { form });
             
             const res = await fetch(url, {
                 method: 'POST',

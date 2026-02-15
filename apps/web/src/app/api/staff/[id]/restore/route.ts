@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
@@ -10,7 +9,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(_: Request, context: unknown) {
-    try {
+    return withErrorHandler('StaffRestore', async () => {
         const staffId = await getRouteParamRequired(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
@@ -24,7 +23,7 @@ export async function POST(_: Request, context: unknown) {
         'id, biz_id, user_id, is_active'
     );
     if (staffCheck.error || !staffCheck.data) {
-        return NextResponse.json({ ok: false, error: 'STAFF_NOT_FOUND' }, { status: 404 });
+        return createErrorResponse('not_found', 'Сотрудник не найден', undefined, 404);
     }
     const staff = staffCheck.data;
 
@@ -35,7 +34,9 @@ export async function POST(_: Request, context: unknown) {
         .eq('id', staffId)
         .eq('biz_id', bizId);
 
-    if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });
+    if (eUpd) {
+        return createErrorResponse('validation', eUpd.message, undefined, 400);
+    }
 
     // 3) вернём роль staff (если привязан к user_id)
     if (staff.user_id) {
@@ -48,8 +49,9 @@ export async function POST(_: Request, context: unknown) {
             .eq('key', 'staff')
             .maybeSingle();
 
-        if (eRole || !roleStaff?.id)
-            return NextResponse.json({ ok: false, error: 'ROLE_STAFF_NOT_FOUND' }, { status: 500 });
+        if (eRole || !roleStaff?.id) {
+            return createErrorResponse('internal', 'Роль staff не найдена', undefined, 500);
+        }
 
         await svc
             .from('user_roles')
@@ -59,9 +61,6 @@ export async function POST(_: Request, context: unknown) {
             );
     }
 
-        return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+        return createSuccessResponse();
+    });
 }

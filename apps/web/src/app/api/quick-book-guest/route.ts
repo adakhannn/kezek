@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.public,
         async () => {
+            return withErrorHandler('QuickBookGuest', async () => {
             const url = getSupabaseUrl();
             const anon = getSupabaseAnonKey();
             
@@ -60,10 +61,7 @@ export async function POST(req: Request) {
                 .maybeSingle<{ id: string }>();
 
             if (eBranch || !branch?.id) {
-                return NextResponse.json(
-                    { ok: false, error: 'no_branch', message: 'Branch not found or inactive' },
-                    { status: 400 }
-                );
+                return createErrorResponse('not_found', 'Филиал не найден или неактивен', { code: 'no_branch' }, 400);
             }
 
             function pickBookingId(data: unknown): string | null {
@@ -91,18 +89,12 @@ export async function POST(req: Request) {
             
             if (error) {
                 logError('QuickBookGuest', 'RPC error', error);
-                return NextResponse.json(
-                    { ok: false, error: 'rpc', message: error.message },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', error.message, { code: 'rpc' }, 400);
             }
 
             const bookingId = pickBookingId(rpcData);
             if (!bookingId) {
-                return NextResponse.json(
-                    { ok: false, error: 'rpc_shape', message: 'Unexpected RPC result shape' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Неожиданный формат результата RPC', { code: 'rpc_shape' }, 400);
             }
 
             logDebug('QuickBookGuest', 'Guest booking created', { bookingId });
@@ -133,10 +125,10 @@ export async function POST(req: Request) {
                 // Не возвращаем ошибку, так как бронирование уже создано и подтверждено
             }
 
-            return NextResponse.json({
-                ok: true, 
+            return createSuccessResponse({
                 booking_id: bookingId,
                 confirmed: true,
+            });
             });
         }
     );

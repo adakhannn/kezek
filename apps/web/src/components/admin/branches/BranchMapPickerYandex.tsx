@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
+import {logError} from '@/lib/log';
 import { loadYandexMaps } from '@/lib/yamaps';
 
 /* =======================
@@ -182,7 +183,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                     // Yandex Maps возвращает координаты в формате [lat, lon]
                     onPick(coords[0], coords[1], addr);
                 } catch (error) {
-                    console.error('Geocoding error:', error);
+                    logError('BranchMapPicker', 'Geocoding error', error);
                     // В случае ошибки все равно передаем координаты
                     onPick(coords[0], coords[1], undefined);
                 }
@@ -196,17 +197,17 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                 try {
                     const coords = e.get<Coordinates>('coords');
                     if (!coords || !Array.isArray(coords) || coords.length < 2) {
-                        console.error('Invalid coordinates from click event:', coords);
+                        logError('BranchMapPicker', 'Invalid coordinates from click event', { coords });
                         return;
                     }
                     setPoint(coords);
                     await geocodeAndEmit(coords);
                 } catch (error) {
-                    console.error('Error handling map click:', error);
+                    logError('BranchMapPicker', 'Error handling map click', error);
                 }
             });
             } catch (error) {
-                console.error('Failed to initialize Yandex Maps:', error);
+                logError('BranchMapPicker', 'Failed to initialize Yandex Maps', error);
                 if (boxRef.current) {
                     boxRef.current.innerHTML = `
                         <div class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800 rounded border">

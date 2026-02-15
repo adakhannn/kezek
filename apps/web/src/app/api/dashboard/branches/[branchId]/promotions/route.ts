@@ -1,6 +1,6 @@
 // apps/web/src/app/api/dashboard/branches/[branchId]/promotions/route.ts
-import { NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -30,7 +30,7 @@ type PromotionBody = {
  * Получает список акций филиала
  */
 export async function GET(req: Request, context: unknown) {
-    try {
+    return withErrorHandler<ApiSuccessResponse<{ promotions: unknown[] } | { promotion: unknown }>>('BranchPromotions', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'branchId');
         const { bizId } = await getBizContextForManagers();
@@ -45,7 +45,7 @@ export async function GET(req: Request, context: unknown) {
             .maybeSingle();
 
         if (branchError || !branch) {
-            return NextResponse.json({ ok: false, error: 'BRANCH_NOT_FOUND_OR_ACCESS_DENIED' }, { status: 404 });
+            return createErrorResponse('not_found', 'Филиал не найден или доступ запрещен', undefined, 404);
         }
 
         // Получаем акции филиала
@@ -57,7 +57,7 @@ export async function GET(req: Request, context: unknown) {
             .order('created_at', { ascending: false });
 
         if (promotionsError) {
-            return NextResponse.json({ ok: false, error: promotionsError.message }, { status: 500 });
+            return createErrorResponse('internal', promotionsError.message, undefined, 500);
         }
 
         // Получаем статистику использования для каждой акции
@@ -79,15 +79,8 @@ export async function GET(req: Request, context: unknown) {
             })
         );
 
-        return NextResponse.json({
-            ok: true,
-            promotions: promotionsWithStats,
-        });
-    } catch (error) {
-        logError('BranchPromotions', 'Unexpected error in GET promotions API', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse({ promotions: promotionsWithStats });
+    });
 }
 
 /**
@@ -95,7 +88,7 @@ export async function GET(req: Request, context: unknown) {
  * Создает новую акцию для филиала
  */
 export async function POST(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('BranchPromotions', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'branchId');
         const { bizId } = await getBizContextForManagers();
@@ -110,7 +103,7 @@ export async function POST(req: Request, context: unknown) {
             .maybeSingle();
 
         if (branchError || !branch) {
-            return NextResponse.json({ ok: false, error: 'BRANCH_NOT_FOUND_OR_ACCESS_DENIED' }, { status: 404 });
+            return createErrorResponse('not_found', 'Филиал не найден или доступ запрещен', undefined, 404);
         }
 
         const body = (await req.json()) as PromotionBody;
@@ -119,21 +112,21 @@ export async function POST(req: Request, context: unknown) {
         const { promotion_type, params, title_ru, is_active, valid_from, valid_to } = body;
 
         if (!promotion_type || !title_ru) {
-            return NextResponse.json({ ok: false, error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
+            return createErrorResponse('validation', 'Необходимо указать тип акции и заголовок', undefined, 400);
         }
 
         // Валидация параметров для разных типов акций
         if (promotion_type === 'free_after_n_visits') {
             const visitCount = params?.visit_count;
             if (!visitCount || typeof visitCount !== 'number' || visitCount < 1) {
-                return NextResponse.json({ ok: false, error: 'INVALID_VISIT_COUNT' }, { status: 400 });
+                return createErrorResponse('validation', 'Количество визитов должно быть больше 0', undefined, 400);
             }
         }
 
         if (promotion_type === 'birthday_discount' || promotion_type === 'first_visit_discount') {
             const discountPercent = params?.discount_percent;
             if (!discountPercent || typeof discountPercent !== 'number' || discountPercent < 1 || discountPercent > 100) {
-                return NextResponse.json({ ok: false, error: 'INVALID_DISCOUNT_PERCENT' }, { status: 400 });
+                return createErrorResponse('validation', 'Процент скидки должен быть от 1 до 100', undefined, 400);
             }
         }
 
@@ -159,17 +152,10 @@ export async function POST(req: Request, context: unknown) {
             .single();
 
         if (insertError) {
-            return NextResponse.json({ ok: false, error: insertError.message }, { status: 500 });
+            return createErrorResponse('internal', insertError.message, undefined, 500);
         }
 
-        return NextResponse.json({
-            ok: true,
-            promotion,
-        });
-    } catch (error) {
-        logError('BranchPromotions', 'Unexpected error in POST promotions API', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse({ promotion });
+    });
 }
 

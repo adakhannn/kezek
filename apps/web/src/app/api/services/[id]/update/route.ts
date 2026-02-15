@@ -1,8 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
@@ -22,14 +21,18 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('ServicesUpdate', async () => {
         const serviceId = await getRouteParamRequired(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
         const body = await req.json().catch(() => ({} as Body));
-        if (!body.name_ru?.trim()) return NextResponse.json({ ok: false, error: 'NAME_REQUIRED' }, { status: 400 });
-        if (!body.duration_min || body.duration_min <= 0) return NextResponse.json({ ok: false, error: 'DURATION_INVALID' }, { status: 400 });
+        if (!body.name_ru?.trim()) {
+            return createErrorResponse('validation', 'Имя обязательно', undefined, 400);
+        }
+        if (!body.duration_min || body.duration_min <= 0) {
+            return createErrorResponse('validation', 'Длительность должна быть больше 0', undefined, 400);
+        }
 
         // услуга принадлежит бизнесу? (используем унифицированную утилиту)
         const serviceCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; name_ru: string }>(
@@ -40,14 +43,14 @@ export async function POST(req: Request, context: unknown) {
             'id, biz_id, name_ru'
         );
         if (serviceCheck.error || !serviceCheck.data) {
-            return NextResponse.json({ ok: false, error: 'SERVICE_NOT_IN_THIS_BUSINESS' }, { status: 400 });
+            return createErrorResponse('forbidden', 'Услуга не принадлежит этому бизнесу', undefined, 403);
         }
         const svc = serviceCheck.data;
 
         // Определяем список филиалов
         const branchIds: string[] = body.branch_ids ?? (body.branch_id ? [body.branch_id] : []);
         if (branchIds.length === 0) {
-            return NextResponse.json({ ok: false, error: 'BRANCH_REQUIRED' }, { status: 400 });
+            return createErrorResponse('validation', 'Необходимо указать хотя бы один филиал', undefined, 400);
         }
 
         // Проверяем, что все филиалы принадлежат бизнесу
@@ -58,17 +61,13 @@ export async function POST(req: Request, context: unknown) {
             .in('id', branchIds);
 
         if (brErr) {
-            return NextResponse.json({ ok: false, error: brErr.message }, { status: 400 });
+            return createErrorResponse('validation', brErr.message, undefined, 400);
         }
 
         const found = new Set((brRows ?? []).map((r) => String(r.id)));
         const missing = branchIds.filter((id) => !found.has(String(id)));
         if (missing.length) {
-            return NextResponse.json({
-                ok: false,
-                error: 'BRANCH_NOT_IN_THIS_BUSINESS',
-                details: { missing },
-            }, { status: 400 });
+            return createErrorResponse('forbidden', 'Некоторые филиалы не принадлежат этому бизнесу', { missing }, 403);
         }
 
         // Находим все услуги с таким же названием в этом бизнесе (это "копии" услуги в разных филиалах)
@@ -102,7 +101,9 @@ export async function POST(req: Request, context: unknown) {
                 .eq('name_ru', svc.name_ru)
                 .in('branch_id', toUpdate);
 
-            if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });
+            if (eUpd) {
+                return createErrorResponse('validation', eUpd.message, undefined, 400);
+            }
         }
 
         // Создаём новые записи для добавленных филиалов
@@ -122,7 +123,9 @@ export async function POST(req: Request, context: unknown) {
             }));
 
             const { error: eIns } = await admin.from('services').insert(rows);
-            if (eIns) return NextResponse.json({ ok: false, error: eIns.message }, { status: 400 });
+            if (eIns) {
+                return createErrorResponse('validation', eIns.message, undefined, 400);
+            }
         }
 
         // Удаляем записи для убранных филиалов (только если нет броней)
@@ -180,18 +183,12 @@ export async function POST(req: Request, context: unknown) {
                                     .eq('biz_id', bizId);
 
                                 if (eSoftDel) {
-                                    return NextResponse.json({
-                                        ok: false,
-                                        error: `Не удалось отвязать услугу из филиала: ${eSoftDel.message}`,
-                                    }, { status: 400 });
+                                    return createErrorResponse('validation', `Не удалось отвязать услугу из филиала: ${eSoftDel.message}`, undefined, 400);
                                 }
                                 // Успешно пометили как неактивную - услуга "отвязана" от филиала
                             } else {
                                 // Другая ошибка - возвращаем её
-                                return NextResponse.json({
-                                    ok: false,
-                                    error: `Не удалось удалить услугу из филиала: ${eDel.message}`,
-                                }, { status: 400 });
+                                return createErrorResponse('validation', `Не удалось удалить услугу из филиала: ${eDel.message}`, undefined, 400);
                             }
                         }
                         // Успешно удалено физически
@@ -202,17 +199,15 @@ export async function POST(req: Request, context: unknown) {
             // Если есть филиалы с бронями, возвращаем ошибку
             if (branchesWithBookings.length > 0) {
                 const branchNames = branchesWithBookings.join(', ');
-                return NextResponse.json({
-                    ok: false,
-                    error: 'HAS_BOOKINGS',
-                    message: `Невозможно отвязать услугу от филиала${branchesWithBookings.length > 1 ? 'ов' : ''} "${branchNames}": к ${branchesWithBookings.length > 1 ? 'ним' : 'нему'} привязаны будущие брони. Сначала отмените или удалите все будущие брони.`,
-                }, { status: 400 });
+                return createErrorResponse(
+                    'conflict',
+                    `Невозможно отвязать услугу от филиала${branchesWithBookings.length > 1 ? 'ов' : ''} "${branchNames}": к ${branchesWithBookings.length > 1 ? 'ним' : 'нему'} привязаны будущие брони. Сначала отмените или удалите все будущие брони.`,
+                    { branches: branchesWithBookings },
+                    409
+                );
             }
         }
 
-        return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+        return createSuccessResponse();
+    });
 }

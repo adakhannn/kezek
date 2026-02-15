@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { WhatsAppConnectPrompt } from './WhatsAppConnectPrompt';
 import { useLanguage } from './i18n/LanguageProvider';
 
+import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 
@@ -50,7 +51,7 @@ export function WhatsAppReminderBanner() {
                     setLoading(false);
                 }
             } catch (error) {
-                console.warn('WhatsAppReminderBanner: error checking phone', error);
+                logWarn('WhatsAppReminderBanner', 'error checking phone', error);
                 if (mounted) {
                     setLoading(false);
                 }

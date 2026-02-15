@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 type Body = {
@@ -83,7 +84,7 @@ export async function POST(req: Request, context: unknown) {
         return NextResponse.json({ ok: true, id: data?.id });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('branch create error', e);
+        logError('BranchCreate', 'Failed to create branch', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

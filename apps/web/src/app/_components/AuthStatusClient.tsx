@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { SignOutButton } from './SignOutButton';
 import { useLanguage } from './i18n/LanguageProvider';
 
+import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 
@@ -51,7 +52,7 @@ async function getTargetPath(userId: string, t: (key: string, fallback?: string)
             
             isStaff = !!staff;
         } catch (error) {
-            console.warn('AuthStatusClient: error checking staff record', error);
+            logWarn('AuthStatusClient', 'error checking staff record', error);
             // Fallback: проверяем через user_roles
             try {
                 const [{ data: ur }, { data: roleRows }] = await Promise.all([
@@ -65,7 +66,7 @@ async function getTargetPath(userId: string, t: (key: string, fallback?: string)
                     isStaff = !!staffRole?.biz_id;
                 }
             } catch (fallbackError) {
-                console.warn('AuthStatusClient: fallback check also failed', fallbackError);
+                logWarn('AuthStatusClient', 'fallback check also failed', fallbackError);
             }
         }
         
@@ -84,7 +85,7 @@ async function getTargetPath(userId: string, t: (key: string, fallback?: string)
         return { href: '/cabinet', label: t('header.myBookings', 'Мои записи'), isStaff: false };
     } catch (error) {
         // В случае ошибки возвращаем кабинет по умолчанию
-        console.warn('AuthStatusClient: error getting target path', error);
+        logWarn('AuthStatusClient', 'error getting target path', error);
         return { href: '/cabinet', label: t('header.myBookings', 'Мои записи'), isStaff: false };
     }
 }
@@ -113,17 +114,15 @@ export function AuthStatusClient({ onAction }: { onAction?: () => void }) {
                 if (!mounted) return;
 
                 if (sessionError) {
-                    console.warn('AuthStatusClient: session error', sessionError);
+                    logWarn('AuthStatusClient', 'session error', sessionError);
                 }
 
                 // Логируем для отладки
-                if (process.env.NODE_ENV === 'development') {
-                    console.log('AuthStatusClient: session check', { 
-                        hasSession: !!session, 
-                        hasUser: !!session?.user,
-                        userId: session?.user?.id 
-                    });
-                }
+                logDebug('AuthStatusClient', 'session check', { 
+                    hasSession: !!session, 
+                    hasUser: !!session?.user,
+                    userId: session?.user?.id 
+                });
 
                 if (session?.user) {
                     setUser(session.user);
@@ -136,13 +135,11 @@ export function AuthStatusClient({ onAction }: { onAction?: () => void }) {
                     // Если сессии нет, пробуем getUser (может быть в процессе обновления)
                     const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
                     
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log('AuthStatusClient: getUser check', { 
-                            hasUser: !!currentUser, 
-                            userId: currentUser?.id,
-                            error: userError 
-                        });
-                    }
+                    logDebug('AuthStatusClient', 'getUser check', { 
+                        hasUser: !!currentUser, 
+                        userId: currentUser?.id,
+                        error: userError 
+                    });
 
                     if (currentUser) {
                         setUser(currentUser);
@@ -156,7 +153,7 @@ export function AuthStatusClient({ onAction }: { onAction?: () => void }) {
                     }
                 }
             } catch (error) {
-                console.error('AuthStatusClient: error updating status', error);
+                logError('AuthStatusClient', 'error updating status', error);
                 if (mounted) {
                     setUser(null);
                     setTarget(null);
@@ -177,9 +174,7 @@ export function AuthStatusClient({ onAction }: { onAction?: () => void }) {
         } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (!mounted) return;
 
-            if (process.env.NODE_ENV === 'development') {
-                console.log('AuthStatusClient: auth state change', { event, hasSession: !!session, hasUser: !!session?.user });
-            }
+            logDebug('AuthStatusClient', 'auth state change', { event, hasSession: !!session, hasUser: !!session?.user });
 
             if (session?.user) {
                 setUser(session.user);

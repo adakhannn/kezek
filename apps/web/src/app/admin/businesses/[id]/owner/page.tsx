@@ -2,9 +2,11 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
-
 import { OwnerForm } from './ui/OwnerForm';
+
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
+import {logWarn} from '@/lib/log';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -97,7 +99,7 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
                         });
                     }
                 } catch (e) {
-                    console.warn(`Failed to fetch owner ${ownerId}:`, e);
+                    logWarn('OwnerPage', `Failed to fetch owner ${ownerId}`, e);
                 }
             }
         }

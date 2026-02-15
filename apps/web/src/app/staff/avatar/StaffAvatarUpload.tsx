@@ -4,6 +4,7 @@ import React, {useEffect, useRef, useState} from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import {Button} from '@/components/ui/Button';
+import {logError} from '@/lib/log';
 
 async function createImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
@@ -97,7 +98,7 @@ export default function StaffAvatarUpload({
                 setPreview(dataUrl);
             })
             .catch((error) => {
-                console.error('Crop error:', error);
+                logError('StaffAvatarUpload', 'Crop error', error);
                 alert(t('staff.avatar.error.process', 'Failed to process image. Try another photo.'));
             });
     };
@@ -129,7 +130,7 @@ export default function StaffAvatarUpload({
             }
             onUploaded?.(result.url);
         } catch (error) {
-            console.error('Error uploading avatar:', error);
+            logError('StaffAvatarUpload', 'Error uploading avatar', error);
             const errorMessage = error instanceof Error ? error.message : t('staff.avatar.error.unknown', 'Unknown error');
             alert(t('staff.avatar.error.uploadFailed', 'Error uploading avatar: {error}').replace('{error}', errorMessage));
         } finally {
@@ -159,7 +160,7 @@ export default function StaffAvatarUpload({
             }
             onUploaded?.('');
         } catch (error) {
-            console.error('Error removing avatar:', error);
+            logError('StaffAvatarUpload', 'Error removing avatar', error);
             alert(t('staff.avatar.error.removeFailed', 'Error removing avatar. Please try again.'));
         } finally {
             setUploading(false);
@@ -176,7 +177,7 @@ export default function StaffAvatarUpload({
                             alt={t('staff.avatar.alt', 'Avatar')}
                             className="h-full w-full object-cover"
                             onError={(e) => {
-                                console.error('Error loading avatar image:', preview);
+                                logError('StaffAvatarUpload', 'Error loading avatar image', { preview });
                                 e.currentTarget.style.display = 'none';
                             }}
                         />

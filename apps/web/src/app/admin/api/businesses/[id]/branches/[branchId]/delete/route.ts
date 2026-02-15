@@ -7,6 +7,8 @@ import {createClient, type PostgrestError} from '@supabase/supabase-js';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import {logDebug, logError, logWarn} from '@/lib/log';
+
 // Аккуратно парсим id и branchId из URL, без any
 function extractIds(urlStr: string): { id: string; branchId: string } {
     const parts = new URL(urlStr).pathname.split('/').filter(Boolean);
@@ -128,10 +130,10 @@ export async function POST(req: Request) {
                 .eq('status', 'cancelled');
 
             if (eDelCancelled) {
-                console.warn(`Не удалось удалить отмененные бронирования: ${eDelCancelled.message}`);
+                logWarn('BranchDelete', `Не удалось удалить отмененные бронирования: ${eDelCancelled.message}`, { branchId, cancelledCount });
                 // Не блокируем удаление из-за этого, но логируем
             } else {
-                console.log(`Удалено ${cancelledCount} отмененных бронирований для филиала ${branchId}`);
+                logDebug('BranchDelete', `Удалено ${cancelledCount} отмененных бронирований для филиала`, { branchId, cancelledCount });
             }
         }
 
@@ -154,7 +156,7 @@ export async function POST(req: Request) {
                 .eq('is_active', false);
 
             if (eMoveStaff) {
-                console.warn('Не удалось переместить неактивных сотрудников:', eMoveStaff.message);
+                logWarn('BranchDelete', 'Не удалось переместить неактивных сотрудников', { branchId, error: eMoveStaff.message });
             }
         }
 
@@ -167,7 +169,7 @@ export async function POST(req: Request) {
             .eq('branch_id', branchId);
 
         if (eDelAssignments) {
-            console.warn('Не удалось удалить строки из staff_branch_assignments:', eDelAssignments.message);
+            logWarn('BranchDelete', 'Не удалось удалить строки из staff_branch_assignments', { branchId, error: eDelAssignments.message });
             // Не блокируем удаление филиала, но логируем проблему
         }
 
@@ -180,7 +182,7 @@ export async function POST(req: Request) {
             .eq('branch_id', branchId);
 
         if (eDelScheduleRules) {
-            console.warn('Не удалось удалить строки из staff_schedule_rules:', eDelScheduleRules.message);
+            logWarn('BranchDelete', 'Не удалось удалить строки из staff_schedule_rules', { branchId, error: eDelScheduleRules.message });
             // Не блокируем удаление филиала, но логируем проблему
         }
         
@@ -232,7 +234,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ ok: true });
     } catch (e: unknown) {
-        console.error('branch delete error', e);
+        logError('BranchDelete', 'Failed to delete branch', e);
         const msg = e instanceof Error ? e.message : String(e);
         return NextResponse.json({ok: false, error: msg}, {status: 500});
     }

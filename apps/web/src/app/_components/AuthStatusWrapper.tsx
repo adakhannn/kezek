@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
+import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
 /**
@@ -33,7 +34,7 @@ export function AuthStatusUpdater() {
                 }
             } catch (error) {
                 // Игнорируем ошибки проверки сессии
-                console.warn('AuthStatusUpdater: session check error', error);
+                logWarn('AuthStatusUpdater', 'session check error', error);
             }
         };
 

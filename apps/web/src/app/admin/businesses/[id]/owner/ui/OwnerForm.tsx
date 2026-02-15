@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import {logError} from '@/lib/log';
 
 type UserRow = {
     id: string;
@@ -80,7 +81,7 @@ export function OwnerForm({
 
             setSearchResults(data.items || []);
         } catch (e) {
-            console.error('Search error:', e);
+            logError('OwnerForm', 'Search error', e);
             setSearchResults([]);
         } finally {
             setSearchLoading(false);

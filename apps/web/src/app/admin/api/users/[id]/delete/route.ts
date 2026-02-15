@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import {logWarn} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 
 type Biz = { id: string; name: string | null; slug: string | null };
@@ -78,12 +79,12 @@ export async function POST(_req: Request, context: unknown) {
                 try {
                     const { data, error } = await admin.from('businesses').select('id,name,slug').eq('owner_id', id);
                     if (error) {
-                        console.warn('[delete user] Failed to fetch owned businesses:', error.message);
+                        logWarn('UserDelete', 'Failed to fetch owned businesses', { userId: id, error: error.message });
                     }
                     owned = data ?? [];
                 } catch (e) {
                     // Не критично, если не удалось получить список бизнесов - просто не показываем их
-                    console.warn('[delete user] Error fetching owned businesses:', e instanceof Error ? e.message : String(e));
+                    logWarn('UserDelete', 'Error fetching owned businesses', { userId: id, error: e });
                 }
 
                 return NextResponse.json(

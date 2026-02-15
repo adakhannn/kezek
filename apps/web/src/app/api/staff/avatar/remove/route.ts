@@ -1,6 +1,5 @@
 // apps/web/src/app/api/staff/avatar/remove/route.ts
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -9,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('StaffAvatarRemove', async () => {
         const { staffId } = await getStaffContext();
 
         const admin = getServiceClient();
@@ -22,7 +21,7 @@ export async function POST(req: Request) {
             .single();
 
         if (!currentStaff?.avatar_url) {
-            return NextResponse.json({ ok: true, message: 'Аватарка не найдена' });
+            return createSuccessResponse({ message: 'Аватарка не найдена' });
         }
 
         // Удаляем файл из storage
@@ -42,14 +41,10 @@ export async function POST(req: Request) {
 
         if (updateError) {
             logError('StaffAvatarRemove', 'Update error', updateError);
-            return NextResponse.json({ ok: false, error: updateError.message }, { status: 400 });
+            return createErrorResponse('validation', updateError.message, undefined, 400);
         }
 
-        return NextResponse.json({ ok: true });
-    } catch (error) {
-        logError('StaffAvatarRemove', 'Error in avatar remove', error);
-        const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse();
+    });
 }
 

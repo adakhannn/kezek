@@ -2,17 +2,16 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {NextResponse} from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = { review_id: string; rating: number; comment?: string };
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('ReviewsUpdate', async () => {
         const body = (await req.json()) as Body;
         if (!body.review_id || !body.rating) {
-            return NextResponse.json({ok: false, error: 'BAD_REQUEST'}, {status: 400});
+            return createErrorResponse('validation', 'review_id и rating обязательны', undefined, 400);
         }
 
         // Используем унифицированную утилиту для создания Supabase клиента
@@ -21,7 +20,7 @@ export async function POST(req: Request) {
         // Получаем текущего пользователя
         const { data: auth } = await supabase.auth.getUser();
         if (!auth.user) {
-            return NextResponse.json({ok: false, error: 'UNAUTHORIZED'}, {status: 401});
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         const userId = auth.user.id;
@@ -34,11 +33,11 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (reviewError || !review) {
-            return NextResponse.json({ok: false, error: 'REVIEW_NOT_FOUND'}, {status: 404});
+            return createErrorResponse('not_found', 'Отзыв не найден', undefined, 404);
         }
 
         if (review.client_id !== userId) {
-            return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
+            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
         }
 
         // Обновляем отзыв
@@ -53,12 +52,11 @@ export async function POST(req: Request) {
             .select('id')
             .single();
 
-        if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
+        if (error) {
+            return createErrorResponse('validation', error.message, undefined, 400);
+        }
 
-        return NextResponse.json({ok: true, id: data?.id});
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+        return createSuccessResponse({ id: data?.id });
+    });
 }
 

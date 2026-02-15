@@ -42,23 +42,29 @@
 
 **Текущее покрытие**:
 - ✅ Unit-тесты для `financeDomain` (6 файлов)
-- ✅ Интеграционные тесты для API endpoints (24 файла):
-  - ✅ Финансовые API (staff/finance, staff/shift/*)
+- ✅ Интеграционные тесты для API endpoints (70 файлов):
+  - ✅ Финансовые API (staff/finance, staff/shift/*, dashboard/staff/[id]/finance/stats, dashboard/staff/[id]/finance, dashboard/staff/finance/all, dashboard/finance/all)
   - ✅ Бронирования (bookings/cancel, bookings/mark-attendance)
   - ✅ Уведомления (notify)
-  - ✅ CRUD операции (staff/create, branches/create, branches/delete, services/create)
+  - ✅ CRUD операции (staff/create, staff/update, staff/delete, staff/dismiss, staff/restore, staff/transfer, staff/create-from-user, staff/sync-roles, branches/create, branches/update, branches/delete, branches/schedule, services/create, services/update, services/delete)
+  - ✅ Профиль пользователя (profile/update, user/update-phone)
+  - ✅ Аватары сотрудников (staff/avatar/upload, staff/avatar/remove)
+  - ✅ Dashboard (staff-shifts/[id]/update-hours, staff/[id]/shift/open)
+  - ✅ Поиск пользователей (users/search)
   - ✅ Quick booking (quick-book-guest, quick-hold)
   - ✅ Cron задачи (close-shifts)
+  - ✅ **Auth endpoints (sign-out, telegram/login, telegram/link, whatsapp/send-otp, whatsapp/verify-otp, whatsapp/create-session, mobile-exchange, yandex/callback)** ✨
+  - ✅ **Reviews endpoints (reviews/create, reviews/update)** ✨
+  - ✅ **Promotions endpoints (branches/[branchId]/promotions - GET, POST, PATCH, DELETE)** ✨
+  - ✅ **Admin endpoints (ratings/status, health-check, initialize-ratings, performance/stats, promotions/debug)** ✨
+  - ✅ **WhatsApp endpoints (send-otp, verify-otp, get-phone-numbers, get-business-account, diagnose, test)** ✨
+  - ✅ **Webhooks (whatsapp)** ✨
+  - ✅ **Метрики (metrics/frontend)** ✨
 - ✅ E2E тесты для критичных сценариев (4 файла)
-- ⚠️ **Покрытие ~30%** от общего количества endpoints
+- ⚠️ **Покрытие ~87%** от общего количества endpoints
 
 **Отсутствуют тесты для**:
-- Промоакций (promotions/*)
-- Auth endpoints (sign-in, sign-out, OAuth)
-- Остальных CRUD операций (staff/update, services/update, branches/update, branches/schedule)
-- Admin endpoints (admin/*)
-- Reviews endpoints (reviews/*)
-- WhatsApp/Telegram endpoints
+- Менее критичные endpoints (swagger.json, notify/ping, public/bookings/guest-create, etc.)
 
 **Риски**:
 - Высокий риск регрессий при изменениях
@@ -83,17 +89,31 @@
 ### 3. Высокий: Непоследовательная обработка ошибок в API
 
 **Описание**: 
-Из ~80+ API endpoints только 12 используют централизованную систему `withErrorHandler`. Остальные используют старую обработку ошибок с разными форматами ответов.
+Из ~80+ API endpoints только 26 используют централизованную систему `withErrorHandler`. Остальные используют старую обработку ошибок с разными форматами ответов.
 
-**Endpoints с withErrorHandler** (12):
-- `branches/create`, `branches/[id]/delete`
-- `staff/[id]/update`, `staff/[id]/delete`, `staff/create`
-- `services/create`
+**Endpoints с withErrorHandler** (51):
+- `branches/create`, `branches/[id]/delete`, `branches/[id]/update`, `branches/[id]/schedule`
+- `staff/[id]/update`, `staff/[id]/delete`, `staff/create`, `staff/[id]/restore`, `staff/[id]/dismiss`, `staff/[id]/transfer`, `staff/create-from-user`, `staff/avatar/upload`, `staff/avatar/remove`
+- `staff/shift/today` (deprecated)
+- `services/create`, `services/[id]/update`, `services/[id]/delete`
+- `reviews/create`, `reviews/update`
 - `notify`
 - `bookings/[id]/cancel`, `bookings/[id]/mark-attendance`
 - `admin/promotions/debug`
-- `auth/sign-out`
+- `auth/sign-out`, `auth/telegram/login`, `auth/telegram/link`, `auth/mobile-exchange` (POST, GET), `auth/yandex/callback`
+- `auth/whatsapp/send-otp`, `auth/whatsapp/verify-otp`, `auth/whatsapp/create-session`
+- `staff/sync-roles`, `staff/update`
+- `quick-hold`, `quick-book-guest`
+- `whatsapp/get-phone-numbers`, `whatsapp/get-business-account`, `whatsapp/diagnose`, `whatsapp/test`
 - `users/search`
+- `profile/update`
+- `user/update-phone`
+- `dashboard/staff-shifts/[id]/update-hours`
+- `dashboard/staff/[id]/shift/open`
+- `dashboard/staff/[id]/finance/stats`
+- `dashboard/staff/finance/all`
+- `dashboard/branches/[branchId]/promotions` (GET, POST)
+- `dashboard/branches/[branchId]/promotions/[promotionId]` (PATCH, DELETE)
 
 **Проблемы**:
 - Разные форматы ответов об ошибках
@@ -108,7 +128,7 @@
 - Невозможность централизованного мониторинга ошибок
 
 **Рекомендации**:
-- Мигрировать остальные ~68 API endpoints на `withErrorHandler`
+- Мигрировать остальные ~29 API endpoints на `withErrorHandler` (прогресс: 51/80, ~64%)
 - Стандартизировать формат ошибок (используется `createErrorResponse`)
 - Добавить автоматическое логирование всех ошибок (через `withErrorHandler`)
 - Маскировать чувствительные данные в ошибках (частично реализовано)
