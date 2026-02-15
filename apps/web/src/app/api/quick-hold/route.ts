@@ -1,12 +1,11 @@
-import {createServerClient} from "@supabase/ssr";
-import {createClient} from "@supabase/supabase-js";
-import {cookies} from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 import {NextResponse} from "next/server";
 
+import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
-import { createErrorResponse } from '@/lib/apiErrorHandler';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { quickHoldSchema } from '@/lib/validation/bookingSchemas';
 
@@ -135,11 +134,8 @@ export async function POST(req: Request) {
         user = userData;
         logDebug('QuickHold', 'Bearer token auth successful', { userId: user.id });
     } else {
-        // Для веб-версии: используем cookies
-        const cookieStore = await cookies();
-        supabase = createServerClient(url, anon, {
-            cookies: {get: (n: string) => cookieStore.get(n)?.value},
-        });
+        // Для веб-версии: используем унифицированную утилиту
+        supabase = await createSupabaseServerClient();
         const {data: {user: userData}} = await supabase.auth.getUser();
         if (!userData) {
             return createErrorResponse('auth', 'Not signed in', undefined, 401);

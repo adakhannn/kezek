@@ -9,6 +9,7 @@ notifications/
 ├── types.ts                      # Типы и интерфейсы
 ├── utils.ts                      # Утилиты (first, normalizeEmails, greet, roleRu, statusRu, buildHtmlPersonal)
 ├── messageBuilders.ts            # Построение сообщений (HTML, текст, WhatsApp, Telegram)
+├── BookingDataService.ts         # Получение данных бронирования из БД
 ├── ParticipantDataService.ts     # Получение данных участников (клиент, владелец, мастер)
 ├── EmailNotificationService.ts   # Отправка email уведомлений
 ├── WhatsAppNotificationService.ts # Отправка WhatsApp уведомлений
@@ -44,6 +45,26 @@ const orchestrator = new NotificationOrchestrator(
 // Отправляем уведомления
 const result = await orchestrator.sendNotifications(booking, 'confirm');
 // result: { emailsSent: 3, whatsappSent: 2, telegramSent: 1 }
+```
+
+### BookingDataService
+
+Сервис для получения данных бронирования из базы данных:
+
+```typescript
+import { BookingDataService } from '@/lib/notifications';
+import { createClient } from '@supabase/supabase-js';
+
+const admin = createClient(url, serviceKey);
+const bookingService = new BookingDataService(admin);
+
+// Получить данные бронирования
+const booking = await bookingService.getBookingById('booking-123');
+
+// Получить email владельца
+const ownerEmail = await bookingService.getOwnerEmail('owner-123');
+// или из бизнеса
+const ownerEmail = await bookingService.getOwnerEmailFromBusiness(booking.biz);
 ```
 
 ### Использование отдельных сервисов

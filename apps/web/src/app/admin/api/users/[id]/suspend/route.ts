@@ -78,13 +78,17 @@ export async function POST(req: Request, context: unknown) {
             });
 
             // 4) инвалидируем все сессии
-            await (admin).auth.admin.signOut?.(targetId).catch(() => {
-            });
-            // Старый метод (может отсутствовать в типах, но существует в рантайме)
-            // @ts-expect-error - invalidateRefreshTokens может отсутствовать в типах @supabase/supabase-js,
-            // но метод существует в runtime для Supabase Auth Admin API
-            await admin.auth.admin.invalidateRefreshTokens?.(targetId).catch(() => {
-            });
+            const authAdmin = admin.auth.admin as { 
+                signOut?: (userId: string) => Promise<unknown>;
+                invalidateRefreshTokens?: (userId: string) => Promise<unknown>;
+            };
+            if (authAdmin.signOut) {
+                await authAdmin.signOut(targetId).catch(() => {});
+            }
+            // invalidateRefreshTokens может отсутствовать в типах, но существует в runtime
+            if (authAdmin.invalidateRefreshTokens) {
+                await authAdmin.invalidateRefreshTokens(targetId).catch(() => {});
+            }
 
             return NextResponse.json({ok: true, blocked: true});
         } else {

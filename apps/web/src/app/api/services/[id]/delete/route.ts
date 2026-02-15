@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -13,26 +14,21 @@ export async function POST(_req: Request, context: unknown) {
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
-        // услуга принадлежит бизнесу?
-        const { data: svc, error: svcError } = await admin
-            .from('services')
-            .select('id,biz_id')
-            .eq('id', serviceId)
-            .maybeSingle();
-
-        if (svcError) {
-            return NextResponse.json({ ok: false, error: `Ошибка проверки услуги: ${svcError.message}` }, { status: 400 });
-        }
-
-        if (!svc) {
-            return NextResponse.json({ ok: false, error: 'Услуга не найдена' }, { status: 404 });
-        }
-        if (String(svc.biz_id) !== String(bizId)) {
+        // услуга принадлежит бизнесу? (используем унифицированную утилиту)
+        const serviceCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
+            admin,
+            'services',
+            serviceId,
+            bizId,
+            'id, biz_id'
+        );
+        if (serviceCheck.error || !serviceCheck.data) {
+            const statusCode = serviceCheck.error === 'Resource not found' ? 404 : 403;
             return NextResponse.json({ 
                 ok: false, 
-                error: 'SERVICE_NOT_IN_THIS_BUSINESS',
-                details: { serviceBizId: svc.biz_id, currentBizId: bizId }
-            }, { status: 403 });
+                error: serviceCheck.error === 'Resource not found' ? 'Услуга не найдена' : 'SERVICE_NOT_IN_THIS_BUSINESS',
+                details: serviceCheck.error === 'Resource not found' ? undefined : { currentBizId: bizId }
+            }, { status: statusCode });
         }
 
         // Проверяем только будущие брони (прошедшие не должны блокировать удаление)

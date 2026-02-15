@@ -1,8 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
+import { getServiceClient } from '@/lib/supabaseService';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,21 +12,24 @@ export const dynamic = 'force-dynamic';
 export async function POST(_: Request, context: unknown) {
     try {
         const staffId = await getRouteParamRequired(context, 'id');
-        const { supabase, bizId } = await getBizContextForManagers();
+        const { bizId } = await getBizContextForManagers();
+        const admin = getServiceClient();
 
-    // 1) читаем сотрудника
-    const { data: staff, error: eStaff } = await supabase
-        .from('staff')
-        .select('id,biz_id,user_id,is_active')
-        .eq('id', staffId)
-        .maybeSingle();
-
-    if (eStaff) return NextResponse.json({ ok: false, error: eStaff.message }, { status: 400 });
-    if (!staff || String(staff.biz_id) !== String(bizId))
+    // 1) проверяем, что сотрудник принадлежит бизнесу (используем унифицированную утилиту)
+    const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; user_id: string | null; is_active: boolean }>(
+        admin,
+        'staff',
+        staffId,
+        bizId,
+        'id, biz_id, user_id, is_active'
+    );
+    if (staffCheck.error || !staffCheck.data) {
         return NextResponse.json({ ok: false, error: 'STAFF_NOT_FOUND' }, { status: 404 });
+    }
+    const staff = staffCheck.data;
 
-    // 2) включаем карточку
-    const { error: eUpd } = await supabase
+    // 2) включаем карточку (используем service client)
+    const { error: eUpd } = await admin
         .from('staff')
         .update({ is_active: true })
         .eq('id', staffId)
@@ -34,11 +39,8 @@ export async function POST(_: Request, context: unknown) {
 
     // 3) вернём роль staff (если привязан к user_id)
     if (staff.user_id) {
-        const svc = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
-            { auth: { persistSession: false } }
-        );
+        // Используем унифицированную утилиту для создания admin клиента
+        const svc = createSupabaseAdminClient();
 
         const { data: roleStaff, error: eRole } = await svc
             .from('roles')

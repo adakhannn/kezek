@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -30,15 +31,18 @@ export async function POST(req: Request, context: unknown) {
         if (!body.name_ru?.trim()) return NextResponse.json({ ok: false, error: 'NAME_REQUIRED' }, { status: 400 });
         if (!body.duration_min || body.duration_min <= 0) return NextResponse.json({ ok: false, error: 'DURATION_INVALID' }, { status: 400 });
 
-        // услуга принадлежит бизнесу?
-        const { data: svc } = await admin
-            .from('services')
-            .select('id,biz_id,name_ru')
-            .eq('id', serviceId)
-            .maybeSingle();
-        if (!svc || String(svc.biz_id) !== String(bizId)) {
+        // услуга принадлежит бизнесу? (используем унифицированную утилиту)
+        const serviceCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; name_ru: string }>(
+            admin,
+            'services',
+            serviceId,
+            bizId,
+            'id, biz_id, name_ru'
+        );
+        if (serviceCheck.error || !serviceCheck.data) {
             return NextResponse.json({ ok: false, error: 'SERVICE_NOT_IN_THIS_BUSINESS' }, { status: 400 });
         }
+        const svc = serviceCheck.data;
 
         // Определяем список филиалов
         const branchIds: string[] = body.branch_ids ?? (body.branch_id ? [body.branch_id] : []);

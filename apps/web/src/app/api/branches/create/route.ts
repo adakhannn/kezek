@@ -1,8 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
@@ -16,27 +15,27 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('BranchesCreate', async () => {
         const { supabase, bizId } = await getBizContextForManagers();
         
         // Проверяем, является ли пользователь суперадмином
         const { data: isSuper } = await supabase.rpc('is_super_admin');
         if (!isSuper) {
-            return NextResponse.json({ ok: false, error: 'FORBIDDEN', message: 'Только суперадмин может создавать филиалы' }, { status: 403 });
+            return createErrorResponse('forbidden', 'Только суперадмин может создавать филиалы', undefined, 403);
         }
         
         const admin = getServiceClient();
 
         const body = await req.json().catch(() => ({} as Body));
         if (!body.name?.trim()) {
-            return NextResponse.json({ ok: false, error: 'NAME_REQUIRED' }, { status: 400 });
+            return createErrorResponse('validation', 'Название филиала обязательно', undefined, 400);
         }
 
         let coordsWkt: string | null = null;
         if (body.lat != null && body.lon != null) {
             const v = validateLatLon(body.lat, body.lon);
             if (!v.ok) {
-                return NextResponse.json({ ok: false, error: 'Некорректные координаты' }, { status: 400 });
+                return createErrorResponse('validation', 'Некорректные координаты', undefined, 400);
             }
             coordsWkt = coordsToEWKT(v.lat, v.lon);
         }
@@ -53,11 +52,10 @@ export async function POST(req: Request) {
             .select('id')
             .single();
 
-        if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+        if (error) {
+            return createErrorResponse('validation', error.message, undefined, 400);
+        }
 
-        return NextResponse.json({ ok: true, id: data?.id });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+        return createSuccessResponse({ id: data?.id });
+    });
 }

@@ -56,9 +56,38 @@ export function createMockNextRequest(
  * Используем Record<string, unknown> вместо any для лучшей типизации,
  * но сохраняем гибкость для тестов
  */
-export function createMockSupabase() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mockSupabase: any = {
+type MockSupabaseClient = {
+    auth: {
+        getUser: jest.Mock;
+        signOut: jest.Mock;
+    };
+    from: jest.Mock<MockSupabaseClient>;
+    select: jest.Mock<MockSupabaseClient>;
+    insert: jest.Mock<MockSupabaseClient>;
+    update: jest.Mock<MockSupabaseClient>;
+    delete: jest.Mock<MockSupabaseClient>;
+    eq: jest.Mock<MockSupabaseClient>;
+    neq: jest.Mock<MockSupabaseClient>;
+    gt: jest.Mock<MockSupabaseClient>;
+    gte: jest.Mock<MockSupabaseClient>;
+    lt: jest.Mock<MockSupabaseClient>;
+    lte: jest.Mock<MockSupabaseClient>;
+    in: jest.Mock<MockSupabaseClient>;
+    like: jest.Mock<MockSupabaseClient>;
+    ilike: jest.Mock<MockSupabaseClient>;
+    is: jest.Mock<MockSupabaseClient>;
+    order: jest.Mock<MockSupabaseClient>;
+    limit: jest.Mock<MockSupabaseClient>;
+    range: jest.Mock<MockSupabaseClient>;
+    single: jest.Mock;
+    maybeSingle: jest.Mock;
+    csv: jest.Mock;
+    geojson: jest.Mock;
+    rpc: jest.Mock;
+};
+
+export function createMockSupabase(): MockSupabaseClient {
+    const mockSupabase: MockSupabaseClient = {
         auth: {
             getUser: jest.fn(),
             signOut: jest.fn(),

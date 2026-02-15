@@ -57,7 +57,8 @@ export default function ProfileForm() {
                 .maybeSingle();
 
             if (fetchError) {
-                console.error('Error loading profile:', fetchError);
+                const { logError } = require('@/lib/log');
+                logError('ProfileForm', 'Error loading profile', fetchError);
                 return;
             }
 
@@ -75,7 +76,8 @@ export default function ProfileForm() {
                 telegram_connected: telegramFromProfile || telegramFromMeta,
             });
         } catch (e) {
-            console.error('Error loading profile:', e);
+            const { logError } = require('@/lib/log');
+            logError('ProfileForm', 'Error loading profile', e);
         } finally {
             setLoading(false);
         }

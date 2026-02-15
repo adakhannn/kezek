@@ -181,6 +181,9 @@ importers:
       swagger-ui-react:
         specifier: ^5.31.0
         version: 5.31.0(@types/react@19.1.17)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      web-vitals:
+        specifier: ^5.1.0
+        version: 5.1.0
       zod:
         specifier: ^4.0.17
         version: 4.3.5
@@ -5414,6 +5417,9 @@ packages:
 
   web-tree-sitter@0.24.5:
     resolution: {integrity: sha512-+J/2VSHN8J47gQUAvF8KDadrfz6uFYVjxoxbKWDoXVsH2u7yLdarCnIURnrMA6uSRkgX3SdmqM5BOoQjPdSh5w==}
+
+  web-vitals@5.1.0:
+    resolution: {integrity: sha512-ArI3kx5jI0atlTtmV0fWU3fjpLmq/nD3Zr1iFFlJLaqa5wLBkUSzINwBPySCX/8jRyjlmy1Volw1kz1g9XE4Jg==}
 
   webidl-conversions@5.0.0:
     resolution: {integrity: sha512-VlZwKPCkYKxQgeSbH5EyngOmRp7Ww7I9rQLERETtf5ofd9pGeswWiOtogpEO850jziPRarreGxn5QIiTqpb2wA==}
@@ -12156,6 +12162,8 @@ snapshots:
 
   web-tree-sitter@0.24.5:
     optional: true
+
+  web-vitals@5.1.0: {}
 
   webidl-conversions@5.0.0: {}
 

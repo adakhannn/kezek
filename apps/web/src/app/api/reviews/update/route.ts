@@ -2,9 +2,9 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import {createServerClient} from '@supabase/ssr';
-import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
+
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = { review_id: string; rating: number; comment?: string };
 
@@ -15,18 +15,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ok: false, error: 'BAD_REQUEST'}, {status: 400});
         }
 
-        const cookieStore = await cookies();
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    get: (n: string) => cookieStore.get(n)?.value, set: () => {
-                    }, remove: () => {
-                    }
-                }
-            }
-        );
+        // Используем унифицированную утилиту для создания Supabase клиента
+        const supabase = await createSupabaseServerClient();
 
         // Получаем текущего пользователя
         const { data: auth } = await supabase.auth.getUser();

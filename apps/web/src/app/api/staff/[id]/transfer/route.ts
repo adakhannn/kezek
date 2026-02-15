@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -30,29 +31,34 @@ export async function POST(req: Request, context: unknown) {
 
         if (!target) return NextResponse.json({ ok: false, error: 'TARGET_BRANCH_REQUIRED' }, { status: 400 });
 
-        // 1) валидируем сотрудника
-        const { data: st, error: eSt } = await admin
-            .from('staff')
-            .select('id,biz_id,branch_id')
-            .eq('id', staffId)
-            .maybeSingle();
-        if (eSt) return NextResponse.json({ ok: false, error: eSt.message }, { status: 400 });
-        if (!st || String(st.biz_id) !== String(bizId)) {
+        // 1) валидируем сотрудника (используем унифицированную утилиту)
+        const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; branch_id: string }>(
+            admin,
+            'staff',
+            staffId,
+            bizId,
+            'id, biz_id, branch_id'
+        );
+        if (staffCheck.error || !staffCheck.data) {
             return NextResponse.json({ ok: false, error: 'STAFF_NOT_IN_THIS_BUSINESS' }, { status: 403 });
         }
+        const st = staffCheck.data;
         if (String(st.branch_id) === String(target)) {
             return NextResponse.json({ ok: false, error: 'ALREADY_IN_TARGET_BRANCH' }, { status: 400 });
         }
 
-        // 2) цель валидна/активна
-        const { data: br } = await admin
-            .from('branches')
-            .select('id,biz_id,is_active')
-            .eq('id', target)
-            .maybeSingle();
-        if (!br || String(br.biz_id) !== String(bizId)) {
+        // 2) цель валидна/активна (используем унифицированную утилиту)
+        const branchCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; is_active: boolean }>(
+            admin,
+            'branches',
+            target,
+            bizId,
+            'id, biz_id, is_active'
+        );
+        if (branchCheck.error || !branchCheck.data) {
             return NextResponse.json({ ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS' }, { status: 400 });
         }
+        const br = branchCheck.data;
         if (br.is_active === false) {
             return NextResponse.json({ ok: false, error: 'TARGET_BRANCH_INACTIVE' }, { status: 400 });
         }

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logDebug, logError } from '@/lib/log';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -25,10 +26,11 @@ type ShiftItem = {
 
 export async function GET(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    context: unknown
 ) {
     try {
-        const { id: staffId } = await params;
+        // Валидация UUID для предотвращения потенциальных проблем безопасности
+        const staffId = await getRouteParamUuid(context, 'id');
         const { supabase, bizId } = await getBizContextForManagers();
 
         // Получаем параметры запроса

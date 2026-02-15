@@ -1,17 +1,13 @@
-import { createServerClient } from '@supabase/ssr';
 import { formatInTimeZone } from 'date-fns-tz';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { logError } from '@/lib/log';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 type HealthCheckResult = {
     ok: boolean;
@@ -54,14 +50,8 @@ type HealthCheckResult = {
  */
 export async function GET() {
     try {
-        const cookieStore = await cookies();
-        const supabase = createServerClient(URL, ANON, {
-            cookies: {
-                get: (name: string) => cookieStore.get(name)?.value,
-                set: () => {},
-                remove: () => {},
-            },
-        });
+        // Используем унифицированную утилиту для создания Supabase клиента
+        const supabase = await createSupabaseServerClient();
 
         const {
             data: { user },

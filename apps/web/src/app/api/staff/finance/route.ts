@@ -7,7 +7,9 @@
  * - date (опционально) - дата в формате YYYY-MM-DD (по умолчанию сегодня)
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+
 
 import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
@@ -83,15 +85,14 @@ export async function GET(req: Request) {
 
         let staffId: string;
         let bizId: string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let supabase: any;
+        // Используем общий тип SupabaseClient, который совместим с обоими клиентами
+        let supabase: SupabaseClient;
         let useServiceClient = false;
 
         // Если передан staffId, это запрос от менеджера/владельца
         if (staffIdParam) {
             const context = await getBizContextForManagers();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            supabase = context.supabase as any;
+            supabase = context.supabase;
             bizId = context.bizId;
 
             // Проверяем, что сотрудник принадлежит этому бизнесу

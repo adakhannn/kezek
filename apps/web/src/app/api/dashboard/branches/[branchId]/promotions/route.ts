@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
-import { getRouteParamRequired } from '@/lib/routeParams';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +31,8 @@ type PromotionBody = {
  */
 export async function GET(req: Request, context: unknown) {
     try {
-        const branchId = await getRouteParamRequired(context, 'branchId');
+        // Валидация UUID для предотвращения потенциальных проблем безопасности
+        const branchId = await getRouteParamUuid(context, 'branchId');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
@@ -95,7 +96,8 @@ export async function GET(req: Request, context: unknown) {
  */
 export async function POST(req: Request, context: unknown) {
     try {
-        const branchId = await getRouteParamRequired(context, 'branchId');
+        // Валидация UUID для предотвращения потенциальных проблем безопасности
+        const branchId = await getRouteParamUuid(context, 'branchId');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 

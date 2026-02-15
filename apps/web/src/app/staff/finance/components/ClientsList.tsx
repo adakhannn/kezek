@@ -1,5 +1,7 @@
 // apps/web/src/app/staff/finance/components/ClientsList.tsx
 
+import { useMemo, useCallback } from 'react';
+
 import type { ShiftItem, Booking, ServiceName, Shift } from '../types';
 import { getItemKey } from '../utils/itemKeys';
 
@@ -65,7 +67,41 @@ export function ClientsList({
         );
     }
 
-    const now = new Date();
+    // Мемоизируем вычисление использованных booking IDs для оптимизации производительности
+    // Это предотвращает повторное вычисление при каждом рендере
+    const usedBookingIdsSet = useMemo(() => {
+        return new Set(items.map(it => it.bookingId).filter(Boolean));
+    }, [items]);
+
+    // Мемоизируем фильтрацию доступных бронирований
+    // Фильтруем только прошедшие бронирования, которые еще не использованы
+    const now = useMemo(() => new Date(), []);
+    const availableBookingsBase = useMemo(() => {
+        return bookings.filter((b) => {
+            if (usedBookingIdsSet.has(b.id)) return false;
+            try {
+                const start = new Date(b.start_at);
+                return start <= now;
+            } catch {
+                return false;
+            }
+        });
+    }, [bookings, usedBookingIdsSet, now]);
+
+    // Мемоизируем функции-обработчики для предотвращения лишних ре-рендеров
+    const handleEdit = useCallback((idx: number) => {
+        onExpand(idx);
+    }, [onExpand]);
+
+    const handleDelete = useCallback((idx: number) => {
+        onDeleteItem(idx);
+    }, [onDeleteItem]);
+
+    const handleDuplicate = useCallback((idx: number) => {
+        if (onDuplicateItem) {
+            onDuplicateItem(idx);
+        }
+    }, [onDuplicateItem]);
 
     return (
         <div className="space-y-2 text-sm">
@@ -86,16 +122,19 @@ export function ClientsList({
             </div>
 
             {items.map((item, idx) => {
-                const usedBookingIds = items.filter((it, i) => i !== idx && it.bookingId).map(it => it.bookingId);
-                const availableBookings = bookings.filter((b) => {
-                    if (usedBookingIds.includes(b.id)) return false;
-                    try {
-                        const start = new Date(b.start_at);
-                        return start <= now;
-                    } catch {
-                        return false;
+                // Для каждого элемента вычисляем доступные бронирования, исключая текущий элемент
+                const currentItemBookingId = item.bookingId;
+                // Вычисляем доступные бронирования без useMemo (хуки нельзя вызывать в циклах)
+                // Но используем мемоизированную базу и просто фильтруем
+                let availableBookings = availableBookingsBase;
+                if (currentItemBookingId) {
+                    // Если текущий элемент использует бронирование, добавляем его обратно в доступные
+                    const currentBooking = bookings.find(b => b.id === currentItemBookingId);
+                    if (currentBooking) {
+                        availableBookings = [...availableBookingsBase, currentBooking];
                     }
-                });
+                }
+
                 const isExpanded = expandedItems.has(idx);
 
                 // Используем стабильный ключ для элемента списка
@@ -129,9 +168,9 @@ export function ClientsList({
                         isClosed={isClosed}
                         isReadOnly={isReadOnly}
                         staffId={staffId}
-                        onEdit={() => onExpand(idx)}
-                        onDelete={() => onDeleteItem(idx)}
-                        onDuplicate={onDuplicateItem ? () => onDuplicateItem(idx) : undefined}
+                        onEdit={() => handleEdit(idx)}
+                        onDelete={() => handleDelete(idx)}
+                        onDuplicate={onDuplicateItem ? () => handleDuplicate(idx) : undefined}
                     />
                 );
             })}

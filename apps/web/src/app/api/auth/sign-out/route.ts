@@ -1,12 +1,10 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-
 import { createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { getSupabaseUrl } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
+import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 /**
  * POST /api/auth/sign-out
@@ -14,33 +12,22 @@ import { logDebug, logError } from '@/lib/log';
  */
 export async function POST(_req: Request) {
     return withErrorHandler('AuthSignOut', async () => {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-        // Получаем текущего пользователя из cookies
-        const cookieStore = await cookies();
-        const admin = createClient(URL, SERVICE);
-        
-        // Пытаемся получить пользователя из cookies
-        const supabase = createServerClient(URL, ANON, {
-            cookies: {
-                get: (name: string) => cookieStore.get(name)?.value,
-                set: () => {},
-                remove: () => {},
-            },
-        });
+        // Используем унифицированные утилиты для создания клиентов
+        const { supabase, admin } = await createSupabaseClients();
 
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
             // Инвалидируем все refresh токены пользователя через Admin API
             try {
-                // @ts-expect-error - invalidateRefreshTokens может отсутствовать в типах @supabase/supabase-js,
+                // invalidateRefreshTokens может отсутствовать в типах @supabase/supabase-js,
                 // но метод существует в runtime для Supabase Auth Admin API
                 // См. https://supabase.com/docs/reference/javascript/auth-admin-invalidaterefreshtokens
-                await admin.auth.admin.invalidateRefreshTokens?.(user.id).catch(() => {});
-                logDebug('AuthSignOut', 'Invalidated refresh tokens for user', { userId: user.id });
+                const authAdmin = admin.auth.admin as { invalidateRefreshTokens?: (userId: string) => Promise<unknown> };
+                if (authAdmin.invalidateRefreshTokens) {
+                    await authAdmin.invalidateRefreshTokens(user.id).catch(() => {});
+                    logDebug('AuthSignOut', 'Invalidated refresh tokens for user', { userId: user.id });
+                }
             } catch (err) {
                 logError('AuthSignOut', 'Error invalidating tokens', err);
             }
@@ -50,7 +37,8 @@ export async function POST(_req: Request) {
         const response = createSuccessResponse(undefined, { message: 'Выход выполнен' });
         
         // Удаляем все возможные cookies Supabase
-        const projectRef = URL.split('//')[1].split('.')[0];
+        const url = getSupabaseUrl();
+        const projectRef = url.split('//')[1].split('.')[0];
         const cookieNames = [
             `sb-${projectRef}-auth-token`,
             `sb-${projectRef}-auth-token-code-verifier`,

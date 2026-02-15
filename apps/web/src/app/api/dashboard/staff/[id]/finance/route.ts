@@ -12,6 +12,7 @@ import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug, logWarn } from '@/lib/log';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 
@@ -20,13 +21,14 @@ export const runtime = 'nodejs';
 
 export async function GET(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    context: unknown
 ) {
     try {
         // Предупреждение о deprecated endpoint
         logWarn('StaffFinance', 'Deprecated endpoint used. Please migrate to /api/staff/finance?staffId={id}');
         
-        const { id: staffId } = await params;
+        // Валидация UUID для предотвращения потенциальных проблем безопасности
+        const staffId = await getRouteParamUuid(context, 'id');
         const { supabase, bizId } = await getBizContextForManagers();
 
         // Получаем параметр date из query string, если он есть

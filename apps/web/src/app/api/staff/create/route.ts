@@ -66,8 +66,11 @@ export async function POST(req: Request) {
             .eq('user_id', userId)
             .eq('biz_id', bizId);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const ok = (roles ?? []).some(r => (r as any).roles?.key && ['owner', 'admin', 'manager'].includes((r as any).roles.key));
+        type RoleRow = {
+            roles: { key: string } | null;
+        };
+        const rolesArray = (roles ?? []) as unknown as RoleRow[];
+        const ok = rolesArray.some((r: RoleRow) => r.roles?.key && ['owner', 'admin', 'manager'].includes(r.roles.key));
         if (!ok) {
             return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
         }

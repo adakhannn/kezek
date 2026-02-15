@@ -29,9 +29,22 @@ import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 
+type MockSupabaseClient = {
+    auth: {
+        getUser: jest.Mock;
+    };
+    from: jest.Mock<MockSupabaseClient>;
+    select: jest.Mock<MockSupabaseClient>;
+    eq: jest.Mock<MockSupabaseClient>;
+    order: jest.Mock<MockSupabaseClient>;
+    limit: jest.Mock<MockSupabaseClient>;
+    maybeSingle: jest.Mock;
+    single: jest.Mock;
+    rpc: jest.Mock;
+};
+
 describe('/api/quick-hold', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mockSupabase: any = {
+    const mockSupabase: MockSupabaseClient = {
         auth: {
             getUser: jest.fn(),
         },

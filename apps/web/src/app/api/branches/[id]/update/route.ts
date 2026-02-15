@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
@@ -25,27 +26,21 @@ export async function POST(req: Request, context: unknown) {
         const body = await req.json().catch(() => ({} as Body));
         if (!body.name?.trim()) return NextResponse.json({ ok: false, error: 'NAME_REQUIRED' }, { status: 400 });
 
-        // проверим, что филиал принадлежит этому бизнесу
-        const { data: br, error: brError } = await admin
-            .from('branches')
-            .select('id,biz_id')
-            .eq('id', branchId)
-            .maybeSingle();
-
-        if (brError) {
-            return NextResponse.json({ ok: false, error: `Ошибка проверки филиала: ${brError.message}` }, { status: 400 });
-        }
-
-        if (!br) {
-            return NextResponse.json({ ok: false, error: 'Филиал не найден' }, { status: 404 });
-        }
-
-        if (String(br.biz_id) !== String(bizId)) {
+        // проверим, что филиал принадлежит этому бизнесу (используем унифицированную утилиту)
+        const branchCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
+            admin,
+            'branches',
+            branchId,
+            bizId,
+            'id, biz_id'
+        );
+        if (branchCheck.error || !branchCheck.data) {
+            const statusCode = branchCheck.error === 'Resource not found' ? 404 : 403;
             return NextResponse.json({ 
                 ok: false, 
-                error: 'BRANCH_NOT_IN_THIS_BUSINESS',
-                details: { branchBizId: br.biz_id, currentBizId: bizId }
-            }, { status: 403 });
+                error: branchCheck.error === 'Resource not found' ? 'Филиал не найден' : 'BRANCH_NOT_IN_THIS_BUSINESS',
+                details: branchCheck.error === 'Resource not found' ? undefined : { currentBizId: bizId }
+            }, { status: statusCode });
         }
 
         const updateData: {

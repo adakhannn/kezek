@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 
+import { formatDateTime } from '@/lib/dateFormat';
+
 export const dynamic = 'force-dynamic';
 
 type RatingsStatusResponse = {
@@ -53,16 +55,9 @@ export default async function RatingsStatusPage() {
     const branchStale = isStale(data.branch_last_metric_date);
     const bizStale = isStale(data.biz_last_metric_date);
 
+    // Используем унифицированную функцию форматирования дат
     const formatDate = (value: string | null) =>
-        value
-            ? new Date(value).toLocaleString('ru-RU', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-              })
-            : 'нет данных';
+        value ? formatDateTime(value, 'ru', true) : 'нет данных';
 
     return (
         <main className="max-w-4xl mx-auto space-y-6">

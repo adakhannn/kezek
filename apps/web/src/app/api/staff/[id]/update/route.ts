@@ -2,9 +2,9 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -21,7 +21,7 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    try {
+    return withErrorHandler('StaffUpdate', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const staffId = await getRouteParamUuid(context, 'id');
         const { bizId } = await getBizContextForManagers();
@@ -32,46 +32,50 @@ export async function POST(req: Request, context: unknown) {
             body = await req.json();
         } catch (e) {
             logError('StaffUpdate', 'Error parsing JSON', e);
-            return NextResponse.json({ ok: false, error: 'INVALID_JSON' }, { status: 400 });
+            return createErrorResponse('validation', 'Неверный формат JSON', undefined, 400);
         }
 
         // Валидация обязательных полей
         if (!staffId) {
             logError('StaffUpdate', 'Missing staffId');
-            return NextResponse.json({ ok: false, error: 'INVALID_BODY: missing staffId' }, { status: 400 });
+            return createErrorResponse('validation', 'Отсутствует ID сотрудника', undefined, 400);
         }
         if (!body.full_name || typeof body.full_name !== 'string' || body.full_name.trim() === '') {
             logError('StaffUpdate', 'Invalid full_name', { full_name: body.full_name });
-            return NextResponse.json({ ok: false, error: 'INVALID_BODY: invalid full_name' }, { status: 400 });
+            return createErrorResponse('validation', 'Неверное имя сотрудника', undefined, 400);
         }
         if (!body.branch_id || typeof body.branch_id !== 'string') {
             logError('StaffUpdate', 'Invalid branch_id', { branch_id: body.branch_id });
-            return NextResponse.json({ ok: false, error: 'INVALID_BODY: invalid branch_id' }, { status: 400 });
+            return createErrorResponse('validation', 'Неверный ID филиала', undefined, 400);
         }
 
-        // 1) staff принадлежит бизнесу?
-        const { data: st, error: eSt } = await admin
-            .from('staff')
-            .select('id,biz_id,branch_id')
-            .eq('id', staffId)
-            .maybeSingle();
-        if (eSt) return NextResponse.json({ ok: false, error: eSt.message }, { status: 400 });
-        if (!st || String(st.biz_id) !== String(bizId)) {
-            return NextResponse.json({ ok: false, error: 'STAFF_NOT_IN_THIS_BUSINESS' }, { status: 403 });
+        // 1) staff принадлежит бизнесу? (используем унифицированную утилиту)
+        const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; branch_id: string }>(
+            admin,
+            'staff',
+            staffId,
+            bizId,
+            'id, biz_id, branch_id'
+        );
+        if (staffCheck.error || !staffCheck.data) {
+            return createErrorResponse('forbidden', staffCheck.error || 'Сотрудник не принадлежит этому бизнесу', undefined, 403);
         }
+        const st = staffCheck.data;
 
-        // 2) новый branch принадлежит этому бизнесу?
-        const { data: br, error: eBr } = await admin
-            .from('branches')
-            .select('id,biz_id,is_active')
-            .eq('id', body.branch_id)
-            .maybeSingle();
-        if (eBr) return NextResponse.json({ ok: false, error: eBr.message }, { status: 400 });
-        if (!br || String(br.biz_id) !== String(bizId)) {
-            return NextResponse.json({ ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS' }, { status: 400 });
+        // 2) новый branch принадлежит этому бизнесу? (используем унифицированную утилиту)
+        const branchCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; is_active: boolean }>(
+            admin,
+            'branches',
+            body.branch_id,
+            bizId,
+            'id, biz_id, is_active'
+        );
+        if (branchCheck.error || !branchCheck.data) {
+            return createErrorResponse('validation', branchCheck.error || 'Филиал не принадлежит этому бизнесу', undefined, 400);
         }
+        const br = branchCheck.data;
         if (br.is_active === false) {
-            return NextResponse.json({ ok: false, error: 'TARGET_BRANCH_INACTIVE' }, { status: 400 });
+            return createErrorResponse('validation', 'Целевой филиал неактивен', undefined, 400);
         }
 
         const isBranchChanged = String(st.branch_id) !== String(body.branch_id);
@@ -97,10 +101,7 @@ export async function POST(req: Request, context: unknown) {
             if (typeof body.percent_master === 'number' && typeof body.percent_salon === 'number') {
                 const sum = body.percent_master + body.percent_salon;
                 if (Math.abs(sum - 100) > 0.01) {
-                    return NextResponse.json(
-                        { ok: false, error: 'Сумма процентов должна быть равна 100' },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', 'Сумма процентов должна быть равна 100', undefined, 400);
                 }
                 updateData.percent_master = body.percent_master;
                 updateData.percent_salon = body.percent_salon;
@@ -129,8 +130,8 @@ export async function POST(req: Request, context: unknown) {
             
             if (eUpd) {
                 logError('StaffUpdate', 'Error updating staff', { error: eUpd, updateData });
+                return createErrorResponse('internal', eUpd.message, undefined, 400);
             }
-            if (eUpd) return NextResponse.json({ ok: false, error: eUpd.message }, { status: 400 });
         }
 
         // 4) если филиал меняется — делаем корректный перенос (assignments + кэш)
@@ -151,7 +152,7 @@ export async function POST(req: Request, context: unknown) {
                 branch_id: body.branch_id,
                 valid_from: today,
             });
-            if (eIns) return NextResponse.json({ ok: false, error: eIns.message }, { status: 400 });
+            if (eIns) return createErrorResponse('internal', eIns.message, undefined, 400);
 
             // синхронизировать кэш
             const { error: eCache } = await admin
@@ -159,12 +160,9 @@ export async function POST(req: Request, context: unknown) {
                 .update({ branch_id: body.branch_id })
                 .eq('id', staffId)
                 .eq('biz_id', bizId);
-            if (eCache) return NextResponse.json({ ok: false, error: eCache.message }, { status: 400 });
+            if (eCache) return createErrorResponse('internal', eCache.message, undefined, 400);
         }
 
-        return NextResponse.json({ ok: true, transferred: isBranchChanged });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-    }
+        return createSuccessResponse({ transferred: isBranchChanged });
+    });
 }

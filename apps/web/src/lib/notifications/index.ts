@@ -4,6 +4,7 @@
 export type * from './types';
 
 // Экспортируем сервисы
+export { BookingDataService } from './BookingDataService';
 export { ParticipantDataService } from './ParticipantDataService';
 export { EmailNotificationService } from './EmailNotificationService';
 export { WhatsAppNotificationService } from './WhatsAppNotificationService';

@@ -8,13 +8,16 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
-import { BookingEmptyState } from './BookingEmptyState';
 import { AuthChoiceModal } from './components/AuthChoiceModal';
 import { BookingHeader } from './components/BookingHeader';
 import { BookingSteps } from './components/BookingSteps';
+import { BookingSummary } from './components/BookingSummary';
 import { BranchSelector } from './components/BranchSelector';
 import { GuestBookingModal } from './components/GuestBookingModal';
 import { PromotionsList } from './components/PromotionsList';
+import { ServiceSelector } from './components/ServiceSelector';
+import { SlotPicker } from './components/SlotPicker';
+import { StaffSelector } from './components/StaffSelector';
 import { useBookingCreation } from './hooks/useBookingCreation';
 import { useBranchPromotions, useClientBookings, useServiceStaff } from './hooks/useBookingData';
 import { useBookingSteps } from './hooks/useBookingSteps';
@@ -28,7 +31,7 @@ import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { todayTz, dateAtTz, toLabel, TZ } from '@/lib/time';
+import { todayTz, dateAtTz, TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
 // Используем безопасное логирование из @/lib/log
@@ -627,105 +630,12 @@ export default function BookingForm({ data }: { data: Data }) {
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     {t('booking.step3.title', 'Шаг 3. Выберите мастера')}
                                 </h2>
-                                {!dayStr ? (
-                                    <BookingEmptyState
-                                        type="info"
-                                        message={t('booking.empty.selectDayFirst', 'Сначала выберите день.')}
-                                    />
-                                ) : staffFiltered.length === 0 ? (
-                                    <BookingEmptyState
-                                        type="empty"
-                                        message={t('booking.empty.noStaff', 'На выбранную дату в этом филиале нет доступных мастеров. Выберите другой день.')}
-                                    />
-                                ) : (
-                                    <>
-                                        <button
-                                            type="button"
-                                            data-testid="master-select"
-                                            className="mb-3 inline-flex items-center rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-400 hover:text-indigo-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-400 dark:hover:text-indigo-200"
-                                        >
-                                            {t('booking.testIds.masterSelect', 'Выбрать мастера')}
-                                        </button>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {/* Опция "Любой мастер" */}
-                                        <button
-                                            type="button"
-                                            data-testid="master-card-any"
-                                            onClick={() => setStaffId('any')}
-                                            className={`flex items-center gap-3 rounded-lg border p-3 text-sm font-medium transition ${
-                                                staffId === 'any'
-                                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                                    : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                                            }`}
-                                        >
-                                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700 flex items-center justify-center text-base font-semibold text-white flex-shrink-0">
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                </svg>
-                                            </div>
-                                            <div className="flex-1 text-left">
-                                                <span data-testid="master-option-any">
-                                                    {t('booking.step3.anyMaster', 'Любой мастер')}
-                                                </span>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                    {t('booking.step3.anyMasterHint', 'Ближайший свободный слот')}
-                                                </div>
-                                            </div>
-                                        </button>
-                                        
-                                        {staffFiltered.map((m) => {
-                                            const active = m.id === staffId;
-                                            return (
-                                                <button
-                                                    key={m.id}
-                                                    type="button"
-                                                    data-testid="master-card"
-                                                    onClick={() => setStaffId(m.id)}
-                                                    className={`flex items-center gap-3 rounded-lg border p-3 text-sm font-medium transition ${
-                                                        active
-                                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                                            : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                                                    }`}
-                                                >
-                                                    {m.avatar_url ? (
-                                                        <img
-                                                            src={m.avatar_url}
-                                                            alt={formatStaffName(m.full_name)}
-                                                            className="h-12 w-12 rounded-full object-cover flex-shrink-0"
-                                                            onError={(e) => {
-                                                                // Скрываем изображение, если оно не загрузилось
-                                                                e.currentTarget.style.display = 'none';
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-base font-semibold text-gray-500 dark:text-gray-400 flex-shrink-0">
-                                                            {formatStaffName(m.full_name).charAt(0).toUpperCase()}
-                                                        </div>
-                                                    )}
-                                                    <div className="flex-1 flex items-center justify-between">
-                                                        <span
-                                                            className="text-left"
-                                                            data-testid="master-option"
-                                                        >
-                                                            {formatStaffName(m.full_name)}
-                                                        </span>
-                                                        {m.rating_score !== null && m.rating_score !== undefined && (
-                                                            <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded border border-amber-200 dark:border-amber-800 ml-2">
-                                                                <svg className="w-3 h-3 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                                </svg>
-                                                                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                                                                    {m.rating_score.toFixed(1)}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    </>
-                                )}
+                                <StaffSelector
+                                    staff={staffFiltered}
+                                    selectedStaffId={staffId}
+                                    onSelect={setStaffId}
+                                    dayStr={dayStr}
+                                />
                             </section>
                         )}
 
@@ -735,93 +645,34 @@ export default function BookingForm({ data }: { data: Data }) {
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     {t('booking.step4.title', 'Шаг 4. Выберите услугу')}
                                 </h2>
-                                {!staffId ? (
-                                    <BookingEmptyState
-                                        type="info"
-                                        message={t('booking.empty.selectMasterFirst', 'Сначала выберите мастера.')}
-                                    />
-                                ) : servicesFiltered.length === 0 ? (
-                                    <BookingEmptyState
-                                        type="empty"
-                                        message={t('booking.empty.noServices', 'У выбранного мастера пока нет назначенных услуг. Выберите другого мастера.')}
-                                    />
-                                ) : (
-                                    <>
-                                        <button
-                                            type="button"
-                                            data-testid="service-select"
-                                            className="mb-3 inline-flex items-center rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-400 hover:text-indigo-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-400 dark:hover:text-indigo-200"
-                                        >
-                                            {t('booking.testIds.serviceSelect', 'Выбрать услугу')}
-                                        </button>
-                                        <div className="flex flex-col gap-2">
-                                            {servicesFiltered.map((s) => {
-                                                const active = s.id === serviceId;
-                                                const hasRange =
-                                                    typeof s.price_from === 'number' &&
-                                                    (typeof s.price_to === 'number'
-                                                        ? s.price_to !== s.price_from
-                                                        : false);
-                                                return (
-                                                    <button
-                                                        key={s.id}
-                                                        type="button"
-                                                        data-testid="service-card"
-                                                        onClick={() => {
-                                                            logDebug('Booking', 'Service clicked', {
-                                                                serviceId: s.id,
-                                                                name: s.name_ru,
-                                                                currentServiceId: serviceId,
-                                                            });
-                                                            setServiceId(s.id);
-                                                        }}
-                                                        className={`flex w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${
-                                                            active
-                                                                ? 'border-indigo-600 bg-indigo-50 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60'
-                                                                : 'border-gray-200 bg-white hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                                                        }`}
-                                                    >
-                                                        <div>
-                                                            <div
-                                                                className="font-semibold text-gray-900 dark:text-gray-100"
-                                                                data-testid="service-option"
-                                                            >
-                                                                {formatServiceName(s)}
-                                                            </div>
-                                                            <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-                                                                {s.duration_min} {t('booking.duration.min', 'мин')}
-                                                            </div>
-                                                        </div>
-                                                        {(typeof s.price_from === 'number' ||
-                                                            typeof s.price_to === 'number') && (
-                                                            <div className="whitespace-nowrap text-right text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                                                {s.price_from}
-                                                                {hasRange && s.price_to ? `–${s.price_to}` : ''}{' '}
-                                                                {t('booking.currency', 'сом')}
-                                                            </div>
-                                                        )}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                        {serviceCurrent && (
-                                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                                {t('booking.duration.label', 'Продолжительность:')} {serviceCurrent.duration_min} {t('booking.duration.min', 'мин')}.
-                                                {serviceCurrent.price_from && (
-                                                    <>
-                                                        {' '}
-                                                        {t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}{' '}
-                                                        {serviceCurrent.price_from}
-                                                        {serviceCurrent.price_to &&
-                                                        serviceCurrent.price_to !== serviceCurrent.price_from
-                                                            ? `–${serviceCurrent.price_to}`
-                                                            : ''}{' '}
-                                                        {t('booking.currency', 'сом')}.
-                                                    </>
-                                                )}
-                                            </p>
+                                <ServiceSelector
+                                    services={servicesFiltered}
+                                    selectedServiceId={serviceId}
+                                    onSelect={(id) => {
+                                        logDebug('Booking', 'Service clicked', {
+                                            serviceId: id,
+                                            currentServiceId: serviceId,
+                                        });
+                                        setServiceId(id);
+                                    }}
+                                    staffId={staffId}
+                                />
+                                {serviceCurrent && (
+                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                        {t('booking.duration.label', 'Продолжительность:')} {serviceCurrent.duration_min} {t('booking.duration.min', 'мин')}.
+                                        {serviceCurrent.price_from && (
+                                            <>
+                                                {' '}
+                                                {t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}{' '}
+                                                {serviceCurrent.price_from}
+                                                {serviceCurrent.price_to &&
+                                                serviceCurrent.price_to !== serviceCurrent.price_from
+                                                    ? `–${serviceCurrent.price_to}`
+                                                    : ''}{' '}
+                                                {t('booking.currency', 'сом')}.
+                                            </>
                                         )}
-                                    </>
+                                    </p>
                                 )}
                             </section>
                         )}
@@ -832,103 +683,24 @@ export default function BookingForm({ data }: { data: Data }) {
                                 <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     {t('booking.step5.title', 'Шаг 5. Выберите время')}
                                 </h2>
-                                {dayStr && (
-                                    <div className="mb-3 text-xs text-gray-600 dark:text-gray-400">
-                                        {t('booking.step5.selectedDate', 'Выбранная дата:')} {dayLabel}
-                                    </div>
-                                )}
-
-                                {/* Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги */}
-                                {/* Используем servicesFiltered, который уже учитывает временные переводы и похожие услуги */}
-                                {/* Показываем ошибку только если:
-                                    1. Услуга не валидна (не в servicesFiltered)
-                                    2. serviceStaff загружен (не null) - проверка завершена
-                                    3. Слоты не загружаются (не loading)
-                                    4. Слотов нет (slots.length === 0) - если слоты есть, значит услуга валидна */}
-                                {serviceId && staffId && !slotsLoading && slots.length === 0 && (() => {
-                                    // Проверяем, есть ли услуга в servicesFiltered (это значит, что мастер может её выполнять)
-                                    // servicesFiltered уже учитывает временные переводы и связи service_staff (включая похожие услуги)
-                                    const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-                                    
-                                    // Показываем ошибку только если услуга не валидна И serviceStaff загружен (не null)
-                                    // Если serviceStaff еще загружается (null), не показываем ошибку, так как проверка еще не завершена
-                                    // Также не показываем ошибку, если есть ошибка загрузки слотов (slotsError) - там будет своё сообщение
-                                    if (serviceStaff !== null && !isServiceValid && !slotsError) {
-                                        return (
-                                            <div className="mb-3">
-                                                <BookingEmptyState
-                                                    type="warning"
-                                                    message={t('booking.step5.masterNoService', 'Выбранный мастер не выполняет эту услугу')}
-                                                    hint={t('booking.step5.masterNoServiceHint', 'Пожалуйста, вернитесь к шагу 4 и выберите другого мастера или выберите другую услугу.')}
-                                                />
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                })()}
-
-                                {/* Уведомление, если у клиента уже есть запись в этом бизнесе на выбранный день */}
-                                {isAuthed && !clientBookingsLoading && clientBookingsCount && clientBookingsCount > 0 && (
-                                    <div className="mb-3">
-                                        <BookingEmptyState
-                                            type="warning"
-                                            message={
-                                                clientBookingsCount === 1
-                                                    ? t('booking.existingBookings.warning.one', 'У вас уже есть одна активная запись в этом заведении на выбранный день.')
-                                                    : t('booking.existingBookings.warning.many', `У вас уже есть ${clientBookingsCount} активных записей в этом заведении на выбранный день.`)
-                                            }
-                                            hint={t('booking.existingBookings.hint', 'Вы всё равно можете оформить ещё одну запись, если это необходимо.')}
-                                        />
-                                    </div>
-                                )}
-
-                                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                    {t('booking.freeSlots', 'Свободные слоты')}
-                                </h3>
-                                {slotsLoading && (
-                                    <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                                        {t('booking.loadingSlots', 'Загружаем свободные слоты...')}
-                                    </div>
-                                )}
-                                {!slotsLoading && slotsError && (
-                                    <BookingEmptyState
-                                        type="error"
-                                        message={slotsError}
-                                    />
-                                )}
-                                {!slotsLoading && !slotsError && slots.length === 0 && (
-                                    <BookingEmptyState
-                                        type="empty"
-                                        message={t('booking.empty.noSlots', 'На выбранный день нет свободных слотов. Выберите другой день или мастера.')}
-                                    />
-                                )}
-                                {!slotsLoading && !slotsError && slots.length > 0 && (
-                                    <div className="mt-1 flex flex-wrap gap-2">
-                                        {slots.map((s) => {
-                                            const d = new Date(s.start_at);
-                                            const slotStaff = staff.find((m) => m.id === s.staff_id);
-                                            const showStaffName = staffId === 'any' && slotStaff;
-                                            return (
-                                                <button
-                                                    key={`${s.start_at}-${s.staff_id}`}
-                                                    disabled={bookingLoading}
-                                                    data-testid="time-slot"
-                                                    className="rounded-full border border-gray-300 bg-white px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[32px] touch-manipulation"
-                                                    onClick={() => createBooking(d, s.staff_id)}
-                                                >
-                                                    <div className="flex flex-col items-center">
-                                                        <span>{toLabel(d)}</span>
-                                                        {showStaffName && (
-                                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                                                                {formatStaffName(slotStaff.full_name)}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                <SlotPicker
+                                    slots={slots}
+                                    selectedSlot={null}
+                                    onSelect={createBooking}
+                                    loading={slotsLoading}
+                                    error={slotsError}
+                                    dayStr={dayStr}
+                                    dayLabel={dayLabel}
+                                    staffId={staffId}
+                                    staff={staff}
+                                    serviceId={serviceId}
+                                    servicesFiltered={servicesFiltered}
+                                    serviceStaff={serviceStaff}
+                                    isAuthed={isAuthed}
+                                    clientBookingsCount={clientBookingsCount}
+                                    clientBookingsLoading={clientBookingsLoading}
+                                    bookingLoading={bookingLoading}
+                                />
                             </section>
                         )}
 
@@ -964,121 +736,15 @@ export default function BookingForm({ data }: { data: Data }) {
                     </div>
 
                     {/* Корзина / итог */}
-                    <aside className="space-y-3 rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                        <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {t('booking.summary.title', 'Ваша запись')}
-                        </h2>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {t('booking.summary.hint', 'Шаги слева → выберите мастера, услугу, день и время. Здесь вы увидите итог перед подтверждением.')}
-                        </p>
-
-                        <div className="mt-2 space-y-1 rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-gray-950 dark:text-gray-200">
-                            <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">{t('booking.summary.branch', 'Филиал:')}</span>
-                                <span className="font-medium">{branch ? formatBranchName(branch.name) : t('booking.summary.notSelected', 'Не выбран')}</span>
-                            </div>
-                            <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">{t('booking.summary.service', 'Услуга:')}</span>
-                                <span className="text-right font-medium">
-                                    {serviceCurrent ? formatServiceName(serviceCurrent) : t('booking.summary.notSelectedFem', 'Не выбрана')}
-                                </span>
-                            </div>
-                            <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">{t('booking.summary.master', 'Мастер:')}</span>
-                                <div className="flex items-center gap-2 text-right">
-                                    {staffCurrent?.avatar_url ? (
-                                        <img
-                                            src={staffCurrent.avatar_url}
-                                            alt={formatStaffName(staffCurrent.full_name)}
-                                            className="h-8 w-8 rounded-full object-cover ml-auto"
-                                            onError={(e) => {
-                                                // Скрываем изображение, если оно не загрузилось
-                                                e.currentTarget.style.display = 'none';
-                                            }}
-                                        />
-                                    ) : staffCurrent ? (
-                                        <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-400 ml-auto">
-                                            {formatStaffName(staffCurrent.full_name).charAt(0).toUpperCase()}
-                                        </div>
-                                    ) : null}
-                                    <span className="font-medium">
-                                        {staffCurrent ? formatStaffName(staffCurrent.full_name) : t('booking.summary.notSelected', 'Не выбран')}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">{t('booking.summary.day', 'День:')}</span>
-                                <span className="text-right font-medium">{dayLabel}</span>
-                            </div>
-                            <div className="flex justify-between gap-2">
-                                <span className="text-gray-500">{t('booking.summary.time', 'Время:')}</span>
-                                <span className="text-right font-medium">
-                                    {t('booking.summary.selectSlot', 'Выберите слот')}
-                                </span>
-                            </div>
-                            {serviceCurrent?.price_from && (
-                                <div className="mt-1 flex justify-between gap-2 border-t border-dashed border-gray-300 pt-1 dark:border-gray-700">
-                                    <span className="text-gray-500">{t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}</span>
-                                    <span
-                                        className="text-right font-semibold text-emerald-600 dark:text-emerald-400"
-                                        data-testid="final-price"
-                                    >
-                                        {serviceCurrent.price_from}
-                                        {serviceCurrent.price_to &&
-                                        serviceCurrent.price_to !== serviceCurrent.price_from
-                                            ? `–${serviceCurrent.price_to}`
-                                            : ''}{' '}
-                                        {t('booking.currency', 'сом')}
-                                    </span>
-                                </div>
-                            )}
-                            
-                            {/* Информация об акциях */}
-                            {branchId && branchPromotions.length > 0 && (
-                                <div
-                                    className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/40"
-                                    data-testid="promotions"
-                                >
-                                    <div className="flex items-start gap-2">
-                                        <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                        </svg>
-                                        <div className="flex-1">
-                                            <p className="text-xs font-medium text-emerald-900 dark:text-emerald-100 mb-1">
-                                                {t('booking.summary.promotionWillApply', 'При оплате будет применена акция:')}
-                                            </p>
-                                            <ul className="space-y-1">
-                                                {branchPromotions.map((promotion) => {
-                                                    const params = promotion.params || {};
-                                                    let description = promotion.title_ru || '';
-                                                    
-                                                    if (promotion.promotion_type === 'free_after_n_visits' && params.visit_count) {
-                                                        description = t('booking.promotions.freeAfterN', 'Каждая {n}-я услуга бесплатно').replace('{n}', String(params.visit_count));
-                                                    } else if ((promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount' || promotion.promotion_type === 'referral_discount_50') && params.discount_percent) {
-                                                        description = t('booking.promotions.discountPercent', 'Скидка {percent}%').replace('{percent}', String(params.discount_percent));
-                                                    }
-                                                    
-                                                    return (
-                                                        <li key={promotion.id} className="text-xs text-emerald-800 dark:text-emerald-200">
-                                                            • {description}
-                                                        </li>
-                                                    );
-                                                })}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {!isAuthed ? (
-                                <span>{t('booking.needAuth', 'Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.')}</span>
-                            ) : (
-                                <span>{t('booking.summary.selectSlotFirst', 'Выберите свободный слот для бронирования.')}</span>
-                            )}
-                        </div>
-                    </aside>
+                    <BookingSummary
+                        branchName={branch ? formatBranchName(branch.name) : null}
+                        dayLabel={dayLabel}
+                        staffCurrent={staffCurrent}
+                        serviceCurrent={serviceCurrent}
+                        branchId={branchId}
+                        branchPromotions={branchPromotions}
+                        isAuthed={isAuthed}
+                    />
                 </div>
             </div>
             

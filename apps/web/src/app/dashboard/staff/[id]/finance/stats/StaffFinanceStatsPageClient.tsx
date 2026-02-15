@@ -43,7 +43,8 @@ export default function StaffFinanceStatsPageClient({
                     <ErrorBoundary
                         onError={(error, errorInfo) => {
                             // Дополнительное логирование для stats компонентов
-                            console.error('StaffFinanceStats error:', error, errorInfo);
+                            const { logError } = require('@/lib/log');
+                            logError('StaffFinanceStatsPage', 'StaffFinanceStats error', { error, errorInfo });
                         }}
                         fallback={
                             <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 px-4 py-3">

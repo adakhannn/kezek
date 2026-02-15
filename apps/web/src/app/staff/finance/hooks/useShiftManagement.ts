@@ -7,6 +7,7 @@ import type { ShiftItem } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { useToast } from '@/hooks/useToast';
+import { logError, logWarn } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
 interface UseShiftManagementOptions {
@@ -72,7 +73,7 @@ export function useShiftManagement(
                 }
                 
                 toast.showError(errorMessage);
-                console.error('Error opening shift (fetch):', fetchError);
+                logError('UseShiftManagement', 'Error opening shift (fetch)', fetchError);
                 return;
             }
             
@@ -101,7 +102,7 @@ export function useShiftManagement(
                     }
                 } catch (parseError) {
                     // Если не удалось распарсить ответ, используем стандартные сообщения по статусу
-                    console.warn('Failed to parse error response:', parseError);
+                    logWarn('UseShiftManagement', 'Failed to parse error response', parseError);
                 }
                 
                 // Улучшенные сообщения для разных HTTP статусов
@@ -122,7 +123,7 @@ export function useShiftManagement(
                 }
                 
                 toast.showError(errorMessage);
-                console.error('Error opening shift (HTTP):', {
+                logError('UseShiftManagement', 'Error opening shift (HTTP)', {
                     status: res.status,
                     statusText: res.statusText,
                     url,
@@ -139,7 +140,7 @@ export function useShiftManagement(
                     errorOccurred = true;
                     const errorMessage = t('staff.finance.error.openShift.emptyResponse', 'Сервер вернул пустой ответ. Попробуйте снова.');
                     toast.showError(errorMessage);
-                    console.error('Empty response from server');
+                    logError('UseShiftManagement', 'Empty response from server');
                     return;
                 }
                 json = JSON.parse(jsonText);
@@ -147,7 +148,7 @@ export function useShiftManagement(
                 errorOccurred = true;
                 const errorMessage = t('staff.finance.error.openShift.invalidResponse', 'Сервер вернул некорректный ответ. Попробуйте снова.');
                 toast.showError(errorMessage);
-                console.error('Failed to parse response JSON:', parseError);
+                logError('UseShiftManagement', 'Failed to parse response JSON', parseError);
                 return;
             }
             
@@ -156,7 +157,7 @@ export function useShiftManagement(
                 errorOccurred = true;
                 const errorMessage = json.error || json.message || t('staff.finance.error.openShift', 'Не удалось открыть смену');
                 toast.showError(errorMessage);
-                console.error('Error in response JSON:', json);
+                logError('UseShiftManagement', 'Error in response JSON', json);
                 return;
             }
             
@@ -186,7 +187,7 @@ export function useShiftManagement(
             }
             
             toast.showError(errorMessage);
-            console.error('Unexpected error opening shift:', e);
+            logError('UseShiftManagement', 'Unexpected error opening shift', e);
         } finally {
             setSaving(false);
         }

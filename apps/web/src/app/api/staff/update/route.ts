@@ -6,6 +6,7 @@ import {NextResponse} from 'next/server';
 import {getBizContextForManagers} from '@/lib/authBiz';
 import { formatErrorSimple } from '@/lib/errors';
 import { logWarn } from '@/lib/log';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import {getServiceClient} from '@/lib/supabaseService';
 
 /**
@@ -56,14 +57,9 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    // безопасно достаём params.id без any
-    const params =
-        typeof context === 'object' &&
-        context !== null &&
-        'params' in context
-            ? (context as { params: Record<string, string | string[]> }).params
-            : {};
     try {
+        // Валидация UUID для предотвращения потенциальных проблем безопасности
+        const staffId = await getRouteParamUuid(context, 'id');
         const {supabase, userId, bizId} = await getBizContextForManagers();
 
         const {data: roles} = await supabase
@@ -113,7 +109,7 @@ export async function POST(req: Request, context: unknown) {
                 is_active: body.is_active,
                 user_id: linkedUserId,
             })
-            .eq('id', params.id)
+            .eq('id', staffId)
             .eq('biz_id', bizId);
 
         if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});

@@ -2,12 +2,12 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 /**
  * POST /api/auth/whatsapp/send-otp
@@ -16,9 +16,6 @@ import { sendWhatsApp } from '@/lib/senders/whatsapp';
  */
 export async function POST(req: Request) {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
         const body = await req.json();
         const { phone } = body as { phone?: string };
 
@@ -38,8 +35,8 @@ export async function POST(req: Request) {
             );
         }
 
-        // Используем Service Role для проверки существования пользователя и сохранения OTP
-        const admin = createClient(URL, SERVICE);
+        // Используем унифицированную утилиту для создания admin клиента
+        const admin = createSupabaseAdminClient();
 
         // Проверяем, существует ли пользователь с таким номером
         const { data: existingUser } = await admin.auth.admin.listUsers();

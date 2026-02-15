@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 import ActionButtons from './ActionButtons';
 
@@ -23,6 +23,26 @@ export default function StaffListClient({ initialRows }: Props) {
     const { t } = useLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+    
+    // Пагинация для больших списков (показываем по 30 элементов на странице)
+    const ITEMS_PER_PAGE = 30;
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    // Сбрасываем страницу при изменении фильтров
+    const handleFilterChange = useCallback(() => {
+        setCurrentPage(1);
+    }, []);
+    
+    // Обработчики для фильтров с сбросом пагинации
+    const handleSearchChange = useCallback((value: string) => {
+        setSearchQuery(value);
+        handleFilterChange();
+    }, [handleFilterChange]);
+
+    const handleStatusChange = useCallback((status: 'all' | 'active' | 'inactive') => {
+        setFilterStatus(status);
+        handleFilterChange();
+    }, [handleFilterChange]);
 
     // Фильтрация и поиск
     const filteredRows = useMemo(() => {
@@ -44,9 +64,31 @@ export default function StaffListClient({ initialRows }: Props) {
         return result;
     }, [initialRows, searchQuery, filterStatus]);
 
-    const activeCount = initialRows.filter((r) => r.is_active === true).length;
-    const inactiveCount = initialRows.filter((r) => r.is_active !== true).length;
-    const totalCount = initialRows.length;
+    // Мемоизируем подсчет статистики для оптимизации производительности
+    const { activeCount, inactiveCount, totalCount } = useMemo(() => {
+        const active = initialRows.filter((r) => r.is_active === true).length;
+        const inactive = initialRows.filter((r) => r.is_active !== true).length;
+        const total = initialRows.length;
+        return { activeCount: active, inactiveCount: inactive, totalCount: total };
+    }, [initialRows]);
+
+    const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
+    
+    // Мемоизируем пагинированные элементы
+    const paginatedRows = useMemo(() => {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        return filteredRows.slice(start, end);
+    }, [filteredRows, currentPage, ITEMS_PER_PAGE]);
+
+    // Обработчики для пагинации
+    const handlePrevPage = useCallback(() => {
+        setCurrentPage((prev) => Math.max(1, prev - 1));
+    }, []);
+
+    const handleNextPage = useCallback(() => {
+        setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+    }, [totalPages]);
 
     return (
         <div className="space-y-6">
@@ -89,7 +131,7 @@ export default function StaffListClient({ initialRows }: Props) {
                             type="text"
                             placeholder={t('staff.search.placeholder', 'Поиск по имени...')}
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                             className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 sm:w-64"
                         />
                     </div>
@@ -97,7 +139,7 @@ export default function StaffListClient({ initialRows }: Props) {
                     <div className="flex rounded-lg border border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-800">
                         <button
                             type="button"
-                            onClick={() => setFilterStatus('all')}
+                            onClick={() => handleStatusChange('all')}
                             className={`px-3 py-2 text-xs font-medium transition-colors ${
                                 filterStatus === 'all'
                                     ? 'bg-indigo-600 text-white dark:bg-indigo-500'
@@ -108,7 +150,7 @@ export default function StaffListClient({ initialRows }: Props) {
                         </button>
                         <button
                             type="button"
-                            onClick={() => setFilterStatus('active')}
+                            onClick={() => handleStatusChange('active')}
                             className={`px-3 py-2 text-xs font-medium transition-colors ${
                                 filterStatus === 'active'
                                     ? 'bg-indigo-600 text-white dark:bg-indigo-500'
@@ -119,7 +161,7 @@ export default function StaffListClient({ initialRows }: Props) {
                         </button>
                         <button
                             type="button"
-                            onClick={() => setFilterStatus('inactive')}
+                            onClick={() => handleStatusChange('inactive')}
                             className={`px-3 py-2 text-xs font-medium transition-colors ${
                                 filterStatus === 'inactive'
                                     ? 'bg-indigo-600 text-white dark:bg-indigo-500'
@@ -171,8 +213,9 @@ export default function StaffListClient({ initialRows }: Props) {
                     )}
                 </div>
             ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {filteredRows.map((staff) => (
+                <>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {paginatedRows.map((staff) => (
                         <div
                             key={staff.id}
                             className={`group rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-900 ${
@@ -228,8 +271,39 @@ export default function StaffListClient({ initialRows }: Props) {
                                 <ActionButtons id={String(staff.id)} isActive={!!staff.is_active} />
                             </div>
                         </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                    
+                    {/* Пагинация - показываем только если элементов больше чем на одной странице */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-4">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                {t('staff.pagination.showing', 'Показано')} {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredRows.length)} {t('staff.pagination.of', 'из')} {filteredRows.length}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handlePrevPage}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                                >
+                                    {t('staff.pagination.prev', 'Назад')}
+                                </button>
+                                <span className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {currentPage} / {totalPages}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleNextPage}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                                >
+                                    {t('staff.pagination.next', 'Вперед')}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

@@ -52,7 +52,8 @@ export default function StaffFinancePageClient({
                 <ErrorBoundary
                     onError={(error, errorInfo) => {
                         // Дополнительное логирование для finance компонентов
-                        console.error('FinancePage error:', error, errorInfo);
+                        const { logError } = require('@/lib/log');
+                        logError('StaffFinancePage', 'FinancePage error', { error, errorInfo });
                     }}
                     fallback={
                         <div className="p-6">

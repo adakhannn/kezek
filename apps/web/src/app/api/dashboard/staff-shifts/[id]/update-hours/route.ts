@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -38,29 +39,36 @@ export async function POST(req: Request, context: unknown) {
         // Округляем до двух знаков после запятой
         const hoursWorked = Math.round(rawHours * 100) / 100;
 
-        // Загружаем смену и проверяем, что она принадлежит бизнесу владельца
-        const { data: shift, error: shiftError } = await admin
-            .from('staff_shifts')
-            .select(
-                'id,biz_id,staff_id,status,total_amount,consumables_amount,percent_master,percent_salon,hourly_rate,guaranteed_amount,master_share,salon_share,topup_amount'
-            )
-            .eq('id', shiftId)
-            .maybeSingle();
-
-        if (shiftError) {
-            logError('UpdateShiftHours', 'Error loading shift', shiftError);
-            return NextResponse.json(
-                { ok: false, error: shiftError.message },
-                { status: 500 }
-            );
-        }
-
-        if (!shift || String(shift.biz_id) !== String(bizId)) {
+        // Загружаем смену и проверяем, что она принадлежит бизнесу владельца (используем унифицированную утилиту)
+        const shiftCheck = await checkResourceBelongsToBiz<{
+            id: string;
+            biz_id: string;
+            staff_id: string;
+            status: string;
+            total_amount: number;
+            consumables_amount: number;
+            percent_master: number;
+            percent_salon: number;
+            hourly_rate: number | null;
+            guaranteed_amount: number;
+            master_share: number;
+            salon_share: number;
+            topup_amount: number;
+        }>(
+            admin,
+            'staff_shifts',
+            shiftId,
+            bizId,
+            'id,biz_id,staff_id,status,total_amount,consumables_amount,percent_master,percent_salon,hourly_rate,guaranteed_amount,master_share,salon_share,topup_amount'
+        );
+        if (shiftCheck.error || !shiftCheck.data) {
             return NextResponse.json(
                 { ok: false, error: 'SHIFT_NOT_FOUND_OR_FORBIDDEN' },
                 { status: 404 }
             );
         }
+
+        const shift = shiftCheck.data;
 
         if (shift.status !== 'closed') {
             return NextResponse.json(

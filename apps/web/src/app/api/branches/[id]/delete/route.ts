@@ -1,15 +1,15 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logWarn } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function POST(_req: Request, context: unknown) {
-    try {
+    return withErrorHandler('BranchesDelete', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'id');
         const { supabase, bizId } = await getBizContextForManagers();
@@ -17,19 +17,21 @@ export async function POST(_req: Request, context: unknown) {
         // Проверяем, является ли пользователь суперадмином
         const { data: isSuper } = await supabase.rpc('is_super_admin');
         if (!isSuper) {
-            return NextResponse.json({ ok: false, error: 'FORBIDDEN', message: 'Только суперадмин может удалять филиалы' }, { status: 403 });
+            return createErrorResponse('forbidden', 'Только суперадмин может удалять филиалы', undefined, 403);
         }
         
         const admin = getServiceClient();
 
-        // 1) филиал наш?
-        const { data: br } = await admin
-            .from('branches')
-            .select('id,biz_id')
-            .eq('id', branchId)
-            .maybeSingle();
-        if (!br || String(br.biz_id) !== String(bizId)) {
-            return NextResponse.json({ ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS' }, { status: 400 });
+        // 1) филиал наш? (используем унифицированную утилиту)
+        const branchCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
+            admin,
+            'branches',
+            branchId,
+            bizId,
+            'id, biz_id'
+        );
+        if (branchCheck.error || !branchCheck.data) {
+            return createErrorResponse('validation', branchCheck.error || 'Филиал не принадлежит этому бизнесу', undefined, 400);
         }
 
         // 2) нет активных услуг?
@@ -42,11 +44,7 @@ export async function POST(_req: Request, context: unknown) {
             .eq('active', true); // Только активные услуги
 
         if ((servicesCount ?? 0) > 0) {
-            return NextResponse.json({ 
-                ok: false, 
-                error: 'HAS_SERVICES',
-                message: 'Невозможно удалить филиал: к нему привязаны активные услуги. Сначала удалите или переместите все активные услуги.'
-            }, { status: 400 });
+            return createErrorResponse('conflict', 'Невозможно удалить филиал: к нему привязаны активные услуги. Сначала удалите или переместите все активные услуги.', undefined, 400);
         }
 
         // 3) нет активных сотрудников?
@@ -59,11 +57,7 @@ export async function POST(_req: Request, context: unknown) {
             .eq('is_active', true); // Только активные сотрудники
 
         if ((staffCount ?? 0) > 0) {
-            return NextResponse.json({ 
-                ok: false, 
-                error: 'HAS_STAFF',
-                message: 'Невозможно удалить филиал: к нему привязаны активные сотрудники. Сначала удалите или переместите всех активных сотрудников.'
-            }, { status: 400 });
+            return createErrorResponse('conflict', 'Невозможно удалить филиал: к нему привязаны активные сотрудники. Сначала удалите или переместите всех активных сотрудников.', undefined, 400);
         }
 
         // 4) нет активных (неотмененных) броней, привязанных к этому филиалу?
@@ -77,17 +71,12 @@ export async function POST(_req: Request, context: unknown) {
             .limit(10);
 
         if ((activeBookingsCount ?? 0) > 0) {
-            return NextResponse.json({ 
-                ok: false, 
-                error: 'HAS_BOOKINGS',
-                message: 'Невозможно удалить филиал: к нему привязаны активные (неотмененные) брони. Сначала отмените или удалите все активные брони.',
-                details: {
-                    total: activeBookingsCount ?? 0,
-                    active: activeBookingsCount ?? 0,
-                    cancelled: 0,
-                    bookings: activeBookings?.slice(0, 5) || [],
-                }
-            }, { status: 400 });
+            return createErrorResponse('conflict', 'Невозможно удалить филиал: к нему привязаны активные (неотмененные) брони. Сначала отмените или удалите все активные брони.', {
+                total: activeBookingsCount ?? 0,
+                active: activeBookingsCount ?? 0,
+                cancelled: 0,
+                bookings: activeBookings?.slice(0, 5) || [],
+            }, 400);
         }
 
         // 5) Обрабатываем неактивных сотрудников - перемещаем их в другой филиал
@@ -139,11 +128,7 @@ export async function POST(_req: Request, context: unknown) {
                 .neq('status', 'cancelled');
 
             if ((activeBookingsForServices ?? 0) > 0) {
-                return NextResponse.json({ 
-                    ok: false, 
-                    error: 'HAS_ACTIVE_BOOKINGS_FOR_INACTIVE_SERVICES',
-                    message: 'Невозможно удалить филиал: у неактивных услуг есть активные брони. Сначала отмените все активные брони.'
-                }, { status: 400 });
+                return createErrorResponse('conflict', 'Невозможно удалить филиал: у неактивных услуг есть активные брони. Сначала отмените все активные брони.', undefined, 400);
             }
 
             // Удаляем отмененные брони для этих неактивных услуг
@@ -155,10 +140,7 @@ export async function POST(_req: Request, context: unknown) {
                 .eq('status', 'cancelled');
 
             if (eDelCancelledBookings) {
-                return NextResponse.json({ 
-                    ok: false, 
-                    error: `Не удалось удалить отмененные брони: ${eDelCancelledBookings.message}` 
-                }, { status: 400 });
+                return createErrorResponse('internal', `Не удалось удалить отмененные брони: ${eDelCancelledBookings.message}`, undefined, 400);
             }
 
             // Теперь пытаемся удалить неактивные услуги
@@ -170,10 +152,7 @@ export async function POST(_req: Request, context: unknown) {
                 .eq('active', false);
 
             if (eDelServices) {
-                return NextResponse.json({ 
-                    ok: false, 
-                    error: `Не удалось удалить неактивные услуги: ${eDelServices.message}` 
-                }, { status: 400 });
+                return createErrorResponse('internal', `Не удалось удалить неактивные услуги: ${eDelServices.message}`, undefined, 400);
             }
         }
 
@@ -216,25 +195,18 @@ export async function POST(_req: Request, context: unknown) {
                                 .eq('biz_id', bizId);
 
                             if (eDel2) {
-                                return NextResponse.json({ ok: false, error: eDel2.message }, { status: 400 });
+                                return createErrorResponse('internal', eDel2.message, undefined, 400);
                             }
-                            return NextResponse.json({ ok: true });
+                            return createSuccessResponse();
                         }
                     }
                     // Если нет другого филиала, возвращаем ошибку
-                    return NextResponse.json({ 
-                        ok: false, 
-                        error: 'HAS_INACTIVE_STAFF',
-                        message: 'Невозможно удалить филиал: к нему привязаны неактивные сотрудники, а других филиалов нет. Создайте другой филиал или удалите неактивных сотрудников.'
-                    }, { status: 400 });
+                    return createErrorResponse('conflict', 'Невозможно удалить филиал: к нему привязаны неактивные сотрудники, а других филиалов нет. Создайте другой филиал или удалите неактивных сотрудников.', undefined, 400);
                 }
             }
-            return NextResponse.json({ ok: false, error: eDel.message }, { status: 400 });
+            return createErrorResponse('internal', eDel.message, undefined, 400);
         }
 
-        return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e);
-        return NextResponse.json({ok: false, error: msg}, {status: 500});
-    }
+        return createSuccessResponse();
+    });
 }

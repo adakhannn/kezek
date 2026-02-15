@@ -1,14 +1,12 @@
 // apps/web/src/app/api/auth/telegram/link/route.ts
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { createSupabaseClients } from '@/lib/supabaseHelpers';
 import {
     TelegramAuthData,
     normalizeTelegramData,
@@ -26,19 +24,8 @@ export async function POST(req: Request) {
         RateLimitConfigs.auth,
         async () => {
             try {
-                const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-                const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-                const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-                const cookieStore = await cookies();
-
-        // Проверяем авторизацию текущего пользователя
-        const supabase = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value,
-                set: () => {},
-                remove: () => {},
-            },
-        });
+                // Используем унифицированные утилиты для создания клиентов
+                const { supabase, admin } = await createSupabaseClients();
 
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
@@ -56,7 +43,6 @@ export async function POST(req: Request) {
             return createErrorResponse('validation', 'Неверная подпись данных Telegram', { code: 'invalid_signature' }, 400);
         }
 
-        const admin = createClient(URL, SERVICE);
         const normalized = normalizeTelegramData(body);
 
         // Проверяем, не привязан ли этот Telegram ID к другому пользователю

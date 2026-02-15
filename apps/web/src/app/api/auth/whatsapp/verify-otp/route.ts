@@ -2,11 +2,11 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { logDebug, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 /**
  * POST /api/auth/whatsapp/verify-otp
@@ -15,8 +15,8 @@ import { normalizePhoneToE164 } from '@/lib/senders/sms';
  */
 export async function POST(req: Request) {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        // Используем унифицированную утилиту для создания admin клиента
+        const admin = createSupabaseAdminClient();
         
         // Получаем redirect из body (передается клиентом)
         const body = await req.json();
@@ -47,8 +47,6 @@ export async function POST(req: Request) {
                 { status: 400 }
             );
         }
-
-        const admin = createClient(URL, SERVICE);
 
         // Проверяем OTP код в базе данных
         const { data: otpRecord, error: otpError } = await admin

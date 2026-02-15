@@ -4,7 +4,8 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { formatDate, formatDateBrowser, formatMonthYear } from '@/lib/dateFormat';
+import { formatDate, formatDateBrowser, formatMonthYear, formatTime } from '@/lib/dateFormat';
+import { logDebug, logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
 type ShiftItem = {
@@ -80,10 +81,7 @@ function ShiftCard({
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                             {t('finance.staffStats.openedAt', 'Открыта')}
                             {': '}
-                            {new Date(shift.opened_at).toLocaleTimeString(locale === 'en' ? 'en-US' : 'ru-RU', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                            })}
+                            {formatTime(shift.opened_at, locale as 'ru' | 'ky' | 'en')}
                         </div>
                     )}
                 </div>
@@ -180,7 +178,7 @@ function ShiftCard({
                                         // Обновляем страницу, чтобы подтянуть актуальную статистику
                                         window.location.reload();
                                     } catch (err) {
-                                        console.error('Failed to update shift hours', err);
+                                        logError('StaffFinanceStats', 'Failed to update shift hours', err);
                                         alert(
                                             t(
                                                 'finance.staffStats.editHoursError',
@@ -379,10 +377,10 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
         setError(null);
         try {
             const url = `/api/dashboard/staff/${staffId}/finance/stats?period=${period}&date=${date}`;
-            console.log('[StaffFinanceStats] Loading stats:', { url, staffId, period, date });
+            logDebug('StaffFinanceStats', 'Loading stats', { url, staffId, period, date });
             const res = await fetch(url, { cache: 'no-store' });
             const json = await res.json();
-            console.log('[StaffFinanceStats] Stats response:', json);
+            logDebug('StaffFinanceStats', 'Stats response', json);
             if (!json.ok) {
                 throw new Error(json.error || t('finance.loading', 'Не удалось загрузить статистику'));
             }
@@ -394,7 +392,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setError(msg);
-            console.error('[StaffFinanceStats] Error loading stats:', e);
+            logError('StaffFinanceStats', 'Error loading stats', e);
         } finally {
             setLoading(false);
         }

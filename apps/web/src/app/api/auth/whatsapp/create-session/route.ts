@@ -4,11 +4,11 @@ export const dynamic = 'force-dynamic';
 
 import crypto from 'crypto';
 
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { logDebug, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 /**
  * POST /api/auth/whatsapp/create-session
@@ -17,9 +17,6 @@ import { normalizePhoneToE164 } from '@/lib/senders/sms';
  */
 export async function POST(req: Request) {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        
         const body = await req.json();
         const { phone, userId, redirect: redirectParam } = body as { phone?: string; userId?: string; redirect?: string };
         const finalRedirect = redirectParam || '/';
@@ -31,7 +28,8 @@ export async function POST(req: Request) {
             );
         }
 
-        const admin = createClient(URL, SERVICE);
+        // Используем унифицированную утилиту для создания admin клиента
+        const admin = createSupabaseAdminClient();
 
         // Находим пользователя
         let user;

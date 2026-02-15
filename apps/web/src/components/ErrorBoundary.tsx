@@ -45,8 +45,10 @@ export class ErrorBoundary extends Component<Props, State> {
                 timestamp: new Date().toISOString(),
             });
         } catch (logErr) {
-            // Если логирование не удалось, используем console.error
-            console.error('ErrorBoundary caught an error:', error, errorInfo);
+            // Если логирование не удалось, используем console.error как fallback
+            // Это единственный случай, когда мы используем console.error напрямую
+             
+            console.error('ErrorBoundary: Failed to log error', logErr, 'Original error:', error, errorInfo);
         }
         
         // Вызываем callback если передан
@@ -54,7 +56,15 @@ export class ErrorBoundary extends Component<Props, State> {
             try {
                 this.props.onError(error, errorInfo);
             } catch (callbackError) {
-                console.error('Error in onError callback:', callbackError);
+                // Используем безопасное логирование для ошибок в callback
+                try {
+                    const { logError } = require('@/lib/log');
+                    logError('ErrorBoundary', 'Error in onError callback', callbackError);
+                } catch {
+                    // Fallback только если логирование полностью недоступно
+                     
+                    console.error('ErrorBoundary: Error in onError callback', callbackError);
+                }
             }
         }
 

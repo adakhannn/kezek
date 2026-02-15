@@ -5,22 +5,29 @@
 /**
  * Форматирует ошибку для отображения пользователю
  */
+type ErrorWithDetails = {
+    message?: string;
+    details?: string;
+    hint?: string;
+    code?: string;
+};
+
 export function fmtErr(e: unknown, t?: (key: string, fallback?: string) => string): string {
     if (e && typeof e === 'object') {
-        const any = e as { message?: string; details?: string; hint?: string; code?: string };
-        const rawMessage = any.message || '';
+        const errorObj = e as ErrorWithDetails;
+        const rawMessage = errorObj.message || '';
 
         // Пользовательский текст для частых бизнес-ошибок
         if (rawMessage.includes('is not assigned to branch')) {
             return t?.('booking.error.masterNotAssigned', 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.') || 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
         }
 
-        if (any.message) {
+        if (errorObj.message) {
             const parts = [
-                any.message,
-                any.details && `Details: ${any.details}`,
-                any.hint && `Hint: ${any.hint}`,
-                any.code && `Code: ${any.code}`,
+                errorObj.message,
+                errorObj.details && `Details: ${errorObj.details}`,
+                errorObj.hint && `Hint: ${errorObj.hint}`,
+                errorObj.code && `Code: ${errorObj.code}`,
             ].filter(Boolean);
             return parts.join('\n');
         }
@@ -36,15 +43,19 @@ export function fmtErr(e: unknown, t?: (key: string, fallback?: string) => strin
 /**
  * Проверяет, является ли ошибка сетевой (например, недоступен интернет или сервер)
  */
+type ErrorWithCode = {
+    code?: string;
+};
+
 export function isNetworkError(e: unknown): boolean {
     if (e instanceof TypeError) {
         // Fetch в браузере выбрасывает TypeError при проблемах сети / CORS
         return true;
     }
     if (e && typeof e === 'object' && 'code' in e) {
-        const anyErr = e as { code?: string };
+        const errorWithCode = e as ErrorWithCode;
         // Некоторые драйверы могут использовать такие коды для сетевых ошибок
-        if (anyErr.code === 'ECONNABORTED' || anyErr.code === 'ECONNREFUSED' || anyErr.code === 'ENETUNREACH') {
+        if (errorWithCode.code === 'ECONNABORTED' || errorWithCode.code === 'ECONNREFUSED' || errorWithCode.code === 'ENETUNREACH') {
             return true;
         }
     }

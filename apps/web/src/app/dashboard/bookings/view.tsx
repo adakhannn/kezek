@@ -5,11 +5,15 @@ import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
+import { BookingFilters } from './components/BookingFilters';
+import { BookingsList } from './components/BookingsList';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 import { validateName, validatePhone } from '@/lib/validation';
+
 
 type ServiceRow = { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number; branch_id: string };
 type StaffRow   = { id: string; full_name: string; branch_id: string };
@@ -387,228 +391,30 @@ function ListTable({ bizId, initial, branches }: { bizId: string; initial: Booki
 
     return (
         <section className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-3 sm:space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.list.title', 'Брони')}</h2>
-                <button className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 flex items-center justify-center gap-2" onClick={refresh}>
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span className="hidden sm:inline">{t('bookings.list.refresh', 'Обновить')}</span>
-                    <span className="sm:hidden">{t('bookings.list.refresh', 'Обновить')}</span>
-                </button>
-            </div>
+            <BookingFilters
+                statusFilter={statusFilter}
+                branchFilter={branchFilter}
+                searchQuery={searchQuery}
+                branches={branches}
+                onStatusChange={setStatusFilter}
+                onBranchChange={setBranchFilter}
+                onSearchChange={setSearchQuery}
+                onRefresh={refresh}
+                isLoading={isLoading}
+            />
             
-            {/* Фильтры и поиск */}
-            <div className="flex flex-col gap-2 sm:gap-3">
-                <input
-                    type="text"
-                    placeholder={t('bookings.list.searchPlaceholder', 'Поиск: услуга, мастер, клиент, ID...')}
-                    value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        // Debounce будет через useEffect
-                    }}
-                    className="w-full px-3 sm:px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                />
-                <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
-                    {branches.length > 1 && (
-                        <select
-                            value={branchFilter}
-                            onChange={(e) => setBranchFilter(e.target.value)}
-                            className="flex-1 px-3 sm:px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                        >
-                            <option value="all">{t('bookings.list.allBranches', 'Все филиалы')}</option>
-                            {branches.map(b => (
-                                <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                        </select>
-                    )}
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="flex-1 px-3 sm:px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                    >
-                        <option value="all">{t('bookings.list.allStatuses', 'Все статусы')}</option>
-                        <option value="active">{t('bookings.list.active', 'Активные')}</option>
-                        <option value="confirmed">{t('bookings.list.confirmed', 'Подтвержденные')}</option>
-                        <option value="paid">{t('bookings.list.paid', 'Оплаченные')}</option>
-                        <option value="no_show">{t('bookings.list.noShow', 'Не пришли')}</option>
-                    </select>
-                </div>
-            </div>
-            
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="min-w-full">
-                    <thead className="sticky top-0 z-[96]">
-                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">#</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.service', 'Услуга')}</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.master', 'Мастер')}</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.start', 'Начало')}</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.status', 'Статус')}</th>
-                        <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.actions', 'Действия')}</th>
-                    </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {list.map(b => {
-                        const service = Array.isArray(b.services) ? b.services[0] : b.services;
-                        const master  = Array.isArray(b.staff)    ? b.staff[0]    : b.staff;
-                        const isPast = new Date(b.start_at) < new Date();
-                        const canMarkAttendance = isPast && b.status !== 'cancelled' && b.status !== 'no_show' && b.status !== 'paid';
-                        
-                        return (
-                            <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                <td className="p-3 lg:p-4 text-sm font-mono text-gray-600 dark:text-gray-400">{String(b.id).slice(0, 8)}</td>
-                                <td className="p-3 lg:p-4 text-sm font-medium text-gray-900 dark:text-gray-100">{getServiceName(service)}</td>
-                                <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{master?.full_name}</td>
-                                <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
-                                <td className="p-3 lg:p-4">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
-                                        {b.status === 'no_show' ? t('bookings.status.noShowShort', 'не пришел') : b.status === 'paid' && isPast ? t('bookings.status.attended', 'пришел') : t(`bookings.status.${b.status}`, b.status)}
-                                    </span>
-                                </td>
-                                <td className="p-3 lg:p-4">
-                                    <div className="flex gap-2 flex-wrap">
-                                        {canMarkAttendance && (
-                                            <>
-                                                <button 
-                                                    className="px-2.5 py-1 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" 
-                                                    onClick={() => markAttendance(b.id, true)}
-                                                >
-                                                    {t('bookings.actions.attended', 'Пришел')}
-                                                </button>
-                                                <button 
-                                                    className="px-2.5 py-1 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" 
-                                                    onClick={() => markAttendance(b.id, false)}
-                                                >
-                                                    {t('bookings.actions.noShow', 'Не пришел')}
-                                                </button>
-                                            </>
-                                        )}
-                                        {!isPast && b.status !== 'cancelled' && (
-                                            <button className="px-2.5 py-1 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" onClick={() => cancel(b.id)}>
-                                                {t('bookings.actions.cancel', 'Отменить')}
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        );
-                    })}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-3">
-                {list.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <p className="text-sm">{t('bookings.list.empty', 'Нет броней')}</p>
-                    </div>
-                ) : (
-                    list.map(b => {
-                        const service = Array.isArray(b.services) ? b.services[0] : b.services;
-                        const master  = Array.isArray(b.staff)    ? b.staff[0]    : b.staff;
-                        const isPast = new Date(b.start_at) < new Date();
-                        const canMarkAttendance = isPast && b.status !== 'cancelled' && b.status !== 'no_show' && b.status !== 'paid';
-                        
-                        return (
-                            <div key={b.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-2.5">
-                                {/* Header with ID and Status */}
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-xs font-mono text-gray-500 dark:text-gray-400">#{String(b.id).slice(0, 8)}</span>
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
-                                                {b.status === 'no_show' ? t('bookings.status.noShowShort', 'не пришел') : b.status === 'paid' && isPast ? t('bookings.status.attended', 'пришел') : t(`bookings.status.${b.status}`, b.status)}
-                                            </span>
-                                        </div>
-                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{getServiceName(service)}</h3>
-                                    </div>
-                                </div>
-
-                                {/* Details */}
-                                <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                        <span className="truncate">{master?.full_name || '—'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <span>{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</span>
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                {(canMarkAttendance || (!isPast && b.status !== 'cancelled')) && (
-                                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                        {canMarkAttendance && (
-                                            <>
-                                                <button 
-                                                    className="flex-1 min-w-[100px] px-2.5 py-1.5 text-xs font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200" 
-                                                    onClick={() => markAttendance(b.id, true)}
-                                                >
-                                                    {t('bookings.actions.attended', 'Пришел')}
-                                                </button>
-                                                <button 
-                                                    className="flex-1 min-w-[100px] px-2.5 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" 
-                                                    onClick={() => markAttendance(b.id, false)}
-                                                >
-                                                    {t('bookings.actions.noShow', 'Не пришел')}
-                                                </button>
-                                            </>
-                                        )}
-                                        {!isPast && b.status !== 'cancelled' && (
-                                            <button className="flex-1 min-w-[100px] px-2.5 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200" onClick={() => cancel(b.id)}>
-                                                {t('bookings.actions.cancel', 'Отменить')}
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })
-                )}
-            </div>
-            
-            {/* Pagination */}
-            {totalCount > ITEMS_PER_PAGE && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('bookings.list.paginationInfo', 'Показано')} {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} {t('bookings.list.of', 'из')} {totalCount}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1 || isLoading}
-                            className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                        >
-                            {t('bookings.list.prev', 'Назад')}
-                        </button>
-                        <span className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300">
-                            {t('bookings.list.page', 'Страница')} {currentPage} {t('bookings.list.of', 'из')} {Math.ceil(totalCount / ITEMS_PER_PAGE)}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalCount / ITEMS_PER_PAGE), p + 1))}
-                            disabled={currentPage >= Math.ceil(totalCount / ITEMS_PER_PAGE) || isLoading}
-                            className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                        >
-                            {t('bookings.list.next', 'Вперед')}
-                        </button>
-                    </div>
-                </div>
-            )}
-            
-            {isLoading && (
-                <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                    {t('bookings.list.loading', 'Загрузка...')}
-                </div>
-            )}
+            <BookingsList
+                bookings={list}
+                branches={branches}
+                onConfirm={_confirm}
+                onCancel={cancel}
+                onMarkAttendance={markAttendance}
+                isLoading={isLoading}
+                currentPage={currentPage}
+                totalCount={totalCount}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+            />
         </section>
     );
 }

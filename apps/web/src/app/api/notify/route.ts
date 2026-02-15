@@ -2,22 +2,18 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { 
     getResendApiKey, 
-    getEmailFrom, 
-    getSupabaseUrl, 
-    getSupabaseAnonKey, 
-    getSupabaseServiceRoleKey 
+    getEmailFrom
 } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
+import { BookingDataService } from '@/lib/notifications/BookingDataService';
 import { NotificationOrchestrator } from '@/lib/notifications/NotificationOrchestrator';
-import type { NotifyRequest, BookingRow } from '@/lib/notifications/types';
+import type { NotifyRequest } from '@/lib/notifications/types';
+import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 /**
  * API endpoint для отправки уведомлений о бронированиях
@@ -63,64 +59,25 @@ export async function POST(req: Request) {
         }
 
         const from = getEmailFrom();
-        const url = getSupabaseUrl();
-        const anon = getSupabaseAnonKey();
-        const service = getSupabaseServiceRoleKey();
 
-        // Создаем Supabase клиенты
-        const cookieStore = await cookies();
-        const supabase = createServerClient(url, anon, {
-            cookies: { 
-                get: (n: string) => cookieStore.get(n)?.value, 
-                set: () => {}, 
-                remove: () => {} 
-            },
-        });
-        
-        // Admin client для получения данных (обход RLS)
-        const admin = createClient(url, service);
+        // Создаем Supabase клиенты используя унифицированные утилиты
+        const { supabase, admin } = await createSupabaseClients();
+
+        // Создаем сервис для получения данных бронирования
+        const bookingDataService = new BookingDataService(admin);
 
         // Получаем данные бронирования
-        logDebug('Notify', 'Fetching booking data', { booking_id: body.booking_id });
-        const { data: booking, error: bookingError } = await admin
-            .from('bookings')
-            .select(`
-                id, status, start_at, end_at, created_at, client_id, client_phone, client_name, client_email,
-                services:services!bookings_service_id_fkey ( name_ru, duration_min, price_from, price_to ),
-                staff:staff!bookings_staff_id_fkey ( full_name, email, phone, user_id ),
-                biz:businesses!bookings_biz_id_fkey ( name, email_notify_to, slug, address, phones, owner_id ),
-                branches:branches!bookings_branch_id_fkey ( name, address )
-            `)
-            .eq('id', body.booking_id)
-            .maybeSingle<BookingRow>();
+        const booking = await bookingDataService.getBookingById(body.booking_id);
 
-        if (bookingError || !booking) {
-            logError('Notify', 'Booking not found or error', {
+        if (!booking) {
+            logError('Notify', 'Booking not found', {
                 booking_id: body.booking_id,
-                error: bookingError?.message,
             });
-            return NextResponse.json(
-                { ok: false, error: bookingError?.message || 'not_found' }, 
-                { status: 404 }
-            );
+            return createErrorResponse('not_found', 'Booking not found', undefined, 404);
         }
-
-        logDebug('Notify', 'Booking found', {
-            booking_id: booking.id,
-            status: booking.status,
-        });
 
         // Получаем email владельца для reply_to
-        const biz = Array.isArray(booking.biz) ? booking.biz[0] : booking.biz;
-        let ownerEmail: string | null = null;
-        if (biz?.owner_id) {
-            try {
-                const { data: owner } = await admin.auth.admin.getUserById(biz.owner_id);
-                ownerEmail = owner?.user?.email ?? null;
-            } catch (e) {
-                logError('Notify', 'Failed to get owner email', e);
-            }
-        }
+        const ownerEmail = await bookingDataService.getOwnerEmailFromBusiness(booking.biz);
 
         // Создаем оркестратор уведомлений
         const orchestrator = new NotificationOrchestrator(

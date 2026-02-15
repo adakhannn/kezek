@@ -1,22 +1,15 @@
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+
+import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const cookieStore = await cookies();
+        // Используем унифицированные утилиты для создания клиентов
+        const { supabase, admin } = await createSupabaseClients();
 
-        const supa = createServerClient(URL, ANON, {
-            cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
-        });
-
-        const { data: { user } } = await supa.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return NextResponse.json({ ok: false, error: 'Не авторизован' }, { status: 401 });
         }
@@ -32,8 +25,6 @@ export async function POST(req: Request) {
         if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
             return NextResponse.json({ ok: false, error: 'Некорректный формат телефона' }, { status: 400 });
         }
-
-        const admin = createClient(URL, SERVICE);
 
         // Обновляем телефон пользователя
         const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {

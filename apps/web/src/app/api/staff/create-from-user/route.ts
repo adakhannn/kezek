@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -27,16 +28,16 @@ export async function POST(req: Request) {
         // service-клиентом обойдём RLS для мутаций
         const admin = getServiceClient();
 
-        // 1) Проверим, что branch принадлежит этому бизнесу
-        {
-            const { data: br } = await admin
-                .from('branches')
-                .select('id,biz_id')
-                .eq('id', body.branch_id)
-                .maybeSingle();
-            if (!br || String(br.biz_id) !== String(bizId)) {
-                return NextResponse.json({ ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS' }, { status: 400 });
-            }
+        // 1) Проверим, что branch принадлежит этому бизнесу (используем унифицированную утилиту)
+        const branchCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
+            admin,
+            'branches',
+            body.branch_id,
+            bizId,
+            'id, biz_id'
+        );
+        if (branchCheck.error || !branchCheck.data) {
+            return NextResponse.json({ ok: false, error: 'BRANCH_NOT_IN_THIS_BUSINESS' }, { status: 400 });
         }
 
         // 2) Подтянем пользователя из Auth Admin API

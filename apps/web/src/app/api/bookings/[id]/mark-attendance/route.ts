@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -98,24 +99,24 @@ export async function POST(req: Request, context: unknown) {
                 const body = await req.json().catch(() => ({} as Body));
                 const attended = body.attended === true;
 
-                // Проверяем, что бронь принадлежит этому бизнесу
-                const { data: booking, error: bookingError } = await admin
-                    .from('bookings')
-                    .select('id, biz_id, start_at, status')
-                    .eq('id', bookingId)
-                    .maybeSingle();
-
-                if (bookingError) {
-                    return createErrorResponse('validation', bookingError.message, undefined, 400);
+                // Проверяем, что бронь принадлежит этому бизнесу (используем унифицированную утилиту)
+                const bookingCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; start_at: string; status: string }>(
+                    admin,
+                    'bookings',
+                    bookingId,
+                    bizId,
+                    'id, biz_id, start_at, status'
+                );
+                if (bookingCheck.error || !bookingCheck.data) {
+                    const statusCode = bookingCheck.error === 'Resource not found' ? 404 : 403;
+                    return createErrorResponse(
+                        statusCode === 404 ? 'not_found' : 'forbidden',
+                        bookingCheck.error === 'Resource not found' ? 'Бронь не найдена' : 'Доступ запрещен',
+                        undefined,
+                        statusCode
+                    );
                 }
-
-                if (!booking) {
-                    return createErrorResponse('not_found', 'Бронь не найдена', undefined, 404);
-                }
-
-                if (String(booking.biz_id) !== String(bizId)) {
-                    return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
-                }
+                const booking = bookingCheck.data;
 
                 // Если статус уже финальный, не пытаемся применять его повторно
                 if (booking.status === 'paid' || booking.status === 'no_show') {

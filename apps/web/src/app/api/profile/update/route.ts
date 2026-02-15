@@ -1,11 +1,10 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { logError } from '@/lib/log';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = {
     full_name?: string | null;
@@ -18,18 +17,8 @@ type Body = {
 
 export async function POST(req: Request) {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const cookieStore = await cookies();
-
-        // Проверка авторизации
-        const supabase = createServerClient(URL, ANON, {
-            cookies: {
-                get: (n: string) => cookieStore.get(n)?.value,
-                set: () => {},
-                remove: () => {},
-            },
-        });
+        // Используем унифицированную утилиту для создания Supabase клиента
+        const supabase = await createSupabaseServerClient();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {

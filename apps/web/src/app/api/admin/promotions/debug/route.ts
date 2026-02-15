@@ -1,21 +1,11 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function GET(request: Request) {
     return withErrorHandler('PromotionsDebug', async () => {
-        const cookieStore = await cookies();
-        const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON, {
-            cookies: {
-                get: (name: string) => cookieStore.get(name)?.value,
-                set: () => {},
-                remove: () => {},
-            },
-        });
+        // Используем унифицированную утилиту для создания Supabase клиента
+        const supabase = await createSupabaseServerClient();
 
         // Проверяем, что пользователь - суперадмин
         const {

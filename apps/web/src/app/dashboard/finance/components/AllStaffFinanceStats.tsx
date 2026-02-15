@@ -85,7 +85,8 @@ export default function AllStaffFinanceStats() {
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setError(msg);
-            console.error('Error loading stats:', e);
+            const { logError } = require('@/lib/log');
+            logError('AllStaffFinanceStats', 'Error loading stats', e);
         } finally {
             setLoading(false);
         }

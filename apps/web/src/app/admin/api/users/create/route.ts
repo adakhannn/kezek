@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { logError } from '@/lib/log';
+
 type Body = {
     email?: string | null;
     phone?: string | null;
@@ -132,7 +134,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: true, id: uid, method: 'phone_otp' });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        console.error('user create error', e);
+        logError('AdminUsersCreate', 'user create error', e);
         return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
 }

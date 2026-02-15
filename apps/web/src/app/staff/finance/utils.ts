@@ -2,20 +2,18 @@
 
 import type { ServiceName } from './types';
 
+import { formatTime as formatTimeLib } from '@/lib/dateFormat';
 import { transliterate } from '@/lib/transliterate';
 
 /**
  * Форматирует время из ISO строки
+ * Использует унифицированную функцию из @/lib/dateFormat
  */
 export function formatTime(iso: string | null, locale: string): string {
     if (!iso) return '—';
     try {
-        const d = new Date(iso);
-        const localeMap: Record<string, string> = { ky: 'ky-KG', ru: 'ru-RU', en: 'en-US' };
-        return d.toLocaleTimeString(localeMap[locale] || 'ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
+        // Используем унифицированную функцию форматирования времени
+        return formatTimeLib(iso, locale as 'ru' | 'ky' | 'en');
     } catch {
         return '—';
     }

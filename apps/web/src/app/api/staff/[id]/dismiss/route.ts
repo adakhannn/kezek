@@ -1,8 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
+import { getServiceClient } from '@/lib/supabaseService';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,23 +12,25 @@ export const dynamic = 'force-dynamic';
 export async function POST(_: Request, context: unknown) {
     try {
         const staffId = await getRouteParamRequired(context, 'id');
-        const { supabase, bizId } = await getBizContextForManagers();
+        const { bizId } = await getBizContextForManagers();
+        const admin = getServiceClient();
 
-    // 1) читаем сотрудника
-    const { data: staff, error: eStaff } = await supabase
-        .from('staff')
-        .select('id,biz_id,user_id,is_active,full_name')
-        .eq('id', staffId)
-        .maybeSingle();
-
-    if (eStaff) return NextResponse.json({ ok: false, error: eStaff.message }, { status: 400 });
-    if (!staff || String(staff.biz_id) !== String(bizId)) {
+    // 1) проверяем, что сотрудник принадлежит бизнесу (используем унифицированную утилиту)
+    const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; user_id: string | null; is_active: boolean; full_name: string }>(
+        admin,
+        'staff',
+        staffId,
+        bizId,
+        'id, biz_id, user_id, is_active, full_name'
+    );
+    if (staffCheck.error || !staffCheck.data) {
         return NextResponse.json({ ok: false, error: 'STAFF_NOT_FOUND' }, { status: 404 });
     }
+    const staff = staffCheck.data;
 
     // 2) есть ли будущие активные записи?
     const nowIso = new Date().toISOString();
-    const { count, error: eBooks } = await supabase
+    const { count, error: eBooks } = await admin
         .from('bookings')
         .select('id', { count: 'exact', head: true })
         .eq('biz_id', bizId)
@@ -39,8 +43,8 @@ export async function POST(_: Request, context: unknown) {
         return NextResponse.json({ ok: false, error: 'HAS_FUTURE_BOOKINGS' }, { status: 409 });
     }
 
-    // 3) деактивируем сотрудника
-    const { error: eDeactivate } = await supabase
+    // 3) деактивируем сотрудника (используем service client)
+    const { error: eDeactivate } = await admin
         .from('staff')
         .update({ is_active: false })
         .eq('id', staffId)
@@ -50,12 +54,8 @@ export async function POST(_: Request, context: unknown) {
 
     // 4) если привязан к пользователю — понизить роли до client
     if (staff.user_id) {
-        // сервис-клиент (SERVER-ONLY ключ!)
-        const svc = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
-            { auth: { persistSession: false } }
-        );
+        // Используем унифицированную утилиту для создания admin клиента
+        const svc = createSupabaseAdminClient();
 
         // найдём id роли client
         const { data: roleClient, error: eRoleCli } = await svc

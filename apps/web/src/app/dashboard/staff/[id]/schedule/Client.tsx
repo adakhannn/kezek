@@ -5,6 +5,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 
@@ -548,7 +549,7 @@ export default function Client({
                 }))
             );
         } catch (e) {
-            console.error('Error applying branch schedule:', e);
+            logError('StaffScheduleClient', 'Error applying branch schedule', e);
             alert('Ошибка при применении расписания филиала: ' + (e instanceof Error ? e.message : String(e)));
         } finally {
             setSaving(false);
@@ -666,7 +667,7 @@ export default function Client({
                 }))
             );
         } catch (error) {
-            console.error('Error saving schedule:', error);
+            logError('StaffScheduleClient', 'Error saving schedule', error);
             alert(t('staff.schedule.saveError', 'Ошибка при сохранении расписания'));
         } finally {
             setSaving(false);

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { calculateBaseShares, normalizePercentages } from '@/lib/financeDomain';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -146,14 +147,16 @@ export async function POST(req: Request) {
                 return response;
             }
 
-            // Проверяем, что сотрудник принадлежит бизнесу
-            const { data: staff } = await supabase
-                .from('staff')
-                .select('id, biz_id')
-                .eq('id', targetStaffId)
-                .maybeSingle();
-
-            if (!staff || String(staff.biz_id) !== String(bizId)) {
+            // Проверяем, что сотрудник принадлежит бизнесу (используем унифицированную утилиту)
+            const admin = getServiceClient();
+            const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
+                admin,
+                'staff',
+                targetStaffId,
+                bizId,
+                'id, biz_id'
+            );
+            if (staffCheck.error || !staffCheck.data) {
                 statusCode = 403;
                 const response = NextResponse.json({ ok: false, error: 'STAFF_NOT_IN_THIS_BUSINESS' }, { status: statusCode });
                 

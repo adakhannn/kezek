@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { formatDateTime, formatTime } from '@/lib/dateFormat';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
@@ -72,42 +73,9 @@ export default function StaffBookingsView({
     const { t, locale } = useLanguage();
     const [tab, setTab] = useState<'upcoming' | 'past' | 'create'>('upcoming');
 
-    function formatDateTime(iso: string): string {
-        const date = new Date(iso);
-        const localeMap: Record<string, string> = {
-            ky: 'ru-KG',
-            ru: 'ru-RU',
-            en: 'en-US',
-        };
-        
-        const dateFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: TZ,
-        });
-        
-        return dateFormatter.format(date);
-    }
-
-    function formatTime(iso: string): string {
-        const date = new Date(iso);
-        const localeMap: Record<string, string> = {
-            ky: 'ru-KG',
-            ru: 'ru-RU',
-            en: 'en-US',
-        };
-        
-        const timeFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: TZ,
-        });
-        
-        return timeFormatter.format(date);
-    }
+    // Используем унифицированные функции форматирования дат
+    const formatDateTimeLocal = (iso: string): string => formatDateTime(iso, locale as 'ru' | 'ky' | 'en', true);
+    const formatTimeLocal = (iso: string): string => formatTime(iso, locale as 'ru' | 'ky' | 'en');
 
     function getServiceName(service: { name_ru: string; name_ky?: string | null; name_en?: string | null } | null): string {
         if (!service) return t('staff.cabinet.bookings.card.serviceDefault', 'Услуга');
@@ -185,7 +153,8 @@ export default function StaffBookingsView({
                 });
                 if (ignore) return;
                 if (error) {
-                    console.error('[StaffBooking] get_free_slots_service_day_v2 error:', error.message || error);
+                    const { logError } = require('@/lib/log');
+                    logError('StaffBookingsView', 'get_free_slots_service_day_v2 error', { message: error.message || error });
                     setSlots([]);
                     setSlotStartISO('');
                     setSlotsLoading(false);
@@ -536,7 +505,7 @@ export default function StaffBookingsView({
                                                         {t('staff.cabinet.bookings.card.time', 'Время')}
                                                     </div>
                                                     <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {formatDateTime(booking.start_at)} - {formatDateTime(booking.end_at)}
+                                                        {formatDateTimeLocal(booking.start_at)} - {formatDateTimeLocal(booking.end_at)}
                                                     </div>
                                                 </div>
                                                 <div>

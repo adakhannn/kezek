@@ -11,6 +11,27 @@
 -- 3. Убедиться, что все операции выполняются в транзакциях
 
 -- ============================================================================
+-- ИСПРАВЛЕНИЕ ДАННЫХ ПЕРЕД ДОБАВЛЕНИЕМ ОГРАНИЧЕНИЙ
+-- ============================================================================
+
+-- Исправление некорректных значений hours_worked перед добавлением CHECK constraint
+-- Это необходимо, так как существующие данные могут нарушать новые ограничения
+DO $$
+BEGIN
+    -- Исправить отрицательные значения (установить в 0)
+    UPDATE public.staff_shifts
+    SET hours_worked = 0
+    WHERE hours_worked IS NOT NULL 
+      AND hours_worked < 0;
+    
+    -- Исправить значения больше 24 часов (установить в 24)
+    UPDATE public.staff_shifts
+    SET hours_worked = 24
+    WHERE hours_worked IS NOT NULL 
+      AND hours_worked > 24;
+END $$;
+
+-- ============================================================================
 -- CHECK-ограничения для таблицы staff_shifts
 -- ============================================================================
 
@@ -134,107 +155,8 @@ add constraint staff_shift_items_note_length
     check (note is null or length(note) <= 2000);
 
 -- ============================================================================
--- Функция для атомарного сохранения items в транзакции
--- ============================================================================
-
-create or replace function public.save_shift_items_atomic(
-    p_shift_id uuid,
-    p_items jsonb
-)
-returns jsonb
-language plpgsql
-as $$
-declare
-    v_shift_status text;
-    v_result jsonb;
-    v_item jsonb;
-    v_inserted_count integer := 0;
-    v_deleted_count integer := 0;
-begin
-    -- Проверяем, что смена существует и открыта
-    select status
-    into v_shift_status
-    from public.staff_shifts
-    where id = p_shift_id
-    for update;  -- Блокируем строку для обновления
-    
-    if v_shift_status is null then
-        return jsonb_build_object(
-            'ok', false,
-            'error', 'Смена не найдена'
-        );
-    end if;
-    
-    if v_shift_status != 'open' then
-        return jsonb_build_object(
-            'ok', false,
-            'error', 'Смена должна быть открыта для сохранения позиций'
-        );
-    end if;
-    
-    -- Удаляем все существующие позиции для этой смены
-    delete from public.staff_shift_items
-    where shift_id = p_shift_id;
-    
-    get diagnostics v_deleted_count = row_count;
-    
-    -- Вставляем новые позиции
-    if p_items is not null and jsonb_array_length(p_items) > 0 then
-        insert into public.staff_shift_items (
-            shift_id,
-            client_name,
-            service_name,
-            service_amount,
-            consumables_amount,
-            booking_id,
-            note,
-            created_at
-        )
-        select
-            p_shift_id,
-            (item->>'clientName')::text,
-            (item->>'serviceName')::text,
-            coalesce(((item->>'serviceAmount')::numeric), 0),
-            coalesce(((item->>'consumablesAmount')::numeric), 0),
-            case when (item->>'bookingId')::text = '' then null else (item->>'bookingId')::uuid end,
-            (item->>'note')::text,
-            coalesce(
-                ((item->>'createdAt')::timestamptz),
-                timezone('utc'::text, now())
-            )
-        from jsonb_array_elements(p_items) as item
-        where
-            -- Сохраняем только если есть данные
-            coalesce(((item->>'serviceAmount')::numeric), 0) > 0
-            or coalesce(((item->>'consumablesAmount')::numeric), 0) > 0
-            or (item->>'bookingId')::text is not null
-            or ((item->>'clientName')::text is not null and (item->>'clientName')::text != '');
-        
-        get diagnostics v_inserted_count = row_count;
-    end if;
-    
-    -- Возвращаем результат
-    return jsonb_build_object(
-        'ok', true,
-        'deleted_count', v_deleted_count,
-        'inserted_count', v_inserted_count
-    );
-    
-exception
-    when others then
-        return jsonb_build_object(
-            'ok', false,
-            'error', 'Ошибка при сохранении позиций: ' || sqlerrm
-        );
-end;
-$$;
-
-comment on function public.save_shift_items_atomic is 'Атомарно сохраняет позиции смены в транзакции. Удаляет старые позиции и вставляет новые. Проверяет, что смена открыта.';
-
--- Предоставляем права на выполнение функции
-grant execute on function public.save_shift_items_atomic(uuid, jsonb) to authenticated;
-grant execute on function public.save_shift_items_atomic(uuid, jsonb) to service_role;
-
+-- ПРИМЕЧАНИЕ: Функция save_shift_items_atomic вынесена в отдельную миграцию
+-- 20260213000001_add_save_shift_items_function.sql для совместимости с Supabase CLI
 -- ============================================================================
 -- Комментарии к ограничениям
 -- ============================================================================

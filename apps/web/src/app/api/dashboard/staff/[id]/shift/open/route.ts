@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
 
@@ -16,14 +17,15 @@ export const runtime = 'nodejs';
  */
 export async function POST(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    context: unknown
 ) {
     return withRateLimit(
         req,
         RateLimitConfigs.critical,
         async () => {
             try {
-                const { id: staffId } = await params;
+                // Валидация UUID для предотвращения потенциальных проблем безопасности
+                const staffId = await getRouteParamUuid(context, 'id');
                 const { supabase, bizId } = await getBizContextForManagers();
 
                 // Получаем дату из query параметров или используем сегодня

@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 
+import { formatDateTime } from '@/lib/dateFormat';
+
 export const dynamic = 'force-dynamic';
 
 type HealthCheckResponse = {
@@ -32,15 +34,10 @@ type HealthCheckResponse = {
     };
 };
 
+// Используем унифицированную функцию форматирования дат
 function formatDate(value: string | null) {
     if (!value) return 'нет данных';
-    return new Date(value).toLocaleString('ru-RU', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+    return formatDateTime(value, 'ru', true);
 }
 
 export default async function HealthCheckPage() {
