@@ -222,6 +222,28 @@ describe('/api/dashboard/branches/[branchId]/promotions/[promotionId]', () => {
             const res = await DELETE(req, { params: { branchId, promotionId } });
             await expectErrorResponse(res, 404, 'PROMOTION_NOT_FOUND_OR_ACCESS_DENIED');
         });
+
+        test('должен вернуть 404 если акция принадлежит другому бизнесу', async () => {
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: {
+                        id: promotionId,
+                        branch_id: branchId,
+                        biz_id: 'other-biz-id', // Другой бизнес
+                    },
+                    error: null,
+                }),
+            });
+
+            const req = createMockRequest(`http://localhost/api/dashboard/branches/${branchId}/promotions/${promotionId}`, {
+                method: 'DELETE',
+            });
+
+            const res = await DELETE(req, { params: { branchId, promotionId } });
+            await expectErrorResponse(res, 404, 'PROMOTION_NOT_FOUND_OR_ACCESS_DENIED');
+        });
     });
 });
 

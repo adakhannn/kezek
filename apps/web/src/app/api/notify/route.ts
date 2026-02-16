@@ -3,6 +3,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
 import { 
     getResendApiKey, 
     getEmailFrom
@@ -59,6 +61,12 @@ export async function POST(req: Request) {
         // Создаем Supabase клиенты используя унифицированные утилиты
         const { supabase, admin } = await createSupabaseClients();
 
+        // Проверяем авторизацию пользователя
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
+        }
+
         // Создаем сервис для получения данных бронирования
         const bookingDataService = new BookingDataService(admin);
 
@@ -70,6 +78,24 @@ export async function POST(req: Request) {
                 booking_id: body.booking_id,
             });
             return createErrorResponse('not_found', 'Booking not found', undefined, 404);
+        }
+
+        // Проверяем права доступа к бронированию
+        // Пользователь должен быть либо клиентом этого бронирования, либо менеджером бизнеса
+        const isClient = booking.client_id === user.id;
+
+        // Если не клиент, проверяем, является ли пользователь менеджером бизнеса
+        if (!isClient) {
+            try {
+                const { bizId } = await getBizContextForManagers();
+                const check = await checkBookingBelongsToBusiness(body.booking_id, bizId);
+                if (!check.belongs) {
+                    return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
+                }
+            } catch {
+                // Если не менеджер, доступ запрещен
+                return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
+            }
         }
 
         // Получаем email владельца для reply_to

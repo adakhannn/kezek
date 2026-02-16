@@ -12,6 +12,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NotificationOrchestrator } from '@/lib/notifications/NotificationOrchestrator';
+import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
 
 // Мокаем зависимости
 jest.mock('@/lib/env', () => ({
@@ -29,6 +31,14 @@ jest.mock('@/lib/notifications/NotificationOrchestrator', () => ({
 jest.mock('@/lib/log', () => ({
     logDebug: jest.fn(),
     logError: jest.fn(),
+}));
+
+jest.mock('@/lib/authBiz', () => ({
+    getBizContextForManagers: jest.fn(),
+}));
+
+jest.mock('@/lib/authCheck', () => ({
+    checkBookingBelongsToBusiness: jest.fn(),
 }));
 
 describe('/api/notify', () => {
@@ -311,6 +321,284 @@ describe('/api/notify', () => {
 
             expect(data.ok).toBe(true);
             expect(mockOrchestrator.sendNotifications).toHaveBeenCalledWith(mockBooking, 'cancel');
+        });
+    });
+
+    describe('Проверка прав доступа', () => {
+        test('должен вернуть 401 если пользователь не авторизован', async () => {
+            mockSupabase.auth.getUser.mockResolvedValue({
+                data: { user: null },
+                error: null,
+            });
+
+            const mockBooking = {
+                id: 'booking-id',
+                client_id: 'client-id',
+                biz_id: 'biz-id',
+                status: 'hold',
+                start_at: new Date().toISOString(),
+                end_at: new Date(Date.now() + 3600000).toISOString(),
+                client_phone: '+996555123456',
+                client_name: 'Test Client',
+                client_email: 'client@example.com',
+                services: [],
+                staff: [],
+                biz: { name: 'Test Business', owner_id: 'owner-id' },
+                branches: [],
+            };
+
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: mockBooking,
+                    error: null,
+                }),
+            });
+
+            const req = createMockRequest('http://localhost/api/notify', {
+                method: 'POST',
+                body: { type: 'hold', booking_id: 'booking-id' },
+            });
+
+            const res = await POST(req);
+            await expectErrorResponse(res, 401, 'AUTH');
+        });
+
+        test('должен вернуть 403 если пользователь не является клиентом бронирования и не менеджер бизнеса', async () => {
+            const unauthorizedUserId = 'unauthorized-user-id';
+            const bookingClientId = 'client-id';
+            const bookingBizId = 'biz-id';
+
+            mockSupabase.auth.getUser.mockResolvedValue({
+                data: { user: { id: unauthorizedUserId } },
+                error: null,
+            });
+
+            const mockBooking = {
+                id: 'booking-id',
+                client_id: bookingClientId,
+                biz_id: bookingBizId,
+                status: 'hold',
+                start_at: new Date().toISOString(),
+                end_at: new Date(Date.now() + 3600000).toISOString(),
+                client_phone: '+996555123456',
+                client_name: 'Test Client',
+                client_email: 'client@example.com',
+                services: [],
+                staff: [],
+                biz: { name: 'Test Business', owner_id: 'owner-id' },
+                branches: [],
+            };
+
+            // Мокаем получение бронирования
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: mockBooking,
+                    error: null,
+                }),
+            });
+
+            // Мокаем getBizContextForManagers - пользователь не менеджер
+            (getBizContextForManagers as jest.Mock).mockRejectedValue(new Error('Not a manager'));
+
+            const req = createMockRequest('http://localhost/api/notify', {
+                method: 'POST',
+                body: { type: 'hold', booking_id: 'booking-id' },
+            });
+
+            const res = await POST(req);
+            await expectErrorResponse(res, 403, 'FORBIDDEN');
+        });
+
+        test('должен разрешить доступ если пользователь является клиентом бронирования', async () => {
+            const clientUserId = 'client-id';
+            const bookingId = 'booking-id';
+
+            mockSupabase.auth.getUser.mockResolvedValue({
+                data: { user: { id: clientUserId } },
+                error: null,
+            });
+
+            const mockBooking = {
+                id: bookingId,
+                client_id: clientUserId,
+                biz_id: 'biz-id',
+                status: 'hold',
+                start_at: new Date().toISOString(),
+                end_at: new Date(Date.now() + 3600000).toISOString(),
+                client_phone: '+996555123456',
+                client_name: 'Test Client',
+                client_email: 'client@example.com',
+                services: [],
+                staff: [],
+                biz: { name: 'Test Business', owner_id: 'owner-id' },
+                branches: [],
+            };
+
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: mockBooking,
+                    error: null,
+                }),
+            });
+
+            mockAdmin.auth = {
+                admin: {
+                    getUserById: jest.fn().mockResolvedValue({
+                        user: { email: 'owner@example.com' },
+                    }),
+                },
+            };
+
+            mockOrchestrator.sendNotifications.mockResolvedValue({
+                emailsSent: 1,
+                whatsappSent: 0,
+                telegramSent: 0,
+            });
+
+            const req = createMockRequest('http://localhost/api/notify', {
+                method: 'POST',
+                body: { type: 'hold', booking_id: bookingId },
+            });
+
+            const res = await POST(req);
+            const data = await expectSuccessResponse(res);
+
+            expect(data.ok).toBe(true);
+            expect(mockOrchestrator.sendNotifications).toHaveBeenCalled();
+        });
+
+        test('должен разрешить доступ если пользователь является менеджером бизнеса', async () => {
+            const managerUserId = 'manager-id';
+            const bookingId = 'booking-id';
+            const bookingBizId = 'biz-id';
+            const bookingClientId = 'client-id';
+
+            mockSupabase.auth.getUser.mockResolvedValue({
+                data: { user: { id: managerUserId } },
+                error: null,
+            });
+
+            const mockBooking = {
+                id: bookingId,
+                client_id: bookingClientId,
+                biz_id: bookingBizId,
+                status: 'hold',
+                start_at: new Date().toISOString(),
+                end_at: new Date(Date.now() + 3600000).toISOString(),
+                client_phone: '+996555123456',
+                client_name: 'Test Client',
+                client_email: 'client@example.com',
+                services: [],
+                staff: [],
+                biz: { name: 'Test Business', owner_id: 'owner-id' },
+                branches: [],
+            };
+
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: mockBooking,
+                    error: null,
+                }),
+            });
+
+            // Мокаем getBizContextForManagers - пользователь менеджер
+            (getBizContextForManagers as jest.Mock).mockResolvedValue({
+                bizId: bookingBizId,
+            });
+
+            // Мокаем checkBookingBelongsToBusiness - бронирование принадлежит бизнесу
+            (checkBookingBelongsToBusiness as jest.Mock).mockResolvedValue({
+                belongs: true,
+            });
+
+            mockAdmin.auth = {
+                admin: {
+                    getUserById: jest.fn().mockResolvedValue({
+                        user: { email: 'owner@example.com' },
+                    }),
+                },
+            };
+
+            mockOrchestrator.sendNotifications.mockResolvedValue({
+                emailsSent: 1,
+                whatsappSent: 0,
+                telegramSent: 0,
+            });
+
+            const req = createMockRequest('http://localhost/api/notify', {
+                method: 'POST',
+                body: { type: 'hold', booking_id: bookingId },
+            });
+
+            const res = await POST(req);
+            const data = await expectSuccessResponse(res);
+
+            expect(data.ok).toBe(true);
+            expect(mockOrchestrator.sendNotifications).toHaveBeenCalled();
+        });
+
+        test('должен вернуть 403 если менеджер пытается получить доступ к бронированию другого бизнеса', async () => {
+            const managerUserId = 'manager-id';
+            const bookingId = 'booking-id';
+            const managerBizId = 'manager-biz-id';
+            const bookingBizId = 'other-biz-id';
+            const bookingClientId = 'client-id';
+
+            mockSupabase.auth.getUser.mockResolvedValue({
+                data: { user: { id: managerUserId } },
+                error: null,
+            });
+
+            const mockBooking = {
+                id: bookingId,
+                client_id: bookingClientId,
+                biz_id: bookingBizId,
+                status: 'hold',
+                start_at: new Date().toISOString(),
+                end_at: new Date(Date.now() + 3600000).toISOString(),
+                client_phone: '+996555123456',
+                client_name: 'Test Client',
+                client_email: 'client@example.com',
+                services: [],
+                staff: [],
+                biz: { name: 'Test Business', owner_id: 'owner-id' },
+                branches: [],
+            };
+
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: mockBooking,
+                    error: null,
+                }),
+            });
+
+            // Мокаем getBizContextForManagers - пользователь менеджер другого бизнеса
+            (getBizContextForManagers as jest.Mock).mockResolvedValue({
+                bizId: managerBizId,
+            });
+
+            // Мокаем checkBookingBelongsToBusiness - бронирование НЕ принадлежит бизнесу менеджера
+            (checkBookingBelongsToBusiness as jest.Mock).mockResolvedValue({
+                belongs: false,
+            });
+
+            const req = createMockRequest('http://localhost/api/notify', {
+                method: 'POST',
+                body: { type: 'hold', booking_id: bookingId },
+            });
+
+            const res = await POST(req);
+            await expectErrorResponse(res, 403, 'FORBIDDEN');
         });
     });
 
