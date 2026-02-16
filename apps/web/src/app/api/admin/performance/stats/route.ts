@@ -1,6 +1,5 @@
 // apps/web/src/app/api/admin/performance/stats/route.ts
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getPerformanceStats, getOperations } from '@/lib/performance';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -12,13 +11,13 @@ export const runtime = 'nodejs';
  * Возвращает статистику производительности для всех операций
  */
 export async function GET(req: Request) {
-    try {
+    return withErrorHandler('PerformanceStats', async () => {
         // Проверяем, что пользователь - супер-админ
         const supabase = getServiceClient();
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         // Проверяем, является ли пользователь супер-админом
@@ -29,7 +28,7 @@ export async function GET(req: Request) {
             .maybeSingle();
 
         if (!profile?.is_super_admin) {
-            return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 });
+            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
         }
 
         // Получаем список всех операций
@@ -41,14 +40,10 @@ export async function GET(req: Request) {
             ...getPerformanceStats(operation, 5 * 60 * 1000), // 5 минут
         }));
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             stats,
             timestamp: Date.now(),
         });
-    } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+    });
 }
 

@@ -4,7 +4,7 @@
  */
 
 
-import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getIpAddress } from '@/lib/apiMetrics';
 import { logDebug, logWarn } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -108,7 +108,7 @@ async function saveMetric(metric: FrontendMetric, req: Request): Promise<void> {
 }
 
 export async function POST(req: Request) {
-    try {
+    return withErrorHandler('FrontendMetrics', async () => {
         // Парсим тело запроса
         let metric: FrontendMetric;
         try {
@@ -136,13 +136,6 @@ export async function POST(req: Request) {
         }
 
         return createSuccessResponse({ ok: true });
-    } catch (error) {
-        // Не возвращаем ошибку клиенту, чтобы не влиять на UX
-        logWarn('FrontendMetrics', 'Error processing metric', {
-            error: error instanceof Error ? error.message : String(error),
-        });
-
-        return createSuccessResponse({ ok: true });
-    }
+    });
 }
 

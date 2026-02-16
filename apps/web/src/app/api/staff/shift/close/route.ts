@@ -1,7 +1,7 @@
 // apps/web/src/app/api/staff/shift/close/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getStaffContext } from '@/lib/authBiz';
 import { calculateShiftFinancials } from '@/lib/financeDomain';
@@ -58,6 +58,7 @@ export async function POST(req: Request) {
         RateLimitConfigs.critical,
         async () => {
             try {
+                return await withErrorHandler('StaffShiftClose', async () => {
                 const context = await getStaffContext();
                 const { supabase, staffId: ctxStaffId, bizId: ctxBizId } = context;
                 staffId = ctxStaffId;
@@ -75,10 +76,7 @@ export async function POST(req: Request) {
                     const errorMessage = errorResponse.errors 
                         ? `Ошибка валидации: ${errorResponse.errors.map((e: { path: string; message: string }) => `${e.path}: ${e.message}`).join(', ')}`
                         : errorResponse.message || 'Ошибка валидации данных';
-                    return NextResponse.json(
-                        { ok: false, error: errorMessage },
-                        { status: 400 }
-                    );
+                    return createErrorResponse('validation', errorMessage, undefined, 400);
                 }
                 
                 const { items = [], totalAmount: totalAmountRaw = 0, consumablesAmount = 0 } = validationResult.data;
@@ -92,13 +90,7 @@ export async function POST(req: Request) {
 
         if (staffError) {
             logError('StaffShiftClose', 'Error loading staff for percent', staffError);
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'Не удалось загрузить настройки сотрудника. Проверьте подключение к интернету и попробуйте снова.' 
-                },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', 'Не удалось загрузить настройки сотрудника. Проверьте подключение к интернету и попробуйте снова.', undefined, 500);
         }
 
         const percentMaster = Number(staffData?.percent_master ?? 60);
@@ -116,33 +108,15 @@ export async function POST(req: Request) {
 
         if (loadError) {
             logError('StaffShiftClose', 'Error loading shift for close', loadError);
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: loadError.message || 'Не удалось загрузить данные смены. Проверьте подключение к интернету и попробуйте снова.' 
-                },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', loadError.message || 'Не удалось загрузить данные смены. Проверьте подключение к интернету и попробуйте снова.', undefined, 500);
         }
 
         if (!existing) {
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'Смена на сегодня ещё не открыта. Сначала откройте смену, затем добавьте клиентов и закройте её.' 
-                },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Смена на сегодня ещё не открыта. Сначала откройте смену, затем добавьте клиентов и закройте её.', undefined, 400);
         }
 
         if (existing.status === 'closed') {
-            return NextResponse.json(
-                { 
-                    ok: false, 
-                    error: 'Смена уже закрыта. Обновите страницу для просмотра результатов.' 
-                },
-                { status: 400 }
-            );
+            return createErrorResponse('validation', 'Смена уже закрыта. Обновите страницу для просмотра результатов.', undefined, 400);
         }
 
         // Если переданы позиции по клиентам, считаем итог по ним
@@ -249,10 +223,7 @@ export async function POST(req: Request) {
                 errorMessage = rpcError.message;
             }
             
-            return NextResponse.json(
-                { ok: false, error: errorMessage },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', errorMessage, undefined, 500);
         }
 
         // Проверяем результат RPC
@@ -260,16 +231,13 @@ export async function POST(req: Request) {
         if (!typedResult || !typedResult.ok) {
             const errorMsg = typedResult?.error || 'Не удалось закрыть смену';
             logError('StaffShiftClose', 'RPC returned error', { error: errorMsg, result: rpcResult });
-            return NextResponse.json({ ok: false, error: errorMsg }, { status: 500 });
+            return createErrorResponse('internal', errorMsg, undefined, 500);
         }
 
         const shift = typedResult.shift;
         if (!shift) {
             logError('StaffShiftClose', 'RPC returned ok but no shift data', rpcResult);
-            return NextResponse.json({ 
-                ok: false, 
-                error: 'Смена закрыта, но не удалось получить обновленные данные. Обновите страницу для просмотра результатов.' 
-            }, { status: 500 });
+            return createErrorResponse('internal', 'Смена закрыта, но не удалось получить обновленные данные. Обновите страницу для просмотра результатов.', undefined, 500);
         }
 
         const updated = shift as typeof existing;
@@ -466,7 +434,6 @@ export async function POST(req: Request) {
         }
 
                 statusCode = 200;
-                const response = NextResponse.json({ ok: true, shift: updated });
                 
                 // Отправляем уведомления о закрытии смены (асинхронно, не блокируем ответ)
                 const adminClient = getServiceClient();
@@ -526,7 +493,8 @@ export async function POST(req: Request) {
                     // Игнорируем ошибки логирования
                 });
                 
-                return response;
+                return createSuccessResponse({ shift: updated });
+                });
             } catch (error) {
                 logError('StaffShiftClose', 'Unexpected error', error);
                 const message = error instanceof Error ? error.message : 'Unknown error';
@@ -550,7 +518,7 @@ export async function POST(req: Request) {
                     // Игнорируем ошибки логирования
                 });
                 
-                return NextResponse.json({ ok: false, error: message }, { status: statusCode });
+                return createErrorResponse('internal', message, undefined, statusCode);
             }
         }
     );

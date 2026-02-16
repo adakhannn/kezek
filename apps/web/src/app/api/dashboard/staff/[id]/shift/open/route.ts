@@ -1,7 +1,7 @@
 // apps/web/src/app/api/dashboard/staff/[id]/shift/open/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
 
-import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -23,7 +23,7 @@ export async function POST(
         req,
         RateLimitConfigs.critical,
         async () => {
-            try {
+            return withErrorHandler('OwnerShiftOpen', async () => {
                 // Валидация UUID для предотвращения потенциальных проблем безопасности
                 const staffId = await getRouteParamUuid(context, 'id');
                 const { supabase, bizId } = await getBizContextForManagers();
@@ -217,11 +217,7 @@ export async function POST(
                 });
 
                 return createSuccessResponse({ shift: newShift });
-            } catch (error) {
-                logError('OwnerShiftOpen', 'Unexpected error', error);
-                const message = error instanceof Error ? error.message : 'Unknown error';
-                return createErrorResponse('internal', message, undefined, 500);
-            }
+            });
         }
     );
 }

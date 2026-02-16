@@ -4,9 +4,8 @@ export const dynamic = 'force-dynamic';
 import crypto from 'crypto';
 
 import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
 
-import { withErrorHandler, createErrorResponse } from '@/lib/apiErrorHandler';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import {
@@ -151,14 +150,13 @@ export async function POST(req: Request) {
             return createErrorResponse('internal', 'Не удалось подготовить сессию', { code: 'session_error' }, 500);
         }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             userId,
             email: emailToUse,
             password: tempPassword,
             needsSignIn: true,
-                redirect: '/',
-            });
+            redirect: '/',
+        });
             });
         }
     );

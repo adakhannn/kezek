@@ -1,6 +1,5 @@
 // apps/web/src/app/api/cron/recalculate-ratings/route.ts
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import { measurePerformance } from '@/lib/performance';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -12,11 +11,11 @@ export const runtime = 'nodejs';
 const CRON_SECRET = process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET;
 
 export async function GET(req: Request) {
-    try {
+    return withErrorHandler('RecalculateRatingsCron', async () => {
         // Проверяем секретный ключ для безопасности
         const authHeader = req.headers.get('authorization');
         if (authHeader !== `Bearer ${CRON_SECRET}`) {
-            return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         const supabase = getServiceClient();
@@ -36,22 +35,14 @@ export async function GET(req: Request) {
 
         if (error) {
             logError('RecalculateRatingsCron', 'RPC recalculate_ratings_for_date failed', error);
-            return NextResponse.json(
-                { ok: false, error: error.message },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', error.message, undefined, 500);
         }
 
         logDebug('RecalculateRatingsCron', 'Successfully recalculated ratings', { data });
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             message: 'Ratings recalculated successfully',
         });
-    } catch (error) {
-        logError('RecalculateRatingsCron', 'Unexpected top-level error', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+    });
 }
 

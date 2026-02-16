@@ -2,9 +2,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
-import { createErrorResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { 
     getResendApiKey, 
     getEmailFrom
@@ -29,10 +27,8 @@ import { createSupabaseClients } from '@/lib/supabaseHelpers';
  * - Владелец бизнеса
  * - Администраторы из списка email_notify_to
  */
-type NotifySuccessResponse = { ok: true; sent: number; whatsappSent: number; telegramSent: number };
-
 export async function POST(req: Request) {
-    return withErrorHandler<NotifySuccessResponse>('Notify', async () => {
+    return withErrorHandler('Notify', async () => {
         logDebug('Notify', 'Endpoint called', {
             url: req.url,
             method: req.method,
@@ -95,11 +91,10 @@ export async function POST(req: Request) {
 
         logDebug('Notify', 'Notifications completed', result);
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             sent: result.emailsSent,
             whatsappSent: result.whatsappSent,
             telegramSent: result.telegramSent,
-        } as { ok: true; sent: number; whatsappSent: number; telegramSent: number });
+        });
     });
 }

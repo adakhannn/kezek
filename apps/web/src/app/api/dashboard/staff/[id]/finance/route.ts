@@ -8,8 +8,8 @@
  */
 // apps/web/src/app/api/dashboard/staff/[id]/finance/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug, logWarn } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -23,7 +23,7 @@ export async function GET(
     req: Request,
     context: unknown
 ) {
-    try {
+    return withErrorHandler('StaffFinance', async () => {
         // Предупреждение о deprecated endpoint
         logWarn('StaffFinance', 'Deprecated endpoint used. Please migrate to /api/staff/finance?staffId={id}');
         
@@ -40,10 +40,7 @@ export async function GET(
             const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
             if (!dateRegex.test(dateParam)) {
                 logError('StaffFinance', 'Invalid date format', { dateParam });
-                return NextResponse.json(
-                    { ok: false, error: 'Invalid date format. Expected YYYY-MM-DD' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY-MM-DD', undefined, 400);
             }
             
             // Парсим дату из параметра (формат YYYY-MM-DD)
@@ -52,19 +49,13 @@ export async function GET(
             // Валидация значений даты
             if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
                 logError('StaffFinance', 'Invalid date values', { dateParam, year, month, day });
-                return NextResponse.json(
-                    { ok: false, error: 'Invalid date values' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Неверные значения даты', undefined, 400);
             }
             
             // Проверяем диапазоны значений
             if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
                 logError('StaffFinance', 'Date out of valid range', { dateParam, year, month, day });
-                return NextResponse.json(
-                    { ok: false, error: 'Date out of valid range' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Дата вне допустимого диапазона', undefined, 400);
             }
             
             targetDate = new Date(year, month - 1, day);
@@ -74,10 +65,7 @@ export async function GET(
                 targetDate.getMonth() !== month - 1 || 
                 targetDate.getDate() !== day) {
                 logError('StaffFinance', 'Invalid date (e.g., Feb 30)', { dateParam, year, month, day });
-                return NextResponse.json(
-                    { ok: false, error: 'Invalid date (e.g., day does not exist in month)' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Неверная дата (например, 30 февраля)', undefined, 400);
             }
         } else {
             targetDate = new Date();
@@ -96,18 +84,12 @@ export async function GET(
                 staffId,
                 bizId 
             });
-            return NextResponse.json(
-                { ok: false, error: 'Staff not found or access denied' },
-                { status: 404 }
-            );
+            return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
         }
 
         if (!staff) {
             logDebug('StaffFinance', 'Staff not found', { staffId, bizId });
-            return NextResponse.json(
-                { ok: false, error: 'Staff not found or access denied' },
-                { status: 404 }
-            );
+            return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
         }
 
         // Нормализуем значения для надежного сравнения
@@ -124,10 +106,7 @@ export async function GET(
                 staffBizIdType: typeof staff.biz_id,
                 bizIdType: typeof bizId,
             });
-            return NextResponse.json(
-                { ok: false, error: 'Staff not found or access denied' },
-                { status: 404 }
-            );
+            return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
         }
 
         const staffPercentMaster = Number(staff.percent_master ?? 60);
@@ -184,10 +163,7 @@ export async function GET(
 
         if (shiftError) {
             logError('StaffFinance', 'Error loading shift', shiftError);
-            return NextResponse.json(
-                { ok: false, error: shiftError.message },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', shiftError.message, undefined, 500);
         }
 
         // Позиции по клиентам для текущей смены
@@ -371,8 +347,7 @@ export async function GET(
             }
         }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             today: shift
                 ? {
                       exists: true,
@@ -431,13 +406,6 @@ export async function GET(
             isDayOff,
             stats,
         });
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logError('StaffFinance', 'Unexpected error', e);
-        return NextResponse.json(
-            { ok: false, error: msg },
-            { status: 500 }
-        );
-    }
+    });
 }
 

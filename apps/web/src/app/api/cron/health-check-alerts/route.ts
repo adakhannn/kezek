@@ -1,6 +1,5 @@
-import { NextResponse } from 'next/server';
-
 import { sendAlertEmail } from '@/lib/alerts';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError, logDebug } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -22,11 +21,11 @@ const CRON_SECRET = process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET;
  * Отправляет email-алерт, если обнаружены проблемы.
  */
 export async function GET(req: Request) {
-    try {
+    return withErrorHandler('HealthCheckAlerts', async () => {
         // Проверяем секретный ключ для безопасности
         const authHeader = req.headers.get('authorization');
         if (authHeader !== `Bearer ${CRON_SECRET}`) {
-            return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         logDebug('HealthCheckAlerts', 'Starting health check...');
@@ -207,15 +206,10 @@ export async function GET(req: Request) {
 
             if (!emailResult.success) {
                 logError('HealthCheckAlerts', 'Failed to send alert email', emailResult.error);
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        error: 'Health check found issues, but failed to send alert email',
-                        healthCheck: healthData,
-                        emailError: emailResult.error,
-                    },
-                    { status: 500 }
-                );
+                return createErrorResponse('internal', 'Health check found issues, but failed to send alert email', {
+                    healthCheck: healthData,
+                    emailError: emailResult.error,
+                }, 500);
             }
 
             logDebug('HealthCheckAlerts', 'Alert email sent successfully');
@@ -223,15 +217,10 @@ export async function GET(req: Request) {
             logDebug('HealthCheckAlerts', 'No alerts, system is healthy');
         }
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             healthCheck: healthData,
             alertSent: healthData.alerts.length > 0,
         });
-    } catch (error) {
-        logError('HealthCheckAlerts', 'Unexpected error', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+    });
 }
 

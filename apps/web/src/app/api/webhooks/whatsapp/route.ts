@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+
 const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'kezek_whatsapp_verify';
 
 /**
@@ -12,19 +14,21 @@ const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'kezek_whatsa
  * Нужно вернуть hub.challenge если verify_token совпадает
  */
 export async function GET(req: NextRequest) {
-    const searchParams = req.nextUrl.searchParams;
-    const mode = searchParams.get('hub.mode');
-    const token = searchParams.get('hub.verify_token');
-    const challenge = searchParams.get('hub.challenge');
+    return withErrorHandler('WhatsAppWebhook', async () => {
+        const searchParams = req.nextUrl.searchParams;
+        const mode = searchParams.get('hub.mode');
+        const token = searchParams.get('hub.verify_token');
+        const challenge = searchParams.get('hub.challenge');
 
-    // Проверяем, что это запрос верификации от Meta
-    if (mode === 'subscribe' && token === WHATSAPP_VERIFY_TOKEN) {
-        // Meta ожидает challenge как plain text, а не JSON
-        return new NextResponse(challenge, { status: 200 });
-    }
+        // Проверяем, что это запрос верификации от Meta
+        if (mode === 'subscribe' && token === WHATSAPP_VERIFY_TOKEN) {
+            // Meta ожидает challenge как plain text, а не JSON
+            return new NextResponse(challenge, { status: 200 });
+        }
 
-    // Если токен не совпадает, возвращаем 403
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        // Если токен не совпадает, возвращаем 403
+        return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
+    });
 }
 
 /**
@@ -32,7 +36,7 @@ export async function GET(req: NextRequest) {
  * Обрабатываем события: входящие сообщения, статусы доставки и т.д.
  */
 export async function POST(req: NextRequest) {
-    try {
+    return withErrorHandler('WhatsAppWebhook', async () => {
         const body = await req.json();
 
         // Meta отправляет webhook в формате:
@@ -79,11 +83,8 @@ export async function POST(req: NextRequest) {
         }
 
         // Всегда возвращаем 200, чтобы Meta не считал запрос неудачным
-        return NextResponse.json({ success: true }, { status: 200 });
-    } catch (error) {
-        // Все равно возвращаем 200, чтобы Meta не повторял запрос
-        return NextResponse.json({ success: false, error: 'Internal error' }, { status: 200 });
-    }
+        return createSuccessResponse({ success: true });
+    });
 }
 
 type WhatsAppMessage = {

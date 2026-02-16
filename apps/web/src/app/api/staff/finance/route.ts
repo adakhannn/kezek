@@ -8,10 +8,9 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
-
 
 import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
@@ -29,6 +28,7 @@ export async function GET(req: Request) {
     let errorMessage: string | undefined;
     
     try {
+        return await withErrorHandler('StaffFinance', async () => {
         const { searchParams } = new URL(req.url);
         const staffIdParam = searchParams.get('staffId');
         const dateParam = searchParams.get('date');
@@ -40,10 +40,7 @@ export async function GET(req: Request) {
             const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
             if (!dateRegex.test(dateParam)) {
                 logError('StaffFinance', 'Invalid date format', { dateParam });
-                return NextResponse.json(
-                    { ok: false, error: 'Invalid date format. Expected YYYY-MM-DD' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY-MM-DD', undefined, 400);
             }
             
             // Парсим дату из параметра (формат YYYY-MM-DD)
@@ -52,19 +49,13 @@ export async function GET(req: Request) {
             // Валидация значений даты
             if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
                 logError('StaffFinance', 'Invalid date values', { dateParam, year, month, day });
-                return NextResponse.json(
-                    { ok: false, error: 'Invalid date values' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Неверные значения даты', undefined, 400);
             }
             
             // Проверяем диапазоны значений
             if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
                 logError('StaffFinance', 'Date out of valid range', { dateParam, year, month, day });
-                return NextResponse.json(
-                    { ok: false, error: 'Date out of valid range' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Дата вне допустимого диапазона', undefined, 400);
             }
             
             targetDate = new Date(year, month - 1, day);
@@ -74,10 +65,7 @@ export async function GET(req: Request) {
                 targetDate.getMonth() !== month - 1 || 
                 targetDate.getDate() !== day) {
                 logError('StaffFinance', 'Invalid date (e.g., Feb 30)', { dateParam, year, month, day });
-                return NextResponse.json(
-                    { ok: false, error: 'Invalid date (e.g., day does not exist in month)' },
-                    { status: 400 }
-                );
+                return createErrorResponse('validation', 'Неверная дата (например, 30 февраля)', undefined, 400);
             }
         } else {
             targetDate = new Date();
@@ -108,18 +96,12 @@ export async function GET(req: Request) {
                     staffId: staffIdParam,
                     bizId 
                 });
-                return NextResponse.json(
-                    { ok: false, error: 'Staff not found or access denied' },
-                    { status: 404 }
-                );
+                return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
             }
 
             if (!staff) {
                 logDebug('StaffFinance', 'Staff not found', { staffId: staffIdParam, bizId });
-                return NextResponse.json(
-                    { ok: false, error: 'Staff not found or access denied' },
-                    { status: 404 }
-                );
+                return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
             }
 
             // Нормализуем значения для надежного сравнения
@@ -133,10 +115,7 @@ export async function GET(req: Request) {
                     staffBizId: normalizedStaffBizId,
                     requestedBizId: normalizedBizId,
                 });
-                return NextResponse.json(
-                    { ok: false, error: 'Staff not found or access denied' },
-                    { status: 404 }
-                );
+                return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
             }
 
             staffId = staffIdParam;
@@ -183,8 +162,7 @@ export async function GET(req: Request) {
         }));
 
         // Форматируем ответ в едином формате
-        const response = NextResponse.json({
-            ok: true,
+        const responseData = {
             today: {
                 ...result.today,
                 items,
@@ -199,7 +177,7 @@ export async function GET(req: Request) {
             currentGuaranteedAmount: result.currentGuaranteedAmount,
             isDayOff: result.isDayOff,
             stats: result.stats,
-        });
+        };
         
         statusCode = 200;
         
@@ -218,7 +196,8 @@ export async function GET(req: Request) {
             // Игнорируем ошибки логирования
         });
         
-        return response;
+            return createSuccessResponse(responseData);
+        });
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         logError('StaffFinance', 'Unexpected error in /api/staff/finance', e);
@@ -249,9 +228,12 @@ export async function GET(req: Request) {
             // Игнорируем ошибки логирования
         });
         
-        return NextResponse.json(
-            { ok: false, error: msg },
-            { status: statusCode }
+        // Возвращаем ошибку через withErrorHandler
+        return createErrorResponse(
+            statusCode === 401 ? 'auth' : 'internal',
+            msg,
+            undefined,
+            statusCode
         );
     }
 }

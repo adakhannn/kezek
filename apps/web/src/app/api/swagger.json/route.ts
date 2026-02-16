@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
-
+import { withErrorHandler, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { swaggerSpec } from '@/lib/swagger';
 
 export async function GET() {
-    return NextResponse.json(swaggerSpec);
+    return withErrorHandler('SwaggerJson', async () => {
+        return createSuccessResponse(swaggerSpec);
+    });
 }
 

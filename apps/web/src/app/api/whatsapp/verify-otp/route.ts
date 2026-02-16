@@ -2,9 +2,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
-import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
@@ -19,7 +17,7 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.auth,
         async () => {
-            try {
+            return withErrorHandler('WhatsAppVerifyOtp', async () => {
                 // Используем унифицированную утилиту для создания Supabase клиента
                 const supabase = await createSupabaseServerClient();
 
@@ -82,10 +80,8 @@ export async function POST(req: Request) {
             // Не критично, продолжаем
         }
 
-            return NextResponse.json({ ok: true, message: 'WhatsApp номер подтвержден' });
-        } catch (error) {
-            return handleApiError(error, 'WhatsAppVerifyOtp', 'Внутренняя ошибка при проверке OTP');
-        }
+            return createSuccessResponse({ message: 'WhatsApp номер подтвержден' });
+            });
         }
     );
 }

@@ -1,6 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -49,7 +49,7 @@ type HealthCheckResult = {
  * - Не перестали ли применяться промо (последнее применение старше 7 дней)
  */
 export async function GET() {
-    try {
+    return withErrorHandler('HealthCheck', async () => {
         // Используем унифицированную утилиту для создания Supabase клиента
         const supabase = await createSupabaseServerClient();
 
@@ -58,7 +58,7 @@ export async function GET() {
         } = await supabase.auth.getUser();
 
         if (!user) {
-            return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         // Проверяем, что пользователь — суперадмин
@@ -71,10 +71,10 @@ export async function GET() {
             .maybeSingle();
 
         if (superErr) {
-            return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
+            return createErrorResponse('internal', superErr.message, undefined, 400);
         }
         if (!superRow) {
-            return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
+            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
         }
 
         const admin = getServiceClient();
@@ -237,11 +237,7 @@ export async function GET() {
             },
         };
 
-        return NextResponse.json(result);
-    } catch (error) {
-        logError('HealthCheck', 'Unexpected error', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse(result);
+    });
 }
 

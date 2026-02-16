@@ -1,7 +1,7 @@
 // apps/web/src/app/api/staff/shift/open/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug, logWarn } from '@/lib/log';
@@ -74,6 +74,7 @@ export async function POST(req: Request) {
         RateLimitConfigs.critical,
         async () => {
             try {
+                return await withErrorHandler('StaffShiftOpen', async () => {
                 const context = await getStaffContext();
                 const { supabase, staffId: ctxStaffId, bizId: ctxBizId, branchId } = context;
                 staffId = ctxStaffId;
@@ -105,10 +106,7 @@ export async function POST(req: Request) {
 
         if (timeOffs && timeOffs.length > 0) {
             statusCode = 400;
-            const response = NextResponse.json(
-                { ok: false, error: 'Сегодня у вас выходной день. Нельзя открыть смену.' },
-                { status: statusCode }
-            );
+            const errorMsg = 'Сегодня у вас выходной день. Нельзя открыть смену.';
             
             // Логируем метрику
             logApiMetric({
@@ -119,13 +117,13 @@ export async function POST(req: Request) {
                 userId,
                 staffId,
                 bizId,
-                errorMessage: 'Сегодня у вас выходной день. Нельзя открыть смену.',
+                errorMessage: errorMsg,
                 errorType: 'validation',
                 ipAddress: getIpAddress(req),
                 userAgent: req.headers.get('user-agent') || undefined,
             }).catch(() => {});
             
-            return response;
+            return createErrorResponse('validation', errorMsg, undefined, statusCode);
         }
 
         // 2. Проверяем staff_schedule_rules для конкретной даты (приоритет выше еженедельного)
@@ -195,10 +193,7 @@ export async function POST(req: Request) {
         // Если нет рабочих часов - это выходной
         if (!hasWorkingHours) {
             statusCode = 400;
-            const response = NextResponse.json(
-                { ok: false, error: 'Сегодня у вас выходной день. Нельзя открыть смену.' },
-                { status: statusCode }
-            );
+            const errorMsg = 'Сегодня у вас выходной день. Нельзя открыть смену.';
             
             // Логируем метрику
             logApiMetric({
@@ -209,13 +204,13 @@ export async function POST(req: Request) {
                 userId,
                 staffId,
                 bizId,
-                errorMessage: 'Сегодня у вас выходной день. Нельзя открыть смену.',
+                errorMessage: errorMsg,
                 errorType: 'validation',
                 ipAddress: getIpAddress(req),
                 userAgent: req.headers.get('user-agent') || undefined,
             }).catch(() => {});
             
-            return response;
+            return createErrorResponse('validation', errorMsg, undefined, statusCode);
         }
 
         const openedAt = now;
@@ -243,11 +238,6 @@ export async function POST(req: Request) {
             statusCode = 500;
             errorMessage = rpcError.message || 'Не удалось открыть смену';
             
-            const response = NextResponse.json(
-                { ok: false, error: errorMessage },
-                { status: statusCode }
-            );
-            
             // Логируем метрику
             logApiMetric({
                 endpoint,
@@ -263,7 +253,7 @@ export async function POST(req: Request) {
                 userAgent: req.headers.get('user-agent') || undefined,
             }).catch(() => {});
             
-            return response;
+            return createErrorResponse('internal', errorMessage, undefined, statusCode);
         }
 
         // Проверяем результат RPC
@@ -273,8 +263,6 @@ export async function POST(req: Request) {
             statusCode = 500;
             errorMessage = errorMsg;
             
-            const response = NextResponse.json({ ok: false, error: errorMsg }, { status: statusCode });
-            
             // Логируем метрику
             logApiMetric({
                 endpoint,
@@ -290,7 +278,7 @@ export async function POST(req: Request) {
                 userAgent: req.headers.get('user-agent') || undefined,
             }).catch(() => {});
             
-            return response;
+            return createErrorResponse('internal', errorMsg, undefined, statusCode);
         }
 
         const shift = (rpcResult as { shift?: unknown }).shift;
@@ -299,8 +287,6 @@ export async function POST(req: Request) {
             statusCode = 500;
             errorMessage = 'Не удалось получить данные смены';
             
-            const response = NextResponse.json({ ok: false, error: errorMessage }, { status: statusCode });
-            
             // Логируем метрику
             logApiMetric({
                 endpoint,
@@ -316,7 +302,7 @@ export async function POST(req: Request) {
                 userAgent: req.headers.get('user-agent') || undefined,
             }).catch(() => {});
             
-            return response;
+            return createErrorResponse('internal', errorMessage, undefined, statusCode);
         }
 
         logDebug('StaffShiftOpen', 'Shift opened successfully', {
@@ -325,7 +311,6 @@ export async function POST(req: Request) {
         });
 
         statusCode = 200;
-        const response = NextResponse.json({ ok: true, shift });
         
         // Логируем метрику
         logApiMetric({
@@ -340,7 +325,8 @@ export async function POST(req: Request) {
             userAgent: req.headers.get('user-agent') || undefined,
         }).catch(() => {});
         
-        return response;
+        return createSuccessResponse({ shift });
+                });
             } catch (error) {
                 logError('StaffShiftOpen', 'Unexpected error', error);
                 const message = error instanceof Error ? error.message : 'Unknown error';
@@ -362,7 +348,7 @@ export async function POST(req: Request) {
                     userAgent: req.headers.get('user-agent') || undefined,
                 }).catch(() => {});
                 
-                return NextResponse.json({ ok: false, error: message }, { status: statusCode });
+                return createErrorResponse('internal', message, undefined, statusCode);
             }
         }
     );

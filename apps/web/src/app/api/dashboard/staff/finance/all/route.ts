@@ -1,6 +1,5 @@
 // apps/web/src/app/api/dashboard/staff/finance/all/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
-import { NextResponse } from 'next/server';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -401,6 +400,6 @@ async function getFinanceStatsLegacy(
     _branchId: string | null,
     _staffList: Array<{ id: string; full_name: string; is_active: boolean }>
 ) {
-    return NextResponse.json({ ok: false, error: 'Legacy method not implemented. Please check SQL function.' }, { status: 500 });
+    return createErrorResponse('internal', 'Legacy method not implemented. Please check SQL function.', undefined, 500);
 }
 

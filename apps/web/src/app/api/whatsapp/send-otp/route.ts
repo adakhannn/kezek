@@ -2,9 +2,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-
-import { createErrorResponse, handleApiError } from '@/lib/apiErrorHandler';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
@@ -21,7 +19,7 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.auth,
         async () => {
-            try {
+            return withErrorHandler('WhatsAppSendOtp', async () => {
                 // Используем унифицированную утилиту для создания Supabase клиента
                 const supabase = await createSupabaseServerClient();
 
@@ -84,10 +82,8 @@ export async function POST(req: Request) {
             return createErrorResponse('internal', `Не удалось отправить код: ${errorMsg}`, { code: 'send_failed' }, 500);
         }
 
-                return NextResponse.json({ ok: true, message: 'Код отправлен на WhatsApp' });
-            } catch (error) {
-                return handleApiError(error, 'WhatsAppSendOtp', 'Внутренняя ошибка при отправке OTP');
-            }
+                return createSuccessResponse({ message: 'Код отправлен на WhatsApp' });
+            });
         }
     );
 }

@@ -1,7 +1,7 @@
 // apps/web/src/app/api/cron/close-shifts/route.ts
 import { formatInTimeZone } from 'date-fns-tz';
-import { NextResponse } from 'next/server';
 
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
@@ -13,11 +13,11 @@ export const runtime = 'nodejs';
 const CRON_SECRET = process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET;
 
 export async function GET(req: Request) {
-    try {
+    return withErrorHandler('CloseShiftsCron', async () => {
         // Проверяем секретный ключ для безопасности
         const authHeader = req.headers.get('authorization');
         if (authHeader !== `Bearer ${CRON_SECRET}`) {
-            return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         const supabase = getServiceClient();
@@ -40,16 +40,12 @@ export async function GET(req: Request) {
 
         if (findError) {
             logError('CloseShiftsCron', 'Error finding open shifts', findError);
-            return NextResponse.json(
-                { ok: false, error: findError.message },
-                { status: 500 }
-            );
+            return createErrorResponse('internal', findError.message, undefined, 500);
         }
 
         if (!openShifts || openShifts.length === 0) {
             logDebug('CloseShiftsCron', 'No open shifts to close');
-            return NextResponse.json({ 
-                ok: true, 
+            return createSuccessResponse({ 
                 message: 'No open shifts to close',
                 closed: 0 
             });
@@ -379,11 +375,7 @@ export async function GET(req: Request) {
             logDebug('CloseShiftsCron', 'Completed successfully', { closedCount, total: openShifts.length });
         }
 
-        return NextResponse.json(response);
-    } catch (error) {
-        logError('CloseShiftsCron', 'Unexpected top-level error', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+        return createSuccessResponse(response);
+    });
 }
 

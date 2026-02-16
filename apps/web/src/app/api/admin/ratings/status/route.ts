@@ -1,6 +1,4 @@
-import { NextResponse } from 'next/server';
-
-import { logError } from '@/lib/log';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -18,7 +16,7 @@ export const runtime = 'nodejs';
  * - признак, что данные в целом есть.
  */
 export async function GET() {
-    try {
+    return withErrorHandler('RatingsStatus', async () => {
         // Используем унифицированную утилиту для создания Supabase клиента
         const supabase = await createSupabaseServerClient();
 
@@ -27,7 +25,7 @@ export async function GET() {
         } = await supabase.auth.getUser();
 
         if (!user) {
-            return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+            return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
         // Проверяем, что пользователь — суперадмин
@@ -40,10 +38,10 @@ export async function GET() {
             .maybeSingle();
 
         if (superErr) {
-            return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
+            return createErrorResponse('internal', superErr.message, undefined, 400);
         }
         if (!superRow) {
-            return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
+            return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
         }
 
         const admin = getServiceClient();
@@ -66,8 +64,7 @@ export async function GET() {
             admin.from('businesses').select('id', { count: 'exact', head: true }).or('rating_score.is.null,rating_score.eq.0'),
         ]);
 
-        return NextResponse.json({
-            ok: true,
+        return createSuccessResponse({
             staff_last_metric_date: staffMax?.metric_date ?? null,
             branch_last_metric_date: branchMax?.metric_date ?? null,
             biz_last_metric_date: bizMax?.metric_date ?? null,
@@ -75,11 +72,7 @@ export async function GET() {
             branches_without_rating: branchesNoRating ?? null,
             businesses_without_rating: bizNoRating ?? null,
         });
-    } catch (error) {
-        logError('RatingsStatus', 'Unexpected error', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
+    });
 }
 
 
