@@ -8,6 +8,8 @@ import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/
 import { logDebug, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { createWhatsAppSessionSchema } from '@/lib/validation/schemas';
 
 /**
  * POST /api/auth/whatsapp/create-session
@@ -16,13 +18,13 @@ import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
  */
 export async function POST(req: Request) {
     return withErrorHandler('WhatsAppAuth', async () => {
-        const body = await req.json();
-        const { phone, userId, redirect: redirectParam } = body as { phone?: string; userId?: string; redirect?: string };
-        const finalRedirect = redirectParam || '/';
-
-        if (!phone && !userId) {
-            return createErrorResponse('validation', 'Номер телефона или ID пользователя обязательны', { code: 'missing_data' }, 400);
+        // Валидация запроса
+        const validationResult = await validateRequest(req, createWhatsAppSessionSchema);
+        if (!validationResult.success) {
+            return validationResult.response;
         }
+        const { phone, userId, redirect: redirectParam } = validationResult.data;
+        const finalRedirect = redirectParam || '/';
 
         // Используем унифицированную утилиту для создания admin клиента
         const admin = createSupabaseAdminClient();

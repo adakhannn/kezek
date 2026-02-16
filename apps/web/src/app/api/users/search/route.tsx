@@ -5,6 +5,8 @@ export const dynamic = 'force-dynamic';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { usersSearchSchema } from '@/lib/validation/schemas';
 
 /**
  * POST /api/users/search
@@ -20,12 +22,17 @@ export async function POST(req: Request) {
         // Доступ сюда уже ограничен getBizContextForManagers (owner/admin/manager ИЛИ владелец по owner_id)
         const { supabase, bizId } = await getBizContextForManagers();
 
-        const { q, page = 1, perPage = 50 } = await req.json().catch(() => ({}));
+        // Валидация запроса
+        const validationResult = await validateRequest(req, usersSearchSchema);
+        if (!validationResult.success) {
+            return validationResult.response;
+        }
+        const { q, page, perPage } = validationResult.data;
         
         // Валидация и санитизация входных данных для предотвращения проблем безопасности
         const query = (q ?? '').trim().slice(0, 100).toLowerCase(); // Ограничиваем длину поискового запроса
-        const pageNum = Math.max(1, Math.min(100, Number(page) || 1)); // Ограничиваем page от 1 до 100
-        const perPageNum = Math.max(1, Math.min(100, Number(perPage) || 50)); // Ограничиваем perPage от 1 до 100
+        const pageNum = Math.max(1, Math.min(100, page)); // Ограничиваем page от 1 до 100
+        const perPageNum = Math.max(1, Math.min(100, perPage)); // Ограничиваем perPage от 1 до 100
 
         const admin = getServiceClient();
         const { data, error } = await admin.auth.admin.listUsers({ page: pageNum, perPage: perPageNum });

@@ -15,6 +15,8 @@ import { logError, logDebug, logWarn } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
+import { validateQuery } from '@/lib/validation/apiValidation';
+import { staffFinanceByIdQuerySchema } from '@/lib/validation/schemas';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -31,42 +33,19 @@ export async function GET(
         const staffId = await getRouteParamUuid(context, 'id');
         const { supabase, bizId } = await getBizContextForManagers();
 
-        // Получаем параметр date из query string, если он есть
-        const { searchParams } = new URL(req.url);
-        const dateParam = searchParams.get('date');
+        // Валидация query параметров
+        const url = new URL(req.url);
+        const queryValidation = validateQuery(url, staffFinanceByIdQuerySchema);
+        if (!queryValidation.success) {
+            return queryValidation.response;
+        }
+        const { date: dateParam } = queryValidation.data;
+        
         let targetDate: Date;
         if (dateParam) {
-            // Валидация формата даты (YYYY-MM-DD)
-            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-            if (!dateRegex.test(dateParam)) {
-                logError('StaffFinance', 'Invalid date format', { dateParam });
-                return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY-MM-DD', undefined, 400);
-            }
-            
-            // Парсим дату из параметра (формат YYYY-MM-DD)
+            // Парсим дату из параметра (формат YYYY-MM-DD, уже валидирован)
             const [year, month, day] = dateParam.split('-').map(Number);
-            
-            // Валидация значений даты
-            if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
-                logError('StaffFinance', 'Invalid date values', { dateParam, year, month, day });
-                return createErrorResponse('validation', 'Неверные значения даты', undefined, 400);
-            }
-            
-            // Проверяем диапазоны значений
-            if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
-                logError('StaffFinance', 'Date out of valid range', { dateParam, year, month, day });
-                return createErrorResponse('validation', 'Дата вне допустимого диапазона', undefined, 400);
-            }
-            
             targetDate = new Date(year, month - 1, day);
-            
-            // Проверяем, что дата валидна (например, 2024-02-30 будет невалидной)
-            if (targetDate.getFullYear() !== year || 
-                targetDate.getMonth() !== month - 1 || 
-                targetDate.getDate() !== day) {
-                logError('StaffFinance', 'Invalid date (e.g., Feb 30)', { dateParam, year, month, day });
-                return createErrorResponse('validation', 'Неверная дата (например, 30 февраля)', undefined, 400);
-            }
         } else {
             targetDate = new Date();
         }

@@ -10,6 +10,8 @@ import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { markAttendanceSchema } from '@/lib/validation/schemas';
 
 /**
  * @swagger
@@ -96,8 +98,12 @@ export async function POST(req: Request, context: unknown) {
                 const { bizId } = await getBizContextForManagers();
                 const admin = getServiceClient();
 
-                const body = await req.json().catch(() => ({} as Body));
-                const attended = body.attended === true;
+                // Валидация запроса
+                const validationResult = await validateRequest(req, markAttendanceSchema);
+                if (!validationResult.success) {
+                    return validationResult.response;
+                }
+                const { attended } = validationResult.data;
 
                 // Проверяем, что бронь принадлежит этому бизнесу (используем унифицированную утилиту)
                 const bookingCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; start_at: string; status: string }>(

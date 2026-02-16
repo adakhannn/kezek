@@ -6,6 +6,8 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
+import { validateQuery } from '@/lib/validation/apiValidation';
+import { financeAllQuerySchema } from '@/lib/validation/schemas';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -49,99 +51,31 @@ export async function GET(req: Request) {
     return withErrorHandler('FinanceAll', async () => {
         const { supabase, bizId } = await getBizContextForManagers();
 
-        // Получаем параметры запроса
-        const { searchParams } = new URL(req.url);
-        const period = (searchParams.get('period') || 'day') as Period;
-        const dateParam = searchParams.get('date');
+        // Валидация query параметров
+        const url = new URL(req.url);
+        const queryValidation = validateQuery(url, financeAllQuerySchema);
+        if (!queryValidation.success) {
+            return queryValidation.response;
+        }
+        const { period, date: dateParam, branchId } = queryValidation.data;
+        
+        const periodTyped = (period || 'day') as Period;
         let date: string;
         
         if (dateParam) {
-            // Валидация формата даты в зависимости от периода
-            if (period === 'day') {
-                // Для дня требуется полная дата YYYY-MM-DD
-                const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                if (!dateRegex.test(dateParam)) {
-                    logError('FinanceAll', 'Invalid date format for day period', { dateParam, period });
-                    return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY-MM-DD для периода "день"', undefined, 400);
-                }
-                
-                const [year, month, day] = dateParam.split('-').map(Number);
-                
-                // Валидация значений даты
-                if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
-                    logError('FinanceAll', 'Invalid date values', { dateParam, year, month, day });
-                    return createErrorResponse('validation', 'Неверные значения даты', undefined, 400);
-                }
-                
-                // Проверяем диапазоны значений
-                if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
-                    logError('FinanceAll', 'Date out of valid range', { dateParam, year, month, day });
-                    return createErrorResponse('validation', 'Дата вне допустимого диапазона', undefined, 400);
-                }
-                
-                // Проверяем, что дата валидна
-                const testDate = new Date(year, month - 1, day);
-                if (testDate.getFullYear() !== year || 
-                    testDate.getMonth() !== month - 1 || 
-                    testDate.getDate() !== day) {
-                    logError('FinanceAll', 'Invalid date (e.g., Feb 30)', { dateParam, year, month, day });
-                    return createErrorResponse('validation', 'Неверная дата (например, 30 февраля)', undefined, 400);
-                }
-            } else if (period === 'month') {
-                // Для месяца требуется YYYY-MM
-                const monthRegex = /^\d{4}-\d{2}$/;
-                if (!monthRegex.test(dateParam)) {
-                    logError('FinanceAll', 'Invalid date format for month period', { dateParam, period });
-                    return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY-MM для периода "месяц"', undefined, 400);
-                }
-                
-                const [year, month] = dateParam.split('-').map(Number);
-                
-                if (!Number.isFinite(year) || !Number.isFinite(month)) {
-                    logError('FinanceAll', 'Invalid month values', { dateParam, year, month });
-                    return createErrorResponse('validation', 'Неверные значения месяца', undefined, 400);
-                }
-                
-                if (year < 1900 || year > 2100 || month < 1 || month > 12) {
-                    logError('FinanceAll', 'Month out of valid range', { dateParam, year, month });
-                    return createErrorResponse('validation', 'Месяц вне допустимого диапазона', undefined, 400);
-                }
-            } else if (period === 'year') {
-                // Для года требуется YYYY
-                const yearRegex = /^\d{4}$/;
-                if (!yearRegex.test(dateParam)) {
-                    logError('FinanceAll', 'Invalid date format for year period', { dateParam, period });
-                    return createErrorResponse('validation', 'Неверный формат даты. Ожидается YYYY для периода "год"', undefined, 400);
-                }
-                
-                const year = Number(dateParam);
-                
-                if (!Number.isFinite(year)) {
-                    logError('FinanceAll', 'Invalid year value', { dateParam, year });
-                    return createErrorResponse('validation', 'Неверное значение года', undefined, 400);
-                }
-                
-                if (year < 1900 || year > 2100) {
-                    logError('FinanceAll', 'Year out of valid range', { dateParam, year });
-                    return createErrorResponse('validation', 'Год вне допустимого диапазона', undefined, 400);
-                }
-            }
-            
             date = dateParam;
         } else {
             date = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
         }
-        
-        const branchId = searchParams.get('branchId');
 
         // Определяем диапазон дат в зависимости от периода
         let dateFrom: string;
         let dateTo: string;
 
-        if (period === 'day') {
+        if (periodTyped === 'day') {
             dateFrom = date;
             dateTo = date;
-        } else if (period === 'month') {
+        } else if (periodTyped === 'month') {
             // Первый и последний день месяца
             const [year, month] = date.split('-');
             dateFrom = `${year}-${month}-01`;

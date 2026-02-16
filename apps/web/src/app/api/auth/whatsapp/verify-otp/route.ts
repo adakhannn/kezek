@@ -6,6 +6,8 @@ import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/
 import { logDebug, logError } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { verifyWhatsAppOtpSchema } from '@/lib/validation/schemas';
 
 /**
  * POST /api/auth/whatsapp/verify-otp
@@ -17,20 +19,13 @@ export async function POST(req: Request) {
         // Используем унифицированную утилиту для создания admin клиента
         const admin = createSupabaseAdminClient();
         
-        // Получаем redirect из body (передается клиентом)
-        const body = await req.json();
-        const { phone, code, redirect: redirectParam } = body as { phone?: string; code?: string; redirect?: string };
+        // Валидация запроса
+        const validationResult = await validateRequest(req, verifyWhatsAppOtpSchema);
+        if (!validationResult.success) {
+            return validationResult.response;
+        }
+        const { phone, code, redirect: redirectParam } = validationResult.data;
         const redirect = redirectParam || '/';
-
-        // body уже получен выше
-
-        if (!phone || !code) {
-            return createErrorResponse('validation', 'Номер телефона и код обязательны', { code: 'missing_data' }, 400);
-        }
-
-        if (!/^\d{6}$/.test(code)) {
-            return createErrorResponse('validation', 'Неверный формат кода. Введите 6 цифр.', { code: 'invalid_code' }, 400);
-        }
 
         // Нормализуем номер телефона
         const phoneE164 = normalizePhoneToE164(phone);

@@ -11,6 +11,8 @@ import {
     normalizeTelegramData,
     verifyTelegramAuth,
 } from '@/lib/telegram/verify';
+import { validateRequest } from '@/lib/validation/apiValidation';
+import { telegramAuthDataSchema } from '@/lib/validation/schemas';
 
 /**
  * POST /api/auth/telegram/link
@@ -31,11 +33,12 @@ export async function POST(req: Request) {
             return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
-        const body = (await req.json()) as TelegramAuthData;
-
-        if (!body || !body.id || !body.hash || !body.auth_date) {
-            return createErrorResponse('validation', 'Недостаточно данных от Telegram', { code: 'missing_data' }, 400);
+        // Валидация запроса
+        const validationResult = await validateRequest(req, telegramAuthDataSchema);
+        if (!validationResult.success) {
+            return validationResult.response;
         }
+        const body = validationResult.data as TelegramAuthData;
 
         // Проверяем подпись
         if (!verifyTelegramAuth(body)) {

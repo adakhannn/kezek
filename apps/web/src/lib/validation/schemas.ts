@@ -158,3 +158,126 @@ export const closeShiftSchema = z.object({
     { message: 'Either items array or totalAmount must be provided' }
 );
 
+/**
+ * Схема для проверки OTP WhatsApp
+ */
+export const verifyWhatsAppOtpSchema = z.object({
+    phone: z.string().min(1, 'Phone number is required'),
+    code: z.string().regex(/^\d{6}$/, 'Code must be 6 digits'),
+    redirect: z.string().optional(),
+}).strict();
+
+/**
+ * Схема для создания сессии WhatsApp
+ */
+export const createWhatsAppSessionSchema = z.object({
+    phone: z.string().min(1, 'Phone number is required').optional(),
+    userId: uuidSchema.optional(),
+    redirect: z.string().optional(),
+}).strict().refine(
+    (data) => data.phone || data.userId,
+    { message: 'Either phone or userId must be provided' }
+);
+
+/**
+ * Схема для отметки посещения бронирования
+ */
+export const markAttendanceSchema = z.object({
+    attended: z.boolean(),
+}).strict();
+
+/**
+ * Схема для данных Telegram авторизации
+ */
+export const telegramAuthDataSchema = z.object({
+    id: z.number().int().positive(),
+    hash: z.string().min(1),
+    auth_date: z.number().int().positive(),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    username: z.string().optional(),
+    photo_url: z.string().url().optional(),
+}).strict();
+
+/**
+ * Схема для поиска пользователей
+ */
+export const usersSearchSchema = z.object({
+    q: z.string().max(100, 'Search query too long').optional(),
+    page: z.number().int().min(1).max(100).optional().default(1),
+    perPage: z.number().int().min(1).max(100).optional().default(50),
+}).strict();
+
+/**
+ * Схема для query параметров finance/all (период и дата)
+ */
+export const financeAllQuerySchema = z.object({
+    period: z.enum(['day', 'month', 'year']).optional().default('day'),
+    date: z.string().optional(),
+    branchId: uuidSchema.optional(),
+}).strict().superRefine((data, ctx) => {
+    if (data.date) {
+        if (data.period === 'day') {
+            const parsed = dateStringSchema.safeParse(data.date);
+            if (!parsed.success) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Неверный формат даты. Ожидается YYYY-MM-DD для периода "день"',
+                    path: ['date'],
+                });
+            }
+        } else if (data.period === 'month') {
+            const monthRegex = /^\d{4}-\d{2}$/;
+            if (!monthRegex.test(data.date)) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Неверный формат даты. Ожидается YYYY-MM для периода "месяц"',
+                    path: ['date'],
+                });
+            } else {
+                const [year, month] = data.date.split('-').map(Number);
+                if (!Number.isFinite(year) || !Number.isFinite(month) || year < 1900 || year > 2100 || month < 1 || month > 12) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: 'Месяц вне допустимого диапазона',
+                        path: ['date'],
+                    });
+                }
+            }
+        } else if (data.period === 'year') {
+            const yearRegex = /^\d{4}$/;
+            if (!yearRegex.test(data.date)) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Неверный формат даты. Ожидается YYYY для периода "год"',
+                    path: ['date'],
+                });
+            } else {
+                const year = Number(data.date);
+                if (!Number.isFinite(year) || year < 1900 || year > 2100) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: 'Год вне допустимого диапазона',
+                        path: ['date'],
+                    });
+                }
+            }
+        }
+    }
+});
+
+/**
+ * Схема для query параметров staff/finance
+ */
+export const staffFinanceQuerySchema = z.object({
+    staffId: uuidSchema.optional(),
+    date: dateStringSchema.optional(),
+}).strict();
+
+/**
+ * Схема для query параметров dashboard/staff/[id]/finance
+ */
+export const staffFinanceByIdQuerySchema = z.object({
+    date: dateStringSchema.optional(),
+}).strict();
+
