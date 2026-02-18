@@ -136,6 +136,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.84.2
         version: 5.90.16(react@19.1.0)
+      '@types/react-window':
+        specifier: ^2.0.0
+        version: 2.0.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@upstash/redis':
         specifier: ^1.36.2
         version: 1.36.2
@@ -172,6 +175,9 @@ importers:
       react-hook-form:
         specifier: ^7.62.0
         version: 7.71.0(react@19.1.0)
+      react-window:
+        specifier: ^2.2.7
+        version: 2.2.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       resend:
         specifier: ^6.0.1
         version: 6.0.1
@@ -1720,6 +1726,10 @@ packages:
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
     peerDependencies:
       '@types/react': ^19.2.0
+
+  '@types/react-window@2.0.0':
+    resolution: {integrity: sha512-E8hMDtImEpMk1SjswSvqoSmYvk7GEtyVaTa/GJV++FdDNuMVVEzpAClyJ0nqeKYBrMkGiyH6M1+rPLM0Nu1exQ==}
+    deprecated: This is a stub types definition. react-window provides its own type definitions, so you do not need this installed.
 
   '@types/react@19.1.17':
     resolution: {integrity: sha512-Qec1E3mhALmaspIrhWt9jkQMNdw6bReVu64mjvhbhq2NFPftLPVr+l1SZgmw/66WwBNpDh7ao5AT6gF5v41PFA==}
@@ -4645,6 +4655,12 @@ packages:
     engines: {node: '>= 16.20.2'}
     peerDependencies:
       react: '>= 0.14.0'
+
+  react-window@2.2.7:
+    resolution: {integrity: sha512-SH5nvfUQwGHYyriDUAOt7wfPsfG9Qxd6OdzQxl5oQ4dsSsUicqQvjV7dR+NqZ4coY0fUn3w1jnC5PwzIUWEg5w==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
 
   react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
@@ -7764,6 +7780,13 @@ snapshots:
   '@types/react-dom@19.2.3(@types/react@19.1.17)':
     dependencies:
       '@types/react': 19.1.17
+
+  '@types/react-window@2.0.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      react-window: 2.2.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@types/react@19.1.17':
     dependencies:
@@ -11249,6 +11272,11 @@ snapshots:
       prismjs: 1.30.0
       react: 19.1.0
       refractor: 5.0.0
+
+  react-window@2.2.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   react@19.1.0: {}
 

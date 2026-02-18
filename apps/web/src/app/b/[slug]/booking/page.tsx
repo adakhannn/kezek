@@ -1,6 +1,10 @@
-import { JSX, Suspense } from 'react';
+import dynamic from 'next/dynamic';
+import { JSX } from 'react';
 
-import BookingForm from '../view';
+const BookingForm = dynamic(() => import('../view'), {
+    ssr: false,
+    loading: () => <main className="p-6">Загрузка...</main>,
+});
 
 async function getData(slug: string) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -16,26 +20,26 @@ async function getData(slug: string) {
         return r.json();
     }
 
+    // Оптимизация: сначала получаем бизнес, затем параллельно загружаем все остальные данные
     const [biz] = await q(
         `businesses?select=id,slug,name,address,phones,rating_score&slug=eq.${slug}&is_approved=eq.true&limit=1`
     );
     if (!biz) return null;
 
-    const branches = await q(
-        `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`
-    );
+    // Параллельная загрузка всех данных для улучшения производительности
+    const [branches, services, staff] = await Promise.all([
+        q(
+            `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`
+        ),
+        q(
+            `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`
+        ),
+        q(
+            `staff?select=id,full_name,branch_id,avatar_url,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=full_name.asc`
+        ),
+    ]);
 
-    // все активные услуги бизнеса (дальше фильтруем по филиалу)
-    const services = await q(
-        `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`
-    );
-
-    // активные мастера с их "родным" филиалом и аватаркой
-    const staff = await q(
-        `staff?select=id,full_name,branch_id,avatar_url,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=full_name.asc`
-    );
-
-    // активные акции для всех филиалов бизнеса
+    // Активные акции для всех филиалов бизнеса (загружаем после получения branches)
     const branchIds = branches.map((b: { id: string }) => b.id);
     let promotions: Array<{
         id: string;
@@ -64,11 +68,7 @@ export default async function Page({
     const { slug } = await params;
     const data = await getData(slug);
     if (!data) return <main className="p-6">Бизнес не найден</main>;
-    return (
-        <Suspense fallback={<main className="p-6">Загрузка...</main>}>
-            <BookingForm data={data} />
-        </Suspense>
-    );
+    return <BookingForm data={data} />;
 }
 
 

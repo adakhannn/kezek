@@ -1,7 +1,7 @@
 // apps/web/src/app/staff/finance/hooks/useShiftManagement.ts
 
 import { formatInTimeZone } from 'date-fns-tz';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import type { ShiftItem } from '../types';
 
@@ -352,6 +352,16 @@ export function useShiftManagement(
         setClosingProgress(null);
         setSaving(false);
     };
+
+    // Cleanup: отменяем запрос при размонтировании компонента
+    useEffect(() => {
+        return () => {
+            if (closeAbortControllerRef.current) {
+                closeAbortControllerRef.current.abort();
+                closeAbortControllerRef.current = null;
+            }
+        };
+    }, []);
 
     return {
         saving,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { FixedSizeList as List } from 'react-window';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -23,6 +24,10 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
     const [q, setQ] = useState('');
     const [found, setFound] = useState<SearchUser[]>([]);
     const [searching, setSearching] = useState(false);
+
+    // Пагинация для таблицы админов (на случай больших списков)
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(20);
 
     async function load() {
         setLoading(true); setErr(null);
@@ -91,10 +96,22 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
 
     useEffect(() => { void load(); }, []);
 
+    // если список изменился — возвращаемся на первую страницу
+    useEffect(() => {
+        setPage(1);
+    }, [list.length]);
+
     const explicitIds = useMemo(
         () => new Set(list.filter(x => x.source === 'branch_admin').map(x => x.user_id)),
         [list]
     );
+
+    const total = list.length;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    const startIdx = (safePage - 1) * perPage;
+    const endIdx = Math.min(startIdx + perPage, total);
+    const pageItems = useMemo(() => list.slice(startIdx, endIdx), [list, startIdx, endIdx]);
 
     return (
         <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-6">
@@ -126,7 +143,7 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                             <td className="p-4 text-center text-gray-500 dark:text-gray-400" colSpan={3}>Пока пусто</td>
                         </tr>
                     )}
-                    {!loading && list.map((row) => (
+                    {!loading && pageItems.map((row) => (
                         <tr key={`${row.user_id}:${row.source}`} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                             <td className="p-4">
                                 <div className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-1">{row.user_id}</div>
@@ -162,6 +179,49 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                 </table>
             </div>
 
+            {!loading && total > 0 && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Показано <span className="font-medium">{startIdx + 1}</span>–<span className="font-medium">{endIdx}</span> из <span className="font-medium">{total}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <label className="text-xs text-gray-600 dark:text-gray-400">На странице</label>
+                        <select
+                            className="px-2 py-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-gray-100"
+                            value={perPage}
+                            onChange={(e) => setPerPage(Number(e.target.value) || 20)}
+                        >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            disabled={safePage <= 1}
+                        >
+                            Назад
+                        </Button>
+                        <div className="text-sm text-gray-700 dark:text-gray-300 min-w-[90px] text-center">
+                            {safePage} / {totalPages}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={safePage >= totalPages}
+                        >
+                            Вперёд
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {/* Поиск и добавление явных админов */}
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-4">
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Добавить администратора из существующих пользователей</div>
@@ -178,37 +238,74 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                 </div>
 
                 {found.length > 0 && (
-                    <div className="max-h-56 overflow-auto bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                            <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Имя</th>
-                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Email</th>
-                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3">Телефон</th>
-                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 w-32">Действия</th>
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {found.map(u => (
-                                <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                    <td className="p-3 font-medium text-gray-900 dark:text-gray-100">{u.full_name ?? '—'}</td>
-                                    <td className="p-3 text-gray-700 dark:text-gray-300">{u.email ?? '—'}</td>
-                                    <td className="p-3 text-gray-700 dark:text-gray-300">{u.phone ?? '—'}</td>
-                                    <td className="p-3">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => add(u.id)}
-                                            disabled={explicitIds.has(u.id)}
-                                            type="button"
-                                        >
-                                            {explicitIds.has(u.id) ? 'Уже добавлен' : 'Добавить'}
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2">
+                            <div className="grid grid-cols-4 gap-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                                <div>Имя</div>
+                                <div>Email</div>
+                                <div>Телефон</div>
+                                <div className="w-32">Действия</div>
+                            </div>
+                        </div>
+                        {found.length > 50 ? (
+                            // Виртуализация для длинных списков (>50 элементов)
+                            <List
+                                height={224} // max-h-56 = 224px
+                                itemCount={found.length}
+                                itemSize={56} // Примерная высота строки
+                                width="100%"
+                            >
+                                {({ index, style }) => {
+                                    const u = found[index];
+                                    return (
+                                        <div style={style} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                            <div className="grid grid-cols-4 gap-3 px-3 py-3 text-sm">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100">{u.full_name ?? '—'}</div>
+                                                <div className="text-gray-700 dark:text-gray-300">{u.email ?? '—'}</div>
+                                                <div className="text-gray-700 dark:text-gray-300">{u.phone ?? '—'}</div>
+                                                <div>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => add(u.id)}
+                                                        disabled={explicitIds.has(u.id)}
+                                                        type="button"
+                                                    >
+                                                        {explicitIds.has(u.id) ? 'Уже добавлен' : 'Добавить'}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }}
+                            </List>
+                        ) : (
+                            // Обычный рендер для коротких списков
+                            <div className="max-h-56 overflow-auto">
+                                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                    {found.map(u => (
+                                        <div key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                            <div className="grid grid-cols-4 gap-3 px-3 py-3 text-sm">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100">{u.full_name ?? '—'}</div>
+                                                <div className="text-gray-700 dark:text-gray-300">{u.email ?? '—'}</div>
+                                                <div className="text-gray-700 dark:text-gray-300">{u.phone ?? '—'}</div>
+                                                <div>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => add(u.id)}
+                                                        disabled={explicitIds.has(u.id)}
+                                                        type="button"
+                                                    >
+                                                        {explicitIds.has(u.id) ? 'Уже добавлен' : 'Добавить'}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

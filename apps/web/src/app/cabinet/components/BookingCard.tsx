@@ -2,7 +2,7 @@
 'use client';
 
 import {formatInTimeZone} from 'date-fns-tz';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 
 import MapDialog from './MapDialog';
 import ReviewDialog from './ReviewDialog';
@@ -53,6 +53,8 @@ export default function BookingCard({
     const [review, setReview] = useState(initialReview);
     // Флаг для блокировки повторных кликов
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    // Ref для хранения timeoutId для очистки при размонтировании
+    const reloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const { t, locale } = useLanguage();
 
     const getServiceName = (svc: typeof service): string => {
@@ -98,6 +100,15 @@ export default function BookingCard({
     useEffect(() => {
         setReview(initialReview);
     }, [initialReview]);
+
+    // Cleanup: очищаем timeout при размонтировании компонента
+    useEffect(() => {
+        return () => {
+            if (reloadTimeoutRef.current) {
+                clearTimeout(reloadTimeoutRef.current);
+            }
+        };
+    }, []);
 
     async function cancelBooking() {
         if (!confirm(t('cabinet.bookings.card.cancelConfirm', 'Отменить запись?'))) return;
@@ -356,8 +367,12 @@ export default function BookingCard({
                         setReview(newReview);
                         setOpenReview(false);
                         setReviewSubmitting(false);
+                        // Очищаем предыдущий timeout, если он есть
+                        if (reloadTimeoutRef.current) {
+                            clearTimeout(reloadTimeoutRef.current);
+                        }
                         // Перезагружаем страницу для синхронизации с сервером
-                        setTimeout(() => {
+                        reloadTimeoutRef.current = setTimeout(() => {
                             window.location.reload();
                         }, 300);
                     }}

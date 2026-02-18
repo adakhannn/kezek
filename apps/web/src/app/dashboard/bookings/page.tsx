@@ -1,6 +1,14 @@
+import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
-import BookingsClient from './view';
+const BookingsClient = dynamic(() => import('./view'), {
+    ssr: false,
+    loading: () => (
+        <main className="p-6">
+            <div className="text-sm text-gray-600">Загрузка…</div>
+        </main>
+    ),
+});
 
 import { getBizContextForManagers } from '@/lib/authBiz'; // <-- твой рабочий хелпер
 

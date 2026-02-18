@@ -17,21 +17,23 @@ async function getData(slug: string) {
         return r.json();
     }
 
+    // Оптимизация: сначала получаем бизнес, затем параллельно загружаем все остальные данные
     const [biz] = await q(
         `businesses?select=id,slug,name,address,phones,rating_score&slug=eq.${slug}&is_approved=eq.true&limit=1`
     );
     if (!biz) return null;
 
-    const branches = await q(
-        `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`
-    );
+    // Параллельная загрузка branches и staff для улучшения производительности
+    const [branches, staff] = await Promise.all([
+        q(
+            `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`
+        ),
+        q(
+            `staff?select=id,full_name,branch_id,avatar_url,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=full_name.asc`
+        ),
+    ]);
 
-    // активные мастера с их "родным" филиалом и аватаркой
-    const staff = await q(
-        `staff?select=id,full_name,branch_id,avatar_url,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=full_name.asc`
-    );
-
-    // активные акции для всех филиалов бизнеса
+    // Активные акции для всех филиалов бизнеса (загружаем после получения branches)
     const branchIds = branches.map((b: { id: string }) => b.id);
     let promotions: Array<{
         id: string;

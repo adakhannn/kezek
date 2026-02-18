@@ -10,14 +10,35 @@ import { logWarn } from '@/lib/log';
 const tokenStore = new Map<string, { accessToken: string; refreshToken: string; expiresAt: number; createdAt: number }>();
 
 // Очистка истекших токенов каждые 5 минут
-setInterval(() => {
-    const now = Date.now();
-    for (const [code, data] of tokenStore.entries()) {
-        if (data.expiresAt < now) {
-            tokenStore.delete(code);
+// Сохраняем intervalId для возможной очистки (хотя в Next.js API routes это не критично, т.к. они stateless)
+let cleanupInterval: NodeJS.Timeout | null = null;
+
+// Функция для запуска очистки (вызывается при первом использовании)
+function startCleanupInterval() {
+    if (cleanupInterval) return; // Уже запущен
+    
+    cleanupInterval = setInterval(() => {
+        const now = Date.now();
+        let cleaned = 0;
+        for (const [code, data] of tokenStore.entries()) {
+            if (data.expiresAt < now) {
+                tokenStore.delete(code);
+                cleaned++;
+            }
         }
-    }
-}, 5 * 60 * 1000);
+        // Ограничиваем размер кэша (максимум 1000 записей)
+        if (tokenStore.size > 1000) {
+            // Удаляем самые старые записи
+            const entries = Array.from(tokenStore.entries())
+                .sort((a, b) => a[1].createdAt - b[1].createdAt);
+            const toDelete = entries.slice(0, tokenStore.size - 1000);
+            toDelete.forEach(([code]) => tokenStore.delete(code));
+        }
+    }, 5 * 60 * 1000);
+}
+
+// Запускаем очистку при первом импорте модуля
+startCleanupInterval();
 
 /**
  * POST /api/auth/mobile-exchange

@@ -35,6 +35,7 @@ type CacheEntry = {
 };
 
 const SLOTS_CACHE_TTL = 10 * 1000; // 10 секунд (уменьшено для уменьшения race conditions)
+const SLOTS_CACHE_MAX_SIZE = 100; // Максимальное количество записей в кэше
 const DEBOUNCE_DELAY = 300; // 300ms
 
 /**
@@ -340,11 +341,21 @@ export function useSlotsLoader(params: {
 
                 // Сохраняем в кэш
                 const cacheKey = `${dayStr}-${staffId}-${serviceId}`;
+                
+                // Ограничиваем размер кэша: если превышен лимит, удаляем самые старые записи
+                if (cacheRef.current.size >= SLOTS_CACHE_MAX_SIZE) {
+                    const entries = Array.from(cacheRef.current.entries())
+                        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+                    const toDelete = entries.slice(0, cacheRef.current.size - SLOTS_CACHE_MAX_SIZE + 1);
+                    toDelete.forEach(([key]) => cacheRef.current.delete(key));
+                    logDebug('Booking', 'Cache size limit reached, removed oldest entries', { removed: toDelete.length });
+                }
+                
                 cacheRef.current.set(cacheKey, {
                     slots: filtered,
                     timestamp: Date.now(),
                 });
-                logDebug('Booking', 'Slots cached', { cacheKey, count: filtered.length });
+                logDebug('Booking', 'Slots cached', { cacheKey, count: filtered.length, cacheSize: cacheRef.current.size });
 
                 setSlots(filtered);
                 setError(null);
@@ -381,8 +392,16 @@ export function useSlotsLoader(params: {
                     cleaned++;
                 }
             }
+            // Дополнительная проверка: если кэш все еще превышает лимит, удаляем самые старые записи
+            if (cacheRef.current.size > SLOTS_CACHE_MAX_SIZE) {
+                const entries = Array.from(cacheRef.current.entries())
+                    .sort((a, b) => a[1].timestamp - b[1].timestamp);
+                const toDelete = entries.slice(0, cacheRef.current.size - SLOTS_CACHE_MAX_SIZE);
+                toDelete.forEach(([key]) => cacheRef.current.delete(key));
+                cleaned += toDelete.length;
+            }
             if (cleaned > 0) {
-                logDebug('Booking', 'Cleaned expired cache entries', { cleaned });
+                logDebug('Booking', 'Cleaned expired cache entries', { cleaned, remaining: cacheRef.current.size });
             }
         }, 60000); // Проверяем каждую минуту
 

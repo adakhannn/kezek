@@ -55,6 +55,37 @@ const nextConfig: NextConfig = {
     // Билд должен падать при ошибках типов
     typescript: { ignoreBuildErrors: false },
     
+    // Оптимизации для bundle size
+    compiler: {
+        // Удаляем console.log в production
+        removeConsole: process.env.NODE_ENV === 'production' ? {
+            exclude: ['error', 'warn'],
+        } : false,
+    },
+    
+    // Оптимизация webpack для tree shaking
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            // Оптимизация для клиентских bundle
+            config.optimization = {
+                ...config.optimization,
+                usedExports: true,
+                sideEffects: false,
+            };
+        }
+        return config;
+    },
+    
+    // Экспериментальные оптимизации
+    experimental: {
+        optimizePackageImports: [
+            'date-fns',
+            'date-fns-tz',
+            'lucide-react',
+            '@tanstack/react-query',
+        ],
+    },
+    
     // Добавляем Security Headers ко всем ответам
     async headers() {
         return [
