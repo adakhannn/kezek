@@ -1,10 +1,6 @@
-import dynamic from 'next/dynamic';
 import { JSX } from 'react';
 
-const BookingForm = dynamic(() => import('../view'), {
-    ssr: false,
-    loading: () => <main className="p-6">Загрузка...</main>,
-});
+import { BookingFormClient } from './BookingFormClient';
 
 async function getData(slug: string) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -68,7 +64,7 @@ export default async function Page({
     const { slug } = await params;
     const data = await getData(slug);
     if (!data) return <main className="p-6">Бизнес не найден</main>;
-    return <BookingForm data={data} />;
+    return <BookingFormClient data={data} />;
 }
 
 

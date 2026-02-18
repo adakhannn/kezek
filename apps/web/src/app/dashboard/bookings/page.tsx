@@ -1,14 +1,6 @@
-import nextDynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
-const BookingsClient = nextDynamic(() => import('./view'), {
-    ssr: false,
-    loading: () => (
-        <main className="p-6">
-            <div className="text-sm text-gray-600">Загрузка…</div>
-        </main>
-    ),
-});
+import { BookingsClientWrapper } from './BookingsClientWrapper';
 
 import { getBizContextForManagers } from '@/lib/authBiz'; // <-- твой рабочий хелпер
 
@@ -52,7 +44,7 @@ export default async function Page() {
             .limit(30);
 
         return (
-            <BookingsClient
+            <BookingsClientWrapper
                 bizId={bizId}
                 services={services || []}
                 staff={staff || []}
