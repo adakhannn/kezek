@@ -67,7 +67,41 @@ describe('/api/webhooks/whatsapp', () => {
     });
 
     describe('POST /api/webhooks/whatsapp (обработка событий)', () => {
-        test('должен успешно обработать входящее сообщение', async () => {
+        test('должен успешно обработать входящее текстовое сообщение', async () => {
+            const mockSupabase = require('../../testHelpers').createMockSupabase();
+            const { createClient } = require('@supabase/supabase-js');
+            createClient.mockReturnValue(mockSupabase);
+
+            // Мокаем проверку существующего сообщения (не найдено)
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
+
+            // Мокаем поиск профиля (не найден)
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
+
+            // Мокаем поиск гостевого бронирования (не найдено)
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                in: jest.fn().mockReturnThis(),
+                gte: jest.fn().mockReturnThis(),
+                order: jest.fn().mockReturnThis(),
+                limit: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
+
+            // Мокаем вставку сообщения
+            mockSupabase.from.mockReturnValueOnce({
+                insert: jest.fn().mockResolvedValue({ error: null }),
+            });
+
             const webhookBody = {
                 object: 'whatsapp_business_account',
                 entry: [
@@ -82,9 +116,9 @@ describe('/api/webhooks/whatsapp', () => {
                                     },
                                     messages: [
                                         {
-                                            from: '1234567890',
-                                            id: 'message-id',
-                                            timestamp: '1234567890',
+                                            from: '996555123456',
+                                            id: 'wamid.test123',
+                                            timestamp: '1704067200',
                                             text: {
                                                 body: 'Test message',
                                             },
@@ -105,8 +139,11 @@ describe('/api/webhooks/whatsapp', () => {
             });
 
             const res = await POST(req);
-            // Webhook должен вернуть 200 даже если обработка не удалась
-            expect([200, 500]).toContain(res.status);
+            const data = await expectSuccessResponse(res);
+
+            expect(data.success).toBe(true);
+            // Проверяем, что сообщение было сохранено
+            expect(mockSupabase.from).toHaveBeenCalledWith('whatsapp_messages');
         });
 
         test('должен успешно обработать статус доставки', async () => {
