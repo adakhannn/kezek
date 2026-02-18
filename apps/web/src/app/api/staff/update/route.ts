@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import {getBizContextForManagers} from '@/lib/authBiz';
 import { logWarn } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import {getServiceClient} from '@/lib/supabaseService';
 
@@ -55,7 +56,11 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    return withErrorHandler('StaffUpdate', async () => {
+    // Применяем rate limiting для обновления данных сотрудника
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('StaffUpdate', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const staffId = await getRouteParamUuid(context, 'id');
         const {supabase, userId, bizId} = await getBizContextForManagers();
@@ -118,5 +123,6 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return createSuccessResponse({ user_linked: !!linkedUserId });
-    });
+        })
+    );
 }

@@ -1,7 +1,8 @@
 'use client';
 
+import type { CSSProperties, ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import * as ReactWindow from 'react-window';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -16,6 +17,17 @@ type AdminRow = {
 
 type SearchUser = { id: string; email: string | null; phone: string | null; full_name: string | null };
 
+// Обёртка над FixedSizeList с явной типизацией пропсов
+type VirtualizedListProps = {
+    height: number;
+    itemCount: number;
+    itemSize: number;
+    width: number | string;
+    children: (props: { index: number; style: CSSProperties }) => ReactElement;
+};
+
+const VirtualizedList = (ReactWindow as unknown as { FixedSizeList: React.ComponentType<VirtualizedListProps> }).FixedSizeList;
+
 export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
     const [list, setList] = useState<AdminRow[]>([]);
     const [loading, setLoading] = useState(true);
@@ -28,6 +40,33 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
     // Пагинация для таблицы админов (на случай больших списков)
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(20);
+
+    // Рендер строки для виртуализированного списка найденных пользователей
+    const renderFoundUserRow = ({ index, style }: { index: number; style: CSSProperties }) => {
+        const u = found[index];
+        return (
+            <div style={style}>
+                <div className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <div className="grid grid-cols-4 gap-3 px-3 py-3 text-sm">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{u.full_name ?? '—'}</div>
+                        <div className="text-gray-700 dark:text-gray-300">{u.email ?? '—'}</div>
+                        <div className="text-gray-700 dark:text-gray-300">{u.phone ?? '—'}</div>
+                        <div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => add(u.id)}
+                                disabled={explicitIds.has(u.id)}
+                                type="button"
+                            >
+                                {explicitIds.has(u.id) ? 'Уже добавлен' : 'Добавить'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     async function load() {
         setLoading(true); setErr(null);
@@ -249,36 +288,14 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
                         </div>
                         {found.length > 50 ? (
                             // Виртуализация для длинных списков (>50 элементов)
-                            <List
+                            <VirtualizedList
                                 height={224} // max-h-56 = 224px
                                 itemCount={found.length}
                                 itemSize={56} // Примерная высота строки
                                 width="100%"
                             >
-                                {({ index, style }) => {
-                                    const u = found[index];
-                                    return (
-                                        <div style={style} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                            <div className="grid grid-cols-4 gap-3 px-3 py-3 text-sm">
-                                                <div className="font-medium text-gray-900 dark:text-gray-100">{u.full_name ?? '—'}</div>
-                                                <div className="text-gray-700 dark:text-gray-300">{u.email ?? '—'}</div>
-                                                <div className="text-gray-700 dark:text-gray-300">{u.phone ?? '—'}</div>
-                                                <div>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => add(u.id)}
-                                                        disabled={explicitIds.has(u.id)}
-                                                        type="button"
-                                                    >
-                                                        {explicitIds.has(u.id) ? 'Уже добавлен' : 'Добавить'}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                }}
-                            </List>
+                                {renderFoundUserRow}
+                            </VirtualizedList>
                         ) : (
                             // Обычный рендер для коротких списков
                             <div className="max-h-56 overflow-auto">

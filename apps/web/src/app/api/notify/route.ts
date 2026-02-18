@@ -13,6 +13,7 @@ import { logDebug, logError } from '@/lib/log';
 import { BookingDataService } from '@/lib/notifications/BookingDataService';
 import { NotificationOrchestrator } from '@/lib/notifications/NotificationOrchestrator';
 import type { NotifyRequest } from '@/lib/notifications/types';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 /**
@@ -30,7 +31,11 @@ import { createSupabaseClients } from '@/lib/supabaseHelpers';
  * - Администраторы из списка email_notify_to
  */
 export async function POST(req: Request) {
-    return withErrorHandler('Notify', async () => {
+    // Применяем rate limiting для отправки уведомлений (защита от массовой рассылки)
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('Notify', async () => {
         logDebug('Notify', 'Endpoint called', {
             url: req.url,
             method: req.method,
@@ -122,5 +127,6 @@ export async function POST(req: Request) {
             whatsappSent: result.whatsappSent,
             telegramSent: result.telegramSent,
         });
-    });
+        })
+    );
 }

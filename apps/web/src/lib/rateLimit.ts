@@ -230,6 +230,20 @@ export async function withRateLimit(
     const result = await checkRateLimit(req, config);
     
     if (!result.success) {
+        // Логируем превышение лимита для мониторинга
+        try {
+            const identifier = getRateLimitIdentifier(req);
+            logWarn('RateLimit', 'Rate limit exceeded', {
+                identifier,
+                limit: result.limit,
+                remaining: result.remaining,
+                reset: result.reset,
+                retryAfter: result.retryAfter,
+            });
+        } catch {
+            // Игнорируем ошибки логирования, чтобы не мешать основному потоку
+        }
+
         return new Response(
             JSON.stringify({
                 ok: false,

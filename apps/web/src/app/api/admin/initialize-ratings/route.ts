@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,11 @@ const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
  * Доступно только суперадминам
  */
 export async function POST(req: Request) {
-    return withErrorHandler('InitializeRatings', async () => {
+    // Применяем rate limiting для тяжелой админской операции
+    return withRateLimit(
+        req,
+        RateLimitConfigs.critical,
+        () => withErrorHandler('InitializeRatings', async () => {
         const cookieStore = await cookies();
         const supabase = createServerClient(URL, ANON, {
             cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },
@@ -51,13 +56,13 @@ export async function POST(req: Request) {
         const admin = getServiceClient();
 
         // Вызываем функцию инициализации рейтингов
-        const { data, error } = await admin.rpc('initialize_all_ratings', {
+        const { error: initError } = await admin.rpc('initialize_all_ratings', {
             p_days_back: daysBack,
         });
 
-        if (error) {
-            logError('InitializeRatings', 'Error initializing ratings', error);
-            return createErrorResponse('internal', error.message, undefined, 500);
+        if (initError) {
+            logError('InitializeRatings', 'Error initializing ratings', initError);
+            return createErrorResponse('internal', initError.message, undefined, 500);
         }
 
         logDebug('InitializeRatings', 'Successfully initialized ratings');
@@ -65,6 +70,7 @@ export async function POST(req: Request) {
         return createSuccessResponse({
             message: `Ratings initialized for last ${daysBack} days`,
         });
-    });
+        })
+    );
 }
 

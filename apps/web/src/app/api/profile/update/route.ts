@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = {
@@ -15,7 +16,11 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    return withErrorHandler('ProfileUpdate', async () => {
+    // Применяем rate limiting для обновления профиля
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('ProfileUpdate', async () => {
         // Используем унифицированную утилиту для создания Supabase клиента
         const supabase = await createSupabaseServerClient();
 
@@ -86,6 +91,7 @@ export async function POST(req: Request) {
         }
 
         return createSuccessResponse();
-    });
+        })
+    );
 }
 

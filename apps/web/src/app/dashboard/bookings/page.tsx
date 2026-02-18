@@ -1,7 +1,7 @@
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
-const BookingsClient = dynamic(() => import('./view'), {
+const BookingsClient = nextDynamic(() => import('./view'), {
     ssr: false,
     loading: () => (
         <main className="p-6">

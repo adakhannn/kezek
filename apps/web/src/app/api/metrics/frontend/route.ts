@@ -7,6 +7,7 @@
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getIpAddress } from '@/lib/apiMetrics';
 import { logDebug, logWarn } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -108,34 +109,40 @@ async function saveMetric(metric: FrontendMetric, req: Request): Promise<void> {
 }
 
 export async function POST(req: Request) {
-    return withErrorHandler('FrontendMetrics', async () => {
-        // Парсим тело запроса
-        let metric: FrontendMetric;
-        try {
-            const body = await req.json();
-            metric = body as FrontendMetric;
-        } catch (error) {
-            return createErrorResponse('validation', 'Invalid JSON body', undefined, 400);
-        }
+    // Применяем rate limiting для приёма фронтовых метрик (защита от спама)
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () =>
+            withErrorHandler('FrontendMetrics', async () => {
+                // Парсим тело запроса
+                let metric: FrontendMetric;
+                try {
+                    const body = await req.json();
+                    metric = body as FrontendMetric;
+                } catch {
+                    return createErrorResponse('validation', 'Invalid JSON body', undefined, 400);
+                }
 
-        // Валидация базовых полей
-        if (!metric || typeof metric !== 'object') {
-            return createErrorResponse('validation', 'Invalid metric data', undefined, 400);
-        }
+                // Валидация базовых полей
+                if (!metric || typeof metric !== 'object') {
+                    return createErrorResponse('validation', 'Invalid metric data', undefined, 400);
+                }
 
-        // Сохраняем метрику асинхронно (не блокируем ответ)
-        saveMetric(metric, req).catch(() => {
-            // Игнорируем ошибки сохранения
-        });
+                // Сохраняем метрику асинхронно (не блокируем ответ)
+                saveMetric(metric, req).catch(() => {
+                    // Игнорируем ошибки сохранения
+                });
 
-        // Логируем в dev режиме
-        if (process.env.NODE_ENV === 'development') {
-            logDebug('FrontendMetrics', `Received ${getMetricType(metric)} metric`, {
-                metric,
-            });
-        }
+                // Логируем в dev режиме
+                if (process.env.NODE_ENV === 'development') {
+                    logDebug('FrontendMetrics', `Received ${getMetricType(metric)} metric`, {
+                        metric,
+                    });
+                }
 
-        return createSuccessResponse({ ok: true });
-    });
+                return createSuccessResponse({ ok: true });
+            })
+    );
 }
 

@@ -1,10 +1,15 @@
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
-    return withErrorHandler('UserUpdatePhone', async () => {
+    // Применяем rate limiting для смены номера телефона (безопасность)
+    return withRateLimit(
+        req,
+        RateLimitConfigs.auth,
+        () => withErrorHandler('UserUpdatePhone', async () => {
         // Используем унифицированные утилиты для создания клиентов
         const { supabase, admin } = await createSupabaseClients();
 
@@ -36,6 +41,7 @@ export async function POST(req: Request) {
         }
 
         return createSuccessResponse();
-    });
+        })
+    );
 }
 

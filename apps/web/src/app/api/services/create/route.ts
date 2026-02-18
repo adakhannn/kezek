@@ -2,11 +2,11 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
 
-import { getBizContextForManagers } from '@/lib/authBiz';
-import { getServiceClient } from '@/lib/supabaseService';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { getBizContextForManagers } from '@/lib/authBiz';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { getServiceClient } from '@/lib/supabaseService';
 
 type Body = {
     name_ru: string;
@@ -24,7 +24,11 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    return withErrorHandler('ServicesCreate', async () => {
+    // Применяем rate limiting для создания услуг
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('ServicesCreate', async () => {
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
@@ -116,5 +120,6 @@ export async function POST(req: Request) {
             count: inserted?.length ?? 0,
             ids: (inserted ?? []).map((r) => r.id),
         });
-    });
+        })
+    );
 }

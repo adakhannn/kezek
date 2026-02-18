@@ -5,6 +5,7 @@ import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSucces
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logDebug, logWarn, logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -15,7 +16,11 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    return withErrorHandler<ApiSuccessResponse<{ id: string; warn: string; error: string } | { id: string; schedule_initialized: boolean; schedule_days_created: number; schedule_error: string | null }>>('StaffCreateFromUser', async () => {
+    // Применяем rate limiting для создания сотрудника из пользователя
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler<ApiSuccessResponse<{ id: string; warn: string; error: string } | { id: string; schedule_initialized: boolean; schedule_days_created: number; schedule_error: string | null }>>('StaffCreateFromUser', async () => {
         // Доступ уже проверен внутри (владелец по owner_id ИЛИ owner/admin/manager по user_roles)
         const {bizId } = await getBizContextForManagers();
 
@@ -185,5 +190,6 @@ export async function POST(req: Request) {
             schedule_days_created: scheduleResult.daysCreated,
             schedule_error: scheduleResult.error || null,
         });
-    });
+        })
+    );
 }

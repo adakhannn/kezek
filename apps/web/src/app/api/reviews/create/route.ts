@@ -3,12 +3,17 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = { booking_id: string; rating: number; comment?: string };
 
 export async function POST(req: Request) {
-    return withErrorHandler('ReviewsCreate', async () => {
+    // Применяем rate limiting для создания/обновления отзыва
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('ReviewsCreate', async () => {
         const body = (await req.json()) as Body;
         if (!body.booking_id || !body.rating) {
             return createErrorResponse('validation', 'booking_id и rating обязательны', undefined, 400);
@@ -90,5 +95,6 @@ export async function POST(req: Request) {
         }
 
         return createSuccessResponse({ id: data?.id, updated: false });
-    });
+        })
+    );
 }

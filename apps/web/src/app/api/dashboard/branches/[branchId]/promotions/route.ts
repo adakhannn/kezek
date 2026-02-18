@@ -3,6 +3,7 @@
 import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -88,7 +89,11 @@ export async function GET(req: Request, context: unknown) {
  * Создает новую акцию для филиала
  */
 export async function POST(req: Request, context: unknown) {
-    return withErrorHandler('BranchPromotions', async () => {
+    // Применяем rate limiting для создания акций
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('BranchPromotions', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'branchId');
         const { bizId } = await getBizContextForManagers();
@@ -156,6 +161,7 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return createSuccessResponse({ promotion });
-    });
+        })
+    );
 }
 

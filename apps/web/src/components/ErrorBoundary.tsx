@@ -4,6 +4,8 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 import { ErrorDisplay } from './ErrorDisplay';
 
+import { reportErrorToMonitoring } from '@/lib/errorMonitoring';
+
 interface Props {
     children: ReactNode;
     fallback?: ReactNode;
@@ -30,48 +32,43 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        // Логируем ошибку с детальной информацией
-        try {
-            const { logError } = require('@/lib/log');
-            logError('ErrorBoundary', 'Caught an error', { 
-                error: {
-                    name: error.name,
-                    message: error.message,
-                    stack: error.stack,
-                },
-                errorInfo: {
-                    componentStack: errorInfo.componentStack,
-                },
-                timestamp: new Date().toISOString(),
-            });
-        } catch (logErr) {
-            // Если логирование не удалось, используем console.error как fallback
-            // Это единственный случай, когда мы используем console.error напрямую
-             
-            console.error('ErrorBoundary: Failed to log error', logErr, 'Original error:', error, errorInfo);
-        }
+        const timestamp = new Date().toISOString();
+        const url = typeof window !== 'undefined' ? window.location.href : undefined;
+        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : undefined;
+
+        // Логируем ошибку и отправляем в систему мониторинга (если подключена)
+        reportErrorToMonitoring({
+            scope: 'ErrorBoundary',
+            error: {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+            },
+            componentStack: errorInfo.componentStack,
+            url,
+            userAgent,
+            timestamp,
+        });
         
         // Вызываем callback если передан
         if (this.props.onError) {
             try {
                 this.props.onError(error, errorInfo);
-            } catch (callbackError) {
-                // Используем безопасное логирование для ошибок в callback
-                try {
-                    const { logError } = require('@/lib/log');
-                    logError('ErrorBoundary', 'Error in onError callback', callbackError);
-                } catch {
-                    // Fallback только если логирование полностью недоступно
-                     
-                    console.error('ErrorBoundary: Error in onError callback', callbackError);
-                }
+            } catch (callbackError: unknown) {
+                // Логируем ошибки внутри onError через общую систему мониторинга
+                reportErrorToMonitoring({
+                    scope: 'ErrorBoundary',
+                    error: {
+                        name: callbackError instanceof Error ? callbackError.name : 'Error',
+                        message: callbackError instanceof Error ? callbackError.message : String(callbackError),
+                        stack: callbackError instanceof Error ? callbackError.stack : undefined,
+                    },
+                    componentStack: errorInfo.componentStack,
+                    url,
+                    userAgent,
+                    timestamp: new Date().toISOString(),
+                });
             }
-        }
-
-        // В продакшене можно отправить ошибку в систему мониторинга (Sentry, LogRocket и т.д.)
-        if (process.env.NODE_ENV === 'production') {
-            // TODO: Интеграция с системой мониторинга ошибок
-            // logErrorToService(error, errorInfo);
         }
     }
 

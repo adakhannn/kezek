@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -18,7 +19,11 @@ function isoDate(d: Date) {
 }
 
 export async function POST(req: Request, context: unknown) {
-    return withErrorHandler('StaffTransfer', async () => {
+    // Применяем rate limiting для операции перевода сотрудника
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('StaffTransfer', async () => {
         const staffId = await getRouteParamRequired(context, 'id');
 
         const { bizId } = await getBizContextForManagers();
@@ -177,5 +182,6 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return createSuccessResponse();
-    });
+        })
+    );
 }

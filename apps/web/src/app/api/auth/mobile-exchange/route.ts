@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
 import { logWarn } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 
 // Временное хранилище для токенов (в продакшене лучше использовать Redis)
 const tokenStore = new Map<string, { accessToken: string; refreshToken: string; expiresAt: number; createdAt: number }>();
@@ -19,11 +20,9 @@ function startCleanupInterval() {
     
     cleanupInterval = setInterval(() => {
         const now = Date.now();
-        let cleaned = 0;
         for (const [code, data] of tokenStore.entries()) {
             if (data.expiresAt < now) {
                 tokenStore.delete(code);
-                cleaned++;
             }
         }
         // Ограничиваем размер кэша (максимум 1000 записей)
@@ -45,29 +44,35 @@ startCleanupInterval();
  * Сохраняет токены и возвращает код для обмена
  */
 export async function POST(request: NextRequest) {
-    return withErrorHandler('MobileExchange', async () => {
-        const { accessToken, refreshToken } = await request.json();
+    // Применяем rate limiting для аутентификации
+    return withRateLimit(
+        request,
+        RateLimitConfigs.auth,
+        () =>
+            withErrorHandler('MobileExchange', async () => {
+                const { accessToken, refreshToken } = await request.json();
 
-        if (!accessToken || !refreshToken) {
-            return createErrorResponse('validation', 'Необходимо указать accessToken и refreshToken', undefined, 400);
-        }
+                if (!accessToken || !refreshToken) {
+                    return createErrorResponse('validation', 'Необходимо указать accessToken и refreshToken', undefined, 400);
+                }
 
-        // Генерируем уникальный код (6 символов)
-        const code = crypto.randomBytes(3).toString('hex').toUpperCase();
-        
-        // Сохраняем токены на 10 минут
-        const now = Date.now();
-        tokenStore.set(code, {
-            accessToken,
-            refreshToken,
-            expiresAt: now + 10 * 60 * 1000, // 10 минут
-            createdAt: now,
-        });
+                // Генерируем уникальный код (6 символов)
+                const code = crypto.randomBytes(3).toString('hex').toUpperCase();
+                
+                // Сохраняем токены на 10 минут
+                const now = Date.now();
+                tokenStore.set(code, {
+                    accessToken,
+                    refreshToken,
+                    expiresAt: now + 10 * 60 * 1000, // 10 минут
+                    createdAt: now,
+                });
 
-        logWarn('MobileExchange', 'Token stored', { code, expiresAt: new Date(now + 10 * 60 * 1000).toISOString() });
+                logWarn('MobileExchange', 'Token stored', { code, expiresAt: new Date(now + 10 * 60 * 1000).toISOString() });
 
-        return createSuccessResponse({ code });
-    });
+                return createSuccessResponse({ code });
+            })
+    );
 }
 
 /**

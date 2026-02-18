@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import {withErrorHandler, createErrorResponse, createSuccessResponse} from '@/lib/apiErrorHandler';
 import {getBizContextForManagers} from '@/lib/authBiz';
 import {logDebug, logWarn, logError} from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import {initializeStaffSchedule} from '@/lib/staffSchedule';
 import {getServiceClient} from '@/lib/supabaseService';
 
@@ -56,7 +57,11 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    return withErrorHandler('StaffCreate', async () => {
+    // Применяем rate limiting для создания сотрудника
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('StaffCreate', async () => {
         const {supabase, userId, bizId} = await getBizContextForManagers();
 
         // проверка роли в этом бизнесе
@@ -159,5 +164,6 @@ export async function POST(req: Request) {
             schedule_days_created: scheduleResult.daysCreated,
             schedule_error: scheduleResult.error || null,
         });
-    });
+        })
+    );
 }

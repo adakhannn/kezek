@@ -6,6 +6,7 @@ import crypto from 'crypto';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 import { validateRequest } from '@/lib/validation/apiValidation';
@@ -17,14 +18,17 @@ import { createWhatsAppSessionSchema } from '@/lib/validation/schemas';
  * Использует Admin API для генерации access token
  */
 export async function POST(req: Request) {
-    return withErrorHandler('WhatsAppAuth', async () => {
+    // Применяем rate limiting для создания сессии после OTP
+    return withRateLimit(
+        req,
+        RateLimitConfigs.auth,
+        () => withErrorHandler('WhatsAppAuth', async () => {
         // Валидация запроса
         const validationResult = await validateRequest(req, createWhatsAppSessionSchema);
         if (!validationResult.success) {
             return validationResult.response;
         }
-        const { phone, userId, redirect: redirectParam } = validationResult.data;
-        const finalRedirect = redirectParam || '/';
+        const { phone, userId } = validationResult.data;
 
         // Используем унифицированную утилиту для создания admin клиента
         const admin = createSupabaseAdminClient();
@@ -116,6 +120,7 @@ export async function POST(req: Request) {
             password: tempPassword,
             needsSignIn: true,
         });
-    });
+    })
+    );
 }
 

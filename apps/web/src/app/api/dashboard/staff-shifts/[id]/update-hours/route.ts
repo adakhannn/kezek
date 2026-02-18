@@ -3,6 +3,7 @@ import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -14,7 +15,11 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    return withErrorHandler('UpdateShiftHours', async () => {
+    // Применяем rate limiting для обновления часов закрытой смены
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('UpdateShiftHours', async () => {
         const shiftId = await getRouteParamRequired(context, 'id');
         const { bizId } = await getBizContextForManagers();
         const admin = getServiceClient();
@@ -121,7 +126,8 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return createSuccessResponse({ shift: updated });
-    });
+        })
+    );
 }
 
 

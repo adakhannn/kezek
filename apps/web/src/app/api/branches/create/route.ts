@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 import { coordsToEWKT, validateLatLon } from '@/lib/validation';
 
@@ -15,7 +16,11 @@ type Body = {
 };
 
 export async function POST(req: Request) {
-    return withErrorHandler('BranchesCreate', async () => {
+    // Применяем rate limiting для создания филиала (админская операция)
+    return withRateLimit(
+        req,
+        RateLimitConfigs.critical,
+        () => withErrorHandler('BranchesCreate', async () => {
         const { supabase, bizId } = await getBizContextForManagers();
         
         // Проверяем, является ли пользователь суперадмином
@@ -57,5 +62,6 @@ export async function POST(req: Request) {
         }
 
         return createSuccessResponse({ id: data?.id });
-    });
+        })
+    );
 }

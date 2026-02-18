@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { usersSearchSchema } from '@/lib/validation/schemas';
@@ -18,7 +19,11 @@ import { usersSearchSchema } from '@/lib/validation/schemas';
  * - если q задана → вернёт пользователей, у кого email/phone/имя содержит q.
  */
 export async function POST(req: Request) {
-    return withErrorHandler('UsersSearch', async () => {
+    // Применяем rate limiting для поиска пользователей (защита от массового сканирования)
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('UsersSearch', async () => {
         // Доступ сюда уже ограничен getBizContextForManagers (owner/admin/manager ИЛИ владелец по owner_id)
         const { supabase, bizId } = await getBizContextForManagers();
 
@@ -79,5 +84,6 @@ export async function POST(req: Request) {
             : mapped;
 
         return createSuccessResponse(undefined, { items, page, perPage });
-    });
+        })
+    );
 }

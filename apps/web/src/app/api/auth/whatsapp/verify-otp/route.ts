@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 import { validateRequest } from '@/lib/validation/apiValidation';
@@ -15,7 +16,11 @@ import { verifyWhatsAppOtpSchema } from '@/lib/validation/schemas';
  * Не требует авторизации
  */
 export async function POST(req: Request) {
-    return withErrorHandler('WhatsAppAuth', async () => {
+    // Применяем rate limiting для проверки OTP
+    return withRateLimit(
+        req,
+        RateLimitConfigs.auth,
+        () => withErrorHandler('WhatsAppAuth', async () => {
         // Используем унифицированную утилиту для создания admin клиента
         const admin = createSupabaseAdminClient();
         
@@ -24,8 +29,7 @@ export async function POST(req: Request) {
         if (!validationResult.success) {
             return validationResult.response;
         }
-        const { phone, code, redirect: redirectParam } = validationResult.data;
-        const redirect = redirectParam || '/';
+        const { phone, code } = validationResult.data;
 
         // Нормализуем номер телефона
         const phoneE164 = normalizePhoneToE164(phone);
@@ -206,6 +210,7 @@ export async function POST(req: Request) {
             // Но так как OTP уже проверен через WhatsApp, можно использовать прямой вход
             // Или клиент может перейти на страницу входа и использовать стандартный метод
         });
-    });
+    })
+    );
 }
 

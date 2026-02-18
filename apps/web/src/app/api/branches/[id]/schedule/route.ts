@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -17,7 +18,11 @@ type Body = {
 };
 
 export async function POST(req: Request, context: unknown) {
-    return withErrorHandler('BranchSchedule', async () => {
+    // Применяем rate limiting для обновления расписания филиала
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('BranchSchedule', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'id');
         const { bizId } = await getBizContextForManagers();
@@ -67,7 +72,8 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return createSuccessResponse();
-    });
+        })
+    );
 }
 
 export async function GET(req: Request, context: unknown) {
