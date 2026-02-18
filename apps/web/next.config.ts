@@ -63,19 +63,6 @@ const nextConfig: NextConfig = {
         } : false,
     },
     
-    // Оптимизация webpack для tree shaking
-    webpack: (config, { isServer }) => {
-        if (!isServer) {
-            // Оптимизация для клиентских bundle
-            config.optimization = {
-                ...config.optimization,
-                usedExports: true,
-                sideEffects: false,
-            };
-        }
-        return config;
-    },
-    
     // Экспериментальные оптимизации
     experimental: {
         optimizePackageImports: [
