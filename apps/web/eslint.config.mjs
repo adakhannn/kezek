@@ -26,10 +26,10 @@ const eslintConfig = [
   },
   {
     rules: {
-      // Запрещаем console.log/warn/info/debug в production коде
+      // Строго запрещаем прямые console.log/warn/info/debug в приложении
       // Используйте logDebug, logWarn, logError из @/lib/log
-      "no-console": ["warn", { 
-        allow: ["error"] // console.error разрешен только в log.ts и logSafe.ts
+      "no-console": ["error", { 
+        allow: ["error"] // console.error разрешен только в log.ts и logSafe.ts (через eslint-disable/overrides)
       }],
       // Запрещаем использование any в production коде
       // Используйте конкретные типы или unknown
