@@ -1,4 +1,4 @@
-import { formatInTimeZone, zonedTimeToUtc } from 'date-fns-tz';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 import { DashboardHomeClient } from './components/DashboardHomeClient';
 
@@ -70,9 +70,9 @@ export default async function DashboardHome() {
     const now = new Date();
     const todayStr = formatInTimeZone(now, businessTz, 'yyyy-MM-dd');
     // Начало дня в таймзоне бизнеса
-    const startOfDay = zonedTimeToUtc(`${todayStr}T00:00:00`, businessTz);
+    const startOfDay = fromZonedTime(`${todayStr}T00:00:00`, businessTz);
     // Конец дня в таймзоне бизнеса
-    const endOfDay = zonedTimeToUtc(`${todayStr}T23:59:59.999`, businessTz);
+    const endOfDay = fromZonedTime(`${todayStr}T23:59:59.999`, businessTz);
     const start = startOfDay.toISOString();
     const end = endOfDay.toISOString();
 

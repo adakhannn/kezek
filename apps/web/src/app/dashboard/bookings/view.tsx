@@ -13,7 +13,7 @@ import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { zonedTimeToUtc } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 
 import { getBusinessTimezone } from '@/lib/time';
 import { validateName, validatePhone } from '@/lib/validation';
@@ -135,8 +135,8 @@ function CalendarDay({ bizId, staff, branches, timezone }: { bizId: string; staf
         let ignore = false;
         (async () => {
             // Используем таймзону бизнеса для расчета начала и конца дня
-            const startOfDay = zonedTimeToUtc(`${date}T00:00:00`, timezone);
-            const endOfDay = zonedTimeToUtc(`${date}T23:59:59.999`, timezone);
+            const startOfDay = fromZonedTime(`${date}T00:00:00`, timezone);
+            const endOfDay = fromZonedTime(`${date}T23:59:59.999`, timezone);
             const startDay = startOfDay.toISOString();
             const endDay = endOfDay.toISOString();
             const { data, error } = await supabase
