@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { DashboardLayoutClient } from './components/DashboardLayoutClient';
 import { MobileSidebar } from './components/MobileSidebar';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { getBizContextForManagers, BizAccessError } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
                 <div className="flex">
                     <MobileSidebar bizId={bizId} />
-                    <section className="flex-1 min-h-screen lg:ml-0 pt-16 lg:pt-0">{children}</section>
+                    <section className="flex-1 min-h-screen lg:ml-0 pt-16 lg:pt-0">
+                        <ErrorBoundary>
+                            {children}
+                        </ErrorBoundary>
+                    </section>
                 </div>
             </div>
         );

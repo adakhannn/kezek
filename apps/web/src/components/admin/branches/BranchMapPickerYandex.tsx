@@ -92,6 +92,13 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
     const boxRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<IMap | null>(null);
     const placemarkRef = useRef<IPlacemark | null>(null);
+    // Используем ref для хранения последней версии onPick, чтобы избежать пересоздания карты
+    const onPickRef = useRef(onPick);
+    
+    // Обновляем ref при изменении onPick
+    useEffect(() => {
+        onPickRef.current = onPick;
+    }, [onPick]);
 
     useEffect(() => {
         let destroyed = false;
@@ -146,7 +153,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                 const addr = meta?.GeocoderMetaData?.text ?? item.properties.get<string | undefined>('text') ?? undefined;
 
                 // Yandex Maps возвращает координаты в формате [lat, lon]
-                onPick(coords[0], coords[1], addr);
+                onPickRef.current(coords[0], coords[1], addr);
                 map.setCenter(coords, 16, { duration: 200 });
             });
 
@@ -181,11 +188,11 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                     }
 
                     // Yandex Maps возвращает координаты в формате [lat, lon]
-                    onPick(coords[0], coords[1], addr);
+                    onPickRef.current(coords[0], coords[1], addr);
                 } catch (error) {
                     logError('BranchMapPicker', 'Geocoding error', error);
                     // В случае ошибки все равно передаем координаты
-                    onPick(coords[0], coords[1], undefined);
+                    onPickRef.current(coords[0], coords[1], undefined);
                 }
             }
 

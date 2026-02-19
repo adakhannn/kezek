@@ -11,8 +11,9 @@ import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import { RootStackParamList } from '../../navigation/types';
 
-type NavigationProp = NativeStackNavigationProp<any>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function BookingStep2Service() {
     const navigation = useNavigation<NavigationProp>();
@@ -61,8 +62,8 @@ export default function BookingStep2Service() {
 
     const handleNext = () => {
         if (bookingData.serviceId) {
-            // @ts-ignore
-            navigation.navigate('BookingStep3Staff');
+            // Навигация в BookingStep3Staff находится в RootStack
+            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep3Staff');
         }
     };
 

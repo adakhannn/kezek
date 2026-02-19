@@ -4,6 +4,7 @@ import React, {useMemo, useState} from 'react';
 
 import {Button} from '@/components/ui/Button';
 import {Input} from '@/components/ui/Input';
+import { validateEmail, validatePhone } from '@/lib/validation';
 
 type ApiOk = { ok: true };
 type ApiErr = { ok: false; error?: string };
@@ -35,29 +36,20 @@ export function UserBasicForm({
         return e instanceof Error ? e.message : String(e);
     }
 
-    function validateEmail(v: string): boolean {
-        if (!v.trim()) return true; // email опционален
-        // простая проверка
-        return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
-    }
-
-    function validatePhoneE164(v: string): boolean {
-        if (!v.trim()) return true; // телефон можно пустить — бэкенд решит
-        // E.164: + и 8-15 цифр (без пробелов)
-        return /^\+[1-9]\d{7,14}$/.test(v.trim());
-    }
-
     async function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setLoading(true);
         setMsg(null);
         setErr(null);
         try {
-            if (!validateEmail(email)) {
-                throw new Error('Некорректный email');
+            const emailValidation = validateEmail(email);
+            if (!emailValidation.valid) {
+                throw new Error(emailValidation.error || 'Некорректный email');
             }
-            if (!validatePhoneE164(phone)) {
-                throw new Error('Телефон должен быть в формате E.164, например: +996XXXYYYYYY');
+
+            const phoneValidation = validatePhone(phone, false);
+            if (!phoneValidation.valid) {
+                throw new Error(phoneValidation.error || 'Телефон должен быть в формате E.164, например: +996XXXYYYYYY');
             }
 
             const body = JSON.stringify({

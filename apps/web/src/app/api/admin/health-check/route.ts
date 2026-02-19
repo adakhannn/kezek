@@ -2,6 +2,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
@@ -48,8 +49,11 @@ type HealthCheckResult = {
  * - Не пересчитались ли рейтинги (последняя метрика старше 2 дней)
  * - Не перестали ли применяться промо (последнее применение старше 7 дней)
  */
-export async function GET() {
-    return withErrorHandler('HealthCheck', async () => {
+export async function GET(req: Request) {
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('HealthCheck', async () => {
         // Используем унифицированную утилиту для создания Supabase клиента
         const supabase = await createSupabaseServerClient();
 
@@ -238,6 +242,6 @@ export async function GET() {
         };
 
         return createSuccessResponse(result);
-    });
+    }));
 }
 

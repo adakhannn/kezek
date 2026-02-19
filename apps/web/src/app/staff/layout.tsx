@@ -1,9 +1,9 @@
 // apps/web/src/app/staff/layout.tsx
-import { redirect } from 'next/navigation';
 
 import StaffLayoutClient from './StaffLayoutClient';
-import { ErrorDisplay } from '@/app/_components/ErrorDisplay';
 
+import { ErrorDisplay } from '@/app/_components/ErrorDisplay';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { getStaffContext } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,13 @@ export default async function StaffLayout({ children }: { children: React.ReactN
     try {
         const { staffId } = await getStaffContext();
 
-        return <StaffLayoutClient staffId={staffId}>{children}</StaffLayoutClient>;
+        return (
+            <StaffLayoutClient staffId={staffId}>
+                <ErrorBoundary>
+                    {children}
+                </ErrorBoundary>
+            </StaffLayoutClient>
+        );
     } catch (e: unknown) {
         if (e instanceof Error) {
             // Для критических ошибок авторизации - показываем страницу ошибки вместо редиректа

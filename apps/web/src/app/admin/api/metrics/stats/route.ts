@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
+import { validateQuery } from '@/lib/validation/apiValidation';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-type StatsQueryParams = {
-    endpoint?: string;
-    method?: string;
-    windowMinutes?: string;
-};
+const statsQuerySchema = z.object({
+    endpoint: z
+        .string()
+        .min(1)
+        .max(255)
+        .optional(),
+    method: z
+        .string()
+        .min(1)
+        .max(10)
+        .optional(),
+    windowMinutes: z.coerce.number().int().min(1).max(1440).optional().default(60),
+});
 
 /**
  * GET /api/admin/metrics/stats
@@ -18,23 +28,23 @@ type StatsQueryParams = {
  */
 export async function GET(req: Request) {
     try {
-        const { searchParams } = new URL(req.url);
-        const params: StatsQueryParams = {
-            endpoint: searchParams.get('endpoint') || undefined,
-            method: searchParams.get('method') || undefined,
-            windowMinutes: searchParams.get('windowMinutes') || '60',
-        };
+        const url = new URL(req.url);
+        const queryValidation = validateQuery(url, statsQuerySchema);
+        if (!queryValidation.success) {
+            return queryValidation.response;
+        }
+        const { endpoint, method, windowMinutes } = queryValidation.data;
 
         const serviceClient = getServiceClient();
 
         // Используем RPC функцию для получения статистики
-        const windowMinutes = parseInt(params.windowMinutes || '60', 10);
-        const endpoint = params.endpoint || '/api/staff/finance'; // Дефолтный endpoint
+        const effectiveWindowMinutes = windowMinutes ?? 60;
+        const effectiveEndpoint = endpoint || '/api/staff/finance'; // Дефолтный endpoint
 
         const { data, error } = await serviceClient.rpc('get_api_metrics_stats', {
-            p_endpoint: endpoint,
-            p_window_minutes: windowMinutes,
-            p_method: params.method || null,
+            p_endpoint: effectiveEndpoint,
+            p_window_minutes: effectiveWindowMinutes,
+            p_method: method || null,
         });
 
         if (error) {
@@ -46,8 +56,8 @@ export async function GET(req: Request) {
         }
 
         logDebug('AdminMetricsStatsAPI', 'Stats fetched', { 
-            endpoint,
-            windowMinutes,
+            endpoint: effectiveEndpoint,
+            windowMinutes: effectiveWindowMinutes,
             stats: data 
         });
 

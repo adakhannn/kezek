@@ -3,18 +3,19 @@
  */
 
 import Constants from 'expo-constants';
+import { logDebug } from '../lib/log';
 
 /**
  * Выводит информацию о переменных окружения в консоль
  */
 export function logEnvVars() {
-    console.log('=== Environment Variables Debug ===');
-    console.log('process.env.EXPO_PUBLIC_SUPABASE_URL:', process.env.EXPO_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT SET');
-    console.log('process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
-    console.log('process.env.EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL ? 'SET' : 'NOT SET');
-    console.log('Constants.expoConfig?.extra:', Constants.expoConfig?.extra);
-    console.log('Constants.manifest?.extra:', Constants.manifest?.extra);
-    console.log('===================================');
+    logDebug('Debug', 'Environment Variables Debug', {
+        supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT SET',
+        supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET',
+        apiUrl: process.env.EXPO_PUBLIC_API_URL ? 'SET' : 'NOT SET',
+        expoConfigExtra: Constants.expoConfig?.extra,
+        manifestExtra: Constants.manifest?.extra,
+    });
 }
 
 /**

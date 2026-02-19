@@ -10,6 +10,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { apiRequest } from '../../lib/api';
 import Constants from 'expo-constants';
+import { logError, logDebug } from '../../lib/log';
 
 const API_URL = 
     process.env.EXPO_PUBLIC_API_URL || 
@@ -61,8 +62,9 @@ export default function WhatsAppScreen() {
             setStep('otp');
             setCountdown(60);
             showToast('Код отправлен на WhatsApp', 'success');
-        } catch (error: any) {
-            showToast(error.message || 'Не удалось отправить код', 'error');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
+            showToast(errorMessage, 'error');
         } finally {
             setSending(false);
         }
@@ -77,7 +79,7 @@ export default function WhatsAppScreen() {
         setVerifying(true);
         try {
             const normalizedPhone = normalizePhone(phone);
-            console.log('[WhatsAppScreen] Verifying OTP for:', normalizedPhone);
+            logDebug('WhatsAppScreen', 'Verifying OTP', { phone: normalizedPhone });
             
             const response = await fetch(`${API_URL}/api/auth/whatsapp/verify-otp`, {
                 method: 'POST',
@@ -86,14 +88,14 @@ export default function WhatsAppScreen() {
             });
             const data = await response.json();
 
-            console.log('[WhatsAppScreen] Verify OTP response:', { ok: data.ok, userId: data.userId });
+            logDebug('WhatsAppScreen', 'Verify OTP response', { ok: data.ok, userId: data.userId });
 
             if (!data.ok) {
                 throw new Error(data.message || 'Неверный код');
             }
 
             // Создаем сессию через API
-            console.log('[WhatsAppScreen] Creating session for userId:', data.userId);
+            logDebug('WhatsAppScreen', 'Creating session', { userId: data.userId });
             const sessionResponse = await fetch(`${API_URL}/api/auth/whatsapp/create-session`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -104,7 +106,7 @@ export default function WhatsAppScreen() {
             });
             const sessionData = await sessionResponse.json();
 
-            console.log('[WhatsAppScreen] Create session response:', { 
+            logDebug('WhatsAppScreen', 'Create session response', { 
                 ok: sessionData.ok, 
                 hasEmail: !!sessionData.email, 
                 hasPassword: !!sessionData.password,
@@ -127,18 +129,18 @@ export default function WhatsAppScreen() {
                 });
 
                 if (signInError) {
-                    console.error('[WhatsAppScreen] Sign in error:', signInError);
+                    logError('WhatsAppScreen', 'Sign in error', signInError);
                     throw new Error('Не удалось войти: ' + signInError.message);
                 }
 
                 // Проверяем, что сессия создана
                 const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
                 if (userError || !currentUser) {
-                    console.error('[WhatsAppScreen] User not found after sign in:', userError);
+                    logError('WhatsAppScreen', 'User not found after sign in', userError);
                     throw new Error('Вход выполнен, но сессия не была создана');
                 }
 
-                console.log('[WhatsAppScreen] Sign in successful, user:', currentUser.id);
+                logDebug('WhatsAppScreen', 'Sign in successful', { userId: currentUser.id });
                 showToast('Вход выполнен успешно', 'success');
                 
                 // Навигация произойдет автоматически через RootNavigator при изменении auth state
@@ -163,8 +165,9 @@ export default function WhatsAppScreen() {
             } else {
                 throw new Error('Неожиданный формат ответа от сервера');
             }
-        } catch (error: any) {
-            showToast(error.message || 'Не удалось войти', 'error');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось войти';
+            showToast(errorMessage, 'error');
         } finally {
             setVerifying(false);
         }

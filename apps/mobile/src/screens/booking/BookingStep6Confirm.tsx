@@ -14,8 +14,9 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
+import { RootStackParamList } from '../../navigation/types';
 
-type NavigationProp = NativeStackNavigationProp<any>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const TZ = 'Asia/Bishkek';
 
@@ -70,8 +71,8 @@ export default function BookingStep6Confirm() {
             showToast('Запись создана!', 'success');
             reset();
             setTimeout(() => {
-                // @ts-ignore
-                navigation.navigate('BookingDetails', { id: data.booking_id });
+                // Навигация в BookingDetails находится в RootStack
+                (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingDetails', { id: data.booking_id });
             }, 500);
         },
         onError: (error: Error) => {

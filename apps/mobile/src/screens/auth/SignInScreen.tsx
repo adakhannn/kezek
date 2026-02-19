@@ -11,6 +11,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { validateEmail, getValidationError } from '../../utils/validation';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { logError, logDebug, logWarn } from '../../lib/log';
 
 type SignInScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
 
@@ -47,8 +48,9 @@ export default function SignInScreen() {
             if (error) throw error;
             showToast('Проверьте email и перейдите по ссылке', 'success');
             // Не переходим на Verify, так как пользователь должен перейти по ссылке из email
-        } catch (error: any) {
-            showToast(error.message || 'Не удалось отправить код', 'error');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
+            showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
@@ -61,7 +63,7 @@ export default function SignInScreen() {
             // Это более надежно работает в мобильных браузерах
             const redirectTo = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
             
-            console.log('[SignInScreen] Starting Google OAuth, redirectTo:', redirectTo);
+            logDebug('SignInScreen', 'Starting Google OAuth', { redirectTo });
             
             // Получаем OAuth URL от Supabase
             const { data, error } = await supabase.auth.signInWithOAuth({
@@ -73,7 +75,7 @@ export default function SignInScreen() {
             });
             
             if (error) {
-                console.error('[SignInScreen] OAuth error:', error);
+                logError('SignInScreen', 'OAuth error', error);
                 throw error;
             }
             
@@ -81,13 +83,7 @@ export default function SignInScreen() {
                 throw new Error('Не удалось получить OAuth URL');
             }
             
-            console.log('[SignInScreen] OAuth URL received, opening browser:', data.url);
-            
-            // Открываем браузер с OAuth URL
-            // Используем WebBrowser для правильной обработки deep links
-            // redirectTo должен совпадать с тем, что мы передали в signInWithOAuth
-            console.log('[SignInScreen] Opening WebBrowser with URL:', data.url);
-            console.log('[SignInScreen] Expected redirect:', redirectTo);
+            logDebug('SignInScreen', 'OAuth URL received, opening browser', { url: data.url, redirectTo });
             
             // Открываем браузер и ждем результат
             const result = await WebBrowser.openAuthSessionAsync(
@@ -95,54 +91,55 @@ export default function SignInScreen() {
                 redirectTo
             );
             
-            console.log('[SignInScreen] WebBrowser result:', JSON.stringify(result, null, 2));
+            logDebug('SignInScreen', 'WebBrowser result', result);
             
             // Завершаем сессию браузера
             WebBrowser.maybeCompleteAuthSession();
             
             // Если результат success и есть URL, обрабатываем его
             if (result.type === 'success' && result.url) {
-                console.log('[SignInScreen] OAuth completed successfully, URL:', result.url);
+                logDebug('SignInScreen', 'OAuth completed successfully', { url: result.url });
                 // Deep link будет обработан RootNavigator
                 // Проверяем сессию через некоторое время
                 setTimeout(async () => {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (session) {
-                        console.log('[SignInScreen] Session confirmed after OAuth');
+                        logDebug('SignInScreen', 'Session confirmed after OAuth');
                         showToast('Вход выполнен успешно', 'success');
                     }
                 }, 1000);
             } else if (result.type === 'dismiss') {
                 // Браузер был закрыт, но пользователь мог авторизоваться на веб-сайте
                 // Проверяем сессию - возможно она уже установлена через deep link
-                console.log('[SignInScreen] Browser dismissed, checking if user authorized on web');
+                logDebug('SignInScreen', 'Browser dismissed, checking if user authorized on web');
                 
                 // Даем время на то, чтобы deep link обработался (если он пришел)
                 setTimeout(async () => {
                     // Проверяем, есть ли сессия (может быть установлена через deep link, который пришел позже)
                     const { data: { session }, error } = await supabase.auth.getSession();
                     if (session) {
-                        console.log('[SignInScreen] Session found after dismiss');
+                        logDebug('SignInScreen', 'Session found after dismiss');
                         showToast('Вход выполнен успешно', 'success');
                     } else {
-                        console.log('[SignInScreen] No session after dismiss');
+                        logDebug('SignInScreen', 'No session after dismiss');
                         // Показываем инструкцию пользователю
                         showToast('Авторизация завершена на веб-сайте. Вернитесь в приложение или перезапустите его.', 'info');
                     }
                 }, 3000); // Увеличиваем время ожидания для обработки deep link
             } else if (result.type === 'cancel') {
-                console.log('[SignInScreen] OAuth cancelled by user');
+                logDebug('SignInScreen', 'OAuth cancelled by user');
                 showToast('Вход отменен', 'info');
             } else if (result.type === 'locked') {
-                console.log('[SignInScreen] OAuth locked (browser already open)');
+                logDebug('SignInScreen', 'OAuth locked (browser already open)');
                 showToast('Браузер уже открыт. Закройте его и попробуйте снова.', 'info');
             } else {
-                console.warn('[SignInScreen] OAuth result type:', result.type);
+                logWarn('SignInScreen', 'OAuth result type', { type: result.type });
                 showToast('Не удалось завершить авторизацию. Попробуйте снова.', 'error');
             }
-        } catch (error: any) {
-            console.error('[SignInScreen] Google sign in error:', error);
-            showToast(error.message || 'Не удалось войти через Google', 'error');
+        } catch (error: unknown) {
+            logError('SignInScreen', 'Google sign in error', error);
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось войти через Google';
+            showToast(errorMessage, 'error');
         } finally {
             setGoogleLoading(false);
         }

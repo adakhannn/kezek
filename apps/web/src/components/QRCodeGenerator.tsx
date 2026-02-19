@@ -127,19 +127,27 @@ export default function QRCodeGenerator({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto" onClick={onClose}>
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto"
+            onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qr-generator-title"
+        >
             <div
                 className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 max-w-2xl w-full my-8"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    <h2 id="qr-generator-title" className="text-xl font-bold text-gray-900 dark:text-gray-100">
                         QR код для филиала
                     </h2>
                     {onClose && (
                         <button
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            type="button"
+                            aria-label="Закрыть диалог с QR‑кодом"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -169,7 +177,7 @@ export default function QRCodeGenerator({
                             <div className="absolute inset-0">
                                 <Image
                                     src="/qr-template.png"
-                                    alt="QR Code Template"
+                                    alt=""
                                     fill
                                     className="object-cover"
                                     priority

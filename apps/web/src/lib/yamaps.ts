@@ -1,6 +1,8 @@
 // apps/web/src/lib/yamaps.ts
 import type ymaps from "yandex-maps";
 
+import { getYandexMapsApiKey } from './env';
+
 declare global {
     interface Window {
         ymaps?: typeof ymaps;
@@ -12,7 +14,7 @@ let loadPromise: Promise<typeof ymaps> | null = null;
 export function loadYandexMaps(apiKey?: string): Promise<typeof ymaps> {
     if (typeof window === 'undefined') throw new Error('run in client only');
 
-    const key = apiKey || process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY;
+    const key = apiKey || getYandexMapsApiKey();
     
     if (!key) {
         return Promise.reject(

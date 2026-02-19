@@ -1,6 +1,7 @@
 // apps/web/src/app/api/admin/performance/stats/route.ts
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getPerformanceStats, getOperations } from '@/lib/performance';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +12,10 @@ export const runtime = 'nodejs';
  * Возвращает статистику производительности для всех операций
  */
 export async function GET(req: Request) {
-    return withErrorHandler('PerformanceStats', async () => {
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('PerformanceStats', async () => {
         // Проверяем, что пользователь - супер-админ
         const supabase = getServiceClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -44,6 +48,6 @@ export async function GET(req: Request) {
             stats,
             timestamp: Date.now(),
         });
-    });
+    }));
 }
 

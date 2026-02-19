@@ -12,16 +12,24 @@ import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import { RootStackParamList } from '../../navigation/types';
 
-type NavigationProp = NativeStackNavigationProp<any>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const TZ = 'Asia/Bishkek';
+
+type TimeSlot = {
+    start_at: string;
+    staff_id: string;
+    branch_id: string;
+    [key: string]: unknown;
+};
 
 export default function BookingStep5Time() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedSlot } = useBooking();
 
-    const { data: slots, isLoading } = useQuery({
+    const { data: slots, isLoading } = useQuery<TimeSlot[]>({
         queryKey: ['slots', bookingData.business?.id, bookingData.serviceId, bookingData.selectedDate, bookingData.staffId, bookingData.branchId],
         queryFn: async () => {
             if (!bookingData.business?.id || !bookingData.serviceId || !bookingData.selectedDate || !bookingData.staffId || !bookingData.branchId) {
@@ -38,12 +46,12 @@ export default function BookingStep5Time() {
 
             if (error) throw error;
 
-            const all = data || [];
+            const all = (data || []) as TimeSlot[];
             const now = new Date();
             const minTime = addMinutes(now, 30);
 
             const filtered = all.filter(
-                (s: any) =>
+                (s) =>
                     s.staff_id === bookingData.staffId &&
                     s.branch_id === bookingData.branchId &&
                     new Date(s.start_at) > minTime
@@ -59,14 +67,14 @@ export default function BookingStep5Time() {
         return formatInTimeZone(date, TZ, 'HH:mm');
     };
 
-    const handleSelectSlot = (slot: any) => {
+    const handleSelectSlot = (slot: TimeSlot) => {
         setSelectedSlot(slot);
     };
 
     const handleNext = () => {
         if (bookingData.selectedSlot) {
-            // @ts-ignore
-            navigation.navigate('BookingStep6Confirm');
+            // Навигация в BookingStep6Confirm находится в RootStack
+            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep6Confirm');
         }
     };
 
@@ -91,7 +99,7 @@ export default function BookingStep5Time() {
                     </View>
                 ) : slots && slots.length > 0 ? (
                     <View style={styles.slotsGrid}>
-                        {slots.map((slot: any, index: number) => (
+                        {slots.map((slot, index) => (
                             <TouchableOpacity
                                 key={index}
                                 style={[

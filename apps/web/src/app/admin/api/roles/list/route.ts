@@ -6,10 +6,12 @@ import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+
 export async function GET() {
     try {
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+        const URL = getSupabaseUrl();
+        const ANON = getSupabaseAnonKey();
         const cookieStore = await cookies();
 
         const supa = createServerClient(URL, ANON, {

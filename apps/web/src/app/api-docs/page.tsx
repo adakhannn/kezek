@@ -1,10 +1,18 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
-import SwaggerUI from 'swagger-ui-react';
-import 'swagger-ui-react/swagger-ui.css';
 
 import {logError} from '@/lib/log';
+
+// Swagger UI — тяжёлая библиотека, загружаем её только на клиенте и только для этой страницы,
+// чтобы не раздувать общий bundle и не мешать SSR.
+const SwaggerUI = dynamic(() => import('swagger-ui-react'), {
+    ssr: false,
+});
+
+// Стили остаются на уровне страницы, чтобы не попадать в основной CSS‑бандл приложения.
+import 'swagger-ui-react/swagger-ui.css';
 
 export default function ApiDocsPage() {
     const [spec, setSpec] = useState<Record<string, unknown> | null>(null);

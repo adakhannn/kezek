@@ -10,8 +10,9 @@ import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import { RootStackParamList } from '../../navigation/types';
 
-type NavigationProp = NativeStackNavigationProp<any>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const TZ = 'Asia/Bishkek';
 
@@ -43,8 +44,8 @@ export default function BookingStep4Date() {
 
     const handleNext = () => {
         if (bookingData.selectedDate) {
-            // @ts-ignore
-            navigation.navigate('BookingStep5Time');
+            // Навигация в BookingStep5Time находится в RootStack
+            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep5Time');
         }
     };
 

@@ -3,9 +3,11 @@ import { JSX } from 'react';
 
 import BusinessInfo from './BusinessInfo';
 
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+
 async function getData(slug: string) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const url = getSupabaseUrl();
+    const anon = getSupabaseAnonKey();
 
     async function q(path: string, init?: RequestInit) {
         const r = await fetch(`${url}/rest/v1/${path}`, {

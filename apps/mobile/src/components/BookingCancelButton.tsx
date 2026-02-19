@@ -4,13 +4,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 import { useBooking } from '../contexts/BookingContext';
+import { RootStackParamList } from '../navigation/types';
 
 /**
  * Кнопка отмены бронирования
  * Возвращает на главную страницу с подтверждением
  */
 export default function BookingCancelButton() {
-    const navigation = useNavigation<NativeStackNavigationProp<any>>();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { reset } = useBooking();
 
     const handleCancel = () => {

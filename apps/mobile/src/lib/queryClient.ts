@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '../lib/errors';
+import { logError } from './log';
 
 /**
  * Настроенный QueryClient с улучшенной обработкой ошибок
@@ -28,7 +29,7 @@ export const queryClient = new QueryClient({
             retry: 0, // Мутации не повторяем автоматически
             onError: (error) => {
                 // Логируем ошибки мутаций для отладки
-                console.error('Mutation error:', getErrorMessage(error));
+                logError('QueryClient', 'Mutation error', { message: getErrorMessage(error) });
             },
         },
     },

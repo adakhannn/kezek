@@ -2,13 +2,15 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { formatInTimeZone } from 'date-fns-tz';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { getWhatsAppVerifyToken } from '@/lib/env';
 import { logDebug, logError, logWarn } from '@/lib/log';
+import { sendWhatsApp } from '@/lib/senders/whatsapp';
 import { getServiceClient } from '@/lib/supabaseService';
-
-const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'kezek_whatsapp_verify';
+import { TZ } from '@/lib/time';
 
 /**
  * GET - верификация webhook от Meta
@@ -23,6 +25,7 @@ export async function GET(req: NextRequest) {
         const challenge = searchParams.get('hub.challenge');
 
         // Проверяем, что это запрос верификации от Meta
+        const WHATSAPP_VERIFY_TOKEN = getWhatsAppVerifyToken();
         if (mode === 'subscribe' && token === WHATSAPP_VERIFY_TOKEN) {
             // Meta ожидает challenge как plain text, а не JSON
             return new NextResponse(challenge, { status: 200 });
@@ -95,6 +98,10 @@ type WhatsAppMessage = {
     type: string;
     timestamp: string;
     text?: { body: string };
+    image?: { id: string; mime_type?: string; sha256?: string; caption?: string };
+    audio?: { id: string; mime_type?: string; sha256?: string };
+    video?: { id: string; mime_type?: string; sha256?: string; caption?: string };
+    document?: { id: string; filename?: string; mime_type?: string; sha256?: string; caption?: string };
     context?: {
         from?: string;
         id?: string;
@@ -241,19 +248,14 @@ async function handleIncomingMessage(message: WhatsAppMessage) {
             bizId,
         });
 
-        // TODO: Здесь можно добавить логику автоматических ответов
-        // Например, если сообщение содержит "отмена" или "подтвердить"
+        // Обработка медиа-файлов
+        if (messageType !== 'text') {
+            await handleMediaMessage(message, normalizedPhone, bookingId, bizId);
+        }
+
+        // Обработка текстовых команд
         if (messageType === 'text' && messageText) {
-            const lowerText = messageText.toLowerCase().trim();
-            
-            // Простая обработка команд (можно расширить)
-            if (lowerText === 'отмена' || lowerText === 'cancel' || lowerText === 'отменить') {
-                // TODO: Обработка отмены бронирования
-                logDebug('WhatsAppWebhook', 'Cancel command detected', { bookingId });
-            } else if (lowerText === 'подтвердить' || lowerText === 'confirm' || lowerText === 'да') {
-                // TODO: Обработка подтверждения бронирования
-                logDebug('WhatsAppWebhook', 'Confirm command detected', { bookingId });
-            }
+            await handleTextCommand(messageText, normalizedPhone, bookingId, clientId, bizId);
         }
     } catch (error) {
         // Логируем ошибку, но не прерываем обработку других сообщений
@@ -265,11 +267,457 @@ async function handleIncomingMessage(message: WhatsAppMessage) {
 }
 
 /**
+ * Обработка медиа-файлов (изображения, аудио, видео, документы)
+ */
+async function handleMediaMessage(
+    message: WhatsAppMessage,
+    fromPhone: string,
+    bookingId: string | null,
+    bizId: string | null
+) {
+    try {
+        const mediaType = message.type;
+        let mediaInfo = '';
+
+        switch (mediaType) {
+            case 'image':
+                mediaInfo = `Изображение${message.image?.caption ? `: ${message.image.caption}` : ''}`;
+                break;
+            case 'audio':
+                mediaInfo = 'Аудио сообщение';
+                break;
+            case 'video':
+                mediaInfo = `Видео${message.video?.caption ? `: ${message.video.caption}` : ''}`;
+                break;
+            case 'document':
+                mediaInfo = `Документ: ${message.document?.filename || 'без имени'}`;
+                break;
+            default:
+                mediaInfo = `Медиа-файл (${mediaType})`;
+        }
+
+        logDebug('WhatsAppWebhook', 'Media message received', {
+            type: mediaType,
+            fromPhone,
+            bookingId,
+            mediaInfo,
+        });
+
+        // Отправляем подтверждение получения медиа-файла
+        try {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: `Получен ${mediaInfo}. Спасибо! Мы обработаем ваше сообщение.`,
+            });
+        } catch (error) {
+            logError('WhatsAppWebhook', 'Failed to send media confirmation', { error, fromPhone });
+        }
+    } catch (error) {
+        logError('WhatsAppWebhook', 'Error handling media message', { error, messageId: message.id });
+    }
+}
+
+/**
+ * Обработка текстовых команд
+ */
+async function handleTextCommand(
+    messageText: string,
+    fromPhone: string,
+    bookingId: string | null,
+    clientId: string | null,
+    bizId: string | null
+) {
+    try {
+        const lowerText = messageText.toLowerCase().trim();
+        
+        // Команды отмены
+        const cancelCommands = ['отмена', 'cancel', 'отменить', 'отменить бронь', 'отменить запись'];
+        if (cancelCommands.some(cmd => lowerText.includes(cmd))) {
+            await handleCancelCommand(fromPhone, bookingId, clientId, bizId);
+            return;
+        }
+
+        // Команды подтверждения
+        const confirmCommands = ['подтвердить', 'confirm', 'да', 'подтверждаю', 'ок', 'ok'];
+        if (confirmCommands.some(cmd => lowerText.includes(cmd))) {
+            await handleConfirmCommand(fromPhone, bookingId, clientId, bizId);
+            return;
+        }
+
+        // Команды помощи
+        const helpCommands = ['помощь', 'help', 'команды', 'commands', 'что можно', '?'];
+        if (helpCommands.some(cmd => lowerText.includes(cmd))) {
+            await handleHelpCommand(fromPhone, bookingId);
+            return;
+        }
+
+        // Если команда не распознана, но есть активное бронирование - отправляем информацию о нем
+        if (bookingId) {
+            await sendBookingInfo(fromPhone, bookingId);
+        }
+    } catch (error) {
+        logError('WhatsAppWebhook', 'Error handling text command', { error, messageText, fromPhone });
+    }
+}
+
+/**
+ * Обработка команды отмены бронирования
+ */
+async function handleCancelCommand(
+    fromPhone: string,
+    bookingId: string | null,
+    clientId: string | null,
+    bizId: string | null
+) {
+    if (!bookingId) {
+        await sendWhatsApp({
+            to: fromPhone,
+            text: 'У вас нет активных бронирований для отмены.',
+        });
+        return;
+    }
+
+    try {
+        const admin = getServiceClient();
+        
+        // Проверяем статус бронирования
+        const { data: booking } = await admin
+            .from('bookings')
+            .select('id, status, start_at, services(name_ru), staff(full_name)')
+            .eq('id', bookingId)
+            .maybeSingle();
+
+        if (!booking) {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Бронирование не найдено.',
+            });
+            return;
+        }
+
+        if (booking.status === 'cancelled') {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Это бронирование уже отменено.',
+            });
+            return;
+        }
+
+        // Отменяем бронирование через RPC
+        const { error: cancelError } = await admin.rpc('cancel_booking', {
+            p_booking_id: bookingId,
+        });
+
+        if (cancelError) {
+            logError('WhatsAppWebhook', 'Failed to cancel booking', { error: cancelError, bookingId });
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Не удалось отменить бронирование. Пожалуйста, попробуйте позже или свяжитесь с нами.',
+            });
+            return;
+        }
+
+        // Формируем сообщение об отмене
+        const servicesForCancel = booking.services as
+            | { name_ru?: string }[]
+            | { name_ru?: string }
+            | null
+            | undefined;
+        const staffForCancel = booking.staff as
+            | { full_name?: string }[]
+            | { full_name?: string }
+            | null
+            | undefined;
+
+        const serviceName =
+            Array.isArray(servicesForCancel)
+                ? servicesForCancel[0]?.name_ru || 'услуга'
+                : servicesForCancel?.name_ru || 'услуга';
+
+        const staffName =
+            Array.isArray(staffForCancel)
+                ? staffForCancel[0]?.full_name || 'мастер'
+                : staffForCancel?.full_name || 'мастер';
+        const startTime = formatInTimeZone(new Date(booking.start_at), TZ, 'dd.MM.yyyy HH:mm');
+
+        await sendWhatsApp({
+            to: fromPhone,
+            text: `✅ Бронирование отменено.\n\nУслуга: ${serviceName}\nМастер: ${staffName}\nДата и время: ${startTime}\n\nЕсли у вас есть вопросы, свяжитесь с нами.`,
+        });
+
+        logDebug('WhatsAppWebhook', 'Booking cancelled via WhatsApp', { bookingId, fromPhone });
+    } catch (error) {
+        logError('WhatsAppWebhook', 'Error in cancel command', { error, bookingId, fromPhone });
+        await sendWhatsApp({
+            to: fromPhone,
+            text: 'Произошла ошибка при отмене бронирования. Пожалуйста, попробуйте позже.',
+        });
+    }
+}
+
+/**
+ * Обработка команды подтверждения бронирования
+ */
+async function handleConfirmCommand(
+    fromPhone: string,
+    bookingId: string | null,
+    clientId: string | null,
+    bizId: string | null
+) {
+    if (!bookingId) {
+        await sendWhatsApp({
+            to: fromPhone,
+            text: 'У вас нет активных бронирований для подтверждения.',
+        });
+        return;
+    }
+
+    try {
+        const admin = getServiceClient();
+        
+        // Проверяем статус бронирования
+        const { data: booking } = await admin
+            .from('bookings')
+            .select('id, status, start_at, services(name_ru), staff(full_name)')
+            .eq('id', bookingId)
+            .maybeSingle();
+
+        if (!booking) {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Бронирование не найдено.',
+            });
+            return;
+        }
+
+        if (booking.status === 'confirmed' || booking.status === 'paid') {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Это бронирование уже подтверждено.',
+            });
+            return;
+        }
+
+        if (booking.status === 'cancelled') {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Это бронирование было отменено и не может быть подтверждено.',
+            });
+            return;
+        }
+
+        // Подтверждаем бронирование через RPC
+        const { error: confirmError } = await admin.rpc('confirm_booking', {
+            p_booking_id: bookingId,
+        });
+
+        if (confirmError) {
+            logError('WhatsAppWebhook', 'Failed to confirm booking', { error: confirmError, bookingId });
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Не удалось подтвердить бронирование. Пожалуйста, попробуйте позже или свяжитесь с нами.',
+            });
+            return;
+        }
+
+        // Формируем сообщение о подтверждении
+        const servicesForConfirm = booking.services as
+            | { name_ru?: string }[]
+            | { name_ru?: string }
+            | null
+            | undefined;
+        const staffForConfirm = booking.staff as
+            | { full_name?: string }[]
+            | { full_name?: string }
+            | null
+            | undefined;
+
+        const serviceName =
+            Array.isArray(servicesForConfirm)
+                ? servicesForConfirm[0]?.name_ru || 'услуга'
+                : servicesForConfirm?.name_ru || 'услуга';
+
+        const staffName =
+            Array.isArray(staffForConfirm)
+                ? staffForConfirm[0]?.full_name || 'мастер'
+                : staffForConfirm?.full_name || 'мастер';
+        const startTime = formatInTimeZone(new Date(booking.start_at), TZ, 'dd.MM.yyyy HH:mm');
+
+        await sendWhatsApp({
+            to: fromPhone,
+            text: `✅ Бронирование подтверждено!\n\nУслуга: ${serviceName}\nМастер: ${staffName}\nДата и время: ${startTime}\n\nЖдем вас! Если возникнут вопросы, напишите нам.`,
+        });
+
+        logDebug('WhatsAppWebhook', 'Booking confirmed via WhatsApp', { bookingId, fromPhone });
+    } catch (error) {
+        logError('WhatsAppWebhook', 'Error in confirm command', { error, bookingId, fromPhone });
+        await sendWhatsApp({
+            to: fromPhone,
+            text: 'Произошла ошибка при подтверждении бронирования. Пожалуйста, попробуйте позже.',
+        });
+    }
+}
+
+/**
+ * Обработка команды помощи
+ */
+async function handleHelpCommand(fromPhone: string, bookingId: string | null) {
+    let helpText = '📋 Доступные команды:\n\n';
+    helpText += '• "отмена" - отменить бронирование\n';
+    helpText += '• "подтвердить" - подтвердить бронирование\n';
+    helpText += '• "помощь" - показать это сообщение\n\n';
+
+    if (bookingId) {
+        helpText += 'У вас есть активное бронирование. Используйте команды выше для управления им.';
+    } else {
+        helpText += 'Для создания нового бронирования посетите наш сайт или свяжитесь с нами.';
+    }
+
+    try {
+        await sendWhatsApp({
+            to: fromPhone,
+            text: helpText,
+        });
+    } catch (error) {
+        logError('WhatsAppWebhook', 'Failed to send help message', { error, fromPhone });
+    }
+}
+
+/**
+ * Отправка информации о бронировании
+ */
+async function sendBookingInfo(fromPhone: string, bookingId: string) {
+    try {
+        const admin = getServiceClient();
+        
+        const { data: booking } = await admin
+            .from('bookings')
+            .select(`
+                id, status, start_at, end_at,
+                services(name_ru),
+                staff(full_name),
+                branches(name, address),
+                businesses(name)
+            `)
+            .eq('id', bookingId)
+            .maybeSingle();
+
+        if (!booking) {
+            return;
+        }
+
+        const servicesForInfo = booking.services as
+            | { name_ru?: string }[]
+            | { name_ru?: string }
+            | null
+            | undefined;
+        const staffForInfo = booking.staff as
+            | { full_name?: string }[]
+            | { full_name?: string }
+            | null
+            | undefined;
+        const branchesForInfo = booking.branches as
+            | { name?: string; address?: string | null }[]
+            | { name?: string; address?: string | null }
+            | null
+            | undefined;
+        const businessesForInfo = booking.businesses as
+            | { name?: string }[]
+            | { name?: string }
+            | null
+            | undefined;
+
+        const serviceName =
+            Array.isArray(servicesForInfo)
+                ? servicesForInfo[0]?.name_ru || 'услуга'
+                : servicesForInfo?.name_ru || 'услуга';
+
+        const staffName =
+            Array.isArray(staffForInfo)
+                ? staffForInfo[0]?.full_name || 'мастер'
+                : staffForInfo?.full_name || 'мастер';
+
+        const branchName =
+            Array.isArray(branchesForInfo)
+                ? branchesForInfo[0]?.name || 'филиал'
+                : branchesForInfo?.name || 'филиал';
+
+        const branchAddress =
+            Array.isArray(branchesForInfo)
+                ? branchesForInfo[0]?.address || ''
+                : branchesForInfo?.address || '';
+
+        const businessName =
+            Array.isArray(businessesForInfo)
+                ? businessesForInfo[0]?.name || ''
+                : businessesForInfo?.name || '';
+
+        const startTime = formatInTimeZone(new Date(booking.start_at), TZ, 'dd.MM.yyyy HH:mm');
+        const endTime = formatInTimeZone(new Date(booking.end_at), TZ, 'HH:mm');
+
+        let statusText = '';
+        switch (booking.status) {
+            case 'hold':
+                statusText = '⏳ Ожидает подтверждения';
+                break;
+            case 'confirmed':
+                statusText = '✅ Подтверждено';
+                break;
+            case 'paid':
+                statusText = '✅ Оплачено';
+                break;
+            case 'cancelled':
+                statusText = '❌ Отменено';
+                break;
+            default:
+                statusText = booking.status;
+        }
+
+        const infoText = `📅 Ваше бронирование:\n\n` +
+            `${statusText}\n\n` +
+            `Услуга: ${serviceName}\n` +
+            `Мастер: ${staffName}\n` +
+            `Дата и время: ${startTime} - ${endTime}\n` +
+            `Филиал: ${branchName}${branchAddress ? `\nАдрес: ${branchAddress}` : ''}\n` +
+            `${businessName ? `\n${businessName}` : ''}\n\n` +
+            `Команды: "отмена", "подтвердить", "помощь"`;
+
+        await sendWhatsApp({
+            to: fromPhone,
+            text: infoText,
+        });
+    } catch (error) {
+        logError('WhatsAppWebhook', 'Failed to send booking info', { error, bookingId, fromPhone });
+    }
+}
+
+/**
  * Обработка обновления статуса сообщения
  */
 async function handleStatusUpdate(status: WhatsAppStatus) {
-    // Здесь можно добавить логику обновления статусов в базе данных
-    // Например, отмечать, что уведомление было доставлено/прочитано
-    void status; // временно, чтобы избежать unused variable
+    try {
+        const admin = getServiceClient();
+        
+        // Обновляем статус в базе данных, если сообщение найдено
+        const { data: message } = await admin
+            .from('whatsapp_messages')
+            .select('id, whatsapp_message_id')
+            .eq('whatsapp_message_id', status.id)
+            .maybeSingle();
+
+        if (message) {
+            // Обновляем статус доставки (можно расширить таблицу для хранения статусов)
+            logDebug('WhatsAppWebhook', 'Message status updated', {
+                messageId: status.id,
+                status: status.status,
+                recipientId: status.recipient_id,
+            });
+
+            // Здесь можно добавить обновление статуса в таблице whatsapp_messages
+            // Например, добавить колонку delivery_status и обновлять её
+        }
+    } catch (error) {
+        logError('WhatsAppWebhook', 'Error handling status update', { error, statusId: status.id });
+    }
 }
 

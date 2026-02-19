@@ -1,22 +1,30 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
+import { validateQuery } from '@/lib/validation/apiValidation';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-type FinanceLogsQueryParams = {
-    staffId?: string;
-    bizId?: string;
-    shiftId?: string;
-    operationType?: string;
-    logLevel?: string;
-    startDate?: string;
-    endDate?: string;
-    limit?: string;
-    offset?: string;
-};
+const financeLogsQuerySchema = z.object({
+    staffId: z.string().uuid().optional(),
+    bizId: z.string().uuid().optional(),
+    shiftId: z.string().uuid().optional(),
+    operationType: z.string().max(100).optional(),
+    logLevel: z.enum(['info', 'warning', 'error']).optional(),
+    startDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be in YYYY-MM-DD format')
+        .optional(),
+    endDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be in YYYY-MM-DD format')
+        .optional(),
+    limit: z.coerce.number().int().min(1).max(1000).optional().default(100),
+    offset: z.coerce.number().int().min(0).optional().default(0),
+});
 
 /**
  * GET /api/admin/finance-logs
@@ -24,18 +32,12 @@ type FinanceLogsQueryParams = {
  */
 export async function GET(req: Request) {
     try {
-        const { searchParams } = new URL(req.url);
-        const params: FinanceLogsQueryParams = {
-            staffId: searchParams.get('staffId') || undefined,
-            bizId: searchParams.get('bizId') || undefined,
-            shiftId: searchParams.get('shiftId') || undefined,
-            operationType: searchParams.get('operationType') || undefined,
-            logLevel: searchParams.get('logLevel') || undefined,
-            startDate: searchParams.get('startDate') || undefined,
-            endDate: searchParams.get('endDate') || undefined,
-            limit: searchParams.get('limit') || '100',
-            offset: searchParams.get('offset') || '0',
-        };
+        const url = new URL(req.url);
+        const queryValidation = validateQuery(url, financeLogsQuerySchema);
+        if (!queryValidation.success) {
+            return queryValidation.response;
+        }
+        const params = queryValidation.data;
 
         const serviceClient = getServiceClient();
 
@@ -73,8 +75,8 @@ export async function GET(req: Request) {
         }
 
         // Пагинация
-        const limit = Math.min(parseInt(params.limit || '100', 10), 1000);
-        const offset = parseInt(params.offset || '0', 10);
+        const limit = params.limit ?? 100;
+        const offset = params.offset ?? 0;
         query = query.range(offset, offset + limit - 1);
 
         const { data, error, count } = await query;

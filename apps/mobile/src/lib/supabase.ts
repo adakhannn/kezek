@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { logEnvVars } from '../utils/debug';
+import { logError, logDebug } from './log';
 
 // В Expo переменные окружения доступны через process.env.EXPO_PUBLIC_*
 // Также можно получить через Constants.expoConfig.extra (если настроено в app.json)
@@ -18,11 +19,13 @@ const supabaseAnonKey =
 
 // Детальное логирование для отладки
 logEnvVars();
-console.log('Final supabaseUrl:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'NOT SET');
-console.log('Final supabaseAnonKey:', supabaseAnonKey ? 'SET' : 'NOT SET');
-console.log('Source:', {
-    url: process.env.EXPO_PUBLIC_SUPABASE_URL ? 'process.env' : (Constants.expoConfig?.extra?.supabaseUrl ? 'app.json' : 'NOT FOUND'),
-    key: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'process.env' : (Constants.expoConfig?.extra?.supabaseAnonKey ? 'app.json' : 'NOT FOUND'),
+logDebug('Supabase', 'Initialization', {
+    supabaseUrl: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'NOT SET',
+    supabaseAnonKey: supabaseAnonKey ? 'SET' : 'NOT SET',
+    source: {
+        url: process.env.EXPO_PUBLIC_SUPABASE_URL ? 'process.env' : (Constants.expoConfig?.extra?.supabaseUrl ? 'app.json' : 'NOT FOUND'),
+        key: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'process.env' : (Constants.expoConfig?.extra?.supabaseAnonKey ? 'app.json' : 'NOT FOUND'),
+    },
 });
 
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -35,7 +38,7 @@ EXPO_PUBLIC_API_URL=https://kezek.kg
 
 Then restart Expo with: npx expo start --clear`;
 
-    console.error('Supabase initialization error:', errorMsg);
+    logError('Supabase', 'Initialization error', { message: errorMsg });
     throw new Error(errorMsg);
 }
 

@@ -5,6 +5,7 @@
 
 import Constants from 'expo-constants';
 import { supabase } from './supabase';
+import { logWarn } from './log';
 
 const API_URL = 
     process.env.EXPO_PUBLIC_API_URL || 
@@ -23,14 +24,14 @@ export async function apiRequest<T>(
     try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
-            console.warn('[apiRequest] Session error:', sessionError.message);
+            logWarn('apiRequest', 'Session error', { message: sessionError.message });
         }
         authToken = session?.access_token || null;
         if (!authToken) {
-            console.warn('[apiRequest] No access token in session');
+            logWarn('apiRequest', 'No access token in session');
         }
     } catch (error) {
-        console.warn('[apiRequest] Failed to get session token:', error);
+        logWarn('apiRequest', 'Failed to get session token', error);
     }
     
     try {
@@ -51,7 +52,7 @@ export async function apiRequest<T>(
 
         if (!response.ok) {
             let errorMessage = `HTTP ${response.status}`;
-            let errorDetails: any = null;
+            let errorDetails: unknown = null;
 
             // Пытаемся получить JSON ошибки
             try {
@@ -88,24 +89,32 @@ export async function apiRequest<T>(
                 }
             }
 
-            const error = new Error(errorMessage);
-            // @ts-ignore
+            // Создаем ошибку с дополнительными полями
+            const error = new Error(errorMessage) as Error & {
+                status?: number;
+                details?: unknown;
+            };
             error.status = response.status;
-            // @ts-ignore
             error.details = errorDetails;
             throw error;
         }
 
         return response.json();
-    } catch (error: any) {
-        // Если это уже наша ошибка, пробрасываем её дальше
-        if (error.message && error.status) {
-            throw error;
-        }
-        
-        // Если это сетевая ошибка
-        if (error.message?.includes('Network request failed') || error.message?.includes('Failed to fetch')) {
-            throw new Error('Нет подключения к интернету. Проверьте соединение и попробуйте снова');
+    } catch (error: unknown) {
+        // Если это уже наша ошибка с дополнительными полями, пробрасываем её дальше
+        if (error instanceof Error) {
+            const apiError = error as Error & {
+                status?: number;
+                details?: unknown;
+            };
+            if (apiError.status !== undefined) {
+                throw apiError;
+            }
+            
+            // Если это сетевая ошибка
+            if (error.message?.includes('Network request failed') || error.message?.includes('Failed to fetch')) {
+                throw new Error('Нет подключения к интернету. Проверьте соединение и попробуйте снова');
+            }
         }
         
         // Если это другая ошибка, пробрасываем её

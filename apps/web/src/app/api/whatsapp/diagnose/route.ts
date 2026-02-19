@@ -4,13 +4,17 @@ export const dynamic = 'force-dynamic';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 
 /**
  * GET /api/whatsapp/diagnose
  * Полная диагностика WhatsApp API: проверяет токен, получает все аккаунты и номера
  */
-export async function GET() {
-    return withErrorHandler('WhatsAppDiagnose', async () => {
+export async function GET(req: Request) {
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('WhatsAppDiagnose', async () => {
         const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
         const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
@@ -227,6 +231,6 @@ export async function GET() {
                 phoneNumberIdValid: results.currentPhoneNumberId && typeof results.currentPhoneNumberId === 'object' && 'ok' in results.currentPhoneNumberId && results.currentPhoneNumberId.ok === true,
             },
         });
-    });
+    }));
 }
 

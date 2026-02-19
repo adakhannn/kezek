@@ -6,13 +6,20 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
-type Query = {
-    q?: string;
-    page?: string;
-    perPage?: string;
-    status?: 'all' | 'active' | 'blocked';
-};
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
+import { validateQuery } from '@/lib/validation/apiValidation';
+
+const userListQuerySchema = z.object({
+    q: z
+        .string()
+        .optional()
+        .transform((value) => (value ?? '').trim().toLowerCase()),
+    page: z.coerce.number().int().min(1).max(1000).optional().default(1),
+    perPage: z.coerce.number().int().min(1).max(200).optional().default(50),
+    status: z.enum(['all', 'active', 'blocked']).optional().default('all'),
+});
 
 type UserListItem = {
     id: string;
@@ -38,14 +45,15 @@ type ListErr = { ok: false; error?: string };
 export async function GET(req: Request) {
     try {
         const url = new URL(req.url);
-        const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
-        const page = Math.max(1, Number(url.searchParams.get('page') ?? '1'));
-        const perPage = Math.min(200, Math.max(1, Number(url.searchParams.get('perPage') ?? '50')));
-        const status = (url.searchParams.get('status') as Query['status']) ?? 'all';
+        const queryValidation = validateQuery(url, userListQuerySchema);
+        if (!queryValidation.success) {
+            return queryValidation.response;
+        }
+        const { q, page, perPage, status } = queryValidation.data;
 
-        const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const SB_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SB_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const SB_URL = getSupabaseUrl();
+        const SB_ANON = getSupabaseAnonKey();
+        const SB_SERVICE = getSupabaseServiceRoleKey();
 
         // 1) Проверка прав (текущий запрос выполняется от имени пользователя по anon-cookie)
         const cookieStore = await cookies();

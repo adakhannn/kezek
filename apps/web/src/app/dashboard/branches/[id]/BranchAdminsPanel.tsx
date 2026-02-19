@@ -157,7 +157,11 @@ export default function BranchAdminsPanel({ branchId }: { branchId: string }) {
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Администраторы филиала</h3>
 
             {err && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div
+                    className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4"
+                    role="alert"
+                    aria-live="polite"
+                >
                     <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
                 </div>
             )}

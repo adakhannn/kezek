@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug } from '@/lib/log';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 
 /**
  * GET /api/whatsapp/get-phone-numbers?account_id=1185726307058446
@@ -13,7 +14,10 @@ import { logDebug } from '@/lib/log';
  * GET /api/whatsapp/get-phone-numbers?account_id=1185726307058446
  */
 export async function GET(req: Request) {
-    return withErrorHandler<ApiSuccessResponse<{ phone_numbers: unknown; message: string; instructions: { step1: string; step2: string; step3: string } } | { data: unknown; message: string }>>('WhatsAppAPI', async () => {
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler<ApiSuccessResponse<{ phone_numbers: unknown; message: string; instructions: { step1: string; step2: string; step3: string } } | { data: unknown; message: string }>>('WhatsAppAPI', async () => {
         const { searchParams } = new URL(req.url);
         const accountId = searchParams.get('account_id');
         
@@ -97,6 +101,6 @@ export async function GET(req: Request) {
             data,
             message: 'Данные получены успешно',
         });
-    });
+    }));
 }
 

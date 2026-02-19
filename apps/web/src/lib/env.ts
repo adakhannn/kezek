@@ -199,3 +199,28 @@ export function getYandexMapsApiKey(): string | undefined {
     return getOptionalEnvVar('NEXT_PUBLIC_YANDEX_MAPS_API_KEY');
 }
 
+/**
+ * Получает WHATSAPP_VERIFY_TOKEN
+ */
+export function getWhatsAppVerifyToken(): string {
+    return getEnvVar('WHATSAPP_VERIFY_TOKEN', {
+        required: false,
+        defaultValue: 'kezek_whatsapp_verify',
+        validator: isNonEmpty
+    });
+}
+
+/**
+ * Получает UPSTASH_REDIS_REST_URL
+ */
+export function getUpstashRedisUrl(): string | undefined {
+    return getOptionalEnvVar('UPSTASH_REDIS_REST_URL');
+}
+
+/**
+ * Получает UPSTASH_REDIS_REST_TOKEN
+ */
+export function getUpstashRedisToken(): string | undefined {
+    return getOptionalEnvVar('UPSTASH_REDIS_REST_TOKEN');
+}
+

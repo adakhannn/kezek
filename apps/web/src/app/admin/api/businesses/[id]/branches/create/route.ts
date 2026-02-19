@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 
 import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { validateLatLon } from '@/lib/validation';
 
 type Body = {
     name: string;
@@ -22,14 +23,6 @@ const norm = (s?: string | null) => {
     const v = (s ?? '').trim();
     return v.length ? v : null;
 };
-
-function validateLatLon(lat: unknown, lon: unknown) {
-    if (lat == null || lon == null) return { ok: false as const };
-    const la = Number(lat), lo = Number(lon);
-    if (!Number.isFinite(la) || !Number.isFinite(lo)) return { ok: false as const };
-    if (la < -90 || la > 90 || lo < -180 || lo > 180) return { ok: false as const };
-    return { ok: true as const, lat: la, lon: lo };
-}
 
 export async function POST(req: Request, context: unknown) {
     try {

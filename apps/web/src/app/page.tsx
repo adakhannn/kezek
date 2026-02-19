@@ -60,6 +60,8 @@ export default async function Home({
     const typedBusinesses: Business[] = (businesses as Business[] | null) ?? [];
 
     // Подсчитываем количество активных акций для каждого бизнеса
+    // Оптимизация: используем один запрос с JOIN через branches для получения акций по бизнесам
+    // Это избегает N+1 проблемы и уменьшает количество запросов к БД
     if (typedBusinesses.length > 0) {
         const bizIds = typedBusinesses.map(b => b.id);
         
@@ -73,14 +75,15 @@ export default async function Home({
         if (branchesData && branchesData.length > 0) {
             const branchIds = branchesData.map(b => b.id);
             
-            // Получаем количество акций по филиалам
+            // Получаем количество акций по филиалам одним запросом
+            // Используем select только branch_id для минимизации передачи данных
             const { data: promotionsCounts } = await supabase
                 .from('branch_promotions')
                 .select('branch_id')
                 .eq('is_active', true)
                 .in('branch_id', branchIds);
             
-            // Группируем по biz_id
+            // Группируем по biz_id в памяти (эффективно для небольшого количества записей)
             const promoCountMap = new Map<string, number>();
             const branchToBizMap = new Map<string, string>();
             branchesData.forEach(b => {

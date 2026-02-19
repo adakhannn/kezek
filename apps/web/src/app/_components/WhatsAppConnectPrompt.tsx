@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
+import { validatePhone } from '@/lib/validation';
 
 type Props = {
     onDismiss?: () => void;
@@ -17,11 +18,6 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    function validatePhone(v: string): boolean {
-        // E.164: + и 8-15 цифр (без пробелов)
-        return /^\+[1-9]\d{7,14}$/.test(v.trim());
-    }
-
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError(null);
@@ -32,8 +28,9 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
             return;
         }
 
-        if (!validatePhone(trimmedPhone)) {
-            setError('Телефон должен быть в формате E.164, например: +996555123456');
+        const phoneValidation = validatePhone(trimmedPhone, true);
+        if (!phoneValidation.valid) {
+            setError(phoneValidation.error || 'Телефон должен быть в формате E.164, например: +996555123456');
             return;
         }
 

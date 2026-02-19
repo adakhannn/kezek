@@ -1,22 +1,30 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 import { logError, logDebug } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
+import { validateQuery } from '@/lib/validation/apiValidation';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-type MetricsQueryParams = {
-    endpoint?: string;
-    method?: string;
-    statusCode?: string;
-    startDate?: string;
-    endDate?: string;
-    limit?: string;
-    offset?: string;
-    errorType?: string;
-    minDuration?: string;
-};
+const metricsQuerySchema = z.object({
+    endpoint: z.string().max(255).optional(),
+    method: z.string().max(10).optional(),
+    statusCode: z.coerce.number().int().min(100).max(599).optional(),
+    startDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be in YYYY-MM-DD format')
+        .optional(),
+    endDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be in YYYY-MM-DD format')
+        .optional(),
+    limit: z.coerce.number().int().min(1).max(1000).optional().default(100),
+    offset: z.coerce.number().int().min(0).optional().default(0),
+    errorType: z.string().max(50).optional(),
+    minDuration: z.coerce.number().int().min(0).optional(),
+});
 
 /**
  * GET /api/admin/metrics
@@ -24,18 +32,12 @@ type MetricsQueryParams = {
  */
 export async function GET(req: Request) {
     try {
-        const { searchParams } = new URL(req.url);
-        const params: MetricsQueryParams = {
-            endpoint: searchParams.get('endpoint') || undefined,
-            method: searchParams.get('method') || undefined,
-            statusCode: searchParams.get('statusCode') || undefined,
-            startDate: searchParams.get('startDate') || undefined,
-            endDate: searchParams.get('endDate') || undefined,
-            limit: searchParams.get('limit') || '100',
-            offset: searchParams.get('offset') || '0',
-            errorType: searchParams.get('errorType') || undefined,
-            minDuration: searchParams.get('minDuration') || undefined,
-        };
+        const url = new URL(req.url);
+        const queryValidation = validateQuery(url, metricsQuerySchema);
+        if (!queryValidation.success) {
+            return queryValidation.response;
+        }
+        const params = queryValidation.data;
 
         const serviceClient = getServiceClient();
 
@@ -52,8 +54,8 @@ export async function GET(req: Request) {
         if (params.method) {
             query = query.eq('method', params.method);
         }
-        if (params.statusCode) {
-            query = query.eq('status_code', parseInt(params.statusCode, 10));
+        if (params.statusCode !== undefined) {
+            query = query.eq('status_code', params.statusCode);
         }
         if (params.startDate) {
             query = query.gte('created_at', params.startDate);
@@ -64,13 +66,13 @@ export async function GET(req: Request) {
         if (params.errorType) {
             query = query.eq('error_type', params.errorType);
         }
-        if (params.minDuration) {
-            query = query.gte('duration_ms', parseInt(params.minDuration, 10));
+        if (params.minDuration !== undefined) {
+            query = query.gte('duration_ms', params.minDuration);
         }
 
         // Пагинация
-        const limit = Math.min(parseInt(params.limit || '100', 10), 1000);
-        const offset = parseInt(params.offset || '0', 10);
+        const limit = params.limit ?? 100;
+        const offset = params.offset ?? 0;
         query = query.range(offset, offset + limit - 1);
 
         const { data, error, count } = await query;

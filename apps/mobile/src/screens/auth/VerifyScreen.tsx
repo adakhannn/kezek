@@ -53,8 +53,9 @@ export default function VerifyScreen() {
             }
             showToast('Вход выполнен успешно', 'success');
             // Навигация произойдет автоматически через RootNavigator при изменении сессии
-        } catch (error: any) {
-            showToast(error.message || 'Неверный код', 'error');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Неверный код';
+            showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
@@ -81,8 +82,9 @@ export default function VerifyScreen() {
                 if (error) throw error;
             }
             showToast('Код отправлен повторно', 'success');
-        } catch (error: any) {
-            showToast(error.message || 'Не удалось отправить код', 'error');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
+            showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }

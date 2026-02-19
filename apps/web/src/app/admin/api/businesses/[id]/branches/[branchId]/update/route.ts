@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import {logError} from '@/lib/log';
+import { validateLatLon } from '@/lib/validation';
 
 type Body = {
     name?: string | null;
@@ -23,14 +24,6 @@ const norm = (s?: string | null) => {
     const v = (s ?? '').trim();
     return v.length ? v : null;
 };
-
-function validateLatLon(lat: unknown, lon: unknown) {
-    if (lat == null || lon == null) return { ok: false as const };
-    const la = Number(lat), lo = Number(lon);
-    if (!Number.isFinite(la) || !Number.isFinite(lo)) return { ok: false as const };
-    if (la < -90 || la > 90 || lo < -180 || lo > 180) return { ok: false as const };
-    return { ok: true as const, lat: la, lon: lo };
-}
 
 function extractIds(urlStr: string): { id: string; branchId: string } {
     const parts = new URL(urlStr).pathname.split('/').filter(Boolean);

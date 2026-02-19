@@ -3,6 +3,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../constants/colors';
 import { useBooking } from '../contexts/BookingContext';
+import { RootStackParamList } from '../navigation/types';
 
 type StepInfo = {
     number: number;
@@ -24,7 +25,7 @@ type BookingProgressIndicatorProps = {
 };
 
 export default function BookingProgressIndicator({ currentStep }: BookingProgressIndicatorProps) {
-    const navigation = useNavigation<NativeStackNavigationProp<any>>();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const route = useRoute();
     const { bookingData } = useBooking();
     const totalSteps = STEPS.length;
@@ -35,12 +36,11 @@ export default function BookingProgressIndicator({ currentStep }: BookingProgres
         if (step.number <= currentStep && step.number < currentStep) {
             // Для первого шага нужен slug
             if (step.number === 1 && bookingData.business?.slug) {
-                // @ts-ignore
-                navigation.navigate(step.screenName, { slug: bookingData.business.slug });
+                // Навигация в BookingStep1Branch находится в RootStack
+                (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate(step.screenName as keyof RootStackParamList, { slug: bookingData.business.slug });
             } else if (step.number > 1) {
                 // Для остальных шагов параметры не нужны
-                // @ts-ignore
-                navigation.navigate(step.screenName);
+                (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate(step.screenName as keyof RootStackParamList);
             }
         }
     };

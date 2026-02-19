@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { getSupabaseUrl, getSupabaseServiceRoleKey } from '@/lib/env';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import {
@@ -26,8 +27,8 @@ export async function POST(req: Request) {
         RateLimitConfigs.auth,
         async () => {
             return withErrorHandler('TelegramLogin', async () => {
-                const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-                const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+                const URL = getSupabaseUrl();
+                const SERVICE = getSupabaseServiceRoleKey();
 
         const body = (await req.json()) as TelegramAuthData;
 

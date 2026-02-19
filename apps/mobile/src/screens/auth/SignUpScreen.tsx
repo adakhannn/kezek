@@ -35,8 +35,9 @@ export default function SignUpScreen() {
             if (error) throw error;
             showToast('Код отправлен на email', 'success');
             navigation.navigate('Verify', { email });
-        } catch (error: any) {
-            showToast(error.message || 'Не удалось отправить код', 'error');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
+            showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }

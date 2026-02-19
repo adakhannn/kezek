@@ -1,30 +1,38 @@
 /**
- * Утилиты для валидации данных на клиенте
+ * Утилиты для валидации данных на клиенте.
+ *
+ * Эти функции используются в формах (dashboard, бронирование, auth) и в API‑слое
+ * для повторного использования одинаковой бизнес‑валидации на клиенте и сервере.
  */
 
 /**
- * Простая проверка UUID (возвращает boolean)
+ * Проверяет, что строка имеет формат UUID v1–v5.
+ * @param v Строка-кандидат.
+ * @returns `true`, если строка выглядит как корректный UUID, иначе `false`.
  */
 export function isUuid(v: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 }
 
 /**
- * Простая проверка email (возвращает boolean)
+ * Простая проверка email по базовому регулярному выражению.
+ * Не учитывает все возможные edge‑кейсы, но достаточна для UI‑валидации.
  */
 export function isEmail(s: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
 /**
- * Простая проверка телефона в формате E.164 (возвращает boolean)
+ * Проверяет, что строка соответствует формату телефона E.164 (`+` и 1–15 цифр).
+ * Подходит для грубой проверки перед отправкой на сервер.
  */
 export function isE164(s: string): boolean {
     return /^\+[1-9]\d{1,14}$/.test(s);
 }
 
 /**
- * Валидация координат (широта и долгота)
+ * Валидирует координаты широты/долготы и приводит их к числам.
+ * @returns `{ ok: true, lat, lon }` для валидных координат или `{ ok: false }`.
  */
 export function validateLatLon(lat: unknown, lon: unknown): { ok: false } | { ok: true; lat: number; lon: number } {
     if (lat == null || lon == null) return { ok: false };
@@ -36,15 +44,16 @@ export function validateLatLon(lat: unknown, lon: unknown): { ok: false } | { ok
 }
 
 /**
- * Конвертация координат в EWKT формат для PostGIS
- * Формат: SRID=4326;POINT(lon lat)
+ * Конвертирует координаты в EWKT‑формат для PostGIS:
+ * `SRID=4326;POINT(lon lat)`.
  */
 export function coordsToEWKT(lat: number, lon: number): string {
     return `SRID=4326;POINT(${lon} ${lat})`;
 }
 
 /**
- * Валидация email
+ * Валидация email с сообщением об ошибке.
+ * Email считается опциональным: пустая строка даёт `valid: true`.
  */
 export function validateEmail(email: string): { valid: boolean; error?: string } {
     if (!email || !email.trim()) {
@@ -66,7 +75,8 @@ export function validateEmail(email: string): { valid: boolean; error?: string }
 }
 
 /**
- * Валидация телефона (формат E.164: +996555123456)
+ * Валидация телефона в формате E.164 (`+996555123456`).
+ * Если `required = false`, пустое значение считается валидным.
  */
 export function validatePhone(phone: string, required: boolean = false): { valid: boolean; error?: string } {
     const trimmed = phone.trim();
@@ -89,7 +99,7 @@ export function validatePhone(phone: string, required: boolean = false): { valid
 }
 
 /**
- * Валидация имени (не пустое, минимум 2 символа)
+ * Валидация имени: не пустое (если `required = true`), длина от 2 до 100 символов.
  */
 export function validateName(name: string, required: boolean = true): { valid: boolean; error?: string } {
     const trimmed = name.trim();
@@ -113,7 +123,12 @@ export function validateName(name: string, required: boolean = true): { valid: b
 }
 
 /**
- * Валидация числового значения (положительное число)
+ * Универсальная валидация числового значения.
+ *
+ * Поддерживает:
+ * - обязательность (`required`)
+ * - минимальное/максимальное значение (`min`/`max`)
+ * - запрет нуля (`allowZero = false`).
  */
 export function validatePositiveNumber(
     value: number | string,
@@ -155,14 +170,16 @@ export function validatePositiveNumber(
 }
 
 /**
- * Валидация процента (0-100)
+ * Валидация процента в диапазоне 0..100 (включительно).
  */
 export function validatePercent(percent: number | string): { valid: boolean; error?: string } {
     return validatePositiveNumber(percent, { min: 0, max: 100, required: true });
 }
 
 /**
- * Валидация диапазона цен (price_from <= price_to)
+ * Валидация диапазона цен: обе цены неотрицательные и `price_from <= price_to`.
+ * Если одно из значений не является числом, валидация считается пройденной
+ * (интерпретируется как «поле не заполнено»).
  */
 export function validatePriceRange(
     priceFrom: number | string,
@@ -187,7 +204,7 @@ export function validatePriceRange(
 }
 
 /**
- * Валидация суммы процентов (должна быть равна 100)
+ * Валидация суммы процентов: `master + salon ≈ 100` (с небольшой погрешностью).
  */
 export function validatePercentSum(
     master: number | string,

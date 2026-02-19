@@ -1,9 +1,13 @@
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function GET(request: Request) {
-    return withErrorHandler('PromotionsDebug', async () => {
+    return withRateLimit(
+        request,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('PromotionsDebug', async () => {
         // Используем унифицированную утилиту для создания Supabase клиента
         const supabase = await createSupabaseServerClient();
 
@@ -507,6 +511,6 @@ export async function GET(request: Request) {
         });
 
         return createSuccessResponse(result);
-    });
+    }));
 }
 

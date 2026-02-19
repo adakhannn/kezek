@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ErrorDisplay from './ErrorDisplay';
+import { logError } from '../lib/log';
 
 interface Props {
     children: ReactNode;
@@ -22,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error('ErrorBoundary caught an error:', error, errorInfo);
+        logError('ErrorBoundary', 'Caught an error', { error: error.message, errorInfo });
     }
 
     handleReset = () => {

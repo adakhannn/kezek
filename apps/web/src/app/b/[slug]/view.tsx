@@ -409,15 +409,15 @@ export default function BookingForm({ data }: { data: Data }) {
     }, [serviceId, staffId, dayStr]);
 
     /* ---------- создание бронирования ---------- */
+    // Создаем стабильные ссылки на Set'ы ID для валидации восстановленных значений
+    const branchIds = useMemo(() => new Set(branches.map((b) => b.id)), [branches]);
+    const serviceIds = useMemo(() => new Set(services.map((s) => s.id)), [services]);
+    const staffIdSet = useMemo(() => new Set(staff.map((m) => m.id)), [staff]);
+    
     // Восстановление состояния после авторизации (localStorage)
     useEffect(() => {
         if (restoredFromStorage) return;
         if (typeof window === 'undefined') return;
-        
-        // Используем useMemo для создания стабильных ссылок на массивы
-        const branchIds = new Set(branches.map((b) => b.id));
-        const serviceIds = new Set(services.map((s) => s.id));
-        const staffIds = new Set(staff.map((m) => m.id));
         
         try {
             const key = `booking_state_${biz.id}`;
@@ -441,7 +441,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 setServiceId(parsed.serviceId);
             }
             // Восстанавливаем мастера только если он валиден (будет проверен в useEffect ниже)
-            if (parsed.staffId && staffIds.has(parsed.staffId)) {
+            if (parsed.staffId && staffIdSet.has(parsed.staffId)) {
                 setStaffId(parsed.staffId);
             }
             if (parsed.day) {
@@ -459,7 +459,7 @@ export default function BookingForm({ data }: { data: Data }) {
         } finally {
             setRestoredFromStorage(true);
         }
-    }, [biz.id, restoredFromStorage]); // Убрали branches, services, staff из зависимостей, чтобы избежать бесконечных ререндеров
+    }, [biz.id, restoredFromStorage, branchIds, serviceIds, staffIds]);
 
     const service = useMemo(
         () => {

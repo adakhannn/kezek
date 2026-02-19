@@ -2,6 +2,16 @@
 
 import { logError } from './log';
 
+/**
+ * Структура полезной нагрузки для отправки ошибки во внешнюю систему мониторинга.
+ *
+ * `scope` — логический модуль/компонент, где произошла ошибка (например, 'BookingForm').
+ * `error` — нормализованная информация об ошибке (имя, сообщение, stack).
+ * `componentStack` — React component stack (передаётся из ErrorBoundary).
+ * `url` / `userAgent` — дополнительный контекст окружения.
+ * `timestamp` — ISO‑время возникновения ошибки.
+ * `extra` — любые дополнительные данные (payload, user, feature‑flags и т.д.).
+ */
 type ErrorMonitoringPayload = {
     scope: string;
     error: {
@@ -17,10 +27,16 @@ type ErrorMonitoringPayload = {
 };
 
 /**
- * Отправка ошибок в внешнюю систему мониторинга (Sentry, LogRocket и т.п.)
- * Реализация построена так, чтобы не тянуть конкретные SDK в бандл:
- *  - если на window есть Sentry/LogRocket, используем их
- *  - иначе просто логируем через logError
+ * Отправляет информацию об ошибке во внешнюю систему мониторинга (Sentry, LogRocket и т.п.).
+ *
+ * Поведение:
+ * - На сервере всегда логирует ошибку через `logError` (без обращения к `window`).
+ * - В браузере пытается вызвать `window.Sentry.captureException` и/или `window.LogRocket.captureException`,
+ *   добавляя в `extra` полный контекст `ErrorMonitoringPayload`.
+ * - В любом случае делает локальный лог через `logError`, чтобы ошибка не потерялась даже без интеграций.
+ *
+ * Функция спроектирована так, чтобы не тянуть SDK мониторинга в основной бандл:
+ * интеграции инициализируются отдельно и просто вешаются на `window`.
  */
 export function reportErrorToMonitoring(payload: ErrorMonitoringPayload) {
     try {

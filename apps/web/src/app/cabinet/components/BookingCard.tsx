@@ -8,10 +8,11 @@ import MapDialog from './MapDialog';
 import ReviewDialog from './ReviewDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { getTimezone } from '@/lib/env';
 import {logError} from '@/lib/log';
 import { transliterate } from '@/lib/transliterate';
 
-const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
+const TZ = getTimezone();
 
 export default function BookingCard({
                                         bookingId,

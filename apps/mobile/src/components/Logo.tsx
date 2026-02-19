@@ -2,16 +2,17 @@ import { Image, View, Text, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../constants/colors';
+import { logDebug } from '../lib/log';
 
 /**
  * Компонент логотипа Kezek для мобильного приложения
  * Поддерживает как изображение, так и текстовый вариант
  */
-export default function Logo({ style }: { style?: any }) {
+export default function Logo({ style }: { style?: unknown }) {
     const [imageError, setImageError] = useState(false);
 
-    const handleImageError = (error: any) => {
-        console.log('[Logo] Image load error:', error);
+    const handleImageError = (error: unknown) => {
+        logDebug('Logo', 'Image load error', error);
         setImageError(true);
     };
 
@@ -23,7 +24,7 @@ export default function Logo({ style }: { style?: any }) {
                     style={styles.image}
                     resizeMode="contain"
                     onError={handleImageError}
-                    onLoad={() => console.log('[Logo] Image loaded successfully')}
+                    onLoad={() => logDebug('Logo', 'Image loaded successfully')}
                 />
             ) : (
                 // Текстовый вариант (показывается если изображение не загрузилось)

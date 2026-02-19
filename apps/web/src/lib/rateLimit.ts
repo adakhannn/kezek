@@ -14,12 +14,22 @@
 
 import { logWarn } from './log';
 
+/**
+ * Конфигурация ограничения запросов.
+ * @property maxRequests Максимальное количество запросов в окне.
+ * @property windowMs Длительность окна в миллисекундах.
+ * @property identifier Необязательный фиксированный идентификатор (если не задан — используется IP).
+ */
 type RateLimitConfig = {
-    maxRequests: number; // Максимальное количество запросов
-    windowMs: number; // Окно времени в миллисекундах
-    identifier?: string; // Дополнительный идентификатор (например, IP, user_id)
+    maxRequests: number;
+    windowMs: number;
+    identifier?: string;
 };
 
+/**
+ * Результат проверки лимита для конкретного ключа.
+ * Используется как для Redis, так и для in-memory реализации.
+ */
 type RateLimitResult = {
     success: boolean;
     limit: number;
@@ -48,8 +58,9 @@ if (typeof setInterval !== 'undefined' && typeof window === 'undefined') {
  */
 async function getRedisClient() {
     // Проверяем наличие Upstash Redis переменных
-    const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    const { getUpstashRedisUrl, getUpstashRedisToken } = await import('./env');
+    const redisUrl = getUpstashRedisUrl();
+    const redisToken = getUpstashRedisToken();
     
     if (!redisUrl || !redisToken) {
         return null; // Fallback на in-memory

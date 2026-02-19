@@ -3,15 +3,13 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 /**
  * POST /api/admin/initialize-ratings
@@ -24,6 +22,8 @@ export async function POST(req: Request) {
         req,
         RateLimitConfigs.critical,
         () => withErrorHandler('InitializeRatings', async () => {
+        const URL = getSupabaseUrl();
+        const ANON = getSupabaseAnonKey();
         const cookieStore = await cookies();
         const supabase = createServerClient(URL, ANON, {
             cookies: { get: (n: string) => cookieStore.get(n)?.value, set: () => {}, remove: () => {} },

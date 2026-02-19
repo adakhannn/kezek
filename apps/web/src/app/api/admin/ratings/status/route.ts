@@ -1,4 +1,5 @@
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -15,8 +16,11 @@ export const runtime = 'nodejs';
  * - количество записей без rating_score;
  * - признак, что данные в целом есть.
  */
-export async function GET() {
-    return withErrorHandler('RatingsStatus', async () => {
+export async function GET(req: Request) {
+    return withRateLimit(
+        req,
+        RateLimitConfigs.normal,
+        () => withErrorHandler('RatingsStatus', async () => {
         // Используем унифицированную утилиту для создания Supabase клиента
         const supabase = await createSupabaseServerClient();
 
@@ -72,7 +76,7 @@ export async function GET() {
             branches_without_rating: branchesNoRating ?? null,
             businesses_without_rating: bizNoRating ?? null,
         });
-    });
+    }));
 }
 
 

@@ -9,13 +9,15 @@ import { useToast } from '../contexts/ToastContext';
 import { formatDate, formatTime, formatPhone } from '../utils/format';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { logError } from '../lib/log';
+import { RootStackParamList } from '../navigation/types';
 
 type BookingDetailsRouteParams = {
     id: string;
 };
 
 type BookingDetailsScreenRouteProp = RouteProp<{ params: BookingDetailsRouteParams }, 'params'>;
-type BookingDetailsScreenNavigationProp = NativeStackNavigationProp<any>;
+type BookingDetailsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 type BookingDetails = {
     id: string;
@@ -74,7 +76,7 @@ export default function BookingDetailsScreen() {
                 .single();
 
             if (error) {
-                console.error('[BookingDetailsScreen] Error fetching booking:', error);
+                logError('BookingDetailsScreen', 'Error fetching booking', error);
                 throw error;
             }
             

@@ -12,12 +12,13 @@ import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
+import { RootStackParamList } from '../../navigation/types';
 
 type RouteParams = {
     slug: string;
 };
 
-type NavigationProp = NativeStackNavigationProp<any>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type RouteProp = RouteProp<{ params: RouteParams }, 'params'>;
 
 export default function BookingStep1Branch() {
@@ -74,8 +75,8 @@ export default function BookingStep1Branch() {
 
     const handleNext = () => {
         if (bookingData.branchId) {
-            // @ts-ignore
-            navigation.navigate('BookingStep2Service');
+            // Навигация в BookingStep2Service находится в RootStack
+            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep2Service');
         }
     };
 

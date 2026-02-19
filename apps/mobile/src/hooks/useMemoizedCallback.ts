@@ -4,7 +4,7 @@ import { useCallback, useRef } from 'react';
  * Хук для мемоизации колбэков с зависимостями
  * Полезно для оптимизации производительности
  */
-export function useMemoizedCallback<T extends (...args: any[]) => any>(
+export function useMemoizedCallback<T extends (...args: unknown[]) => unknown>(
     callback: T,
     deps: React.DependencyList
 ): T {

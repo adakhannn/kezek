@@ -5,10 +5,11 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { supabase } from '../lib/supabase';
-import { CabinetStackParamList } from '../navigation/types';
+import { CabinetStackParamList, RootStackParamList } from '../navigation/types';
 import { formatDate, formatTime } from '../utils/format';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { logError, logDebug } from '../lib/log';
 
 type CabinetScreenNavigationProp = NativeStackNavigationProp<CabinetStackParamList, 'CabinetMain'>;
 
@@ -49,11 +50,11 @@ export default function CabinetScreen() {
         queryKey: ['bookings', user?.id],
         queryFn: async () => {
             if (!user?.id) {
-                console.log('[CabinetScreen] No user ID, returning empty array');
+                logDebug('CabinetScreen', 'No user ID, returning empty array');
                 return [];
             }
 
-            console.log('[CabinetScreen] Fetching bookings for user:', user.id);
+            logDebug('CabinetScreen', 'Fetching bookings for user', { userId: user.id });
 
             const { data, error } = await supabase
                 .from('bookings')
@@ -72,11 +73,11 @@ export default function CabinetScreen() {
                 .limit(50);
 
             if (error) {
-                console.error('[CabinetScreen] Error fetching bookings:', error);
+                logError('CabinetScreen', 'Error fetching bookings', error);
                 throw error;
             }
             
-            console.log('[CabinetScreen] Bookings loaded:', data?.length || 0);
+            logDebug('CabinetScreen', 'Bookings loaded', { count: data?.length || 0 });
             return data as Booking[];
         },
         enabled: !!user?.id,
@@ -116,8 +117,8 @@ export default function CabinetScreen() {
     };
 
     const handleBookingPress = (bookingId: string) => {
-        // @ts-ignore - типы навигации будут исправлены позже
-        navigation.navigate('BookingDetails', { id: bookingId });
+        // Навигация в BookingDetails находится в RootStack, поэтому используем type assertion
+        (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingDetails', { id: bookingId });
     };
 
 

@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
+
 type Body = {
     full_name?: string | null;
     email?: string | null;
@@ -28,9 +30,9 @@ export async function POST(req: Request, ctx: unknown) {
         const email = body.email?.trim() || null;
         const phone = body.phone?.trim() || null;
 
-        const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const URL = getSupabaseUrl();
+        const ANON = getSupabaseAnonKey();
+        const SERVICE = getSupabaseServiceRoleKey();
         const cookieStore = await cookies();
 
         // 1) Проверка авторизации и что вызывающий — global super_admin

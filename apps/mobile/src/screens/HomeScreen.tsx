@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { supabase } from '../lib/supabase';
-import { MainTabParamList } from '../navigation/types';
+import { MainTabParamList, RootStackParamList } from '../navigation/types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -16,6 +16,7 @@ import Logo from '../components/Logo';
 import RatingBadge from '../components/ui/RatingBadge';
 import { colors } from '../constants/colors';
 import { formatPhone } from '../utils/format';
+import { logError, logDebug } from '../lib/log';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Home'>;
 
@@ -56,10 +57,10 @@ export default function HomeScreen() {
 
             const { data, error } = await query.limit(20).order('name');
             if (error) {
-                console.error('[HomeScreen] Error fetching businesses:', error);
+                logError('HomeScreen', 'Error fetching businesses', error);
                 throw error;
             }
-            console.log('[HomeScreen] Businesses loaded:', data?.length || 0);
+            logDebug('HomeScreen', 'Businesses loaded', { count: data?.length || 0 });
             return data as Business[];
         },
     });
@@ -83,8 +84,8 @@ export default function HomeScreen() {
     };
 
     const handleBusinessPress = (slug: string) => {
-        // @ts-ignore - типы навигации будут исправлены позже
-        navigation.navigate('Booking', { slug });
+        // Навигация в Booking находится в RootStack, поэтому используем type assertion
+        (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('Booking', { slug });
     };
 
     const handleCategoryPress = (category: string | null) => {

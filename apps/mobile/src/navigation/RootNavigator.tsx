@@ -9,6 +9,7 @@ import { linking } from './linking';
 import { colors } from '../constants/colors';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import { logError, logDebug, logWarn } from '../lib/log';
 import BookingDetailsScreen from '../screens/BookingDetailsScreen';
 import BookingScreen from '../screens/BookingScreen';
 import BookingStep1Branch from '../screens/booking/BookingStep1Branch';
@@ -23,13 +24,13 @@ import { BookingProvider } from '../contexts/BookingContext';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-    const [session, setSession] = useState<any>(null);
+    const [session, setSession] = useState<unknown>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         // Проверяем текущую сессию
         supabase.auth.getSession().then(({ data: { session } }) => {
-            console.log('[RootNavigator] Initial session check:', session ? 'has session' : 'no session');
+            logDebug('RootNavigator', 'Initial session check', { hasSession: !!session });
             setSession(session);
             setLoading(false);
         });
@@ -38,12 +39,12 @@ export default function RootNavigator() {
         const {
             data: { subscription: authSubscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log('[RootNavigator] Auth state changed:', event, 'hasSession:', !!session);
+            logDebug('RootNavigator', 'Auth state changed', { event, hasSession: !!session });
             setSession(session);
             
             // Если пользователь авторизовался, обновляем состояние
             if (event === 'SIGNED_IN' && session) {
-                console.log('[RootNavigator] User signed in, updating UI');
+                logDebug('RootNavigator', 'User signed in, updating UI');
             }
         });
 
@@ -51,10 +52,10 @@ export default function RootNavigator() {
         const handleDeepLink = async (url: string) => {
             if (!url) return;
 
-            console.log('[RootNavigator] Handling deep link:', url);
+            logDebug('RootNavigator', 'Handling deep link', { url });
 
             try {
-                console.log('[RootNavigator] Processing URL:', url);
+                logDebug('RootNavigator', 'Processing URL', { url });
                 
                 // Проверяем, является ли это callback URL (поддерживаем и https:// и kezek://)
                 const isCallbackUrl = 
@@ -66,27 +67,27 @@ export default function RootNavigator() {
                     url.includes('refresh_token=');
                 
                 if (isCallbackUrl) {
-                    console.log('[RootNavigator] Detected callback URL');
+                    logDebug('RootNavigator', 'Detected callback URL');
                     // Извлекаем токены из URL
                     let urlObj: URL;
                     try {
                         urlObj = new URL(url);
                     } catch (e) {
                         // Если URL не валидный, пытаемся обработать как deep link
-                        console.log('[RootNavigator] Invalid URL format, trying to parse manually');
+                        logDebug('RootNavigator', 'Invalid URL format, trying to parse manually');
                         const hashMatch = url.match(/#access_token=([^&]+)&refresh_token=([^&]+)/);
                         if (hashMatch) {
                             const accessToken = decodeURIComponent(hashMatch[1]);
                             const refreshToken = decodeURIComponent(hashMatch[2]);
-                            console.log('[RootNavigator] Found tokens in hash, setting session');
+                            logDebug('RootNavigator', 'Found tokens in hash, setting session');
                             const { error } = await supabase.auth.setSession({
                                 access_token: accessToken,
                                 refresh_token: refreshToken,
                             });
                             if (error) {
-                                console.error('[RootNavigator] Error setting session:', error);
+                                logError('RootNavigator', 'Error setting session', error);
                             } else {
-                                console.log('[RootNavigator] Session set successfully');
+                                logDebug('RootNavigator', 'Session set successfully');
                             }
                             return;
                         }
@@ -101,7 +102,7 @@ export default function RootNavigator() {
                     const code = queryParams.get('code');
                     const exchangeCode = queryParams.get('exchange_code'); // Код для обмена через API
 
-                    console.log('[RootNavigator] Extracted from URL:', { 
+                    logDebug('RootNavigator', 'Extracted from URL', { 
                         hasAccessToken: !!accessToken, 
                         hasRefreshToken: !!refreshToken, 
                         hasCode: !!code,
@@ -110,7 +111,7 @@ export default function RootNavigator() {
 
                     // Приоритет 1: Обмен кода через API (самый безопасный способ)
                     if (exchangeCode) {
-                        console.log('[RootNavigator] Exchanging code via API:', exchangeCode);
+                        logDebug('RootNavigator', 'Exchanging code via API', { exchangeCode });
                         try {
                             // Используем тот же способ получения API_URL, что и в api.ts
                             const Constants = require('expo-constants').default;
@@ -120,82 +121,82 @@ export default function RootNavigator() {
                                 Constants.manifest?.extra?.apiUrl ||
                                 'https://kezek.kg';
                             
-                            console.log('[RootNavigator] API URL:', apiUrl);
+                            logDebug('RootNavigator', 'API URL', { apiUrl });
                             const response = await fetch(`${apiUrl}/api/auth/mobile-exchange?code=${encodeURIComponent(exchangeCode)}`);
                             
                             if (response.ok) {
                                 const { accessToken: apiAccessToken, refreshToken: apiRefreshToken } = await response.json();
-                                console.log('[RootNavigator] Tokens received from API, setting session');
+                                logDebug('RootNavigator', 'Tokens received from API, setting session');
                                 const { error } = await supabase.auth.setSession({
                                     access_token: apiAccessToken,
                                     refresh_token: apiRefreshToken,
                                 });
                                 if (error) {
-                                    console.error('[RootNavigator] Error setting session from API:', error);
+                                    logError('RootNavigator', 'Error setting session from API', error);
                                 } else {
-                                    console.log('[RootNavigator] Session set successfully from API');
+                                    logDebug('RootNavigator', 'Session set successfully from API');
                                 }
                             } else {
                                 const errorText = await response.text();
-                                console.error('[RootNavigator] API exchange failed:', response.status, errorText);
+                                logError('RootNavigator', 'API exchange failed', { status: response.status, errorText });
                             }
                         } catch (error) {
-                            console.error('[RootNavigator] Error exchanging code via API:', error);
+                            logError('RootNavigator', 'Error exchanging code via API', error);
                         }
                     } else if (accessToken && refreshToken) {
                         // Приоритет 2: Прямые токены из URL
-                        console.log('[RootNavigator] Setting session from tokens');
+                        logDebug('RootNavigator', 'Setting session from tokens');
                         const { error } = await supabase.auth.setSession({
                             access_token: accessToken,
                             refresh_token: refreshToken,
                         });
                         if (error) {
-                            console.error('[RootNavigator] Error setting session:', error);
+                            logError('RootNavigator', 'Error setting session', error);
                         } else {
-                            console.log('[RootNavigator] Session set successfully');
+                            logDebug('RootNavigator', 'Session set successfully');
                         }
                     } else if (code) {
                         // Приоритет 3: OAuth code от Supabase
-                        console.log('[RootNavigator] Exchanging code for session');
+                        logDebug('RootNavigator', 'Exchanging code for session');
                         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                         if (error) {
-                            console.error('[RootNavigator] Error exchanging code:', error);
+                            logError('RootNavigator', 'Error exchanging code', error);
                         } else {
-                            console.log('[RootNavigator] Code exchanged successfully, session created');
+                            logDebug('RootNavigator', 'Code exchanged successfully, session created');
                         }
                     } else {
-                        console.warn('[RootNavigator] No tokens or code found in URL');
+                        logWarn('RootNavigator', 'No tokens or code found in URL');
                     }
                 }
             } catch (error) {
-                console.error('[RootNavigator] Error handling deep link:', error);
+                logError('RootNavigator', 'Error handling deep link', error);
             }
         };
 
         // Проверяем initial URL при запуске
         Linking.getInitialURL().then((url) => {
             if (url) {
-                console.log('[RootNavigator] Initial URL:', url);
+                logDebug('RootNavigator', 'Initial URL', { url });
                 handleDeepLink(url);
             } else {
-                console.log('[RootNavigator] No initial URL');
+                logDebug('RootNavigator', 'No initial URL');
             }
         });
 
         // Слушаем входящие ссылки во время работы приложения
         const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
-            console.log('[RootNavigator] URL event received:', url);
+            logDebug('RootNavigator', 'URL event received', { url });
             handleDeepLink(url);
         });
         
         // Также слушаем изменения сессии от Supabase (на случай, если сессия установилась другим способом)
         const { data: { subscription: sessionSubscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log('[RootNavigator] Auth state changed:', event, 'hasSession:', !!session);
+            logDebug('RootNavigator', 'Auth state changed', { event, hasSession: !!session });
             if (event === 'SIGNED_IN' && session) {
-                console.log('[RootNavigator] User signed in, session:', session.user.id);
+                logDebug('RootNavigator', 'User signed in', { userId: session.user.id });
                 setSession(session);
             } else if (event === 'SIGNED_OUT') {
-                console.log('[RootNavigator] User signed out');
+                logDebug('RootNavigator', 'User signed out');
                 setSession(null);
             }
         });
@@ -203,12 +204,12 @@ export default function RootNavigator() {
         // Слушаем изменения состояния приложения (когда приложение возвращается из фона)
         const handleAppStateChange = async (nextAppState: AppStateStatus) => {
             if (nextAppState === 'active') {
-                console.log('[RootNavigator] App became active, checking session...');
+                logDebug('RootNavigator', 'App became active, checking session');
                 
                 // Сначала проверяем текущую сессию
                 const { data: { session: currentSession } } = await supabase.auth.getSession();
                 if (currentSession && !session) {
-                    console.log('[RootNavigator] Session found after app became active');
+                    logDebug('RootNavigator', 'Session found after app became active');
                     setSession(currentSession);
                     return;
                 }
@@ -216,7 +217,7 @@ export default function RootNavigator() {
                 // Если сессии нет, проверяем, есть ли pending токены через API
                 // Это может помочь, если deep link не сработал, но пользователь авторизовался на веб-сайте
                 if (!currentSession) {
-                    console.log('[RootNavigator] No session, checking for pending tokens...');
+                    logDebug('RootNavigator', 'No session, checking for pending tokens');
                     try {
                         const Constants = require('expo-constants').default;
                         const apiUrl = 
@@ -229,7 +230,7 @@ export default function RootNavigator() {
                         if (checkResponse.ok) {
                             const checkData = await checkResponse.json();
                             if (checkData.hasPending && checkData.code) {
-                                console.log('[RootNavigator] Found pending tokens, exchanging code:', checkData.code);
+                                logDebug('RootNavigator', 'Found pending tokens, exchanging code', { code: checkData.code });
                                 
                                 // Обмениваем код на токены
                                 const exchangeResponse = await fetch(`${apiUrl}/api/auth/mobile-exchange?code=${encodeURIComponent(checkData.code)}`);
@@ -240,24 +241,24 @@ export default function RootNavigator() {
                                         refresh_token: refreshToken,
                                     });
                                     if (!error) {
-                                        console.log('[RootNavigator] Session set from pending tokens');
+                                        logDebug('RootNavigator', 'Session set from pending tokens');
                                         const { data: { session: newSession } } = await supabase.auth.getSession();
                                         if (newSession) {
                                             setSession(newSession);
                                         }
                                     } else {
-                                        console.error('[RootNavigator] Error setting session from pending tokens:', error);
+                                        logError('RootNavigator', 'Error setting session from pending tokens', error);
                                     }
                                 }
                             } else {
-                                console.log('[RootNavigator] No pending tokens found');
+                                logDebug('RootNavigator', 'No pending tokens found');
                             }
                         }
                     } catch (error) {
-                        console.error('[RootNavigator] Error checking pending tokens:', error);
+                        logError('RootNavigator', 'Error checking pending tokens', error);
                     }
                 } else if (!currentSession && session) {
-                    console.log('[RootNavigator] Session lost after app became active');
+                    logDebug('RootNavigator', 'Session lost after app became active');
                     setSession(null);
                 }
             }
