@@ -1,12 +1,26 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import {HomeHero, HomeBookButtonText, HomeHeader, HomeEmptyState, HomeAboutButtonText} from './_components/HomeClientComponents';
+import { getT, getServerLocale } from './_components/i18n/LanguageProvider';
 
 import { getSupabaseServer } from '@/lib/authBiz';
+import { generateAlternates } from '@/lib/seo';
 
 const PAGE_SIZE = 9;
 
 type SearchParams = { q?: string; cat?: string; page?: string };
+
+export async function generateMetadata(): Promise<Metadata> {
+    const locale = await getServerLocale();
+    const t = getT(locale);
+    
+    return {
+        title: t('home.seo.title'),
+        description: t('home.seo.description'),
+        alternates: generateAlternates('/'),
+    };
+}
 
 type Business = {
     id: string;

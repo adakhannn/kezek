@@ -7,10 +7,10 @@ import ClientCabinet from '../ClientCabinet';
 
 import BookingsPageClient from './BookingsPageClient';
 
+import { TZ } from '@/lib/time';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 export default async function BookingsPage() {
     const cookieStore = await cookies();

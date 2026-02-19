@@ -8,7 +8,7 @@ import {Footer} from './_components/Footer';
 import {Logo} from './_components/Logo';
 import {MobileHeaderMenu} from './_components/MobileHeaderMenu';
 import {ReminderBanners} from './_components/ReminderBanners';
-import {LanguageProvider} from './_components/i18n/LanguageProvider';
+import {LanguageProvider, getServerLocale} from './_components/i18n/LanguageProvider';
 import {LanguageSwitcher} from './_components/i18n/LanguageSwitcher';
 
 import {ErrorBoundary} from '@/components/ErrorBoundary';
@@ -38,13 +38,16 @@ export const metadata: Metadata = {
     },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
                                        children,
                                    }: Readonly<{
     children: React.ReactNode;
 }>) {
+    // Получаем локаль из cookie для установки lang в <html>
+    const locale = await getServerLocale();
+    
     return (
-        <html lang="ky">
+        <html lang={locale}>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ErrorBoundary>
         <PerformanceTracking />

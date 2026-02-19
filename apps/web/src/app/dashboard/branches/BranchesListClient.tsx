@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { ToastContainer } from '@/components/ui/Toast';
 import QRCodeGenerator from '@/components/QRCodeGenerator';
+import { useToast } from '@/hooks/useToast';
 import { transliterate } from '@/lib/transliterate';
 
 type Branch = {
@@ -26,6 +28,7 @@ export default function BranchesListClient({
     businessName: string | null;
 }) {
     const { t, locale } = useLanguage();
+    const toast = useToast();
     const [qrCodeData, setQrCodeData] = useState<{ 
         url: string; 
         branchName: string; 
@@ -48,7 +51,7 @@ export default function BranchesListClient({
 
     const handleGenerateQR = (branch: Branch) => {
         if (!businessSlug) {
-            alert('Не удалось получить информацию о бизнесе');
+            toast.showError(t('branches.qr.businessInfoError', 'Не удалось получить информацию о бизнесе'));
             return;
         }
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
@@ -200,6 +203,7 @@ export default function BranchesListClient({
                     </table>
                 </div>
             </div>
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
         </>
     );

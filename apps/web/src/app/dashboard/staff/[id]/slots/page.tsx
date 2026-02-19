@@ -1,6 +1,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 
+import { getT } from '@/app/_components/i18n/LanguageProvider';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import Client from '@/app/dashboard/staff/[id]/slots/Client';
 import { getBizContextForManagers } from '@/lib/authBiz';
@@ -24,9 +25,10 @@ export default async function StaffSlotsPage({
         .maybeSingle();
 
     if (!staff || String(staff.biz_id) !== String(bizId)) {
+        const t = getT('ru');
         return (
             <main className="p-6 text-red-600">
-                Сотрудник не найден или нет доступа
+                {t('staff.slots.notFound', 'Сотрудник не найден или нет доступа')}
             </main>
         );
     }
@@ -64,9 +66,10 @@ export default async function StaffSlotsPage({
         .order('name_ru');
 
     if (svcErr) {
+        const t = getT('ru');
         return (
             <main className="p-6 text-red-600">
-                Ошибка загрузки услуг: {svcErr.message}
+                {t('staff.slots.error.loadServices', 'Ошибка загрузки услуг')}: {svcErr.message}
             </main>
         );
     }

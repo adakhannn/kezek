@@ -1,0 +1,16 @@
+export const headerKy = {
+    'header.account': 'аккаунт',
+    'header.adminPanel': 'Админ-панель',
+    'header.businessCabinet': 'Бизнес кабинети',
+    'header.cabinetShort': 'Кабинет',
+    'header.language': 'Тил',
+    'header.loading': 'Жүктөп жатабыз...',
+    'header.myBookings': 'Менин жазылыштарым',
+    'header.ownerCabinet': 'Ээсинин кабинети',
+    'header.personalCabinet': 'Жеке кабинет',
+    'header.signIn': 'Кирүү',
+    'header.signInShort': 'Кир',
+    'header.signOut': 'Чыгуу',
+    'header.staffCabinet': 'Кызматкердин кабинети',
+    'header.staffCabinetShort': 'Кызматкер',
+} as const;

@@ -1,0 +1,16 @@
+export const headerRu = {
+    'header.account': 'аккаунт',
+    'header.adminPanel': 'Админ-панель',
+    'header.businessCabinet': 'Кабинет бизнеса',
+    'header.cabinetShort': 'Кабинет',
+    'header.language': 'Язык',
+    'header.loading': 'Загрузка...',
+    'header.myBookings': 'Мои записи',
+    'header.ownerCabinet': 'Кабинет владельца',
+    'header.personalCabinet': 'Личный кабинет',
+    'header.signIn': 'Войти',
+    'header.signInShort': 'Вход',
+    'header.signOut': 'Выйти',
+    'header.staffCabinet': 'Кабинет сотрудника',
+    'header.staffCabinetShort': 'Сотрудник',
+} as const;

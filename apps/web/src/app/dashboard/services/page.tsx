@@ -1,5 +1,6 @@
 import ServicesListClient from '@/app/dashboard/services/ServicesListClient';
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { t } from '@/app/_components/i18n/LanguageProvider';
 
 
 export const dynamic = 'force-dynamic';
@@ -45,7 +46,11 @@ export default async function ServicesListPage({
     ]);
 
     if (error) {
-        return <main className="p-6 text-red-600">Ошибка: {error.message}</main>;
+        return (
+            <main className="p-6 text-red-600">
+                {t('dashboard.services.error', 'Ошибка')}: {error.message}
+            </main>
+        );
     }
 
     // Группируем услуги по названию (убираем дубли)

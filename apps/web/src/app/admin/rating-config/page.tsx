@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { getT } from '@/app/_components/i18n/LanguageProvider';
+
 import { RatingConfigClient } from './RatingConfigClient';
 
 export const dynamic = 'force-dynamic';
@@ -43,17 +45,19 @@ export default async function RatingConfigPage() {
         .limit(1)
         .maybeSingle();
 
+    const t = getT('ru');
+    
     if (superErr) {
         return (
             <main className="p-6">
-                <div className="text-red-600">Ошибка: {superErr.message}</div>
+                <div className="text-red-600">{t('admin.ratingConfig.error.load', 'Ошибка')}: {superErr.message}</div>
             </main>
         );
     }
     if (!superRow) {
         return (
             <main className="p-6">
-                <div className="text-red-600">Нет доступа. Только суперадмин может управлять настройками рейтинга.</div>
+                <div className="text-red-600">{t('admin.ratingConfig.noAccess', 'Нет доступа. Только суперадмин может управлять настройками рейтинга.')}</div>
             </main>
         );
     }
@@ -70,7 +74,7 @@ export default async function RatingConfigPage() {
     if (configError) {
         return (
             <main className="p-6">
-                <div className="text-red-600">Ошибка загрузки конфигурации: {configError.message}</div>
+                <div className="text-red-600">{t('admin.ratingConfig.error.loadConfig', 'Ошибка загрузки конфигурации')}: {configError.message}</div>
             </main>
         );
     }

@@ -87,8 +87,9 @@ export function BookingsList({
     return (
         <>
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="min-w-full">
+            <div className="hidden md:block overflow-x-auto -mx-3 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                    <table className="min-w-full">
                     <thead className="sticky top-0 z-[96]">
                         <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                             <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">#</th>
@@ -136,6 +137,7 @@ export function BookingsList({
                         })}
                     </tbody>
                 </table>
+                </div>
             </div>
 
             {/* Mobile Card View */}
@@ -147,30 +149,37 @@ export function BookingsList({
                     const canMarkAttendance = isPast && b.status !== 'cancelled' && b.status !== 'no_show' && b.status !== 'paid';
 
                     return (
-                        <div key={b.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2 border border-gray-200 dark:border-gray-700">
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                    <Link href={`/booking/${b.id}`} className="text-sm font-mono text-indigo-600 dark:text-indigo-400 hover:underline">
+                        <div key={b.id} className="bg-white dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                    <Link href={`/booking/${b.id}`} className="text-xs font-mono text-indigo-600 dark:text-indigo-400 hover:underline block mb-1">
                                         #{String(b.id).slice(0, 8)}
                                     </Link>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{getServiceName(service)}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400">{master?.full_name}</p>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{getServiceName(service) || '—'}</p>
+                                    {master?.full_name && (
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 truncate">{master.full_name}</p>
+                                    )}
                                 </div>
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
                                     {b.status === 'no_show' ? t('bookings.status.noShowShort', 'не пришел') : b.status === 'paid' && isPast ? t('bookings.status.attended', 'пришел') : t(`bookings.status.${b.status}`, b.status)}
                                 </span>
                             </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                                {formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}
+                            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</span>
                             </div>
-                            <BookingActions
-                                bookingId={b.id}
-                                status={b.status}
-                                startAt={b.start_at}
-                                onConfirm={onConfirm}
-                                onCancel={onCancel}
-                                onMarkAttendance={onMarkAttendance}
-                            />
+                            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                <BookingActions
+                                    bookingId={b.id}
+                                    status={b.status}
+                                    startAt={b.start_at}
+                                    onConfirm={onConfirm}
+                                    onCancel={onCancel}
+                                    onMarkAttendance={onMarkAttendance}
+                                />
+                            </div>
                         </div>
                     );
                 })}

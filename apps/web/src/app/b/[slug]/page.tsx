@@ -1,9 +1,12 @@
 // apps/web/src/app/[slug]/page.tsx
+import type { Metadata } from 'next';
 import { JSX } from 'react';
 
 import BusinessInfo from './BusinessInfo';
+import { getT, getServerLocale } from '@/app/_components/i18n/LanguageProvider';
 
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+import { generateAlternates } from '@/lib/seo';
 
 async function getData(slug: string) {
     const url = getSupabaseUrl();
@@ -21,7 +24,7 @@ async function getData(slug: string) {
 
     // Оптимизация: сначала получаем бизнес, затем параллельно загружаем все остальные данные
     const [biz] = await q(
-        `businesses?select=id,slug,name,address,phones,rating_score&slug=eq.${slug}&is_approved=eq.true&limit=1`
+        `businesses?select=id,slug,name,address,phones,rating_score,tz&slug=eq.${slug}&is_approved=eq.true&limit=1`
     );
     if (!biz) return null;
 
@@ -56,6 +59,38 @@ async function getData(slug: string) {
     }
 
     return { biz, branches, staff, promotions };
+}
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+    const { slug } = await params;
+    const locale = await getServerLocale();
+    const t = getT(locale);
+    
+    // Получаем данные о бизнесе для метаданных
+    const data = await getData(slug);
+    if (!data) {
+        const titleTemplate = t('business.seo.title');
+        const descTemplate = t('business.seo.description');
+        return {
+            title: titleTemplate.replace('{businessName}', 'Бизнес'),
+            description: descTemplate.replace('{businessName}', 'Бизнес'),
+            alternates: generateAlternates(`/b/${slug}`),
+        };
+    }
+    
+    const businessName = data.biz.name || 'Бизнес';
+    const titleTemplate = t('business.seo.title');
+    const descTemplate = t('business.seo.description');
+    
+    return {
+        title: titleTemplate.replace('{businessName}', businessName),
+        description: descTemplate.replace('{businessName}', businessName),
+        alternates: generateAlternates(`/b/${slug}`),
+    };
 }
 
 export default async function Page({

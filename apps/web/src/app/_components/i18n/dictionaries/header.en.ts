@@ -1,0 +1,16 @@
+export const headerEn = {
+    'header.account': 'account',
+    'header.adminPanel': 'Admin panel',
+    'header.businessCabinet': 'Business cabinet',
+    'header.cabinetShort': 'Cabinet',
+    'header.language': 'Language',
+    'header.loading': 'Loading...',
+    'header.myBookings': 'My bookings',
+    'header.ownerCabinet': 'Owner cabinet',
+    'header.personalCabinet': 'Personal cabinet',
+    'header.signIn': 'Sign in',
+    'header.signInShort': 'Login',
+    'header.signOut': 'Sign out',
+    'header.staffCabinet': 'Staff cabinet',
+    'header.staffCabinetShort': 'Staff',
+} as const;

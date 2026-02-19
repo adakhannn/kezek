@@ -5,10 +5,13 @@ import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 
 export default function DeleteBranchButton({ id }: { id: string }) {
     const r = useRouter();
     const { t } = useLanguage();
+    const toast = useToast();
     const [loading, setLoading] = useState(false);
 
     async function onDelete() {
@@ -37,7 +40,7 @@ export default function DeleteBranchButton({ id }: { id: string }) {
                     errorMessage += `\n\n${t('branches.delete.error.firstCancel', 'Сначала отмените или удалите все брони, связанные с этим филиалом.')}`;
                 }
                 
-                alert(errorMessage);
+                toast.showError(errorMessage);
                 return;
             }
             // Редирект на список филиалов после успешного удаления
@@ -48,15 +51,18 @@ export default function DeleteBranchButton({ id }: { id: string }) {
     }
 
     return (
-        <Button
-            type="button"
-            variant="danger"
-            size="sm"
-            onClick={onDelete}
-            disabled={loading}
-            isLoading={loading}
-        >
-            {loading ? t('branches.delete.deleting', 'Удаляем…') : t('branches.delete.button', 'Удалить')}
-        </Button>
+        <>
+            <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={onDelete}
+                disabled={loading}
+                isLoading={loading}
+            >
+                {loading ? t('branches.delete.deleting', 'Удаляем…') : t('branches.delete.button', 'Удалить')}
+            </Button>
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
+        </>
     );
 }

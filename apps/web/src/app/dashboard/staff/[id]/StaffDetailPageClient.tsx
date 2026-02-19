@@ -10,8 +10,7 @@ import StaffServicesEditor from './StaffServicesEditor';
 import TransferStaffDialog from './TransferStaffDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-
-const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
+import { TZ } from '@/lib/time';
 
 type Branch = { id: string; name: string; is_active: boolean };
 type StaffData = {

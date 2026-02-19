@@ -150,29 +150,29 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
             </div>
             
             {(canEdit || canDelete) && (
-                <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                <div className="flex items-center gap-2 sm:ml-3 flex-shrink-0">
                     {canEdit ? (
                         <button
                             type="button"
-                            className="p-2 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-lg transition-all shadow-sm hover:shadow"
+                            className="p-2.5 sm:p-2 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 active:bg-indigo-200 dark:active:bg-indigo-900/70 rounded-lg transition-all shadow-sm hover:shadow touch-manipulation"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onEdit();
                             }}
                             title={t('staff.finance.clients.edit', 'Редактировать')}
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                         </button>
                     ) : editMessage ? (
                         <button
                             type="button"
-                            className="p-2 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-lg cursor-not-allowed opacity-50"
+                            className="p-2.5 sm:p-2 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-lg cursor-not-allowed opacity-50"
                             disabled
                             title={editMessage}
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                         </button>
@@ -180,7 +180,7 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                     {canDelete ? (
                         <button
                             type="button"
-                            className="p-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-all shadow-sm hover:shadow"
+                            className="p-2.5 sm:p-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 active:bg-red-200 dark:active:bg-red-900/70 rounded-lg transition-all shadow-sm hover:shadow touch-manipulation"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (confirm(t('staff.finance.clients.confirmDelete', 'Удалить этого клиента?'))) {
@@ -189,18 +189,18 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                             }}
                             title={t('staff.finance.clients.delete', 'Удалить')}
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                         </button>
                     ) : deleteMessage ? (
                         <button
                             type="button"
-                            className="p-2 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-lg cursor-not-allowed opacity-50"
+                            className="p-2.5 sm:p-2 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-lg cursor-not-allowed opacity-50"
                             disabled
                             title={deleteMessage}
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                         </button>

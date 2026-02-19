@@ -1,5 +1,6 @@
 import BranchForm from '../BranchForm';
 
+import { getT } from '@/app/_components/i18n/LanguageProvider';
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';
@@ -14,11 +15,12 @@ export default async function NewBranchPage() {
     const isSuperAdmin = !!isSuper;
 
     if (!isSuperAdmin) {
+        const t = getT('ru');
         return (
             <main className="mx-auto max-w-3xl p-6">
                 <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-                    <h1 className="text-xl font-semibold mb-2">Нет доступа</h1>
-                    <p>Только суперадмин может создавать филиалы.</p>
+                    <h1 className="text-xl font-semibold mb-2">{t('branches.new.noAccess.title', 'Нет доступа')}</h1>
+                    <p>{t('branches.new.noAccess.description', 'Только суперадмин может создавать филиалы.')}</p>
                 </div>
             </main>
         );

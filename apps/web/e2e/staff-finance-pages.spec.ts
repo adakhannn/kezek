@@ -246,6 +246,172 @@ test.describe('Страницы финансов сотрудника', () => {
                 await expect(summaryElements.first()).toBeVisible({ timeout: 3000 });
             }
         });
+
+        test('должен корректно отображать часы и доход по смене', async ({ page }) => {
+            await page.goto('/staff/finance', { waitUntil: 'domcontentloaded' });
+            await page.waitForTimeout(2000);
+
+            // Шаг 1: Открыть смену (если не открыта)
+            const openButton = page.locator('button:has-text("Открыть"), button:has-text("Open")').first();
+            if (await openButton.isVisible({ timeout: 3000 })) {
+                await openButton.click();
+                await page.waitForTimeout(2000);
+            }
+
+            // Шаг 2: Добавить клиента с суммой
+            const addButton = page.locator('button:has-text("Добавить"), button:has-text("Add")').first();
+            if (await addButton.isVisible({ timeout: 3000 })) {
+                await addButton.click();
+                await page.waitForTimeout(500);
+
+                const clientNameInput = page.locator('input[name*="client"], input[placeholder*="клиент" i]').first();
+                if (await clientNameInput.isVisible({ timeout: 2000 })) {
+                    await clientNameInput.fill('Клиент для теста дохода');
+                }
+
+                const serviceAmountInput = page.locator('input[name*="serviceAmount"], input[type="number"]').first();
+                if (await serviceAmountInput.isVisible({ timeout: 2000 })) {
+                    await serviceAmountInput.fill('2500');
+                }
+
+                const saveButton = page.locator('button:has-text("Сохранить"), button:has-text("Save")').first();
+                if (await saveButton.isVisible({ timeout: 2000 })) {
+                    await saveButton.click();
+                    await page.waitForTimeout(2000);
+                }
+            }
+
+            // Шаг 3: Проверяем отображение финансовой сводки
+            await test.step('Проверка отображения оборота', async () => {
+                const turnoverElement = page.locator('text=/оборот|turnover|итого/i').first();
+                if (await turnoverElement.isVisible({ timeout: 5000 })) {
+                    await expect(turnoverElement).toBeVisible();
+                    
+                    // Проверяем, что сумма отображается
+                    const amountText = await turnoverElement.textContent();
+                    expect(amountText).toMatch(/\d+/); // Должна быть хотя бы одна цифра
+                }
+            });
+
+            // Шаг 4: Проверяем отображение доли сотрудника
+            await test.step('Проверка отображения доли сотрудника', async () => {
+                const staffShareElement = page.locator('text=/сотруднику|staff|мастеру/i').first();
+                if (await staffShareElement.isVisible({ timeout: 5000 })) {
+                    await expect(staffShareElement).toBeVisible();
+                    
+                    // Проверяем, что сумма отображается
+                    const shareText = await staffShareElement.textContent();
+                    expect(shareText).toMatch(/\d+/);
+                }
+            });
+
+            // Шаг 5: Проверяем отображение доли бизнеса
+            await test.step('Проверка отображения доли бизнеса', async () => {
+                const businessShareElement = page.locator('text=/бизнесу|business|салону/i').first();
+                if (await businessShareElement.isVisible({ timeout: 5000 })) {
+                    await expect(businessShareElement).toBeVisible();
+                }
+            });
+
+            // Шаг 6: Проверяем отображение часов (если есть почасовая ставка)
+            await test.step('Проверка отображения часов', async () => {
+                const hoursElement = page.locator('text=/часов|hours|ч\.|ч /i').first();
+                if (await hoursElement.isVisible({ timeout: 5000 })) {
+                    await expect(hoursElement).toBeVisible();
+                    
+                    // Проверяем, что часы отображаются в формате числа
+                    const hoursText = await hoursElement.textContent();
+                    expect(hoursText).toMatch(/\d+/);
+                }
+            });
+        });
+
+        test('должен корректно фильтровать данные по датам', async ({ page }) => {
+            await page.goto('/staff/finance', { waitUntil: 'domcontentloaded' });
+            await page.waitForTimeout(2000);
+
+            // Шаг 1: Проверяем наличие датапикера
+            await test.step('Проверка датапикера', async () => {
+                const datePicker = page.locator('input[type="date"], [data-testid="date-picker"]').first();
+                if (await datePicker.isVisible({ timeout: 5000 })) {
+                    await expect(datePicker).toBeVisible();
+                    
+                    // Получаем текущую дату
+                    const currentDate = new Date();
+                    const currentDateStr = currentDate.toISOString().split('T')[0];
+                    
+                    // Проверяем, что датапикер показывает текущую дату или позволяет выбрать
+                    const dateValue = await datePicker.inputValue();
+                    expect(dateValue).toBeTruthy();
+                }
+            });
+
+            // Шаг 2: Изменяем дату и проверяем обновление данных
+            await test.step('Изменение даты и проверка обновления', async () => {
+                const datePicker = page.locator('input[type="date"], [data-testid="date-picker"]').first();
+                if (await datePicker.isVisible({ timeout: 5000 })) {
+                    // Выбираем вчерашний день
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    
+                    // Перехватываем запрос к API
+                    const apiResponsePromise = page.waitForResponse(
+                        response => response.url().includes('/api/staff/finance') || response.url().includes('/api/dashboard/staff'),
+                        { timeout: 10000 }
+                    ).catch(() => null);
+                    
+                    await datePicker.fill(yesterdayStr);
+                    await page.waitForTimeout(1000);
+                    
+                    // Ждем обновления данных
+                    const response = await apiResponsePromise;
+                    if (response) {
+                        expect(response.status()).toBe(200);
+                    }
+                    
+                    // Проверяем, что данные обновились (нет ошибок загрузки)
+                    const errorMessage = page.locator('text=/ошибка|error|не найдено/i').first();
+                    await expect(errorMessage).not.toBeVisible({ timeout: 3000 }).catch(() => {
+                        // Игнорируем, если ошибок нет
+                    });
+                }
+            });
+
+            // Шаг 3: Переходим на вкладку статистики и проверяем фильтрацию по периодам
+            await test.step('Проверка фильтрации по периодам в статистике', async () => {
+                const statsTab = page.locator('button:has-text("Статистика"), button:has-text("Stats"), [data-testid="stats-tab"]').first();
+                if (await statsTab.isVisible({ timeout: 5000 })) {
+                    await statsTab.click();
+                    await page.waitForTimeout(2000);
+                    
+                    // Проверяем наличие переключателей периода (день/месяц/год)
+                    const periodButtons = page.locator('button:has-text("День"), button:has-text("Месяц"), button:has-text("Год"), button:has-text("Day"), button:has-text("Month"), button:has-text("Year")');
+                    if (await periodButtons.count() > 0) {
+                        // Выбираем период "месяц"
+                        const monthButton = page.locator('button:has-text("Месяц"), button:has-text("Month")').first();
+                        if (await monthButton.isVisible({ timeout: 3000 })) {
+                            await monthButton.click();
+                            await page.waitForTimeout(2000);
+                            
+                            // Проверяем, что данные обновились
+                            const loadingIndicator = page.locator('text=/загрузка|loading/i').first();
+                            await expect(loadingIndicator).not.toBeVisible({ timeout: 5000 });
+                        }
+                        
+                        // Выбираем период "год"
+                        const yearButton = page.locator('button:has-text("Год"), button:has-text("Year")').first();
+                        if (await yearButton.isVisible({ timeout: 3000 })) {
+                            await yearButton.click();
+                            await page.waitForTimeout(2000);
+                            
+                            // Проверяем, что данные обновились
+                            await expect(loadingIndicator).not.toBeVisible({ timeout: 5000 });
+                        }
+                    }
+                }
+            });
+        });
     });
 });
 

@@ -1,22 +1,49 @@
 import { addMinutes, isBefore, max as maxDate, min as minDate } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
-export const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
+/**
+ * Получает таймзону из переменной окружения или возвращает значение по умолчанию
+ * Централизованный доступ к таймзоне для всего приложения
+ */
+export function getTimezone(): string {
+    return process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
+}
 
-export function todayTz(): Date {
+/**
+ * Получает таймзону бизнеса, если она указана, иначе использует дефолтную таймзону
+ * @param businessTz - таймзона бизнеса из базы данных (может быть null или undefined)
+ * @returns таймзона бизнеса или дефолтная таймзона
+ */
+export function getBusinessTimezone(businessTz?: string | null): string {
+    if (businessTz && businessTz.trim()) {
+        return businessTz.trim();
+    }
+    return getTimezone();
+}
+
+/**
+ * Экспорт таймзоны для обратной совместимости
+ * @deprecated Используйте getTimezone() или getBusinessTimezone() для получения таймзоны
+ */
+export const TZ = getTimezone();
+
+export function todayTz(timezone?: string): Date {
+    const tz = timezone || TZ;
     const now = new Date();
     // нормализуем на 00:00 в TZ
-    const s = formatInTimeZone(now, TZ, 'yyyy-MM-dd') + 'T00:00:00';
-    return fromZonedTime(s, TZ);
+    const s = formatInTimeZone(now, tz, 'yyyy-MM-dd') + 'T00:00:00';
+    return fromZonedTime(s, tz);
 }
 
-export function dateAtTz(ymd: string, hhmm: string): Date {
+export function dateAtTz(ymd: string, hhmm: string, timezone?: string): Date {
+    const tz = timezone || TZ;
     const s = `${ymd}T${hhmm}:00`;
-    return fromZonedTime(s, TZ);
+    return fromZonedTime(s, tz);
 }
 
-export function toLabel(d: Date) {
-    return formatInTimeZone(d, TZ, 'HH:mm');
+export function toLabel(d: Date, timezone?: string) {
+    const tz = timezone || TZ;
+    return formatInTimeZone(d, tz, 'HH:mm');
 }
 
 export function rangeClip(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {

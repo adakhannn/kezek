@@ -4,7 +4,9 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { ToastContainer } from '@/components/ui/Toast';
 import { formatDate, formatDateBrowser, formatMonthYear, formatTime } from '@/lib/dateFormat';
+import { useToast } from '@/hooks/useToast';
 import { logDebug, logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
@@ -47,6 +49,7 @@ function ShiftCard({
     locale: string;
     t: (key: string, fallback: string) => string;
 }) {
+    const toast = useToast();
     const [isExpanded, setIsExpanded] = useState(shift.status === 'open');
 
     return (
@@ -150,7 +153,7 @@ function ShiftCard({
                                     if (!input) return;
                                     const next = Number(input.replace(',', '.'));
                                     if (!Number.isFinite(next) || next < 0) {
-                                        alert(
+                                        toast.showError(
                                             t(
                                                 'finance.staffStats.editHoursInvalid',
                                                 'Некорректное значение часов'
@@ -179,7 +182,7 @@ function ShiftCard({
                                         window.location.reload();
                                     } catch (err) {
                                         logError('StaffFinanceStats', 'Failed to update shift hours', err);
-                                        alert(
+                                        toast.showError(
                                             t(
                                                 'finance.staffStats.editHoursError',
                                                 'Не удалось обновить часы. Попробуйте позже.'
@@ -366,6 +369,7 @@ type Stats = {
 
 export default function StaffFinanceStats({ staffId }: { staffId: string }) {
     const { t, locale } = useLanguage();
+    const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState<Period>('day');
     const [date, setDate] = useState(formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
@@ -648,6 +652,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                     </div>
                 </div>
             )}
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }

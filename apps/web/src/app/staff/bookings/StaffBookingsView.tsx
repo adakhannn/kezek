@@ -427,36 +427,41 @@ export default function StaffBookingsView({
                                 {t('staff.cabinet.bookings.subtitle', 'Управляйте своими записями')}
                             </p>
                         </div>
-                        <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                        <div className="flex flex-col sm:flex-row gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
                             <button
-                                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base ${
                                     tab === 'upcoming'
                                         ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 onClick={() => setTab('upcoming')}
                             >
-                                {t('staff.cabinet.bookings.tabs.upcoming', 'Предстоящие')} ({upcoming.length})
+                                <span className="sm:hidden">{t('staff.cabinet.bookings.tabs.upcomingShort', 'Предстоящие')}</span>
+                                <span className="hidden sm:inline">{t('staff.cabinet.bookings.tabs.upcoming', 'Предстоящие')}</span>
+                                <span className="ml-1">({upcoming.length})</span>
                             </button>
                             <button
-                                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base ${
                                     tab === 'past'
                                         ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 onClick={() => setTab('past')}
                             >
-                                {t('staff.cabinet.bookings.tabs.past', 'Прошедшие')} ({past.length})
+                                <span className="sm:hidden">{t('staff.cabinet.bookings.tabs.pastShort', 'Прошедшие')}</span>
+                                <span className="hidden sm:inline">{t('staff.cabinet.bookings.tabs.past', 'Прошедшие')}</span>
+                                <span className="ml-1">({past.length})</span>
                             </button>
                             <button
-                                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base ${
                                     tab === 'create'
                                         ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 onClick={() => setTab('create')}
                             >
-                                {t('staff.cabinet.bookings.tabs.create', 'Создать запись')}
+                                <span className="sm:hidden">{t('staff.cabinet.bookings.tabs.createShort', 'Создать')}</span>
+                                <span className="hidden sm:inline">{t('staff.cabinet.bookings.tabs.create', 'Создать запись')}</span>
                             </button>
                         </div>
                     </div>
@@ -489,17 +494,17 @@ export default function StaffBookingsView({
                                 : t('staff.cabinet.bookings.card.businessDefault', 'Бизнес');
 
                             return (
-                                <Card key={booking.id} variant="elevated" className="p-6 hover:shadow-lg transition-shadow">
+                                <Card key={booking.id} variant="elevated" className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
                                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                                        <div className="flex-1 space-y-3">
-                                            <div className="flex items-center gap-3 flex-wrap">
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                        <div className="flex-1 space-y-3 min-w-0">
+                                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 truncate flex-1 min-w-0">
                                                     {serviceName}
                                                 </h3>
-                                                {getStatusBadge(booking.status)}
+                                                <div className="flex-shrink-0">{getStatusBadge(booking.status)}</div>
                                             </div>
 
-                                            <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                                                 <div>
                                                     <div className="text-gray-500 dark:text-gray-400 mb-1">
                                                         {t('staff.cabinet.bookings.card.time', 'Время')}
@@ -532,9 +537,9 @@ export default function StaffBookingsView({
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-2">
-                                            <Link href={`/booking/${booking.id}`}>
-                                                <Button variant="outline" size="sm">
+                                        <div className="flex gap-2 sm:flex-col">
+                                            <Link href={`/booking/${booking.id}`} className="flex-1 sm:flex-none">
+                                                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                                                     {t('staff.cabinet.bookings.card.details', 'Подробнее')}
                                                 </Button>
                                             </Link>

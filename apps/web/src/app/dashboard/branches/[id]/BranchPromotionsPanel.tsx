@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 import {logError} from '@/lib/log';
 
 type PromotionType = 'free_after_n_visits' | 'referral_free' | 'referral_discount_50' | 'birthday_discount' | 'first_visit_discount';
@@ -37,6 +39,7 @@ const PROMOTION_TYPE_KEYS: Array<{ value: PromotionType; labelKey: string; descK
 
 export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId: string; bizSlug?: string }) {
     const { t } = useLanguage();
+    const toast = useToast();
     const [promotions, setPromotions] = useState<Promotion[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -71,11 +74,11 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                 setPromotions(data.promotions || []);
             } else {
                 logError('BranchPromotions', 'Failed to load promotions', { error: data.error });
-                alert(data.error || t('branches.promotions.error.load', 'Ошибка загрузки акций'));
+                toast.showError(data.error || t('branches.promotions.error.load', 'Ошибка загрузки акций'));
             }
         } catch (error) {
             logError('BranchPromotions', 'Failed to load promotions', error);
-            alert(t('branches.promotions.error.load', 'Ошибка загрузки акций'));
+            toast.showError(t('branches.promotions.error.load', 'Ошибка загрузки акций'));
         } finally {
             setLoading(false);
         }
@@ -146,15 +149,15 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
 
             const data = await res.json();
             if (data.ok) {
-                alert(editingId ? t('branches.promotions.save.success', 'Акция обновлена') : t('branches.promotions.create.success', 'Акция создана'));
+                toast.showSuccess(editingId ? t('branches.promotions.save.success', 'Акция обновлена') : t('branches.promotions.create.success', 'Акция создана'));
                 loadPromotions();
                 cancelForm();
             } else {
-                alert(data.error || t('branches.promotions.error.save', 'Ошибка сохранения акции'));
+                toast.showError(data.error || t('branches.promotions.error.save', 'Ошибка сохранения акции'));
             }
         } catch (error) {
             logError('BranchPromotions', 'Failed to save promotion', error);
-            alert(t('branches.promotions.error.save', 'Ошибка сохранения акции'));
+            toast.showError(t('branches.promotions.error.save', 'Ошибка сохранения акции'));
         }
     }
 
@@ -168,14 +171,14 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
 
             const data = await res.json();
             if (data.ok) {
-                alert(t('branches.promotions.delete.success', 'Акция удалена'));
+                toast.showSuccess(t('branches.promotions.delete.success', 'Акция удалена'));
                 loadPromotions();
             } else {
-                alert(data.error || t('branches.promotions.error.delete', 'Ошибка удаления акции'));
+                toast.showError(data.error || t('branches.promotions.error.delete', 'Ошибка удаления акции'));
             }
         } catch (error) {
             logError('BranchPromotions', 'Failed to delete promotion', error);
-            alert(t('branches.promotions.error.delete', 'Ошибка удаления акции'));
+            toast.showError(t('branches.promotions.error.delete', 'Ошибка удаления акции'));
         }
     }
 
@@ -190,12 +193,12 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                 if (data.ok) {
                     loadPromotions();
                 } else {
-                    alert(data.error || t('branches.promotions.error.update', 'Ошибка обновления акции'));
+                    toast.showError(data.error || t('branches.promotions.error.update', 'Ошибка обновления акции'));
                 }
             })
             .catch((error) => {
                 logError('BranchPromotions', 'Failed to toggle promotion', error);
-                alert(t('branches.promotions.error.update', 'Ошибка обновления акции'));
+                toast.showError(t('branches.promotions.error.update', 'Ошибка обновления акции'));
             });
     }
 
@@ -374,18 +377,18 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                         return (
                             <div
                                 key={promotion.id}
-                                className={`p-4 rounded-lg border ${
+                                className={`p-3 sm:p-4 rounded-lg border ${
                                     promotion.is_active
                                         ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                                         : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                                 }`}
                             >
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="flex-1 space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">{promotion.title_ru}</h4>
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                                    <div className="flex-1 space-y-2 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base truncate flex-1 min-w-0">{promotion.title_ru}</h4>
                                             <span
-                                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
                                                     promotion.is_active
                                                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                                         : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
@@ -423,22 +426,22 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:flex-col">
                                         <button
                                             onClick={() => toggleActive(promotion.id, promotion.is_active)}
-                                            className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                                            className="flex-1 sm:flex-none px-3 py-2 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 transition-all shadow-sm"
                                         >
                                             {promotion.is_active ? t('branches.promotions.deactivate', 'Деактив.') : t('branches.promotions.activate', 'Актив.')}
                                         </button>
                                         <button
                                             onClick={() => startEdit(promotion)}
-                                            className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                                            className="flex-1 sm:flex-none px-3 py-2 text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 transition-all shadow-sm"
                                         >
                                             {t('branches.promotions.edit', 'Редакт.')}
                                         </button>
                                         <button
                                             onClick={() => deletePromotion(promotion.id)}
-                                            className="px-3 py-1.5 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+                                            className="flex-1 sm:flex-none px-3 py-2 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 active:bg-red-200 dark:active:bg-red-900/40 transition-all shadow-sm"
                                         >
                                             {t('branches.promotions.delete', 'Удалить')}
                                         </button>
@@ -449,6 +452,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                     })}
                 </div>
             )}
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }

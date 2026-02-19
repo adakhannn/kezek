@@ -1,6 +1,10 @@
 'use client';
 import { useState } from 'react';
 
+import { t } from '@/app/_components/i18n/LanguageProvider';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
+
 export type QuickPayload = {
     biz_id: string;
     service_id: string;
@@ -18,6 +22,7 @@ export default function SlotButton({
     payload: QuickPayload;
     redirectBase?: string;
 }) {
+    const toast = useToast();
     const [loading, setLoading] = useState(false);
 
     async function onClick() {
@@ -38,15 +43,18 @@ export default function SlotButton({
             window.location.href = `${redirectBase}/${data.booking_id}`;
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
-            alert(msg);
+            toast.showError(msg);
         } finally {
             setLoading(false);
         }
     }
 
     return (
-        <button onClick={onClick} disabled={loading} className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">
-            {label}
-        </button>
+        <>
+            <button onClick={onClick} disabled={loading} className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">
+                {label}
+            </button>
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
+        </>
     );
 }

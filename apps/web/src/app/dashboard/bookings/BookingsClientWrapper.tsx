@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 type BookingsClientProps = {
     bizId: string;
+    businessTz?: string | null;
     services: unknown[];
     staff: unknown[];
     branches: unknown[];

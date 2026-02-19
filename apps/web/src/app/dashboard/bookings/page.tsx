@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { BookingsClientWrapper } from './BookingsClientWrapper';
 
 import { getBizContextForManagers } from '@/lib/authBiz'; // <-- твой рабочий хелпер
+import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,7 +13,7 @@ export default async function Page() {
         const { supabase, bizId } = await getBizContextForManagers();
 
         // 1) Данные для страницы (ВАЖНО: branch_id у services и staff)
-        const [{ data: services }, { data: staff }, { data: branches }] = await Promise.all([
+        const [{ data: services }, { data: staff }, { data: branches }, { data: biz }] = await Promise.all([
             supabase
                 .from('services')
                 .select('id,name_ru,name_ky,name_en,duration_min,active,branch_id')
@@ -33,6 +34,11 @@ export default async function Page() {
                 .eq('biz_id', bizId)
                 .eq('is_active', true)
                 .order('name'),
+            supabase
+                .from('businesses')
+                .select('tz')
+                .eq('id', bizId)
+                .maybeSingle<{ tz: string | null }>(),
         ]);
 
         // 2) Последние брони (для вкладки «Список») - загружаем только первую страницу
@@ -47,6 +53,7 @@ export default async function Page() {
         return (
             <BookingsClientWrapper
                 bizId={bizId}
+                businessTz={biz?.tz || null}
                 services={services || []}
                 staff={staff || []}
                 branches={branches || []}
@@ -60,24 +67,38 @@ export default async function Page() {
         }
         // нет подходящего бизнеса → мягкое сообщение
         if (e instanceof Error && e.message === 'NO_BIZ_ACCESS') {
+            const t = getT('ru');
             return (
                 <main className="p-6">
-                    <h1 className="text-xl font-semibold mb-2">Нет доступа к кабинету</h1>
+                    <h1 className="text-xl font-semibold mb-2">
+                        {t('dashboard.bookings.noAccess.title', 'Нет доступа к кабинету')}
+                    </h1>
                     <p className="text-sm text-gray-600">
-                        У вашей учётной записи нет ролей <code>owner / admin / manager</code> ни в одном бизнесе.
+                        {t(
+                            'dashboard.bookings.noAccess.description',
+                            'У вашей учётной записи нет ролей owner / admin / manager ни в одном бизнесе.'
+                        )}
                     </p>
                 </main>
             );
         }
         // Другие ошибки
+        const t = getT('ru');
         return (
             <main className="p-6">
-                <h1 className="text-xl font-semibold mb-2 text-red-600">Ошибка</h1>
+                <h1 className="text-xl font-semibold mb-2 text-red-600">
+                    {t('dashboard.bookings.error.title', 'Ошибка')}
+                </h1>
                 <p className="text-sm text-gray-600">
-                    Произошла ошибка при загрузке броней. Пожалуйста, попробуйте обновить страницу.
+                    {t(
+                        'dashboard.bookings.error.description',
+                        'Произошла ошибка при загрузке броней. Пожалуйста, попробуйте обновить страницу.'
+                    )}
                 </p>
                 {e instanceof Error && (
-                    <p className="text-xs text-gray-500 mt-2">Детали: {e.message}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                        {t('dashboard.bookings.error.details', 'Детали')}: {e.message}
+                    </p>
                 )}
             </main>
         );

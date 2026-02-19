@@ -1,6 +1,9 @@
+import { formatInTimeZone, zonedTimeToUtc } from 'date-fns-tz';
+
 import { DashboardHomeClient } from './components/DashboardHomeClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { getBusinessTimezone } from '@/lib/time';
 
 
 export const dynamic = 'force-dynamic';
@@ -30,31 +33,23 @@ async function count(
 export default async function DashboardHome() {
     const { supabase, bizId } = await getBizContextForManagers();
 
-    // диапазон «сегодня» в TZ бизнеса можно будет брать из businesses.tz.
-    // Пока используем локальный день (UTC+06 можно подставить при желании).
-    const today = new Date();
-    const y = today.getUTCFullYear();
-    const m = String(today.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(today.getUTCDate()).padStart(2, '0');
-    const start = `${y}-${m}-${d}T00:00:00Z`;
-    const end   = `${y}-${m}-${d}T23:59:59Z`;
-
     const [
         [bookingsToday, staffActive, servicesActive, branchesCount],
         { data: biz },
         { data: ratingConfig },
     ] = await Promise.all([
         Promise.all([
-            count(supabase, 'bookings', [{ col: 'biz_id', eq: bizId }, { col: 'start_at', gte: start }, { col: 'start_at', lte: end }]),
+            // bookingsToday будет пересчитан после получения таймзоны бизнеса
+            Promise.resolve(0),
             count(supabase, 'staff', [{ col: 'biz_id', eq: bizId }, { col: 'is_active', eq: true }]),
             count(supabase, 'services', [{ col: 'biz_id', eq: bizId }, { col: 'active', eq: true }]),
             count(supabase, 'branches', [{ col: 'biz_id', eq: bizId }, { col: 'is_active', eq: true }]),
         ]),
         supabase
             .from('businesses')
-            .select('name, city, slug, rating_score')
+            .select('name, city, slug, rating_score, tz')
             .eq('id', bizId)
-            .maybeSingle<{ name: string | null; city: string | null; slug: string | null; rating_score: number | null }>(),
+            .maybeSingle<{ name: string | null; city: string | null; slug: string | null; rating_score: number | null; tz: string | null }>(),
         supabase
             .from('rating_global_config')
             .select('staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days')
@@ -70,12 +65,32 @@ export default async function DashboardHome() {
             }>(),
     ]);
 
+    // Используем таймзону бизнеса для расчета диапазона "сегодня"
+    const businessTz = getBusinessTimezone(biz?.tz);
+    const now = new Date();
+    const todayStr = formatInTimeZone(now, businessTz, 'yyyy-MM-dd');
+    // Начало дня в таймзоне бизнеса
+    const startOfDay = zonedTimeToUtc(`${todayStr}T00:00:00`, businessTz);
+    // Конец дня в таймзоне бизнеса
+    const endOfDay = zonedTimeToUtc(`${todayStr}T23:59:59.999`, businessTz);
+    const start = startOfDay.toISOString();
+    const end = endOfDay.toISOString();
+
+    // Пересчитываем bookingsToday с правильным диапазоном дат
+    const { count: bookingsTodayCount } = await supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('biz_id', bizId)
+        .gte('start_at', start)
+        .lte('start_at', end);
+    const bookingsToday = bookingsTodayCount ?? 0;
+
     const bizName = biz?.name || null; // Передаем null, чтобы перевести на клиенте
     const bizCity = biz?.city || null;
     const bizRatingScore = biz?.rating_score ?? null;
 
     // Передаем ISO строку, форматирование будет на клиенте с учетом локали
-    const formattedDate = today.toISOString();
+    const formattedDate = now.toISOString();
 
     const needOnboarding =
         bookingsToday === 0 || staffActive === 0 || servicesActive === 0 || branchesCount === 0;

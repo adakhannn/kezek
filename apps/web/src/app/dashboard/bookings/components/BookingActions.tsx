@@ -34,32 +34,32 @@ export function BookingActions({
             {status === 'hold' && (
                 <button
                     onClick={() => onConfirm(bookingId)}
-                    className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm hover:shadow"
                 >
-                    {t('bookings.list.confirm', 'Подтвердить')}
+                    {t('bookings.actions.confirm', 'Подтвердить')}
                 </button>
             )}
             {status !== 'cancelled' && status !== 'paid' && (
                 <button
                     onClick={() => onCancel(bookingId)}
-                    className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    className="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors shadow-sm hover:shadow"
                 >
-                    {t('bookings.list.cancel', 'Отменить')}
+                    {t('bookings.actions.cancel', 'Отменить')}
                 </button>
             )}
             {canMarkAttendance && (
                 <>
                     <button
                         onClick={() => onMarkAttendance(bookingId, true)}
-                        className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        className="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 transition-colors shadow-sm hover:shadow"
                     >
-                        {t('bookings.list.attended', 'Пришел')}
+                        {t('bookings.actions.attended', 'Пришел')}
                     </button>
                     <button
                         onClick={() => onMarkAttendance(bookingId, false)}
-                        className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                        className="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium bg-orange-600 text-white rounded-lg hover:bg-orange-700 active:bg-orange-800 transition-colors shadow-sm hover:shadow"
                     >
-                        {t('bookings.list.noShow', 'Не пришел')}
+                        {t('bookings.actions.noShow', 'Не пришел')}
                     </button>
                 </>
             )}

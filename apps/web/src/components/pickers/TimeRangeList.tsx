@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import type React from 'react';
 
+import { t } from '@/app/_components/i18n/LanguageProvider';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
+
 export type TimeRange = { start: string; end: string };
 
 function normalize(t: string) {
@@ -23,13 +27,17 @@ export default function TimeRangeList({
     items: TimeRange[];
     onChange: (next: TimeRange[]) => void;
 }) {
+    const toast = useToast();
     const [draft, setDraft] = useState<TimeRange>({ start: '09:00', end: '18:00' });
 
     function add() {
         const s = normalize(draft.start);
         const e = normalize(draft.end);
         if (!s || !e) return;
-        if (s >= e) return alert('Начало должно быть раньше конца');
+        if (s >= e) {
+            toast.showError(t('timeRange.startBeforeEnd', 'Начало должно быть раньше конца'));
+            return;
+        }
         onChange([...items, { start: s, end: e }]);
     }
     function removeAt(i: number) {
@@ -68,8 +76,9 @@ export default function TimeRangeList({
                         <button className="border rounded px-2 py-1" onClick={()=>removeAt(i)}>Удалить</button>
                     </div>
                 ))}
-                {items.length===0 && <div className="text-xs text-gray-400">Пока пусто</div>}
+                {items.length===0 && <div className="text-xs text-gray-400">{t('timeRange.empty', 'Пока пусто')}</div>}
             </div>
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }

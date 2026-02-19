@@ -5,6 +5,8 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
@@ -320,6 +322,7 @@ export default function Client({
     homeBranchId: string;
 }) {
     const { t } = useLanguage();
+    const toast = useToast();
     const [activeTab, setActiveTab] = useState<'schedule' | 'transfers'>('schedule');
     const [saving, setSaving] = useState(false);
     const [rules, setRules] = useState<
@@ -550,7 +553,7 @@ export default function Client({
             );
         } catch (e) {
             logError('StaffScheduleClient', 'Error applying branch schedule', e);
-            alert('Ошибка при применении расписания филиала: ' + (e instanceof Error ? e.message : String(e)));
+            toast.showError(t('staff.schedule.applyBranchError', 'Ошибка при применении расписания филиала:') + ' ' + (e instanceof Error ? e.message : String(e)));
         } finally {
             setSaving(false);
         }
@@ -668,7 +671,7 @@ export default function Client({
             );
         } catch (error) {
             logError('StaffScheduleClient', 'Error saving schedule', error);
-            alert(t('staff.schedule.saveError', 'Ошибка при сохранении расписания'));
+            toast.showError(t('staff.schedule.saveError', 'Ошибка при сохранении расписания'));
         } finally {
             setSaving(false);
         }
@@ -1072,6 +1075,7 @@ function TransfersTab({
                     </div>
                 </div>
             </div>
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }

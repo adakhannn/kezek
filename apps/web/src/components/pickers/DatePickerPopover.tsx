@@ -5,22 +5,58 @@ import { useEffect, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
-// Русские названия для календаря
-const MONTHS = [
-    'Январь',
-    'Февраль',
-    'Март',
-    'Апрель',
-    'Май',
-    'Июнь',
-    'Июль',
-    'Август',
-    'Сентябрь',
-    'Октябрь',
-    'Ноябрь',
-    'Декабрь',
-];
-const WEEKDAYS_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
+// Локализованные названия месяцев и дней недели
+const MONTHS_BY_LOCALE: Record<'ky' | 'ru' | 'en', string[]> = {
+    ru: [
+        'Январь',
+        'Февраль',
+        'Март',
+        'Апрель',
+        'Май',
+        'Июнь',
+        'Июль',
+        'Август',
+        'Сентябрь',
+        'Октябрь',
+        'Ноябрь',
+        'Декабрь',
+    ],
+    ky: [
+        'Январь',
+        'Февраль',
+        'Март',
+        'Апрель',
+        'Май',
+        'Июнь',
+        'Июль',
+        'Август',
+        'Сентябрь',
+        'Октябрь',
+        'Ноябрь',
+        'Декабрь',
+    ],
+    en: [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+    ],
+};
+const WEEKDAYS_SHORT_BY_LOCALE: Record<'ky' | 'ru' | 'en', string[]> = {
+    ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+    ky: ['Жк', 'Дш', 'Шш', 'Шр', 'Бш', 'Жм', 'Иш'],
+    en: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+};
 
 // --- helpers: локальное форматирование/парсинг YYYY-MM-DD без UTC-сдвига
 function toYmdLocal(d: Date): string {
@@ -85,9 +121,14 @@ export default function DatePickerPopover({
         }
     }, [isOpen]);
 
+    const { t, locale } = useLanguage();
+
     const displayValue = selected
         ? format(selected, 'dd.MM.yyyy')
-        : 'Выберите дату';
+        : t('datePicker.placeholder', 'Выберите дату');
+
+    const MONTHS = MONTHS_BY_LOCALE[locale];
+    const WEEKDAYS_SHORT = WEEKDAYS_SHORT_BY_LOCALE[locale];
 
     return (
         <div className={`relative ${className}`}>
@@ -98,7 +139,11 @@ export default function DatePickerPopover({
                 onClick={() => setIsOpen(!isOpen)}
                 aria-expanded={isOpen}
                 aria-haspopup="dialog"
-                aria-label={selected ? `Выбранная дата: ${displayValue}` : 'Выбрать дату'}
+                aria-label={
+                    selected
+                        ? t('datePicker.selected', `Выбранная дата: ${displayValue}`)
+                        : t('datePicker.open', 'Выбрать дату')
+                }
                 className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[40px] sm:py-2 sm:text-sm touch-manipulation"
             >
                 {/* Иконка календаря */}
@@ -141,7 +186,7 @@ export default function DatePickerPopover({
                     ref={popoverRef}
                     role="dialog"
                     aria-modal="false"
-                    aria-label="Выбор даты"
+                    aria-label={t('datePicker.dialogLabel', 'Выбор даты')}
                     className="absolute left-0 top-full z-50 mt-2 border rounded-lg p-3 bg-white dark:bg-[#0b0b0d] shadow-lg sm:left-auto sm:right-0 sm:p-2 max-w-[calc(100vw-2rem)] sm:max-w-none"
                 >
                     <DayPicker
@@ -169,10 +214,10 @@ export default function DatePickerPopover({
                             },
                         }}
                         labels={{
-                            labelMonthDropdown: () => 'Месяц',
-                            labelYearDropdown: () => 'Год',
-                            labelNext: () => 'Следующий месяц',
-                            labelPrevious: () => 'Предыдущий месяц',
+                            labelMonthDropdown: () => t('datePicker.monthLabel', 'Месяц'),
+                            labelYearDropdown: () => t('datePicker.yearLabel', 'Год'),
+                            labelNext: () => t('datePicker.nextMonth', 'Следующий месяц'),
+                            labelPrevious: () => t('datePicker.prevMonth', 'Предыдущий месяц'),
                         }}
                         classNames={{
                             root: 'w-full',

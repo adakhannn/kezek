@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
 import { validatePhone } from '@/lib/validation';
+import { t } from '@/app/_components/i18n/LanguageProvider';
 
 type Props = {
     onDismiss?: () => void;
@@ -24,13 +25,19 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
         
         const trimmedPhone = phone.trim();
         if (!trimmedPhone) {
-            setError('Введите номер телефона');
+            setError(t('notifications.whatsapp.enterPhone', 'Введите номер телефона'));
             return;
         }
 
         const phoneValidation = validatePhone(trimmedPhone, true);
         if (!phoneValidation.valid) {
-            setError(phoneValidation.error || 'Телефон должен быть в формате E.164, например: +996555123456');
+            setError(
+                phoneValidation.error ||
+                    t(
+                        'notifications.whatsapp.invalidFormat',
+                        'Телефон должен быть в формате E.164, например: +996555123456'
+                    )
+            );
             return;
         }
 
@@ -46,7 +53,9 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
 
             if (!resp.ok) {
                 const data = await resp.json();
-                throw new Error(data.error || 'Не удалось обновить телефон');
+                throw new Error(
+                    data.error || t('notifications.whatsapp.updateError', 'Не удалось обновить телефон')
+                );
             }
 
             // Отправляем OTP на телефон для подтверждения
@@ -81,10 +90,13 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
                             </svg>
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                            Телефон подключен!
+                            {t('notifications.whatsapp.connectedTitle', 'Телефон подключен!')}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Теперь вы будете получать уведомления через WhatsApp
+                            {t(
+                                'notifications.whatsapp.connectedDescription',
+                                'Теперь вы будете получать уведомления через WhatsApp'
+                            )}
                         </p>
                     </div>
                 </div>
@@ -104,11 +116,14 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
                                 </svg>
                             </div>
                             <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                Подключите WhatsApp
+                                {t('notifications.whatsapp.connectTitle', 'Подключите WhatsApp')}
                             </h3>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Подключите номер телефона для получения уведомлений через WhatsApp. Это удобнее и быстрее!
+                            {t(
+                                'notifications.whatsapp.connectDescription',
+                                'Подключите номер телефона для получения уведомлений через WhatsApp. Это удобнее и быстрее!'
+                            )}
                         </p>
                     </div>
                     {onDismiss && (
@@ -125,8 +140,11 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Номер телефона
+                        <label
+                            htmlFor="phone"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                        >
+                            {t('notifications.whatsapp.phoneLabel', 'Номер телефона')}
                         </label>
                         <input
                             id="phone"
@@ -139,7 +157,10 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
                             disabled={loading}
                         />
                         <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                            Формат: +996555123456 (с кодом страны)
+                            {t(
+                                'notifications.whatsapp.phoneHint',
+                                'Формат: +996555123456 (с кодом страны)'
+                            )}
                         </p>
                     </div>
 
@@ -157,7 +178,7 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
                                 disabled={loading}
                                 className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                             >
-                                Позже
+                                {t('notifications.whatsapp.later', 'Позже')}
                             </button>
                         )}
                         <button
@@ -165,7 +186,9 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
                             disabled={loading || !phone.trim()}
                             className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-pink-600 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Отправка...' : 'Подключить'}
+                            {loading
+                                ? t('notifications.whatsapp.sending', 'Отправка...')
+                                : t('notifications.whatsapp.submit', 'Подключить')}
                         </button>
                     </div>
                 </form>

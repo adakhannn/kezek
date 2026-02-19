@@ -3,17 +3,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { useLanguage, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
+
 type NavItem = {
     href: string;
-    label: string;
+    labelKey: I18nKey;
     icon: React.ReactNode;
     variant?: 'default' | 'outline';
 };
 
-const navItems: NavItem[] = [
+export function AdminNav() {
+    const { t } = useLanguage();
+    const pathname = usePathname();
+
+    const navItems: NavItem[] = [
     {
         href: '/admin',
-        label: 'Главная',
+        labelKey: 'admin.nav.home',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -22,7 +28,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/businesses',
-        label: 'Бизнесы',
+        labelKey: 'admin.nav.businesses',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -31,7 +37,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/categories',
-        label: 'Категории',
+        labelKey: 'admin.nav.categories',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -40,7 +46,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/users',
-        label: 'Пользователи',
+        labelKey: 'admin.nav.users',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -49,7 +55,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/roles',
-        label: 'Роли',
+        labelKey: 'admin.nav.roles',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -58,7 +64,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/rating-config',
-        label: 'Рейтинги',
+        labelKey: 'admin.nav.ratings',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -67,7 +73,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/ratings-status',
-        label: 'Здоровье рейтингов',
+        labelKey: 'admin.nav.ratingsHealth',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -81,7 +87,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/promotions-debug',
-        label: 'Отладка промо',
+        labelKey: 'admin.nav.promotionsDebug',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -95,7 +101,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/health-check',
-        label: 'Health Check',
+        labelKey: 'admin.nav.healthCheck',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -109,7 +115,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/performance',
-        label: 'Производительность',
+        labelKey: 'admin.nav.performance',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -123,7 +129,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/admin/monitoring',
-        label: 'Мониторинг',
+        labelKey: 'admin.nav.monitoring',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -137,7 +143,7 @@ const navItems: NavItem[] = [
     },
     {
         href: '/',
-        label: 'На сайт',
+        labelKey: 'admin.nav.toSite',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -146,9 +152,6 @@ const navItems: NavItem[] = [
         variant: 'outline',
     },
 ];
-
-export function AdminNav() {
-    const pathname = usePathname();
 
     return (
         <nav className="hidden md:flex items-center gap-1">
@@ -175,7 +178,7 @@ export function AdminNav() {
                         `}
                     >
                         {item.icon}
-                        {item.label}
+                        {t(item.labelKey, item.labelKey)}
                     </Link>
                 );
             })}

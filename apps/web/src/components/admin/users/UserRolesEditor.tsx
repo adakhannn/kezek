@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from 'react';
 import type React from 'react';
+import { t } from '@/app/_components/i18n/LanguageProvider';
 
 type RoleLiteral = 'owner' | 'manager' | 'staff' | 'admin' | 'client';
 const ROLES = ['owner', 'manager', 'staff', 'admin', 'client'] as const;
@@ -55,15 +56,19 @@ export function UserRolesEditor({
         setErr(null);
         try {
             const targetBiz = currentBizId ?? biz;
-            if (!targetBiz) throw new Error('Выберите бизнес');
+            if (!targetBiz) throw new Error(t('admin.userRoles.selectBusiness', 'Выберите бизнес'));
 
             if (currentBizId && currentBizId !== targetBiz) {
-                throw new Error('У пользователя уже есть роли по другому бизнесу');
+                throw new Error(
+                    t('admin.userRoles.otherBusinessExists', 'У пользователя уже есть роли по другому бизнесу')
+                );
             }
 
             const exists = items.some((it) => it.biz_id === targetBiz && it.role === role);
             if (exists) {
-                throw new Error('Такая роль уже есть у этого пользователя');
+                throw new Error(
+                    t('admin.userRoles.roleExists', 'Такая роль уже есть у этого пользователя')
+                );
             }
 
             const resp = await fetch(`/admin/api/users/${userId}/roles/add`, {
@@ -115,7 +120,7 @@ export function UserRolesEditor({
 
     return (
         <div className="space-y-3 rounded border p-4">
-            <h3 className="font-semibold">Роли по бизнесам</h3>
+            <h3 className="font-semibold">{t('admin.userRoles.title', 'Роли по бизнесам')}</h3>
 
             <div className="flex flex-wrap gap-2">
                 {items.map((r, idx) => (
@@ -123,20 +128,24 @@ export function UserRolesEditor({
                         key={`${r.biz_id}:${r.role}:${idx}`}
                         className="inline-flex items-center gap-2 border rounded-full px-3 py-1 text-sm"
                     >
-            <span>{r.businesses?.name ?? r.biz_id}</span>
-            <span className="text-gray-500">/ {r.role}</span>
-            <button
-                type="button"
-                className="opacity-60 hover:opacity-100"
-                onClick={() => remove(r.biz_id, r.role)}
-                aria-label="Удалить роль"
-                title="Удалить роль"
-            >
-              ×
-            </button>
-          </span>
+                        <span>{r.businesses?.name ?? r.biz_id}</span>
+                        <span className="text-gray-500">/ {r.role}</span>
+                        <button
+                            type="button"
+                            className="opacity-60 hover:opacity-100"
+                            onClick={() => remove(r.biz_id, r.role)}
+                            aria-label={t('admin.userRoles.removeRole', 'Удалить роль')}
+                            title={t('admin.userRoles.removeRole', 'Удалить роль')}
+                        >
+                            ×
+                        </button>
+                    </span>
                 ))}
-                {items.length === 0 && <div className="text-sm text-gray-500">Ролей нет.</div>}
+                {items.length === 0 && (
+                    <div className="text-sm text-gray-500">
+                        {t('admin.userRoles.empty', 'Ролей нет.')}
+                    </div>
+                )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -169,7 +178,7 @@ export function UserRolesEditor({
                 </select>
 
                 <button className="border rounded px-3 py-2" disabled={loading} type="button" onClick={add}>
-                    Добавить роль
+                    {t('admin.userRoles.add', 'Добавить роль')}
                 </button>
             </div>
 

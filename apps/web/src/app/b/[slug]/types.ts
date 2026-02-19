@@ -9,6 +9,7 @@ export type Biz = {
     address: string;
     phones: string[];
     rating_score: number | null;
+    tz?: string | null;
 };
 
 export type Branch = {

@@ -2,6 +2,8 @@
 import {createClient} from '@supabase/supabase-js';
 import Link from 'next/link';
 
+import { getT } from '@/app/_components/i18n/LanguageProvider';
+
 export const dynamic = 'force-dynamic';
 
 type BizRow = { id: string; name: string; slug: string; created_at: string };
@@ -48,6 +50,7 @@ function normRel<T>(rel: T | T[] | null | undefined): T | null {
 }
 
 export default async function AdminHomePage() {
+    const t = getT('ru');
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const admin = createClient(SUPABASE_URL, SERVICE);
@@ -125,11 +128,11 @@ export default async function AdminHomePage() {
 
     // Системные проверки окружения
     const checks = [
-        {ok: !!process.env.SUPABASE_SERVICE_ROLE_KEY, label: 'SUPABASE_SERVICE_ROLE_KEY задан'},
-        {ok: !!process.env.NEXT_PUBLIC_SITE_ORIGIN, label: 'NEXT_PUBLIC_SITE_ORIGIN задан'},
+        {ok: !!process.env.SUPABASE_SERVICE_ROLE_KEY, label: t('admin.home.systemChecks.serviceRoleKey', 'SUPABASE_SERVICE_ROLE_KEY задан')},
+        {ok: !!process.env.NEXT_PUBLIC_SITE_ORIGIN, label: t('admin.home.systemChecks.siteOrigin', 'NEXT_PUBLIC_SITE_ORIGIN задан')},
         {
             ok: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            label: 'Публичные ключи Supabase заданы',
+            label: t('admin.home.systemChecks.supabaseKeys', 'Публичные ключи Supabase заданы'),
         },
     ];
 
@@ -140,10 +143,10 @@ export default async function AdminHomePage() {
                 <section className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                            Панель администратора
+                            {t('admin.home.title', 'Панель администратора')}
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            Обзор системы и управление
+                            {t('admin.home.subtitle', 'Обзор системы и управление')}
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -154,7 +157,7 @@ export default async function AdminHomePage() {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
-                            Создать бизнес
+                            {t('admin.home.createBusiness', 'Создать бизнес')}
                         </Link>
                         <Link 
                             href="/admin/categories/new" 
@@ -163,17 +166,17 @@ export default async function AdminHomePage() {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                             </svg>
-                            Категория
+                            {t('admin.home.createCategory', 'Категория')}
                         </Link>
                     </div>
                 </section>
 
                 {/* Метрики */}
                 <section>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Общая статистика</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('admin.home.stats.title', 'Общая статистика')}</h2>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <MetricCard 
-                            title="Бизнесы" 
+                            title={t('admin.home.stats.businesses', 'Бизнесы')} 
                             value={bizCount ?? 0} 
                             href="/admin/businesses"
                             icon={
@@ -184,10 +187,10 @@ export default async function AdminHomePage() {
                             gradient="from-blue-500 to-cyan-500"
                         />
                         <MetricCard 
-                            title="Филиалы" 
+                            title={t('admin.home.stats.branches', 'Филиалы')} 
                             value={branchCount ?? 0} 
                             href="/admin/businesses"
-                            hint="управление в карточках бизнеса"
+                            hint={t('admin.home.stats.branchesHint', 'управление в карточках бизнеса')}
                             icon={
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -197,7 +200,7 @@ export default async function AdminHomePage() {
                             gradient="from-emerald-500 to-teal-500"
                         />
                         <MetricCard 
-                            title="Сотрудники" 
+                            title={t('admin.home.stats.staff', 'Сотрудники')} 
                             value={staffCount ?? 0}
                             icon={
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +210,7 @@ export default async function AdminHomePage() {
                             gradient="from-purple-500 to-pink-500"
                         />
                         <MetricCard 
-                            title="Услуги" 
+                            title={t('admin.home.stats.services', 'Услуги')} 
                             value={serviceCount ?? 0}
                             icon={
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +220,7 @@ export default async function AdminHomePage() {
                             gradient="from-orange-500 to-red-500"
                         />
                         <MetricCard 
-                            title="Брони (всего)" 
+                            title={t('admin.home.stats.bookings', 'Брони (всего)')} 
                             value={bookingCount ?? 0}
                             icon={
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,7 +230,7 @@ export default async function AdminHomePage() {
                             gradient="from-indigo-500 to-purple-500"
                         />
                         <MetricCard 
-                            title="Категории" 
+                            title={t('admin.home.stats.categories', 'Категории')} 
                             value={catCount ?? 0} 
                             href="/admin/categories"
                             icon={
@@ -245,7 +248,7 @@ export default async function AdminHomePage() {
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                         <div>
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                Брони сегодня
+                                {t('admin.home.bookingsToday.title', 'Брони сегодня')}
                             </h2>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                 {label} (Asia/Bishkek)
@@ -263,12 +266,12 @@ export default async function AdminHomePage() {
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead className="bg-gray-50 dark:bg-gray-800">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Время</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Бизнес / филиал</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Услуга</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Мастер</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Клиент</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Статус</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('admin.home.bookingsToday.table.time', 'Время')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('admin.home.bookingsToday.table.business', 'Бизнес / филиал')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('admin.home.bookingsToday.table.service', 'Услуга')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('admin.home.bookingsToday.table.master', 'Мастер')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('admin.home.bookingsToday.table.client', 'Клиент')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('admin.home.bookingsToday.table.status', 'Статус')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -303,7 +306,7 @@ export default async function AdminHomePage() {
                             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">На сегодня броней нет</p>
+                            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">{t('admin.home.bookingsToday.empty', 'На сегодня броней нет')}</p>
                         </div>
                     )}
                 </section>
@@ -313,12 +316,12 @@ export default async function AdminHomePage() {
                     {/* Последние бизнесы */}
                     <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Последние бизнесы</h2>
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('admin.home.latestBusinesses.title', 'Последние бизнесы')}</h2>
                             <Link 
                                 href="/admin/businesses" 
                                 className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
                             >
-                                Все →
+                                {t('admin.home.latestBusinesses.all', 'Все')} →
                             </Link>
                         </div>
                         {(latestBiz && latestBiz.length > 0) ? (
@@ -349,14 +352,14 @@ export default async function AdminHomePage() {
                                 <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
-                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Пока нет бизнесов</p>
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{t('admin.home.latestBusinesses.empty', 'Пока нет бизнесов')}</p>
                             </div>
                         )}
                     </section>
 
                     {/* Системные проверки */}
                     <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Системные проверки</h2>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('admin.home.systemChecks.title', 'Системные проверки')}</h2>
                         <div className="space-y-3">
                             {checks.map((c, i) => (
                                 <div
@@ -371,7 +374,7 @@ export default async function AdminHomePage() {
                                     <div className="flex-1">
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.label}</p>
                                         <p className={`text-xs ${c.ok ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`}>
-                                            {c.ok ? 'OK' : 'Проверь .env'}
+                                            {c.ok ? t('common.ok', 'ОК') : t('admin.home.systemChecks.checkEnv', 'Проверь .env')}
                                         </p>
                                     </div>
                                 </div>
@@ -382,12 +385,12 @@ export default async function AdminHomePage() {
 
                 {/* Быстрые ссылки */}
                 <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Быстрые ссылки</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('admin.home.quickLinks.title', 'Быстрые ссылки')}</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <QuickLink href="/admin/businesses" icon="🏢" label="Все бизнесы" />
-                        <QuickLink href="/admin/categories" icon="🏷️" label="Категории" />
-                        <QuickLink href="/admin/users" icon="👥" label="Пользователи" />
-                        <QuickLink href="/" icon="🌐" label="Публичный сайт" />
+                        <QuickLink href="/admin/businesses" icon="🏢" label={t('admin.home.quickLinks.allBusinesses', 'Все бизнесы')} />
+                        <QuickLink href="/admin/categories" icon="🏷️" label={t('admin.home.quickLinks.categories', 'Категории')} />
+                        <QuickLink href="/admin/users" icon="👥" label={t('admin.home.quickLinks.users', 'Пользователи')} />
+                        <QuickLink href="/" icon="🌐" label={t('admin.home.quickLinks.publicSite', 'Публичный сайт')} />
                     </div>
                 </section>
             </div>

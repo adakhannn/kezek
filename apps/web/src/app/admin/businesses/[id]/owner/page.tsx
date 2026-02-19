@@ -6,6 +6,7 @@ import { OwnerForm } from './ui/OwnerForm';
 
 import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
 import {logWarn} from '@/lib/log';
+import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 
 export const dynamic = 'force-dynamic';
@@ -40,14 +41,16 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
         },
     });
 
+    const t = getT('ru');
+    
     // 1) Авторизация
     const { data: { user } } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">Не авторизован</div>;
+    if (!user) return <div className="p-4">{t('admin.error.unauthorized', 'Не авторизован')}</div>;
 
     // 2) Проверка супера
     const { data: isSuper, error: eSuper } = await supa.rpc('is_super_admin');
-    if (eSuper) return <div className="p-4">Ошибка: {eSuper.message}</div>;
-    if (!isSuper) return <div className="p-4">Нет доступа</div>;
+    if (eSuper) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {eSuper.message}</div>;
+    if (!isSuper) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа (нужен супер-админ)')}</div>;
 
     // 3) Сервисный клиент
     const admin = createClient(URL, SERVICE);
@@ -59,8 +62,8 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
         .eq('id', id)
         .maybeSingle<BizRow>();
 
-    if (eBiz) return <div className="p-4">Ошибка: {eBiz.message}</div>;
-    if (!biz) return <div className="p-4">Бизнес не найден</div>;
+    if (eBiz) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {eBiz.message}</div>;
+    if (!biz) return <div className="p-4">{t('admin.businesses.notFound', 'Бизнес не найден')}</div>;
 
     // 5) Получаем всех владельцев бизнеса через user_roles
     const { data: ownerRole, error: roleErr } = await admin
@@ -112,10 +115,10 @@ export default async function OwnerPage({ params }: { params: Promise<RouteParam
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                            Владельцы бизнеса
+                            {t('admin.businesses.owner.title', 'Владельцы бизнеса')}
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Бизнес: <span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
+                            {t('admin.businesses.owner.business', 'Бизнес')}: <span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
                         </p>
                     </div>
                 </div>

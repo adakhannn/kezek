@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 import { AdminNav } from './_components/AdminNav';
 
@@ -32,10 +33,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     const isSuper = !!superRow;
 
     if (roleErr || !isSuper) {
+        const t = getT('ru');
         return (
             <main className="p-6">
                 <h1 className="text-xl font-semibold">403</h1>
-                <p className="text-gray-600">Нет доступа (нужен супер-админ)</p>
+                <p className="text-gray-600">{t('admin.noAccess.title', 'Нет доступа (нужен супер-админ)')}</p>
             </main>
         );
     }

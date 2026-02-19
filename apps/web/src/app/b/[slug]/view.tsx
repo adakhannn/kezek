@@ -31,7 +31,7 @@ import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { todayTz, dateAtTz, TZ } from '@/lib/time';
+import { todayTz, dateAtTz, getBusinessTimezone } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
 // Используем безопасное логирование из @/lib/log
@@ -168,10 +168,10 @@ export default function BookingForm({ data }: { data: Data }) {
     }, [serviceStaff]);
 
     /* ---------- дата и слоты через RPC get_free_slots_service_day_v2 ---------- */
-    const [day, setDay] = useState<Date>(todayTz());
-    const dayStr = formatInTimeZone(day, TZ, 'yyyy-MM-dd');
-    const todayStr = formatInTimeZone(todayTz(), TZ, 'yyyy-MM-dd');
-    const maxStr = formatInTimeZone(addDays(todayTz(), 60), TZ, 'yyyy-MM-dd');
+    const [day, setDay] = useState<Date>(todayTz(businessTz));
+    const dayStr = formatInTimeZone(day, businessTz, 'yyyy-MM-dd');
+    const todayStr = formatInTimeZone(todayTz(businessTz), businessTz, 'yyyy-MM-dd');
+    const maxStr = formatInTimeZone(addDays(todayTz(businessTz), 60), businessTz, 'yyyy-MM-dd');
 
     /* ---------- временные переводы сотрудников (staff_schedule_rules) ---------- */
     const { temporaryTransfers } = useTemporaryTransfers({
@@ -446,7 +446,7 @@ export default function BookingForm({ data }: { data: Data }) {
             }
             if (parsed.day) {
                 try {
-                    setDay(dateAtTz(parsed.day, '00:00'));
+                    setDay(dateAtTz(parsed.day, '00:00', businessTz));
                 } catch {
                     // ignore
                 }
@@ -609,7 +609,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                         value={dayStr}
                                         onChange={(val) => {
                                             if (val) {
-                                                setDay(dateAtTz(val, '00:00'));
+                                                setDay(dateAtTz(val, '00:00', businessTz));
                                             }
                                         }}
                                         min={todayStr}

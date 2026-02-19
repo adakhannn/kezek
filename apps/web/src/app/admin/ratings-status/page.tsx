@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
+import { getT } from '@/app/_components/i18n/LanguageProvider';
 import { formatDateTime } from '@/lib/dateFormat';
 
 export const dynamic = 'force-dynamic';
@@ -40,12 +41,14 @@ export default async function RatingsStatusPage() {
 
     const data = (await res.json()) as RatingsStatusResponse;
 
+    const t = getT('ru');
+    
     if (!data.ok) {
         return (
             <main className="max-w-3xl mx-auto">
                 <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-                    <h1 className="text-lg font-semibold mb-2">Ошибка статуса рейтингов</h1>
-                    <p>{data.error || 'Не удалось получить состояние рейтинговой системы.'}</p>
+                    <h1 className="text-lg font-semibold mb-2">{t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}</h1>
+                    <p>{data.error || t('admin.ratingsStatus.error.description', 'Не удалось получить состояние рейтинговой системы.')}</p>
                 </div>
             </main>
         );
@@ -57,16 +60,16 @@ export default async function RatingsStatusPage() {
 
     // Используем унифицированную функцию форматирования дат
     const formatDate = (value: string | null) =>
-        value ? formatDateTime(value, 'ru', true) : 'нет данных';
+        value ? formatDateTime(value, 'ru', true) : t('common.noData', 'нет данных');
 
     return (
         <main className="max-w-4xl mx-auto space-y-6">
             <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    Здоровье рейтинговой системы
+                    {t('admin.ratingsStatus.title', 'Здоровье рейтинговой системы')}
                 </h1>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    Сводка по последним метрикам и сущностям без рассчитанного рейтинга.
+                    {t('admin.ratingsStatus.description', 'Сводка по последним метрикам и сущностям без рассчитанного рейтинга.')}
                 </p>
             </section>
 
@@ -81,10 +84,10 @@ export default async function RatingsStatusPage() {
                     <div className="flex items-center justify-between gap-2">
                         <div>
                             <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                                Метрики сотрудников
+                                {t('admin.ratingsStatus.metrics.staff.title', 'Метрики сотрудников')}
                             </p>
                             <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
-                                Последняя дата: {formatDate(data.staff_last_metric_date)}
+                                {t('admin.ratingsStatus.metrics.lastDate', 'Последняя дата')}: {formatDate(data.staff_last_metric_date)}
                             </p>
                         </div>
                         <span
@@ -94,11 +97,11 @@ export default async function RatingsStatusPage() {
                                     : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200'
                             }`}
                         >
-                            {staffStale ? 'Проблема' : 'ОК'}
+                            {staffStale ? t('common.problem', 'Проблема') : t('common.ok', 'ОК')}
                         </span>
                     </div>
                     <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                        Без рейтинга:{' '}
+                        {t('admin.ratingsStatus.metrics.withoutRating', 'Без рейтинга')}:{' '}
                         <span className="font-semibold text-gray-900 dark:text-gray-100">
                             {data.staff_without_rating}
                         </span>
@@ -115,10 +118,10 @@ export default async function RatingsStatusPage() {
                     <div className="flex items-center justify-between gap-2">
                         <div>
                             <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                                Метрики филиалов
+                                {t('admin.ratingsStatus.metrics.branches.title', 'Метрики филиалов')}
                             </p>
                             <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
-                                Последняя дата: {formatDate(data.branch_last_metric_date)}
+                                {t('admin.ratingsStatus.metrics.lastDate', 'Последняя дата')}: {formatDate(data.branch_last_metric_date)}
                             </p>
                         </div>
                         <span
@@ -128,11 +131,11 @@ export default async function RatingsStatusPage() {
                                     : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200'
                             }`}
                         >
-                            {branchStale ? 'Проблема' : 'ОК'}
+                            {branchStale ? t('common.problem', 'Проблема') : t('common.ok', 'ОК')}
                         </span>
                     </div>
                     <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                        Без рейтинга:{' '}
+                        {t('admin.ratingsStatus.metrics.withoutRating', 'Без рейтинга')}:{' '}
                         <span className="font-semibold text-gray-900 dark:text-gray-100">
                             {data.branches_without_rating}
                         </span>
@@ -149,10 +152,10 @@ export default async function RatingsStatusPage() {
                     <div className="flex items-center justify-between gap-2">
                         <div>
                             <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                                Метрики бизнесов
+                                {t('admin.ratingsStatus.metrics.businesses.title', 'Метрики бизнесов')}
                             </p>
                             <p className="mt-1 text-sm text-gray-800 dark:text-gray-100">
-                                Последняя дата: {formatDate(data.biz_last_metric_date)}
+                                {t('admin.ratingsStatus.metrics.lastDate', 'Последняя дата')}: {formatDate(data.biz_last_metric_date)}
                             </p>
                         </div>
                         <span
@@ -162,11 +165,11 @@ export default async function RatingsStatusPage() {
                                     : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200'
                             }`}
                         >
-                            {bizStale ? 'Проблема' : 'ОК'}
+                            {bizStale ? t('common.problem', 'Проблема') : t('common.ok', 'ОК')}
                         </span>
                     </div>
                     <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                        Без рейтинга:{' '}
+                        {t('admin.ratingsStatus.metrics.withoutRating', 'Без рейтинга')}:{' '}
                         <span className="font-semibold text-gray-900 dark:text-gray-100">
                             {data.businesses_without_rating}
                         </span>
@@ -176,8 +179,7 @@ export default async function RatingsStatusPage() {
 
             <section className="rounded-2xl border border-gray-200 bg-white p-4 text-xs text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
                 <p>
-                    Если какая‑то из карточек подсвечена красным и даты давно не обновлялись, проверьте
-                    cron‑задачу пересчёта рейтингов и логи API <code>/api/cron/recalculate-ratings</code>.
+                    {t('admin.ratingsStatus.info', 'Если какая‑то из карточек подсвечена красным и даты давно не обновлялись, проверьте cron‑задачу пересчёта рейтингов и логи API')} <code>/api/cron/recalculate-ratings</code>.
                 </p>
             </section>
         </main>

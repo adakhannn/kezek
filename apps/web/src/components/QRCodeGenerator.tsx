@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
+import { t } from '@/app/_components/i18n/LanguageProvider';
 import {logError} from '@/lib/log';
 
 type QRCodeGeneratorProps = {
@@ -140,14 +141,14 @@ export default function QRCodeGenerator({
             >
                 <div className="flex items-center justify-between mb-6">
                     <h2 id="qr-generator-title" className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                        QR код для филиала
+                        {t('qr.title', 'QR код для филиала')}
                     </h2>
                     {onClose && (
                         <button
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                             type="button"
-                            aria-label="Закрыть диалог с QR‑кодом"
+                            aria-label={t('qr.closeDialog', 'Закрыть диалог с QR‑кодом')}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -159,7 +160,7 @@ export default function QRCodeGenerator({
                 {/* Брендированный вариант для печати */}
                 <div className="mb-6">
                     <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
-                        📄 Брендированный QR код для печати и наклейки
+                        {t('qr.brandedTitle', '📄 Брендированный QR код для печати и наклейки')}
                     </h3>
                     <div className="flex justify-center">
                         <div 
@@ -234,11 +235,13 @@ export default function QRCodeGenerator({
                         isLoading={downloading}
                         className="w-full"
                     >
-                        {downloading ? 'Скачивание...' : '📄 Скачать брендированный QR код для печати'}
+                        {downloading
+                            ? t('qr.downloading', 'Скачивание...')
+                            : t('qr.downloadBranded', '📄 Скачать брендированный QR код для печати')}
                     </Button>
                     {onClose && (
                         <Button variant="outline" onClick={onClose} className="w-full">
-                            Закрыть
+                            {t('qr.close', 'Закрыть')}
                         </Button>
                     )}
                 </div>

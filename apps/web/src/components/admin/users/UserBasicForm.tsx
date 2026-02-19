@@ -4,6 +4,7 @@ import React, {useMemo, useState} from 'react';
 
 import {Button} from '@/components/ui/Button';
 import {Input} from '@/components/ui/Input';
+import { t } from '@/app/_components/i18n/LanguageProvider';
 import { validateEmail, validatePhone } from '@/lib/validation';
 
 type ApiOk = { ok: true };
@@ -44,12 +45,18 @@ export function UserBasicForm({
         try {
             const emailValidation = validateEmail(email);
             if (!emailValidation.valid) {
-                throw new Error(emailValidation.error || 'Некорректный email');
+                throw new Error(emailValidation.error || t('admin.userBasic.emailInvalid', 'Некорректный email'));
             }
 
             const phoneValidation = validatePhone(phone, false);
             if (!phoneValidation.valid) {
-                throw new Error(phoneValidation.error || 'Телефон должен быть в формате E.164, например: +996XXXYYYYYY');
+                throw new Error(
+                    phoneValidation.error ||
+                        t(
+                            'admin.userBasic.phoneInvalid',
+                            'Телефон должен быть в формате E.164, например: +996XXXYYYYYY'
+                        )
+                );
             }
 
             const body = JSON.stringify({
@@ -79,7 +86,7 @@ export function UserBasicForm({
                 throw new Error(('error' in (data ?? {}) && (data as ApiErr).error) || `HTTP ${resp.status}`);
             }
 
-            setMsg('Сохранено');
+            setMsg(t('admin.userBasic.saved', 'Сохранено'));
         } catch (e: unknown) {
             setErr(extractError(e));
         } finally {
@@ -93,12 +100,12 @@ export function UserBasicForm({
                 <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Основные данные
+                {t('admin.userBasic.title', 'Основные данные')}
             </h3>
 
             <Input
-                label="Имя"
-                placeholder="Введите имя"
+                label={t('admin.userBasic.nameLabel', 'Имя')}
+                placeholder={t('admin.userBasic.namePlaceholder', 'Введите имя')}
                 value={fullName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
                 name="full_name"
@@ -106,7 +113,7 @@ export function UserBasicForm({
             />
 
             <Input
-                label="Email"
+                label={t('admin.userBasic.emailLabel', 'Email')}
                 placeholder="email@example.com"
                 type="email"
                 value={email}
@@ -116,7 +123,7 @@ export function UserBasicForm({
             />
 
             <Input
-                label="Телефон"
+                label={t('admin.userBasic.phoneLabel', 'Телефон')}
                 placeholder="+996XXXXXXXXX"
                 type="tel"
                 value={phone}
@@ -124,7 +131,7 @@ export function UserBasicForm({
                 name="phone"
                 inputMode="tel"
                 pattern="^\+[1-9]\d{7,14}$"
-                helperText="Формат E.164: +996XXXXXXXXX"
+                helperText={t('admin.userBasic.phoneHelper', 'Формат E.164: +996XXXXXXXXX')}
             />
 
             <div className="flex items-center gap-3 pt-2">
@@ -133,7 +140,9 @@ export function UserBasicForm({
                     disabled={loading || !changed}
                     isLoading={loading}
                 >
-                    {loading ? 'Сохраняю…' : 'Сохранить'}
+                    {loading
+                        ? t('admin.userBasic.saving', 'Сохраняю…')
+                        : t('admin.userBasic.save', 'Сохранить')}
                 </Button>
                 {msg && (
                     <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
@@ -152,7 +161,9 @@ export function UserBasicForm({
                     </div>
                 )}
                 {!changed && !msg && !err && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Нет изменений</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {t('admin.userBasic.noChanges', 'Нет изменений')}
+                    </span>
                 )}
             </div>
         </form>

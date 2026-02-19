@@ -4,11 +4,10 @@ import { formatInTimeZone } from 'date-fns-tz';
 import StaffCabinet from './StaffCabinet';
 
 import { getStaffContext } from '@/lib/authBiz';
+import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 export default async function Page() {
     const { supabase, userId, staffId, bizId, branchId } = await getStaffContext();

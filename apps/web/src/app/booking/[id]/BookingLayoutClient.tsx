@@ -3,9 +3,8 @@
 import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
-
-const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
 
 type BookingLayoutProps = {
     id: string;

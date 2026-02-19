@@ -4,11 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import StaffBookingsView from './StaffBookingsView';
 
 import { getStaffContext } from '@/lib/authBiz';
-
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
-const TZ = process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
+import { TZ } from '@/lib/time';
 
 export default async function StaffBookingsPage() {
     const { supabase, staffId, bizId, branchId } = await getStaffContext();

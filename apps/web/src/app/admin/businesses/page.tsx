@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 type Biz = {
     id: string;
@@ -17,6 +18,7 @@ type Biz = {
 };
 
 export default async function Page() {
+    const t = getT('ru');
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -54,7 +56,7 @@ export default async function Page() {
     if (listErr) {
         return (
             <main className="p-6">
-                <div className="text-red-600">Ошибка загрузки бизнесов: {listErr.message}</div>
+                <div className="text-red-600">{t('admin.businesses.error.load', 'Ошибка загрузки бизнесов')}: {listErr.message}</div>
             </main>
         );
     }
@@ -123,10 +125,10 @@ export default async function Page() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                        Бизнесы
+                        {t('admin.businesses.title', 'Бизнесы')}
                     </h1>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Всего: {totalCount} • Одобрено: {approvedCount}
+                        {t('admin.businesses.stats.total', 'Всего')}: {totalCount} • {t('admin.businesses.stats.approved', 'Одобрено')}: {approvedCount}
                     </p>
                 </div>
                 <Link
@@ -136,7 +138,7 @@ export default async function Page() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Создать бизнес
+                    {t('admin.businesses.create', 'Создать бизнес')}
                 </Link>
             </div>
 
@@ -147,10 +149,10 @@ export default async function Page() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Пока нет бизнесов
+                        {t('admin.businesses.empty.title', 'Пока нет бизнесов')}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        Создайте первый бизнес, чтобы начать работу
+                        {t('admin.businesses.empty.description', 'Создайте первый бизнес, чтобы начать работу')}
                     </p>
                     <Link
                         href="/admin/businesses/new"
@@ -159,7 +161,7 @@ export default async function Page() {
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        Создать бизнес
+                        {t('admin.businesses.create', 'Создать бизнес')}
                     </Link>
                 </div>
             ) : (
@@ -191,14 +193,14 @@ export default async function Page() {
                                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                             </svg>
-                                            Одобрен
+                                            {t('admin.businesses.status.approved', 'Одобрен')}
                                         </span>
                                     ) : (
                                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                                             </svg>
-                                            На модерации
+                                            {t('admin.businesses.status.moderation', 'На модерации')}
                                         </span>
                                     )}
                                 </div>
@@ -242,20 +244,20 @@ export default async function Page() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                         </svg>
                                         <span className="font-medium">{branches}</span>
-                                        <span className="text-xs">филиалов</span>
+                                        <span className="text-xs">{t('admin.businesses.stats.branches', 'филиалов')}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                         </svg>
                                         <span className="font-medium">{staff}</span>
-                                        <span className="text-xs">сотрудников</span>
+                                        <span className="text-xs">{t('admin.businesses.stats.staff', 'сотрудников')}</span>
                                     </div>
                                 </div>
 
                                 {/* Владелец */}
                                 <div className="mb-4 text-sm">
-                                    <span className="text-gray-500 dark:text-gray-400">Владелец: </span>
+                                    <span className="text-gray-500 dark:text-gray-400">{t('admin.businesses.owner.label', 'Владелец')}: </span>
                                     <span className="font-medium text-gray-900 dark:text-gray-100">
                                         {ownerName}
                                     </span>
@@ -263,7 +265,7 @@ export default async function Page() {
 
                                 {/* Дата создания */}
                                 <div className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-                                    Создан: {new Date(b.created_at).toLocaleDateString('ru-RU', {
+                                    {t('admin.businesses.created', 'Создан')}: {new Date(b.created_at).toLocaleDateString('ru-RU', {
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric',
@@ -280,7 +282,7 @@ export default async function Page() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
-                                        Открыть
+                                        {t('admin.businesses.open', 'Открыть')}
                                     </Link>
                                 </div>
                             </div>

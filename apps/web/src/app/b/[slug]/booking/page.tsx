@@ -1,8 +1,11 @@
+import type { Metadata } from 'next';
 import { JSX } from 'react';
 
 import { BookingFormClient } from './BookingFormClient';
+import { getT, getServerLocale } from '@/app/_components/i18n/LanguageProvider';
 
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+import { generateAlternates } from '@/lib/seo';
 
 async function getData(slug: string) {
     const url = getSupabaseUrl();
@@ -56,6 +59,38 @@ async function getData(slug: string) {
     }
 
     return { biz, branches, services, staff, promotions };
+}
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+    const { slug } = await params;
+    const locale = await getServerLocale();
+    const t = getT(locale);
+    
+    // Получаем данные о бизнесе для метаданных
+    const data = await getData(slug);
+    if (!data) {
+        const titleTemplate = t('booking.seo.title');
+        const descTemplate = t('booking.seo.description');
+        return {
+            title: titleTemplate.replace('{businessName}', 'Бизнес'),
+            description: descTemplate.replace('{businessName}', 'Бизнес'),
+            alternates: generateAlternates(`/b/${slug}/booking`),
+        };
+    }
+    
+    const businessName = data.biz.name || 'Бизнес';
+    const titleTemplate = t('booking.seo.title');
+    const descTemplate = t('booking.seo.description');
+    
+    return {
+        title: titleTemplate.replace('{businessName}', businessName),
+        description: descTemplate.replace('{businessName}', businessName),
+        alternates: generateAlternates(`/b/${slug}/booking`),
+    };
 }
 
 export default async function Page({

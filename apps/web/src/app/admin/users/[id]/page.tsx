@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 import { UserBasicForm } from '@/components/admin/users/UserBasicForm';           // client-компонент (как было)
 import { UserPageRedirect } from '@/components/admin/users/UserPageRedirect'; // клиентский компонент для редиректа
 import { UserSecurityActions } from '@/components/admin/users/UserSecurityActions'; // client-компонент (как было)
+import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ type Biz = { id: string; name: string; slug: string | null };
 
 export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+    const t = getT('ru');
 
     const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -27,7 +29,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
     });
 
     const { data: { user } } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">Не авторизован</div>;
+    if (!user) return <div className="p-4">{t('admin.error.unauthorized', 'Не авторизован')}</div>;
 
     // доступ: только глобальный супер
     const { data: superRow, error: superErr } = await supa
@@ -38,8 +40,8 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
         .limit(1)
         .maybeSingle();
 
-    if (superErr) return <div className="p-4">Ошибка: {superErr.message}</div>;
-    if (!superRow) return <div className="p-4">Нет доступа</div>;
+    if (superErr) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {superErr.message}</div>;
+    if (!superRow) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа')}</div>;
 
     // сервис-клиент
     const admin = createClient(URL, SERVICE);
@@ -103,7 +105,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                 <span
                     key={`${r.role_key}:${r.biz_id ?? 'global'}:${idx}`}
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800"
-                    title={r.biz_id ? (b ? `${b.name} (${b.slug ?? '—'})` : r.biz_id) : 'Глобальная роль'}
+                    title={r.biz_id ? (b ? `${b.name} (${b.slug ?? '—'})` : r.biz_id) : t('admin.users.role.global', 'Глобальная роль')}
                 >
                     <span className="font-medium">{r.role_key}</span>
                     {r.biz_id && <span className="text-gray-500 dark:text-gray-400">/ {b?.name ?? r.biz_id}</span>}
@@ -138,14 +140,14 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                     <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
-                                        {userMeta.full_name || u.email || 'Пользователь'}
+                                        {userMeta.full_name || u.email || t('admin.users.user', 'Пользователь')}
                                     </h1>
                                     {isSuperUser && (
                                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
                                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                             </svg>
-                                            Super Admin
+                                            {t('admin.users.superAdmin', 'Super Admin')}
                                         </span>
                                     )}
                                     {isBlocked && (
@@ -153,7 +155,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
                                             </svg>
-                                            Заблокирован
+                                            {t('admin.users.blocked', 'Заблокирован')}
                                         </span>
                                     )}
                                 </div>
@@ -179,7 +181,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            Последний вход: {new Date(u.last_sign_in_at).toLocaleString('ru-RU')}
+                                            {t('admin.users.lastSignIn', 'Последний вход')}: {new Date(u.last_sign_in_at).toLocaleString('ru-RU')}
                                         </div>
                                     )}
                                 </div>
@@ -189,7 +191,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                     </svg>
-                                    К списку
+                                    {t('admin.users.backToList', 'К списку')}
                                 </button>
                             </Link>
                         </div>
@@ -203,15 +205,15 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                 </svg>
                                 <div className="flex-1">
-                                    <h3 className="font-semibold text-red-900 dark:text-red-300 mb-1">Пользователь заблокирован</h3>
+                                    <h3 className="font-semibold text-red-900 dark:text-red-300 mb-1">{t('admin.users.blocked.title', 'Пользователь заблокирован')}</h3>
                                     {suspensionData.reason && (
                                         <p className="text-sm text-red-800 dark:text-red-400 mb-1">
-                                            <span className="font-medium">Причина:</span> {suspensionData.reason}
+                                            <span className="font-medium">{t('admin.users.blocked.reason', 'Причина')}:</span> {suspensionData.reason}
                                         </p>
                                     )}
                                     {suspensionData.created_at && (
                                         <p className="text-xs text-red-700 dark:text-red-500">
-                                            Заблокирован: {new Date(suspensionData.created_at).toLocaleString('ru-RU')}
+                                            {t('admin.users.blocked.date', 'Заблокирован')}: {new Date(suspensionData.created_at).toLocaleString('ru-RU')}
                                         </p>
                                     )}
                                 </div>
@@ -239,7 +241,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
-                                    Владелец бизнеса
+                                    {t('admin.users.businessOwner', 'Владелец бизнеса')}
                                 </h3>
                                 {ownerBusinesses && ownerBusinesses.length > 0 ? (
                                     <div className="grid gap-3 sm:grid-cols-2">
@@ -262,7 +264,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                                     </div>
                                 ) : (
                                     <div className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
-                                        Не владелец ни одного бизнеса
+                                        {t('admin.users.noBusinessOwner', 'Не владелец ни одного бизнеса')}
                                     </div>
                                 )}
                             </div>
@@ -273,7 +275,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
-                                    Роли пользователя
+                                    {t('admin.users.roles.title', 'Роли пользователя')}
                                 </h3>
                                 <div className="flex flex-wrap gap-2 mb-4">
                                     {roleBadges.length > 0 ? (
@@ -283,11 +285,11 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                                             </span>
                                         ))
                                     ) : (
-                                        <div className="text-sm text-gray-500 dark:text-gray-400">Ролей нет</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">{t('admin.users.roles.empty', 'Ролей нет')}</div>
                                     )}
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                                    Роли назначаются владельцами внутри их бизнеса. Суперадмин назначает только владельца на странице бизнеса.
+                                    {t('admin.users.roles.hint', 'Роли назначаются владельцами внутри их бизнеса. Суперадмин назначает только владельца на странице бизнеса.')}
                                 </div>
                             </div>
                         </div>
