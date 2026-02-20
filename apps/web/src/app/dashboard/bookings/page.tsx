@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 
 import { BookingsClientWrapper } from './BookingsClientWrapper';
 
+import { getT } from '@/app/_components/i18n/server';
 import { getBizContextForManagers } from '@/lib/authBiz'; // <-- твой рабочий хелпер
-import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

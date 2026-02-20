@@ -1,9 +1,10 @@
 // apps/web/src/app/admin/performance/page.tsx
 import { Suspense } from 'react';
 
-import { getT } from '@/app/_components/i18n/LanguageProvider';
-
 import PerformanceClient from './PerformanceClient';
+
+import { getT } from '@/app/_components/i18n/server';
+
 
 export const dynamic = 'force-dynamic';
 

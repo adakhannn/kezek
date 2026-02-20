@@ -4,7 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getT } from '@/app/_components/i18n/LanguageProvider';
+
+import { getT } from '@/app/_components/i18n/server';
 
 type Biz = {
     id: string;

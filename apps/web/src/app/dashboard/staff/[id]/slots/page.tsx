@@ -1,8 +1,8 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 
-import { getT } from '@/app/_components/i18n/LanguageProvider';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { getT } from '@/app/_components/i18n/server';
 import Client from '@/app/dashboard/staff/[id]/slots/Client';
 import { getBizContextForManagers } from '@/lib/authBiz';
 

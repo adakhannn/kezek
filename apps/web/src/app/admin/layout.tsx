@@ -3,10 +3,11 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
-import { getT } from '@/app/_components/i18n/LanguageProvider';
-
 import { AdminNav } from './_components/AdminNav';
+
+import { getT } from '@/app/_components/i18n/server';
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
+
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const url  = getSupabaseUrl();

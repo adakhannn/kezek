@@ -1,6 +1,6 @@
 import BranchForm from '../BranchForm';
 
-import { getT } from '@/app/_components/i18n/LanguageProvider';
+import { getT } from '@/app/_components/i18n/server';
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 export const dynamic = 'force-dynamic';

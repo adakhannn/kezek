@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import {HomeHero, HomeBookButtonText, HomeHeader, HomeEmptyState, HomeAboutButtonText} from './_components/HomeClientComponents';
-import { getT, getServerLocale } from './_components/i18n/LanguageProvider';
+import { getT, getServerLocale } from './_components/i18n/server';
 
 import { getSupabaseServer } from '@/lib/authBiz';
 import { generateAlternates } from '@/lib/seo';

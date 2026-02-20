@@ -4,9 +4,10 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { getT } from '@/app/_components/i18n/LanguageProvider';
-
 import { RatingConfigClient } from './RatingConfigClient';
+
+import { getT } from '@/app/_components/i18n/server';
+
 
 export const dynamic = 'force-dynamic';
 

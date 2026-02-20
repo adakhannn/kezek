@@ -6,8 +6,8 @@ import {redirect} from 'next/navigation';
 
 import UsersClient from './UsersClient';
 
+import { getT } from '@/app/_components/i18n/server';
 import {Button} from '@/components/ui/Button';
-import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 export const dynamic = 'force-dynamic';
 

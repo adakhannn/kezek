@@ -1,4 +1,4 @@
-import { getT, getServerLocale } from '@/app/_components/i18n/LanguageProvider';
+import { getT, getServerLocale } from '@/app/_components/i18n/server';
 import ServicesListClient from '@/app/dashboard/services/ServicesListClient';
 import { getBizContextForManagers } from '@/lib/authBiz';
 

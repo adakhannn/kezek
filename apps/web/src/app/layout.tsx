@@ -8,8 +8,9 @@ import {Footer} from './_components/Footer';
 import {Logo} from './_components/Logo';
 import {MobileHeaderMenu} from './_components/MobileHeaderMenu';
 import {ReminderBanners} from './_components/ReminderBanners';
-import {LanguageProvider, getServerLocale} from './_components/i18n/LanguageProvider';
+import {LanguageProvider} from './_components/i18n/LanguageProvider';
 import {LanguageSwitcher} from './_components/i18n/LanguageSwitcher';
+import {getServerLocale} from './_components/i18n/server';
 
 import {ErrorBoundary} from '@/components/ErrorBoundary';
 import {PerformanceTracking} from '@/components/PerformanceTracking';

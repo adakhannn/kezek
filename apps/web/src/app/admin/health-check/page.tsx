@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getT } from '@/app/_components/i18n/LanguageProvider';
+import { getT } from '@/app/_components/i18n/server';
 import { formatDateTime } from '@/lib/dateFormat';
 
 export const dynamic = 'force-dynamic';

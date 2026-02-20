@@ -4,9 +4,9 @@ import { cookies } from 'next/headers';
 
 import { OwnerForm } from './ui/OwnerForm';
 
+import { getT } from '@/app/_components/i18n/server';
 import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from '@/lib/env';
 import {logWarn} from '@/lib/log';
-import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 
 export const dynamic = 'force-dynamic';

@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
-import { getT, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
+import { getT, type I18nKey } from '@/app/_components/i18n/server';
 import { DeleteCategoryButton } from '@/components/admin/categories/DeleteCategoryButton';
 import { Button } from '@/components/ui/Button';
 

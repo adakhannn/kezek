@@ -2,7 +2,7 @@
 import {createClient} from '@supabase/supabase-js';
 import Link from 'next/link';
 
-import { getT } from '@/app/_components/i18n/LanguageProvider';
+import { getT } from '@/app/_components/i18n/server';
 
 export const dynamic = 'force-dynamic';
 

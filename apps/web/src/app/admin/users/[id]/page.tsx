@@ -5,10 +5,10 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { getT } from '@/app/_components/i18n/server';
 import { UserBasicForm } from '@/components/admin/users/UserBasicForm';           // client-компонент (как было)
 import { UserPageRedirect } from '@/components/admin/users/UserPageRedirect'; // клиентский компонент для редиректа
 import { UserSecurityActions } from '@/components/admin/users/UserSecurityActions'; // client-компонент (как было)
-import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 export const dynamic = 'force-dynamic';
 

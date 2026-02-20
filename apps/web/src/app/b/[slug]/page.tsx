@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { JSX } from 'react';
 
 import BusinessInfo from './BusinessInfo';
-import { getT, getServerLocale } from '@/app/_components/i18n/LanguageProvider';
 
+import { getT, getServerLocale } from '@/app/_components/i18n/server';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { generateAlternates } from '@/lib/seo';
 
