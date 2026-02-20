@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type React from 'react';
 
-import { t } from '@/app/_components/i18n/LanguageProvider';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 
@@ -27,6 +27,7 @@ export default function TimeRangeList({
     items: TimeRange[];
     onChange: (next: TimeRange[]) => void;
 }) {
+    const { t } = useLanguage();
     const toast = useToast();
     const [draft, setDraft] = useState<TimeRange>({ start: '09:00', end: '18:00' });
 

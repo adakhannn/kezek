@@ -2,6 +2,7 @@
 
 import { addDays, addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -13,8 +14,6 @@ import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { fromZonedTime } from 'date-fns-tz';
-
 import { getBusinessTimezone } from '@/lib/time';
 import { validateName, validatePhone } from '@/lib/validation';
 
@@ -457,6 +456,7 @@ function QuickDesk({ timezone,
     onTabChange?: (tab: TabKey) => void;
 }) {
     const { t, locale } = useLanguage();
+    const toast = useToast();
     // выбранный филиал (начинаем с пустого, как в публичной версии)
     const [branchId, setBranchId] = useState<string>('');
 
@@ -1274,6 +1274,7 @@ function QuickDesk({ timezone,
                                     </div>
                                 )}
                             </div>
+                        </div>
                         {searchErr && <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">{searchErr}</div>}
                         <div className="max-h-48 overflow-auto bg-white dark:bg-gray-900 rounded-lg border-2 border-green-200 dark:border-green-800">
                             <table className="min-w-full text-sm">

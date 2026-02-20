@@ -2,9 +2,9 @@
 
 import React, {useMemo, useState} from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import {Button} from '@/components/ui/Button';
 import {Input} from '@/components/ui/Input';
-import { t } from '@/app/_components/i18n/LanguageProvider';
 import { validateEmail, validatePhone } from '@/lib/validation';
 
 type ApiOk = { ok: true };
@@ -18,6 +18,7 @@ export function UserBasicForm({
     userId: string;
     initial: { full_name: string; email: string; phone: string };
 }) {
+    const { t } = useLanguage();
     const [fullName, setFullName] = useState<string>(initial.full_name ?? '');
     const [email, setEmail] = useState<string>(initial.email ?? '');
     const [phone, setPhone] = useState<string>(initial.phone ?? '');

@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 
-import { t } from '@/app/_components/i18n/LanguageProvider';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 

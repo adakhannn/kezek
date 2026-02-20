@@ -67,3 +67,5 @@ COMMENT ON COLUMN whatsapp_messages.booking_id IS 'ID бронирования, 
 COMMENT ON COLUMN whatsapp_messages.processed IS 'Обработано ли сообщение автоматической системой';
 COMMENT ON COLUMN whatsapp_messages.raw_data IS 'Полные данные от Meta для отладки и будущей обработки';
 
+
+

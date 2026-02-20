@@ -3,7 +3,8 @@
 
 import { useMemo, useState } from 'react';
 import type React from 'react';
-import { t } from '@/app/_components/i18n/LanguageProvider';
+
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 type RoleLiteral = 'owner' | 'manager' | 'staff' | 'admin' | 'client';
 const ROLES = ['owner', 'manager', 'staff', 'admin', 'client'] as const;
@@ -43,6 +44,7 @@ export function UserRolesEditor({
     roles: RoleRow[];
     allBusinesses: Biz[];
 }) {
+    const { t } = useLanguage();
     const [items, setItems] = useState<RoleRow[]>(roles ?? []);
     const [role, setRole] = useState<RoleLiteral>('client');
     const [loading, setLoading] = useState(false);

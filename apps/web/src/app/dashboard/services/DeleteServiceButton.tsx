@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { ToastContainer } from '@/components/ui/Toast';
-import { t } from '@/app/_components/i18n/LanguageProvider';
 import { useToast } from '@/hooks/useToast';
 
 export default function DeleteServiceButton({ id }: { id: string }) {
+    const { t } = useLanguage();
     const r = useRouter();
     const toast = useToast();
     const [loading, setLoading] = useState(false);

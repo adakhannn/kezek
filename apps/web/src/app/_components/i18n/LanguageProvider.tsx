@@ -1,6 +1,9 @@
 'use client';
 
 import {createContext, useContext, useEffect, useMemo, useState} from 'react';
+
+import { ky as kyModules, ru as ruModules, en as enModules, type I18nKey } from './dictionaries';
+
 import { getLocaleFromCookie, setLocaleInCookie } from '@/lib/cookies';
 
 type Locale = 'ky' | 'ru' | 'en';
@@ -38,10 +41,10 @@ export async function getServerLocale(): Promise<Locale> {
  */
 export function getT(locale: Locale): <K extends I18nKey>(key: K, fallback?: string) => string;
 export function getT(): Promise<<K extends I18nKey>(key: K, fallback?: string) => string>;
-export function getT(locale?: Locale): <K extends I18nKey>(key: K, fallback?: string) => string | Promise<<K extends I18nKey>(key: K, fallback?: string) => string> {
+export function getT(locale?: Locale): (<K extends I18nKey>(key: K, fallback?: string) => string) | Promise<<K extends I18nKey>(key: K, fallback?: string) => string> {
     // Если локаль передана, работаем синхронно
-    if (locale) {
-        return <K extends I18nKey>(key: K, fallback?: string): string => {
+    if (locale !== undefined) {
+        const t = <K extends I18nKey>(key: K, fallback?: string): string => {
             const dict = dictionaries[locale] || {};
             if (Object.prototype.hasOwnProperty.call(dict, key)) {
                 return dict[key];
@@ -52,6 +55,7 @@ export function getT(locale?: Locale): <K extends I18nKey>(key: K, fallback?: st
             }
             return fallback ?? key;
         };
+        return t as <K extends I18nKey>(key: K, fallback?: string) => string;
     }
     
     // Если локаль не передана, работаем асинхронно и читаем из cookie
@@ -83,7 +87,6 @@ export function getT(locale?: Locale): <K extends I18nKey>(key: K, fallback?: st
 }
 
 // Импорт модульных словарей
-import { ky as kyModules, ru as ruModules, en as enModules, type I18nKey } from './dictionaries';
 
 // Re-export I18nKey для удобства использования в других местах
 export type { I18nKey };

@@ -3,9 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { supabase } from '@/lib/supabaseClient';
 import { validatePhone } from '@/lib/validation';
-import { t } from '@/app/_components/i18n/LanguageProvider';
 
 type Props = {
     onDismiss?: () => void;
@@ -13,6 +13,7 @@ type Props = {
 };
 
 export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
+    const { t } = useLanguage();
     const router = useRouter();
     const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);

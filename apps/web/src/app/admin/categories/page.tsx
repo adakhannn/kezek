@@ -3,9 +3,9 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
+import { getT, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
 import { DeleteCategoryButton } from '@/components/admin/categories/DeleteCategoryButton';
 import { Button } from '@/components/ui/Button';
-import { getT } from '@/app/_components/i18n/LanguageProvider';
 
 export const dynamic = 'force-dynamic';
 
@@ -184,7 +184,7 @@ export default async function CategoriesPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <StatusBadge isActive={c.is_active} />
+                                                    <StatusBadge isActive={c.is_active} t={t} />
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export default async function CategoriesPage() {
     );
 }
 
-function StatusBadge({ isActive }: { isActive: boolean }) {
+function StatusBadge({ isActive, t }: { isActive: boolean; t: <K extends I18nKey>(key: K, fallback?: string) => string }) {
     return (
         <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${

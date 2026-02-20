@@ -900,6 +900,7 @@ function TransfersTab({
     homeBranchId: string;
 }) {
     const { t } = useLanguage();
+    const toast = useToast();
     const [transfers, setTransfers] = useState<
         Array<{
             id: string;

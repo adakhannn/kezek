@@ -4,8 +4,8 @@ import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
-import { t } from '@/app/_components/i18n/LanguageProvider';
 import {logError} from '@/lib/log';
 
 type QRCodeGeneratorProps = {
@@ -23,6 +23,7 @@ export default function QRCodeGenerator({
     businessName,
     onClose 
 }: QRCodeGeneratorProps) {
+    const { t } = useLanguage();
     const qrRef = useRef<HTMLDivElement>(null);
     const brandedRef = useRef<HTMLDivElement>(null);
     const [downloading, setDownloading] = useState(false);

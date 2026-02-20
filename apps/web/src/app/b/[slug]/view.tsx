@@ -168,6 +168,7 @@ export default function BookingForm({ data }: { data: Data }) {
     }, [serviceStaff]);
 
     /* ---------- дата и слоты через RPC get_free_slots_service_day_v2 ---------- */
+    const businessTz = getBusinessTimezone(biz.tz);
     const [day, setDay] = useState<Date>(todayTz(businessTz));
     const dayStr = formatInTimeZone(day, businessTz, 'yyyy-MM-dd');
     const todayStr = formatInTimeZone(todayTz(businessTz), businessTz, 'yyyy-MM-dd');

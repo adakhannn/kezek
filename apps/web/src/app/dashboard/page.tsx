@@ -34,7 +34,7 @@ export default async function DashboardHome() {
     const { supabase, bizId } = await getBizContextForManagers();
 
     const [
-        [bookingsToday, staffActive, servicesActive, branchesCount],
+        [, staffActive, servicesActive, branchesCount],
         { data: biz },
         { data: ratingConfig },
     ] = await Promise.all([

@@ -1,6 +1,6 @@
+import { getT, getServerLocale } from '@/app/_components/i18n/LanguageProvider';
 import ServicesListClient from '@/app/dashboard/services/ServicesListClient';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { t } from '@/app/_components/i18n/LanguageProvider';
 
 
 export const dynamic = 'force-dynamic';
@@ -46,6 +46,8 @@ export default async function ServicesListPage({
     ]);
 
     if (error) {
+        const locale = await getServerLocale();
+        const t = getT(locale);
         return (
             <main className="p-6 text-red-600">
                 {t('dashboard.services.error', 'Ошибка')}: {error.message}
