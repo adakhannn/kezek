@@ -10,6 +10,7 @@ import CabinetScreen from '../screens/CabinetScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import StaffScreen from '../screens/StaffScreen';
+import ShiftsScreen from '../screens/ShiftsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const CabinetStack = createNativeStackNavigator<CabinetStackParamList>();

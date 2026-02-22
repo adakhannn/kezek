@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
@@ -12,7 +13,7 @@ import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import EmptyState from '../components/ui/EmptyState';
 
-type StaffScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Staff'>;
+type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Shifts'>;
 
 type StaffInfo = {
     id: string;
@@ -182,6 +183,28 @@ export default function StaffScreen() {
                     />
                 )}
             </View>
+
+            {/* Кнопки для перехода к сменам */}
+            {staffInfo && (
+                <View style={styles.section}>
+                    <TouchableOpacity
+                        style={styles.shiftsButton}
+                        onPress={() => {
+                            navigation.navigate('ShiftQuick');
+                        }}
+                    >
+                        <Text style={styles.shiftsButtonText}>Моя смена</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.shiftsButton, styles.shiftsButtonSecondary]}
+                        onPress={() => {
+                            navigation.navigate('Shifts');
+                        }}
+                    >
+                        <Text style={styles.shiftsButtonTextSecondary}>Статистика</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </ScrollView>
     );
 }
@@ -267,5 +290,25 @@ const styles = StyleSheet.create({
     bookingTimeRange: {
         fontSize: 14,
         color: '#6b7280',
+    },
+    shiftsButton: {
+        backgroundColor: '#4f46e5',
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    shiftsButtonSecondary: {
+        backgroundColor: '#f3f4f6',
+    },
+    shiftsButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    shiftsButtonTextSecondary: {
+        color: '#374151',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

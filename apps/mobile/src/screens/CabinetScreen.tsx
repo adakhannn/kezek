@@ -10,6 +10,7 @@ import { formatDate, formatTime } from '../utils/format';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { logError, logDebug } from '../lib/log';
+import { getStatusColor, getStatusText } from '../utils/i18n';
 
 type CabinetScreenNavigationProp = NativeStackNavigationProp<CabinetStackParamList, 'CabinetMain'>;
 
@@ -90,31 +91,6 @@ export default function CabinetScreen() {
     };
 
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'confirmed':
-                return '#10b981';
-            case 'pending':
-                return '#f59e0b';
-            case 'cancelled':
-                return '#ef4444';
-            default:
-                return '#6b7280';
-        }
-    };
-
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case 'confirmed':
-                return 'Подтверждено';
-            case 'pending':
-                return 'Ожидает';
-            case 'cancelled':
-                return 'Отменено';
-            default:
-                return status;
-        }
-    };
 
     const handleBookingPress = (bookingId: string) => {
         // Навигация в BookingDetails находится в RootStack, поэтому используем type assertion

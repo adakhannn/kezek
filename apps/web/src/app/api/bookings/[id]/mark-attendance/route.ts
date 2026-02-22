@@ -12,6 +12,7 @@ import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { markAttendanceSchema } from '@/lib/validation/schemas';
+import { normalizePromotionApplied, type PromotionApplicationResult } from '@core-domain/booking';
 
 /**
  * @swagger
@@ -78,13 +79,7 @@ type Body = {
     attended: boolean; // true = пришел, false = не пришел
 };
 
-type PromotionRpcResult = {
-    applied?: boolean;
-    promotion_title?: string | null;
-    discount_percent?: number | null;
-    discount_amount?: number | null;
-    final_amount?: number | null;
-} | null;
+// PromotionApplicationResult импортирован из @core-domain/booking
 
 export async function POST(req: Request, context: unknown) {
     // Применяем rate limiting для обычной операции
@@ -162,18 +157,19 @@ export async function POST(req: Request, context: unknown) {
         // Если RPC успешно выполнен, возвращаем успех
         if (!rpcError) {
             // Если применялась акция, возвращаем информацию о ней
-            const result: PromotionRpcResult = promotionResult;
+            const result: PromotionApplicationResult = promotionResult;
             if (newStatus === 'paid' && result) {
                 const applied = result.applied || false;
+                const promotionApplied = normalizePromotionApplied(result);
                 
                 return createSuccessResponse(undefined, { 
                     status: newStatus,
                     promotion_applied: applied,
-                    promotion_info: applied ? {
-                        title: result?.promotion_title || '',
-                        discount_percent: result?.discount_percent || 0,
-                        discount_amount: result?.discount_amount || 0,
-                        final_amount: result?.final_amount || 0,
+                    promotion_info: applied && promotionApplied ? {
+                        title: promotionApplied.promotion_title || '',
+                        discount_percent: promotionApplied.discount_percent || 0,
+                        discount_amount: promotionApplied.discount_amount || 0,
+                        final_amount: promotionApplied.final_amount || 0,
                     } : null,
                 });
             }

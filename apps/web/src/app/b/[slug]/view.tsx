@@ -33,6 +33,7 @@ import { logDebug, logWarn, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, getBusinessTimezone } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
+import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 
 // Используем безопасное логирование из @/lib/log
 // debugLog и debugWarn удалены - используйте logDebug и logWarn из @/lib/log
@@ -124,6 +125,20 @@ export default function BookingForm({ data }: { data: Data }) {
             setInitialBranchSet(true);
         }
     }, [branchFromUrl, branches, initialBranchSet]);
+
+    // Отслеживание просмотра бизнеса
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            trackFunnelEvent({
+                event_type: 'business_view',
+                source: 'public',
+                biz_id: biz.id,
+                session_id: getSessionId(),
+                user_agent: navigator.userAgent,
+                referrer: document.referrer || null,
+            });
+        }
+    }, [biz.id]);
 
     const servicesByBranch = useMemo(
         () => services.filter((s) => s.branch_id === branchId),
@@ -593,7 +608,16 @@ export default function BookingForm({ data }: { data: Data }) {
                             <BranchSelector
                                 branches={branches}
                                 selectedBranchId={branchId}
-                                onSelect={setBranchId}
+                                onSelect={(id) => {
+                                    setBranchId(id);
+                                    trackFunnelEvent({
+                                        event_type: 'branch_select',
+                                        source: 'public',
+                                        biz_id: biz.id,
+                                        branch_id: id,
+                                        session_id: getSessionId(),
+                                    });
+                                }}
                                 formatBranchName={formatBranchName}
                                 t={t}
                             />
@@ -634,7 +658,17 @@ export default function BookingForm({ data }: { data: Data }) {
                                 <StaffSelector
                                     staff={staffFiltered}
                                     selectedStaffId={staffId}
-                                    onSelect={setStaffId}
+                                    onSelect={(id) => {
+                                        setStaffId(id);
+                                        trackFunnelEvent({
+                                            event_type: 'staff_select',
+                                            source: 'public',
+                                            biz_id: biz.id,
+                                            branch_id: branchId || null,
+                                            staff_id: id === 'any' ? null : id,
+                                            session_id: getSessionId(),
+                                        });
+                                    }}
                                     dayStr={dayStr}
                                 />
                             </section>
@@ -655,6 +689,15 @@ export default function BookingForm({ data }: { data: Data }) {
                                             currentServiceId: serviceId,
                                         });
                                         setServiceId(id);
+                                        trackFunnelEvent({
+                                            event_type: 'service_select',
+                                            source: 'public',
+                                            biz_id: biz.id,
+                                            branch_id: branchId || null,
+                                            service_id: id,
+                                            staff_id: staffId === 'any' ? null : staffId || null,
+                                            session_id: getSessionId(),
+                                        });
                                     }}
                                     staffId={staffId}
                                 />
@@ -687,7 +730,20 @@ export default function BookingForm({ data }: { data: Data }) {
                                 <SlotPicker
                                     slots={slots}
                                     selectedSlot={null}
-                                    onSelect={createBooking}
+                                    onSelect={(slotTime, slotStaffId) => {
+                                        // Отслеживаем выбор слота
+                                        trackFunnelEvent({
+                                            event_type: 'slot_select',
+                                            source: 'public',
+                                            biz_id: biz.id,
+                                            branch_id: branchId || null,
+                                            service_id: serviceId || null,
+                                            staff_id: slotStaffId || staffId === 'any' ? null : staffId || null,
+                                            slot_start_at: slotTime.toISOString(),
+                                            session_id: getSessionId(),
+                                        });
+                                        createBooking(slotTime, slotStaffId);
+                                    }}
                                     loading={slotsLoading}
                                     error={slotsError}
                                     dayStr={dayStr}

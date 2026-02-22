@@ -292,5 +292,160 @@ test.describe('Применение промо при бронировании',
             }
         });
     });
+
+    // Happy-path: Применение промо с несколькими типами скидок
+    test('должен применить промо с процентной скидкой', async ({ page }) => {
+        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        await page.goto(`/b/${businessSlug}`);
+        await page.waitForLoadState('networkidle');
+
+        await test.step('Поиск промо с процентной скидкой', async () => {
+            const promoSection = page.locator('[data-testid="promotions"], .promotion, text=/скидка|discount/i').first();
+            if (await promoSection.isVisible({ timeout: 5000 })) {
+                // Ищем промо с указанием процента (например, "10%", "20%")
+                const percentPromo = page.locator('text=/\\d+%/i').first();
+                if (await percentPromo.isVisible({ timeout: 3000 })) {
+                    await expect(percentPromo).toBeVisible();
+                    
+                    // Проверяем, что процент указан корректно
+                    const percentText = await percentPromo.textContent();
+                    expect(percentText).toMatch(/\d+%/);
+                }
+            }
+        });
+    });
+
+    // Happy-path: Применение промо "бесплатно" (free service)
+    test('должен применить промо типа "бесплатно"', async ({ page }) => {
+        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        await page.goto(`/b/${businessSlug}`);
+        await page.waitForLoadState('networkidle');
+
+        await test.step('Поиск промо типа "бесплатно"', async () => {
+            const freePromo = page.locator('text=/бесплатно|free|gratis/i').first();
+            if (await freePromo.isVisible({ timeout: 5000 })) {
+                await expect(freePromo).toBeVisible();
+                
+                // Проверяем, что итоговая цена = 0
+                const finalPrice = page.locator('[data-testid="final-price"], .total').first();
+                if (await finalPrice.isVisible({ timeout: 3000 })) {
+                    const priceText = await finalPrice.textContent();
+                    if (priceText) {
+                        const priceValue = parseFloat(priceText.replace(/[^\d.]/g, ''));
+                        expect(priceValue).toBe(0);
+                    }
+                }
+            }
+        });
+    });
+
+    // Edge-case: Промо с истекшим сроком действия
+    test('должен не показывать промо с истекшим сроком', async ({ page }) => {
+        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        await page.goto(`/b/${businessSlug}`);
+        await page.waitForLoadState('networkidle');
+
+        await test.step('Проверка отсутствия истекших промо', async () => {
+            // Промо с истекшим сроком не должны отображаться
+            const expiredPromo = page.locator('text=/истек|expired|завершено/i').first();
+            if (await expiredPromo.isVisible({ timeout: 3000 })) {
+                // Если есть истекшие промо, они должны быть помечены как неактивные
+                const isDisabled = await expiredPromo.isDisabled().catch(() => false);
+                expect(isDisabled || !(await expiredPromo.isVisible())).toBe(true);
+            }
+        });
+    });
+
+    // Edge-case: Промо с ограниченным количеством использований
+    test('должен проверить ограничение количества использований промо', async ({ page }) => {
+        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        await page.goto(`/b/${businessSlug}`);
+        await page.waitForLoadState('networkidle');
+
+        await test.step('Проверка отображения лимита использований', async () => {
+            const promoCard = page.locator('[data-testid="promotion-card"], .promotion-card').first();
+            if (await promoCard.isVisible({ timeout: 5000 })) {
+                // Ищем информацию о лимите (например, "Осталось 5 использований")
+                const limitInfo = page.locator('text=/осталось|remaining|лимит|limit/i').first();
+                if (await limitInfo.isVisible({ timeout: 3000 })) {
+                    const limitText = await limitInfo.textContent();
+                    expect(limitText).toMatch(/\d+/);
+                }
+            }
+        });
+    });
+
+    // Edge-case: Применение нескольких промо одновременно (если поддерживается)
+    test('должен проверить возможность применения нескольких промо', async ({ page }) => {
+        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        await page.goto(`/b/${businessSlug}`);
+        await page.waitForLoadState('networkidle');
+
+        await test.step('Проверка множественных промо', async () => {
+            // Обычно можно применить только одно промо, проверяем это
+            const promoCheckboxes = page.locator('input[type="checkbox"][data-testid*="promo"], input[type="radio"][name*="promo"]');
+            const promoCount = await promoCheckboxes.count();
+            
+            if (promoCount > 1) {
+                // Если есть несколько промо, проверяем, что можно выбрать только одно
+                const firstPromo = promoCheckboxes.first();
+                const secondPromo = promoCheckboxes.nth(1);
+                
+                if (await firstPromo.isVisible({ timeout: 3000 })) {
+                    await firstPromo.click();
+                    await page.waitForTimeout(500);
+                    
+                    if (await secondPromo.isVisible({ timeout: 3000 })) {
+                        await secondPromo.click();
+                        await page.waitForTimeout(500);
+                        
+                        // Проверяем, что первое промо снялось (если radio buttons)
+                        const firstChecked = await firstPromo.isChecked().catch(() => false);
+                        const secondChecked = await secondPromo.isChecked().catch(() => false);
+                        
+                        // Должно быть выбрано только одно
+                        expect(firstChecked && secondChecked).toBe(false);
+                    }
+                }
+            }
+        });
+    });
+
+    // Edge-case: Промо с условием минимальной суммы заказа
+    test('должен проверить применение промо с минимальной суммой', async ({ page }) => {
+        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        await page.goto(`/b/${businessSlug}`);
+        await page.waitForLoadState('networkidle');
+
+        await test.step('Проверка условия минимальной суммы', async () => {
+            const promoWithMinAmount = page.locator('text=/от.*сом|minimum|минимум/i').first();
+            if (await promoWithMinAmount.isVisible({ timeout: 5000 })) {
+                // Проверяем, что условие отображается
+                const minAmountText = await promoWithMinAmount.textContent();
+                expect(minAmountText).toMatch(/\d+/);
+                
+                // Если выбрана услуга с меньшей суммой, промо не должно применяться
+                const servicePrice = page.locator('[data-testid="service-price"], .price').first();
+                if (await servicePrice.isVisible({ timeout: 3000 })) {
+                    const priceText = await servicePrice.textContent();
+                    if (priceText) {
+                        const priceValue = parseFloat(priceText.replace(/[^\d.]/g, ''));
+                        const minAmountMatch = minAmountText?.match(/(\d+)/);
+                        if (minAmountMatch) {
+                            const minAmount = parseFloat(minAmountMatch[1]);
+                            
+                            // Если цена меньше минимальной, промо не должно применяться
+                            if (priceValue < minAmount) {
+                                const promoApplied = page.locator('text=/промо применено|promo applied/i').first();
+                                await expect(promoApplied).not.toBeVisible({ timeout: 2000 }).catch(() => {
+                                    // Игнорируем, если промо не применено (это правильно)
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
 });
 

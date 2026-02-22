@@ -7,6 +7,7 @@ import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { quickHoldSchema } from '@/lib/validation/bookingSchemas';
+import { validateCreateBookingParams, extractBookingId } from '@core-domain/booking';
 
 /**
  * @swagger
@@ -143,13 +144,19 @@ export async function POST(req: Request) {
         user = userData;
     }
 
-    // Валидация входных данных
+    // Валидация входных данных через Zod схему
     const validationResult = await validateRequest(req, quickHoldSchema);
     if (!validationResult.success) {
         return validationResult.response;
     }
     
-    const { biz_id, branch_id, service_id, staff_id, start_at } = validationResult.data;
+    // Дополнительная доменная валидация
+    const domainValidation = validateCreateBookingParams(validationResult.data);
+    if (!domainValidation.valid || !domainValidation.data) {
+        return createErrorResponse('validation', domainValidation.error || 'Неверные параметры бронирования', undefined, 400);
+    }
+    
+    const { biz_id, branch_id, service_id, staff_id, start_at } = domainValidation.data;
 
     let branch: { id: string } | null = null;
     
@@ -190,16 +197,6 @@ export async function POST(req: Request) {
         return createErrorResponse('not_found', 'No active branch', undefined, 400);
     }
 
-    function pickBookingId(data: unknown): string | null {
-        if (typeof data === 'string') return data;
-        if (data && typeof data === 'object') {
-            const rec = data as Record<string, unknown>;
-            if (typeof rec.booking_id === 'string') return rec.booking_id;
-            if (typeof rec.id === 'string') return rec.id;
-        }
-        return null;
-    }
-
     // Вызываем RPC с правильным контекстом авторизации
     // Функция hold_slot использует auth.uid() для получения client_id
     // Поэтому важно, чтобы токен был правильно передан в заголовках
@@ -214,18 +211,17 @@ export async function POST(req: Request) {
     
     if (error) {
         logError('QuickHold', 'RPC error', error);
-    } else {
-        logDebug('QuickHold', 'RPC success', { bookingId: pickBookingId(rpcData) });
-    }
-
-    if (error) {
         return createErrorResponse('validation', error.message, undefined, 400);
     }
 
-    const bookingId = pickBookingId(rpcData);
+    // Используем доменную функцию для извлечения booking_id
+    const bookingId = extractBookingId(rpcData);
     if (!bookingId) {
+        logError('QuickHold', 'Unexpected RPC result shape', { rpcData });
         return createErrorResponse('validation', 'Unexpected RPC result shape', undefined, 400);
     }
+    
+    logDebug('QuickHold', 'RPC success', { bookingId });
 
     logDebug('QuickHold', 'Booking created', { bookingId });
     logDebug('QuickHold', 'Attempting to confirm booking');

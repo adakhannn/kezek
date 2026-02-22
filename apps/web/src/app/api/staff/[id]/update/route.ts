@@ -24,7 +24,7 @@ export async function POST(req: Request, context: unknown) {
     return withErrorHandler('StaffUpdate', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const staffId = await getRouteParamUuid(context, 'id');
-        const { bizId } = await getBizContextForManagers();
+        const { bizId, userId } = await getBizContextForManagers();
         const admin = getServiceClient();
 
         let body: Body;
@@ -49,13 +49,20 @@ export async function POST(req: Request, context: unknown) {
             return createErrorResponse('validation', 'Неверный ID филиала', undefined, 400);
         }
 
-        // 1) staff принадлежит бизнесу? (используем унифицированную утилиту)
-        const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; branch_id: string }>(
+        // 1) staff принадлежит бизнесу? (и текущие финансовые настройки для audit log)
+        const staffCheck = await checkResourceBelongsToBiz<{
+            id: string;
+            biz_id: string;
+            branch_id: string;
+            percent_master: number | null;
+            percent_salon: number | null;
+            hourly_rate: number | null;
+        }>(
             admin,
             'staff',
             staffId,
             bizId,
-            'id, biz_id, branch_id'
+            'id, biz_id, branch_id, percent_master, percent_salon, hourly_rate'
         );
         if (staffCheck.error || !staffCheck.data) {
             return createErrorResponse('forbidden', staffCheck.error || 'Сотрудник не принадлежит этому бизнесу', undefined, 403);
@@ -127,10 +134,40 @@ export async function POST(req: Request, context: unknown) {
                 .update(updateData)
                 .eq('id', staffId)
                 .eq('biz_id', bizId);
-            
+
             if (eUpd) {
                 logError('StaffUpdate', 'Error updating staff', { error: eUpd, updateData });
                 return createErrorResponse('internal', eUpd.message, undefined, 400);
+            }
+
+            // Журнал изменений финансовых настроек (audit-trail)
+            const newPercentMaster = updateData.percent_master ?? (st.percent_master != null ? Number(st.percent_master) : null);
+            const newPercentSalon = updateData.percent_salon ?? (st.percent_salon != null ? Number(st.percent_salon) : null);
+            const newHourlyRate = updateData.hourly_rate !== undefined ? updateData.hourly_rate : (st.hourly_rate != null ? Number(st.hourly_rate) : null);
+            const oldPercentMaster = st.percent_master != null ? Number(st.percent_master) : null;
+            const oldPercentSalon = st.percent_salon != null ? Number(st.percent_salon) : null;
+            const oldHourlyRate = st.hourly_rate != null ? Number(st.hourly_rate) : null;
+
+            const fieldChanges: { field: string; old_value: number | null; new_value: number | null }[] = [];
+            if (oldPercentMaster !== newPercentMaster || oldPercentSalon !== newPercentSalon) {
+                if (oldPercentMaster !== newPercentMaster) {
+                    fieldChanges.push({ field: 'percent_master', old_value: oldPercentMaster, new_value: newPercentMaster });
+                }
+                if (oldPercentSalon !== newPercentSalon) {
+                    fieldChanges.push({ field: 'percent_salon', old_value: oldPercentSalon, new_value: newPercentSalon });
+                }
+            }
+            if (oldHourlyRate !== newHourlyRate) {
+                fieldChanges.push({ field: 'hourly_rate', old_value: oldHourlyRate, new_value: newHourlyRate });
+            }
+            if (fieldChanges.length > 0) {
+                await admin.from('finance_settings_audit_log').insert({
+                    biz_id: bizId,
+                    staff_id: staffId,
+                    changed_by_user_id: userId ?? null,
+                    field_changes: fieldChanges,
+                    message: `Изменены настройки: ${fieldChanges.map((c) => `${c.field} ${c.old_value ?? '—'} → ${c.new_value ?? '—'}`).join(', ')}`,
+                });
             }
         }
 

@@ -96,8 +96,15 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: apps/web
 
-      - name: Run API tests
-        run: pnpm test
+      - name: Run API tests with coverage
+        run: pnpm test:coverage
+        working-directory: apps/web
+
+      - name: Check coverage threshold
+        run: |
+          echo "✅ Покрытие тестами проверено автоматически через coverageThreshold в jest.config.js"
+          echo "Текущий минимальный порог: 40% (statements/branches/functions/lines)"
+          echo "По мере добавления тестов порог будет постепенно подниматься до 50%+, 60%+ и т.д."
         working-directory: apps/web
 
   e2e_tests:
@@ -144,6 +151,43 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 30
+
+  mobile_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install deps (root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Install deps (apps/mobile)
+        run: pnpm install --frozen-lockfile
+        working-directory: apps/mobile
+
+      - name: Run mobile smoke tests
+        run: pnpm test
+        working-directory: apps/mobile
+
+      - name: Check smoke tests status
+        run: |
+          echo "✅ Smoke-тесты для mobile приложения проверены"
+          echo "Базовый набор тестов должен проходить перед каждым релизом:"
+          echo "- Auth экраны (SignIn, SignUp, Verify, WhatsApp)"
+          echo "- Основные экраны (StaffScreen, CabinetScreen, BookingDetailsScreen)"
+          echo "- Навигация между шагами бронирования"
+        working-directory: apps/mobile
 
   # SQL тесты запускаются только если есть доступ к тестовой БД
   # Для запуска в CI нужно установить SUPABASE_DB_URL в secrets

@@ -5,6 +5,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@shared-client/*": [
+        "../../packages/shared-client/src/*"
       ]
     }
   },

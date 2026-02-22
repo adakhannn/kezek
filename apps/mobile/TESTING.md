@@ -1,170 +1,95 @@
-# Инструкция по тестированию мобильного приложения
+# Тестирование мобильного приложения
 
-## Подготовка
+## Обзор
 
-### 1. Установите зависимости
+Мобильное приложение использует Jest и React Native Testing Library для smoke-тестов ключевых экранов.
+
+## Установка зависимостей
 
 ```bash
 cd apps/mobile
 pnpm install
 ```
 
-### 2. Настройте переменные окружения
+## Запуск тестов
 
-Создайте файл `apps/mobile/.env.local` (или `.env`) со следующим содержимым:
-
-```env
-EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-EXPO_PUBLIC_API_URL=https://kezek.kg
-```
-
-**Где взять значения:**
-- `EXPO_PUBLIC_SUPABASE_URL` и `EXPO_PUBLIC_SUPABASE_ANON_KEY` - из `apps/web/.env.local` (те же значения, что используются в web версии)
-- `EXPO_PUBLIC_API_URL` - URL вашего продакшн API (обычно `https://kezek.kg`)
-
-### 3. Установите Expo Go на телефон
-
-- **iOS**: [Expo Go в App Store](https://apps.apple.com/app/expo-go/id982107779)
-- **Android**: [Expo Go в Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent)
-
-## Запуск приложения
-
-### Вариант 1: На физическом устройстве (рекомендуется)
-
-1. Запустите dev server:
 ```bash
-cd apps/mobile
-pnpm start
+# Запустить все тесты
+pnpm test
+
+# Запустить тесты в watch режиме
+pnpm test:watch
+
+# Запустить тесты с покрытием
+pnpm test:coverage
 ```
 
-2. Откройте Expo Go на телефоне
-3. Отсканируйте QR-код из терминала:
-   - **iOS**: Откройте камеру и наведите на QR-код
-   - **Android**: Откройте Expo Go и нажмите "Scan QR code"
+## Структура тестов
 
-### Вариант 2: На эмуляторе/симуляторе
+### Smoke-тесты экранов
 
-**iOS Simulator (только на Mac):**
-```bash
-cd apps/mobile
-pnpm ios
+Тесты находятся в `src/__tests__/screens/`:
+
+- **Auth экраны** (`auth/`):
+  - `SignInScreen.test.tsx` - проверка рендеринга экрана входа
+  - `SignUpScreen.test.tsx` - проверка рендеринга экрана регистрации
+  - `VerifyScreen.test.tsx` - проверка рендеринга экрана подтверждения
+  - `WhatsAppScreen.test.tsx` - проверка рендеринга экрана WhatsApp авторизации
+
+- **Основные экраны**:
+  - `StaffScreen.test.tsx` - проверка рендеринга экрана списка смен сотрудника
+  - `CabinetScreen.test.tsx` - проверка рендеринга экрана кабинета клиента
+  - `BookingDetailsScreen.test.tsx` - проверка рендеринга экрана деталей бронирования
+
+### Тесты навигации
+
+- `src/__tests__/navigation/BookingNavigation.test.tsx` - проверка навигации между шагами бронирования
+
+## Базовый набор тестов перед релизом
+
+Перед каждым релизом mobile приложения должны проходить следующие smoke-тесты:
+
+1. ✅ **Auth экраны рендерятся без ошибок**
+   - SignInScreen
+   - SignUpScreen
+   - VerifyScreen
+   - WhatsAppScreen
+
+2. ✅ **Основные экраны рендерятся без ошибок**
+   - StaffScreen (список смен)
+   - CabinetScreen (кабинет клиента)
+   - BookingDetailsScreen (детали бронирования)
+
+3. ✅ **Навигация между шагами бронирования работает**
+   - BookingStep1Branch → BookingStep2Service → BookingStep3Staff → BookingStep4Date → BookingStep5Time → BookingStep6Confirm
+
+## Настройка моков
+
+Моки настроены в `jest.setup.js`:
+- Expo модули (expo-constants, expo-secure-store, expo-web-browser)
+- Supabase клиент
+- React Navigation
+- React Query
+- Toast Context
+- Booking Context
+
+## Добавление новых тестов
+
+При добавлении нового экрана создайте соответствующий smoke-тест:
+
+```typescript
+import React from 'react';
+import { render, screen } from '@testing-library/react-native';
+import NewScreen from '../../screens/NewScreen';
+
+describe('NewScreen', () => {
+    test('должен отрендериться без ошибок', () => {
+        render(<NewScreen />);
+        expect(screen.getByTestId('new-screen') || screen.getByText(/новый экран/i)).toBeTruthy();
+    });
+});
 ```
 
-**Android Emulator:**
-```bash
-cd apps/mobile
-pnpm android
-```
+## CI/CD
 
-**Web (для быстрого тестирования UI):**
-```bash
-cd apps/mobile
-pnpm web
-```
-
-## Чек-лист тестирования
-
-### Авторизация
-- [ ] Вход через Email + OTP
-- [ ] Вход через Phone + OTP
-- [ ] Вход через Google OAuth
-- [ ] Регистрация нового пользователя
-- [ ] Валидация полей (email, phone, код)
-- [ ] Отображение ошибок валидации
-- [ ] Повторная отправка кода
-
-### Главный экран
-- [ ] Отображение списка бизнесов
-- [ ] Поиск бизнесов
-- [ ] Pull-to-refresh
-- [ ] Переход на экран бронирования
-
-### Бронирование
-- [ ] Выбор филиала
-- [ ] Выбор услуги
-- [ ] Выбор мастера
-- [ ] Выбор даты
-- [ ] Выбор времени
-- [ ] Создание бронирования
-- [ ] Отображение ошибок при создании
-
-### Личный кабинет
-- [ ] Отображение предстоящих бронирований
-- [ ] Отображение прошедших бронирований
-- [ ] Переключение между вкладками
-- [ ] Переход к деталям бронирования
-- [ ] Pull-to-refresh
-- [ ] Отмена бронирования
-
-### Детали бронирования
-- [ ] Отображение всей информации
-- [ ] Отмена бронирования
-- [ ] Валидация возможности отмены
-
-### Профиль
-- [ ] Редактирование имени
-- [ ] Редактирование телефона
-- [ ] Настройки уведомлений (Email, WhatsApp)
-- [ ] Сохранение изменений
-- [ ] Выход из аккаунта
-
-### Кабинет бизнеса (для владельцев)
-- [ ] Отображение списка бизнесов
-- [ ] Pull-to-refresh
-- [ ] Пустое состояние (если не владелец)
-
-### Кабинет сотрудника (для сотрудников)
-- [ ] Отображение информации о сотруднике
-- [ ] Отображение предстоящих записей
-- [ ] Pull-to-refresh
-- [ ] Пустое состояние (если не сотрудник)
-
-### Общие функции
-- [ ] Toast уведомления (успех, ошибка)
-- [ ] Обработка ошибок сети
-- [ ] Состояния загрузки
-- [ ] Пустые состояния
-- [ ] Навигация между экранами
-- [ ] Кнопка "Назад"
-
-## Известные проблемы
-
-Если вы столкнулись с проблемами:
-
-1. **"Unable to resolve module"**
-   ```bash
-   rm -rf node_modules
-   pnpm install
-   ```
-
-2. **Metro bundler не запускается**
-   ```bash
-   npx expo start --clear
-   ```
-
-3. **Проблемы с кэшем**
-   ```bash
-   npx expo start -c
-   ```
-
-4. **Ошибки с переменными окружения**
-   - Убедитесь, что файл `.env.local` находится в `apps/mobile/`
-   - Перезапустите Expo после изменения переменных
-   - Используйте префикс `EXPO_PUBLIC_` для всех переменных
-
-5. **Ошибки подключения к Supabase**
-   - Проверьте правильность URL и ключа
-   - Убедитесь, что Supabase проект активен
-   - Проверьте настройки CORS в Supabase
-
-## Отчет о тестировании
-
-После тестирования заполните:
-
-- ✅ Работает
-- ⚠️ Работает с проблемами
-- ❌ Не работает
-
-Для каждого пункта из чек-листа укажите статус и опишите найденные проблемы.
-
+Smoke-тесты автоматически запускаются в CI pipeline перед релизом mobile приложения.

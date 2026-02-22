@@ -7,6 +7,7 @@ import { fmtErr, withNetworkRetry } from '../utils';
 import { logDebug, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { TZ } from '@/lib/time';
+import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 
 
 type UseBookingCreationParams = {
@@ -103,6 +104,19 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 );
                 return;
             }
+
+            // Отслеживаем успешную бронь
+            trackFunnelEvent({
+                event_type: 'booking_success',
+                source: 'public',
+                biz_id: bizId,
+                branch_id: branchId,
+                service_id: service.id,
+                staff_id: actualStaffId,
+                slot_start_at: startISO,
+                booking_id: bookingId,
+                session_id: getSessionId(),
+            });
 
             // Отправляем уведомление о создании бронирования (best effort, с повторной попыткой при сетевой ошибке)
             void withNetworkRetry(

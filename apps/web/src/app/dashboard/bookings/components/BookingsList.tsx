@@ -8,7 +8,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import Link from 'next/link';
 
-import { BookingActions } from './BookingActions';
+import { QuickActions } from './QuickActions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { TZ } from '@/lib/time';
@@ -123,13 +123,14 @@ export function BookingsList({
                                         </span>
                                     </td>
                                     <td className="p-3 lg:p-4">
-                                        <BookingActions
+                                        <QuickActions
                                             bookingId={b.id}
                                             status={b.status}
                                             startAt={b.start_at}
                                             onConfirm={onConfirm}
                                             onCancel={onCancel}
                                             onMarkAttendance={onMarkAttendance}
+                                            compact={true}
                                         />
                                     </td>
                                 </tr>
@@ -171,13 +172,14 @@ export function BookingsList({
                                 <span>{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</span>
                             </div>
                             <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                                <BookingActions
+                                <QuickActions
                                     bookingId={b.id}
                                     status={b.status}
                                     startAt={b.start_at}
                                     onConfirm={onConfirm}
                                     onCancel={onCancel}
                                     onMarkAttendance={onMarkAttendance}
+                                    compact={false}
                                 />
                             </div>
                         </div>

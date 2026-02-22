@@ -6,6 +6,7 @@ import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { quickBookGuestSchema } from '@/lib/validation/bookingSchemas';
+import { validateCreateGuestBookingParams, extractBookingId } from '@core-domain/booking';
 
 type HoldSlotGuestArgs = {
     p_biz_id: string;
@@ -39,17 +40,19 @@ export async function POST(req: Request) {
                 },
             });
 
-            // Валидация входных данных
+            // Валидация входных данных через Zod схему
             const validationResult = await validateRequest(req, quickBookGuestSchema);
             if (!validationResult.success) {
                 return validationResult.response;
             }
             
-            const body = validationResult.data;
-
-            // Нормализуем телефон (убираем пробелы, дефисы и т.д.)
-            // Телефон уже валидирован как E.164, но убираем возможные пробелы для безопасности
-            const normalizedPhone = body.client_phone.replace(/\s+/g, '').replace(/[-\s()]/g, '');
+            // Дополнительная доменная валидация (включает нормализацию телефона)
+            const domainValidation = validateCreateGuestBookingParams(validationResult.data);
+            if (!domainValidation.valid || !domainValidation.data) {
+                return createErrorResponse('validation', domainValidation.error || 'Неверные параметры гостевой брони', undefined, 400);
+            }
+            
+            const body = domainValidation.data;
 
             // Проверяем, что переданный филиал существует и активен
             const { data: branch, error: eBranch } = await supabase
@@ -64,16 +67,6 @@ export async function POST(req: Request) {
                 return createErrorResponse('not_found', 'Филиал не найден или неактивен', { code: 'no_branch' }, 400);
             }
 
-            function pickBookingId(data: unknown): string | null {
-                if (typeof data === 'string') return data;
-                if (data && typeof data === 'object') {
-                    const rec = data as Record<string, unknown>;
-                    if (typeof rec.booking_id === 'string') return rec.booking_id;
-                    if (typeof rec.id === 'string') return rec.id;
-                }
-                return null;
-            }
-
             // Вызываем RPC для создания гостевой брони
             logDebug('QuickBookGuest', 'Calling hold_slot_guest RPC');
             const { data: rpcData, error } = await supabase.rpc<string, HoldSlotGuestArgs>('hold_slot_guest', {
@@ -82,9 +75,9 @@ export async function POST(req: Request) {
                 p_service_id: body.service_id,
                 p_staff_id: body.staff_id,
                 p_start: body.start_at,
-                p_client_name: body.client_name.trim(),
-                p_client_phone: normalizedPhone,
-                p_client_email: body.client_email?.trim() || null,
+                p_client_name: body.client_name,
+                p_client_phone: body.client_phone, // уже нормализован в validateCreateGuestBookingParams
+                p_client_email: body.client_email,
             });
             
             if (error) {
@@ -92,8 +85,10 @@ export async function POST(req: Request) {
                 return createErrorResponse('validation', error.message, { code: 'rpc' }, 400);
             }
 
-            const bookingId = pickBookingId(rpcData);
+            // Используем доменную функцию для извлечения booking_id
+            const bookingId = extractBookingId(rpcData);
             if (!bookingId) {
+                logError('QuickBookGuest', 'Unexpected RPC result shape', { rpcData });
                 return createErrorResponse('validation', 'Неожиданный формат результата RPC', { code: 'rpc_shape' }, 400);
             }
 

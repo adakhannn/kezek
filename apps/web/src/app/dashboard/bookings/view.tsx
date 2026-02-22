@@ -8,8 +8,10 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { BookingFilters } from './components/BookingFilters';
 import { BookingsList } from './components/BookingsList';
+import { FilterPresets, FilterPreset, applyPreset } from './components/FilterPresets';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { BookingCard, StatusPanel, StatusItem } from '@/components/dashboard';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { logDebug, logError, logWarn } from '@/lib/log';
@@ -84,22 +86,18 @@ function Tabs({ value, onChange }: { value: TabKey; onChange: (v: TabKey) => voi
 function hourRange(start: number, end: number) { const a: number[] = []; for (let h = start; h <= end; h++) a.push(h); return a; }
 function minutesFromMidnight(d: Date) { return d.getHours() * 60 + d.getMinutes(); }
 function cellKey(staffId: string, hour: number) { return `${staffId}-${hour}`; }
+import { BookingCard } from '@/components/dashboard';
+
 function BookingPill({ id, startISO, endISO, status, timezone }: { id: string; startISO: string; endISO: string; status: BookingItem['status']; timezone: string }) {
-    const { t } = useLanguage();
-    const start = new Date(startISO);
-    const end   = new Date(endISO);
-    const label = `${formatInTimeZone(start, timezone, 'HH:mm')}–${formatInTimeZone(end, timezone, 'HH:mm')}`;
-    const statusStyles = {
-        hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800',
-        confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-800',
-        paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-800',
-        cancelled: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border-gray-300 dark:border-gray-700 line-through',
-        no_show: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-800',
-    };
     return (
-        <Link href={`/booking/${id}`} className={`inline-block text-xs px-2 py-1 border rounded-lg font-medium ${statusStyles[status]} hover:opacity-90 transition-opacity`} title={`${t('bookings.calendar.openBooking', 'Открыть бронь')} #${id.slice(0, 8)}`}>
-            {label}
-        </Link>
+        <BookingCard
+            id={id}
+            startISO={startISO}
+            endISO={endISO}
+            status={status}
+            timezone={timezone}
+            href={`/booking/${id}`}
+        />
     );
 }
 
@@ -271,6 +269,34 @@ function ListTable({ bizId, initial, branches, timezone }: { bizId: string; init
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalCount, setTotalCount] = useState<number>(initial.length);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [activePreset, setActivePreset] = useState<FilterPreset>(null);
+    const [currentStaffId, setCurrentStaffId] = useState<string | null>(null);
+    const [hasStaffAccess, setHasStaffAccess] = useState<boolean>(false);
+
+    // Получаем текущего пользователя и его staff_id
+    useEffect(() => {
+        async function fetchCurrentStaff() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                const { data: staff } = await supabase
+                    .from('staff')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('is_active', true)
+                    .maybeSingle();
+
+                if (staff) {
+                    setCurrentStaffId(staff.id);
+                    setHasStaffAccess(true);
+                }
+            } catch (error) {
+                logWarn('ListTable', 'Failed to fetch current staff', error);
+            }
+        }
+        fetchCurrentStaff();
+    }, []);
 
     // Функция для получения названия услуги в зависимости от языка
     const getServiceName = (service: { name_ru: string; name_ky?: string | null } | undefined): string => {
@@ -285,16 +311,34 @@ function ListTable({ bizId, initial, branches, timezone }: { bizId: string; init
             // Загружаем прошедшие брони (для отметки посещения) и будущие
             let query = supabase
                 .from('bookings')
-                .select('id,status,start_at,end_at,branch_id,services(name_ru,name_ky),staff(full_name),client_name,client_phone', { count: 'exact' })
+                .select('id,status,start_at,end_at,branch_id,staff_id,services(name_ru,name_ky),staff(full_name),client_name,client_phone', { count: 'exact' })
                 .eq('biz_id', bizId);
             
-            if (statusFilter !== 'all') {
+            // Применяем пресет
+            if (activePreset) {
+                const presetFilters = applyPreset(activePreset, timezone, currentStaffId);
+                
+                if (presetFilters.dateFilter) {
+                    query = query.gte('start_at', presetFilters.dateFilter.gte);
+                    query = query.lte('start_at', presetFilters.dateFilter.lte);
+                }
+                
+                if (presetFilters.staffFilter) {
+                    query = query.eq('staff_id', presetFilters.staffFilter);
+                }
+                
+                if (presetFilters.statusFilter === 'holdConfirmed') {
+                    query = query.in('status', ['hold', 'confirmed']);
+                }
+            }
+            
+            if (statusFilter !== 'all' && !activePreset) {
                 if (statusFilter === 'active') {
                     query = query.in('status', ['confirmed']);
                 } else {
                     query = query.eq('status', statusFilter);
                 }
-            } else {
+            } else if (!activePreset) {
                 query = query.neq('status', 'cancelled');
             }
             
@@ -338,11 +382,11 @@ function ListTable({ bizId, initial, branches, timezone }: { bizId: string; init
     
     useEffect(() => {
         setCurrentPage(1); // Сбрасываем на первую страницу при изменении фильтров
-    }, [statusFilter, branchFilter]);
+    }, [statusFilter, branchFilter, activePreset]);
     
     useEffect(() => {
         refresh();
-    }, [statusFilter, branchFilter, currentPage, bizId]);
+    }, [statusFilter, branchFilter, currentPage, bizId, activePreset]);
 
     async function _confirm(id: string) {
         const { error } = await supabase.rpc('confirm_booking', { p_booking_id: id });
@@ -424,6 +468,11 @@ function ListTable({ bizId, initial, branches, timezone }: { bizId: string; init
                 onSearchChange={setSearchQuery}
                 onRefresh={refresh}
                 isLoading={isLoading}
+                activePreset={activePreset}
+                onPresetChange={setActivePreset}
+                timezone={timezone}
+                currentStaffId={currentStaffId}
+                hasStaffAccess={hasStaffAccess}
             />
             
             <BookingsList
@@ -920,6 +969,20 @@ function QuickDesk({ timezone,
             }
 
             const bookingId = String(data);
+            
+            // Отслеживаем успешную бронь
+            trackFunnelEvent({
+                event_type: 'booking_success',
+                source: 'quickdesk',
+                biz_id: bizId,
+                branch_id: targetBranchId,
+                service_id: serviceId,
+                staff_id: staffId,
+                slot_start_at: slotStartISO,
+                booking_id: bookingId,
+                session_id: getSessionId(),
+            });
+            
             await notify('confirm', bookingId);
             toast.showSuccess(
                 `${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`
@@ -953,65 +1016,41 @@ function QuickDesk({ timezone,
     return (
         <section className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4 sm:space-y-6">
             {/* Панель статуса */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        {t('bookings.desk.statusPanel.title', 'Статус на сегодня/завтра')}
-                    </h3>
-                    {onTabChange && (
-                        <div className="flex gap-2">
-                            <button
-                                type="button"
-                                onClick={() => onTabChange('calendar')}
-                                className="px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-700 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-                            >
-                                {t('bookings.desk.statusPanel.goToCalendar', 'Календарь')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onTabChange('list')}
-                                className="px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-700 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-                            >
-                                {t('bookings.desk.statusPanel.goToList', 'Список')}
-                            </button>
-                        </div>
-                    )}
+            <StatusPanel
+                title={t('bookings.desk.statusPanel.title', 'Статус на сегодня/завтра')}
+                loading={statusStats.loading}
+                actions={onTabChange ? (
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => onTabChange('calendar')}
+                            className="px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-700 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+                        >
+                            {t('bookings.desk.statusPanel.goToCalendar', 'Календарь')}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onTabChange('list')}
+                            className="px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-white dark:bg-gray-800 border border-indigo-300 dark:border-indigo-700 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+                        >
+                            {t('bookings.desk.statusPanel.goToList', 'Список')}
+                        </button>
+                    </>
+                ) : undefined}
+            >
+                <div className="grid grid-cols-2 gap-4">
+                    <StatusItem
+                        label={t('bookings.desk.statusPanel.today', 'Сегодня')}
+                        value={`${statusStats.todayCount} ${t('bookings.desk.statusPanel.bookings', 'записей')}`}
+                        subtitle={slots.length > 0 && date === today ? `${slots.length} ${t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}` : undefined}
+                    />
+                    <StatusItem
+                        label={t('bookings.desk.statusPanel.tomorrow', 'Завтра')}
+                        value={`${statusStats.tomorrowCount} ${t('bookings.desk.statusPanel.bookings', 'записей')}`}
+                        subtitle={slots.length > 0 && date === tomorrow ? `${slots.length} ${t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}` : undefined}
+                    />
                 </div>
-                {statusStats.loading ? (
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{t('bookings.desk.statusPanel.loading', 'Загрузка...')}</div>
-                ) : (
-                    <div className="grid grid-cols-2 gap-4">
-                        {/* Сегодня */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-indigo-200 dark:border-indigo-700">
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                {t('bookings.desk.statusPanel.today', 'Сегодня')}
-                            </div>
-                            <div className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
-                                {statusStats.todayCount} {t('bookings.desk.statusPanel.bookings', 'записей')}
-                            </div>
-                            {slots.length > 0 && date === today && (
-                                <div className="text-xs text-indigo-600 dark:text-indigo-400">
-                                    {slots.length} {t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}
-                                </div>
-                            )}
-                        </div>
-                        {/* Завтра */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-indigo-200 dark:border-indigo-700">
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                {t('bookings.desk.statusPanel.tomorrow', 'Завтра')}
-                            </div>
-                            <div className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
-                                {statusStats.tomorrowCount} {t('bookings.desk.statusPanel.bookings', 'записей')}
-                            </div>
-                            {slots.length > 0 && date === tomorrow && (
-                                <div className="text-xs text-indigo-600 dark:text-indigo-400">
-                                    {slots.length} {t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
+            </StatusPanel>
 
             <div className="flex items-center justify-between">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -1030,7 +1069,18 @@ function QuickDesk({ timezone,
                     {/* Филиал */}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.branch', 'Филиал')}</label>
-                        <select className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+                        <select className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" value={branchId} onChange={(e) => {
+                            setBranchId(e.target.value);
+                            if (e.target.value) {
+                                trackFunnelEvent({
+                                    event_type: 'branch_select',
+                                    source: 'quickdesk',
+                                    biz_id: bizId,
+                                    branch_id: e.target.value,
+                                    session_id: getSessionId(),
+                                });
+                            }
+                        }}>
                             <option value="">{t('bookings.desk.selectBranch', 'Выберите филиал')}</option>
                             {branches.map(b => (<option key={b.id} value={b.id}>{b.name}</option>))}
                         </select>
@@ -1077,7 +1127,19 @@ function QuickDesk({ timezone,
                     {/* Мастер */}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('bookings.desk.master', 'Мастер')}</label>
-                        <select className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={staffId} onChange={(e) => setStaffId(e.target.value)} disabled={!branchId || !date}>
+                        <select className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" value={staffId} onChange={(e) => {
+                            setStaffId(e.target.value);
+                            if (e.target.value) {
+                                trackFunnelEvent({
+                                    event_type: 'staff_select',
+                                    source: 'quickdesk',
+                                    biz_id: bizId,
+                                    branch_id: branchId || null,
+                                    staff_id: e.target.value,
+                                    session_id: getSessionId(),
+                                });
+                            }
+                        }} disabled={!branchId || !date}>
                             <option value="">{!branchId ? t('bookings.desk.selectBranchFirst', 'Сначала выберите филиал') : !date ? t('bookings.desk.selectDateFirst', 'Сначала выберите дату') : t('bookings.desk.selectMaster', 'Выберите мастера')}</option>
                             {staffByBranch.map(m => (<option key={m.id} value={m.id}>{m.full_name}</option>))}
                             {branchId && date && staffByBranch.length === 0 && <option value="">{t('bookings.desk.noMasters', 'Нет мастеров в филиале')}</option>}
@@ -1121,7 +1183,19 @@ function QuickDesk({ timezone,
                                     <button
                                         key={`${s.staff_id}-${s.start_at}-${i}`}
                                         type="button"
-                                        onClick={() => setSlotStartISO(s.start_at)}
+                                        onClick={() => {
+                                            setSlotStartISO(s.start_at);
+                                            trackFunnelEvent({
+                                                event_type: 'slot_select',
+                                                source: 'quickdesk',
+                                                biz_id: bizId,
+                                                branch_id: branchId || null,
+                                                service_id: serviceId || null,
+                                                staff_id: staffId || null,
+                                                slot_start_at: s.start_at,
+                                                session_id: getSessionId(),
+                                            });
+                                        }}
                                         className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                                             isSelected
                                                 ? 'bg-indigo-600 text-white shadow-md'

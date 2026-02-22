@@ -11,6 +11,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { logError } from '../lib/log';
 import { RootStackParamList } from '../navigation/types';
+import { getStatusColor, getStatusText } from '../utils/i18n';
 
 type BookingDetailsRouteParams = {
     id: string;
@@ -107,31 +108,6 @@ export default function BookingDetailsScreen() {
     });
 
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'confirmed':
-                return '#10b981';
-            case 'pending':
-                return '#f59e0b';
-            case 'cancelled':
-                return '#ef4444';
-            default:
-                return '#6b7280';
-        }
-    };
-
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case 'confirmed':
-                return 'Подтверждено';
-            case 'pending':
-                return 'Ожидает подтверждения';
-            case 'cancelled':
-                return 'Отменено';
-            default:
-                return status;
-        }
-    };
 
     const handleCancel = () => {
         Alert.alert(

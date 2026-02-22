@@ -107,6 +107,28 @@ apps/mobile/
 pnpm typecheck
 ```
 
+### Тестирование
+
+Запуск smoke-тестов для проверки базового рендеринга ключевых экранов:
+
+```bash
+# Запустить все тесты
+pnpm test
+
+# Запустить тесты в watch режиме
+pnpm test:watch
+
+# Запустить тесты с покрытием
+pnpm test:coverage
+```
+
+**Базовый набор smoke-тестов:**
+- Auth экраны (SignIn, SignUp, Verify, WhatsApp)
+- Основные экраны (StaffScreen, CabinetScreen, BookingDetailsScreen)
+- Навигация между шагами бронирования
+
+Подробнее см. `TESTING.md` и `SMOKE_TESTS.md`.
+
 ### Сборка для продакшена
 
 **Android:**

@@ -25,6 +25,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@core-domain/*": [
+        "../../packages/core-domain/src/*"
+      ],
+      "@shared-client/*": [
+        "../../packages/shared-client/src/*"
       ]
     }
   },

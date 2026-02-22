@@ -17,7 +17,18 @@ type SendWhatsAppOpts = {
 };
 
 import { getWhatsAppAccessToken, getWhatsAppPhoneNumberId } from '../env';
-import { logDebugSafe, logErrorSafe } from '../logSafe';
+import { sanitizeObject } from '@shared-client/log';
+// Для обратной совместимости создаём обёртки
+const logDebugSafe = (scope: string, message: string, data?: unknown) => {
+    if (process.env.NODE_ENV === 'production') return;
+    const sanitized = data !== undefined ? sanitizeObject(data) : undefined;
+    // eslint-disable-next-line no-console
+    console.log(`[${scope}] ${message}`, sanitized ?? '');
+};
+const logErrorSafe = (scope: string, message: string, error?: unknown) => {
+    const sanitizedError = error !== undefined ? sanitizeObject(error) : undefined;
+    console.error(`[${scope}] ${message}`, sanitizedError ?? '');
+};
 
 /**
  * Отправка сообщения через WhatsApp Cloud API

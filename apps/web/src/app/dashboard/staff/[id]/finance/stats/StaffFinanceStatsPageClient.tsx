@@ -1,5 +1,6 @@
 'use client';
 
+import FinanceSettingsAuditLog from '../components/FinanceSettingsAuditLog';
 import StaffFinanceStats from '../components/StaffFinanceStats';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -72,6 +73,7 @@ export default function StaffFinanceStatsPageClient({
                         }
                     >
                         <StaffFinanceStats staffId={id} />
+                        <FinanceSettingsAuditLog staffId={id} />
                     </ErrorBoundary>
                 </div>
             </div>

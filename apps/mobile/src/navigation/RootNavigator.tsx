@@ -20,6 +20,8 @@ import BookingStep5Time from '../screens/booking/BookingStep5Time';
 import BookingStep6Confirm from '../screens/booking/BookingStep6Confirm';
 import BookingCancelButton from '../components/BookingCancelButton';
 import { BookingProvider } from '../contexts/BookingContext';
+import ShiftsScreen from '../screens/ShiftsScreen';
+import ShiftQuickScreen from '../screens/ShiftQuickScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -371,6 +373,22 @@ export default function RootNavigator() {
                                         title: 'Подтверждение', 
                                         headerBackTitle: 'Назад',
                                         headerRight: () => <BookingCancelButton />,
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="Shifts"
+                                    component={ShiftsScreen}
+                                    options={{ 
+                                        title: 'Смены и статистика',
+                                        headerBackTitle: 'Назад',
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="ShiftQuick"
+                                    component={ShiftQuickScreen}
+                                    options={{ 
+                                        title: 'Моя смена',
+                                        headerBackTitle: 'Назад',
                                     }}
                                 />
                             </>

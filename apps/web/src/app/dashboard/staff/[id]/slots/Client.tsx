@@ -1,8 +1,9 @@
 'use client';
 
-import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
+
+import { filterSlotsByContext, type Slot as ScheduleSlot } from '@core-domain/schedule';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
@@ -19,14 +20,6 @@ function toYmdLocal(d: Date): string {
 
 type Service = { id: string; name: string; duration_min: number; branch_id: string };
 type Branch  = { id: string; name: string };
-
-// RPC ответ (см. get_free_slots_service_day_v2)
-type Slot = {
-    staff_id: string;
-    branch_id: string;
-    start_at: string; // ISO
-    end_at: string;   // ISO
-};
 
 export default function Client({
                                    bizId,
@@ -56,7 +49,7 @@ export default function Client({
     const [date, setDate] = useState<string>(defaultDate);
 
     // слоты именно этого сотрудника
-    const [slots, setSlots] = useState<Slot[]>([]);
+    const [slots, setSlots] = useState<ScheduleSlot[]>([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState<string | null>(null);
     const uniq = Array.from(new Map(slots.map((s) => [s.start_at, s])).values());
@@ -87,16 +80,17 @@ export default function Client({
                 });
                 if (ignore) return;
                 if (error) { setSlots([]); setErr(error.message); return; }
-                const all = (data ?? []) as Slot[];
+                const all = (data ?? []) as ScheduleSlot[];
                 const now = new Date();
-                const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
-                // конкретный сотрудник + на нужный филиал (совпадает с филиалом услуги) + только будущие слоты (минимум через 30 минут)
-                const filtered = all.filter(
-                    (s) =>
-                        s.staff_id === staffId &&
-                        s.branch_id === branchId &&
-                        new Date(s.start_at) > minTime,
-                );
+                const minTime = new Date(now.getTime() + 30 * 60 * 1000); // минимум через 30 минут от текущего времени
+
+                // Слоты только этого сотрудника, на выбранный филиал и только будущие слоты
+                const filtered = filterSlotsByContext(all, {
+                    staffId,
+                    branchId,
+                    isTemporaryTransfer: false,
+                    minStart: minTime,
+                });
                 setSlots(filtered);
             } finally { if (!ignore) setLoading(false); }
         })();

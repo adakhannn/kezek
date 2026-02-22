@@ -1,15 +1,9 @@
-import { addMinutes } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
+
+import { filterSlotsByContext, resolveScheduleContext, type Slot as ScheduleSlot } from '@core-domain/schedule';
 
 import { logDebug, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-
-type Slot = {
-    staff_id: string;
-    branch_id: string;
-    start_at: string;
-    end_at: string;
-};
 
 type TemporaryTransfer = {
     staff_id: string;
@@ -70,7 +64,7 @@ export function useSlotsLoader(params: {
         slotsRefreshKey = 0,
     } = params;
 
-    const [slots, setSlots] = useState<Slot[]>([]);
+    const [slots, setSlots] = useState<ScheduleSlot[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -168,30 +162,23 @@ export function useSlotsLoader(params: {
             setError(null);
 
             try {
-                // Определяем, является ли мастер временно переведенным
-                const isTemporaryTransfer = dayStr && temporaryTransfers.some(
-                    (t) => t.staff_id === staffId && t.date === dayStr
-                );
+                // Вычисляем контекст расписания (учёт временного перевода мастера)
+                const { isTemporaryTransfer, targetBranchId, homeBranchId } = resolveScheduleContext({
+                    staffId,
+                    dayStr,
+                    selectedBranchId: branchId,
+                    temporaryTransfers,
+                    staff,
+                });
 
-                // Для временно переведенного мастера нужно получить слоты для временного филиала
-                let targetBranchId = branchId;
-                const staffCurrent = staff.find((m) => m.id === staffId);
-                const homeBranchId = staffCurrent?.branch_id;
-
-                if (isTemporaryTransfer && dayStr) {
-                    const tempTransfer = temporaryTransfers.find(
-                        (t) => t.staff_id === staffId && t.date === dayStr
-                    );
-                    if (tempTransfer) {
-                        targetBranchId = tempTransfer.branch_id;
-                        logDebug('Booking', 'Temporary transfer found', {
-                            staffId,
-                            date: dayStr,
-                            tempBranch: tempTransfer.branch_id,
-                            homeBranch: homeBranchId,
-                            selectedBranch: branchId,
-                        });
-                    }
+                if (isTemporaryTransfer && dayStr && targetBranchId) {
+                    logDebug('Booking', 'Temporary transfer detected (schedule context)', {
+                        staffId,
+                        date: dayStr,
+                        tempBranch: targetBranchId,
+                        homeBranch: homeBranchId,
+                        selectedBranch: branchId,
+                    });
                 }
 
                 // Проверяем, есть ли у мастера расписание на эту дату во временном филиале
@@ -275,9 +262,9 @@ export function useSlotsLoader(params: {
                     return;
                 }
 
-                const all = (data ?? []) as Slot[];
+                const all = (data ?? []) as ScheduleSlot[];
                 const now = new Date();
-                const minTime = addMinutes(now, 30); // минимум через 30 минут от текущего времени
+                const minTime = new Date(now.getTime() + 30 * 60 * 1000); // минимум через 30 минут от текущего времени
 
                 logDebug('Booking', 'RPC returned slots', {
                     total: all.length,
@@ -287,39 +274,13 @@ export function useSlotsLoader(params: {
                     homeBranchId,
                 });
 
-                // Фильтруем слоты по мастеру (если не выбран "любой мастер"), времени и филиалу
-                const filtered = all.filter((s) => {
-                    // Если выбран конкретный мастер, фильтруем по нему
-                    if (staffId !== 'any' && s.staff_id !== staffId) {
-                        logDebug('Booking', 'Slot filtered (wrong staff)', { slot_staff: s.staff_id, selected_staff: staffId });
-                        return false;
-                    }
-                    if (new Date(s.start_at) <= minTime) {
-                        logDebug('Booking', 'Slot filtered (too early)', { start_at: s.start_at, minTime: minTime.toISOString() });
-                        return false;
-                    }
-
-                    // Для временно переведенного мастера принимаем слоты только из филиала временного перевода
-                    if (isTemporaryTransfer && targetBranchId) {
-                        const matchesBranch = s.branch_id === targetBranchId;
-                        if (!matchesBranch) {
-                            logDebug('Booking', 'Slot filtered (wrong branch for temporary transfer)', {
-                                slot_branch: s.branch_id,
-                                expected_branch: targetBranchId,
-                            });
-                            return false;
-                        }
-                        logDebug('Booking', 'Slot accepted (temporary transfer)', { slot_branch: s.branch_id, start_at: s.start_at });
-                        return true;
-                    }
-
-                    // Для обычного мастера принимаем слоты из выбранного филиала
-                    if (s.branch_id !== branchId) {
-                        logDebug('Booking', 'Slot filtered (wrong branch)', { slot_branch: s.branch_id, selected_branch: branchId });
-                        return false;
-                    }
-
-                    return true;
+                // Фильтруем слоты по мастеру, времени и филиалу с учётом временных переводов
+                const filtered = filterSlotsByContext(all, {
+                    staffId,
+                    branchId,
+                    targetBranchId,
+                    isTemporaryTransfer,
+                    minStart: minTime,
                 });
 
                 // Сортируем слоты по времени (от ближайшего к дальнему)
