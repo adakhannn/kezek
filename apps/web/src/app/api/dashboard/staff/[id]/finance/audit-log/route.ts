@@ -34,7 +34,7 @@ export async function GET(req: Request, context: unknown) {
             return createErrorResponse('validation', 'Отсутствует ID сотрудника', undefined, 400);
         }
 
-        const staffCheck = await checkResourceBelongsToBiz<{ id: string }>(
+        const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
             admin,
             'staff',
             staffId,

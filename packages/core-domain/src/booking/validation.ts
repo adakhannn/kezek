@@ -82,7 +82,7 @@ export function validateCreateGuestBookingParams(params: unknown): {
     });
 
     if (!bookingValidation.valid || !bookingValidation.data) {
-        return bookingValidation;
+        return { valid: false, error: bookingValidation.error };
     }
 
     // Дополнительные проверки для гостевой брони

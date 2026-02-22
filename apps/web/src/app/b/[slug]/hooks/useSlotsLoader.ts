@@ -24,7 +24,7 @@ type Staff = {
  * Ключ: `${dayStr}-${staffId}-${serviceId}`
  */
 type CacheEntry = {
-    slots: Slot[];
+    slots: ScheduleSlot[];
     timestamp: number;
 };
 

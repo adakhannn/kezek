@@ -14,6 +14,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { BookingCard, StatusPanel, StatusItem } from '@/components/dashboard';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
+import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 import { logDebug, logError, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { getBusinessTimezone } from '@/lib/time';
@@ -86,7 +87,6 @@ function Tabs({ value, onChange }: { value: TabKey; onChange: (v: TabKey) => voi
 function hourRange(start: number, end: number) { const a: number[] = []; for (let h = start; h <= end; h++) a.push(h); return a; }
 function minutesFromMidnight(d: Date) { return d.getHours() * 60 + d.getMinutes(); }
 function cellKey(staffId: string, hour: number) { return `${staffId}-${hour}`; }
-import { BookingCard } from '@/components/dashboard';
 
 function BookingPill({ id, startISO, endISO, status, timezone }: { id: string; startISO: string; endISO: string; status: BookingItem['status']; timezone: string }) {
     return (

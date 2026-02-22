@@ -4,8 +4,6 @@
  * Здесь нет зависимостей от Supabase или React — только работа с данными.
  */
 
-import { addMinutes } from 'date-fns';
-
 import type {
     RawSlot,
     Slot,
@@ -74,7 +72,7 @@ export function filterSlotsByContext(
     } = context;
 
     const effectiveMinStart =
-        minStart ?? addMinutes(new Date(), 30); // дефолт — как в текущей логике
+        minStart ?? new Date(Date.now() + 30 * 60 * 1000); // дефолт — как в текущей логике
 
     return slots.filter((s) => {
         // Если выбран конкретный мастер, фильтруем по нему.

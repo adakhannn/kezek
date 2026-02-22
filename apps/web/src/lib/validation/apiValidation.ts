@@ -92,6 +92,9 @@ export async function validateRequest<T extends z.ZodTypeAny>(
     }
 }
 
+/** Alias for validateRequest for body-only validation (e.g. POST). */
+export const validateBody = validateRequest;
+
 /**
  * Обертка для API route handlers с автоматической валидацией
  * 

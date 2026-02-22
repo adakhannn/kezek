@@ -29,7 +29,7 @@ const funnelEventSchema = z.object({
     user_agent: z.string().max(500).nullable().optional(),
     referrer: z.string().max(500).nullable().optional(),
     timestamp: z.string().datetime(),
-    metadata: z.record(z.unknown()).nullable().optional(),
+    metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 /**
@@ -39,7 +39,7 @@ const funnelEventSchema = z.object({
  */
 export async function POST(req: Request) {
     try {
-        const bodyValidation = validateBody(req, funnelEventSchema);
+        const bodyValidation = await validateBody(req, funnelEventSchema);
         if (!bodyValidation.success) {
             return bodyValidation.response;
         }

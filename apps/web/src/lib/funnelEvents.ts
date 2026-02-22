@@ -15,7 +15,7 @@ export type FunnelEventType =
 
 export type FunnelSource = 'public' | 'quickdesk';
 
-export interface FunnelEvent {
+export type FunnelEvent = {
     event_type: FunnelEventType;
     source: FunnelSource;
     biz_id: string;
@@ -28,8 +28,8 @@ export interface FunnelEvent {
     user_agent?: string | null;
     referrer?: string | null;
     timestamp: string;
-    metadata?: Record<string, unknown> | null>;
-}
+    metadata?: Record<string, unknown> | null;
+};
 
 /**
  * Отправляет событие воронки на сервер

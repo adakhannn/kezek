@@ -7,6 +7,8 @@
 
 import { transliterate } from './transliterate';
 
+export { transliterate };
+
 /**
  * Тип для услуги с многоязычными названиями
  */

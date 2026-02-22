@@ -1,9 +1,11 @@
 /**
  * Design tokens для операторских компонентов дашборда
- * 
+ *
  * Единые токены для отступов, размеров, иконок и цветов статусов,
  * используемые по всем экранам дашборда
  */
+
+import type { ReactNode } from 'react';
 
 // Отступы (spacing)
 export const spacing = {
@@ -22,7 +24,7 @@ export const sizes = {
     cardPadding: spacing.lg,
     cardGap: spacing.md,
     cardBorderRadius: '0.75rem', // 12px
-    
+
     // Кнопки
     buttonHeight: {
         sm: '2rem',   // 32px
@@ -34,7 +36,7 @@ export const sizes = {
         md: `${spacing.md} ${spacing.lg}`,
         lg: `${spacing.lg} ${spacing.xl}`,
     },
-    
+
     // Иконки
     iconSize: {
         xs: '0.875rem', // 14px
@@ -42,7 +44,7 @@ export const sizes = {
         md: '1.25rem',  // 20px
         lg: '1.5rem',   // 24px
     },
-    
+
     // Текст
     fontSize: {
         xs: '0.75rem',  // 12px
@@ -52,7 +54,7 @@ export const sizes = {
         xl: '1.25rem',  // 20px
         '2xl': '1.5rem', // 24px
     },
-    
+
     // Панели
     panelPadding: spacing.lg,
     panelGap: spacing.md,
@@ -101,31 +103,19 @@ export const shiftStatusColors = {
 } as const;
 
 // Иконки статусов (SVG paths)
-export const statusIcons = {
-    hold: (
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-    ),
-    confirmed: (
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-    ),
-    paid: (
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-    ),
-    cancelled: (
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-    ),
-    no_show: (
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-    ),
-    open: (
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-    ),
-    closed: (
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-    ),
-} as const;
+const pathHold = <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />;
+const pathCheck = <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />;
+
+export const statusIcons: Record<string, ReactNode> = {
+    hold: pathHold,
+    confirmed: pathCheck,
+    paid: pathCheck,
+    cancelled: pathHold,
+    no_show: pathHold,
+    open: pathCheck,
+    closed: pathHold,
+};
 
 // Типы статусов
 export type BookingStatus = keyof typeof bookingStatusColors;
 export type ShiftStatus = keyof typeof shiftStatusColors;
-
