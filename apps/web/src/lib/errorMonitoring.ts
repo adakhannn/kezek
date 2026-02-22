@@ -29,6 +29,10 @@ type ErrorMonitoringPayload = {
 /**
  * Отправляет информацию об ошибке во внешнюю систему мониторинга (Sentry, LogRocket и т.п.).
  *
+ * Провайдер по умолчанию: Sentry. При заданном NEXT_PUBLIC_SENTRY_DSN инициализация в
+ * sentry.client.config.ts выставляет window.Sentry, и все вызовы reportErrorToMonitoring
+ * уходят в Sentry. См. документацию: PROJECT_DOCUMENTATION.md (раздел «Мониторинг ошибок»).
+ *
  * Поведение:
  * - На сервере всегда логирует ошибку через `logError` (без обращения к `window`).
  * - В браузере пытается вызвать `window.Sentry.captureException` и/или `window.LogRocket.captureException`,

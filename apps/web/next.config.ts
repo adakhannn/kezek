@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 
 /**
  * Security Headers для защиты от XSS, clickjacking, MIME sniffing и других атак
@@ -40,7 +41,7 @@ const securityHeaders = [
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "img-src 'self' data: https: blob:",
             "font-src 'self' data: https://fonts.gstatic.com",
-            "connect-src 'self' https://*.supabase.co https://graph.facebook.com https://api.telegram.org wss://*.supabase.co",
+            "connect-src 'self' https://*.supabase.co https://graph.facebook.com https://api.telegram.org wss://*.supabase.co https://*.ingest.sentry.io https://*.sentry.io",
             "frame-src 'self' https://www.google.com https://yandex.ru https://oauth.telegram.org",
             "object-src 'none'",
             "base-uri 'self'",
@@ -85,4 +86,12 @@ const nextConfig: NextConfig = {
     },
 };
 
-export default nextConfig;
+const sentryConfig = {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    silent: !process.env.CI,
+    widenClientFileUpload: true,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+};
+
+export default withSentryConfig(nextConfig, sentryConfig);

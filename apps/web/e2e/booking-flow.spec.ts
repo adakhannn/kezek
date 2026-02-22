@@ -107,5 +107,81 @@ test.describe('Полный цикл бронирования', () => {
             await expect(successMessage).toBeVisible({ timeout: 5000 });
         });
     });
+
+    test('должен пройти полный цикл бронирования с гостем (без регистрации)', async ({ page }) => {
+        await page.waitForLoadState('networkidle');
+
+        await test.step('Шаг 1: Выбор филиала', async () => {
+            const branchSelect = page.locator('select').first();
+            if (await branchSelect.isVisible({ timeout: 5000 })) {
+                await branchSelect.selectOption({ index: 1 });
+                await page.waitForTimeout(500);
+            }
+            const nextBtn = page.locator('button:has-text("Далее")').first();
+            if (await nextBtn.isVisible({ timeout: 2000 })) await nextBtn.click();
+        });
+
+        await test.step('Шаг 2: Выбор дня', async () => {
+            const dateInput = page.locator('input[type="date"]').first();
+            if (await dateInput.isVisible({ timeout: 5000 })) {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                await dateInput.fill(tomorrow.toISOString().split('T')[0]);
+                await page.waitForTimeout(500);
+            }
+            const nextBtn = page.locator('button:has-text("Далее")').first();
+            if (await nextBtn.isVisible({ timeout: 2000 })) await nextBtn.click();
+        });
+
+        await test.step('Шаг 3: Выбор мастера', async () => {
+            const staffSelect = page.locator('select').first();
+            if (await staffSelect.isVisible({ timeout: 5000 })) {
+                await staffSelect.selectOption({ index: 1 });
+                await page.waitForTimeout(500);
+            }
+            const nextBtn = page.locator('button:has-text("Далее")').first();
+            if (await nextBtn.isVisible({ timeout: 2000 })) await nextBtn.click();
+        });
+
+        await test.step('Шаг 4: Выбор услуги', async () => {
+            const serviceSelect = page.locator('select').first();
+            if (await serviceSelect.isVisible({ timeout: 5000 })) {
+                await serviceSelect.selectOption({ index: 1 });
+                await page.waitForTimeout(1000);
+            }
+            const nextBtn = page.locator('button:has-text("Далее")').first();
+            if (await nextBtn.isVisible({ timeout: 2000 })) await nextBtn.click();
+        });
+
+        await test.step('Шаг 5: Выбор времени и выбор "Запись без регистрации"', async () => {
+            const slotBtn = page.locator('button').filter({ hasText: /^\d{1,2}:\d{2}$/ }).first();
+            await expect(slotBtn).toBeVisible({ timeout: 15000 });
+            await slotBtn.click();
+            await page.waitForTimeout(1000);
+
+            const guestButton = page.locator('button:has-text("Запись без регистрации"), button:has-text("без регистрации")').first();
+            await expect(guestButton).toBeVisible({ timeout: 5000 });
+            await guestButton.click();
+            await page.waitForTimeout(500);
+        });
+
+        await test.step('Заполнение данных гостя и подтверждение', async () => {
+            const nameInput = page.locator('input[placeholder*="имя" i], input[name="name"]').first();
+            await expect(nameInput).toBeVisible({ timeout: 5000 });
+            await nameInput.fill('Гость E2E');
+            const phoneInput = page.locator('input[type="tel"], input[placeholder*="996"]').first();
+            await expect(phoneInput).toBeVisible({ timeout: 3000 });
+            await phoneInput.fill('+996555000001');
+
+            const submitBtn = page.locator('button:has-text("Забронировать"), button:has-text("Создать")').first();
+            await expect(submitBtn).toBeVisible({ timeout: 3000 });
+            await submitBtn.click();
+        });
+
+        await test.step('Проверка успешного бронирования', async () => {
+            const success = page.locator('text=/успешно|создана|подтверждено|бронирование/i').first();
+            await expect(success).toBeVisible({ timeout: 10000 });
+        });
+    });
 });
 

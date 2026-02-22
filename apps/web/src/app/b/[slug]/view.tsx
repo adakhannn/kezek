@@ -5,8 +5,8 @@ import { addDays, format } from 'date-fns';
 import { enGB } from 'date-fns/locale/en-GB';
 import { ru } from 'date-fns/locale/ru';
 import { formatInTimeZone } from 'date-fns-tz';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AuthChoiceModal } from './components/AuthChoiceModal';
 import { BookingHeader } from './components/BookingHeader';
@@ -43,7 +43,9 @@ export default function BookingForm({ data }: { data: Data }) {
     const { biz, branches, services, staff, promotions = [] } = data;
     const {t, locale} = useLanguage();
     const searchParams = useSearchParams();
-    
+    const router = useRouter();
+    const pathname = usePathname();
+
     // Функции для форматирования названий (используем нужный язык, если доступен)
     const formatBranchName = (name: string): string => {
         // Для филиалов используется транслитерация, так как нет отдельных полей для языков
@@ -152,6 +154,7 @@ export default function BookingForm({ data }: { data: Data }) {
     const [serviceId, setServiceId] = useState<string>('');
     const [staffId, setStaffId] = useState<string>('');
     const [restoredFromStorage, setRestoredFromStorage] = useState(false);
+    const urlRestoredRef = useRef(false);
     
     // Загружаем активные акции филиала с кэшированием через React Query
     const { data: branchPromotions = [], isLoading: promotionsLoading } = useBranchPromotions(branchId || null);
@@ -163,6 +166,25 @@ export default function BookingForm({ data }: { data: Data }) {
         setStaffId('');
         setServiceId('');
     }, [branchId, restoredFromStorage]);
+
+    // Восстановление дня, мастера и услуги из URL при загрузке (для сохранения прогресса при обновлении страницы)
+    useEffect(() => {
+        if (urlRestoredRef.current) return;
+        urlRestoredRef.current = true;
+        const dayParam = searchParams.get('day');
+        if (dayParam) {
+            try {
+                const tz = getBusinessTimezone(biz.tz);
+                setDay(dateAtTz(dayParam, '00:00', tz));
+            } catch {
+                // ignore invalid date
+            }
+        }
+        const staffParam = searchParams.get('staff');
+        if (staffParam) setStaffId(staffParam);
+        const serviceParam = searchParams.get('service');
+        if (serviceParam) setServiceId(serviceParam);
+    }, [searchParams, biz.tz]);
 
     /* ---------- сервисные навыки мастеров (service_staff) ---------- */
     // Загружаем связи услуга-мастер с кэшированием через React Query
@@ -571,6 +593,12 @@ export default function BookingForm({ data }: { data: Data }) {
     }, [day, dateLocale]);
 
     /* ---------- пошаговый визард ---------- */
+    const stepFromUrl = searchParams.get('step');
+    const initialStep = useMemo(() => {
+        const n = stepFromUrl ? parseInt(stepFromUrl, 10) : NaN;
+        return Number.isFinite(n) ? Math.min(5, Math.max(1, n)) : 1;
+    }, [stepFromUrl]);
+
     const { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, totalSteps } = useBookingSteps({
         branchId,
         dayStr,
@@ -578,7 +606,28 @@ export default function BookingForm({ data }: { data: Data }) {
         serviceId,
         servicesFiltered,
         t,
+        initialStep,
     });
+
+    // Синхронизация прогресса бронирования с URL (сохранение при обновлении страницы)
+    useEffect(() => {
+        const next = new URLSearchParams();
+        next.set('step', String(step));
+        if (branchId) next.set('branch', branchId);
+        if (dayStr) next.set('day', dayStr);
+        if (staffId) next.set('staff', staffId);
+        if (serviceId) next.set('service', serviceId);
+        const q = next.toString();
+        router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    }, [step, branchId, dayStr, staffId, serviceId, pathname, router]);
+
+    const stepIndicatorText = useMemo(
+        () =>
+            (t('booking.step.indicator', 'Шаг {current} из {total}') as string)
+                .replace('{current}', String(step))
+                .replace('{total}', String(totalSteps)),
+        [t, step, totalSteps]
+    );
 
     /* ---------- UI ---------- */
     return (
@@ -599,7 +648,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     <PromotionsList promotions={branchPromotions} t={t} />
                 )}
 
-                <BookingSteps stepsMeta={stepsMeta} step={step} canGoNext={canGoNext} goPrev={goPrev} />
+                <BookingSteps stepsMeta={stepsMeta} step={step} totalSteps={totalSteps} canGoNext={canGoNext} goPrev={goPrev} stepIndicatorText={stepIndicatorText} />
 
                 <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
                     <div className="space-y-4">

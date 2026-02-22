@@ -25,13 +25,13 @@ const customJestConfig = {
     ],
     testTimeout: 30000, // 30 секунд для API тестов
     // Минимальный порог покрытия тестами
-    // Стартовый порог: 40-45%, по мере добавления тестов постепенно поднимать до 50%+, 60%+ и т.д.
+    // Поднимать постепенно (следующий шаг: 50%). При добавлении тестов — в первую очередь новые/изменяемые API и financeDomain.
     coverageThreshold: {
         global: {
-            branches: 40,
-            functions: 40,
-            lines: 40,
-            statements: 40,
+            branches: 45,
+            functions: 45,
+            lines: 45,
+            statements: 45,
         },
     },
 };

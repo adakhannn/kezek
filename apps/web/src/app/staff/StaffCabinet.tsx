@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import StaffAvatarUpload from './avatar/StaffAvatarUpload';
+import { StaffOnboarding } from './components/StaffOnboarding';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
@@ -69,6 +70,7 @@ export default function StaffCabinet({
     return (
         <main className="min-h-screen">
             <div className="mx-auto max-w-6xl px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
+                <StaffOnboarding />
                 {/* Информация о сотруднике */}
                 <Card variant="elevated" className="p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-4 sm:mb-6">

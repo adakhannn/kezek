@@ -256,6 +256,10 @@ async function handleIncomingMessage(message: WhatsAppMessage) {
         // Обработка текстовых команд
         if (messageType === 'text' && messageText) {
             await handleTextCommand(messageText, normalizedPhone, bookingId, clientId, bizId);
+            await admin
+                .from('whatsapp_messages')
+                .update({ processed: true })
+                .eq('whatsapp_message_id', messageId);
         }
     } catch (error) {
         // Логируем ошибку, но не прерываем обработку других сообщений
@@ -380,10 +384,10 @@ async function handleCancelCommand(
     try {
         const admin = getServiceClient();
         
-        // Проверяем статус бронирования
+        // Проверяем статус бронирования и владельца (client_id или client_phone)
         const { data: booking } = await admin
             .from('bookings')
-            .select('id, status, start_at, services(name_ru), staff(full_name)')
+            .select('id, status, start_at, client_id, client_phone, services(name_ru), staff(full_name)')
             .eq('id', bookingId)
             .maybeSingle();
 
@@ -391,6 +395,17 @@ async function handleCancelCommand(
             await sendWhatsApp({
                 to: fromPhone,
                 text: 'Бронирование не найдено.',
+            });
+            return;
+        }
+
+        const belongsToSender =
+            (booking.client_phone && booking.client_phone === fromPhone) ||
+            (booking.client_id && clientId && booking.client_id === clientId);
+        if (!belongsToSender) {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Это бронирование не связано с вашим номером. Используйте номер телефона, указанный при записи.',
             });
             return;
         }
@@ -475,10 +490,10 @@ async function handleConfirmCommand(
     try {
         const admin = getServiceClient();
         
-        // Проверяем статус бронирования
+        // Проверяем статус бронирования и владельца (client_id или client_phone)
         const { data: booking } = await admin
             .from('bookings')
-            .select('id, status, start_at, services(name_ru), staff(full_name)')
+            .select('id, status, start_at, client_id, client_phone, services(name_ru), staff(full_name)')
             .eq('id', bookingId)
             .maybeSingle();
 
@@ -486,6 +501,17 @@ async function handleConfirmCommand(
             await sendWhatsApp({
                 to: fromPhone,
                 text: 'Бронирование не найдено.',
+            });
+            return;
+        }
+
+        const belongsToSender =
+            (booking.client_phone && booking.client_phone === fromPhone) ||
+            (booking.client_id && clientId && booking.client_id === clientId);
+        if (!belongsToSender) {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'Это бронирование не связано с вашим номером. Используйте номер телефона, указанный при записи.',
             });
             return;
         }

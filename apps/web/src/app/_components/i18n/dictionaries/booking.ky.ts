@@ -66,6 +66,7 @@ export const bookingKy = {
     'booking.step.master': 'Кызматкер',
     'booking.step.service': 'Кызмат',
     'booking.step.time': 'Убакыт',
+    'booking.step.indicator': 'Кадам {current} / {total}',
     'booking.step1.noBranches': 'Активдүү филиалдар жок.',
     'booking.step1.title': 'Кадам 1. Филиалды тандаңыз',
     'booking.step2.selectedDate': 'Тандалган күн:',

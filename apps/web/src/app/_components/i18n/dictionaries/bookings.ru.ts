@@ -51,6 +51,7 @@ export const bookingsRu = {
     'bookings.desk.selectBranchFirst': 'Сначала выбери филиал',
     'bookings.desk.selectMaster': 'Выбери мастера',
     'bookings.desk.selectParamsFirst': 'Выбери филиал, услугу и мастера',
+    'bookings.desk.quickSelectBranch': 'Быстрый выбор филиала',
     'bookings.desk.selectService': 'Выбери услугу',
     'bookings.desk.service': 'Услуга',
     'bookings.desk.slotsHint': 'Слоты считаются по `get_free_slots_service_day` с учётом расписания и занятых броней.',

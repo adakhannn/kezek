@@ -49,4 +49,13 @@ export const dashboardRu = {
     'dashboard.stats.activeStaffHint': 'готовы принимать клиентов',
     'dashboard.stats.bookingsToday': 'Брони сегодня',
     'dashboard.stats.bookingsTodayHint': 'в календаре записи',
+    'dashboard.integrations.title': 'Статус интеграций',
+    'dashboard.integrations.subtitle': 'Уведомления клиентам и сотрудникам',
+    'dashboard.integrations.loading': 'Загрузка...',
+    'dashboard.integrations.ok': 'ОК',
+    'dashboard.integrations.error': 'Ошибка',
+    'dashboard.integrations.notConfigured': 'Не настроен',
+    'dashboard.integrations.errorLoad': 'Не удалось загрузить статус',
+    'dashboard.integrations.retry': 'Повторить',
+    'dashboard.integrations.retryIn': 'Повторить через {sec} с',
 } as const;

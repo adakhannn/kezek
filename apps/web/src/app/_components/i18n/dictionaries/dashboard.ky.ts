@@ -44,4 +44,13 @@ export const dashboardKy = {
     'dashboard.stats.activeStaffHint': 'кардарларды кабыл алууга даяр',
     'dashboard.stats.bookingsToday': 'Бүгүнкү брондоолор',
     'dashboard.stats.bookingsTodayHint': 'календарда жазылыштар',
+    'dashboard.integrations.title': 'Интеграциялардын статусу',
+    'dashboard.integrations.subtitle': 'Кардарларга жана кызматкерлерге билдирүүлөр',
+    'dashboard.integrations.loading': 'Жүктөлүүдө...',
+    'dashboard.integrations.ok': 'ОК',
+    'dashboard.integrations.error': 'Ката',
+    'dashboard.integrations.notConfigured': 'Орнотулуган эмес',
+    'dashboard.integrations.errorLoad': 'Статусту жүктөө мүмкүн болбоду',
+    'dashboard.integrations.retry': 'Кайталоо',
+    'dashboard.integrations.retryIn': '{sec} сек. кийин кайталоо',
 } as const;

@@ -1064,6 +1064,43 @@ function QuickDesk({ timezone,
 
             {/* Параметры записи */}
             <div className="space-y-3 sm:space-y-4">
+                {/* Пресеты по филиалу: быстрый выбор при нескольких филиалах */}
+                {branches.length > 1 && (
+                    <div>
+                        <span className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">{t('bookings.desk.quickSelectBranch', 'Быстрый выбор филиала')}</span>
+                        <div className="flex flex-wrap gap-2">
+                            {branches.map((b) => {
+                                const isActive = branchId === b.id;
+                                return (
+                                    <button
+                                        key={b.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setBranchId(b.id);
+                                            trackFunnelEvent({
+                                                event_type: 'branch_select',
+                                                source: 'quickdesk',
+                                                biz_id: bizId,
+                                                branch_id: b.id,
+                                                session_id: getSessionId(),
+                                            });
+                                        }}
+                                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                                            isActive
+                                                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-700'
+                                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600'
+                                        }`}
+                                    >
+                                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5-10v4" />
+                                        </svg>
+                                        {b.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
                 {/* Первая строка: Филиал, Дата, Мастер */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* Филиал */}

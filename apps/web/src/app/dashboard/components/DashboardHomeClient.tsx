@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 
+import { IntegrationsStatusCard } from './IntegrationsStatusCard';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 type DashboardHomeClientProps = {
@@ -294,6 +296,9 @@ export function DashboardHomeClient({
                     </div>
                 </section>
             )}
+
+            {/* Статус интеграций */}
+            <IntegrationsStatusCard />
 
             {/* Быстрые действия */}
             <section className="rounded-2xl border border-gray-200 bg-white/90 p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900/80">

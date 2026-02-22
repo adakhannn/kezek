@@ -10,12 +10,14 @@ type UseBookingStepsParams = {
     serviceId: string;
     servicesFiltered: Service[];
     t: (key: string, fallback?: string) => string;
+    initialStep?: number;
+    onStepChange?: (step: BookingStep) => void;
 };
 
 export function useBookingSteps(params: UseBookingStepsParams) {
-    const { branchId, dayStr, staffId, serviceId, servicesFiltered, t } = params;
+    const { branchId, dayStr, staffId, serviceId, servicesFiltered, t, initialStep, onStepChange } = params;
 
-    const [step, setStep] = useState<BookingStep>(1);
+    const [step, setStep] = useState<BookingStep>((Math.min(5, Math.max(1, initialStep ?? 1)) as BookingStep));
     const totalSteps: BookingStep = 5;
 
     const stepsMeta = useMemo(
@@ -66,14 +68,19 @@ export function useBookingSteps(params: UseBookingStepsParams) {
 
     const goPrev = () => {
         if (!canGoPrev) return;
-        setStep((prev) => (Math.max(1, prev - 1) as BookingStep));
+        setStep((prev) => {
+            const next = Math.max(1, prev - 1) as BookingStep;
+            onStepChange?.(next);
+            return next;
+        });
     };
 
     const goNext = () => {
         if (!canGoNext) return;
         setStep((prev) => {
-            const next = (prev + 1) as BookingStep;
-            return (next > totalSteps ? totalSteps : next) as BookingStep;
+            const next = (prev + 1 > totalSteps ? totalSteps : (prev + 1)) as BookingStep;
+            onStepChange?.(next);
+            return next;
         });
     };
 

@@ -69,6 +69,7 @@ export const bookingRu = {
     'booking.step.master': 'Сотрудник',
     'booking.step.service': 'Услуга',
     'booking.step.time': 'Время',
+    'booking.step.indicator': 'Шаг {current} из {total}',
     'booking.step1.noBranches': 'Нет активных филиалов.',
     'booking.step1.title': 'Шаг 1. Выберите филиал',
     'booking.step2.selectedDate': 'Выбранная дата:',

@@ -10,13 +10,19 @@ type StepMeta = {
 type BookingStepsProps = {
     stepsMeta: StepMeta[];
     step: BookingStep;
+    totalSteps: number;
     canGoNext: boolean;
     goPrev: () => void;
+    stepIndicatorText: string;
 };
 
-export function BookingSteps({ stepsMeta, step, canGoNext, goPrev }: BookingStepsProps) {
+export function BookingSteps({ stepsMeta, step, totalSteps, canGoNext, goPrev, stepIndicatorText }: BookingStepsProps) {
     return (
-        <div id="booking" className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div id="booking" className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <p className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300" aria-live="polite">
+                {stepIndicatorText}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
             {stepsMeta.map((s, index) => {
                 const isActive = s.id === step;
                 const isCompleted = s.id < step;
@@ -58,6 +64,7 @@ export function BookingSteps({ stepsMeta, step, canGoNext, goPrev }: BookingStep
                     </button>
                 );
             })}
+            </div>
         </div>
     );
 }

@@ -48,4 +48,13 @@ export const dashboardEn = {
     'dashboard.stats.activeStaffHint': 'ready to serve clients',
     'dashboard.stats.bookingsToday': 'Bookings today',
     'dashboard.stats.bookingsTodayHint': 'in booking calendar',
+    'dashboard.integrations.title': 'Integrations status',
+    'dashboard.integrations.subtitle': 'Notifications to clients and staff',
+    'dashboard.integrations.loading': 'Loading...',
+    'dashboard.integrations.ok': 'OK',
+    'dashboard.integrations.error': 'Error',
+    'dashboard.integrations.notConfigured': 'Not configured',
+    'dashboard.integrations.errorLoad': 'Failed to load status',
+    'dashboard.integrations.retry': 'Retry',
+    'dashboard.integrations.retryIn': 'Retry in {sec} s',
 } as const;

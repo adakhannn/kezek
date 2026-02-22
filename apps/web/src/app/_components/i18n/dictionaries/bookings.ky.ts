@@ -51,6 +51,7 @@ export const bookingsKy = {
     'bookings.desk.selectBranchFirst': 'Алгач филиалды тандаңыз',
     'bookings.desk.selectMaster': 'Устатты тандаңыз',
     'bookings.desk.selectParamsFirst': 'Алгач филиал, кызмат жана устатты тандаңыз',
+    'bookings.desk.quickSelectBranch': 'Филиалды тез тандаңыз',
     'bookings.desk.selectService': 'Кызматты тандаңыз',
     'bookings.desk.service': 'Кызмат',
     'bookings.desk.slotsHint': 'Слоттор `get_free_slots_service_day` боюнча эсептелет, график жана бош эмес брондоолорду эске алуу менен.',

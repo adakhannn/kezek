@@ -45,6 +45,10 @@ NEXT_PUBLIC_SITE_ORIGIN=http://localhost:3000
 # Email/Resend
 RESEND_API_KEY=...
 EMAIL_FROM="Kezek <noreply@mail.kezek.kg>"
+
+# Мониторинг (опционально): см. раздел «Мониторинг ошибок»
+# NEXT_PUBLIC_SENTRY_DSN=https://...@....ingest.sentry.io/...
+# SENTRY_ORG=...  SENTRY_PROJECT=...  SENTRY_AUTH_TOKEN=...
 ```
 
 ---
@@ -282,7 +286,36 @@ RPC, которое проверяет, является ли текущий `au
 
 ---
 
-## 7. Дополнительные заметки
+## 7. Мониторинг ошибок
+
+В проекте используется **Sentry** как провайдер мониторинга ошибок поверх общей обёртки `apps/web/src/lib/errorMonitoring.ts`.
+
+### Как это устроено
+
+- **Обёртка** `reportErrorToMonitoring(payload)` в `errorMonitoring.ts`:
+  - на сервере только логирует через `logError`;
+  - в браузере при наличии `window.Sentry` вызывает `Sentry.captureException` и дополнительно пишет в локальный лог.
+- **Инициализация Sentry** выполняется только при заданном `NEXT_PUBLIC_SENTRY_DSN`:
+  - клиент: `src/sentry.client.config.ts` (выставляет `window.Sentry` для обёртки);
+  - сервер: `src/sentry.server.config.ts`;
+  - edge: `src/sentry.edge.config.ts`;
+  - регистрация и перехват ошибок запросов: `src/instrumentation.ts` и `onRequestError`.
+- **ErrorBoundary** и другие места вызывают `reportErrorToMonitoring`, поэтому при включённом Sentry все перехваченные ошибки уходят в дашборд.
+- **Глобальные ошибки рендера** (выше boundary) перехватываются в `app/global-error.tsx` и отправляются в Sentry напрямую.
+
+### Включение Sentry
+
+1. Создайте проект в [sentry.io](https://sentry.io) и скопируйте DSN.
+2. В `apps/web/.env.local` задайте:
+   - `NEXT_PUBLIC_SENTRY_DSN=https://...@....ingest.sentry.io/...`
+   - для загрузки source maps в CI (опционально): `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
+3. Установите зависимости и соберите приложение: `pnpm install`, `pnpm build`. В production при возникновении ошибок события будут отправляться в Sentry.
+
+Без DSN приложение работает как раньше: ошибки только логируются локально через `logError`. Альтернативный провайдер **LogRocket** поддерживается обёрткой (`window.LogRocket.captureException`), но инициализация LogRocket в проекте не настроена; при необходимости его можно подключить аналогично (отдельный конфиг и выставление на `window`).
+
+---
+
+## 8. Дополнительные заметки
 
 ### Важные моменты реализации:
 - Использование PostGIS для геоданных (координаты филиалов)

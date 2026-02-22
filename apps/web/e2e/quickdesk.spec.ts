@@ -318,6 +318,41 @@ test.describe('QuickDesk - управление бронированиями', (
         });
     });
 
+    test('должен пройти смену статусов бронирования: подтверждение и отметка посещения', async ({ page }) => {
+        await test.step('Переход на вкладку Список', async () => {
+            const listTab = page.locator('button:has-text("Список"), button:has-text("List"), [data-testid="list-tab"]').first();
+            if (await listTab.isVisible({ timeout: 5000 })) {
+                await listTab.click();
+                await page.waitForTimeout(1500);
+            }
+        });
+
+        await test.step('Подтверждение брони со статусом hold', async () => {
+            const holdRow = page.locator('tr:has-text("hold"), [data-testid="booking-row"]:has-text("hold"), .booking-row:has-text("hold")').first();
+            const confirmBtn = page.locator('button:has-text("Подтвердить"), button:has-text("Confirm"), [data-testid="confirm-booking"]').first();
+            if (await holdRow.isVisible({ timeout: 5000 }) && await confirmBtn.isVisible({ timeout: 3000 })) {
+                await holdRow.scrollIntoViewIfNeeded();
+                await confirmBtn.click();
+                await page.waitForTimeout(2000);
+                const success = page.locator('text=/подтверждено|confirmed|успешно/i').first();
+                await expect(success).toBeVisible({ timeout: 5000 });
+            }
+        });
+
+        await test.step('Отметка посещения (пришёл или не пришёл) для confirmed', async () => {
+            const confirmedRow = page.locator('tr:has-text("confirmed"), [data-testid="booking-row"]:has-text("confirmed")').first();
+            const attendedBtn = page.locator('button:has-text("Пришел"), button:has-text("Attended"), [data-testid="mark-attended"]').first();
+            const noShowBtn = page.locator('button:has-text("Не пришел"), button:has-text("No Show"), [data-testid="mark-no-show"]').first();
+            const actionBtn = (await attendedBtn.isVisible({ timeout: 3000 })) ? attendedBtn : noShowBtn;
+            if (await actionBtn.isVisible({ timeout: 3000 })) {
+                await actionBtn.click();
+                await page.waitForTimeout(2000);
+                const statusChanged = page.locator('text=/paid|no.show|выполнено|пришел|не пришел|отмечено/i').first();
+                await expect(statusChanged).toBeVisible({ timeout: 5000 });
+            }
+        });
+    });
+
     // Happy-path: Создание бронирования для существующего клиента
     test('должен создать бронирование для существующего клиента', async ({ page }) => {
         await test.step('Выбор режима "существующий клиент"', async () => {

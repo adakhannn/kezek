@@ -69,6 +69,7 @@ export const bookingEn = {
     'booking.step.master': 'Staff',
     'booking.step.service': 'Service',
     'booking.step.time': 'Time',
+    'booking.step.indicator': 'Step {current} of {total}',
     'booking.step1.noBranches': 'No active branches.',
     'booking.step1.title': 'Step 1. Select a branch',
     'booking.step2.selectedDate': 'Selected date:',

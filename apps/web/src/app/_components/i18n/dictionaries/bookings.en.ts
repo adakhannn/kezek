@@ -51,6 +51,7 @@ export const bookingsEn = {
     'bookings.desk.selectBranchFirst': 'Select branch first',
     'bookings.desk.selectMaster': 'Select master',
     'bookings.desk.selectParamsFirst': 'Select branch, service and master first',
+    'bookings.desk.quickSelectBranch': 'Quick select branch',
     'bookings.desk.selectService': 'Select service',
     'bookings.desk.service': 'Service',
     'bookings.desk.slotsHint': 'Slots are calculated by `get_free_slots_service_day` taking into account schedule and occupied bookings.',
