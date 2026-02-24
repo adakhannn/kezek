@@ -29,18 +29,18 @@ import type { Data, Service, ServiceStaffRow, Slot, Staff } from './types';
 
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
+import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { todayTz, dateAtTz, getBusinessTimezone } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
-import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 
 // Используем безопасное логирование из @/lib/log
 // debugLog и debugWarn удалены - используйте logDebug и logWarn из @/lib/log
 
 
 export default function BookingForm({ data }: { data: Data }) {
-    const { biz, branches, services, staff, promotions = [] } = data;
+    const { biz, branches, services, staff, promotions: _promotions = [] } = data;
     const {t, locale} = useLanguage();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -55,7 +55,7 @@ export default function BookingForm({ data }: { data: Data }) {
         return name;
     };
     
-    const formatServiceName = (service: Service): string => {
+    const _formatServiceName = (service: Service): string => {
         // Используем поле для выбранного языка, если оно заполнено
         if (locale === 'en' && service.name_en) {
             return service.name_en;
@@ -71,7 +71,7 @@ export default function BookingForm({ data }: { data: Data }) {
         return service.name_ru;
     };
     
-    const formatStaffName = (name: string): string => {
+    const _formatStaffName = (name: string): string => {
         // Транслитерируем имя мастера для английского языка
         if (locale === 'en') {
             return transliterate(name);
@@ -155,19 +155,24 @@ export default function BookingForm({ data }: { data: Data }) {
     const [staffId, setStaffId] = useState<string>('');
     const [restoredFromStorage, setRestoredFromStorage] = useState(false);
     const urlRestoredRef = useRef(false);
+    const skipBranchClearOnceRef = useRef(false);
+    const skipDayClearOnceRef = useRef(false);
     
     // Загружаем активные акции филиала с кэшированием через React Query
-    const { data: branchPromotions = [], isLoading: promotionsLoading } = useBranchPromotions(branchId || null);
+    const { data: branchPromotions = [], isLoading: _promotionsLoading } = useBranchPromotions(branchId || null);
 
-    // при смене филиала — сбрасываем выборы мастеров и услуг (если не восстановили состояние из localStorage)
+    // при смене филиала — сбрасываем выборы мастеров и услуг (пропускаем один раз после восстановления из URL)
     useEffect(() => {
         if (restoredFromStorage) return;
-        // Сбрасываем выборы при смене филиала
+        if (skipBranchClearOnceRef.current) {
+            skipBranchClearOnceRef.current = false;
+            return;
+        }
         setStaffId('');
         setServiceId('');
     }, [branchId, restoredFromStorage]);
 
-    // Восстановление дня, мастера и услуги из URL при загрузке (для сохранения прогресса при обновлении страницы)
+    // Восстановление дня, мастера и услуги из URL при загрузке (прогресс в URL — при обновлении страницы не теряем выбор)
     useEffect(() => {
         if (urlRestoredRef.current) return;
         urlRestoredRef.current = true;
@@ -184,6 +189,8 @@ export default function BookingForm({ data }: { data: Data }) {
         if (staffParam) setStaffId(staffParam);
         const serviceParam = searchParams.get('service');
         if (serviceParam) setServiceId(serviceParam);
+        skipBranchClearOnceRef.current = true;
+        skipDayClearOnceRef.current = true;
     }, [searchParams, biz.tz]);
 
     /* ---------- сервисные навыки мастеров (service_staff) ---------- */
@@ -298,10 +305,13 @@ export default function BookingForm({ data }: { data: Data }) {
         return mainStaff;
     }, [staffByBranch, staff, branchId, temporaryTransfers, dayStr]);
 
-    // при смене даты — сбрасываем выборы мастеров и услуг, так как список мастеров может измениться
+    // при смене даты — сбрасываем выборы мастеров и услуг (пропускаем один раз после восстановления из URL)
     useEffect(() => {
         if (restoredFromStorage) return;
-        // Сбрасываем выборы при смене даты
+        if (skipDayClearOnceRef.current) {
+            skipDayClearOnceRef.current = false;
+            return;
+        }
         setStaffId('');
         setServiceId('');
     }, [dayStr, restoredFromStorage]);
@@ -347,7 +357,7 @@ export default function BookingForm({ data }: { data: Data }) {
                 const isTemporaryTransfer = dayStr && temporaryTransfers.some(
                     (t) => t.staff_id === staffId && t.date === dayStr
                 );
-                const staffCurrent = staff.find((m) => m.id === staffId);
+                const _staffCurrent = staff.find((m) => m.id === staffId);
                 let targetBranchId = branchId;
                 if (isTemporaryTransfer && dayStr) {
                     const tempTransfer = temporaryTransfers.find(

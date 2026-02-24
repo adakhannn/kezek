@@ -5,7 +5,10 @@
 import type { CreateBookingParams, CreateGuestBookingParams, PromotionType, PromotionParams } from './types';
 
 /**
- * Валидирует параметры создания бронирования
+ * Валидирует параметры создания бронирования (biz_id, service_id, staff_id, start_at; branch_id опционален).
+ *
+ * @param params - Входные данные (обычно тело запроса)
+ * @returns { valid: true, data } при успехе или { valid: false, error } при ошибке
  */
 export function validateCreateBookingParams(params: unknown): {
     valid: boolean;
@@ -59,7 +62,11 @@ export function validateCreateBookingParams(params: unknown): {
 }
 
 /**
- * Валидирует параметры создания гостевой брони
+ * Валидирует параметры создания гостевой брони (включая client_name, client_phone; client_email опционален).
+ * Сначала проверяет базовые поля брони через validateCreateBookingParams.
+ *
+ * @param params - Входные данные (тело запроса)
+ * @returns { valid: true, data } или { valid: false, error }
  */
 export function validateCreateGuestBookingParams(params: unknown): {
     valid: boolean;
@@ -124,7 +131,11 @@ export function validateCreateGuestBookingParams(params: unknown): {
 }
 
 /**
- * Валидирует параметры промоакции в зависимости от типа
+ * Валидирует параметры промоакции в зависимости от типа (visit_count, discount_percent и т.д.).
+ *
+ * @param promotionType - Тип промо (free_after_n_visits, birthday_discount, referral_free и др.)
+ * @param params - Объект параметров промоакции
+ * @returns { valid: true, data } или { valid: false, error }
  */
 export function validatePromotionParams(
     promotionType: PromotionType,
@@ -165,7 +176,10 @@ export function validatePromotionParams(
 }
 
 /**
- * Извлекает booking_id из результата RPC (может быть строкой или объектом)
+ * Извлекает идентификатор бронирования из результата RPC (confirm_booking, quick_book_guest и т.д.).
+ *
+ * @param rpcResult - Результат RPC: строка (id) или объект с полем booking_id или id
+ * @returns UUID бронирования или null, если не найден
  */
 export function extractBookingId(rpcResult: unknown): string | null {
     if (typeof rpcResult === 'string') {

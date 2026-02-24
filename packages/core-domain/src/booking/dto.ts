@@ -49,7 +49,10 @@ export type PromotionDto = {
 };
 
 /**
- * Преобразует данные бронирования из БД в DTO
+ * Преобразует строку бронирования из БД в единый DTO-формат (поля в snake_case, null вместо undefined).
+ *
+ * @param booking - Строка из таблицы bookings (или выборки с теми же полями)
+ * @returns BookingDto с нормализованным promotion_applied
  */
 export function transformBookingToDto(booking: {
     id: string;
@@ -88,7 +91,10 @@ export function transformBookingToDto(booking: {
 }
 
 /**
- * Нормализует promotion_applied из БД (может быть JSONB или null)
+ * Нормализует поле promotion_applied из БД (JSONB может быть объектом или null).
+ *
+ * @param promotionApplied - Значение из bookings.promotion_applied
+ * @returns Объект PromotionApplied с типизированными полями или null
  */
 export function normalizePromotionApplied(
     promotionApplied: unknown
@@ -118,7 +124,10 @@ export function normalizePromotionApplied(
 }
 
 /**
- * Преобразует данные промоакции из БД в DTO
+ * Преобразует строку промоакции из БД в DTO (единый формат полей, null для опциональных).
+ *
+ * @param promotion - Строка из branch_promotions (или выборки с теми же полями)
+ * @returns PromotionDto
  */
 export function transformPromotionToDto(promotion: {
     id: string;

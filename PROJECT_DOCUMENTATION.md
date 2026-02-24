@@ -284,6 +284,11 @@ RPC, которое проверяет, является ли текущий `au
 - Данные сервиса, мастера, времени (с TZ), ссылку на `/booking/:id`
 - `.ics` собираем через `buildIcs({...})`
 
+### WhatsApp (webhook)
+- Входящие сообщения обрабатываются в `api/webhooks/whatsapp/route.ts`.
+- Команды: **отмена** (при нескольких бронях — «отмена 1», «отмена 2»), **подтвердить** (аналогично), **напомни** (список предстоящих записей), **помощь**.
+- Интеграция с уведомлениями/CRM (исходящие напоминания, синхронизация с внешней CRM) зарезервирована на будущее при необходимости.
+
 ---
 
 ## 7. Мониторинг ошибок
@@ -308,8 +313,17 @@ RPC, которое проверяет, является ли текущий `au
 1. Создайте проект в [sentry.io](https://sentry.io) и скопируйте DSN.
 2. В `apps/web/.env.local` задайте:
    - `NEXT_PUBLIC_SENTRY_DSN=https://...@....ingest.sentry.io/...`
-   - для загрузки source maps в CI (опционально): `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
+   - для загрузки source maps при локальной сборке (опционально): `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
 3. Установите зависимости и соберите приложение: `pnpm install`, `pnpm build`. В production при возникновении ошибок события будут отправляться в Sentry.
+
+### Source maps в CI
+
+При сборке в GitHub Actions source maps загружаются в Sentry, если в настройках репозитория (Settings → Secrets and variables → Actions) заданы секреты:
+- **SENTRY_AUTH_TOKEN** — обязателен для загрузки (токен из Sentry: Settings → Auth Tokens, scope `project:releases`).
+- **SENTRY_ORG** — slug организации в Sentry (при необходимости, если не задан в конфиге).
+- **SENTRY_PROJECT** — slug проекта в Sentry (при необходимости).
+
+Job `build` в `.github/workflows/ci.yml` передаёт эти переменные в `pnpm build`; при отсутствии секретов сборка проходит без загрузки карт (Sentry-плагин в CI работает в silent-режиме).
 
 Без DSN приложение работает как раньше: ошибки только логируются локально через `logError`. Альтернативный провайдер **LogRocket** поддерживается обёрткой (`window.LogRocket.captureException`), но инициализация LogRocket в проекте не настроена; при необходимости его можно подключить аналогично (отдельный конфиг и выставление на `window`).
 
@@ -329,6 +343,11 @@ RPC, которое проверяет, является ли текущий `au
 - Кэширование `branch_id` в `staff` для быстрого доступа
 - Индексы на `staff_id/start_at` в bookings
 - Маппинг `service_staff` на клиенте для фильтрации
+
+### Rate limiting (lib/rateLimit.ts)
+- Endpoints оборачиваются в `withRateLimit(req, config, handler)`. Конфиги: `RateLimitConfigs.public | normal | critical | auth`.
+- **Per-route**: отдельный счётчик на маршрут — `routeRateLimit(routeId, RateLimitConfigs.normal)` или `config.keyPrefix = 'api/notify'`. Ключ в Redis/памяти: `ratelimit:${keyPrefix}:${identifier}`.
+- **Per-user**: лимит по пользователю вместо IP — передать в конфиг `identifier` в формате `user:${userId}` (из сессии). Экспортируется `getRateLimitIdentifier(req)` для получения IP при необходимости.
 
 ---
 

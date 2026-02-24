@@ -1,9 +1,15 @@
 /**
  * Rate limiting utility для API endpoints
- * 
+ *
  * Использует Upstash Redis для продакшена (serverless-совместимо)
  * Fallback на in-memory хранилище для dev окружения
- * 
+ *
+ * Точечная настройка:
+ * - Per-route: используйте routeRateLimit(routeId, RateLimitConfigs.normal) или config.keyPrefix,
+ *   чтобы для каждого маршрута был свой счётчик (по IP или по identifier).
+ * - Per-user: передайте в config identifier: `user:${userId}` (например из сессии),
+ *   тогда лимит считается отдельно по пользователю.
+ *
  * Настройка Upstash Redis:
  * 1. Создайте Redis database на https://upstash.com
  * 2. Добавьте переменные окружения:
@@ -18,12 +24,14 @@ import { logWarn } from './log';
  * Конфигурация ограничения запросов.
  * @property maxRequests Максимальное количество запросов в окне.
  * @property windowMs Длительность окна в миллисекундах.
- * @property identifier Необязательный фиксированный идентификатор (если не задан — используется IP).
+ * @property identifier Необязательный идентификатор (по умолчанию — IP из заголовков). Для per-user лимита передайте, например, `user:${userId}`.
+ * @property keyPrefix Необязательный префикс ключа. Задаёт отдельный счётчик на маршрут: ключ будет `ratelimit:${keyPrefix}:${identifier}` (per-route лимит).
  */
-type RateLimitConfig = {
+export type RateLimitConfig = {
     maxRequests: number;
     windowMs: number;
     identifier?: string;
+    keyPrefix?: string;
 };
 
 /**
@@ -81,9 +89,10 @@ async function getRedisClient() {
 }
 
 /**
- * Получает идентификатор для rate limiting из запроса
+ * Получает идентификатор для rate limiting из запроса (IP из x-forwarded-for / x-real-ip / cf-connecting-ip).
+ * Экспортируется для формирования per-user ключа: например, при наличии сессии передайте identifier: `user:${userId}` в конфиг.
  */
-function getRateLimitIdentifier(req: Request): string {
+export function getRateLimitIdentifier(req: Request): string {
     // Пытаемся получить IP адрес из заголовков
     const forwarded = req.headers.get('x-forwarded-for');
     const realIp = req.headers.get('x-real-ip');
@@ -212,11 +221,11 @@ export async function checkRateLimit(
     req: Request,
     config: RateLimitConfig
 ): Promise<RateLimitResult> {
-    const { maxRequests, windowMs, identifier } = config;
+    const { maxRequests, windowMs, identifier, keyPrefix } = config;
     
-    // Формируем ключ для rate limiting
-    const baseKey = identifier || getRateLimitIdentifier(req);
-    const key = `ratelimit:${baseKey}`;
+    // Формируем ключ для rate limiting (keyPrefix даёт per-route счётчик)
+    const baseKey = identifier ?? getRateLimitIdentifier(req);
+    const key = keyPrefix ? `ratelimit:${keyPrefix}:${baseKey}` : `ratelimit:${baseKey}`;
     
     // Пытаемся использовать Redis
     const redisResult = await checkRateLimitWithRedis(key, maxRequests, windowMs);
@@ -319,3 +328,20 @@ export const RateLimitConfigs = {
         windowMs: 15 * 60 * 1000, // в 15 минут
     },
 } as const;
+
+/**
+ * Точечная настройка лимита для маршрута: отдельный счётчик на routeId и опциональные переопределения.
+ * Использование: withRateLimit(req, routeRateLimit('api/notify', RateLimitConfigs.normal), handler)
+ * или с переопределением: routeRateLimit('api/quick-hold', RateLimitConfigs.public, { maxRequests: 5 })
+ */
+export function routeRateLimit(
+    routeId: string,
+    baseConfig: RateLimitConfig,
+    overrides?: Partial<RateLimitConfig>
+): RateLimitConfig {
+    return {
+        ...baseConfig,
+        ...overrides,
+        keyPrefix: routeId,
+    };
+}

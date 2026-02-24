@@ -27,8 +27,10 @@
     "test": "pnpm test:sql && pnpm test:api"
   },
   "lint-staged": {
+    "**/jest.config.js": [],
+    "**/jest.setup.js": [],
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix --ignore-pattern '**/__tests__/**' --ignore-pattern '**/*.test.{ts,tsx}' --ignore-pattern '**/*.spec.{ts,tsx}' --ignore-pattern 'jest.config.js' --ignore-pattern 'jest.setup.js' --ignore-pattern 'e2e/**' --ignore-pattern 'playwright.config.ts' --no-warn-ignored"
+      "eslint --fix --ignore-pattern '**/__tests__/**' --ignore-pattern '**/*.test.{ts,tsx}' --ignore-pattern '**/*.spec.{ts,tsx}' --ignore-pattern '**/jest.config.js' --ignore-pattern '**/jest.setup.js' --ignore-pattern 'e2e/**' --ignore-pattern 'playwright.config.ts' --no-warn-ignored"
     ],
     "e2e/**": [],
     "playwright.config.ts": []

@@ -1,4 +1,5 @@
 // apps/web/src/app/api/cron/recalculate-ratings/route.ts
+import { sendAlertEmail } from '@/lib/alerts';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import { measurePerformance } from '@/lib/performance';
@@ -35,6 +36,17 @@ export async function GET(req: Request) {
 
         if (error) {
             logError('RecalculateRatingsCron', 'RPC recalculate_ratings_for_date failed', error);
+            // Алерт при сбое cron: оповещение по email для быстрой реакции
+            const alertResult = await sendAlertEmail([
+                {
+                    type: 'error',
+                    message: 'Cron пересчёта рейтингов упал',
+                    details: { error: error.message, code: error.code },
+                },
+            ]);
+            if (!alertResult.success) {
+                logError('RecalculateRatingsCron', 'Failed to send alert email', alertResult.error);
+            }
             return createErrorResponse('internal', error.message, undefined, 500);
         }
 

@@ -116,6 +116,26 @@ type WhatsAppStatus = {
     recipient_id: string;
 };
 
+/** Элемент списка активных бронирований (для выбора из нескольких) */
+type ActiveBookingRow = {
+    id: string;
+    biz_id: string;
+    start_at: string;
+    services: { name_ru?: string }[] | { name_ru?: string } | null;
+    staff: { full_name?: string }[] | { full_name?: string } | null;
+    client_id?: string | null;
+    client_phone?: string | null;
+};
+
+function formatBookingListLine(booking: ActiveBookingRow, index: number): string {
+    const services = booking.services;
+    const staff = booking.staff;
+    const serviceName = Array.isArray(services) ? services[0]?.name_ru || 'услуга' : (services as { name_ru?: string })?.name_ru || 'услуга';
+    const staffName = Array.isArray(staff) ? staff[0]?.full_name || 'мастер' : (staff as { full_name?: string })?.full_name || 'мастер';
+    const startTime = formatInTimeZone(new Date(booking.start_at), TZ, 'dd.MM.yyyy HH:mm');
+    return `${index}. ${startTime} — ${serviceName}, ${staffName}`;
+}
+
 /**
  * Обработка входящего сообщения
  */
@@ -152,7 +172,7 @@ async function handleIncomingMessage(message: WhatsAppMessage) {
         const normalizedPhone = fromPhone.startsWith('+') ? fromPhone : `+${fromPhone}`;
         
         let clientId: string | null = null;
-        let bookingId: string | null = null;
+        let activeBookings: ActiveBookingRow[] = [];
         let bizId: string | null = null;
 
         // Ищем пользователя по номеру телефона в profiles
@@ -167,25 +187,22 @@ async function handleIncomingMessage(message: WhatsAppMessage) {
             logDebug('WhatsAppWebhook', 'Found client by phone', { clientId, phone: normalizedPhone });
         }
 
-        // Если нашли клиента, ищем активное бронирование
+        // Собираем до 10 активных бронирований для выбора (отмена/подтвердить/напомни)
         if (clientId) {
-            // Ищем ближайшее активное бронирование (hold, confirmed, paid)
-            const { data: activeBooking } = await admin
+            const { data: clientBookings } = await admin
                 .from('bookings')
-                .select('id, biz_id, status, start_at')
+                .select('id, biz_id, start_at, client_id, client_phone, services(name_ru), staff(full_name)')
                 .eq('client_id', clientId)
                 .in('status', ['hold', 'confirmed', 'paid'])
-                .gte('start_at', new Date().toISOString()) // Только будущие
+                .gte('start_at', new Date().toISOString())
                 .order('start_at', { ascending: true })
-                .limit(1)
-                .maybeSingle();
+                .limit(10);
 
-            if (activeBooking) {
-                bookingId = activeBooking.id;
-                bizId = activeBooking.biz_id;
-                logDebug('WhatsAppWebhook', 'Found active booking', { bookingId, bizId });
+            if (clientBookings?.length) {
+                activeBookings = clientBookings as unknown as ActiveBookingRow[];
+                bizId = activeBookings[0].biz_id;
+                logDebug('WhatsAppWebhook', 'Found active bookings', { count: activeBookings.length, bizId });
             } else {
-                // Если нет активного бронирования, ищем последнее для определения бизнеса
                 const { data: lastBooking } = await admin
                     .from('bookings')
                     .select('biz_id')
@@ -193,29 +210,26 @@ async function handleIncomingMessage(message: WhatsAppMessage) {
                     .order('created_at', { ascending: false })
                     .limit(1)
                     .maybeSingle();
-
-                if (lastBooking) {
-                    bizId = lastBooking.biz_id;
-                }
+                if (lastBooking) bizId = lastBooking.biz_id;
             }
         } else {
-            // Если клиент не найден, пытаемся найти по номеру в bookings (для гостевых бронирований)
-            const { data: guestBooking } = await admin
+            const { data: guestBookings } = await admin
                 .from('bookings')
-                .select('id, biz_id, client_phone')
+                .select('id, biz_id, start_at, client_id, client_phone, services(name_ru), staff(full_name)')
                 .eq('client_phone', normalizedPhone)
                 .in('status', ['hold', 'confirmed', 'paid'])
                 .gte('start_at', new Date().toISOString())
                 .order('start_at', { ascending: true })
-                .limit(1)
-                .maybeSingle();
+                .limit(10);
 
-            if (guestBooking) {
-                bookingId = guestBooking.id;
-                bizId = guestBooking.biz_id;
-                logDebug('WhatsAppWebhook', 'Found guest booking by phone', { bookingId, bizId });
+            if (guestBookings?.length) {
+                activeBookings = guestBookings as unknown as ActiveBookingRow[];
+                bizId = activeBookings[0].biz_id;
+                logDebug('WhatsAppWebhook', 'Found guest bookings by phone', { count: activeBookings.length, bizId });
             }
         }
+
+        const bookingId = activeBookings[0]?.id ?? null;
 
         // Сохраняем сообщение в БД
         const { error: insertError } = await admin
@@ -253,9 +267,9 @@ async function handleIncomingMessage(message: WhatsAppMessage) {
             await handleMediaMessage(message, normalizedPhone, bookingId, bizId);
         }
 
-        // Обработка текстовых команд
+        // Обработка текстовых команд (передаём список активных бронирований для выбора из нескольких)
         if (messageType === 'text' && messageText) {
-            await handleTextCommand(messageText, normalizedPhone, bookingId, clientId, bizId);
+            await handleTextCommand(messageText, normalizedPhone, activeBookings, clientId, bizId);
             await admin
                 .from('whatsapp_messages')
                 .update({ processed: true })
@@ -277,7 +291,7 @@ async function handleMediaMessage(
     message: WhatsAppMessage,
     fromPhone: string,
     bookingId: string | null,
-    bizId: string | null
+    _bizId: string | null
 ) {
     try {
         const mediaType = message.type;
@@ -322,40 +336,94 @@ async function handleMediaMessage(
 }
 
 /**
- * Обработка текстовых команд
+ * Парсит "отмена 1" / "подтвердить 2" — возвращает 1-based индекс или null
+ */
+function parseBookingIndex(message: string, prefix: 'отмена' | 'подтвердить'): number | null {
+    const lower = message.toLowerCase().trim();
+    const re = prefix === 'отмена'
+        ? /отмен(?:а|ить)(?:\s+бронь)?\s*(\d+)/i
+        : /подтверди(?:ть)?\s*(\d+)/i;
+    const m = lower.match(re);
+    if (!m) return null;
+    const n = parseInt(m[1], 10);
+    return Number.isFinite(n) && n >= 1 ? n : null;
+}
+
+/**
+ * Обработка текстовых команд (поддержка одного или нескольких бронирований)
  */
 async function handleTextCommand(
     messageText: string,
     fromPhone: string,
-    bookingId: string | null,
+    activeBookings: ActiveBookingRow[],
     clientId: string | null,
     bizId: string | null
 ) {
     try {
         const lowerText = messageText.toLowerCase().trim();
-        
-        // Команды отмены
-        const cancelCommands = ['отмена', 'cancel', 'отменить', 'отменить бронь', 'отменить запись'];
-        if (cancelCommands.some(cmd => lowerText.includes(cmd))) {
-            await handleCancelCommand(fromPhone, bookingId, clientId, bizId);
+        const bookingId = activeBookings[0]?.id ?? null;
+
+        // Команды напоминания (список предстоящих бронирований)
+        const remindCommands = ['напомни', 'напомни мне', 'remind', 'мои записи', 'мои брони'];
+        if (remindCommands.some(cmd => lowerText.includes(cmd))) {
+            await handleRemindCommand(fromPhone, activeBookings);
             return;
         }
 
-        // Команды подтверждения
+        // Команды отмены (поддержка "отмена 1", "отмена 2" при нескольких бронях)
+        const cancelCommands = ['отмена', 'cancel', 'отменить', 'отменить бронь', 'отменить запись'];
+        if (cancelCommands.some(cmd => lowerText.includes(cmd))) {
+            const index = parseBookingIndex(messageText, 'отмена');
+            const targetId = index && index <= activeBookings.length
+                ? activeBookings[index - 1].id
+                : activeBookings.length === 1
+                    ? activeBookings[0].id
+                    : activeBookings.length > 1 && !index
+                        ? null
+                        : activeBookings[0]?.id ?? null;
+            if (activeBookings.length > 1 && !index) {
+                const lines = activeBookings.map((b, i) => formatBookingListLine(b, i + 1)).join('\n');
+                await sendWhatsApp({
+                    to: fromPhone,
+                    text: `У вас несколько бронирований:\n\n${lines}\n\nНапишите «отмена 1» или «отмена 2» и т.д. для отмены.`,
+                });
+                return;
+            }
+            await handleCancelCommand(fromPhone, targetId, clientId, bizId);
+            return;
+        }
+
+        // Команды подтверждения (поддержка "подтвердить 1", "подтвердить 2")
         const confirmCommands = ['подтвердить', 'confirm', 'да', 'подтверждаю', 'ок', 'ok'];
         if (confirmCommands.some(cmd => lowerText.includes(cmd))) {
-            await handleConfirmCommand(fromPhone, bookingId, clientId, bizId);
+            const index = parseBookingIndex(messageText, 'подтвердить');
+            const targetId = index && index <= activeBookings.length
+                ? activeBookings[index - 1].id
+                : activeBookings.length === 1
+                    ? activeBookings[0].id
+                    : activeBookings.length > 1 && !index
+                        ? null
+                        : activeBookings[0]?.id ?? null;
+            if (activeBookings.length > 1 && !index) {
+                const lines = activeBookings.map((b, i) => formatBookingListLine(b, i + 1)).join('\n');
+                await sendWhatsApp({
+                    to: fromPhone,
+                    text: `У вас несколько бронирований:\n\n${lines}\n\nНапишите «подтвердить 1» или «подтвердить 2» и т.д.`,
+                });
+                return;
+            }
+            await handleConfirmCommand(fromPhone, targetId, clientId, bizId);
             return;
         }
 
         // Команды помощи
         const helpCommands = ['помощь', 'help', 'команды', 'commands', 'что можно', '?'];
         if (helpCommands.some(cmd => lowerText.includes(cmd))) {
-            await handleHelpCommand(fromPhone, bookingId);
+            await handleHelpCommand(fromPhone, activeBookings.length);
             return;
         }
 
-        // Если команда не распознана, но есть активное бронирование - отправляем информацию о нем
+        // Если команда не распознана, но есть активное бронирование — отправляем информацию о нём
         if (bookingId) {
             await sendBookingInfo(fromPhone, bookingId);
         }
@@ -371,7 +439,7 @@ async function handleCancelCommand(
     fromPhone: string,
     bookingId: string | null,
     clientId: string | null,
-    bizId: string | null
+    _bizId: string | null
 ) {
     if (!bookingId) {
         await sendWhatsApp({
@@ -477,7 +545,7 @@ async function handleConfirmCommand(
     fromPhone: string,
     bookingId: string | null,
     clientId: string | null,
-    bizId: string | null
+    _bizId: string | null
 ) {
     if (!bookingId) {
         await sendWhatsApp({
@@ -585,15 +653,45 @@ async function handleConfirmCommand(
 }
 
 /**
+ * Команда «напомни» — список предстоящих бронирований
+ */
+async function handleRemindCommand(fromPhone: string, activeBookings: ActiveBookingRow[]) {
+    try {
+        if (activeBookings.length === 0) {
+            await sendWhatsApp({
+                to: fromPhone,
+                text: 'У вас нет предстоящих бронирований. Для записи посетите наш сайт или напишите нам.',
+            });
+            return;
+        }
+        const lines = activeBookings.map((b, i) => formatBookingListLine(b, i + 1)).join('\n');
+        const header = activeBookings.length === 1
+            ? '📅 Ваше ближайшее бронирование:\n\n'
+            : `📅 У вас ${activeBookings.length} предстоящих бронирований:\n\n`;
+        await sendWhatsApp({
+            to: fromPhone,
+            text: header + lines + '\n\nКоманды: «отмена 1», «подтвердить 1», «помощь».',
+        });
+    } catch (error) {
+        logError('WhatsAppWebhook', 'Failed to send remind message', { error, fromPhone });
+    }
+}
+
+/**
  * Обработка команды помощи
  */
-async function handleHelpCommand(fromPhone: string, bookingId: string | null) {
+async function handleHelpCommand(fromPhone: string, activeBookingsCount: number) {
     let helpText = '📋 Доступные команды:\n\n';
-    helpText += '• "отмена" - отменить бронирование\n';
-    helpText += '• "подтвердить" - подтвердить бронирование\n';
-    helpText += '• "помощь" - показать это сообщение\n\n';
+    helpText += '• "отмена" — отменить бронирование';
+    if (activeBookingsCount > 1) helpText += ' (или "отмена 1", "отмена 2" при нескольких)';
+    helpText += '\n';
+    helpText += '• "подтвердить" — подтвердить бронирование';
+    if (activeBookingsCount > 1) helpText += ' (или "подтвердить 1", "подтвердить 2")';
+    helpText += '\n';
+    helpText += '• "напомни" — показать предстоящие записи\n';
+    helpText += '• "помощь" — это сообщение\n\n';
 
-    if (bookingId) {
+    if (activeBookingsCount > 0) {
         helpText += 'У вас есть активное бронирование. Используйте команды выше для управления им.';
     } else {
         helpText += 'Для создания нового бронирования посетите наш сайт или свяжитесь с нами.';

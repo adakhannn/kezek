@@ -16,8 +16,10 @@ import type {
 /**
  * Вычисляет контекст расписания (временный перевод и целевой филиал)
  * на основании массива временных переводов и базовой информации о сотруднике.
+ * Логика отражает useSlotsLoader в публичном бронировании.
  *
- * Логика отражает то, как сейчас работает useSlotsLoader в публичном бронировании.
+ * @param params - staffId, dayStr (YYYY-MM-DD), selectedBranchId, temporaryTransfers, staff
+ * @returns ScheduleContext (isTemporaryTransfer, targetBranchId, homeBranchId)
  */
 export function resolveScheduleContext(params: {
     staffId: string;
@@ -54,10 +56,12 @@ export function resolveScheduleContext(params: {
 }
 
 /**
- * Фильтрует слоты по контексту:
- * - по мастеру (или любому мастеру для staffId === 'any');
- * - по минимальному времени начала;
- * - по филиалу (учитывая временный перевод).
+ * Фильтрует слоты по контексту: мастер (или любой при staffId === 'any'),
+ * минимальное время начала, филиал (с учётом временного перевода).
+ *
+ * @param slots - Массив сырых слотов (RawSlot)
+ * @param context - SlotFilterContext (staffId, branchId, targetBranchId, isTemporaryTransfer, minStart)
+ * @returns Отфильтрованный массив Slot
  */
 export function filterSlotsByContext(
     slots: RawSlot[],

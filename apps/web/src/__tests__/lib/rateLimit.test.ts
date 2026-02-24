@@ -1,4 +1,4 @@
-import { checkRateLimit, withRateLimit } from '@/lib/rateLimit';
+import { checkRateLimit, withRateLimit, routeRateLimit, getRateLimitIdentifier, RateLimitConfigs } from '@/lib/rateLimit';
 
 function createRequest(ip: string = '127.0.0.1'): Request {
   return new Request('https://example.com', {
@@ -45,6 +45,34 @@ describe('rateLimit (in-memory fallback)', () => {
     expect(body.error).toBe('rate_limit_exceeded');
     expect(secondRes.headers.get('X-RateLimit-Limit')).toBe(String(config.maxRequests));
     expect(secondRes.headers.get('Retry-After')).not.toBeNull();
+  });
+
+  test('keyPrefix gives per-route bucket (same IP, different keys)', async () => {
+    const req = createRequest('10.0.0.3');
+    const base = { maxRequests: 1, windowMs: 60_000 };
+    const configA = { ...base, keyPrefix: 'route-a' };
+    const configB = { ...base, keyPrefix: 'route-b' };
+
+    const a1 = await checkRateLimit(req, configA);
+    expect(a1.success).toBe(true);
+    const b1 = await checkRateLimit(req, configB);
+    expect(b1.success).toBe(true);
+    const a2 = await checkRateLimit(req, configA);
+    expect(a2.success).toBe(false);
+    const b2 = await checkRateLimit(req, configB);
+    expect(b2.success).toBe(false);
+  });
+
+  test('routeRateLimit returns config with keyPrefix and overrides', () => {
+    const config = routeRateLimit('api/notify', RateLimitConfigs.normal, { maxRequests: 20 });
+    expect(config.keyPrefix).toBe('api/notify');
+    expect(config.maxRequests).toBe(20);
+    expect(config.windowMs).toBe(RateLimitConfigs.normal.windowMs);
+  });
+
+  test('getRateLimitIdentifier returns IP from x-forwarded-for', () => {
+    const req = createRequest('203.0.113.1');
+    expect(getRateLimitIdentifier(req)).toBe('203.0.113.1');
   });
 }
 

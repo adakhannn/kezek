@@ -36,7 +36,13 @@ export type ApiErrorType =
     | string; // Кастомные типы ошибок
 
 /**
- * Создает стандартизированный ответ об ошибке
+ * Создаёт стандартизированный JSON-ответ об ошибке для API routes.
+ *
+ * @param error - Код типа ошибки (auth, validation, not_found и т.д.)
+ * @param message - Человекочитаемое сообщение (опционально)
+ * @param details - Дополнительные данные для отладки (опционально)
+ * @param status - HTTP статус (по умолчанию 500)
+ * @returns NextResponse с телом { ok: false, error, message?, details? }
  */
 export function createErrorResponse(
     error: ApiErrorType,
@@ -61,8 +67,13 @@ export function createErrorResponse(
 }
 
 /**
- * Обрабатывает ошибку и возвращает стандартизированный ответ
- * Автоматически определяет тип ошибки и HTTP статус
+ * Обрабатывает ошибку и возвращает стандартизированный ответ.
+ * По тексту сообщения или структуре ошибки определяет тип (auth, forbidden, validation, not_found, conflict) и HTTP статус.
+ *
+ * @param error - Пойманная ошибка (Error, NextResponse или объект с полями error/message)
+ * @param scope - Имя области для логирования (например, 'QuickHold')
+ * @param defaultMessage - Сообщение по умолчанию, если из error не удаётся извлечь текст
+ * @returns NextResponse с ApiErrorResponse и соответствующим status
  */
 export function handleApiError(
     error: unknown,
@@ -155,7 +166,11 @@ export async function withErrorHandler<T>(
 }
 
 /**
- * Создает успешный ответ
+ * Создаёт стандартизированный успешный JSON-ответ для API routes.
+ *
+ * @param data - Тело ответа (попадает в поле `data`)
+ * @param additionalFields - Дополнительные поля в корне ответа (например, { alertSent: true })
+ * @returns NextResponse с телом { ok: true, data?, ...additionalFields }
  */
 export function createSuccessResponse<T = unknown>(
     data?: T,

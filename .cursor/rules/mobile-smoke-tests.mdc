@@ -1,0 +1,35 @@
+---
+description: При добавлении нового экрана в apps/mobile добавлять соответствующий smoke-тест
+globs: apps/mobile/src/screens/**/*.tsx
+alwaysApply: false
+---
+
+# Smoke-тесты для новых экранов (apps/mobile)
+
+При добавлении или значительном изменении экрана в `apps/mobile/src/screens/` обязательно добавьте соответствующий smoke-тест.
+
+## Где создавать тест
+
+- Экраны в `screens/auth/` → тест в `src/__tests__/screens/auth/<ScreenName>.test.tsx`
+- Остальные экраны → тест в `src/__tests__/screens/<ScreenName>.test.tsx`
+
+## Шаблон (по аналогии с SignInScreen, WhatsAppScreen)
+
+1. Импорт экрана и `render`, `screen` из `@testing-library/react-native`.
+2. Мок навигации (см. существующие тесты в `__tests__/screens/auth/`).
+3. Минимум один тест: «должен отрендериться без ошибок» — `render(<Screen />)` и проверка наличия хотя бы одного ожидаемого элемента (`getByText`, `getByPlaceholderText` и т.п.).
+
+Пример структуры:
+
+```tsx
+describe('NewScreen', () => {
+    test('должен отрендериться без ошибок', () => {
+        render(<NewScreen />);
+        expect(screen.getByText(/ожидаемый текст/i)).toBeTruthy();
+    });
+});
+```
+
+## Документация
+
+После добавления теста обновите список в `apps/mobile/SMOKE_TESTS.md` (раздел «Добавление новых тестов» / соответствующий список экранов).

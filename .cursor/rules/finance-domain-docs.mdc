@@ -1,0 +1,16 @@
+---
+description: При добавлении/изменении типов выплат или формул — обновить SYSTEM_FEATURES_DOCUMENTATION и financeDomain README
+globs: apps/web/src/lib/financeDomain/**/*.ts
+alwaysApply: false
+---
+
+# Документирование изменений в финансах (выплаты, формулы)
+
+При добавлении новых типов выплат или изменении формул расчёта в `financeDomain` необходимо:
+
+1. **SYSTEM_FEATURES_DOCUMENTATION.md** (корень репозитория) — обновить раздел 1.5: описание типа выплаты, формулы, граничные случаи. Правило — в подразделе 1.5.6.
+2. **Код** — добавить/изменить функции, экспорт в `index.ts`, JSDoc с формулой.
+3. **apps/web/src/lib/financeDomain/README.md** — описать новую функцию в «Основные функции» (или обновить существующее описание).
+4. **Unit-тесты** — добавить или обновить тесты в `apps/web/src/__tests__/lib/financeDomain/`.
+
+Подробный чеклист: `SYSTEM_FEATURES_DOCUMENTATION.md` (1.5.6) и `apps/web/src/lib/financeDomain/README.md` (раздел «При добавлении новых типов выплат или формул»).

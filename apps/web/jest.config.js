@@ -24,14 +24,13 @@ const customJestConfig = {
         '!src/app/api/**/route.ts', // Исключаем route.ts, так как они тестируются через интеграционные тесты
     ],
     testTimeout: 30000, // 30 секунд для API тестов
-    // Минимальный порог покрытия тестами
-    // Поднимать постепенно (следующий шаг: 50%). При добавлении тестов — в первую очередь новые/изменяемые API и financeDomain.
+    // Минимальный порог покрытия тестами (50%+)
     coverageThreshold: {
         global: {
-            branches: 45,
-            functions: 45,
-            lines: 45,
-            statements: 45,
+            branches: 50,
+            functions: 50,
+            lines: 50,
+            statements: 50,
         },
     },
 };
