@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { BusinessSwitcher } from './BusinessSwitcher';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 type NavItem = {
@@ -124,10 +126,15 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
                 <div className="h-full overflow-y-auto">
                     <div className="p-4 sm:p-6 space-y-6">
                         {/* Заголовок с кнопкой закрытия на мобильных */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">{t('dashboard.sidebar.title', 'Кабинет бизнеса')}</h2>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">ID: {bizId.slice(0, 8)}...</p>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                                <h2 className="mb-1 text-lg font-bold text-gray-900 dark:text-gray-100">
+                                    {t('dashboard.sidebar.title', 'Кабинет бизнеса')}
+                                </h2>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    ID: {bizId.slice(0, 8)}...
+                                </p>
+                                <BusinessSwitcher />
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}

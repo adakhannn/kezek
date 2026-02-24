@@ -32,7 +32,7 @@ export default async function EditBranchPage({
     ] = await Promise.all([
         supabase
             .from('branches')
-            .select('id,name,address,is_active,biz_id,lat,lon,rating_score,businesses!inner(slug)')
+            .select('id,name,address,is_active,biz_id,lat,lon,rating_score,businesses!inner(slug,name,city)')
             .eq('id', id)
             .maybeSingle(),
         supabase
@@ -69,8 +69,9 @@ export default async function EditBranchPage({
         breaks: (s.breaks || []) as Array<{ start: string; end: string }>,
     }));
 
-    const businessesData = branch.businesses as { slug: string } | { slug: string }[] | null;
+    const businessesData = branch.businesses as { slug: string; name?: string | null; city?: string | null } | { slug: string; name?: string | null; city?: string | null }[] | null;
     const bizSlug = Array.isArray(businessesData) ? businessesData[0]?.slug || '' : businessesData?.slug || '';
+    const bizName = Array.isArray(businessesData) ? businessesData[0]?.name || null : businessesData?.name || null;
 
     return (
         <EditBranchPageClient 
@@ -79,6 +80,7 @@ export default async function EditBranchPage({
             initialSchedule={initialSchedule}
             bizId={String(bizId)}
             bizSlug={bizSlug}
+            bizName={bizName}
             ratingScore={branch.rating_score}
             ratingWeights={ratingConfig ? {
                 reviews: ratingConfig.staff_reviews_weight,

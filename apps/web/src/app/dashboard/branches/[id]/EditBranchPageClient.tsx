@@ -29,6 +29,7 @@ export default function EditBranchPageClient({
     initialSchedule = [],
     bizId,
     bizSlug,
+    bizName,
     ratingScore,
     ratingWeights,
 }: { 
@@ -44,6 +45,7 @@ export default function EditBranchPageClient({
     initialSchedule?: BranchSchedule[];
     bizId: string;
     bizSlug: string;
+    bizName?: string | null;
     ratingScore?: number | null;
     ratingWeights?: RatingWeights | null;
 }) {
@@ -84,6 +86,9 @@ export default function EditBranchPageClient({
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
                     {t('branches.edit.subtitle', 'Управление данными филиала')}
+                </p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {t('branches.edit.bizContext', 'Бизнес')}: {bizName || t('branches.edit.bizDefaultName', 'Ваш бизнес в Kezek')}
                 </p>
             </div>
 

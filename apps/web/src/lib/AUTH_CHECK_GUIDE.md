@@ -169,14 +169,35 @@ export async function DELETE(req: Request, context: unknown) {
 
 ## Интеграция с `getBizContextForManagers`
 
-Для endpoints, доступных только менеджерам, используйте `getBizContextForManagers`:
+Для endpoints, доступных только менеджерам/владельцам, используйте `getBizContextForManagers`:
 
 ```typescript
 import { getBizContextForManagers } from '@/lib/authBiz';
 
-const { bizId } = await getBizContextForManagers();
-// Эта функция автоматически проверяет, что пользователь является менеджером бизнеса
+// Возвращает { supabase, userId, bizId }
+const { supabase, userId, bizId } = await getBizContextForManagers();
+
+// Эта функция:
+// - проверяет, что пользователь авторизован;
+// - для обычных пользователей использует текущий выбранный бизнес (таблица user_current_business),
+//   а при его отсутствии — детерминированно выбирает бизнес по ролям или owner_id;
+// - для super admin не подбирает бизнес автоматически, если current_biz_id не задан.
 ```
+
+### Использование `current_biz_id`
+
+Текущий выбранный бизнес пользователя хранится в таблице `user_current_business` (`user_id`, `biz_id`):
+
+- устанавливается через API `/api/me/current-business` (POST);
+- читается через API `/api/me/current-business` (GET) и используется в UI:
+  - при входе, если у пользователя несколько бизнесов — страница `/select-business`;
+  - в кабинете — переключатель бизнеса в левом меню.
+
+**Рекомендации для новых endpoints:**
+
+1. Не пытайтесь сами выбирать `bizId` по `user_roles` или `businesses.owner_id` в каждом endpoint.
+2. Для всего, что относится к кабинету бизнеса (dashboard, финансы, сотрудники и т.п.), всегда берите `bizId` только из `getBizContextForManagers()`.
+3. Если endpoint меняет текущий бизнес (например, выбор из списка), используйте `/api/me/current-business` и не меняйте `user_current_business` напрямую из клиента.
 
 ## Обработка ошибок
 

@@ -66,6 +66,45 @@ export default function SignInPage() {
     const decideRedirect = useCallback(
         async (fallback: string, userId?: string) => {
             if (await fetchIsSuper()) return '/admin';
+
+            // Пробуем использовать новый API текущего бизнеса для детерминированного выбора
+            if (userId) {
+                try {
+                    const res = await fetch('/api/me/current-business', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                    if (res.ok) {
+                        const json = (await res.json()) as {
+                            ok: boolean;
+                            data?: { currentBizId: string | null; businesses: { id: string }[] };
+                        };
+                        if (json.ok && json.data) {
+                            const count = json.data.businesses.length;
+                            if (count === 1) {
+                                const only = json.data.businesses[0];
+                                if (only?.id && json.data.currentBizId !== only.id) {
+                                    // Ставим current_biz_id в фоне, ошибки не блокируют переход
+                                    void fetch('/api/me/current-business', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ bizId: only.id }),
+                                    }).catch(() => undefined);
+                                }
+                                return '/dashboard';
+                            }
+                            if (count > 1) {
+                                return '/select-business';
+                            }
+                        }
+                    }
+                } catch (e) {
+                    logWarn('SignIn', 'decideRedirect: current-business API failed, fallback to old logic', {
+                        error: e instanceof Error ? e.message : String(e),
+                    });
+                }
+            }
+
             if (await fetchOwnsBusiness(userId)) return '/dashboard';
             
             // Проверяем наличие записи в staff (источник правды)

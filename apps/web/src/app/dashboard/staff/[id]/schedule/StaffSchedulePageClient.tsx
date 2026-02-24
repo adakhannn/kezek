@@ -4,14 +4,22 @@ import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
+type StaffSchedulePageClientProps = {
+    staffId: string;
+    staffName: string;
+    bizName?: string | null;
+    bizCity?: string | null;
+};
+
 export default function StaffSchedulePageClient({
     staffId,
     staffName,
-}: {
-    staffId: string;
-    staffName: string;
-}) {
+    bizName,
+    bizCity,
+}: StaffSchedulePageClientProps) {
     const { t } = useLanguage();
+
+    const displayBizName = bizName || t('staff.schedule.biz.defaultName', 'Ваш бизнес в Kezek');
 
     return (
         <div className="rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 text-white shadow-lg">
@@ -32,7 +40,13 @@ export default function StaffSchedulePageClient({
                                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight">
                                     {t('staff.schedule.title', 'Расписание')}
                                 </h1>
-                                <p className="text-xs sm:text-sm lg:text-base text-indigo-100/90 mt-0.5 sm:mt-1 truncate">{staffName}</p>
+                                <p className="text-xs sm:text-sm lg:text-base text-indigo-100/90 mt-0.5 sm:mt-1 truncate">
+                                    {staffName}
+                                </p>
+                                <p className="text-[11px] sm:text-xs text-indigo-100/80 mt-0.5 truncate">
+                                    {t('staff.schedule.biz.context', 'Бизнес')}: {displayBizName}
+                                    {bizCity ? ` · ${bizCity}` : ''}
+                                </p>
                             </div>
                         </div>
                     </div>

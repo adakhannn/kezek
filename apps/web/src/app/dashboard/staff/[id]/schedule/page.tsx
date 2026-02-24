@@ -34,6 +34,16 @@ export default async function StaffSchedulePage({
     }
     if (!staff || String(staff.biz_id) !== String(bizId)) return notFound();
 
+    // данные бизнеса для контекста
+    const { data: biz } = await supabase
+        .from('businesses')
+        .select('name, city')
+        .eq('id', bizId)
+        .maybeSingle<{ name: string | null; city: string | null }>();
+
+    const bizName = biz?.name ?? null;
+    const bizCity = biz?.city ?? null;
+
     // филиалы бизнеса
     const { data: branches, error: eBranches } = await supabase
         .from('branches')
@@ -53,7 +63,12 @@ export default async function StaffSchedulePage({
 
     return (
         <main className="mx-auto max-w-6xl px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
-            <StaffSchedulePageClient staffId={String(staff.id)} staffName={staff.full_name || ''} />
+            <StaffSchedulePageClient
+                staffId={String(staff.id)}
+                staffName={staff.full_name || ''}
+                bizName={bizName}
+                bizCity={bizCity}
+            />
 
             <Client
                 bizId={String(bizId)}

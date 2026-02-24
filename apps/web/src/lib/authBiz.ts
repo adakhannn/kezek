@@ -15,6 +15,9 @@ export class BizAccessError extends Error {
         checkedSuperAdmin?: boolean;
         checkedUserRoles?: boolean;
         checkedOwnerId?: boolean;
+        currentBizId?: string | null;
+        hasCurrentBizRecord?: boolean;
+        currentBizHasAllowedRole?: boolean;
         userRolesFound?: number;
         eligibleRolesFound?: number;
         ownedBusinessesFound?: number;
@@ -45,10 +48,11 @@ export async function getSupabaseServer() {
 
 /**
  * Возвращает { supabase, userId, bizId } для кабинета менеджмента.
- * Порядок определения:
- * 1) super_admin → slug=kezek или любой бизнес
- * 2) роли user_roles (owner|admin|manager)
- * 3) Фоллбек: businesses.owner_id = user.id
+ * Новый порядок определения:
+ * 1) super_admin → current_biz_id (таблица user_current_business), без автоподбора чужих бизнесов
+ * 2) current_biz_id (таблица user_current_business) с проверкой прав
+ * 3) роли user_roles (owner|admin|manager) с детерминированным выбором
+ * 4) Фоллбек: businesses.owner_id = user.id
  */
 export async function getBizContextForManagers() {
     const startTime = Date.now();
@@ -128,6 +132,9 @@ export async function getBizContextForManagers() {
         userRolesCount?: number;
         eligibleRolesCount?: number;
         ownedBusinessesCount?: number;
+        currentBizId?: string | null;
+        hasCurrentBizRecord?: boolean;
+        currentBizHasAllowedRole?: boolean;
         errors?: Array<{ step: string; error: string }>;
     } = {
         checkedSuperAdmin: isSuper,
@@ -135,75 +142,181 @@ export async function getBizContextForManagers() {
         checkedOwnerId: false,
     };
 
-        if (isSuper) {
+    if (isSuper) {
         logDebug('AuthBiz', 'Processing super admin business selection', { userId });
-        // Kezek в приоритете
-        // Используем service client для обхода RLS
-        const kezekCheckStart = Date.now();
-        const { data: bizKezek, error: kezekError } = await serviceClient
-            .from('businesses')
-            .select('id, slug, name')
-            .eq('slug', 'kezek')
-            .maybeSingle();
 
-        if (kezekError) {
-            logError('AuthBiz', 'Error loading Kezek business', { 
-                error: kezekError.message,
-                errorCode: kezekError.code,
-                errorDetails: kezekError.details,
-                userId
+        // 2a) super admin: пробуем использовать current_biz_id, если он задан и бизнес существует
+        const currentBizStart = Date.now();
+        try {
+            const { data: current } = await serviceClient
+                .from('user_current_business')
+                .select('biz_id')
+                .eq('user_id', userId)
+                .maybeSingle<{ biz_id: string }>();
+
+            if (current?.biz_id) {
+                const currentBizId = String(current.biz_id);
+                diagnostics.hasCurrentBizRecord = true;
+                diagnostics.currentBizId = currentBizId;
+
+                const { data: bizRow, error: bizError } = await serviceClient
+                    .from('businesses')
+                    .select('id, slug, name')
+                    .eq('id', currentBizId)
+                    .maybeSingle<{ id: string; slug: string | null; name: string | null }>();
+
+                if (bizError) {
+                    logWarn('AuthBiz', 'Super admin current business lookup failed', {
+                        userId,
+                        currentBizId,
+                        error: bizError.message,
+                        errorCode: bizError.code,
+                        checkTimeMs: Date.now() - currentBizStart,
+                    });
+                } else if (bizRow?.id) {
+                    bizId = bizRow.id;
+                    logDebug('AuthBiz', 'Using current business for super admin', {
+                        userId,
+                        bizId,
+                        bizSlug: bizRow.slug,
+                        bizName: bizRow.name,
+                        resolutionMethod: 'super_admin_current_biz',
+                        checkTimeMs: Date.now() - currentBizStart,
+                    });
+                } else {
+                    logWarn('AuthBiz', 'Super admin current business not found in businesses table', {
+                        userId,
+                        currentBizId,
+                        checkTimeMs: Date.now() - currentBizStart,
+                    });
+                }
+            }
+        } catch (e) {
+            logWarn('AuthBiz', 'Super admin current business resolution failed, fallback to Kezek slug', {
+                userId,
+                error: e instanceof Error ? e.message : String(e),
+                errorType: e instanceof Error ? e.constructor.name : typeof e,
+                checkTimeMs: Date.now() - currentBizStart,
             });
-            diagnostics.errors = diagnostics.errors || [];
-            diagnostics.errors.push({ step: 'load_kezek_business', error: kezekError.message });
         }
 
-        if (bizKezek?.id) {
-            bizId = bizKezek.id;
-            logDebug('AuthBiz', 'Using Kezek business for super admin', { 
-                bizId, 
-                bizName: bizKezek.name,
-                checkTimeMs: Date.now() - kezekCheckStart
-            });
-        } else {
-            logDebug('AuthBiz', 'Kezek business not found, trying any business', { 
-                kezekCheckTimeMs: Date.now() - kezekCheckStart
-            });
-            const anyBizCheckStart = Date.now();
-            const { data: anyBiz, error: anyBizError } = await serviceClient
+        // 2b) Если current_biz_id не подошёл — пробуем Kezek по slug. Больше бизнесы автоматически не выбираем.
+        if (!bizId) {
+            const kezekCheckStart = Date.now();
+            const { data: bizKezek, error: kezekError } = await serviceClient
                 .from('businesses')
                 .select('id, slug, name')
-                .limit(1)
+                .eq('slug', 'kezek')
                 .maybeSingle();
 
-            if (anyBizError) {
-                logError('AuthBiz', 'Error loading any business for super admin', { 
-                    error: anyBizError.message,
-                    errorCode: anyBizError.code,
-                    errorDetails: anyBizError.details,
-                    userId
+            if (kezekError) {
+                logError('AuthBiz', 'Error loading Kezek business for super admin', {
+                    error: kezekError.message,
+                    errorCode: kezekError.code,
+                    errorDetails: kezekError.details,
+                    userId,
                 });
                 diagnostics.errors = diagnostics.errors || [];
-                diagnostics.errors.push({ step: 'load_any_business', error: anyBizError.message });
+                diagnostics.errors.push({ step: 'load_kezek_business', error: kezekError.message });
             }
 
-            if (anyBiz?.id) {
-                bizId = anyBiz.id;
-                logDebug('AuthBiz', 'Using first available business for super admin', { 
+            if (bizKezek?.id) {
+                bizId = bizKezek.id;
+                logDebug('AuthBiz', 'Using Kezek business for super admin', {
                     bizId,
-                    bizSlug: anyBiz.slug,
-                    bizName: anyBiz.name,
-                    checkTimeMs: Date.now() - anyBizCheckStart
+                    bizName: bizKezek.name,
+                    checkTimeMs: Date.now() - kezekCheckStart,
                 });
             } else {
-                logWarn('AuthBiz', 'Super admin but no businesses found in database', { 
+                logWarn('AuthBiz', 'Super admin has no current business and Kezek business not found', {
                     userId,
-                    totalCheckTimeMs: Date.now() - anyBizCheckStart
+                    totalCheckTimeMs: Date.now() - kezekCheckStart,
                 });
             }
         }
     } else {
         logDebug('AuthBiz', 'Processing regular user business selection', { userId });
-        // (a) ищем по user_roles, но без JOIN, затем мапим role_id -> key
+
+        // (a) сначала пытаемся использовать current_biz_id из user_current_business
+        const currentBizStart = Date.now();
+        try {
+            const { data: current } = await serviceClient
+                .from('user_current_business')
+                .select('biz_id')
+                .eq('user_id', userId)
+                .maybeSingle<{ biz_id: string }>();
+
+            if (current?.biz_id) {
+                const currentBizId = String(current.biz_id);
+                diagnostics.hasCurrentBizRecord = true;
+                diagnostics.currentBizId = currentBizId;
+                logDebug('AuthBiz', 'Found current business for user', {
+                    userId,
+                    currentBizId,
+                });
+
+                // Проверяем, что у пользователя есть допустимая роль в этом бизнесе
+                const [{ data: ur }, { data: roleRows }] = await Promise.all([
+                    serviceClient
+                        .from('user_roles')
+                        .select('biz_id, role_id')
+                        .eq('user_id', userId)
+                        .eq('biz_id', currentBizId),
+                    serviceClient
+                        .from('roles')
+                        .select('id, key'),
+                ]);
+
+                if (ur && roleRows && ur.length > 0) {
+                    const rolesMap = new Map<string, string>(
+                        roleRows.map((r: { id: string | number; key: string }) => [String(r.id), String(r.key)])
+                    );
+                    const hasAllowedRole = ur.some((r: { role_id: string | number }) => {
+                        const key = rolesMap.get(String(r.role_id));
+                        return !!key && ROLE_KEYS_ALLOWED.has(key);
+                    });
+
+                    if (hasAllowedRole) {
+                        bizId = currentBizId;
+                        diagnostics.currentBizHasAllowedRole = true;
+                        logDebug('AuthBiz', 'Using current business for user (validated by roles)', {
+                            userId,
+                            bizId,
+                            resolutionMethod: 'current_biz',
+                            checkTimeMs: Date.now() - currentBizStart,
+                        });
+                    } else {
+                        diagnostics.currentBizHasAllowedRole = false;
+                        logWarn('AuthBiz', 'Current business has no allowed roles for user, fallback to auto selection', {
+                            userId,
+                            currentBizId,
+                            checkTimeMs: Date.now() - currentBizStart,
+                        });
+                    }
+                } else {
+                    diagnostics.currentBizHasAllowedRole = false;
+                    logWarn('AuthBiz', 'No user_roles found for current business, fallback to auto selection', {
+                        userId,
+                        currentBizId,
+                        checkTimeMs: Date.now() - currentBizStart,
+                    });
+                }
+            } else {
+                logDebug('AuthBiz', 'No current business set for user, will auto select', {
+                    userId,
+                    checkTimeMs: Date.now() - currentBizStart,
+                });
+            }
+        } catch (e) {
+            logWarn('AuthBiz', 'Failed to resolve current business, fallback to auto selection', {
+                userId,
+                error: e instanceof Error ? e.message : String(e),
+                errorType: e instanceof Error ? e.constructor.name : typeof e,
+                checkTimeMs: Date.now() - currentBizStart,
+            });
+        }
+
+        // (b) если current_biz_id не подошёл — ищем по user_roles, но без JOIN, затем мапим role_id -> key
         // Используем service client для обхода RLS при проверке доступа
         const userRolesCheckStart = Date.now();
         const [{ data: ur, error: urError }, { data: roleRows, error: rolesError }] = await Promise.all([
@@ -254,7 +367,7 @@ export async function getBizContextForManagers() {
                 checkTimeMs: userRolesCheckTime
             });
 
-            // Ищем подходящие роли: сначала с biz_id, потом без (глобальные)
+            // Ищем подходящие роли по ключу
             const eligibleRoles = ur.filter((r: { role_id: string | number; biz_id?: string | null }) => {
                 const roleKey = rolesMap.get(String(r.role_id)) || '';
                 return ROLE_KEYS_ALLOWED.has(roleKey);
@@ -262,30 +375,39 @@ export async function getBizContextForManagers() {
             
             diagnostics.eligibleRolesCount = eligibleRoles.length;
 
-            // Приоритет: роли с конкретным biz_id
-            const eligibleWithBizId = eligibleRoles.find((r: { role_id: string | number; biz_id?: string | null }) => r.biz_id != null);
-            
-            if (eligibleWithBizId?.biz_id) {
-                bizId = String(eligibleWithBizId.biz_id);
-                const roleKey = rolesMap.get(String(eligibleWithBizId.role_id)) || 'unknown';
-                logDebug('AuthBiz', 'Business found via user_roles (with biz_id)', { 
-                    bizId, 
-                    roleKey,
-                    eligibleRolesCount: diagnostics.eligibleRolesCount,
-                    checkTimeMs: userRolesCheckTime
-                });
-            } else if (eligibleRoles.length > 0) {
-                // Если есть глобальные роли (biz_id = null), но нет конкретного бизнеса,
-                // ищем бизнес через owner_id как fallback
-                logDebug('AuthBiz', 'Found eligible roles but no biz_id, will check owner_id', { 
-                    userId,
-                    eligibleRolesCount: eligibleRoles.length,
-                    eligibleRoleKeys: eligibleRoles.map((r: { role_id: string | number }) => 
-                        rolesMap.get(String(r.role_id)) || 'unknown'
-                    ),
-                    checkTimeMs: userRolesCheckTime
-                });
-            } else {
+            if (!bizId && eligibleRoles.length > 0) {
+                // Приоритет: роли с конкретным biz_id, с детерминированным выбором по biz_id
+                const eligibleWithBizId = eligibleRoles
+                    .filter((r: { biz_id?: string | null }) => r.biz_id != null)
+                    .sort((a: { biz_id?: string | null }, b: { biz_id?: string | null }) => {
+                        const aId = String(a.biz_id);
+                        const bId = String(b.biz_id);
+                        return aId.localeCompare(bId);
+                    });
+
+                const selectedRole = eligibleWithBizId[0] ?? null;
+
+                if (selectedRole?.biz_id) {
+                    bizId = String(selectedRole.biz_id);
+                    const roleKey = rolesMap.get(String(selectedRole.role_id)) || 'unknown';
+                    logDebug('AuthBiz', 'Business found via user_roles (with biz_id, deterministic)', { 
+                        bizId, 
+                        roleKey,
+                        eligibleRolesCount: diagnostics.eligibleRolesCount,
+                        checkTimeMs: userRolesCheckTime
+                    });
+                } else {
+                    // Если есть только глобальные роли (biz_id = null), ищем бизнес через owner_id как fallback
+                    logDebug('AuthBiz', 'Found eligible roles but only global (no biz_id), will check owner_id', { 
+                        userId,
+                        eligibleRolesCount: eligibleRoles.length,
+                        eligibleRoleKeys: eligibleRoles.map((r: { role_id: string | number }) => 
+                            rolesMap.get(String(r.role_id)) || 'unknown'
+                        ),
+                        checkTimeMs: userRolesCheckTime
+                    });
+                }
+            } else if (!bizId) {
                 logDebug('AuthBiz', 'No eligible roles found in user_roles', { 
                     userId,
                     userRolesCount: ur.length,
@@ -315,6 +437,7 @@ export async function getBizContextForManagers() {
                 .from('businesses')
                 .select('id, slug, name')
                 .eq('owner_id', userId)
+                .order('id', { ascending: true })
                 .limit(1)
                 .maybeSingle();
 
@@ -372,6 +495,9 @@ export async function getBizContextForManagers() {
             checkedSuperAdmin: diagnostics.checkedSuperAdmin,
             checkedUserRoles: diagnostics.checkedUserRoles,
             checkedOwnerId: diagnostics.checkedOwnerId,
+            currentBizId: diagnostics.currentBizId ?? null,
+            hasCurrentBizRecord: diagnostics.hasCurrentBizRecord ?? false,
+            currentBizHasAllowedRole: diagnostics.currentBizHasAllowedRole ?? false,
             userRolesFound: diagnostics.userRolesCount ?? 0,
             eligibleRolesFound: diagnostics.eligibleRolesCount ?? 0,
             ownedBusinessesFound: diagnostics.ownedBusinessesCount ?? 0,
