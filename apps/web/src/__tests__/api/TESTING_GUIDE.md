@@ -200,10 +200,10 @@ describe('/api/bookings/[id]/cancel', () => {
 ### Высокий приоритет (критичные endpoints):
 1. ✅ `quick-hold` - быстрое создание брони
 2. ✅ `quick-book-guest` - гостевая бронь
-3. ⏳ `bookings/[id]/cancel` - отмена брони
-4. ⏳ `bookings/[id]/mark-attendance` - отметка посещения
-5. ⏳ `staff/shift/close` - закрытие смены
-6. ⏳ `notify` - отправка уведомлений
+3. ✅ `bookings/[id]/cancel` - отмена брони
+4. ✅ `bookings/[id]/mark-attendance` - отметка посещения
+5. ✅ `staff/shift/close` - закрытие смены
+6. ✅ `notify` - отправка уведомлений
 
 ### Средний приоритет:
 - CRUD операции (staff, services, branches)
@@ -233,12 +233,32 @@ npm test -- --coverage
 
 ## Покрытие
 
-Цель: **80%+ покрытие для критичных endpoints**
+Цель: **80%+ покрытие для критичных endpoints**.
 
-Текущее состояние:
-- ✅ `quick-hold` - покрыт
-- ✅ `quick-book-guest` - покрыт
-- ⏳ Остальные ~90+ routes - требуют тестов
+Дополнительно к процентному покрытию мы ведём **реестр бизнес‑сценариев** в `SCENARIO_TEST_REGISTRY.md`:
+
+- каждый сценарий (например, "1. Публичная запись авторизованного пользователя") связывается с одним или несколькими Jest/E2E‑тестами;
+- при добавлении/изменении тестов стоит проверять, какие сценарии они покрывают.
+
+Мини‑матрица соответствия (неполная, для ориентира):
+
+| # сценария (см. SCENARIO_TEST_REGISTRY.md)                        | Что покрывает (основные тесты)                                      |
+|-------------------------------------------------------------------|---------------------------------------------------------------------|
+| 1. Публичная запись авторизованного пользователя                  | `quick-hold.test.ts`, E2E `quickdesk.spec.ts` (создание/подтверждение) |
+| 2. Гостевая запись без аккаунта                                   | `quick-book-guest.test.ts`                                          |
+| 3. Отмена бронирования клиентом                                   | `bookings/cancel.test.ts`                                           |
+| 5. Отметка посещения и применение промо                           | `bookings/mark-attendance.test.ts`, E2E `promotion-application.spec.ts` |
+| 6–7. Открытие/закрытие смены, корректировка часов и гарантии     | `staff/shift/close.test.ts`, E2E `hours-worked-recalculation.spec.ts`, `finance-disputes-verification.spec.ts` |
+| 8. Финансовая статистика                                          | тесты в `dashboard/finance/*.test.ts`, E2E сценарии по finance      |
+| 9–10. CRUD филиалов/услуг и промо                                 | тесты в `branches/*.test.ts`, `services/*.test.ts`, `promotions/*.test.ts` |
+| 11. Авторизация (Telegram/WhatsApp/mobile-exchange)              | `auth/*.test.ts` (telegram, whatsapp, mobile-exchange)              |
+| 12. Уведомления (email / WhatsApp / Telegram)                    | `notify.test.ts`, `notify/ping.test.ts`                             |
+| 14. Health/monitoring сценарии                                   | `admin/health-check.test.ts`, `admin/performance/stats.test.ts`     |
+
+Полный список сценариев и их покрытие см. в `SCENARIO_TEST_REGISTRY.md`. При добавлении нового теста:
+
+1. Найдите соответствующий сценарий (или добавьте новый).
+2. Убедитесь, что тест покрывает хотя бы один happy path и хотя бы один edge‑case сценария.
 
 ## Best Practices
 
@@ -251,8 +271,7 @@ npm test -- --coverage
 
 ## Следующие шаги
 
-1. Создать тесты для всех критичных endpoints (высокий приоритет)
-2. Добавить тесты для CRUD операций
-3. Настроить CI/CD для автоматического запуска тестов
-4. Добавить тесты производительности для медленных endpoints
+1. Поддерживать актуальность матрицы сценариев (`SCENARIO_TEST_REGISTRY.md`) при добавлении новых фич.
+2. Для новых endpoints сразу решать, к какому сценарию они относятся, и добавлять соответствующие тесты.
+3. Постепенно расширять E2E‑покрытие ключевых сценариев (особенно мобильных и операторских флоу).
 

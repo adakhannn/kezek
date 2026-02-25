@@ -1764,19 +1764,82 @@ OpenAPI спецификация доступна в формате JSON: `/api/
 
 ### GET `/api/admin/health-check`
 
-Проверка здоровья системы.
+Проверка здоровья системы (агрегированный health‑статус).
 
 **Ответ:**
 ```json
 {
   "ok": true,
-  "timestamp": "2024-01-15T10:00:00Z",
+  "timestamp": "2024-01-15T10:00:00.000Z",
+  "alerts": [
+    {
+      "type": "warning",
+      "message": "Последний пересчет рейтингов был 3 дней назад",
+      "details": {
+        "lastMetricDate": "2024-01-12T00:00:00.000Z",
+        "daysSinceLastMetric": 3
+      }
+    }
+  ],
   "services": {
-    "database": "ok",
-    "storage": "ok"
+    "core": {
+      "status": "degraded",
+      "details": {
+        "shiftsOk": false,
+        "ratingsOk": false,
+        "promotionsOk": true
+      }
+    },
+    "supabase": {
+      "status": "ok"
+    },
+    "email": {
+      "status": "degraded",
+      "details": {
+        "note": "RESEND_API_KEY presence is checked by /api/notify; здесь только статический статус"
+      }
+    },
+    "whatsapp": {
+      "status": "degraded",
+      "details": {
+        "note": "Интеграция проверяется через /api/webhooks/whatsapp и диагностические endpoints"
+      }
+    },
+    "redis": {
+      "status": "degraded",
+      "details": {
+        "note": "Rate limiting использует Upstash Redis, но health этого сервиса проверяется отдельно при выполнении запросов"
+      }
+    }
+  },
+  "checks": {
+    "shifts": {
+      "ok": false,
+      "openShiftsOlderThan2Days": 2,
+      "lastCheckDate": "2024-01-15"
+    },
+    "ratings": {
+      "ok": false,
+      "staffLastMetricDate": "2024-01-12",
+      "branchLastMetricDate": "2024-01-12",
+      "bizLastMetricDate": "2024-01-12",
+      "daysSinceLastMetric": 3
+    },
+    "promotions": {
+      "ok": true,
+      "lastAppliedDate": "2024-01-14T10:00:00.000Z",
+      "daysSinceLastApplication": 1,
+      "activePromotionsCount": 5
+    }
   }
 }
 ```
+
+**Статусы сервисов (`services.*.status`):**
+
+- `ok` — всё в норме.
+- `degraded` — есть предупреждения (alerts), но система продолжает работать.
+- `fail` — критические проблемы (обычно сопровождаются alert с `type: "error"`).
 
 ---
 
@@ -2171,9 +2234,19 @@ Webhook для получения сообщений от WhatsApp.
 
 ## Версионирование
 
-Текущая версия API: `v1` (неявная)
+- **Текущая стабильная версия API**: `v1`.
+- В Swagger/OpenAPI это отражено так:
+  - `info.version = "1.0.0"` — базовая семантическая версия спецификации;
+  - корневое поле `"x-api-version": "v1"` — явная версия публичной API‑поверхности.
+- Все текущие публичные endpoints (`/api/...`) относятся к версии **v1**.
 
-В будущем может быть добавлено версионирование через префикс пути: `/api/v1/...`
+### Политика изменений
+
+- Минорные и патч‑изменения (добавление необязательных полей, новых endpoints, расширение enum‑ов) считаются **совместимыми с v1** и не требуют смены версии.
+- Ломающие изменения (удаление полей, изменение типов, изменение семантики существующих endpoints) проводятся только:
+  - либо через введение новых endpoints (с пометкой `v2` в описании/Swagger тегах),
+  - либо через отдельный префикс пути `/api/v2/...` (зарезервировано, не используется сейчас).
+- Устаревшие endpoints помечаются как **`deprecated`** в Swagger и остаются доступными ограниченное время, пока клиенты мигрируют на новые версии.
 
 ---
 

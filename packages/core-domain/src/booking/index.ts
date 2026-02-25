@@ -41,3 +41,16 @@ export {
     extractBookingId,
 } from './validation';
 
+// Application use-cases
+export type {
+    BookingCommandsPort,
+    BookingNotificationPort,
+} from './useCases';
+
+export {
+    createBookingUseCase,
+    cancelBookingUseCase,
+    confirmBookingUseCase,
+    sendBookingNotificationsUseCase,
+} from './useCases';
+

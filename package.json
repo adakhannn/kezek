@@ -11,6 +11,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "supabase": "^2.34.3",
+    "openapi-typescript-codegen": "^0.29.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.39.1"
   },
@@ -24,7 +25,9 @@
     "test:sql": "bash scripts/run-tests.sh || powershell -ExecutionPolicy Bypass -File scripts/run-tests.ps1",
     "test:api": "pnpm -C apps/web test",
     "test:e2e": "pnpm -C apps/web test:e2e",
-    "test": "pnpm test:sql && pnpm test:api"
+    "test": "pnpm test:sql && pnpm test:api",
+    "generate:sdk": "openapi -i http://localhost:3000/api/swagger.json -o packages/shared-client/src/generated-sdk -c fetch",
+    "generate:api-route": "node scripts/generate-api-route.mjs"
   },
   "lint-staged": {
     "**/jest.config.js": [],

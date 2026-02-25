@@ -2,14 +2,16 @@
  * Zod схемы для валидации данных бронирования
  */
 
+import type { QuickHoldRequestDto } from '@shared-client/types';
 import { z } from 'zod';
 
 import { uuidSchema, nameSchema, phoneSchema, emailSchema, isoDateTimeSchema } from './schemas';
 
 /**
- * Схема для quick-hold (быстрое бронирование для авторизованных)
+ * Схема для quick-hold (быстрое бронирование для авторизованных).
+ * Соответствует типу QuickHoldRequestDto из shared-client.
  */
-export const quickHoldSchema = z.object({
+export const quickHoldSchema: z.ZodSchema<QuickHoldRequestDto> = z.object({
     biz_id: uuidSchema,
     branch_id: uuidSchema.optional(),
     service_id: uuidSchema,

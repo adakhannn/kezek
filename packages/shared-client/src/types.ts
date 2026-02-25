@@ -44,6 +44,21 @@ export type BookingDto = {
     promotion_applied?: PromotionApplied | null;
 };
 
+/** DTO запроса для quick-hold (v1) */
+export type QuickHoldRequestDto = {
+    biz_id: string;
+    branch_id?: string;
+    service_id: string;
+    staff_id: string;
+    start_at: string;
+};
+
+/** DTO ответа для quick-hold (v1) */
+export type QuickHoldResponseDto = {
+    booking_id: string;
+    confirmed: boolean;
+};
+
 /** DTO промоакции */
 export type PromotionDto = {
     id: string;

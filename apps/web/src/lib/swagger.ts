@@ -5,7 +5,7 @@ const options: swaggerJsdoc.Options = {
         openapi: '3.0.0',
         info: {
             title: 'Kezek API',
-            version: '1.0.0',
+            version: '1.0.0', // соответствует текущей версии публичного API v1
             description: `API документация для платформы Kezek - система управления бронированиями для салонов красоты
 
 ## Формат ответов
@@ -47,6 +47,7 @@ const options: swaggerJsdoc.Options = {
                 email: 'support@kezek.kg',
             },
         },
+        'x-api-version': 'v1',
         servers: [
             {
                 url: process.env.NEXT_PUBLIC_SITE_ORIGIN || 'http://localhost:3000',

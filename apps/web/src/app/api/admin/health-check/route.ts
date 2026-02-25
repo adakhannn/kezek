@@ -10,13 +10,28 @@ import { TZ } from '@/lib/time';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+type HealthStatus = 'ok' | 'degraded' | 'fail';
+
+type ServiceSection = {
+    status: HealthStatus;
+    details?: Record<string, unknown>;
+};
+
 type HealthCheckResult = {
     ok: boolean;
+    timestamp: string;
     alerts: Array<{
         type: 'error' | 'warning';
         message: string;
         details?: Record<string, unknown>;
     }>;
+    services: {
+        core: ServiceSection;
+        supabase: ServiceSection;
+        email: ServiceSection;
+        whatsapp: ServiceSection;
+        redis: ServiceSection;
+    };
     checks: {
         shifts: {
             ok: boolean;
@@ -216,9 +231,43 @@ export async function GET(req: Request) {
             });
         }
 
+        const coreOk = shiftsOk && ratingsOk && promotionsOk;
+
         const result: HealthCheckResult = {
-            ok: shiftsOk && ratingsOk && promotionsOk,
+            ok: coreOk,
+            timestamp: now.toISOString(),
             alerts,
+            services: {
+                core: {
+                    status: coreOk ? 'ok' : alerts.some(a => a.type === 'error') ? 'fail' : 'degraded',
+                    details: {
+                        shiftsOk,
+                        ratingsOk,
+                        promotionsOk,
+                    },
+                },
+                supabase: {
+                    status: 'ok',
+                },
+                email: {
+                    status: 'degraded',
+                    details: {
+                        note: 'RESEND_API_KEY presence is checked by /api/notify; здесь только статический статус',
+                    },
+                },
+                whatsapp: {
+                    status: 'degraded',
+                    details: {
+                        note: 'Интеграция проверяется через /api/webhooks/whatsapp и диагностические endpoints',
+                    },
+                },
+                redis: {
+                    status: 'degraded',
+                    details: {
+                        note: 'Rate limiting использует Upstash Redis, но health этого сервиса проверяется отдельно при выполнении запросов',
+                    },
+                },
+            },
             checks: {
                 shifts: {
                     ok: shiftsOk,
