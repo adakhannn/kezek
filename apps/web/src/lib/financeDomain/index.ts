@@ -14,6 +14,7 @@
  * для обеспечения единообразия расчетов и избежания расхождений в логике.
  */
 
+export * from './modes';
 export * from './normalize';
 export * from './shares';
 export * from './guarantee';

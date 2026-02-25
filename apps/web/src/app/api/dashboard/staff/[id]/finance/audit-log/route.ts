@@ -68,15 +68,24 @@ export async function GET(req: Request, context: unknown) {
             }, {});
         }
 
-        const entries: AuditLogEntry[] = (rows ?? []).map((row: Record<string, unknown>) => {
-            const uid = row.changed_by_user_id ? String(row.changed_by_user_id) : null;
+        type AuditRow = {
+            id: string;
+            changed_at: string;
+            changed_by_user_id: string | null;
+            field_changes: FieldChange[] | null;
+            message: string | null;
+        };
+
+        const entries: AuditLogEntry[] = (rows ?? []).map((row) => {
+            const r = row as AuditRow;
+            const uid = r.changed_by_user_id ? String(r.changed_by_user_id) : null;
             return {
-                id: String(row.id),
-                changed_at: String(row.changed_at),
+                id: String(r.id),
+                changed_at: String(r.changed_at),
                 changed_by_user_id: uid,
                 changed_by_name: uid ? namesByUserId[uid] ?? null : null,
-                field_changes: (row.field_changes as FieldChange[]) ?? [],
-                message: row.message != null ? String(row.message) : null,
+                field_changes: r.field_changes ?? [],
+                message: r.message != null ? String(r.message) : null,
             };
         });
 

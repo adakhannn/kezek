@@ -3,6 +3,7 @@
  */
 
 import { calculateGuaranteedAmount, calculateTopupAmount } from './guarantee';
+import type { PaymentMode } from './modes';
 import { calculateBaseShares } from './shares';
 
 export interface ShiftFinancials {
@@ -25,6 +26,11 @@ export interface CalculateShiftFinancialsOptions {
     percentSalon: number;
     hoursWorked: number | null;
     hourlyRate: number | null;
+    /**
+     * Режим оплаты смены.
+     * По умолчанию используется 'percent_with_guarantee' (процент + гарантия).
+     */
+    paymentMode?: PaymentMode;
 }
 
 /**
@@ -59,6 +65,7 @@ export function calculateShiftFinancials(
         percentSalon,
         hoursWorked,
         hourlyRate,
+        paymentMode = 'percent_with_guarantee',
     } = options;
     
     // Нормализуем проценты
@@ -76,15 +83,31 @@ export function calculateShiftFinancials(
         percentSalon
     );
     
-    // Вычисляем гарантированную сумму
+    // Применяем режим оплаты к базовым долям
+    if (paymentMode === 'percent_only') {
+        // Игнорируем гарантию: финальные доли совпадают с базовыми
+        return {
+            totalAmount,
+            totalConsumables,
+            baseMasterShare,
+            baseSalonShare,
+            guaranteedAmount: 0,
+            topupAmount: 0,
+            finalMasterShare: Math.round(baseMasterShare * 100) / 100,
+            finalSalonShare: Math.round(baseSalonShare * 100) / 100,
+            normalizedPercentMaster,
+            normalizedPercentSalon,
+        };
+    }
+
+    // Текущий (исторический) режим: процент + гарантия.
+    // fixed_per_shift/custom пока ведут себя так же — это точка расширения на будущее.
     const guaranteedAmount = calculateGuaranteedAmount(hoursWorked, hourlyRate);
-    
-    // Вычисляем доплату
     const topupAmount = calculateTopupAmount(guaranteedAmount, baseMasterShare);
-    
+
     // Финальные доли:
     // - Мастер получает максимум из гарантированной суммы и базовой доли
-    // - Салон получает базовую долю минус доплата (но не меньше 0)
+    // - Салон получает базовую долю минус доплату (но не меньше 0)
     const finalMasterShare = guaranteedAmount > baseMasterShare 
         ? guaranteedAmount 
         : baseMasterShare;

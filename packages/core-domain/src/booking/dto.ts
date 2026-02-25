@@ -3,7 +3,7 @@
  * Преобразование между структурами БД и доменными объектами
  */
 
-import type { BookingStatus, PromotionType, PromotionApplied } from './types';
+import type { BookingStatus, PromotionType, PromotionApplied, PromotionParams } from './types';
 
 /**
  * DTO бронирования (упрощённая версия для API ответов)
@@ -29,6 +29,10 @@ export type BookingDto = {
 /**
  * DTO промоакции
  */
+export type PromotionParamsJson = PromotionParams & {
+    [key: string]: unknown;
+};
+
 export type PromotionDto = {
     id: string;
     branch_id: string;
@@ -40,7 +44,7 @@ export type PromotionDto = {
     description_ru?: string | null;
     description_ky?: string | null;
     description_en?: string | null;
-    params: Record<string, unknown>;
+    params: PromotionParamsJson;
     is_active: boolean;
     valid_from?: string | null;
     valid_to?: string | null;
@@ -96,6 +100,16 @@ export function transformBookingToDto(booking: {
  * @param promotionApplied - Значение из bookings.promotion_applied
  * @returns Объект PromotionApplied с типизированными полями или null
  */
+type RawPromotionApplied = {
+    promotion_type?: string;
+    promotion_id?: string;
+    promotion_title?: string;
+    discount_percent?: number;
+    discount_amount?: number;
+    final_amount?: number;
+    [key: string]: unknown;
+};
+
 export function normalizePromotionApplied(
     promotionApplied: unknown
 ): PromotionApplied | null {
@@ -104,18 +118,26 @@ export function normalizePromotionApplied(
     }
 
     if (typeof promotionApplied === 'object' && promotionApplied !== null) {
-        const obj = promotionApplied as Record<string, unknown>;
+        const {
+            promotion_type,
+            promotion_id,
+            promotion_title,
+            discount_percent,
+            discount_amount,
+            final_amount,
+            ...rest
+        } = promotionApplied as RawPromotionApplied;
         
         // Проверяем, что есть хотя бы promotion_type
-        if (typeof obj.promotion_type === 'string') {
+        if (typeof promotion_type === 'string') {
             return {
-                promotion_id: typeof obj.promotion_id === 'string' ? obj.promotion_id : undefined,
-                promotion_type: obj.promotion_type as PromotionType,
-                promotion_title: typeof obj.promotion_title === 'string' ? obj.promotion_title : undefined,
-                discount_percent: typeof obj.discount_percent === 'number' ? obj.discount_percent : undefined,
-                discount_amount: typeof obj.discount_amount === 'number' ? obj.discount_amount : undefined,
-                final_amount: typeof obj.final_amount === 'number' ? obj.final_amount : undefined,
-                ...obj,
+                promotion_id: typeof promotion_id === 'string' ? promotion_id : undefined,
+                promotion_type: promotion_type as PromotionType,
+                promotion_title: typeof promotion_title === 'string' ? promotion_title : undefined,
+                discount_percent: typeof discount_percent === 'number' ? discount_percent : undefined,
+                discount_amount: typeof discount_amount === 'number' ? discount_amount : undefined,
+                final_amount: typeof final_amount === 'number' ? final_amount : undefined,
+                ...rest,
             };
         }
     }
@@ -140,7 +162,7 @@ export function transformPromotionToDto(promotion: {
     description_ru?: string | null;
     description_ky?: string | null;
     description_en?: string | null;
-    params: Record<string, unknown>;
+    params: PromotionParamsJson;
     is_active: boolean;
     valid_from?: string | null;
     valid_to?: string | null;

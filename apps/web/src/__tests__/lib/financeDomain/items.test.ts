@@ -5,6 +5,7 @@
 import {
     calculateTotalServiceAmount,
     calculateTotalConsumables,
+    applyAdjustmentsToTotals,
 } from '@/lib/financeDomain/items';
 
 describe('calculateTotalServiceAmount', () => {
@@ -98,6 +99,71 @@ describe('calculateTotalConsumables', () => {
             { consumablesAmount: 50 },
         ];
         expect(calculateTotalConsumables(items)).toBe(150);
+    });
+});
+
+describe('applyAdjustmentsToTotals', () => {
+    test('полный возврат услуги и расходников обнуляет суммы смены', () => {
+        const baseAmount = 3000;
+        const baseConsumables = 300;
+
+        const { totalAmount, totalConsumables } = applyAdjustmentsToTotals(baseAmount, baseConsumables, [
+            { serviceDelta: -3000, consumablesDelta: -300 },
+        ]);
+
+        expect(totalAmount).toBe(0);
+        expect(totalConsumables).toBe(0);
+    });
+
+    test('частичный возврат уменьшает суммы смены, но не уводит в минус', () => {
+        const baseAmount = 3000;
+        const baseConsumables = 300;
+
+        const { totalAmount, totalConsumables } = applyAdjustmentsToTotals(baseAmount, baseConsumables, [
+            { serviceDelta: -1000, consumablesDelta: -50 },
+        ]);
+
+        expect(totalAmount).toBe(2000);
+        expect(totalConsumables).toBe(250);
+    });
+
+    test('возврат только услуги не трогает расходники', () => {
+        const baseAmount = 3000;
+        const baseConsumables = 300;
+
+        const { totalAmount, totalConsumables } = applyAdjustmentsToTotals(baseAmount, baseConsumables, [
+            { serviceDelta: -500 },
+        ]);
+
+        expect(totalAmount).toBe(2500);
+        expect(totalConsumables).toBe(300);
+    });
+
+    test('возврат только расходников не трогает сумму услуг', () => {
+        const baseAmount = 3000;
+        const baseConsumables = 300;
+
+        const { totalAmount, totalConsumables } = applyAdjustmentsToTotals(baseAmount, baseConsumables, [
+            { consumablesDelta: -200 },
+        ]);
+
+        expect(totalAmount).toBe(3000);
+        expect(totalConsumables).toBe(100);
+    });
+
+    test('несколько корректировок суммируются и нижняя граница 0', () => {
+        const baseAmount = 1000;
+        const baseConsumables = 100;
+
+        const { totalAmount, totalConsumables } = applyAdjustmentsToTotals(baseAmount, baseConsumables, [
+            { serviceDelta: -600, consumablesDelta: -50 },
+            { serviceDelta: -600, consumablesDelta: -100 },
+        ]);
+
+        // 1000 - 600 - 600 = -200 -> 0
+        expect(totalAmount).toBe(0);
+        // 100 - 50 - 100 = -50 -> 0
+        expect(totalConsumables).toBe(0);
     });
 });
 
