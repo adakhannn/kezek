@@ -4,8 +4,8 @@ import Link from 'next/link';
 import {HomeHero, HomeBookButtonText, HomeHeader, HomeEmptyState, HomeAboutButtonText} from './_components/HomeClientComponents';
 import { getT, getServerLocale } from './_components/i18n/server';
 
-import { getSupabaseServer } from '@/lib/authBiz';
 import { generateAlternates } from '@/lib/seo';
+import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 const PAGE_SIZE = 9;
 
@@ -33,6 +33,11 @@ type Business = {
     promotions_count?: number;
 };
 
+type BranchSummary = {
+    id: string;
+    biz_id: string;
+};
+
 export default async function Home({
     searchParams,
 }: {
@@ -41,7 +46,7 @@ export default async function Home({
     const {q = '', cat = '', page = '1'} = (await searchParams) ?? {};
     const pageNum = Math.max(1, Number.parseInt(page || '1', 10));
 
-    const supabase = await getSupabaseServer();
+    const supabase = await createSupabaseServerClient();
 
     // базовый запрос по бизнесам
     let query = supabase
@@ -86,8 +91,10 @@ export default async function Home({
             .in('biz_id', bizIds)
             .eq('is_active', true);
         
-        if (branchesData && branchesData.length > 0) {
-            const branchIds = branchesData.map(b => b.id);
+        const branches = (branchesData ?? []) as BranchSummary[];
+        
+        if (branches.length > 0) {
+            const branchIds = branches.map((b) => b.id);
             
             // Получаем количество акций по филиалам одним запросом
             // Используем select только branch_id для минимизации передачи данных
@@ -100,7 +107,7 @@ export default async function Home({
             // Группируем по biz_id в памяти (эффективно для небольшого количества записей)
             const promoCountMap = new Map<string, number>();
             const branchToBizMap = new Map<string, string>();
-            branchesData.forEach(b => {
+            branches.forEach((b) => {
                 branchToBizMap.set(b.id, b.biz_id);
             });
             

@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { supabase } from '../lib/supabase';
 import { apiRequest } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { formatDate, formatTime, formatPhone } from '../utils/format';
@@ -12,6 +11,7 @@ import Button from '../components/ui/Button';
 import { logError } from '../lib/log';
 import { RootStackParamList } from '../navigation/types';
 import { getStatusColor, getStatusText } from '../utils/i18n';
+import type { ClientBookingDetailsDto } from '@shared-client/types';
 
 type BookingDetailsRouteParams = {
     id: string;
@@ -20,30 +20,7 @@ type BookingDetailsRouteParams = {
 type BookingDetailsScreenRouteProp = RouteProp<{ params: BookingDetailsRouteParams }, 'params'>;
 type BookingDetailsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-type BookingDetails = {
-    id: string;
-    start_at: string;
-    end_at: string;
-    status: string;
-    service: {
-        name_ru: string;
-        duration_min: number;
-        price_from: number | null;
-        price_to: number | null;
-    } | null;
-    staff: {
-        full_name: string;
-    } | null;
-    branch: {
-        name: string;
-        address: string;
-    } | null;
-    business: {
-        name: string;
-        slug?: string;
-        phones: string[];
-    } | null;
-};
+type BookingDetails = ClientBookingDetailsDto;
 
 export default function BookingDetailsScreen() {
     const route = useRoute<BookingDetailsScreenRouteProp>();
@@ -55,38 +32,19 @@ export default function BookingDetailsScreen() {
     const { data: booking, isLoading } = useQuery({
         queryKey: ['booking', bookingId],
         queryFn: async () => {
-            // Получаем текущего пользователя для проверки прав доступа
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                throw new Error('Необходима авторизация');
+            if (!bookingId) {
+                throw new Error('Не указан идентификатор бронирования');
             }
 
-            const { data, error } = await supabase
-                .from('bookings')
-                .select(`
-                    id,
-                    start_at,
-                    end_at,
-                    status,
-                    service:services(name_ru, duration_min, price_from, price_to),
-                    staff:staff(full_name),
-                    branch:branches(name, address),
-                    business:businesses(name, slug, phones)
-                `)
-                .eq('id', bookingId)
-                .eq('client_id', user.id) // Фильтруем по client_id для безопасности
-                .single();
-
-            if (error) {
-                logError('BookingDetailsScreen', 'Error fetching booking', error);
+            try {
+                const data = await apiRequest<BookingDetails>(`/mobile/bookings/${bookingId}`, {
+                    method: 'GET',
+                });
+                return data;
+            } catch (error: unknown) {
+                logError('BookingDetailsScreen', 'Error fetching booking via API', error);
                 throw error;
             }
-            
-            if (!data) {
-                throw new Error('Бронирование не найдено');
-            }
-            
-            return data as BookingDetails;
         },
         enabled: !!bookingId,
     });

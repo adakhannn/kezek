@@ -1,13 +1,13 @@
 'use client';
 
+import { filterSlotsByContext, type Slot as ScheduleSlot } from '@core-domain/schedule';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useMemo, useState } from 'react';
 
-import { filterSlotsByContext, type Slot as ScheduleSlot } from '@core-domain/schedule';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
-import { supabase } from '@/lib/supabaseClient';
+import { getFreeSlotsForServiceDay, createInternalBooking } from '@/lib/bookingDashboardService';
 import { TZ } from '@/lib/time';
 
 // Helper для конвертации Date в YYYY-MM-DD
@@ -61,7 +61,7 @@ export default function Client({
         setErr(null);
     }, [branchId]);
 
-    // загрузка слотов от RPC v2 (на уровне сервиса и даты), затем фильтрация по staffId
+    // загрузка слотов через единый сервис, затем фильтрация по staffId
     useEffect(() => {
         let ignore = false;
         (async () => {
@@ -71,16 +71,15 @@ export default function Client({
             }
             setLoading(true); setErr(null);
             try {
-                const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
-                    p_biz_id: bizId,
-                    p_service_id: serviceId,
-                    p_day: date,       // 'yyyy-MM-dd'
-                    p_per_staff: 400,  // побольше, но всё равно обрежет по мастеру
-                    p_step_min: 15,
+                const raw = await getFreeSlotsForServiceDay({
+                    bizId,
+                    serviceId,
+                    day: date,
+                    perStaff: 400,
+                    stepMinutes: 15,
                 });
                 if (ignore) return;
-                if (error) { setSlots([]); setErr(error.message); return; }
-                const all = (data ?? []) as ScheduleSlot[];
+                const all = (raw ?? []) as ScheduleSlot[];
                 const now = new Date();
                 const minTime = new Date(now.getTime() + 30 * 60 * 1000); // минимум через 30 минут от текущего времени
 
@@ -100,18 +99,24 @@ export default function Client({
     async function createBooking(startISO: string) {
         const svc = services.find(s => s.id === serviceId);
         if (!svc) return alert(t('bookings.desk.errors.selectService', 'Не найдена услуга'));
-        const { data, error } = await supabase.rpc('create_internal_booking', {
-            p_biz_id: bizId,
-            p_branch_id: branchId,
-            p_service_id: serviceId,
-            p_staff_id: staffId,
-            p_start: startISO,
-            p_minutes: svc.duration_min,
-            p_client_id: null,
-        });
-        if (error) return alert(error.message);
-        const id = String(data);
-        alert(`${t('bookings.desk.created', 'Создана запись')} #${id.slice(0, 8)}`);
+
+        try {
+            const bookingId = await createInternalBooking({
+                bizId,
+                branchId,
+                serviceId,
+                staffId,
+                startAtISO: startISO,
+                minutes: svc.duration_min,
+                clientId: null,
+                clientName: null,
+                clientPhone: null,
+            });
+            alert(`${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            alert(message);
+        }
     }
 
 

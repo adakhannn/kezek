@@ -1,7 +1,6 @@
 import {
     validateCreateBookingParams,
     createBookingUseCase,
-    type BookingCommandsPort,
     type BookingNotificationPort,
 } from '@core-domain/booking';
 import { createClient } from '@supabase/supabase-js';
@@ -11,6 +10,7 @@ import {
     createErrorResponse,
     createSuccessResponse,
 } from '@/lib/apiErrorHandler';
+import { createSupabaseBookingCommands } from '@/lib/bookingCommandsSupabase';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -164,56 +164,7 @@ export async function POST(req: Request) {
     }
 
     const branchRepository = new SupabaseBranchRepository(supabase);
-
-    const commands: BookingCommandsPort = {
-        async holdSlot({ bizId, branchId, serviceId, staffId, startAt }) {
-            logDebug('QuickHold', 'Calling hold_slot RPC', { userId: user.id });
-
-            const { data: rpcData, error } = await supabase.rpc('hold_slot', {
-                p_biz_id: bizId,
-                p_branch_id: branchId,
-                p_service_id: serviceId,
-                p_staff_id: staffId,
-                p_start: startAt,
-            });
-
-            if (error) {
-                logError('QuickHold', 'RPC error', error);
-                throw new Error(error.message);
-            }
-
-            // RPC возвращает booking_id строкой
-            if (typeof rpcData !== 'string' || !rpcData) {
-                logError('QuickHold', 'Unexpected RPC result shape', { rpcData });
-                throw new Error('Unexpected RPC result shape');
-            }
-
-            logDebug('QuickHold', 'RPC success', { bookingId: rpcData });
-            return rpcData;
-        },
-        async confirmBooking(bookingId) {
-            logDebug('QuickHold', 'Attempting to confirm booking', { bookingId });
-
-            const { error: confirmError } = await supabase.rpc('confirm_booking', {
-                p_booking_id: bookingId,
-            });
-
-            if (confirmError) {
-                logError('QuickHold', 'Failed to confirm booking', {
-                    error: confirmError.message,
-                    code: confirmError.code,
-                    details: confirmError.details,
-                    hint: confirmError.hint,
-                });
-                throw new Error(confirmError.message);
-            }
-
-            logDebug('QuickHold', 'Booking confirmed successfully', { bookingId });
-        },
-        async cancelBooking() {
-            // В этом endpoint не используется
-        },
-    };
+    const commands = createSupabaseBookingCommands(supabase, { userId: user.id });
 
     const notifications: BookingNotificationPort = {
         async send(bookingId, type) {
@@ -233,6 +184,23 @@ export async function POST(req: Request) {
         },
         domainValidation.data,
     );
+
+            if (!result.ok) {
+                const kind = result.error.kind;
+                const baseMessage =
+                    kind === 'BRANCH_NOT_FOUND_OR_INACTIVE'
+                        ? 'Филиал не найден или неактивен'
+                        : kind === 'NO_ACTIVE_BRANCH_FOR_BIZ'
+                        ? 'Для выбранного бизнеса нет активных филиалов'
+                        : 'Не удалось создать бронирование';
+
+                return createErrorResponse(
+                    'validation',
+                    result.error.message || baseMessage,
+                    { kind },
+                    400,
+                );
+            }
 
             return createSuccessResponse({
                 booking_id: result.bookingId,

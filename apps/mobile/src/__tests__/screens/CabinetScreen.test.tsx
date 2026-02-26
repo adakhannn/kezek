@@ -43,6 +43,10 @@ jest.mock('../../lib/supabase', () => ({
     },
 }));
 
+jest.mock('../../lib/api', () => ({
+    apiRequest: jest.fn().mockResolvedValue([]),
+}));
+
 describe('CabinetScreen', () => {
     const queryClient = new QueryClient({
         defaultOptions: {

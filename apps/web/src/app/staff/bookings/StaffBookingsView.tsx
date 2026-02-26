@@ -8,8 +8,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { formatDateTime, formatTime } from '@/lib/dateFormat';
-import { supabase } from '@/lib/supabaseClient';
+import { getFreeSlotsForServiceDay, createInternalBooking } from '@/lib/bookingDashboardService';
+import { formatDateTime } from '@/lib/dateFormat';
 import { TZ } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 import { validateName, validatePhone } from '@/lib/validation';
@@ -75,7 +75,6 @@ export default function StaffBookingsView({
 
     // Используем унифицированные функции форматирования дат
     const formatDateTimeLocal = (iso: string): string => formatDateTime(iso, locale as 'ru' | 'ky' | 'en', true);
-    const formatTimeLocal = (iso: string): string => formatTime(iso, locale as 'ru' | 'ky' | 'en');
 
     function getServiceName(service: { name_ru: string; name_ky?: string | null; name_en?: string | null } | null): string {
         if (!service) return t('staff.cabinet.bookings.card.serviceDefault', 'Услуга');
@@ -144,27 +143,20 @@ export default function StaffBookingsView({
                 }
 
                 setSlotsLoading(true);
-                const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
-                    p_biz_id: bizId,
-                    p_service_id: serviceId,
-                    p_day: date,
-                    p_per_staff: 400,
-                    p_step_min: 15,
-                });
-                if (ignore) return;
-                if (error) {
-                    const { logError } = require('@/lib/log');
-                    logError('StaffBookingsView', 'get_free_slots_service_day_v2 error', { message: error.message || error });
-                    setSlots([]);
-                    setSlotStartISO('');
-                    setSlotsLoading(false);
-                    return;
-                }
-                const raw = (data || []) as RpcSlot[];
+                try {
+                    const raw = await getFreeSlotsForServiceDay({
+                        bizId,
+                        serviceId,
+                        day: date,
+                        perStaff: 400,
+                        stepMinutes: 15,
+                    });
+                    if (ignore) return;
+                    const cast = (raw || []) as RpcSlot[];
                 const now = new Date();
                 const minTime = addMinutes(now, 30);
 
-                const filtered = raw
+                const filtered = cast
                     .filter(s => s.branch_id === branchId)
                     .filter(s => s.staff_id === selectedStaffId)
                     .filter(s => new Date(s.start_at) > minTime);
@@ -173,6 +165,14 @@ export default function StaffBookingsView({
                 setSlots(uniq);
                 setSlotStartISO(prev => (prev && uniq.some(u => u.start_at === prev)) ? prev : (uniq[0]?.start_at || ''));
                 setSlotsLoading(false);
+                } catch (error: unknown) {
+                    const { logError } = require('@/lib/log');
+                    logError('StaffBookingsView', 'get_free_slots_service_day_v2 error', { message: error instanceof Error ? error.message : String(error) });
+                    if (ignore) return;
+                    setSlots([]);
+                    setSlotStartISO('');
+                    setSlotsLoading(false);
+                }
             })();
             return () => { ignore = true; };
         }, [bizId, serviceId, selectedStaffId, date, branchId]);
@@ -219,23 +219,17 @@ export default function StaffBookingsView({
 
             setCreating(true);
             try {
-                const { data, error } = await supabase.rpc('create_internal_booking', {
-                    p_biz_id: bizId,
-                    p_branch_id: branchId,
-                    p_service_id: serviceId,
-                    p_staff_id: selectedStaffId,
-                    p_start: slotStartISO,
-                    p_minutes: svc.duration_min,
-                    p_client_id: null,
-                    p_client_name: name,
-                    p_client_phone: phone,
+                const bookingId = await createInternalBooking({
+                    bizId,
+                    branchId,
+                    serviceId,
+                    staffId: selectedStaffId,
+                    startAtISO: slotStartISO,
+                    minutes: svc.duration_min,
+                    clientId: null,
+                    clientName: name,
+                    clientPhone: phone,
                 });
-                if (error) {
-                    alert(error.message);
-                    return;
-                }
-
-                const bookingId = String(data);
                 alert(t('staff.cabinet.bookings.create.success', `Создана запись #${bookingId.slice(0, 8)}`));
 
                 // Сброс формы

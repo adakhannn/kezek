@@ -6,7 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { supabase } from '../lib/supabase';
+import { apiRequest } from '../lib/api';
 import { MainTabParamList, RootStackParamList } from '../navigation/types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -18,6 +18,7 @@ import { colors } from '../constants/colors';
 import { formatDate, formatTime, formatPhone } from '../utils/format';
 import { logError, logDebug } from '../lib/log';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import type { ClientBookingListItemDto, PublicBusinessDto } from '@shared-client/types';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Home'>;
 
@@ -77,29 +78,27 @@ export default function HomeScreen() {
     const { data: businesses, isLoading, refetch } = useQuery({
         queryKey: ['businesses', search, selectedCategory],
         queryFn: async () => {
-            let query = supabase
-                .from('businesses')
-                .select('id, name, slug, address, phones, categories, rating_score')
-                .eq('is_approved', true);
-
-            if (search) {
-                // Безопасный поиск: экранируем специальные символы
-                const safeQ = search.trim().slice(0, 100).replace(/[%_\\]/g, (char) => `\\${char}`);
-                const searchPattern = `%${safeQ}%`;
-                query = query.or(`name.ilike.${searchPattern},address.ilike.${searchPattern}`);
+            const params = new URLSearchParams();
+            if (search.trim()) {
+                params.set('search', search.trim());
             }
-
             if (selectedCategory) {
-                query = query.contains('categories', [selectedCategory]);
+                params.set('category', selectedCategory);
             }
-
-            const { data, error } = await query.limit(20).order('name');
-            if (error) {
-                logError('HomeScreen', 'Error fetching businesses', error);
-                throw error;
-            }
+            const endpoint = `/mobile/businesses${params.toString() ? `?${params.toString()}` : ''}`;
+            const data = await apiRequest<PublicBusinessDto[]>(endpoint);
             logDebug('HomeScreen', 'Businesses loaded', { count: data?.length || 0 });
-            return data as Business[];
+            return (data ?? []).map(
+                (b): Business => ({
+                    id: b.id,
+                    name: b.name,
+                    slug: b.slug,
+                    address: b.address,
+                    phones: b.phones,
+                    categories: b.categories,
+                    rating_score: b.rating_score,
+                }),
+            );
         },
         onError: (error: unknown) => {
             const message = error instanceof Error ? error.message : String(error);
@@ -118,49 +117,29 @@ export default function HomeScreen() {
         queryFn: async () => {
             if (!user?.id) return [];
 
-            const { data, error } = await supabase
-                .from('bookings')
-                .select(
-                    `
-                    id,
-                    start_at,
-                    end_at,
-                    status,
-                    business:businesses(name, slug),
-                    branch:branches(name),
-                    service:services(name_ru)
-                `,
-                )
-                .eq('client_id', user.id)
-                .order('start_at', { ascending: true })
-                .limit(20);
-
-            if (error) {
-                logError('HomeScreen', 'Error fetching home bookings', error);
-                throw error;
-            }
-
+            const data = await apiRequest<ClientBookingListItemDto[]>('/mobile/bookings');
             logDebug('HomeScreen', 'Home bookings loaded', { count: data?.length || 0 });
-            return (data as any[]).map(
+            return (data ?? []).map(
                 (b): HomeBooking => ({
-                    id: String(b.id),
-                    start_at: String(b.start_at),
-                    end_at: String(b.end_at),
-                    status: String(b.status),
+                    id: b.id,
+                    start_at: b.start_at,
+                    end_at: b.end_at,
+                    status: b.status,
                     business: b.business
-                        ? Array.isArray(b.business)
-                            ? b.business[0]
-                            : b.business
+                        ? {
+                              name: b.business.name ?? '',
+                              slug: b.business.slug ?? null,
+                          }
                         : null,
                     branch: b.branch
-                        ? Array.isArray(b.branch)
-                            ? b.branch[0]
-                            : b.branch
+                        ? {
+                              name: b.branch.name ?? null,
+                          }
                         : null,
                     service: b.service
-                        ? Array.isArray(b.service)
-                            ? b.service[0]
-                            : b.service
+                        ? {
+                              name_ru: b.service.name_ru ?? '',
+                          }
                         : null,
                 }),
             );

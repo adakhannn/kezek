@@ -16,6 +16,8 @@ import {
     saveOfflineBookings,
     type OfflineBooking,
 } from '../lib/offlineBookingsStorage';
+import { apiRequest } from '../lib/api';
+import type { ClientBookingListItemDto } from '@shared-client/types';
 
 type CabinetScreenNavigationProp = NativeStackNavigationProp<CabinetStackParamList, 'CabinetMain'>;
 
@@ -62,62 +64,25 @@ export default function CabinetScreen() {
                 return [];
             }
 
-            logDebug('CabinetScreen', 'Fetching bookings for user', { userId: user.id });
+            logDebug('CabinetScreen', 'Fetching bookings for user (HTTP API)', {
+                userId: user.id,
+            });
 
             try {
-                const { data, error } = await supabase
-                    .from('bookings')
-                    .select(`
-                        id,
-                        start_at,
-                        end_at,
-                        status,
-                        service:services(name_ru),
-                        staff:staff(full_name),
-                        branch:branches(name, address),
-                        business:businesses(name)
-                    `)
-                    .eq('client_id', user.id)
-                    .order('start_at', { ascending: false })
-                    .limit(50);
-
-                if (error) {
-                    logError('CabinetScreen', 'Error fetching bookings', error);
-                    throw error;
-                }
-
-                const rows = (data as any[]) ?? [];
+                const data = await apiRequest<ClientBookingListItemDto[]>('/mobile/bookings');
+                const rows = (data ?? []) as ClientBookingListItemDto[];
                 const nowIso = new Date().toISOString();
-                const offlineItems: OfflineBooking[] = rows.map((b) => {
-                    const branch = (b.branch && Array.isArray(b.branch) ? b.branch[0] : b.branch) as
-                        | { name?: string | null; address?: string | null }
-                        | null
-                        | undefined;
-                    const service = (b.service && Array.isArray(b.service) ? b.service[0] : b.service) as
-                        | { name_ru?: string | null }
-                        | null
-                        | undefined;
-                    const staff = (b.staff && Array.isArray(b.staff) ? b.staff[0] : b.staff) as
-                        | { full_name?: string | null }
-                        | null
-                        | undefined;
-                    const business = (b.business && Array.isArray(b.business) ? b.business[0] : b.business) as
-                        | { name?: string | null }
-                        | null
-                        | undefined;
-
-                    return {
-                        id: String(b.id),
-                        status: b.status as OfflineBooking['status'],
-                        start_at: String(b.start_at),
-                        end_at: String(b.end_at),
-                        branch_name: branch?.name ?? null,
-                        service_name: service?.name_ru ?? null,
-                        staff_name: staff?.full_name ?? null,
-                        business_name: business?.name ?? null,
-                        created_at: nowIso,
-                    };
-                });
+                const offlineItems: OfflineBooking[] = rows.map((b) => ({
+                    id: String(b.id),
+                    status: b.status as OfflineBooking['status'],
+                    start_at: String(b.start_at),
+                    end_at: String(b.end_at),
+                    branch_name: b.branch?.name ?? null,
+                    service_name: b.service?.name_ru ?? null,
+                    staff_name: b.staff?.full_name ?? null,
+                    business_name: b.business?.name ?? null,
+                    created_at: nowIso,
+                }));
 
                 await saveOfflineBookings({
                     userId: user.id,
@@ -129,7 +94,35 @@ export default function CabinetScreen() {
                 setLastSyncAt(nowIso);
 
                 logDebug('CabinetScreen', 'Bookings loaded', { count: rows.length || 0 });
-                return rows as unknown as Booking[];
+                return rows.map(
+                    (b): Booking => ({
+                        id: b.id,
+                        start_at: b.start_at,
+                        end_at: b.end_at,
+                        status: b.status,
+                        service: b.service
+                            ? {
+                                  name_ru: b.service.name_ru ?? '',
+                              }
+                            : null,
+                        staff: b.staff
+                            ? {
+                                  full_name: b.staff.full_name ?? '',
+                              }
+                            : null,
+                        branch: b.branch
+                            ? {
+                                  name: b.branch.name ?? '',
+                                  address: b.branch.address ?? '',
+                              }
+                            : null,
+                        business: b.business
+                            ? {
+                                  name: b.business.name ?? '',
+                              }
+                            : null,
+                    }),
+                );
             } catch (error) {
                 logDebug('CabinetScreen', 'Network error, trying to load offline bookings', error);
                 const cached = await loadOfflineBookings(user.id);

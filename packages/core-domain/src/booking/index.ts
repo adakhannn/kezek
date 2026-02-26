@@ -47,6 +47,9 @@ export type {
     BookingNotificationPort,
     MarkAttendanceParams,
     MarkAttendanceDecision,
+    BookingErrorKind,
+    BookingError,
+    CreateBookingResult,
 } from './useCases';
 
 export {

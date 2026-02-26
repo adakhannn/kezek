@@ -127,3 +127,63 @@ export type ServiceInfo = {
     price_to?: number | null;
     active: boolean;
 };
+
+/** Публичный DTO бизнеса для мобильного и веб-клиентов */
+export type PublicBusinessDto = {
+    id: string;
+    name: string;
+    slug: string;
+    address: string | null;
+    phones: string[] | null;
+    categories: string[] | null;
+    rating_score: number | null;
+};
+
+/** Элемент списка броней в мобильном/веб-кабинете клиента */
+export type ClientBookingListItemDto = {
+    id: string;
+    start_at: string;
+    end_at: string;
+    status: BookingStatus;
+    service: {
+        name_ru: string | null;
+    } | null;
+    staff: {
+        full_name: string | null;
+    } | null;
+    branch: {
+        name: string | null;
+        address: string | null;
+    } | null;
+    business: {
+        name: string | null;
+        slug?: string | null;
+    } | null;
+};
+
+/** DTO деталей бронирования для мобильного приложения */
+export type ClientBookingDetailsDto = {
+    id: string;
+    start_at: string;
+    end_at: string;
+    status: BookingStatus;
+    service: {
+        name_ru: string;
+        duration_min: number;
+        price_from: number | null;
+        price_to: number | null;
+    } | null;
+    staff: {
+        full_name: string;
+    } | null;
+    branch: {
+        name: string;
+        address: string | null;
+    } | null;
+    business: {
+        name: string;
+        slug?: string;
+        phones: string[];
+    } | null;
+};
+

@@ -27,22 +27,36 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
         );
     } catch (e: unknown) {
-        if (e instanceof Error) {
-            // Не авторизован → редирект на публичную страницу
+        if (e instanceof BizAccessError) {
+            if (e.code === 'NOT_AUTHENTICATED') {
+                redirect('/b/kezek');
+            }
+            if (e.code === 'NO_BIZ_ACCESS') {
+                return (
+                    <DashboardLayoutClient
+                        errorType="NO_BIZ_ACCESS"
+                        diagnostics={e.diagnostics}
+                    />
+                );
+            }
+        } else if (e instanceof Error) {
+            // Fallback для старых/других ошибок по message
             if (e.message === 'UNAUTHORIZED') {
                 redirect('/b/kezek');
             }
-            // Нет доступа к бизнесу → показываем сообщение с улучшенными инструкциями
             if (e.message === 'NO_BIZ_ACCESS') {
-                // Извлекаем диагностическую информацию из ошибки, если она есть
                 const diagnostics = e instanceof BizAccessError ? e.diagnostics : undefined;
-                return <DashboardLayoutClient errorType="NO_BIZ_ACCESS" diagnostics={diagnostics} />;
+                return (
+                    <DashboardLayoutClient
+                        errorType="NO_BIZ_ACCESS"
+                        diagnostics={diagnostics}
+                    />
+                );
             }
         }
-        // Другие ошибки → показываем общее сообщение
         return (
-            <DashboardLayoutClient 
-                errorType="GENERAL" 
+            <DashboardLayoutClient
+                errorType="GENERAL"
                 errorMessage={e instanceof Error ? e.message : undefined}
             />
         );

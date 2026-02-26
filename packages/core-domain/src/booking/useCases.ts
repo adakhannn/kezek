@@ -31,6 +31,23 @@ type CreateBookingDeps = {
     notifications?: BookingNotificationPort;
 };
 
+export type BookingErrorKind = 'BRANCH_NOT_FOUND_OR_INACTIVE' | 'NO_ACTIVE_BRANCH_FOR_BIZ';
+
+export type BookingError = {
+    kind: BookingErrorKind;
+    message?: string;
+};
+
+export type CreateBookingResult =
+    | {
+          ok: true;
+          bookingId: string;
+      }
+    | {
+          ok: false;
+          error: BookingError;
+      };
+
 /**
  * Use-case: создание и автоматическое подтверждение бронирования.
  *
@@ -43,7 +60,7 @@ type CreateBookingDeps = {
 export async function createBookingUseCase(
     deps: CreateBookingDeps,
     params: CreateBookingParams,
-): Promise<{ bookingId: string }> {
+): Promise<CreateBookingResult> {
     const { branchRepository, commands, notifications } = deps;
 
     // Определяем филиал: либо проверяем переданный, либо подбираем первый активный.
@@ -56,7 +73,13 @@ export async function createBookingUseCase(
         });
 
         if (!branch) {
-            throw new Error('BRANCH_NOT_FOUND_OR_INACTIVE');
+            return {
+                ok: false,
+                error: {
+                    kind: 'BRANCH_NOT_FOUND_OR_INACTIVE',
+                    message: 'Branch not found or inactive',
+                },
+            };
         }
 
         targetBranchId = branch.id;
@@ -64,7 +87,13 @@ export async function createBookingUseCase(
         const branch = await branchRepository.findFirstActiveByBizId(params.biz_id);
 
         if (!branch) {
-            throw new Error('NO_ACTIVE_BRANCH_FOR_BIZ');
+            return {
+                ok: false,
+                error: {
+                    kind: 'NO_ACTIVE_BRANCH_FOR_BIZ',
+                    message: 'No active branch for business',
+                },
+            };
         }
 
         targetBranchId = branch.id;
@@ -87,7 +116,7 @@ export async function createBookingUseCase(
         await notifications.send(bookingId, 'confirm');
     }
 
-    return { bookingId };
+    return { ok: true, bookingId };
 }
 
 type SimpleBookingDeps = {

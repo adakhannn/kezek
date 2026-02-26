@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { BookingsClientWrapper } from './BookingsClientWrapper';
 
 import { getT } from '@/app/_components/i18n/server';
-import { getBizContextForManagers } from '@/lib/authBiz'; // <-- твой рабочий хелпер
+import { getBizContextForManagers, BizAccessError } from '@/lib/authBiz'; // <-- твой рабочий хелпер
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -61,26 +61,47 @@ export default async function Page() {
             />
         );
     } catch (e: unknown) {
-        // нет сессии → уводим на публичную
-        if (e instanceof Error && e.message === 'UNAUTHORIZED') {
-            redirect('/b/kezek');
-        }
-        // нет подходящего бизнеса → мягкое сообщение
-        if (e instanceof Error && e.message === 'NO_BIZ_ACCESS') {
-            const t = getT('ru');
-            return (
-                <main className="p-6">
-                    <h1 className="text-xl font-semibold mb-2">
-                        {t('dashboard.bookings.noAccess.title', 'Нет доступа к кабинету')}
-                    </h1>
-                    <p className="text-sm text-gray-600">
-                        {t(
-                            'dashboard.bookings.noAccess.description',
-                            'У вашей учётной записи нет ролей owner / admin / manager ни в одном бизнесе.'
-                        )}
-                    </p>
-                </main>
-            );
+        if (e instanceof BizAccessError) {
+            if (e.code === 'NOT_AUTHENTICATED') {
+                redirect('/b/kezek');
+            }
+            if (e.code === 'NO_BIZ_ACCESS') {
+                const t = getT('ru');
+                return (
+                    <main className="p-6">
+                        <h1 className="text-xl font-semibold mb-2">
+                            {t('dashboard.bookings.noAccess.title', 'Нет доступа к кабинету')}
+                        </h1>
+                        <p className="text-sm text-gray-600">
+                            {t(
+                                'dashboard.bookings.noAccess.description',
+                                'У вашей учётной записи нет ролей owner / admin / manager ни в одном бизнесе.',
+                            )}
+                        </p>
+                    </main>
+                );
+            }
+        } else if (e instanceof Error) {
+            // Fallback по старым строковым сообщениям
+            if (e.message === 'UNAUTHORIZED') {
+                redirect('/b/kezek');
+            }
+            if (e.message === 'NO_BIZ_ACCESS') {
+                const t = getT('ru');
+                return (
+                    <main className="p-6">
+                        <h1 className="text-xl font-semibold mb-2">
+                            {t('dashboard.bookings.noAccess.title', 'Нет доступа к кабинету')}
+                        </h1>
+                        <p className="text-sm text-gray-600">
+                            {t(
+                                'dashboard.bookings.noAccess.description',
+                                'У вашей учётной записи нет ролей owner / admin / manager ни в одном бизнесе.',
+                            )}
+                        </p>
+                    </main>
+                );
+            }
         }
         // Другие ошибки
         const t = getT('ru');
