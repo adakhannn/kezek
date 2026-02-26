@@ -4,16 +4,30 @@
  */
 
 import { POST } from '@/app/api/bookings/[id]/cancel/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import {
+    setupApiTestMocks,
+    createMockRequest,
+    createMockSupabase,
+    expectSuccessResponse,
+    expectErrorResponse,
+} from '../testHelpers';
 
 setupApiTestMocks();
+
+jest.mock('next/headers', () => ({
+    cookies: jest.fn(),
+}));
+
+jest.mock('@supabase/ssr', () => ({
+    createServerClient: jest.fn(),
+}));
 
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
-// Мокаем getRouteParamRequired
+// Мокаем getRouteParamUuid
 jest.mock('@/lib/routeParams', () => ({
-    getRouteParamRequired: jest.fn(async (context: unknown, param: string) => {
+    getRouteParamUuid: jest.fn(async (context: unknown, param: string) => {
         if (typeof context === 'object' && context !== null && 'params' in context) {
             const params = (context as { params: Record<string, string> }).params;
             return params[param];
@@ -65,7 +79,7 @@ describe('/api/bookings/[id]/cancel', () => {
             });
 
             const res = await POST(req, { params: { id: bookingId } });
-            await expectErrorResponse(res, 403, 'FORBIDDEN');
+            await expectErrorResponse(res, 403, 'forbidden');
         });
     });
 
@@ -92,7 +106,7 @@ describe('/api/bookings/[id]/cancel', () => {
             });
 
             const res = await POST(req, { params: { id: bookingId } });
-            await expectErrorResponse(res, 403, 'FORBIDDEN');
+            await expectErrorResponse(res, 403, 'forbidden');
         });
     });
 

@@ -11,6 +11,11 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { logError, logDebug } from '../lib/log';
 import { getStatusColor, getStatusText } from '../utils/i18n';
+import {
+    loadOfflineBookings,
+    saveOfflineBookings,
+    type OfflineBooking,
+} from '../lib/offlineBookingsStorage';
 
 type CabinetScreenNavigationProp = NativeStackNavigationProp<CabinetStackParamList, 'CabinetMain'>;
 
@@ -37,6 +42,8 @@ type Booking = {
 export default function CabinetScreen() {
     const navigation = useNavigation<CabinetScreenNavigationProp>();
     const [refreshing, setRefreshing] = useState(false);
+    const [isOfflineData, setIsOfflineData] = useState(false);
+    const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
 
     const { data: user } = useQuery({
         queryKey: ['user'],
@@ -57,29 +64,96 @@ export default function CabinetScreen() {
 
             logDebug('CabinetScreen', 'Fetching bookings for user', { userId: user.id });
 
-            const { data, error } = await supabase
-                .from('bookings')
-                .select(`
-                    id,
-                    start_at,
-                    end_at,
-                    status,
-                    service:services(name_ru),
-                    staff:staff(full_name),
-                    branch:branches(name, address),
-                    business:businesses(name)
-                `)
-                .eq('client_id', user.id)
-                .order('start_at', { ascending: false })
-                .limit(50);
+            try {
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select(`
+                        id,
+                        start_at,
+                        end_at,
+                        status,
+                        service:services(name_ru),
+                        staff:staff(full_name),
+                        branch:branches(name, address),
+                        business:businesses(name)
+                    `)
+                    .eq('client_id', user.id)
+                    .order('start_at', { ascending: false })
+                    .limit(50);
 
-            if (error) {
-                logError('CabinetScreen', 'Error fetching bookings', error);
+                if (error) {
+                    logError('CabinetScreen', 'Error fetching bookings', error);
+                    throw error;
+                }
+
+                const rows = (data as any[]) ?? [];
+                const nowIso = new Date().toISOString();
+                const offlineItems: OfflineBooking[] = rows.map((b) => {
+                    const branch = (b.branch && Array.isArray(b.branch) ? b.branch[0] : b.branch) as
+                        | { name?: string | null; address?: string | null }
+                        | null
+                        | undefined;
+                    const service = (b.service && Array.isArray(b.service) ? b.service[0] : b.service) as
+                        | { name_ru?: string | null }
+                        | null
+                        | undefined;
+                    const staff = (b.staff && Array.isArray(b.staff) ? b.staff[0] : b.staff) as
+                        | { full_name?: string | null }
+                        | null
+                        | undefined;
+                    const business = (b.business && Array.isArray(b.business) ? b.business[0] : b.business) as
+                        | { name?: string | null }
+                        | null
+                        | undefined;
+
+                    return {
+                        id: String(b.id),
+                        status: b.status as OfflineBooking['status'],
+                        start_at: String(b.start_at),
+                        end_at: String(b.end_at),
+                        branch_name: branch?.name ?? null,
+                        service_name: service?.name_ru ?? null,
+                        staff_name: staff?.full_name ?? null,
+                        business_name: business?.name ?? null,
+                        created_at: nowIso,
+                    };
+                });
+
+                await saveOfflineBookings({
+                    userId: user.id,
+                    updatedAt: nowIso,
+                    items: offlineItems,
+                });
+
+                setIsOfflineData(false);
+                setLastSyncAt(nowIso);
+
+                logDebug('CabinetScreen', 'Bookings loaded', { count: rows.length || 0 });
+                return rows as unknown as Booking[];
+            } catch (error) {
+                logDebug('CabinetScreen', 'Network error, trying to load offline bookings', error);
+                const cached = await loadOfflineBookings(user.id);
+                if (cached && cached.items.length > 0) {
+                    setIsOfflineData(true);
+                    setLastSyncAt(cached.updatedAt);
+
+                    return cached.items.map((item) => ({
+                        id: item.id,
+                        start_at: item.start_at,
+                        end_at: item.end_at,
+                        status: item.status,
+                        service: item.service_name ? { name_ru: item.service_name } : null,
+                        staff: item.staff_name ? { full_name: item.staff_name } : null,
+                        branch: item.branch_name
+                            ? { name: item.branch_name, address: '' }
+                            : null,
+                        business: item.business_name ? { name: item.business_name } : null,
+                    })) as Booking[];
+                }
+
+                // Если кэша нет — пробрасываем ошибку дальше
                 throw error;
             }
-            
-            logDebug('CabinetScreen', 'Bookings loaded', { count: data?.length || 0 });
-            return data as Booking[];
         },
         enabled: !!user?.id,
     });
@@ -122,6 +196,15 @@ export default function CabinetScreen() {
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Мои записи</Text>
+
+                {isOfflineData && (
+                    <View style={styles.offlineBanner}>
+                        <Text style={styles.offlineBannerText}>
+                            Нет подключения к интернету — показаны сохранённые данные
+                            {lastSyncAt ? ` (последняя синхронизация: ${formatDate(lastSyncAt)} ${formatTime(lastSyncAt)})` : ''}
+                        </Text>
+                    </View>
+                )}
 
                 {bookings && bookings.length > 0 ? (
                     <View style={styles.bookingsList}>
@@ -226,6 +309,18 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#111827',
         marginBottom: 20,
+    },
+    offlineBanner: {
+        marginBottom: 16,
+        padding: 12,
+        borderRadius: 8,
+        backgroundColor: '#FEF3C7',
+        borderWidth: 1,
+        borderColor: '#FBBF24',
+    },
+    offlineBannerText: {
+        fontSize: 14,
+        color: '#92400E',
     },
     bookingsList: {
         gap: 16,

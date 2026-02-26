@@ -45,6 +45,8 @@ export {
 export type {
     BookingCommandsPort,
     BookingNotificationPort,
+    MarkAttendanceParams,
+    MarkAttendanceDecision,
 } from './useCases';
 
 export {
@@ -52,5 +54,6 @@ export {
     cancelBookingUseCase,
     confirmBookingUseCase,
     sendBookingNotificationsUseCase,
+    decideMarkAttendanceUseCase,
 } from './useCases';
 

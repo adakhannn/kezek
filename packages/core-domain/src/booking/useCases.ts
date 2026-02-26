@@ -1,5 +1,5 @@
-import type { BranchRepository } from '../ports';
-import type { CreateBookingParams } from './types';
+import type { BranchRepository, BookingRepository } from '../ports';
+import type { BookingStatus, CreateBookingParams, PromotionApplicationResult } from './types';
 
 /**
  * Порт для команд над бронированиями, реализуемый инфраструктурой (Supabase RPC и т.п.).
@@ -137,5 +137,100 @@ export async function sendBookingNotificationsUseCase(
     type: 'hold' | 'confirm' | 'cancel',
 ): Promise<void> {
     await notifications.send(bookingId, type);
+}
+
+type MarkAttendanceDeps = {
+    bookingRepository: BookingRepository;
+    now?: () => Date;
+};
+
+export type MarkAttendanceParams = {
+    bookingId: string;
+    bizId: string;
+    attended: boolean;
+};
+
+type MarkAttendanceDomainError =
+    | 'BOOKING_NOT_FOUND'
+    | 'BOOKING_NOT_IN_BIZ'
+    | 'BOOKING_NOT_IN_PAST'
+    | 'BOOKING_ALREADY_FINAL';
+
+export type MarkAttendanceDecision =
+    | {
+          ok: true;
+          newStatus: BookingStatus;
+          applyPromotion: boolean;
+          currentStatus: BookingStatus;
+      }
+    | {
+          ok: false;
+          reason: MarkAttendanceDomainError;
+          currentStatus?: BookingStatus;
+      };
+
+/**
+ * Use-case: доменное решение по отметке посещения.
+ *
+ * Не знает про Supabase/RPC — только про:
+ * - принадлежность брони бизнесу,
+ * - допустимость изменения статуса,
+ * - выбор нового статуса и необходимости применения промо.
+ */
+export async function decideMarkAttendanceUseCase(
+    deps: MarkAttendanceDeps,
+    params: MarkAttendanceParams,
+): Promise<MarkAttendanceDecision> {
+    const { bookingRepository, now } = deps;
+
+    const booking = await bookingRepository.findById(params.bookingId);
+
+    if (!booking) {
+        return { ok: false, reason: 'BOOKING_NOT_FOUND' };
+    }
+
+    if (booking.biz_id !== params.bizId) {
+        return {
+            ok: false,
+            reason: 'BOOKING_NOT_IN_BIZ',
+            currentStatus: booking.status,
+        };
+    }
+
+    if (booking.status === 'paid' || booking.status === 'no_show') {
+        return {
+            ok: false,
+            reason: 'BOOKING_ALREADY_FINAL',
+            currentStatus: booking.status,
+        };
+    }
+
+    const nowDate = now ? now() : new Date();
+    const startAt = new Date(booking.start_at);
+
+    if (Number.isNaN(startAt.getTime())) {
+        return {
+            ok: false,
+            reason: 'BOOKING_NOT_IN_PAST',
+            currentStatus: booking.status,
+        };
+    }
+
+    if (startAt > nowDate) {
+        return {
+            ok: false,
+            reason: 'BOOKING_NOT_IN_PAST',
+            currentStatus: booking.status,
+        };
+    }
+
+    const newStatus: BookingStatus = params.attended ? 'paid' : 'no_show';
+
+    return {
+        ok: true,
+        newStatus,
+        applyPromotion: newStatus === 'paid',
+        currentStatus: booking.status,
+    };
 }
 

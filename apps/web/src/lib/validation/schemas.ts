@@ -187,6 +187,15 @@ export const markAttendanceSchema = z.object({
 }).strict();
 
 /**
+ * Схема для запроса отправки уведомлений о бронировании (POST /api/notify).
+ * Соответствует NotifyRequest; тип события — hold | confirm | cancel (см. NOTIFICATIONS_PREFERENCES.md).
+ */
+export const notifyRequestSchema = z.object({
+    type: z.enum(['hold', 'confirm', 'cancel']),
+    booking_id: uuidSchema,
+}).strict();
+
+/**
  * Схема для данных Telegram авторизации
  */
 export const telegramAuthDataSchema = z.object({

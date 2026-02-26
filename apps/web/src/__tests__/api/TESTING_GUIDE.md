@@ -245,8 +245,9 @@ npm test -- --coverage
 | # сценария (см. SCENARIO_TEST_REGISTRY.md)                        | Что покрывает (основные тесты)                                      |
 |-------------------------------------------------------------------|---------------------------------------------------------------------|
 | 1. Публичная запись авторизованного пользователя                  | `quick-hold.test.ts`, E2E `quickdesk.spec.ts` (создание/подтверждение) |
-| 2. Гостевая запись без аккаунта                                   | `quick-book-guest.test.ts`                                          |
-| 3. Отмена бронирования клиентом                                   | `bookings/cancel.test.ts`                                           |
+| 2. Гостевая запись без аккаунта                                   | `quick-book-guest.test.ts`, E2E `booking-flow.spec.ts` (гостевой флоу) |
+| 3. Отмена бронирования клиентом                                   | `bookings/cancel.test.ts`, E2E `quickdesk.spec.ts` (отмена)           |
+| 4. Отмена/подтверждение через WhatsApp                            | `webhooks/whatsapp.test.ts`, E2E `whatsapp-webhook.spec.ts` (HTTP webhook) |
 | 5. Отметка посещения и применение промо                           | `bookings/mark-attendance.test.ts`, E2E `promotion-application.spec.ts` |
 | 6–7. Открытие/закрытие смены, корректировка часов и гарантии     | `staff/shift/close.test.ts`, E2E `hours-worked-recalculation.spec.ts`, `finance-disputes-verification.spec.ts` |
 | 8. Финансовая статистика                                          | тесты в `dashboard/finance/*.test.ts`, E2E сценарии по finance      |

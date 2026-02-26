@@ -4,11 +4,11 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getStaffContext } from '@/lib/authBiz';
-import { calculateShiftFinancials } from '@/lib/financeDomain';
-import { logError, logDebug } from '@/lib/log';
+import { logError } from '@/lib/log';
 import { sendShiftCloseNotification } from '@/lib/notifications/shiftNotifications';
 import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { closeStaffShiftUseCase } from '@/lib/staffShift/closeUseCase';
 import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
 import { validateRequest } from '@/lib/validation/apiValidation';
@@ -93,9 +93,6 @@ export async function POST(req: Request) {
             return createErrorResponse('internal', 'Не удалось загрузить настройки сотрудника. Проверьте подключение к интернету и попробуйте снова.', undefined, 500);
         }
 
-        const percentMaster = Number(staffData?.percent_master ?? 60);
-        const percentSalon = Number(staffData?.percent_salon ?? 40);
-
         const now = new Date();
         const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
 
@@ -118,31 +115,6 @@ export async function POST(req: Request) {
         if (existing.status === 'closed') {
             return createErrorResponse('validation', 'Смена уже закрыта. Обновите страницу для просмотра результатов.', undefined, 400);
         }
-
-        // Если переданы позиции по клиентам, считаем итог по ним
-        const totalServiceAmount = Array.isArray(items)
-            ? items.reduce(
-                  (sum: number, it: { serviceAmount?: number }) => sum + Number(it?.serviceAmount ?? 0),
-                  0
-              )
-            : 0;
-
-        const totalConsumablesFromItems = Array.isArray(items)
-            ? items.reduce(
-                  (sum: number, it: { consumablesAmount?: number }) => sum + Number(it?.consumablesAmount ?? 0),
-                  0
-              )
-            : 0;
-
-        // Итоговая сумма услуг = сумма всех serviceAmount
-        // Итоговые расходники = либо из поля consumablesAmount (если не переданы items), либо сумма consumablesAmount по клиентам
-        const totalAmount = items.length > 0 ? totalServiceAmount : totalAmountRaw;
-        const finalConsumablesAmount = items.length > 0 ? totalConsumablesFromItems : consumablesAmount;
-
-        // Расчет оплаты за выход (если указана ставка за час)
-        const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
-        let hoursWorked: number | null = null;
-
         // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
         // Правильно вычисляем следующую дату в часовом поясе TZ
         const todayInTz = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
@@ -153,36 +125,44 @@ export async function POST(req: Request) {
         const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
         const closedAt = midnightNextDay.toISOString();
 
-        if (hourlyRate && existing.opened_at) {
-            // Вычисляем количество отработанных часов
-            // opened_at хранится в UTC в базе данных
-            const openedAt = new Date(existing.opened_at);
-            // Используем текущее время (now) для расчета, а не полночь следующего дня
-            // Это более точно отражает реальное время работы
-            const currentTime = now;
-            const diffMs = currentTime.getTime() - openedAt.getTime();
-            hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // округляем до 2 знаков
-            
-            logDebug('StaffShiftClose', 'Hours calculation', {
-                ymd,
-                openedAt: existing.opened_at,
-                openedAtDate: openedAt.toISOString(),
-                now: now.toISOString(),
-                midnightNextDay: midnightNextDay.toISOString(),
-                diffMs,
-                hoursWorked,
-            });
+        const decision = closeStaffShiftUseCase({
+            now,
+            staff: {
+                percentMaster: staffData?.percent_master,
+                percentSalon: staffData?.percent_salon,
+                hourlyRate: staffData?.hourly_rate,
+            },
+            shift: existing,
+            items,
+            totalAmountRaw,
+            consumablesAmountRaw: consumablesAmount,
+        });
+
+        if (decision.kind === 'no_shift') {
+            return createErrorResponse(
+                'validation',
+                'Смена на сегодня ещё не открыта. Сначала откройте смену, затем добавьте клиентов и закройте её.',
+                undefined,
+                400,
+            );
         }
 
-        // Используем единый доменный слой для расчета всех финансовых показателей
-        const financials = calculateShiftFinancials({
+        if (decision.kind === 'already_closed') {
+            return createErrorResponse(
+                'validation',
+                'Смена уже закрыта. Обновите страницу для просмотра результатов.',
+                undefined,
+                400,
+            );
+        }
+
+        const {
             totalAmount,
             totalConsumables: finalConsumablesAmount,
-            percentMaster,
-            percentSalon,
             hoursWorked,
-            hourlyRate,
-        });
+            financials,
+        } = decision;
+        const hourlyRate = staffData?.hourly_rate ? Number(staffData.hourly_rate) : null;
 
         // Данные для обновления смены (используются в RPC вызове)
 

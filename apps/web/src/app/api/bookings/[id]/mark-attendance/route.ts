@@ -2,17 +2,22 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import {
+    decideMarkAttendanceUseCase,
+    normalizePromotionApplied,
+    type MarkAttendanceDecision,
+    type PromotionApplicationResult,
+} from '@core-domain/booking';
 
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { SupabaseBookingRepository } from '@/lib/repositories';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { markAttendanceSchema } from '@/lib/validation/schemas';
-import { normalizePromotionApplied, type PromotionApplicationResult } from '@core-domain/booking';
 
 /**
  * @swagger
@@ -100,122 +105,124 @@ export async function POST(req: Request, context: unknown) {
                 }
                 const { attended } = validationResult.data;
 
-                // Проверяем, что бронь принадлежит этому бизнесу (используем унифицированную утилиту)
-                const bookingCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string; start_at: string; status: string }>(
-                    admin,
-                    'bookings',
-                    bookingId,
-                    bizId,
-                    'id, biz_id, start_at, status'
+                const bookingRepository = new SupabaseBookingRepository(admin);
+
+                const decision: MarkAttendanceDecision = await decideMarkAttendanceUseCase(
+                    {
+                        bookingRepository,
+                    },
+                    {
+                        bookingId,
+                        bizId,
+                        attended,
+                    },
                 );
-                if (bookingCheck.error || !bookingCheck.data) {
-                    const statusCode = bookingCheck.error === 'Resource not found' ? 404 : 403;
-                    return createErrorResponse(
-                        statusCode === 404 ? 'not_found' : 'forbidden',
-                        bookingCheck.error === 'Resource not found' ? 'Бронь не найдена' : 'Доступ запрещен',
-                        undefined,
-                        statusCode
-                    );
-                }
-                const booking = bookingCheck.data;
 
-                // Если статус уже финальный, не пытаемся применять его повторно
-                if (booking.status === 'paid' || booking.status === 'no_show') {
-                    return createSuccessResponse(undefined, { status: booking.status });
-                }
-
-                // Проверяем, что бронь уже прошла
-                const now = new Date();
-                const startAt = new Date(booking.start_at);
-                if (startAt > now) {
-                    return createErrorResponse('validation', 'Можно отмечать посещение только для прошедших броней', undefined, 400);
-                }
-
-        // Обновляем статус: attended = true -> paid (выполнено/пришел), attended = false -> no_show
-        // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
-        const newStatus = attended ? 'paid' : 'no_show';
-
-        // Если статус = 'paid', используем функцию с автоматическим применением акций
-        // Иначе используем стандартную функцию обновления статуса
-        const rpcFunctionName = newStatus === 'paid' 
-            ? 'update_booking_status_with_promotion' 
-            : 'update_booking_status_no_check';
-
-        // Применяем статус (и акцию, если статус = 'paid')
-        // Мониторинг производительности применения промо
-        const { error: rpcError, data: promotionResult } = await measurePerformance(
-            newStatus === 'paid' ? 'apply_promotion' : 'update_booking_status',
-            async () => {
-                return await admin.rpc(rpcFunctionName, {
-                    p_booking_id: bookingId,
-                    p_new_status: newStatus,
-                });
-            },
-            { bookingId, newStatus, rpcFunctionName }
-        );
-
-        // Если RPC успешно выполнен, возвращаем успех
-        if (!rpcError) {
-            // Если применялась акция, возвращаем информацию о ней
-            const result: PromotionApplicationResult = promotionResult;
-            if (newStatus === 'paid' && result) {
-                const applied = result.applied || false;
-                const promotionApplied = normalizePromotionApplied(result);
-                
-                return createSuccessResponse(undefined, { 
-                    status: newStatus,
-                    promotion_applied: applied,
-                    promotion_info: applied && promotionApplied ? {
-                        title: promotionApplied.promotion_title || '',
-                        discount_percent: promotionApplied.discount_percent || 0,
-                        discount_amount: promotionApplied.discount_amount || 0,
-                        final_amount: promotionApplied.final_amount || 0,
-                    } : null,
-                });
-            }
-            return createSuccessResponse(undefined, { status: newStatus });
-        }
-
-        // Если RPC функция не найдена или не работает, используем прямой update через service client
-        // Service client должен обходить большинство проверок
-        if (rpcError && (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist') || rpcError.message?.includes('schema cache'))) {
-            // Fallback: прямой update через service client
-            const { error: updateError } = await admin
-                .from('bookings')
-                .update({ status: newStatus })
-                .eq('id', bookingId)
-                .select('id, status');
-
-            if (updateError) {
-                const errorMsg = updateError.message.toLowerCase();
-                // Если ошибка о назначении сотрудника, это не критично для прошедших броней
-                // Бронь уже существует, и мы просто меняем её статус
-                if (errorMsg.includes('not assigned to branch') || errorMsg.includes('staff')) {
-                    // Для прошедших броней игнорируем ошибку о назначении
-                    // Проверяем, что статус все же обновился
-                    const { data: checkData } = await admin
-                        .from('bookings')
-                        .select('status')
-                        .eq('id', bookingId)
-                        .maybeSingle();
-                    
-                    if (checkData && checkData.status === newStatus) {
-                        // Статус обновился, несмотря на ошибку
-                        return createSuccessResponse(undefined, { status: newStatus });
+                if (!decision.ok) {
+                    if (decision.reason === 'BOOKING_NOT_FOUND') {
+                        return createErrorResponse('not_found', 'Бронь не найдена', undefined, 404);
                     }
-                    
-                    // Если статус не обновился, возвращаем ошибку
-                    return createErrorResponse('validation', 'Не удалось обновить статус. Возможно, сотрудник больше не назначен на филиал.', undefined, 400);
-                } else {
-                    return createErrorResponse('validation', updateError.message, undefined, 400);
-                }
-            }
-            
-            // Успешно обновлено
-            return createSuccessResponse(undefined, { status: newStatus });
-        }
 
-                // Если это не ошибка "функция не найдена", возвращаем ошибку RPC
+                    if (decision.reason === 'BOOKING_NOT_IN_BIZ') {
+                        return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
+                    }
+
+                    if (decision.reason === 'BOOKING_NOT_IN_PAST') {
+                        return createErrorResponse(
+                            'validation',
+                            'Можно отмечать посещение только для прошедших броней',
+                            undefined,
+                            400,
+                        );
+                    }
+
+                    if (decision.reason === 'BOOKING_ALREADY_FINAL') {
+                        return createSuccessResponse(undefined, { status: decision.currentStatus });
+                    }
+
+                    return createErrorResponse('internal', 'Неизвестная ошибка при отметке посещения', undefined, 500);
+                }
+
+                const { newStatus, applyPromotion } = decision;
+
+                const rpcFunctionName =
+                    newStatus === 'paid'
+                        ? 'update_booking_status_with_promotion'
+                        : 'update_booking_status_no_check';
+
+                const { error: rpcError, data: promotionResult } = await measurePerformance(
+                    applyPromotion ? 'apply_promotion' : 'update_booking_status',
+                    async () =>
+                        admin.rpc(rpcFunctionName, {
+                            p_booking_id: bookingId,
+                            p_new_status: newStatus,
+                        }),
+                    { bookingId, newStatus, rpcFunctionName },
+                );
+
+                if (!rpcError) {
+                    const result: PromotionApplicationResult = promotionResult;
+                    if (newStatus === 'paid' && result) {
+                        const applied = result.applied || false;
+                        const promotionApplied = normalizePromotionApplied(result);
+
+                        return createSuccessResponse(undefined, {
+                            status: newStatus,
+                            promotion_applied: applied,
+                            promotion_info:
+                                applied && promotionApplied
+                                    ? {
+                                          title: promotionApplied.promotion_title || '',
+                                          discount_percent: promotionApplied.discount_percent || 0,
+                                          discount_amount: promotionApplied.discount_amount || 0,
+                                          final_amount: promotionApplied.final_amount || 0,
+                                      }
+                                    : null,
+                        });
+                    }
+                    return createSuccessResponse(undefined, { status: newStatus });
+                }
+
+                if (
+                    rpcError &&
+                    (rpcError.message?.includes('function') ||
+                        rpcError.message?.includes('does not exist') ||
+                        rpcError.message?.includes('schema cache'))
+                ) {
+                    const { error: updateError } = await admin
+                        .from('bookings')
+                        .update({ status: newStatus })
+                        .eq('id', bookingId)
+                        .select('id, status');
+
+                    if (updateError) {
+                        const errorMsg = updateError.message.toLowerCase();
+
+                        if (errorMsg.includes('not assigned to branch') || errorMsg.includes('staff')) {
+                            const { data: checkData } = await admin
+                                .from('bookings')
+                                .select('status')
+                                .eq('id', bookingId)
+                                .maybeSingle();
+
+                            if (checkData && checkData.status === newStatus) {
+                                return createSuccessResponse(undefined, { status: newStatus });
+                            }
+
+                            return createErrorResponse(
+                                'validation',
+                                'Не удалось обновить статус. Возможно, сотрудник больше не назначен на филиал.',
+                                undefined,
+                                400,
+                            );
+                        }
+
+                        return createErrorResponse('validation', updateError.message, undefined, 400);
+                    }
+
+                    return createSuccessResponse(undefined, { status: newStatus });
+                }
+
                 return createErrorResponse('validation', rpcError?.message || 'Неизвестная ошибка', undefined, 400);
             });
         }

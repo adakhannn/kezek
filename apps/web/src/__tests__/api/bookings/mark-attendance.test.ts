@@ -4,7 +4,7 @@
  */
 
 import { POST } from '@/app/api/bookings/[id]/mark-attendance/route';
-// Мокируем зависимости
+
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
@@ -14,7 +14,7 @@ jest.mock('@/lib/supabaseService', () => ({
 }));
 
 jest.mock('@/lib/routeParams', () => ({
-    getRouteParamRequired: jest.fn(),
+    getRouteParamUuid: jest.fn(),
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
@@ -27,7 +27,7 @@ jest.mock('@/lib/performance', () => ({
 }));
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { getRouteParamRequired } from '@/lib/routeParams';
+import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
 describe('/api/bookings/[id]/mark-attendance', () => {
@@ -45,7 +45,7 @@ describe('/api/bookings/[id]/mark-attendance', () => {
             bizId: 'test-biz-id',
         });
         (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
-        (getRouteParamRequired as jest.Mock).mockResolvedValue('test-booking-id');
+        (getRouteParamUuid as jest.Mock).mockResolvedValue('test-booking-id');
     });
 
     describe('Edge cases', () => {
@@ -145,7 +145,7 @@ describe('/api/bookings/[id]/mark-attendance', () => {
 
             expect(response.status).toBe(400);
             expect(data.ok).toBe(false);
-            expect(data.error).toContain('прошедших');
+            expect(data.message).toContain('прошедших');
         });
 
         test('должен вернуть успех для уже обработанной брони (paid/no_show)', async () => {

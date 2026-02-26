@@ -2,13 +2,20 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import {
+    cancelBookingUseCase,
+    type BookingCommandsPort,
+    type BookingNotificationPort,
+} from '@core-domain/booking';
+
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
+import { logDebug, logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-export async function POST(_: Request, context: unknown) {
+export async function POST(req: Request, context: unknown) {
     return withErrorHandler('BookingsCancel', async () => {
         // Валидация UUID для предотвращения потенциальных проблем безопасности
         const bookingId = await getRouteParamUuid(context, 'id');
@@ -54,35 +61,85 @@ export async function POST(_: Request, context: unknown) {
             return createSuccessResponse();
         }
 
-        // Пытаемся отменить через RPC
-        const {error} = await supabase.rpc('cancel_booking', {p_booking_id: bookingId});
-        
-        // Если ошибка связана с назначением сотрудника, обновляем статус напрямую
-        if (error) {
-            const errorMsg = error.message.toLowerCase();
-            if (errorMsg.includes('not assigned to branch') || errorMsg.includes('staff')) {
-                // Обновляем статус напрямую, минуя проверку назначения
-                const {error: updateError} = await supabase
-                    .from('bookings')
-                    .update({status: 'cancelled'})
-                    .eq('id', bookingId)
-                    .eq('client_id', auth.user.id);
-                
-                if (updateError) {
-                    return createErrorResponse('validation', updateError.message, undefined, 400);
-                }
-            } else {
-                return createErrorResponse('validation', error.message, undefined, 400);
-            }
-        }
+        const commands: BookingCommandsPort = {
+            async holdSlot() {
+                throw new Error('holdSlot is not supported in cancel route');
+            },
+            async confirmBooking() {
+                throw new Error('confirmBooking is not supported in cancel route');
+            },
+            async cancelBooking(id: string) {
+                logDebug('BookingsCancel', 'Calling cancel_booking RPC', { bookingId: id });
 
-        // триггерим уведомления
-        await fetch(`${process.env.NEXT_PUBLIC_SITE_ORIGIN || ''}/api/notify`, {
-            method: 'POST',
-            headers: {'content-type': 'application/json'},
-            body: JSON.stringify({type: 'cancel', booking_id: bookingId}),
-        }).catch(() => {
-        });
+                const { error } = await supabase.rpc('cancel_booking', { p_booking_id: id });
+
+                // Если ошибка связана с назначением сотрудника, обновляем статус напрямую
+                if (error) {
+                    const errorMsg = error.message.toLowerCase();
+
+                    if (errorMsg.includes('not assigned to branch') || errorMsg.includes('staff')) {
+                        const { error: updateError } = await supabase
+                            .from('bookings')
+                            .update({ status: 'cancelled' })
+                            .eq('id', id)
+                            .eq('client_id', auth.user.id);
+
+                        if (updateError) {
+                            logError('BookingsCancel', 'Direct status update failed', updateError);
+                            throw {
+                                error: 'validation',
+                                message: updateError.message,
+                                status: 400,
+                            } as const;
+                        }
+                    } else {
+                        logError('BookingsCancel', 'RPC cancel_booking failed', error);
+                        throw {
+                            error: 'validation',
+                            message: error.message,
+                            status: 400,
+                        } as const;
+                    }
+                }
+            },
+        };
+
+        const notifications: BookingNotificationPort = {
+            async send(id, type) {
+                logDebug('BookingsCancel', 'Triggering notifications', { bookingId: id, type });
+
+                try {
+                    const notifyUrl = new URL('/api/notify', req.url);
+
+                    const response = await fetch(notifyUrl, {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ type, booking_id: id }),
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text().catch(() => 'Unknown error');
+                        logError('BookingsCancel', 'Notify API error', {
+                            status: response.status,
+                            errorText,
+                        });
+                    } else {
+                        const result = await response.json().catch(() => ({}));
+                        logDebug('BookingsCancel', 'Notify API success', result);
+                    }
+                } catch (error) {
+                    logError('BookingsCancel', 'Notify API exception', error);
+                }
+            },
+        };
+
+        await cancelBookingUseCase(
+            {
+                commands,
+                notifications,
+            },
+            bookingId,
+        );
 
         return createSuccessResponse();
     });

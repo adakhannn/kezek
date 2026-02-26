@@ -16,6 +16,7 @@ type DbBookingRow = {
     staff_id: string;
     status: BookingStatus;
     promotion_applied: PromotionApplied | null;
+    start_at: string;
 };
 
 /**
@@ -28,7 +29,7 @@ export class SupabaseBookingRepository implements BookingRepository {
         const { data, error } = await this.supabase
             .from('bookings')
             .select(
-                'id, biz_id, branch_id, service_id, staff_id, status, promotion_applied',
+                'id, biz_id, branch_id, service_id, staff_id, status, promotion_applied, start_at',
             )
             .eq('id', id)
             .maybeSingle<DbBookingRow>();

@@ -22,6 +22,7 @@ export interface BookingRepository {
         staff_id: string;
         status: BookingStatus;
         promotion_applied: PromotionApplied | null;
+        start_at: string;
     } | null>;
 
     /**
