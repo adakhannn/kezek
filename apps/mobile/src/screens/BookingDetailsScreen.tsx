@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -40,6 +40,7 @@ type BookingDetails = {
     } | null;
     business: {
         name: string;
+        slug?: string;
         phones: string[];
     } | null;
 };
@@ -70,7 +71,7 @@ export default function BookingDetailsScreen() {
                     service:services(name_ru, duration_min, price_from, price_to),
                     staff:staff(full_name),
                     branch:branches(name, address),
-                    business:businesses(name, phones)
+                    business:businesses(name, slug, phones)
                 `)
                 .eq('id', bookingId)
                 .eq('client_id', user.id) // Фильтруем по client_id для безопасности
@@ -124,6 +125,35 @@ export default function BookingDetailsScreen() {
         );
     };
 
+    const primaryPhone = booking?.business?.phones?.[0] || null;
+
+    const handleCall = () => {
+        if (!primaryPhone) return;
+        const digits = primaryPhone.replace(/[^\d+]/g, '');
+        Linking.openURL(`tel:${digits}`).catch(() => {
+            showToast('Не удалось открыть звонилку', 'error');
+        });
+    };
+
+    const handleWhatsApp = () => {
+        if (!primaryPhone) return;
+        const digits = primaryPhone.replace(/[^\d]/g, '');
+        if (!digits) return;
+        const url = `https://wa.me/${digits}`;
+        Linking.openURL(url).catch(() => {
+            showToast('Не удалось открыть WhatsApp', 'error');
+        });
+    };
+
+    const handleRepeat = () => {
+        const slug = booking?.business?.slug;
+        if (!slug) {
+            showToast('Не удалось открыть запись, бизнес не найден', 'error');
+            return;
+        }
+        navigation.navigate('Booking', { slug });
+    };
+
     if (isLoading) {
         return (
             <View style={styles.container}>
@@ -141,6 +171,25 @@ export default function BookingDetailsScreen() {
     }
 
     const canCancel = booking.status !== 'cancelled' && booking.status !== 'confirmed';
+
+    const timelineSteps = [
+        { key: 'created', label: 'Создано', done: true },
+        {
+            key: 'confirmed',
+            label: 'Подтверждено',
+            done: booking.status === 'confirmed' || booking.status === 'paid',
+        },
+        {
+            key: 'completed',
+            label: booking.status === 'cancelled' ? 'Отменено' : 'Завершено',
+            done: booking.status === 'paid' || booking.status === 'cancelled',
+        },
+        {
+            key: 'promo',
+            label: 'Промо применено',
+            done: false, // TODO: можно расширить, когда промо будет доступно в запросе
+        },
+    ] as const;
 
     return (
         <ScrollView style={styles.container}>
@@ -186,6 +235,30 @@ export default function BookingDetailsScreen() {
                     </View>
                 )}
 
+                <View style={styles.timelineSection}>
+                    <Text style={styles.label}>Статус</Text>
+                    <View style={styles.timelineRow}>
+                        {timelineSteps.map((step, index) => (
+                            <View key={step.key} style={styles.timelineStep}>
+                                <View
+                                    style={[
+                                        styles.timelineDot,
+                                        step.done && styles.timelineDotDone,
+                                    ]}
+                                >
+                                    {step.done && (
+                                        <Text style={styles.timelineDotText}>✓</Text>
+                                    )}
+                                </View>
+                                <Text style={styles.timelineLabel}>{step.label}</Text>
+                                {index < timelineSteps.length - 1 && (
+                                    <View style={styles.timelineConnector} />
+                                )}
+                            </View>
+                        ))}
+                    </View>
+                </View>
+
                 <View style={styles.section}>
                     <Text style={styles.label}>Дата и время</Text>
                     <Text style={styles.value}>{formatDate(booking.start_at)}</Text>
@@ -215,8 +288,14 @@ export default function BookingDetailsScreen() {
                 )}
             </Card>
 
-            {canCancel && (
-                <View style={styles.actions}>
+            <View style={styles.actions}>
+                <Button
+                    title="Повторить запись"
+                    onPress={handleRepeat}
+                    style={styles.primaryAction}
+                />
+
+                {canCancel && (
                     <Button
                         title="Отменить бронирование"
                         onPress={handleCancel}
@@ -224,8 +303,25 @@ export default function BookingDetailsScreen() {
                         style={styles.cancelButton}
                         loading={cancelMutation.isPending}
                     />
-                </View>
-            )}
+                )}
+
+                {primaryPhone && (
+                    <View style={styles.contactRow}>
+                        <Button
+                            title="Позвонить в салон"
+                            onPress={handleCall}
+                            variant="outline"
+                            style={styles.contactButton}
+                        />
+                        <Button
+                            title="Написать в WhatsApp"
+                            onPress={handleWhatsApp}
+                            variant="outline"
+                            style={styles.contactButton}
+                        />
+                    </View>
+                )}
+            </View>
         </ScrollView>
     );
 }
@@ -277,6 +373,12 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#e5e7eb',
     },
+    timelineSection: {
+        marginBottom: 20,
+        paddingBottom: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb',
+    },
     label: {
         fontSize: 14,
         fontWeight: '500',
@@ -312,12 +414,64 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#10b981',
     },
+    timelineRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 8,
+        columnGap: 4,
+    },
+    timelineStep: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    timelineDot: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+    },
+    timelineDotDone: {
+        backgroundColor: '#4f46e5',
+        borderColor: '#4f46e5',
+    },
+    timelineDotText: {
+        fontSize: 10,
+        color: '#fff',
+        fontWeight: '700',
+    },
+    timelineLabel: {
+        fontSize: 11,
+        color: '#6b7280',
+        marginLeft: 4,
+        marginRight: 4,
+    },
+    timelineConnector: {
+        width: 16,
+        height: 1,
+        backgroundColor: '#e5e7eb',
+    },
     actions: {
         padding: 20,
         paddingBottom: 40,
+        gap: 12,
+    },
+    primaryAction: {
+        marginBottom: 4,
     },
     cancelButton: {
         borderColor: '#ef4444',
+    },
+    contactRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 8,
+    },
+    contactButton: {
+        flex: 1,
     },
 });
 

@@ -15,8 +15,9 @@ import EmptyState from '../components/ui/EmptyState';
 import Logo from '../components/Logo';
 import RatingBadge from '../components/ui/RatingBadge';
 import { colors } from '../constants/colors';
-import { formatPhone } from '../utils/format';
+import { formatDate, formatTime, formatPhone } from '../utils/format';
 import { logError, logDebug } from '../lib/log';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Home'>;
 
@@ -30,11 +31,48 @@ type Business = {
     rating_score: number | null;
 };
 
+type HomeBooking = {
+    id: string;
+    start_at: string;
+    end_at: string;
+    status: string;
+    business: {
+        name: string;
+        slug: string | null;
+    } | null;
+    branch: {
+        name: string | null;
+    } | null;
+    service: {
+        name_ru: string | null;
+    } | null;
+};
+
+type RecentPlace = {
+    slug: string;
+    name: string;
+};
+
 export default function HomeScreen() {
     const navigation = useNavigation<HomeScreenNavigationProp>();
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [hasNetworkError, setHasNetworkError] = useState(false);
+
+    const { isOffline } = useNetworkStatus();
+
+    const { data: user } = useQuery({
+        queryKey: ['user'],
+        queryFn: async () => {
+            const {
+                data: { user },
+                error,
+            } = await supabase.auth.getUser();
+            if (error) throw error;
+            return user;
+        },
+    });
 
     const { data: businesses, isLoading, refetch } = useQuery({
         queryKey: ['businesses', search, selectedCategory],
@@ -63,7 +101,105 @@ export default function HomeScreen() {
             logDebug('HomeScreen', 'Businesses loaded', { count: data?.length || 0 });
             return data as Business[];
         },
+        onError: (error: unknown) => {
+            const message = error instanceof Error ? error.message : String(error);
+            if (/network request failed|failed to fetch|network/i.test(message)) {
+                setHasNetworkError(true);
+            }
+        },
+        onSuccess: () => {
+            setHasNetworkError(false);
+        },
     });
+
+    const { data: bookings } = useQuery({
+        queryKey: ['home-bookings', user?.id],
+        enabled: !!user?.id,
+        queryFn: async () => {
+            if (!user?.id) return [];
+
+            const { data, error } = await supabase
+                .from('bookings')
+                .select(
+                    `
+                    id,
+                    start_at,
+                    end_at,
+                    status,
+                    business:businesses(name, slug),
+                    branch:branches(name),
+                    service:services(name_ru)
+                `,
+                )
+                .eq('client_id', user.id)
+                .order('start_at', { ascending: true })
+                .limit(20);
+
+            if (error) {
+                logError('HomeScreen', 'Error fetching home bookings', error);
+                throw error;
+            }
+
+            logDebug('HomeScreen', 'Home bookings loaded', { count: data?.length || 0 });
+            return (data as any[]).map(
+                (b): HomeBooking => ({
+                    id: String(b.id),
+                    start_at: String(b.start_at),
+                    end_at: String(b.end_at),
+                    status: String(b.status),
+                    business: b.business
+                        ? Array.isArray(b.business)
+                            ? b.business[0]
+                            : b.business
+                        : null,
+                    branch: b.branch
+                        ? Array.isArray(b.branch)
+                            ? b.branch[0]
+                            : b.branch
+                        : null,
+                    service: b.service
+                        ? Array.isArray(b.service)
+                            ? b.service[0]
+                            : b.service
+                        : null,
+                }),
+            );
+        },
+    });
+
+    const now = useMemo(() => new Date(), []);
+
+    const upcomingBookings = useMemo(() => {
+        if (!bookings || bookings.length === 0) return [] as HomeBooking[];
+        const nowTime = now.getTime();
+        return bookings
+            .filter((b) => {
+                if (b.status === 'cancelled' || b.status === 'no_show') return false;
+                const start = new Date(b.start_at).getTime();
+                return Number.isFinite(start) && start >= nowTime;
+            })
+            .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
+            .slice(0, 3);
+    }, [bookings, now]);
+
+    const recentPlaces: RecentPlace[] = useMemo(() => {
+        if (!bookings || bookings.length === 0) return [];
+        const seen = new Set<string>();
+        const places: RecentPlace[] = [];
+
+        [...bookings]
+            .sort((a, b) => new Date(b.start_at).getTime() - new Date(a.start_at).getTime())
+            .forEach((b) => {
+                const slug = b.business?.slug;
+                const name = b.business?.name;
+                if (!slug || !name) return;
+                if (seen.has(slug)) return;
+                seen.add(slug);
+                places.push({ slug, name });
+            });
+
+        return places.slice(0, 3);
+    }, [bookings]);
 
     // Собираем доступные категории из загруженных бизнесов
     const availableCategories = useMemo(() => {
@@ -79,7 +215,7 @@ export default function HomeScreen() {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await refetch();
+        await Promise.all([refetch()]);
         setRefreshing(false);
     };
 
@@ -96,6 +232,8 @@ export default function HomeScreen() {
         setSearch('');
         setSelectedCategory(null);
     };
+
+    const showOfflineBanner = isOffline || hasNetworkError;
 
     return (
         <LinearGradient
@@ -121,6 +259,81 @@ export default function HomeScreen() {
                 </Text>
             </View>
 
+            {showOfflineBanner && (
+                <View style={styles.offlineBanner}>
+                    <Ionicons name="cloud-offline-outline" size={18} color={colors.text.secondary} />
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.offlineTitle}>Нет подключения к интернету</Text>
+                        <Text style={styles.offlineText}>
+                            Список обновится автоматически, когда сеть появится. Попробуйте потянуть вниз для обновления.
+                        </Text>
+                    </View>
+                </View>
+            )}
+
+            {/* Ближайшие записи */}
+            {user && upcomingBookings.length > 0 && (
+                <View style={styles.section}>
+                    <View style={styles.sectionHeaderRow}>
+                        <Text style={styles.sectionTitle}>Ближайшие записи</Text>
+                        <TouchableOpacity
+                            onPress={() =>
+                                (navigation as unknown as {
+                                    navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void;
+                                }).navigate('CabinetMain' as any)
+                            }
+                        >
+                            <Text style={styles.sectionLink}>Открыть все</Text>
+                        </TouchableOpacity>
+                    </View>
+                    {upcomingBookings.map((b) => (
+                        <Card key={b.id} style={styles.bookingCard}>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() =>
+                                    (navigation as unknown as {
+                                        navigate: (
+                                            screen: keyof RootStackParamList,
+                                            params?: RootStackParamList[keyof RootStackParamList],
+                                        ) => void;
+                                    }).navigate('BookingDetails', { id: b.id })
+                                }
+                            >
+                                <View style={styles.bookingRow}>
+                                    <View style={styles.bookingMain}>
+                                        <Text style={styles.bookingBusiness}>
+                                            {b.business?.name || 'Запись'}
+                                        </Text>
+                                        {b.branch?.name && (
+                                            <Text style={styles.bookingBranch}>{b.branch.name}</Text>
+                                        )}
+                                        {b.service?.name_ru && (
+                                            <Text style={styles.bookingService}>{b.service.name_ru}</Text>
+                                        )}
+                                    </View>
+                                    <View style={styles.bookingMeta}>
+                                        <Text style={styles.bookingDate}>
+                                            {formatDate(b.start_at)} • {formatTime(b.start_at)}
+                                        </Text>
+                                        <View style={styles.bookingStatusPill}>
+                                            <Text style={styles.bookingStatusText}>
+                                                {b.status === 'confirmed'
+                                                    ? 'Подтверждено'
+                                                    : b.status === 'hold'
+                                                    ? 'Ожидает'
+                                                    : b.status === 'paid'
+                                                    ? 'Оплачено'
+                                                    : 'Запись'}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        </Card>
+                    ))}
+                </View>
+            )}
+
             {/* Поиск */}
             <View style={styles.searchContainer}>
                 <View style={styles.searchInputContainer}>
@@ -139,6 +352,35 @@ export default function HomeScreen() {
                     )}
                 </View>
             </View>
+
+            {/* Недавние места */}
+            {user && recentPlaces.length > 0 && (
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Недавние места</Text>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.recentPlacesRow}
+                    >
+                        {recentPlaces.map((place) => (
+                            <TouchableOpacity
+                                key={place.slug}
+                                style={styles.recentPlaceChip}
+                                activeOpacity={0.7}
+                                onPress={() => handleBusinessPress(place.slug)}
+                            >
+                                <Ionicons
+                                    name="time-outline"
+                                    size={16}
+                                    color={colors.text.secondary}
+                                    style={{ marginRight: 6 }}
+                                />
+                                <Text style={styles.recentPlaceText}>{place.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
 
             {/* Фильтры по категориям */}
             {availableCategories.length > 0 && (
@@ -305,6 +547,29 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         maxWidth: 320,
     },
+    offlineBanner: {
+        marginHorizontal: 20,
+        marginBottom: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 12,
+        backgroundColor: colors.background.secondary,
+        borderWidth: 1,
+        borderColor: colors.border.light,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 10,
+    },
+    offlineTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.text.primary,
+        marginBottom: 2,
+    },
+    offlineText: {
+        fontSize: 12,
+        color: colors.text.secondary,
+    },
     searchContainer: {
         paddingHorizontal: 20,
         paddingBottom: 16,
@@ -374,6 +639,93 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '500',
         color: '#fff',
+    },
+    section: {
+        paddingHorizontal: 20,
+        paddingBottom: 16,
+    },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.text.primary,
+    },
+    sectionLink: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: colors.primary.from,
+    },
+    bookingCard: {
+        marginTop: 8,
+    },
+    bookingRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    bookingMain: {
+        flex: 1,
+    },
+    bookingBusiness: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.text.primary,
+        marginBottom: 2,
+    },
+    bookingBranch: {
+        fontSize: 13,
+        color: colors.text.secondary,
+        marginBottom: 2,
+    },
+    bookingService: {
+        fontSize: 13,
+        color: colors.text.tertiary,
+    },
+    bookingMeta: {
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        gap: 4,
+    },
+    bookingDate: {
+        fontSize: 12,
+        color: colors.text.secondary,
+    },
+    bookingStatusPill: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 999,
+        backgroundColor: colors.background.secondary,
+    },
+    bookingStatusText: {
+        fontSize: 11,
+        fontWeight: '500',
+        color: colors.text.secondary,
+    },
+    recentPlacesRow: {
+        paddingTop: 8,
+        paddingBottom: 4,
+        gap: 8,
+    },
+    recentPlaceChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 999,
+        backgroundColor: colors.background.secondary,
+        borderWidth: 1,
+        borderColor: colors.border.light,
+        marginRight: 8,
+    },
+    recentPlaceText: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: colors.text.primary,
     },
     businessList: {
         padding: 20,

@@ -108,8 +108,8 @@ export const bookingsRu = {
     'bookings.status.noShowShort': 'не пришел',
     'bookings.status.paid': 'Выполнено',
     'bookings.subtitle': 'Управление бронированиями',
-    'bookings.tabs.calendar': 'Календарь',
-    'bookings.tabs.desk': 'Стойка',
-    'bookings.tabs.list': 'Список',
+    'bookings.tabs.calendar': 'Календарь (сегодня)',
+    'bookings.tabs.desk': 'Сегодня (QuickDesk)',
+    'bookings.tabs.list': 'История и поиск',
     'bookings.title': 'Брони',
 } as const;

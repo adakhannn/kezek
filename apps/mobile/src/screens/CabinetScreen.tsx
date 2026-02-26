@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -172,9 +172,27 @@ export default function CabinetScreen() {
     };
 
 
-    if (isLoading) {
+    const now = useMemo(() => new Date(), []);
+    const upcomingBookings: Booking[] = useMemo(() => {
+        if (!bookings) return [];
+        return bookings.filter((b) => {
+            if (b.status === 'cancelled') return false;
+            const end = new Date(b.end_at);
+            return end >= now;
+        });
+    }, [bookings, now]);
+
+    const pastBookings: Booking[] = useMemo(() => {
+        if (!bookings) return [];
+        return bookings.filter((b) => {
+            const end = new Date(b.end_at);
+            return end < now || b.status === 'cancelled';
+        });
+    }, [bookings, now]);
+
+    if (isLoading && !bookings) {
         return (
-            <View style={styles.container}>
+            <View style={styles.container} testID="cabinet-screen">
                 <Text style={styles.loading}>Загрузка...</Text>
             </View>
         );
@@ -183,6 +201,7 @@ export default function CabinetScreen() {
     return (
         <ScrollView
             style={styles.container}
+            testID="cabinet-screen"
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
             <View style={styles.header}>
@@ -197,6 +216,39 @@ export default function CabinetScreen() {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Мои записи</Text>
 
+                <View style={styles.tabsContainer}>
+                    <TouchableOpacity
+                        style={[styles.tabButton, !isOfflineData && styles.tabButtonActive]}
+                        onPress={() => {
+                            setIsOfflineData(false);
+                        }}
+                    >
+                        <Text
+                            style={[
+                                styles.tabButtonText,
+                                !isOfflineData && styles.tabButtonTextActive,
+                            ]}
+                        >
+                            Предстоящие
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tabButton, isOfflineData && styles.tabButtonActive]}
+                        onPress={() => {
+                            setIsOfflineData(true);
+                        }}
+                    >
+                        <Text
+                            style={[
+                                styles.tabButtonText,
+                                isOfflineData && styles.tabButtonTextActive,
+                            ]}
+                        >
+                            История
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
                 {isOfflineData && (
                     <View style={styles.offlineBanner}>
                         <Text style={styles.offlineBannerText}>
@@ -206,9 +258,9 @@ export default function CabinetScreen() {
                     </View>
                 )}
 
-                {bookings && bookings.length > 0 ? (
+                {!isOfflineData && upcomingBookings.length > 0 ? (
                     <View style={styles.bookingsList}>
-                        {bookings.map((booking) => (
+                        {upcomingBookings.map((booking) => (
                             <TouchableOpacity
                                 key={booking.id}
                                 onPress={() => handleBookingPress(booking.id)}
@@ -261,10 +313,76 @@ export default function CabinetScreen() {
                             </TouchableOpacity>
                         ))}
                     </View>
-                ) : (
+                ) : !isOfflineData && (
                     <View style={styles.empty}>
                         <Text style={styles.emptyText}>У вас пока нет записей</Text>
                         <Text style={styles.emptyHint}>Запишитесь на услугу, чтобы увидеть её здесь</Text>
+                    </View>
+                )}
+
+                {isOfflineData && pastBookings.length > 0 && (
+                    <View style={styles.bookingsList}>
+                        {pastBookings.map((booking) => (
+                            <TouchableOpacity
+                                key={booking.id}
+                                onPress={() => handleBookingPress(booking.id)}
+                            >
+                                <Card style={styles.bookingCard}>
+                                    <View style={styles.bookingHeader}>
+                                        <Text style={styles.bookingService}>
+                                            {booking.service?.name_ru || 'Услуга'}
+                                        </Text>
+                                        <View
+                                            style={[
+                                                styles.statusBadge,
+                                                { backgroundColor: getStatusColor(booking.status) },
+                                            ]}
+                                        >
+                                            <Text style={styles.statusText}>
+                                                {getStatusText(booking.status)}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    {booking.business && (
+                                        <Text style={styles.bookingBusiness}>
+                                            {booking.business.name}
+                                        </Text>
+                                    )}
+
+                                    {booking.staff && (
+                                        <Text style={styles.bookingStaff}>
+                                            Мастер: {booking.staff.full_name}
+                                        </Text>
+                                    )}
+
+                                    {booking.branch && (
+                                        <Text style={styles.bookingBranch}>
+                                            {booking.branch.name}
+                                            {booking.branch.address && ` • ${booking.branch.address}`}
+                                        </Text>
+                                    )}
+
+                                    <View style={styles.bookingTime}>
+                                        <Text style={styles.bookingDate}>
+                                            {formatDate(booking.start_at)}
+                                        </Text>
+                                        <Text style={styles.bookingTimeRange}>
+                                            {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
+                                        </Text>
+                                    </View>
+                                </Card>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+
+                {isOfflineData && pastBookings.length === 0 && (
+                    <View style={styles.empty}>
+                        <Text style={styles.emptyText}>У вас пока нет прошедших записей</Text>
+                        <Text style={styles.emptyHint}>
+                            Здесь появятся завершённые записи после первой синхронизации
+                        </Text>
                     </View>
                 )}
             </View>
@@ -309,6 +427,36 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#111827',
         marginBottom: 20,
+    },
+    tabsContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#f3f4f6',
+        borderRadius: 999,
+        padding: 4,
+        marginBottom: 12,
+    },
+    tabButton: {
+        flex: 1,
+        paddingVertical: 8,
+        borderRadius: 999,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabButtonActive: {
+        backgroundColor: '#ffffff',
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    tabButtonText: {
+        fontSize: 14,
+        color: '#6b7280',
+        fontWeight: '500',
+    },
+    tabButtonTextActive: {
+        color: '#4f46e5',
+        fontWeight: '600',
     },
     offlineBanner: {
         marginBottom: 16,

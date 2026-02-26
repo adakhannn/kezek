@@ -108,8 +108,8 @@ export const bookingsEn = {
     'bookings.status.noShowShort': 'did not attend',
     'bookings.status.paid': 'completed',
     'bookings.subtitle': 'Booking management',
-    'bookings.tabs.calendar': 'Calendar',
-    'bookings.tabs.desk': 'Desk',
-    'bookings.tabs.list': 'List',
+    'bookings.tabs.calendar': 'Calendar (today)',
+    'bookings.tabs.desk': 'Today (desk)',
+    'bookings.tabs.list': 'History & search',
     'bookings.title': 'Bookings',
 } as const;

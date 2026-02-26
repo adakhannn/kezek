@@ -163,6 +163,43 @@ export default function BookingCard({
         cancelled: t('cabinet.bookings.card.status.cancelled', 'Отменена'),
     };
 
+    const statusOrder: Record<typeof status, number> = {
+        hold: 1,
+        confirmed: 2,
+        paid: 3,
+        cancelled: 3,
+    };
+
+    const timelineSteps: Array<{
+        key: 'created' | 'confirmed' | 'completed' | 'promo';
+        label: string;
+        done: boolean;
+    }> = [
+        {
+            key: 'created',
+            label: t('cabinet.bookings.timeline.created', 'Создано'),
+            done: true,
+        },
+        {
+            key: 'confirmed',
+            label: t('cabinet.bookings.timeline.confirmed', 'Подтверждено'),
+            done: statusOrder[status] >= 2,
+        },
+        {
+            key: 'completed',
+            label:
+                status === 'cancelled'
+                    ? t('cabinet.bookings.timeline.cancelled', 'Отменено')
+                    : t('cabinet.bookings.timeline.completed', 'Завершено'),
+            done: statusOrder[status] >= 3,
+        },
+        {
+            key: 'promo',
+            label: t('cabinet.bookings.timeline.promo', 'Промо применено'),
+            done: !!(promotionApplied && status === 'paid'),
+        },
+    ];
+
     return (
         <div className="bg-white dark:bg-gray-900 rounded-xl p-5 sm:p-6 shadow-md border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all duration-200">
             {/* Заголовок карточки */}
@@ -199,6 +236,38 @@ export default function BookingCard({
                         </span>
                     </div>
                 </div>
+            </div>
+
+            {/* Таймлайн статусов */}
+            <div className="flex items-center gap-2 mb-3">
+                {timelineSteps.map((step, index) => (
+                    <div key={step.key} className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+                        <div
+                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                                step.done
+                                    ? 'bg-indigo-600 border-indigo-600 text-white'
+                                    : 'border-gray-300 dark:border-gray-600'
+                            }`}
+                        >
+                            {step.done ? (
+                                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 10l3 3 7-7"
+                                    />
+                                </svg>
+                            ) : (
+                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+                            )}
+                        </div>
+                        <span>{step.label}</span>
+                        {index < timelineSteps.length - 1 && (
+                            <span className="w-6 h-px bg-gray-200 dark:bg-gray-700 mx-1" />
+                        )}
+                    </div>
+                ))}
             </div>
 
             {/* Применённая акция */}

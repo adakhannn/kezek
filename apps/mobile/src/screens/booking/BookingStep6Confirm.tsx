@@ -9,6 +9,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { apiRequest } from '../../lib/api';
 import { useBooking } from '../../contexts/BookingContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { logError } from '../../lib/log';
 import { colors } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -24,6 +26,7 @@ export default function BookingStep6Confirm() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, reset } = useBooking();
     const { showToast } = useToast();
+    const { isOffline } = useNetworkStatus();
 
     const formatTimeSlot = (dateString: string) => {
         const date = new Date(dateString);
@@ -76,7 +79,20 @@ export default function BookingStep6Confirm() {
             }, 500);
         },
         onError: (error: Error) => {
-            showToast(error.message || 'Не удалось создать запись', 'error');
+            const isNetworkError = isOffline || /network request failed|failed to fetch|network/i.test(error.message);
+            logError('BookingStep6Confirm', 'Create booking failed', {
+                message: error.message,
+                isNetworkError,
+            });
+
+            if (isNetworkError) {
+                showToast(
+                    'Нет сети или ошибка сервера. Запись не создана, попробуйте ещё раз, когда соединение восстановится.',
+                    'error',
+                );
+            } else {
+                showToast(error.message || 'Не удалось создать запись', 'error');
+            }
         },
     });
 

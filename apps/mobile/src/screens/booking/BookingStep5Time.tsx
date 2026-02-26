@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
@@ -28,8 +30,10 @@ type TimeSlot = {
 export default function BookingStep5Time() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedSlot } = useBooking();
+    const { isOffline } = useNetworkStatus();
+    const [hasNetworkError, setHasNetworkError] = useState(false);
 
-    const { data: slots, isLoading } = useQuery<TimeSlot[]>({
+    const { data: slots, isLoading, refetch } = useQuery<TimeSlot[]>({
         queryKey: ['slots', bookingData.business?.id, bookingData.serviceId, bookingData.selectedDate, bookingData.staffId, bookingData.branchId],
         queryFn: async () => {
             if (!bookingData.business?.id || !bookingData.serviceId || !bookingData.selectedDate || !bookingData.staffId || !bookingData.branchId) {
@@ -59,7 +63,21 @@ export default function BookingStep5Time() {
 
             return filtered;
         },
-        enabled: !!bookingData.business?.id && !!bookingData.serviceId && !!bookingData.staffId && !!bookingData.branchId && !!bookingData.selectedDate,
+        enabled:
+            !!bookingData.business?.id &&
+            !!bookingData.serviceId &&
+            !!bookingData.staffId &&
+            !!bookingData.branchId &&
+            !!bookingData.selectedDate,
+        onError: (error: unknown) => {
+            const message = error instanceof Error ? error.message : String(error);
+            if (/network request failed|failed to fetch|network/i.test(message)) {
+                setHasNetworkError(true);
+            }
+        },
+        onSuccess: () => {
+            setHasNetworkError(false);
+        },
     });
 
     const formatTimeSlot = (dateString: string) => {
@@ -78,6 +96,8 @@ export default function BookingStep5Time() {
         }
     };
 
+    const showOfflineBanner = isOffline || hasNetworkError;
+
     return (
         <LinearGradient
             colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
@@ -92,7 +112,28 @@ export default function BookingStep5Time() {
                 </View>
 
             <View style={styles.section}>
-                {isLoading ? (
+                {showOfflineBanner && (
+                    <View style={styles.offlineBanner}>
+                        <Ionicons name="cloud-offline-outline" size={18} color={colors.text.secondary} />
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.offlineTitle}>Нет подключения к интернету</Text>
+                            <Text style={styles.offlineText}>
+                                Мы не можем загрузить свободное время. Проверьте сеть и нажмите кнопку обновления,
+                                когда соединение восстановится.
+                            </Text>
+                            <View style={styles.offlineActions}>
+                                <Button
+                                    title="Обновить"
+                                    onPress={() => refetch()}
+                                    variant="outline"
+                                    style={styles.offlineRetryButton}
+                                />
+                            </View>
+                        </View>
+                    </View>
+                )}
+
+                {isLoading && !slots ? (
                     <View style={styles.slotsLoadingContainer}>
                         <ActivityIndicator size="small" color="#6366f1" />
                         <Text style={styles.slotsLoadingText}>Загрузка доступного времени...</Text>
@@ -119,13 +160,13 @@ export default function BookingStep5Time() {
                             </TouchableOpacity>
                         ))}
                     </View>
-                ) : (
+                ) : !showOfflineBanner ? (
                     <View style={styles.noSlotsContainer}>
                         <Ionicons name="time-outline" size={48} color="#9ca3af" />
                         <Text style={styles.noSlotsText}>Нет доступного времени</Text>
                         <Text style={styles.noSlotsHint}>Попробуйте выбрать другую дату</Text>
                     </View>
-                )}
+                ) : null}
 
                 {slots && slots.length > 0 && (
                     <View style={styles.buttonContainer}>
@@ -176,6 +217,36 @@ const styles = StyleSheet.create({
     },
     section: {
         padding: 20,
+    },
+    offlineBanner: {
+        marginBottom: 16,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 12,
+        backgroundColor: colors.background.secondary,
+        borderWidth: 1,
+        borderColor: colors.border.light,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 10,
+    },
+    offlineTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.text.primary,
+        marginBottom: 2,
+    },
+    offlineText: {
+        fontSize: 12,
+        color: colors.text.secondary,
+    },
+    offlineActions: {
+        marginTop: 8,
+        flexDirection: 'row',
+        gap: 8,
+    },
+    offlineRetryButton: {
+        flex: 0,
     },
     slotsLoadingContainer: {
         padding: 40,
