@@ -18,6 +18,7 @@ export const dashboardKy = {
     'dashboard.nav.bookings': 'Брондоолор',
     'dashboard.nav.branches': 'Филиалдар',
     'dashboard.nav.finance': 'Финансы',
+    'dashboard.nav.analytics': 'Аналитика',
     'dashboard.nav.home': 'Башкы',
     'dashboard.nav.services': 'Кызматтар',
     'dashboard.nav.staff': 'Кызматкерлер',

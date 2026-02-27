@@ -23,6 +23,7 @@ export const dashboardRu = {
     'dashboard.nav.bookings': 'Брони',
     'dashboard.nav.branches': 'Филиалы',
     'dashboard.nav.finance': 'Финансы',
+    'dashboard.nav.analytics': 'Аналитика',
     'dashboard.nav.home': 'Главная',
     'dashboard.nav.services': 'Услуги',
     'dashboard.nav.staff': 'Сотрудники',

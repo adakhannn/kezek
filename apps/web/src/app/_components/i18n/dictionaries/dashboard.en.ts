@@ -23,6 +23,7 @@ export const dashboardEn = {
     'dashboard.nav.bookings': 'Bookings',
     'dashboard.nav.branches': 'Branches',
     'dashboard.nav.finance': 'Finance',
+    'dashboard.nav.analytics': 'Analytics',
     'dashboard.nav.home': 'Home',
     'dashboard.nav.services': 'Services',
     'dashboard.nav.staff': 'Staff',

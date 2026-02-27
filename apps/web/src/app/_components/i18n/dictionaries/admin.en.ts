@@ -97,6 +97,7 @@ export const adminEn = {
     'admin.nav.performance': 'Performance',
     'admin.nav.promotionsDebug': 'Promotions Debug',
     'admin.nav.analytics': 'Analytics',
+    'admin.nav.systemAnalytics': 'Platform analytics',
     'admin.nav.ratings': 'Ratings',
     'admin.nav.ratingsHealth': 'Ratings Health',
     'admin.nav.roles': 'Roles',

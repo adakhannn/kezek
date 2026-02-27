@@ -172,6 +172,20 @@ export function AdminNav() {
         ),
     },
     {
+        href: '/admin/analytics/system',
+        labelKey: 'admin.nav.systemAnalytics',
+        icon: (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h18v4H3V3zm3 8h12v4H6v-4zm4 8h4v4h-4v-4z"
+                />
+            </svg>
+        ),
+    },
+    {
         href: '/',
         labelKey: 'admin.nav.toSite',
         icon: (

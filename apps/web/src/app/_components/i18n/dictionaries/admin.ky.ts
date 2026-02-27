@@ -97,6 +97,7 @@ export const adminKy = {
     'admin.nav.performance': 'Өндүрүмдүүлүк',
     'admin.nav.promotionsDebug': 'Промо дебаг',
     'admin.nav.analytics': 'Аналитика',
+    'admin.nav.systemAnalytics': 'Платформа аналитикасы',
     'admin.nav.ratings': 'Рейтингдер',
     'admin.nav.ratingsHealth': 'Рейтингдин саламаттыгы',
     'admin.nav.roles': 'Ролдор',
