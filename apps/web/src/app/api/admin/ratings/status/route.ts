@@ -57,15 +57,15 @@ export async function GET(req: Request) {
             admin.from('biz_day_metrics').select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle(),
         ]);
 
-        // Количество записей без выставленного rating_score
+        // Количество записей без выставленного rating_score (только IS NULL; 0 — валидный рейтинг)
         const [
             { count: staffNoRating },
             { count: branchesNoRating },
             { count: bizNoRating },
         ] = await Promise.all([
-            admin.from('staff').select('id', { count: 'exact', head: true }).or('rating_score.is.null,rating_score.eq.0'),
-            admin.from('branches').select('id', { count: 'exact', head: true }).or('rating_score.is.null,rating_score.eq.0'),
-            admin.from('businesses').select('id', { count: 'exact', head: true }).or('rating_score.is.null,rating_score.eq.0'),
+            admin.from('staff').select('id', { count: 'exact', head: true }).is('rating_score', null),
+            admin.from('branches').select('id', { count: 'exact', head: true }).is('rating_score', null),
+            admin.from('businesses').select('id', { count: 'exact', head: true }).is('rating_score', null),
         ]);
 
         return createSuccessResponse({

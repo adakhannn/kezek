@@ -191,11 +191,11 @@ begin
     perform public.initialize_all_ratings(30);
 
     select exists (
-        select 1 from public.staff where id = v_staff_id and rating_score is not null and rating_score > 0
+        select 1 from public.staff where id = v_staff_id and rating_score is not null
     ) into v_has_rating;
 
     if not v_has_rating then
-        raise exception '[TEST 3] После initialize_all_ratings у тестового сотрудника должен появиться rating_score > 0';
+        raise exception '[TEST 3] После initialize_all_ratings у тестового сотрудника должен появиться rating_score (не NULL)';
     end if;
 
     -- 3.3. проверяем, что дневные метрики могут быть посчитаны за конкретную дату

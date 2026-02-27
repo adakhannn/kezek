@@ -11,12 +11,19 @@ const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+const DAYS_BACK_MIN = 1;
+const DAYS_BACK_MAX = 365;
+
 type RatingConfigBody = {
     staff_reviews_weight?: number;
     staff_productivity_weight?: number;
     staff_loyalty_weight?: number;
     staff_discipline_weight?: number;
     window_days?: number;
+    /** Если true, после сохранения конфига запускается пересчёт рейтингов за последние N дней (см. recalculate_days_back). */
+    recalculate_history?: boolean;
+    /** Количество дней для пересчёта (1–365). Учитывается только при recalculate_history: true. */
+    recalculate_days_back?: number;
 };
 
 /**
@@ -106,7 +113,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: 'FORBIDDEN' }, { status: 403 });
         }
 
-        const body = (await req.json()) as RatingConfigBody;
+        const body = (await req.json().catch(() => ({}))) as RatingConfigBody;
 
         // Валидация весов (сумма должна быть близка к 100)
         const reviewsWeight = Number(body.staff_reviews_weight ?? 35);
@@ -157,9 +164,25 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: insertError.message }, { status: 500 });
         }
 
+        let recalcTriggered = false;
+        let recalcError: string | null = null;
+
+        if (body.recalculate_history === true && typeof body.recalculate_days_back === 'number') {
+            const daysBack = Math.floor(body.recalculate_days_back);
+            if (daysBack >= DAYS_BACK_MIN && daysBack <= DAYS_BACK_MAX) {
+                const { error: recalcErr } = await admin.rpc('initialize_all_ratings', {
+                    p_days_back: daysBack,
+                });
+                recalcTriggered = !recalcErr;
+                if (recalcErr) recalcError = recalcErr.message;
+            }
+        }
+
         return NextResponse.json({
             ok: true,
             config: newConfig,
+            recalculate_triggered: recalcTriggered,
+            ...(recalcError != null && { recalculate_error: recalcError }),
         });
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';

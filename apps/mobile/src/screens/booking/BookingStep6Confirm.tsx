@@ -125,9 +125,7 @@ export default function BookingStep6Confirm() {
                 <View style={styles.header}>
                     <View style={styles.headerRow}>
                         <Text style={styles.title}>{bookingData.business?.name}</Text>
-                        {bookingData.business?.rating_score !== null && bookingData.business?.rating_score !== undefined && (
-                            <RatingBadge rating={bookingData.business.rating_score} />
-                        )}
+                        <RatingBadge rating={bookingData.business?.rating_score ?? null} />
                     </View>
                 </View>
 

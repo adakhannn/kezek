@@ -108,9 +108,7 @@ export default function BookingStep1Branch() {
                     <View style={styles.header}>
                         <View style={styles.headerRow}>
                             <Text style={styles.title}>{businessData.business.name}</Text>
-                            {businessData.business.rating_score !== null && businessData.business.rating_score !== undefined && (
-                                <RatingBadge rating={businessData.business.rating_score} />
-                            )}
+                            <RatingBadge rating={businessData.business.rating_score ?? null} />
                         </View>
                     </View>
 
@@ -154,18 +152,14 @@ export default function BookingStep1Branch() {
                                         >
                                             <View style={styles.chipContent}>
                                                 <Text style={styles.chipTextSelected}>{branch.name}</Text>
-                                                {branch.rating_score !== null && branch.rating_score !== undefined && (
-                                                    <RatingBadge rating={branch.rating_score} size="small" />
-                                                )}
+                                                <RatingBadge rating={branch.rating_score ?? null} size="small" />
                                             </View>
                                         </LinearGradient>
                                     ) : (
                                         <View style={styles.chip}>
                                             <View style={styles.chipContent}>
                                                 <Text style={styles.chipText}>{branch.name}</Text>
-                                                {branch.rating_score !== null && branch.rating_score !== undefined && (
-                                                    <RatingBadge rating={branch.rating_score} size="small" />
-                                                )}
+                                                <RatingBadge rating={branch.rating_score ?? null} size="small" />
                                             </View>
                                         </View>
                                     )}

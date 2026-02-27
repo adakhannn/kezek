@@ -123,18 +123,14 @@ export default function BookingStep3Staff() {
                                         >
                                             <View style={styles.chipContent}>
                                                 <Text style={styles.chipTextSelected}>{staff.full_name}</Text>
-                                                {staff.rating_score !== null && staff.rating_score !== undefined && (
-                                                    <RatingBadge rating={staff.rating_score} size="small" />
-                                                )}
+                                                <RatingBadge rating={staff.rating_score ?? null} size="small" />
                                             </View>
                                         </LinearGradient>
                                     ) : (
                                         <View style={styles.chip}>
                                             <View style={styles.chipContent}>
                                                 <Text style={styles.chipText}>{staff.full_name}</Text>
-                                                {staff.rating_score !== null && staff.rating_score !== undefined && (
-                                                    <RatingBadge rating={staff.rating_score} size="small" />
-                                                )}
+                                                <RatingBadge rating={staff.rating_score ?? null} size="small" />
                                             </View>
                                         </View>
                                     )}

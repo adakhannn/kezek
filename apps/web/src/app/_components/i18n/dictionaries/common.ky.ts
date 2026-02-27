@@ -6,5 +6,7 @@ export const commonKy = {
     'common.noData': 'маалымат жок',
     'common.ok': 'ОК',
     'common.problem': 'Көйгөй',
+    'common.rating.lowRatingHint': 'төмөн рейтинг',
+    'common.rating.noRating': 'Рейтинг жок',
     'common.warning': 'Эскертүү',
 } as const;

@@ -161,17 +161,24 @@ export default function EditBranchPageClient({
                         </div>
                         <div className="mt-2 flex items-center gap-3 sm:mt-0 sm:flex-col sm:items-end sm:justify-center">
                             {effectiveRatingScore !== null ? (
-                                <div className="inline-flex items-baseline gap-1 rounded-xl bg-white/80 px-3 py-2 text-amber-900 shadow-sm dark:bg-amber-900/50 dark:text-amber-50">
-                                    <span className="text-xs font-medium uppercase tracking-wide">
-                                        {t('branch.rating.scoreLabel', 'Текущий балл')}
-                                    </span>
-                                    <span className="text-xl font-semibold">{effectiveRatingScore.toFixed(1)}</span>
-                                    <span className="text-[10px] opacity-70">/ 100</span>
+                                <div className="inline-flex flex-col items-end gap-0.5">
+                                    <div className="inline-flex items-baseline gap-1 rounded-xl bg-white/80 px-3 py-2 text-amber-900 shadow-sm dark:bg-amber-900/50 dark:text-amber-50">
+                                        <span className="text-xs font-medium uppercase tracking-wide">
+                                            {t('branch.rating.scoreLabel', 'Текущий балл')}
+                                        </span>
+                                        <span className="text-xl font-semibold">{effectiveRatingScore.toFixed(1)}</span>
+                                        <span className="text-[10px] opacity-70">/ 100</span>
+                                    </div>
+                                    {effectiveRatingScore <= 10 && (
+                                        <span className="text-[10px] text-amber-700 dark:text-amber-300">
+                                            {t('common.rating.lowRatingHint', 'низкий рейтинг')}
+                                        </span>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="inline-flex items-baseline gap-1 rounded-xl bg-white/60 px-3 py-2 text-amber-900 shadow-sm dark:bg-amber-900/40 dark:text-amber-50">
                                     <span className="text-xs font-medium uppercase tracking-wide">
-                                        {t('branch.rating.scoreLabelPending', 'Рейтинг считается')}
+                                        {t('common.rating.noRating', 'Нет рейтинга')}
                                     </span>
                                 </div>
                             )}

@@ -428,9 +428,7 @@ export default function HomeScreen() {
                                 <View style={styles.businessHeader}>
                                     <View style={styles.businessNameRow}>
                                         <Text style={styles.businessName}>{business.name}</Text>
-                                        {business.rating_score !== null && business.rating_score !== undefined && (
-                                            <RatingBadge rating={business.rating_score} size="small" />
-                                        )}
+                                        <RatingBadge rating={business.rating_score ?? null} size="small" />
                                     </View>
                                 </View>
 

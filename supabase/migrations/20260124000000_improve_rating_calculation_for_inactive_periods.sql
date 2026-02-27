@@ -47,11 +47,9 @@ begin
         from public.staff
         where id = p_staff_id;
         
-        if v_last_rating is not null and v_last_rating > 0 then
-            -- Используем последний известный рейтинг (не снижаем его резко)
+        if v_last_rating is not null then
             v_rating := v_last_rating;
         else
-            -- Если вообще нет истории, используем дефолтный рейтинг
             v_rating := v_default_rating;
         end if;
     end if;
@@ -114,19 +112,16 @@ begin
         from public.branches
         where id = p_branch_id;
         
-        if v_last_rating is not null and v_last_rating > 0 then
-            -- Используем последний известный рейтинг
+        if v_last_rating is not null then
             v_rating := v_last_rating;
         else
-            -- Если вообще нет истории, рассчитываем как средний рейтинг сотрудников или дефолтный
             select coalesce(avg(s.rating_score), v_default_rating) into v_rating
             from public.staff s
             where s.branch_id = p_branch_id 
               and s.is_active = true 
-              and s.rating_score is not null 
-              and s.rating_score > 0;
+              and s.rating_score is not null;
             
-            if v_rating is null or v_rating = 0 then
+            if v_rating is null then
                 v_rating := v_default_rating;
             end if;
         end if;
@@ -190,19 +185,16 @@ begin
         from public.businesses
         where id = p_biz_id;
         
-        if v_last_rating is not null and v_last_rating > 0 then
-            -- Используем последний известный рейтинг
+        if v_last_rating is not null then
             v_rating := v_last_rating;
         else
-            -- Если вообще нет истории, рассчитываем как средний рейтинг филиалов или дефолтный
             select coalesce(avg(br.rating_score), v_default_rating) into v_rating
             from public.branches br
             where br.biz_id = p_biz_id 
               and br.is_active = true 
-              and br.rating_score is not null 
-              and br.rating_score > 0;
+              and br.rating_score is not null;
             
-            if v_rating is null or v_rating = 0 then
+            if v_rating is null then
                 v_rating := v_default_rating;
             end if;
         end if;

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 type RatingConfig = {
     id: string;
     staff_reviews_weight: number;
@@ -19,10 +21,17 @@ type RatingConfigClientProps = {
     initialConfig: RatingConfig;
 };
 
+const RECALC_DAYS_OPTIONS = [7, 14, 30, 60, 90];
+
 export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [showRecalcPrompt, setShowRecalcPrompt] = useState(false);
+    const [recalcDays, setRecalcDays] = useState(30);
+    const [recalcLoading, setRecalcLoading] = useState(false);
+    const [recalcError, setRecalcError] = useState<string | null>(null);
 
     const [reviewsWeight, setReviewsWeight] = useState(initialConfig?.staff_reviews_weight ?? 35);
     const [productivityWeight, setProductivityWeight] = useState(initialConfig?.staff_productivity_weight ?? 25);
@@ -59,14 +68,48 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
             }
 
             setSuccess(true);
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            const configChanged =
+                reviewsWeight !== (initialConfig?.staff_reviews_weight ?? 35) ||
+                productivityWeight !== (initialConfig?.staff_productivity_weight ?? 25) ||
+                loyaltyWeight !== (initialConfig?.staff_loyalty_weight ?? 20) ||
+                disciplineWeight !== (initialConfig?.staff_discipline_weight ?? 20) ||
+                windowDays !== (initialConfig?.window_days ?? 30);
+            if (configChanged) {
+                setShowRecalcPrompt(true);
+            } else {
+                setTimeout(() => window.location.reload(), 1500);
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleRecalc = async () => {
+        setRecalcError(null);
+        setRecalcLoading(true);
+        try {
+            const res = await fetch('/api/admin/initialize-ratings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ days_back: recalcDays }),
+            });
+            const data = await res.json();
+            if (!data.ok) {
+                throw new Error(data.error || data.message || 'Ошибка пересчёта');
+            }
+            setShowRecalcPrompt(false);
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (err) {
+            setRecalcError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+        } finally {
+            setRecalcLoading(false);
+        }
+    };
+
+    const handleSkipRecalc = () => {
+        window.location.reload();
     };
 
     return (
@@ -220,8 +263,56 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                 {success && (
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                         <p className="text-sm text-green-700 dark:text-green-300">
-                            Настройки успешно сохранены! Страница обновится через несколько секунд...
+                            {showRecalcPrompt
+                                ? t('admin.ratingConfig.saved', 'Настройки успешно сохранены.')
+                                : t('admin.ratingConfig.savedReload', 'Настройки успешно сохранены! Страница обновится через несколько секунд...')}
                         </p>
+                    </div>
+                )}
+
+                {success && showRecalcPrompt && (
+                    <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-3">
+                            {t('admin.ratingConfig.recalcPrompt', 'Вы изменили веса. Хотите пересчитать историю за последние N дней?')}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <label className="text-sm text-gray-700 dark:text-gray-300">
+                                {t('admin.ratingConfig.recalcDaysLabel', 'Дней')}:
+                            </label>
+                            <select
+                                value={recalcDays}
+                                onChange={(e) => setRecalcDays(Number(e.target.value))}
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                                disabled={recalcLoading}
+                            >
+                                {RECALC_DAYS_OPTIONS.map((d) => (
+                                    <option key={d} value={d}>
+                                        {d}
+                                    </option>
+                                ))}
+                            </select>
+                            <button
+                                type="button"
+                                onClick={handleRecalc}
+                                disabled={recalcLoading}
+                                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                            >
+                                {recalcLoading
+                                    ? t('admin.ratingConfig.recalculating', 'Пересчёт…')
+                                    : t('admin.ratingConfig.recalculate', 'Пересчитать')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSkipRecalc}
+                                disabled={recalcLoading}
+                                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                            >
+                                {t('admin.ratingConfig.skipRecalc', 'Пропустить')}
+                            </button>
+                        </div>
+                        {recalcError && (
+                            <p className="mt-2 text-sm text-red-600 dark:text-red-400">{recalcError}</p>
+                        )}
                     </div>
                 )}
 

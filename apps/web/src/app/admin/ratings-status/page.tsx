@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getT } from '@/app/_components/i18n/server';
@@ -180,6 +181,14 @@ export default async function RatingsStatusPage() {
             <section className="rounded-2xl border border-gray-200 bg-white p-4 text-xs text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
                 <p>
                     {t('admin.ratingsStatus.info', 'Если какая‑то из карточек подсвечена красным и даты давно не обновлялись, проверьте cron‑задачу пересчёта рейтингов и логи API')} <code>/api/cron/recalculate-ratings</code>.
+                </p>
+                <p className="mt-2">
+                    <Link
+                        href="/admin/ratings-debug"
+                        className="font-medium text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                        {t('admin.ratingsStatus.debugLink', 'Отладка рейтингов (debug)')}
+                    </Link>
                 </p>
             </section>
         </main>

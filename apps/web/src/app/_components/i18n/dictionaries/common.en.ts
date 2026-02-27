@@ -6,5 +6,7 @@ export const commonEn = {
     'common.noData': 'no data',
     'common.ok': 'OK',
     'common.problem': 'Problem',
+    'common.rating.lowRatingHint': 'low rating',
+    'common.rating.noRating': 'No rating',
     'common.warning': 'Warning',
 } as const;

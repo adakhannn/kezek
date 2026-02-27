@@ -142,6 +142,14 @@ begin
     from public.staff_shifts
     where staff_id = p_staff_id
       and shift_date = p_metric_date;
+
+    -- Если за день не было ни смен, ни клиентов, ни отзывов — считаем день неактивным
+    -- и не создаем/не обновляем запись в staff_day_metrics
+    if v_total_shifts = 0
+       and v_clients_count = 0
+       and v_reviews_count = 0 then
+        return;
+    end if;
     
     -- Штраф за опоздания: если есть опоздания, снижаем рейтинг
     -- 0 опозданий = 100, каждые 30 минут опоздания = -10 баллов, максимум -50
@@ -266,6 +274,7 @@ declare
     v_avg_rating numeric;
     v_total_reviews integer;
     v_day_score numeric;
+    v_metrics_count integer;
 begin
     -- Получаем biz_id
     select biz_id into v_biz_id
@@ -282,11 +291,17 @@ begin
         coalesce(sum(sdm.clients_count), 0)::integer,
         coalesce(sum(sdm.revenue), 0),
         coalesce(avg(sdm.avg_rating), 0),
-        coalesce(sum(sdm.reviews_count), 0)::integer
-    into v_avg_staff_score, v_total_clients, v_total_revenue, v_avg_rating, v_total_reviews
+        coalesce(sum(sdm.reviews_count), 0)::integer,
+        count(*)::integer
+    into v_avg_staff_score, v_total_clients, v_total_revenue, v_avg_rating, v_total_reviews, v_metrics_count
     from public.staff_day_metrics sdm
     where sdm.branch_id = p_branch_id
       and sdm.metric_date = p_metric_date;
+
+    -- Если за день нет ни одной метрики сотрудника, не создаем запись для филиала
+    if v_metrics_count = 0 then
+        return;
+    end if;
     
     -- Рейтинг филиала = средний рейтинг сотрудников (можно добавить дополнительные факторы)
     v_day_score := v_avg_staff_score;
@@ -376,6 +391,7 @@ declare
     v_avg_rating numeric;
     v_total_reviews integer;
     v_day_score numeric;
+    v_metrics_count integer;
 begin
     -- Агрегируем метрики от филиалов бизнеса за день
     select 
@@ -383,11 +399,17 @@ begin
         coalesce(sum(bdm.total_clients_count), 0)::integer,
         coalesce(sum(bdm.total_revenue), 0),
         coalesce(avg(bdm.avg_rating), 0),
-        coalesce(sum(bdm.total_reviews_count), 0)::integer
-    into v_avg_branch_score, v_total_clients, v_total_revenue, v_avg_rating, v_total_reviews
+        coalesce(sum(bdm.total_reviews_count), 0)::integer,
+        count(*)::integer
+    into v_avg_branch_score, v_total_clients, v_total_revenue, v_avg_rating, v_total_reviews, v_metrics_count
     from public.branch_day_metrics bdm
     where bdm.biz_id = p_biz_id
       and bdm.metric_date = p_metric_date;
+
+    -- Если за день нет ни одной метрики филиала, не создаем запись для бизнеса
+    if v_metrics_count = 0 then
+        return;
+    end if;
     
     -- Рейтинг бизнеса = средний рейтинг филиалов
     v_day_score := v_avg_branch_score;

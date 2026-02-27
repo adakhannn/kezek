@@ -18,8 +18,8 @@ begin
     while v_current_date <= p_end_date loop
         raise notice 'Processing date: %', v_current_date;
         
-        -- 1. Пересчитываем ежедневные метрики для всех сотрудников за эту дату
-        for r_staff in select id, biz_id, branch_id from public.staff loop
+        -- 1. Пересчитываем ежедневные метрики только для активных сотрудников
+        for r_staff in select id, biz_id, branch_id from public.staff where is_active = true loop
             begin
                 perform public.calculate_staff_day_metrics(r_staff.id, v_current_date);
             exception when others then
@@ -27,8 +27,8 @@ begin
             end;
         end loop;
 
-        -- 2. Пересчитываем ежедневные метрики для всех филиалов за эту дату
-        for r_branch in select id, biz_id from public.branches loop
+        -- 2. Пересчитываем ежедневные метрики только для активных филиалов
+        for r_branch in select id, biz_id from public.branches where is_active = true loop
             begin
                 perform public.calculate_branch_day_metrics(r_branch.id, v_current_date);
             exception when others then
@@ -36,8 +36,8 @@ begin
             end;
         end loop;
 
-        -- 3. Пересчитываем ежедневные метрики для всех бизнесов за эту дату
-        for r_biz in select id from public.businesses loop
+        -- 3. Пересчитываем ежедневные метрики только для одобренных бизнесов
+        for r_biz in select id from public.businesses where is_approved = true loop
             begin
                 perform public.calculate_biz_day_metrics(r_biz.id, v_current_date);
             exception when others then
@@ -95,53 +95,50 @@ begin
     
     raise notice 'Updating aggregated ratings...';
     
-    -- 4. Обновляем агрегированные рейтинги в таблицах staff, branches, businesses
-    for r_staff in select id from public.staff loop
+    -- 4. Обновляем агрегированные рейтинги только для активных staff, branches и одобренных businesses
+    for r_staff in select id from public.staff where is_active = true loop
         begin
             v_staff_rating := public.calculate_staff_rating(r_staff.id);
-            -- Если рейтинг NULL или 0, устанавливаем начальный рейтинг
-            if v_staff_rating is null or v_staff_rating = 0 then
+            -- Если рейтинг не рассчитан (NULL), устанавливаем стартовый
+            if v_staff_rating is null then
                 v_staff_rating := v_default_rating;
             end if;
             update public.staff set rating_score = v_staff_rating where id = r_staff.id;
         exception when others then
-            raise notice 'Error updating staff rating for staff_id=%: %', r_staff.id, SQLERRM;
-            -- Устанавливаем минимальный рейтинг при ошибке
-            update public.staff set rating_score = v_default_rating where id = r_staff.id and (rating_score is null or rating_score = 0);
+            raise notice 'Error calculating staff rating for staff_id=%: %', r_staff.id, SQLERRM;
+            update public.staff set rating_score = v_default_rating where id = r_staff.id and rating_score is null;
         end;
     end loop;
 
-    for r_branch in select id from public.branches loop
+    for r_branch in select id from public.branches where is_active = true loop
         begin
             v_branch_rating := public.calculate_branch_rating(r_branch.id);
-            -- Если рейтинг NULL или 0, рассчитываем как средний рейтинг сотрудников
-            if v_branch_rating is null or v_branch_rating = 0 then
+            -- Если рейтинг не рассчитан (NULL), берём средний по сотрудникам
+            if v_branch_rating is null then
                 select coalesce(avg(rating_score), v_default_rating) into v_branch_rating
                 from public.staff
-                where branch_id = r_branch.id and is_active = true;
+                where branch_id = r_branch.id and is_active = true and rating_score is not null;
             end if;
             update public.branches set rating_score = v_branch_rating where id = r_branch.id;
         exception when others then
-            raise notice 'Error updating branch rating for branch_id=%: %', r_branch.id, SQLERRM;
-            -- Устанавливаем минимальный рейтинг при ошибке
-            update public.branches set rating_score = v_default_rating where id = r_branch.id and (rating_score is null or rating_score = 0);
+            raise notice 'Error calculating branch rating for branch_id=%: %', r_branch.id, SQLERRM;
+            update public.branches set rating_score = v_default_rating where id = r_branch.id and rating_score is null;
         end;
     end loop;
 
-    for r_biz in select id from public.businesses loop
+    for r_biz in select id from public.businesses where is_approved = true loop
         begin
             v_biz_rating := public.calculate_biz_rating(r_biz.id);
-            -- Если рейтинг NULL или 0, рассчитываем как средний рейтинг филиалов
-            if v_biz_rating is null or v_biz_rating = 0 then
+            -- Если рейтинг не рассчитан (NULL), берём средний по филиалам
+            if v_biz_rating is null then
                 select coalesce(avg(rating_score), v_default_rating) into v_biz_rating
                 from public.branches
-                where biz_id = r_biz.id and is_active = true;
+                where biz_id = r_biz.id and is_active = true and rating_score is not null;
             end if;
             update public.businesses set rating_score = v_biz_rating where id = r_biz.id;
         exception when others then
-            raise notice 'Error updating biz rating for biz_id=%: %', r_biz.id, SQLERRM;
-            -- Устанавливаем минимальный рейтинг при ошибке
-            update public.businesses set rating_score = v_default_rating where id = r_biz.id and (rating_score is null or rating_score = 0);
+            raise notice 'Error calculating biz rating for biz_id=%: %', r_biz.id, SQLERRM;
+            update public.businesses set rating_score = v_default_rating where id = r_biz.id and rating_score is null;
         end;
     end loop;
     
@@ -151,31 +148,81 @@ $$;
 
 comment on function public.initialize_all_ratings(integer) is 'Инициализирует рейтинги для всех бизнесов, филиалов и сотрудников. Пересчитывает метрики за последние N дней и устанавливает начальные рейтинги.';
 
--- Устанавливаем начальные рейтинги для всех существующих записей (если они NULL или 0)
--- Это обеспечит, что даже без исторических данных у всех будет базовый рейтинг
+-- Функция для очистки "пустых" дней и пересчета метрик за последние N дней
+create or replace function public.cleanup_rating_empty_days(p_days_back integer default 60)
+returns void
+language plpgsql
+as $$
+declare
+    v_start_date date;
+    v_end_date date;
+begin
+    -- Определяем диапазон дат (по умолчанию последние 60 дней, не включая сегодня)
+    v_end_date := timezone('Asia/Bishkek', now())::date - interval '1 day';
+    v_start_date := v_end_date - (p_days_back || ' days')::interval;
+
+    raise notice 'Cleaning empty rating days from % to %', v_start_date, v_end_date;
+
+    -- 1. Удаляем дневные метрики сотрудников для неактивных дней
+    delete from public.staff_day_metrics s
+    where s.metric_date >= v_start_date
+      and s.metric_date <= v_end_date
+      and coalesce(s.clients_count, 0) = 0
+      and coalesce(s.reviews_count, 0) = 0
+      and coalesce(s.total_shifts, 0) = 0;
+
+    -- 2. Удаляем дневные метрики филиалов, для которых нет ни одной метрики сотрудника в этот день
+    delete from public.branch_day_metrics bdm
+    where bdm.metric_date >= v_start_date
+      and bdm.metric_date <= v_end_date
+      and not exists (
+          select 1
+          from public.staff_day_metrics sdm
+          where sdm.branch_id = bdm.branch_id
+            and sdm.metric_date = bdm.metric_date
+      );
+
+    -- 3. Удаляем дневные метрики бизнесов, для которых нет ни одной метрики филиала в этот день
+    delete from public.biz_day_metrics bzm
+    where bzm.metric_date >= v_start_date
+      and bzm.metric_date <= v_end_date
+      and not exists (
+          select 1
+          from public.branch_day_metrics bdm
+          where bdm.biz_id = bzm.biz_id
+            and bdm.metric_date = bzm.metric_date
+      );
+
+    raise notice 'Recalculating metrics and ratings for cleaned date range';
+
+    -- 4. Пересчитываем метрики и агрегированные рейтинги для очищенного диапазона
+    perform public.recalculate_ratings_for_date_range(v_start_date, v_end_date);
+end;
+$$;
+
+comment on function public.cleanup_rating_empty_days(integer) is 'Удаляет исторические метрики для неактивных дней за последние N дней и пересчитывает рейтинги с учетом нового правила.';
+
+-- Устанавливаем начальные рейтинги для записей без рейтинга (только IS NULL; 0 — валидное значение)
 do $$
 declare
     v_default_rating numeric := 50.0;
 begin
-    -- Обновляем рейтинги сотрудников
     update public.staff
     set rating_score = v_default_rating
-    where rating_score is null or rating_score = 0;
-    
-    -- Обновляем рейтинги филиалов (если NULL, берем средний рейтинг сотрудников или default)
+    where rating_score is null;
+
     update public.branches b
     set rating_score = coalesce(
-        (select avg(s.rating_score) from public.staff s where s.branch_id = b.id and s.is_active = true and s.rating_score is not null and s.rating_score > 0),
+        (select avg(s.rating_score) from public.staff s where s.branch_id = b.id and s.is_active = true and s.rating_score is not null),
         v_default_rating
     )
-    where b.rating_score is null or b.rating_score = 0;
-    
-    -- Обновляем рейтинги бизнесов (если NULL, берем средний рейтинг филиалов или default)
+    where b.rating_score is null;
+
     update public.businesses biz
     set rating_score = coalesce(
-        (select avg(br.rating_score) from public.branches br where br.biz_id = biz.id and br.is_active = true and br.rating_score is not null and br.rating_score > 0),
+        (select avg(br.rating_score) from public.branches br where br.biz_id = biz.id and br.is_active = true and br.rating_score is not null),
         v_default_rating
     )
-    where biz.rating_score is null or biz.rating_score = 0;
+    where biz.rating_score is null;
 end $$;
 
