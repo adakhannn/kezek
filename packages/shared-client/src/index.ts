@@ -59,6 +59,24 @@ export type {
     ServiceInfo,
 } from './types';
 
+// Рейтинги
+export {
+    interpretRatingScore,
+    isRatingUninitialized,
+    isDefaultRating,
+    clampRating,
+    getRatingWindow,
+    isDateInRatingWindow,
+    isActiveStaffDay,
+} from './rating';
+export type {
+    RatingScoreRaw,
+    RatingScoreKind,
+    RatingSemantics,
+    RatingWindow,
+    StaffDayActivityLike,
+} from './rating';
+
 // API клиент
 export {
     createApiClient,
