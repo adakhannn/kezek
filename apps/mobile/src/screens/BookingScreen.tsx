@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../lib/supabase';
 import { useBooking } from '../contexts/BookingContext';
 import BookingStep1Branch from './booking/BookingStep1Branch';
+import { trackMobileEvent } from '../lib/analytics';
 
 type BookingRouteParams = {
     slug: string;
@@ -17,6 +18,16 @@ export default function BookingScreen() {
     const route = useRoute<BookingScreenRouteProp>();
     const { slug } = route.params || {};
     const { bookingData, setBusiness, setBranches, setServices, setStaff, setPromotions, setBranchId } = useBooking();
+
+    // Аналитика: старт потока бронирования
+    useEffect(() => {
+        if (bookingData.business?.id) {
+            trackMobileEvent({
+                eventType: 'booking_flow_start',
+                bizId: bookingData.business.id,
+            });
+        }
+    }, [bookingData.business?.id]);
 
     // Загружаем данные бизнеса при первом открытии
     const { data: businessData, isLoading } = useQuery({

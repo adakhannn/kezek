@@ -5,6 +5,7 @@ import { JSX } from 'react';
 import BusinessInfo from './BusinessInfo';
 
 import { getT, getServerLocale } from '@/app/_components/i18n/server';
+import { BusinessPageViewTracker } from '@/lib/analyticsTrackEvent';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { generateAlternates } from '@/lib/seo';
 
@@ -101,5 +102,10 @@ export default async function Page({
     const { slug } = await params;
     const data = await getData(slug);
     if (!data) return <main className="p-6">Бизнес не найден</main>;
-    return <BusinessInfo data={data} />;
+    return (
+        <main>
+            <BusinessPageViewTracker bizId={data.biz.id} />
+            <BusinessInfo data={data} />
+        </main>
+    );
 }

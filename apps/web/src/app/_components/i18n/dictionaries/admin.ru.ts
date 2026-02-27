@@ -96,7 +96,7 @@ export const adminRu = {
     'admin.nav.systemHealth': 'Здоровье системы',
     'admin.nav.performance': 'Производительность',
     'admin.nav.promotionsDebug': 'Отладка промо',
-    'admin.nav.funnelAnalytics': 'Аналитика воронки',
+    'admin.nav.analytics': 'Аналитика',
     'admin.nav.ratings': 'Рейтинги',
     'admin.nav.ratingsHealth': 'Здоровье рейтингов',
     'admin.nav.roles': 'Роли',

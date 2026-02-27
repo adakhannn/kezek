@@ -19,6 +19,7 @@ import { formatDate, formatTime, formatPhone } from '../utils/format';
 import { logError, logDebug } from '../lib/log';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import type { ClientBookingListItemDto, PublicBusinessDto } from '@shared-client/types';
+import { trackMobileEvent } from '../lib/analytics';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Home'>;
 
@@ -62,6 +63,11 @@ export default function HomeScreen() {
     const [hasNetworkError, setHasNetworkError] = useState(false);
 
     const { isOffline } = useNetworkStatus();
+
+    // Аналитика: home_view при первом открытии экрана за сессию
+    useEffect(() => {
+        trackMobileEvent({ eventType: 'home_view' });
+    }, []);
 
     const { data: user } = useQuery({
         queryKey: ['user'],

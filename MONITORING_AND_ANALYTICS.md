@@ -375,6 +375,137 @@ WHERE created_at < NOW() - INTERVAL '365 days';
 - Чувствительные данные (например, суммы) не логируются в открытом виде
 - IP адреса и User-Agent сохраняются для безопасности
 
+### Безопасность аналитических API для бизнеса
+
+Для раздела бизнес‑аналитики в админ‑dashboard используются следующие админ‑маршруты:
+
+- `/admin/api/analytics/overview`
+- `/admin/api/analytics/conversion-funnel`
+- `/admin/api/analytics/load`
+- `/admin/api/analytics/promotions`
+
+**Гарантии изоляции данных:**
+
+- Каждый из маршрутов использует `getBizContextForManagers()` для определения текущего бизнеса менеджера/админа.
+- Не допускается подмена `bizId` в query‑строке: если переданный `bizId` не совпадает с контекстным, возвращается 403.
+- Все запросы к агрегирующим таблицам (`business_daily_stats`, `business_hourly_load`, `analytics_events`, `bookings`) дополнительно фильтруются по `biz_id = effectiveBizId`, поэтому агрегаты по чужим бизнесам получить нельзя даже при прямых вызовах API.
+
+**Трекинг событий:**
+
+- Публичный endpoint `/admin/api/analytics/track`:
+  - принимает только строго валидированные события (`trackEventSchema`);
+  - для неавторизованных пользователей разрешает только безопасные публичные события (`home_view`, `business_page_view`, `booking_flow_start`, `booking_flow_step`);
+  - все записи попадают в таблицу `analytics_events`, доступ к которой ограничен на уровне RLS: читать и агрегировать события может только сервисная роль (через `getServiceClient`), что исключает утечки сырых событий клиентским ключом.
+
+Подробнее про бизнес‑аналитику и витрину см. в `BUSINESS_ANALYTICS_DASHBOARD_PLAN.md` (эпик G).
+
+### Тех. чек‑лист сверки метрик (G2.1)
+
+Ниже приведены примерные SQL‑запросы и сценарии для ручной сверки агрегатов аналитики.
+
+#### 1. Сверка количества бронирований в `business_daily_stats` с `bookings`
+
+Проверяем, что число успешных бронирований за день по бизнесу совпадает с агрегатом:
+
+```sql
+-- 1) Агрегаты по business_daily_stats
+SELECT
+  biz_id,
+  date,
+  bookings_confirmed_or_paid
+FROM business_daily_stats
+WHERE biz_id = 'BIZ_ID_HERE'
+  AND date BETWEEN '2025-01-01' AND '2025-01-07'
+ORDER BY date;
+
+-- 2) Фактические успешные брони за те же даты (confirmed/paid)
+SELECT
+  biz_id,
+  DATE(start_at AT TIME ZONE 'UTC') AS date_utc,
+  COUNT(*) AS successful_bookings
+FROM bookings
+WHERE biz_id = 'BIZ_ID_HERE'
+  AND status IN ('confirmed', 'paid')
+  AND start_at >= '2025-01-01T00:00:00Z'
+  AND start_at <  '2025-01-08T00:00:00Z'
+GROUP BY biz_id, date_utc
+ORDER BY date_utc;
+```
+
+#### 2. Сверка heatmap (`business_hourly_load`) с сырыми бронированиями
+
+Проверяем, что помесячная/посуточная загрузка по часам совпадает с развернутыми бронированиями:
+
+```sql
+-- 1) Агрегаты по business_hourly_load
+SELECT
+  biz_id,
+  branch_id,
+  date,
+  hour,
+  bookings_count,
+  promo_bookings_count
+FROM business_hourly_load
+WHERE biz_id = 'BIZ_ID_HERE'
+  AND branch_id = 'BRANCH_ID_HERE'
+  AND date = '2025-01-05'
+ORDER BY hour;
+
+-- 2) Фактические брони по часам (по start_at, UTC)
+SELECT
+  biz_id,
+  branch_id,
+  DATE(start_at AT TIME ZONE 'UTC') AS date_utc,
+  EXTRACT(HOUR FROM start_at AT TIME ZONE 'UTC')::int AS hour_utc,
+  COUNT(*) AS successful_bookings,
+  COUNT(*) FILTER (WHERE promotion_applied IS NOT NULL) AS promo_bookings
+FROM bookings
+WHERE biz_id = 'BIZ_ID_HERE'
+  AND branch_id = 'BRANCH_ID_HERE'
+  AND status IN ('confirmed', 'paid')
+  AND start_at >= '2025-01-05T00:00:00Z'
+  AND start_at <  '2025-01-06T00:00:00Z'
+GROUP BY biz_id, branch_id, date_utc, hour_utc
+ORDER BY hour_utc;
+```
+
+#### 3. Сверка промо‑метрик (`business_daily_stats` + `promotions` API) с `bookings.promotion_applied`
+
+Проверяем, что общее число промо‑бронирований и выручка с промо сходятся:
+
+```sql
+-- 1) Агрегаты по промо в business_daily_stats
+SELECT
+  biz_id,
+  date,
+  promo_bookings,
+  promo_revenue,
+  total_revenue
+FROM business_daily_stats
+WHERE biz_id = 'BIZ_ID_HERE'
+  AND date BETWEEN '2025-01-01' AND '2025-01-07'
+ORDER BY date;
+
+-- 2) Фактические промо‑брони и суммы по promotion_applied
+SELECT
+  biz_id,
+  DATE(start_at AT TIME ZONE 'UTC') AS date_utc,
+  COUNT(*) AS promo_bookings,
+  SUM( (promotion_applied->>'final_amount')::numeric ) AS promo_revenue,
+  SUM( COALESCE((promotion_applied->>'original_amount')::numeric,
+                 (promotion_applied->>'final_amount')::numeric, 0) ) AS total_revenue_estimate
+FROM bookings
+WHERE biz_id = 'BIZ_ID_HERE'
+  AND status IN ('confirmed', 'paid')
+  AND promotion_applied IS NOT NULL
+  AND start_at >= '2025-01-01T00:00:00Z'
+  AND start_at <  '2025-01-08T00:00:00Z'
+GROUP BY biz_id, date_utc
+ORDER BY date_utc;
+```
+
+Рекомендуется прогонять эти сверки на нескольких реальных бизнесах (разные по размеру/настроенным промо) после изменений в агрегирующей логике или схемах таблиц.
+
 ## Дополнительные ресурсы
 
 - [API документация](./API_DOCUMENTATION.md) - описание всех API endpoints

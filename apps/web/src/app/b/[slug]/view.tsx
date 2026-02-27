@@ -29,6 +29,7 @@ import type { Data, Service, ServiceStaffRow, Slot, Staff } from './types';
 
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
+import { useBookingFlowStart, trackBookingFlowStep } from '@/lib/analyticsTrackEvent';
 import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
@@ -88,6 +89,9 @@ export default function BookingForm({ data }: { data: Data }) {
         // (в date-fns нет встроенной киргизской локали)
         return ru;
     }, [locale]);
+
+    /* ---------- analytics: один раз за сессию — старт потока бронирования ---------- */
+    useBookingFlowStart(biz.id);
 
     /* ---------- auth ---------- */
     const [isAuthed, setIsAuthed] = useState<boolean>(false);
@@ -669,6 +673,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                 selectedBranchId={branchId}
                                 onSelect={(id) => {
                                     setBranchId(id);
+                                    trackBookingFlowStep({ bizId: biz.id, branchId: id, step: 'branch' });
                                     trackFunnelEvent({
                                         event_type: 'branch_select',
                                         source: 'public',
@@ -694,6 +699,11 @@ export default function BookingForm({ data }: { data: Data }) {
                                         onChange={(val) => {
                                             if (val) {
                                                 setDay(dateAtTz(val, '00:00', businessTz));
+                                                trackBookingFlowStep({
+                                                    bizId: biz.id,
+                                                    branchId: branchId || undefined,
+                                                    step: 'date',
+                                                });
                                             }
                                         }}
                                         min={todayStr}
@@ -719,6 +729,12 @@ export default function BookingForm({ data }: { data: Data }) {
                                     selectedStaffId={staffId}
                                     onSelect={(id) => {
                                         setStaffId(id);
+                                        trackBookingFlowStep({
+                                            bizId: biz.id,
+                                            branchId: branchId || undefined,
+                                            step: 'staff',
+                                            staffId: id === 'any' ? null : id,
+                                        });
                                         trackFunnelEvent({
                                             event_type: 'staff_select',
                                             source: 'public',
@@ -748,6 +764,12 @@ export default function BookingForm({ data }: { data: Data }) {
                                             currentServiceId: serviceId,
                                         });
                                         setServiceId(id);
+                                        trackBookingFlowStep({
+                                            bizId: biz.id,
+                                            branchId: branchId || undefined,
+                                            step: 'service',
+                                            serviceId: id,
+                                        });
                                         trackFunnelEvent({
                                             event_type: 'service_select',
                                             source: 'public',
@@ -790,7 +812,11 @@ export default function BookingForm({ data }: { data: Data }) {
                                     slots={slots}
                                     selectedSlot={null}
                                     onSelect={(slotTime, slotStaffId) => {
-                                        // Отслеживаем выбор слота
+                                        trackBookingFlowStep({
+                                            bizId: biz.id,
+                                            branchId: branchId || undefined,
+                                            step: 'slot',
+                                        });
                                         trackFunnelEvent({
                                             event_type: 'slot_select',
                                             source: 'public',

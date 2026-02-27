@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {HomeHero, HomeBookButtonText, HomeHeader, HomeEmptyState, HomeAboutButtonText} from './_components/HomeClientComponents';
 import { getT, getServerLocale } from './_components/i18n/server';
 
+import { HomeViewTracker } from '@/lib/analyticsTrackEvent';
 import { generateAlternates } from '@/lib/seo';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
@@ -141,6 +142,8 @@ export default async function Home({
     // Home — серверный компонент, для текстов используем клиентский подкомпонент, чтобы читать язык из контекста
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
+            {/* Клиентский трекер для события home_view */}
+            <HomeViewTracker />
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 <HomeHero />
 

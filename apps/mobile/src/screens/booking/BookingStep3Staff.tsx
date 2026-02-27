@@ -13,6 +13,7 @@ import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { RootStackParamList } from '../../navigation/types';
+import { trackMobileEvent } from '../../lib/analytics';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -51,6 +52,14 @@ export default function BookingStep3Staff() {
 
     const handleSelectStaff = (staffId: string) => {
         setStaffId(staffId);
+        if (bookingData.business?.id) {
+            trackMobileEvent({
+                eventType: 'booking_flow_step',
+                bizId: bookingData.business.id,
+                branchId: bookingData.branchId ?? undefined,
+                metadata: { step: 'staff' },
+            });
+        }
     };
 
     const handleNext = () => {

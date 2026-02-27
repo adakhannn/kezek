@@ -8,11 +8,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
-import { colors } from '../../constants/colors';
-import Button from '../../components/ui/Button';
+import { colors } from '../../constants.colors';
+import Button from '../../components/ui.Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { RootStackParamList } from '../../navigation/types';
+import { trackMobileEvent } from '../../lib/analytics';
 
 type RouteParams = {
     slug: string;
@@ -71,6 +72,14 @@ export default function BookingStep1Branch() {
 
     const handleSelectBranch = (branchId: string) => {
         setBranchId(branchId);
+        if (bookingData.business?.id) {
+            trackMobileEvent({
+                eventType: 'booking_flow_step',
+                bizId: bookingData.business.id,
+                branchId,
+                metadata: { step: 'branch' },
+            });
+        }
     };
 
     const handleNext = () => {

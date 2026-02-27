@@ -156,8 +156,8 @@ export function AdminNav() {
         ),
     },
     {
-        href: '/admin/funnel-analytics',
-        labelKey: 'admin.nav.funnelAnalytics',
+        href: '/admin/analytics/overview',
+        labelKey: 'admin.nav.analytics',
         icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

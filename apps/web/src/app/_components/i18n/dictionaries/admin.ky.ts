@@ -96,7 +96,7 @@ export const adminKy = {
     'admin.nav.systemHealth': 'Системанын саламаттыгы',
     'admin.nav.performance': 'Өндүрүмдүүлүк',
     'admin.nav.promotionsDebug': 'Промо дебаг',
-    'admin.nav.funnelAnalytics': 'Воронка аналитикасы',
+    'admin.nav.analytics': 'Аналитика',
     'admin.nav.ratings': 'Рейтингдер',
     'admin.nav.ratingsHealth': 'Рейтингдин саламаттыгы',
     'admin.nav.roles': 'Ролдор',

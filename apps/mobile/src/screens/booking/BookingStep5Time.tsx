@@ -12,9 +12,10 @@ import { useBooking } from '../../contexts/BookingContext';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { colors } from '../../constants/colors';
 import { supabase } from '../../lib/supabase';
-import Button from '../../components/ui/Button';
+import Button from '../../components.ui.Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import { RootStackParamList } from '../../navigation/types';
+import { trackMobileEvent } from '../../lib/analytics';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -144,6 +145,15 @@ export default function BookingStep5Time() {
 
     const handleSelectSlot = (slot: TimeSlot) => {
         setSelectedSlot(slot);
+        if (bookingData.business?.id) {
+            trackMobileEvent({
+                eventType: 'booking_flow_step',
+                bizId: bookingData.business.id,
+                branchId: bookingData.branchId ?? undefined,
+                bookingId: undefined,
+                metadata: { step: 'slot' },
+            });
+        }
     };
 
     const handleNext = () => {

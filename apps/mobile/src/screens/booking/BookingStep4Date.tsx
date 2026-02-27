@@ -11,6 +11,7 @@ import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import { RootStackParamList } from '../../navigation/types';
+import { trackMobileEvent } from '../../lib/analytics';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -40,6 +41,14 @@ export default function BookingStep4Date() {
 
     const handleSelectDate = (date: string) => {
         setSelectedDate(date);
+        if (bookingData.business?.id) {
+            trackMobileEvent({
+                eventType: 'booking_flow_step',
+                bizId: bookingData.business.id,
+                branchId: bookingData.branchId ?? undefined,
+                metadata: { step: 'date' },
+            });
+        }
     };
 
     const handleNext = () => {
