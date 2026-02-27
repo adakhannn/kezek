@@ -55,7 +55,7 @@ export async function GET(req: Request) {
       return createSuccessResponse(cached);
     }
 
-    let query = serviceClient
+    const { data, error } = await serviceClient
       .from('business_daily_stats')
       .select(
         'date,home_views,business_page_views,booking_flow_starts,bookings_created,bookings_confirmed_or_paid,promo_bookings,promo_revenue,total_revenue',
@@ -64,15 +64,6 @@ export async function GET(req: Request) {
       .gte('date', startStr)
       .lte('date', endStr)
       .order('date', { ascending: true });
-
-    if (branchIds && branchIds.trim()) {
-      const ids = branchIds.split(',').map((s) => s.trim()).filter(Boolean);
-      if (ids.length > 0) {
-        query = query.in('branch_id', ids);
-      }
-    }
-
-    const { data, error } = await query;
     if (error) {
       logError('AdminAnalyticsOverview', 'Failed to load business_daily_stats', { error: error.message });
       return createErrorResponse('server', 'Failed to load overview analytics', undefined, 500);
