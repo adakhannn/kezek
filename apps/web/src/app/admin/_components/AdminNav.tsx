@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import { useLanguage, type I18nKey } from '@/app/_components/i18n/LanguageProvider';
 
@@ -15,6 +16,7 @@ type NavItem = {
 export function AdminNav() {
     const { t } = useLanguage();
     const pathname = usePathname();
+    const [isMoreOpen, setIsMoreOpen] = useState(false);
 
     const navItems: NavItem[] = [
     {
@@ -181,35 +183,98 @@ export function AdminNav() {
     },
 ];
 
+    const primaryItems: NavItem[] = navItems.slice(0, 6);
+    const middleItems: NavItem[] = navItems.slice(6, navItems.length - 1);
+    const lastItem: NavItem | undefined = navItems[navItems.length - 1];
+
+    const isItemActive = (item: NavItem): boolean =>
+        item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
+
+    const hasActiveInMore = middleItems.some(isItemActive);
+
+    const renderItem = (item: NavItem) => {
+        const isActive = isItemActive(item);
+        return (
+            <Link
+                key={item.href}
+                href={item.href}
+                className={`
+                    inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                    ${item.variant === 'outline'
+                        ? isActive
+                            ? 'border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                            : 'border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-300 dark:hover:border-indigo-600'
+                        : isActive
+                            ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-md'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
+                    }
+                `}
+            >
+                {item.icon}
+                {t(item.labelKey, item.labelKey)}
+            </Link>
+        );
+    };
+
     return (
         <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-                const isActive = 
-                    item.href === '/admin' 
-                        ? pathname === '/admin'
-                        : pathname.startsWith(item.href);
-                
-                return (
-                    <Link
-                        key={item.href}
-                        href={item.href}
+            {primaryItems.map(renderItem)}
+
+            {middleItems.length > 0 && (
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={() => setIsMoreOpen((prev) => !prev)}
                         className={`
                             inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                            ${item.variant === 'outline'
-                                ? isActive
-                                    ? 'border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                                    : 'border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-300 dark:hover:border-indigo-600'
-                                : isActive
-                                    ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-md'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
+                            ${hasActiveInMore
+                                ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white shadow-md'
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
                             }
                         `}
                     >
-                        {item.icon}
-                        {t(item.labelKey, item.labelKey)}
-                    </Link>
-                );
-            })}
+                        <span className="w-4 h-4 flex items-center justify-center">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 12h.01M12 12h.01M19 12h.01"
+                                />
+                            </svg>
+                        </span>
+                        <span>{t('admin.nav.more' as I18nKey, 'Ещё')}</span>
+                    </button>
+                    {isMoreOpen && (
+                        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-2 z-50">
+                            {middleItems.map((item) => {
+                                const active = isItemActive(item);
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={`
+                                            flex items-center gap-2 px-3 py-2 text-sm transition-colors
+                                            ${active
+                                                ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
+                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                            }
+                                        `}
+                                        onClick={() => setIsMoreOpen(false)}
+                                    >
+                                        <span className="w-4 h-4 flex items-center justify-center">
+                                            {item.icon}
+                                        </span>
+                                        <span>{t(item.labelKey, item.labelKey)}</span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {lastItem && renderItem(lastItem)}
         </nav>
     );
 }
