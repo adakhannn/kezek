@@ -16,9 +16,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function MapPage() {
+    // Ключ передаём с сервера: на проде env может быть доступен только в runtime, не при билде
+    const yandexMapsApiKey = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY ?? '';
     return (
         <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
-            <MapPageClient />
+            <MapPageClient yandexMapsApiKey={yandexMapsApiKey || undefined} />
         </main>
     );
 }

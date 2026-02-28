@@ -31,7 +31,9 @@ const DEFAULT_CENTER: [number, number] = [40.5146, 72.803]; // Osh
 const DEFAULT_ZOOM = 12;
 const NEARBY_ZOOM = 14;
 
-export default function MapPageClient() {
+type Props = { yandexMapsApiKey?: string | null };
+
+export default function MapPageClient({ yandexMapsApiKey }: Props) {
     const { t } = useLanguage();
     const mapRef = useRef<HTMLDivElement>(null);
     const ymapsMapRef = useRef<YMap | null>(null);
@@ -82,7 +84,7 @@ export default function MapPageClient() {
         (async () => {
             if (!mapRef.current) return;
             try {
-                const ymaps = (await loadYandexMaps()) as {
+                const ymaps = (await loadYandexMaps(yandexMapsApiKey ?? undefined)) as {
                     Map: new (el: HTMLElement, opts: { center: [number, number]; zoom: number; controls: unknown[] }) => YMap;
                     Placemark: new (coords: [number, number], props: object, opts?: object) => unknown;
                     control: { ZoomControl: new (opts: object) => unknown; GeolocationControl?: new (opts: object) => unknown };

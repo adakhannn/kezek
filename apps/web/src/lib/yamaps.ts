@@ -16,9 +16,11 @@ export function loadYandexMaps(apiKey?: string): Promise<typeof ymaps> {
 
     const key = apiKey || getYandexMapsApiKey();
     
-    if (!key) {
+    if (!key || key.trim() === '') {
         return Promise.reject(
-            new Error('NEXT_PUBLIC_YANDEX_MAPS_API_KEY is not set. Please configure it in your environment variables.')
+            new Error(
+                'NEXT_PUBLIC_YANDEX_MAPS_API_KEY is not set. Set it in the hosting Environment Variables (Production) and redeploy, or pass yandexMapsApiKey from the server.'
+            )
         );
     }
 
