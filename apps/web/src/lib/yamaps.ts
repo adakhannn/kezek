@@ -33,10 +33,26 @@ export function loadYandexMaps(apiKey?: string): Promise<typeof ymaps> {
             s.async = true;
             s.onload = () => {
                 const ym = window.ymaps;
-                if (!ym) return reject(new Error('Yandex Maps not available on window'));
-                ym.ready(() => resolve(ym));
+                if (!ym) {
+                    return reject(
+                        new Error(
+                            '[yamaps] Script loaded but window.ymaps is undefined. Possible causes: API key invalid or domain not allowed in Yandex Developer Console.'
+                        )
+                    );
+                }
+                try {
+                    ym.ready(() => resolve(ym));
+                } catch (err) {
+                    const msg = err instanceof Error ? err.message : String(err);
+                    reject(new Error(`[yamaps] ym.ready threw: ${msg}`));
+                }
             };
-            s.onerror = () => reject(new Error('Yandex Maps failed to load. Check your API key and network connection.'));
+            s.onerror = () =>
+                reject(
+                    new Error(
+                        '[yamaps] Script failed to load (network or CORS). Check API key, allowed referrers in Yandex Console, and browser Network tab for api-maps.yandex.ru.'
+                    )
+                );
             document.head.appendChild(s);
         });
     }

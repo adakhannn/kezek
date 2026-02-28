@@ -46,6 +46,7 @@ export default function MapPageClient() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [mapReady, setMapReady] = useState(false);
+    const [mapError, setMapError] = useState<string | null>(null);
     const [geoError, setGeoError] = useState<string | null>(null);
 
     const displayList = nearbyList ?? branches;
@@ -99,7 +100,10 @@ export default function MapPageClient() {
                 ymapsMapRef.current = map as unknown as YMap;
                 setMapReady(true);
             } catch (e) {
-                logError('MapPage', 'Yandex Maps init failed', e);
+                const msg = e instanceof Error ? e.message : String(e);
+                const detail = e instanceof Error ? e.stack ?? msg : msg;
+                logError('MapPage', 'Yandex Maps init failed', { message: msg, detail });
+                setMapError(msg);
             }
         })();
         return () => {
@@ -270,8 +274,19 @@ export default function MapPageClient() {
             </div>
             <div className="flex-1 min-h-[300px] md:min-h-0 relative">
                 {!mapReady && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-500">
-                        {t('common.map.loadingMap', 'Загрузка карты...')}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 p-4">
+                        {mapError ? (
+                            <>
+                                <p className="font-medium text-amber-700 dark:text-amber-400">
+                                    {t('common.map.loadingMap', 'Загрузка карты...')} — ошибка
+                                </p>
+                                <p className="text-sm max-w-lg text-center break-words" title={mapError}>
+                                    {mapError}
+                                </p>
+                            </>
+                        ) : (
+                            <p>{t('common.map.loadingMap', 'Загрузка карты...')}</p>
+                        )}
                     </div>
                 )}
                 <div ref={mapRef} className="w-full h-full min-h-[300px]" />
