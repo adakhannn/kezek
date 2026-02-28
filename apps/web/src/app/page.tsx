@@ -149,6 +149,18 @@ export default async function Home({
 
                 <HomeHeader q={q} cat={cat} categories={categoriesAvailable} />
 
+                <div className="flex justify-center">
+                    <Link
+                        href="/map"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        {t('common.map.title', 'Карта филиалов')}
+                    </Link>
+                </div>
+
                 <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {typedBusinesses.map((b, index) => (
                         <article 

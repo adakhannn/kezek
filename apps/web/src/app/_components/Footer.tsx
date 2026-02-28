@@ -17,6 +17,12 @@ export function Footer() {
                     </p>
                     <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-2">
                         <Link
+                            href="/map"
+                            className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                            {t('footer.map', 'Карта филиалов')}
+                        </Link>
+                        <Link
                             href="/privacy"
                             className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                         >

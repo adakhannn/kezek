@@ -1,4 +1,12 @@
 export const commonKy = {
+    'common.map.title': 'Филиалдар картасы',
+    'common.map.allCategories': 'Бардык категориялар',
+    'common.map.findNearest': 'Мага жакын',
+    'common.map.book': 'Жазылуу',
+    'common.map.loadingMap': 'Карта жүктөлүүдө...',
+    'common.map.geoExplain': 'Жакын филиалды табуу үчүн жайгашкан жериңизди көрсөтүңүз',
+    'common.map.geoDenied': 'Жайгашкан жерге кирүүгө уруксат берилген жок. Тизмеден тандаңыз.',
+    'common.map.geoError': 'Жайгашкан жериңизди аныктоо мүмкүн болбоду',
     'common.daysAgo': 'күн мурун',
     'common.editShort': 'Редакт.',
     'common.loading': 'Жүктөлүүдө...',

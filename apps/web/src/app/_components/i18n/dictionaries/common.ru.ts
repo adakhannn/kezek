@@ -1,4 +1,12 @@
 export const commonRu = {
+    'common.map.title': 'Карта филиалов',
+    'common.map.allCategories': 'Все категории',
+    'common.map.findNearest': 'Ближайший ко мне',
+    'common.map.book': 'Записаться',
+    'common.map.loadingMap': 'Загрузка карты...',
+    'common.map.geoExplain': 'Покажите местоположение, чтобы найти ближайший филиал',
+    'common.map.geoDenied': 'Доступ к геолокации запрещён. Выберите филиал из списка.',
+    'common.map.geoError': 'Не удалось определить местоположение',
     'common.daysAgo': 'дн. назад',
     'common.editShort': 'Редакт.',
     'common.loading': 'Загрузка...',

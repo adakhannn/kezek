@@ -1,4 +1,12 @@
 export const commonEn = {
+    'common.map.title': 'Branches map',
+    'common.map.allCategories': 'All categories',
+    'common.map.findNearest': 'Nearest to me',
+    'common.map.book': 'Book',
+    'common.map.loadingMap': 'Loading map...',
+    'common.map.geoExplain': 'Allow location to find the nearest branch',
+    'common.map.geoDenied': 'Location access denied. Pick a branch from the list.',
+    'common.map.geoError': 'Could not get your location',
     'common.daysAgo': 'days ago',
     'common.editShort': 'Edit',
     'common.loading': 'Loading...',
