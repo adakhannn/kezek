@@ -1,5 +1,5 @@
-import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
+import type { NextConfig } from 'next';
 
 /**
  * Security Headers для защиты от XSS, clickjacking, MIME sniffing и других атак
@@ -37,7 +37,8 @@ const securityHeaders = [
         key: 'Content-Security-Policy',
         value: [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api-maps.yandex.ru https://yandex.ru https://telegram.org",
+            // Yandex Maps грузит доп. бандл с yastatic.net, поэтому добавляем его в script-src
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api-maps.yandex.ru https://yandex.ru https://yastatic.net https://telegram.org",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "img-src 'self' data: https: blob:",
             "font-src 'self' data: https://fonts.gstatic.com",
