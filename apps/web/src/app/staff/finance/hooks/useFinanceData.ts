@@ -184,17 +184,21 @@ export function useFinanceData({
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     });
 
-    // Преобразуем данные в удобный формат
+    // Преобразуем данные в удобный формат (защита от отсутствия response.today — например, при «Бизнес не найден»)
     const data = useMemo<FinanceData | null>(() => {
         if (!query.data) return null;
 
-        const response = query.data;
+        const response = query.data as FinanceDataResponse;
+        const today = response.today;
+        if (!today) {
+            return null;
+        }
         return {
-            shift: response.today.shift,
-            items: response.today.items || [],
-            bookings: response.bookings || [],
-            services: response.services || [],
-            allShifts: response.allShifts || [],
+            shift: today.shift ?? null,
+            items: today.items ?? [],
+            bookings: response.bookings ?? [],
+            services: response.services ?? [],
+            allShifts: response.allShifts ?? [],
             staffPercentMaster: response.staffPercentMaster ?? 60,
             staffPercentSalon: response.staffPercentSalon ?? 40,
             hourlyRate: response.hourlyRate ?? null,
