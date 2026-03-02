@@ -31,7 +31,8 @@ const securityHeaders = [
     },
     {
         key: 'Permissions-Policy',
-        value: 'camera=(), microphone=(), geolocation=()'
+        // geolocation=(self) — разрешаем запрос геолокации на странице карты («Ближайший ко мне»)
+        value: 'camera=(), microphone=(), geolocation=(self)'
     },
     {
         key: 'Content-Security-Policy',
