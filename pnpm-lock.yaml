@@ -210,7 +210,7 @@ importers:
         version: 6.2.8(openapi-types@12.1.3)
       swagger-ui-react:
         specifier: ^5.31.0
-        version: 5.31.0(@types/react@19.1.17)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 5.31.0(@types/react@19.2.14)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       web-vitals:
         specifier: ^5.1.0
         version: 5.1.0
@@ -234,11 +234,11 @@ importers:
         specifier: ^20
         version: 20.19.28
       '@types/react':
-        specifier: ^19
-        version: 19.1.17
+        specifier: ^19.2.0
+        version: 19.2.14
       '@types/react-dom':
-        specifier: ^19
-        version: 19.2.3(@types/react@19.1.17)
+        specifier: ^19.2.0
+        version: 19.2.3(@types/react@19.2.14)
       '@types/swagger-jsdoc':
         specifier: ^6.0.4
         version: 6.0.4
@@ -254,12 +254,18 @@ importers:
       eslint-config-next:
         specifier: 16.0.7
         version: 16.0.7(@typescript-eslint/parser@8.52.0(eslint@9.33.0(jiti@2.6.1))(typescript@5.9.2))(eslint@9.33.0(jiti@2.6.1))(typescript@5.9.2)
+      import-in-the-middle:
+        specifier: ^1.14.0
+        version: 1.15.0
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.28)
       jest-environment-node:
         specifier: ^29.7.0
         version: 29.7.0
+      require-in-the-middle:
+        specifier: ^7.4.0
+        version: 7.5.2
       tailwindcss:
         specifier: ^4
         version: 4.1.18
@@ -2365,6 +2371,9 @@ packages:
 
   '@types/react@19.1.17':
     resolution: {integrity: sha512-Qec1E3mhALmaspIrhWt9jkQMNdw6bReVu64mjvhbhq2NFPftLPVr+l1SZgmw/66WwBNpDh7ao5AT6gF5v41PFA==}
+
+  '@types/react@19.2.14':
+    resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
 
   '@types/shimmer@1.2.0':
     resolution: {integrity: sha512-UE7oxhQLLd9gub6JKIAhDq06T0F6FnztwMNRvYgjeQSBeMc1ZG/tA47EwfduvkuQS8apbkM/lpLpWsaCeYsXVg==}
@@ -7017,7 +7026,7 @@ snapshots:
       '@babel/core': 7.28.5
       '@babel/helper-compilation-targets': 7.27.2
       '@babel/helper-plugin-utils': 7.27.1
-      debug: 4.4.1
+      debug: 4.4.3
       lodash.debounce: 4.0.8
       resolve: 1.22.10
     transitivePeerDependencies:
@@ -7540,7 +7549,7 @@ snapshots:
       '@babel/parser': 7.28.5
       '@babel/template': 7.27.2
       '@babel/types': 7.28.5
-      debug: 4.4.1
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -9781,9 +9790,9 @@ snapshots:
     dependencies:
       types-ramda: 0.30.1
 
-  '@types/react-dom@19.2.3(@types/react@19.1.17)':
+  '@types/react-dom@19.2.3(@types/react@19.2.14)':
     dependencies:
-      '@types/react': 19.1.17
+      '@types/react': 19.2.14
 
   '@types/react-window@2.0.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
@@ -9796,6 +9805,10 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
+  '@types/react@19.2.14':
+    dependencies:
+      csstype: 3.2.3
+
   '@types/shimmer@1.2.0': {}
 
   '@types/stack-utils@2.0.3': {}
@@ -9804,7 +9817,7 @@ snapshots:
 
   '@types/swagger-ui-react@5.18.0':
     dependencies:
-      '@types/react': 19.1.17
+      '@types/react': 19.2.14
 
   '@types/tedious@4.0.14':
     dependencies:
@@ -13840,13 +13853,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  react-redux@9.2.0(@types/react@19.1.17)(react@19.1.0)(redux@5.0.1):
+  react-redux@9.2.0(@types/react@19.2.14)(react@19.1.0)(redux@5.0.1):
     dependencies:
       '@types/use-sync-external-store': 0.0.6
       react: 19.1.0
       use-sync-external-store: 1.6.0(react@19.1.0)
     optionalDependencies:
-      '@types/react': 19.1.17
+      '@types/react': 19.2.14
       redux: 5.0.1
 
   react-refresh@0.14.2: {}
@@ -14580,7 +14593,7 @@ snapshots:
     transitivePeerDependencies:
       - openapi-types
 
-  swagger-ui-react@5.31.0(@types/react@19.1.17)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  swagger-ui-react@5.31.0(@types/react@19.2.14)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@babel/runtime-corejs3': 7.28.6
       '@scarf/scarf': 1.4.0
@@ -14605,7 +14618,7 @@ snapshots:
       react-immutable-proptypes: 2.2.0(immutable@3.8.2)
       react-immutable-pure-component: 2.2.2(immutable@3.8.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-inspector: 6.0.2(react@19.1.0)
-      react-redux: 9.2.0(@types/react@19.1.17)(react@19.1.0)(redux@5.0.1)
+      react-redux: 9.2.0(@types/react@19.2.14)(react@19.1.0)(redux@5.0.1)
       react-syntax-highlighter: 16.1.0(react@19.1.0)
       redux: 5.0.1
       redux-immutable: 4.0.0(immutable@3.8.2)
