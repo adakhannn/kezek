@@ -70,6 +70,12 @@ export async function POST(
                     return createErrorResponse('forbidden', 'Сотрудник не принадлежит этому бизнесу', undefined, 403);
                 }
 
+                // staff_shifts.branch_id NOT NULL — у сотрудника должен быть указан филиал
+                if (staff.branch_id == null) {
+                    logDebug('OwnerShiftOpen', 'Staff has no branch_id', { staffId, bizId });
+                    return createErrorResponse('validation', 'У сотрудника не указан филиал. Укажите филиал в карточке сотрудника и попробуйте снова.', undefined, 400);
+                }
+
                 // Проверяем, не открыта ли уже смена за эту дату
                 const { data: existingShift, error: checkError } = await supabase
                     .from('staff_shifts')
