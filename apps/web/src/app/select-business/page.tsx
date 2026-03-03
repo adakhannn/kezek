@@ -135,7 +135,7 @@ export default function SelectBusinessPage() {
         }
     };
 
-    if (state.status === 'loading' || savingId) {
+    if (state.status === 'loading') {
         return (
             <FullScreenStatus
                 title={t('selectBusiness.loadingTitle', 'Загружаем список бизнесов')}
@@ -176,18 +176,20 @@ export default function SelectBusinessPage() {
                 <div className="space-y-2">
                     {businesses.map((biz) => {
                         const isActive = biz.id === currentBizId;
+                        const isSaving = savingId === biz.id;
                         const title = biz.name || biz.slug || t('selectBusiness.unknown', 'Бизнес без названия');
                         const subtitle = biz.city || undefined;
                         return (
                             <button
                                 key={biz.id}
                                 type="button"
+                                disabled={!!savingId}
                                 onClick={() => void handleSelect(biz.id)}
                                 className={`w-full rounded-xl border px-4 py-3 text-left transition shadow-sm ${
                                     isActive
                                         ? 'border-indigo-500 bg-indigo-50/80 text-indigo-900 dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-50'
                                         : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/30'
-                                }`}
+                                } ${savingId ? 'pointer-events-none opacity-90' : ''}`}
                             >
                                 <div className="flex items-center justify-between gap-3">
                                     <div className="min-w-0">
@@ -198,9 +200,11 @@ export default function SelectBusinessPage() {
                                             </p>
                                         )}
                                     </div>
-                                    {isActive && (
+                                    {isSaving ? (
+                                        <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+                                    ) : isActive ? (
                                         <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                                    )}
+                                    ) : null}
                                 </div>
                             </button>
                         );
