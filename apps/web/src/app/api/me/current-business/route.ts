@@ -1,5 +1,5 @@
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
+import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
@@ -80,7 +80,7 @@ export async function GET() {
 export async function POST(req: Request) {
     return withRateLimit(
         req,
-        RateLimitConfigs.auth,
+        routeRateLimit('api/me/current-business', RateLimitConfigs.normal),
         () => withErrorHandler('SetCurrentBusiness', async () => {
             const { supabase, admin } = await createSupabaseClients();
 
