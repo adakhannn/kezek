@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from './i18n/LanguageProvider';
@@ -34,6 +35,7 @@ type SwitcherState =
 
 export function RoleAndBusinessSwitcher() {
     const { t } = useLanguage();
+    const router = useRouter();
     const [state, setState] = useState<SwitcherState>({ status: 'loading' });
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -168,6 +170,24 @@ export function RoleAndBusinessSwitcher() {
     const bizCity = currentBiz?.city || '';
     const bizLabel = bizCity ? `${bizName} · ${bizCity}` : bizName;
 
+    const handleBusinessSelect = async (bizId: string) => {
+        try {
+            const res = await fetch('/api/me/current-business', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bizId }),
+            });
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+        } catch (e) {
+            logWarn('RoleAndBusinessSwitcher', 'failed to set current business from header', e);
+        } finally {
+            setIsOpen(false);
+            router.refresh();
+        }
+    };
+
     return (
         <div className="hidden md:block" ref={containerRef}>
             <div className="relative">
@@ -249,9 +269,11 @@ export function RoleAndBusinessSwitcher() {
                                         const title = b.name || b.slug || t('dashboard.businessSwitcher.unknown', 'Бизнес');
                                         const subtitle = b.city || undefined;
                                         return (
-                                            <div
+                                            <button
                                                 key={b.id}
-                                                className={`flex items-center justify-between px-2.5 py-1.5 rounded-md ${
+                                                type="button"
+                                                onClick={() => void handleBusinessSelect(b.id)}
+                                                className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-md text-left ${
                                                     isCurrent
                                                         ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-100'
                                                         : 'text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800'
@@ -268,7 +290,7 @@ export function RoleAndBusinessSwitcher() {
                                                 {isCurrent && (
                                                     <span className="ml-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                                 )}
-                                            </div>
+                                            </button>
                                         );
                                     })}
                                 </div>
