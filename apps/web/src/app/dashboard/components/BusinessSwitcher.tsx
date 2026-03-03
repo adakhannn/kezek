@@ -133,8 +133,7 @@ export function BusinessSwitcher() {
     }
 
     const { currentBizId, businesses } = state;
-    if (!businesses || businesses.length <= 1) {
-        // Нечего переключать
+    if (!businesses || businesses.length === 0) {
         return null;
     }
 
@@ -146,6 +145,18 @@ export function BusinessSwitcher() {
     const currentName = current?.name || current?.slug || t('dashboard.businessSwitcher.unknown', 'Бизнес');
     const currentCity = current?.city || '';
     const label = currentCity ? `${currentName} · ${currentCity}` : currentName;
+
+    // Если бизнес один, показываем просто бейдж без дропдауна
+    if (businesses.length === 1) {
+        return (
+            <div className="mt-3">
+                <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <span className="truncate max-w-[140px]">{label}</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="mt-3">
