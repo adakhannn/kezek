@@ -8,6 +8,7 @@ import {Footer} from './_components/Footer';
 import {Logo} from './_components/Logo';
 import {MobileHeaderMenu} from './_components/MobileHeaderMenu';
 import {ReminderBanners} from './_components/ReminderBanners';
+import { RoleAndBusinessSwitcher } from './_components/RoleAndBusinessSwitcher';
 import {LanguageProvider} from './_components/i18n/LanguageProvider';
 import {LanguageSwitcher} from './_components/i18n/LanguageSwitcher';
 import {getServerLocale} from './_components/i18n/server';
@@ -65,6 +66,7 @@ export default async function RootLayout({
                             {/* Десктопная версия - показываем на md и выше */}
                             <div className="hidden md:flex items-center gap-3 flex-shrink-0 ml-auto">
                                 <LanguageSwitcher />
+                                <RoleAndBusinessSwitcher />
                                 <AuthStatusServer/>
                             </div>
                             {/* Мобильная версия - показываем только на md и ниже */}
