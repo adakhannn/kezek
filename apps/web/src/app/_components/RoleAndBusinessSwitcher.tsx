@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from './i18n/LanguageProvider';
 
@@ -36,6 +36,7 @@ export function RoleAndBusinessSwitcher() {
     const { t } = useLanguage();
     const [state, setState] = useState<SwitcherState>({ status: 'loading' });
     const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -111,6 +112,26 @@ export function RoleAndBusinessSwitcher() {
         };
     }, [t]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+            const el = containerRef.current;
+            if (!el) return;
+            if (event.target instanceof Node && !el.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
+    }, [isOpen]);
+
     if (state.status === 'loading') {
         return (
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
@@ -148,7 +169,7 @@ export function RoleAndBusinessSwitcher() {
     const bizLabel = bizCity ? `${bizName} · ${bizCity}` : bizName;
 
     return (
-        <div className="hidden md:block">
+        <div className="hidden md:block" ref={containerRef}>
             <div className="relative">
                 <button
                     type="button"
@@ -182,6 +203,7 @@ export function RoleAndBusinessSwitcher() {
                             {roles.hasDashboard && (
                                 <Link
                                     href="/dashboard"
+                                    onClick={() => setIsOpen(false)}
                                     className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
                                 >
                                     <span>{t('header.businessCabinet', 'Кабинет бизнеса')}</span>
@@ -190,6 +212,7 @@ export function RoleAndBusinessSwitcher() {
                             {roles.hasStaff && (
                                 <Link
                                     href="/staff"
+                                    onClick={() => setIsOpen(false)}
                                     className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
                                 >
                                     <span>{t('header.staffCabinet', 'Кабинет сотрудника')}</span>
@@ -198,6 +221,7 @@ export function RoleAndBusinessSwitcher() {
                             {roles.hasCabinet && (
                                 <Link
                                     href="/cabinet"
+                                    onClick={() => setIsOpen(false)}
                                     className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
                                 >
                                     <span>{t('header.myBookings', 'Мои записи')}</span>
@@ -206,6 +230,7 @@ export function RoleAndBusinessSwitcher() {
                             {roles.hasAdmin && (
                                 <Link
                                     href="/admin"
+                                    onClick={() => setIsOpen(false)}
                                     className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
                                 >
                                     <span>{t('header.adminPanel', 'Админ-панель')}</span>
