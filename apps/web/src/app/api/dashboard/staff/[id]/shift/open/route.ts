@@ -93,7 +93,15 @@ export async function POST(
                 }
 
                 if (existingShift?.status === 'open') {
-                    return createErrorResponse('validation', 'Смена уже открыта', undefined, 400);
+                    // Делаем операцию идемпотентной для владельца:
+                    // если смена уже открыта, просто возвращаем успешный ответ,
+                    // чтобы UI не падал с ошибкой в случае повторных кликов.
+                    logDebug('OwnerShiftOpen', 'Shift already open, returning existing shift', {
+                        shiftId: existingShift.id,
+                        staffId,
+                        ymd,
+                    });
+                    return createSuccessResponse({ shift: existingShift });
                 }
                 // existingShift со статусом 'closed' или другим — переоткрываем через UPDATE ниже
 
