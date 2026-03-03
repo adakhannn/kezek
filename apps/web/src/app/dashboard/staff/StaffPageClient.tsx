@@ -15,17 +15,35 @@ type Row = {
     branches: { name: string } | null;
 };
 
-export default function StaffPageClient({ initialRows, showDismissed }: { initialRows: Row[]; showDismissed?: boolean }) {
+export default function StaffPageClient({
+    initialRows,
+    showDismissed,
+    bizName,
+    bizCity,
+}: {
+    initialRows: Row[];
+    showDismissed?: boolean;
+    bizName?: string | null;
+    bizCity?: string | null;
+}) {
     const { t } = useLanguage();
+
+    const displayBizName = bizName || t('finance.biz.defaultName', 'Ваш бизнес в Kezek');
 
     return (
         <main className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8 space-y-6">
             {/* Заголовок и кнопка добавления */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t('staff.title', 'Сотрудники')}</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                        {t('staff.title', 'Сотрудники')}
+                    </h1>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         {t('staff.subtitle', 'Управление сотрудниками и их услугами')}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {t('staff.biz.context', 'Бизнес')}: {displayBizName}
+                        {bizCity ? ` · ${bizCity}` : ''}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">

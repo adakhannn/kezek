@@ -22,15 +22,21 @@ export default function ServicesListClient({
     list,
     branches,
     branchFilter,
+    bizName,
+    bizCity,
 }: {
     list: GroupedService[];
     branches: Branch[];
     branchFilter: string;
+    bizName?: string | null;
+    bizCity?: string | null;
 }) {
     const { t, locale } = useLanguage();
 
     const formatNumber = (n: number) =>
         n.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU');
+
+    const displayBizName = bizName || t('finance.biz.defaultName', 'Ваш бизнес в Kezek');
 
     return (
         <div className="px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
@@ -42,6 +48,10 @@ export default function ServicesListClient({
                         </h1>
                         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                             {t('services.subtitle', 'Управление услугами бизнеса')}
+                        </p>
+                        <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                            {t('services.biz.context', 'Бизнес')}: {displayBizName}
+                            {bizCity ? ` · ${bizCity}` : ''}
                         </p>
                     </div>
                     <Link

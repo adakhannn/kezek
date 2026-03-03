@@ -255,6 +255,9 @@ export default function DashboardAnalyticsOverviewPage() {
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Краткий обзор воронки бронирований и выручки по вашему бизнесу.
         </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Данные отображаются для текущего выбранного бизнеса в переключателе слева.
+        </p>
       </header>
 
       {/* Фильтры */}

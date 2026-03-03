@@ -68,11 +68,66 @@ export async function middleware(req: NextRequest) {
             url.pathname = '/admin';
             return NextResponse.redirect(url, 302);
         }
-        // Владельцы, админы и менеджеры → dashboard
-        if (keys.includes('owner') || keys.some(k => ['admin','manager'].includes(k))) {
-            const url = req.nextUrl.clone();
-            url.pathname = '/dashboard';
-            return NextResponse.redirect(url, 302);
+        // Владельцы, админы и менеджеры → либо выбор бизнеса, либо dashboard
+        if (keys.includes('owner') || keys.some(k => ['admin', 'manager'].includes(k))) {
+            try {
+                // Если уже есть выбранный текущий бизнес — идём сразу в /dashboard
+                const { data: current } = await supabase
+                    .from('user_current_business')
+                    .select('biz_id')
+                    .eq('user_id', userRes.user.id)
+                    .maybeSingle<{ biz_id: string }>();
+
+                if (!current?.biz_id) {
+                    // Нет current_biz_id — считаем доступные бизнесы
+                    const ALLOWED_ROLE_KEYS = new Set(['owner', 'admin', 'manager']);
+
+                    const [{ data: ownedBusinesses }, { data: roleBusinesses }] = await Promise.all([
+                        supabase
+                            .from('businesses')
+                            .select('id')
+                            .eq('owner_id', userRes.user.id),
+                        supabase
+                            .from('user_roles')
+                            .select('biz_id, roles:key!inner(key)')
+                            .eq('user_id', userRes.user.id)
+                            .not('biz_id', 'is', null),
+                    ]);
+
+                    const bizIds = new Set<string>();
+
+                    (ownedBusinesses ?? []).forEach((b: { id: string }) => {
+                        if (b?.id) bizIds.add(b.id);
+                    });
+
+                    const roleBizRows = (roleBusinesses ?? []) as Array<{
+                        biz_id: string | null;
+                        roles: { key: string }[] | null;
+                    }>;
+
+                    roleBizRows.forEach((r) => {
+                        if (!r.biz_id) return;
+                        const roleKey = r.roles?.[0]?.key;
+                        if (!roleKey || !ALLOWED_ROLE_KEYS.has(roleKey)) return;
+                        bizIds.add(r.biz_id);
+                    });
+
+                    if (bizIds.size > 1) {
+                        const url = req.nextUrl.clone();
+                        url.pathname = '/select-business';
+                        return NextResponse.redirect(url, 302);
+                    }
+                }
+
+                const url = req.nextUrl.clone();
+                url.pathname = '/dashboard';
+                return NextResponse.redirect(url, 302);
+            } catch {
+                // В случае ошибок фоллбек на старое поведение
+                const url = req.nextUrl.clone();
+                url.pathname = '/dashboard';
+                return NextResponse.redirect(url, 302);
+            }
         }
         
         // Сотрудники → проверяем наличие записи в staff (источник правды)

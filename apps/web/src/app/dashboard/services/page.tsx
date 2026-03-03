@@ -31,7 +31,7 @@ export default async function ServicesListPage({
     const branchFilter =
         Array.isArray(sp.branch) ? (sp.branch[0] ?? '') : (sp.branch ?? '');
 
-    const [{ data: branches }, { data: services, error }] = await Promise.all([
+    const [{ data: branches }, { data: services, error }, { data: biz }] = await Promise.all([
         supabase
             .from('branches')
             .select('id,name')
@@ -43,6 +43,11 @@ export default async function ServicesListPage({
             .select('id,name_ru,duration_min,price_from,price_to,active,branch_id')
             .eq('biz_id', bizId)
             .order('name_ru'),
+        supabase
+            .from('businesses')
+            .select('name, city')
+            .eq('id', bizId)
+            .maybeSingle<{ name: string | null; city: string | null }>(),
     ]);
 
     if (error) {
@@ -99,11 +104,16 @@ export default async function ServicesListPage({
 
     const list = Array.from(serviceMap.values());
 
+    const bizName = biz?.name ?? null;
+    const bizCity = biz?.city ?? null;
+
     return (
         <ServicesListClient
             list={list}
             branches={(branches ?? []) as Branch[]}
             branchFilter={branchFilter}
+            bizName={bizName}
+            bizCity={bizCity}
         />
     );
 }

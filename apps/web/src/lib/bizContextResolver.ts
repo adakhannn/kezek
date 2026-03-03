@@ -245,7 +245,7 @@ export async function resolveBizContextForManagers() {
                         diagnostics.currentBizHasAllowedRole = false;
                         logWarn(
                             'AuthBiz',
-                            'Current business has no allowed roles for user, fallback to auto selection',
+                            'Current business has no allowed roles for user, will not auto switch to another business',
                             {
                                 userId,
                                 currentBizId,
@@ -257,7 +257,7 @@ export async function resolveBizContextForManagers() {
                     diagnostics.currentBizHasAllowedRole = false;
                     logWarn(
                         'AuthBiz',
-                        'No user_roles found for current business, fallback to auto selection',
+                        'No user_roles found for current business, will not auto switch to another business',
                         {
                             userId,
                             currentBizId,
@@ -287,9 +287,9 @@ export async function resolveBizContextForManagers() {
         const userRolesCheckStart = Date.now();
         const [{ data: ur, error: urError }, { data: roleRows, error: rolesError }] =
             await Promise.all([
-                serviceClient.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
-                serviceClient.from('roles').select('id, key'),
-            ]);
+            serviceClient.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
+            serviceClient.from('roles').select('id, key'),
+        ]);
 
         diagnostics.checkedUserRoles = true;
         const userRolesCheckTime = Date.now() - userRolesCheckStart;
@@ -317,7 +317,10 @@ export async function resolveBizContextForManagers() {
             diagnostics.errors.push({ step: 'load_roles', error: rolesError.message });
         }
 
-        if (ur && roleRows) {
+        const shouldAutoSelectFromRoles =
+            !diagnostics.hasCurrentBizRecord || diagnostics.currentBizHasAllowedRole === true;
+
+        if (ur && roleRows && shouldAutoSelectFromRoles) {
             diagnostics.userRolesCount = ur.length;
             const rolesMap = new Map<string, string>(
                 roleRows.map((r: { id: string | number; key: string }) => [
@@ -397,7 +400,7 @@ export async function resolveBizContextForManagers() {
                     checkTimeMs: userRolesCheckTime,
                 });
             }
-        } else {
+        } else if (!ur || !roleRows) {
             logDebug('AuthBiz', 'No user_roles or roles data', {
                 userId,
                 hasUserRoles: !!ur,
@@ -408,7 +411,10 @@ export async function resolveBizContextForManagers() {
             });
         }
 
-        if (!bizId) {
+        const shouldAutoSelectFromOwner =
+            !diagnostics.hasCurrentBizRecord || diagnostics.currentBizHasAllowedRole === true;
+
+        if (!bizId && shouldAutoSelectFromOwner) {
             logDebug('AuthBiz', 'No business found via user_roles, checking owner_id', {
                 userId,
             });

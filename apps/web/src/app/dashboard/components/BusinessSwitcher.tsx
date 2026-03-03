@@ -143,7 +143,9 @@ export function BusinessSwitcher() {
         businesses[0] ??
         null;
 
-    const label = current?.name || current?.slug || t('dashboard.businessSwitcher.unknown', 'Бизнес');
+    const currentName = current?.name || current?.slug || t('dashboard.businessSwitcher.unknown', 'Бизнес');
+    const currentCity = current?.city || '';
+    const label = currentCity ? `${currentName} · ${currentCity}` : currentName;
 
     return (
         <div className="mt-3">

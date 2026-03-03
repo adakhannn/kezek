@@ -28,12 +28,19 @@ export default async function Page({
     const dismissedParam = Array.isArray(sp.dismissed) ? sp.dismissed[0] : sp.dismissed;
     const showDismissed = dismissedParam === '1';
 
-    const { data: rows, error } = await supabase
-        .from('staff')
-        .select('id,full_name,is_active,branch_id,branches(name)')
-        .eq('biz_id', bizId)
-        .order('full_name')
-        .returns<Row[]>();
+    const [{ data: rows, error }, { data: biz }] = await Promise.all([
+        supabase
+            .from('staff')
+            .select('id,full_name,is_active,branch_id,branches(name)')
+            .eq('biz_id', bizId)
+            .order('full_name')
+            .returns<Row[]>(),
+        supabase
+            .from('businesses')
+            .select('name, city')
+            .eq('id', bizId)
+            .maybeSingle<{ name: string | null; city: string | null }>(),
+    ]);
 
     if (error) {
         return (
@@ -45,5 +52,15 @@ export default async function Page({
         );
     }
 
-    return <StaffPageClient initialRows={rows ?? []} showDismissed={showDismissed} />;
+    const bizName = biz?.name ?? null;
+    const bizCity = biz?.city ?? null;
+
+    return (
+        <StaffPageClient
+            initialRows={rows ?? []}
+            showDismissed={showDismissed}
+            bizName={bizName}
+            bizCity={bizCity}
+        />
+    );
 }
