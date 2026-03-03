@@ -16,7 +16,7 @@ type State =
     | { status: 'idle' | 'loading'; currentBizId?: string | null; businesses: Business[] }
     | { status: 'error'; message: string };
 
-export function BusinessSwitcher() {
+export function BusinessSwitcher({ serverCurrentBizId }: { serverCurrentBizId?: string } = {}) {
     const { t } = useLanguage();
     const router = useRouter();
     const [state, setState] = useState<State>({ status: 'loading', businesses: [] });
@@ -80,7 +80,8 @@ export function BusinessSwitcher() {
 
     const handleSelect = async (bizId: string) => {
         if (state.status === 'loading' || isSaving) return;
-        if (state.status === 'idle' && state.currentBizId === bizId) {
+        const effective = serverCurrentBizId ?? (state.status === 'idle' ? state.currentBizId : undefined);
+        if (state.status === 'idle' && effective === bizId) {
             setIsOpen(false);
             return;
         }
@@ -137,8 +138,10 @@ export function BusinessSwitcher() {
         return null;
     }
 
+    // Серверный bizId из layout — источник истины, чтобы сайдбар совпадал с контентом после refresh
+    const effectiveBizId = serverCurrentBizId ?? currentBizId ?? null;
     const current =
-        businesses.find((b) => b.id === currentBizId) ??
+        businesses.find((b) => b.id === effectiveBizId) ??
         businesses[0] ??
         null;
 

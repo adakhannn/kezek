@@ -148,7 +148,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
                                     ID: {bizId.slice(0, 8)}...
                                 </p>
-                                <BusinessSwitcher />
+                                <BusinessSwitcher serverCurrentBizId={bizId} />
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
