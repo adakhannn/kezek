@@ -317,8 +317,10 @@ export async function resolveBizContextForManagers() {
             diagnostics.errors.push({ step: 'load_roles', error: rolesError.message });
         }
 
-        const shouldAutoSelectFromRoles =
-            !diagnostics.hasCurrentBizRecord || diagnostics.currentBizHasAllowedRole === true;
+        // Если у пользователя уже есть запись в user_current_business, мы не должны
+        // автоматически переопределять её выбором по ролям. Автовыбор по ролям
+        // используется только когда current_biz_id ещё не задан.
+        const shouldAutoSelectFromRoles = !diagnostics.hasCurrentBizRecord;
 
         if (ur && roleRows && shouldAutoSelectFromRoles) {
             diagnostics.userRolesCount = ur.length;
@@ -411,8 +413,8 @@ export async function resolveBizContextForManagers() {
             });
         }
 
-        const shouldAutoSelectFromOwner =
-            !diagnostics.hasCurrentBizRecord || diagnostics.currentBizHasAllowedRole === true;
+        // Аналогично ролям: к owner_id-фоллбеку переходим только если нет current_biz_id.
+        const shouldAutoSelectFromOwner = !diagnostics.hasCurrentBizRecord;
 
         if (!bizId && shouldAutoSelectFromOwner) {
             logDebug('AuthBiz', 'No business found via user_roles, checking owner_id', {
