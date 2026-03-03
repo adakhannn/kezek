@@ -76,8 +76,11 @@ export async function POST(
                     return createErrorResponse('validation', 'У сотрудника не указан филиал. Укажите филиал в карточке сотрудника и попробуйте снова.', undefined, 400);
                 }
 
+                // Используем service client для работы со staff_shifts, чтобы обойти RLS и корректно обрабатывать существующие смены
+                const writeClient = getServiceClient();
+
                 // Проверяем, не открыта ли уже смена за эту дату
-                const { data: existingShift, error: checkError } = await supabase
+                const { data: existingShift, error: checkError } = await writeClient
                     .from('staff_shifts')
                     .select('id, status')
                     .eq('staff_id', staffId)
@@ -166,9 +169,6 @@ export async function POST(
                     }
                 }
 
-                // Используем service client для создания смены
-                const writeClient = getServiceClient();
-
                 // Если смена уже существует (но не открыта и не закрыта), обновляем её
                 if (existingShift) {
                     const { data: updatedShift, error: updateError } = await writeClient
@@ -212,7 +212,16 @@ export async function POST(
                     .single();
 
                 if (createError) {
-                    logError('OwnerShiftOpen', 'Error creating shift', createError);
+                    logError('OwnerShiftOpen', 'Error creating shift', {
+                        code: (createError as { code?: string })?.code,
+                        message: (createError as { message?: string })?.message,
+                        details: (createError as { details?: string })?.details,
+                        hint: (createError as { hint?: string })?.hint,
+                        staffId,
+                        bizId,
+                        branch_id: staff.branch_id,
+                        shift_date: ymd,
+                    });
                     return createErrorResponse('internal', 'Не удалось создать смену', undefined, 500);
                 }
 
