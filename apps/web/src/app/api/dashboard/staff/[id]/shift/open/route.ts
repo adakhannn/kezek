@@ -92,14 +92,10 @@ export async function POST(
                     return createErrorResponse('internal', 'Не удалось проверить существующую смену', undefined, 500);
                 }
 
-                if (existingShift) {
-                    if (existingShift.status === 'open') {
-                        return createErrorResponse('validation', 'Смена уже открыта', undefined, 400);
-                    }
-                    if (existingShift.status === 'closed') {
-                        return createErrorResponse('validation', 'Смена уже закрыта. Используйте функцию переоткрытия.', undefined, 400);
-                    }
+                if (existingShift?.status === 'open') {
+                    return createErrorResponse('validation', 'Смена уже открыта', undefined, 400);
                 }
+                // existingShift со статусом 'closed' или другим — переоткрываем через UPDATE ниже
 
                 // Получаем информацию о расписании для расчета опоздания
                 const dow = targetDate.getDay(); // 0-6
@@ -169,13 +165,14 @@ export async function POST(
                     }
                 }
 
-                // Если смена уже существует (но не открыта и не закрыта), обновляем её
+                // Если смена уже существует (закрыта или в другом состоянии) — переоткрываем
                 if (existingShift) {
                     const { data: updatedShift, error: updateError } = await writeClient
                         .from('staff_shifts')
                         .update({
                             status: 'open',
                             opened_at: openedAt.toISOString(),
+                            closed_at: null,
                             late_minutes: lateMinutes,
                         })
                         .eq('id', existingShift.id)
