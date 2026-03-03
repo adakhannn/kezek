@@ -34,6 +34,7 @@ export default function SelectBusinessPage() {
                 const res = await fetch('/api/me/current-business', {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-store',
                 });
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
@@ -104,6 +105,10 @@ export default function SelectBusinessPage() {
     const handleSelect = async (bizId: string) => {
         if (savingId) return;
         setSavingId(bizId);
+        // Сразу показываем выбранный бизнес активным
+        setState((prev) =>
+            prev.status === 'ready' ? { ...prev, currentBizId: bizId } : prev,
+        );
         try {
             const res = await fetch('/api/me/current-business', {
                 method: 'POST',
