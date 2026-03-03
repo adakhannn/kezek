@@ -10,33 +10,32 @@ const ALLOWED_ROLE_KEYS = new Set(['owner', 'admin', 'manager']);
 
 export async function GET() {
     return withErrorHandler('GetCurrentBusiness', async () => {
-        const { supabase } = await createSupabaseClients();
+        const { supabase, admin } = await createSupabaseClients();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return createErrorResponse('auth', 'Не авторизован', undefined, 401);
         }
 
-        // Текущий бизнес (если уже выбран)
-        const { data: current } = await supabase
-            .from('user_current_business')
-            .select('biz_id')
-            .eq('user_id', user.id)
-            .maybeSingle<{ biz_id: string }>();
+        const userId = user.id;
 
-        // Доступные бизнесы для пользователя:
-        // 1) где он owner
-        // 2) где у него роль owner/admin/manager через user_roles
-        const { data: ownedBusinesses } = await supabase
-            .from('businesses')
-            .select('id, name, city, slug')
-            .eq('owner_id', user.id);
-
-        const { data: roleBusinesses } = await supabase
-            .from('user_roles')
-            .select('biz_id, roles:key!inner(key)')
-            .eq('user_id', user.id)
-            .not('biz_id', 'is', null);
+        // Читаем через admin, чтобы не упираться в RLS (как в resolveBizContextForManagers)
+        const [{ data: current }, { data: ownedBusinesses }, { data: roleBusinesses }] = await Promise.all([
+            admin
+                .from('user_current_business')
+                .select('biz_id')
+                .eq('user_id', userId)
+                .maybeSingle<{ biz_id: string }>(),
+            admin
+                .from('businesses')
+                .select('id, name, city, slug')
+                .eq('owner_id', userId),
+            admin
+                .from('user_roles')
+                .select('biz_id, role_id')
+                .eq('user_id', userId)
+                .not('biz_id', 'is', null),
+        ]);
 
         const bizMap = new Map<string, { id: string; name: string | null; city: string | null; slug: string | null }>();
 
@@ -44,22 +43,29 @@ export async function GET() {
             bizMap.set(b.id, { id: b.id, name: b.name ?? null, city: b.city ?? null, slug: b.slug ?? null });
         });
 
-        // user_roles может содержать несколько записей по одному biz_id — фильтруем по ролям и мержим
-        const roleBizRows = (roleBusinesses ?? []) as Array<{
-            biz_id: string | null;
-            roles: { key: string }[] | null;
-        }>;
-
-        roleBizRows.forEach((r) => {
-            if (!r.biz_id) return;
-            const roleKey = r.roles?.[0]?.key;
-            if (!roleKey || !ALLOWED_ROLE_KEYS.has(roleKey)) return;
-            if (!bizMap.has(r.biz_id)) {
-                // Если бизнес ещё не в мапе, попробуем вытащить базовую инфу через businesses
-                // Но чтобы не плодить дополнительные запросы, просто сохраним id, остальные поля null
-                bizMap.set(r.biz_id, { id: r.biz_id, name: null, city: null, slug: null });
+        // Роли: оставляем только owner/admin/manager
+        if (roleBusinesses?.length) {
+            const { data: roleRows } = await admin.from('roles').select('id, key');
+            const roleKeyById = new Map<string, string>(
+                (roleRows ?? []).map((r: { id: string; key: string }) => [r.id, r.key]),
+            );
+            const allowedBizIds = new Set<string>();
+            roleBusinesses.forEach((r: { biz_id: string | null; role_id: string }) => {
+                if (!r.biz_id) return;
+                const key = roleKeyById.get(r.role_id);
+                if (key && ALLOWED_ROLE_KEYS.has(key)) allowedBizIds.add(r.biz_id);
+            });
+            const missingIds = [...allowedBizIds].filter((id) => !bizMap.has(id));
+            if (missingIds.length > 0) {
+                const { data: bizRows } = await admin
+                    .from('businesses')
+                    .select('id, name, city, slug')
+                    .in('id', missingIds);
+                (bizRows ?? []).forEach((b: { id: string; name: string | null; city: string | null; slug: string | null }) => {
+                    bizMap.set(b.id, { id: b.id, name: b.name ?? null, city: b.city ?? null, slug: b.slug ?? null });
+                });
             }
-        });
+        }
 
         const businesses = Array.from(bizMap.values());
 
