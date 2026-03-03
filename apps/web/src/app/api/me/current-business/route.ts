@@ -117,18 +117,17 @@ export async function POST(req: Request) {
             if (biz.owner_id === userId) {
                 hasAccess = true;
             } else {
-                const { data: roles } = await admin
+                const { data: urRows } = await admin
                     .from('user_roles')
-                    .select('role_id, roles:key!inner(key)')
+                    .select('role_id')
                     .eq('user_id', userId)
                     .eq('biz_id', bizId);
 
-                if (roles && roles.length > 0) {
-                    const roleRows = roles as Array<{ roles: { key: string }[] | null }>;
-                    hasAccess = roleRows.some((r) => {
-                        const key = r.roles?.[0]?.key;
-                        return !!key && ALLOWED_ROLE_KEYS.has(key);
-                    });
+                if (urRows?.length) {
+                    const roleIds = [...new Set((urRows as { role_id: string }[]).map((r) => r.role_id))];
+                    const { data: roleRows } = await admin.from('roles').select('id, key').in('id', roleIds);
+                    const keySet = new Set((roleRows ?? []).map((r: { key: string }) => r.key));
+                    hasAccess = [...ALLOWED_ROLE_KEYS].some((k) => keySet.has(k));
                 }
             }
 
