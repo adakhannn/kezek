@@ -26,9 +26,10 @@ export async function GET() {
                 .select('biz_id')
                 .eq('user_id', userId)
                 .maybeSingle<{ biz_id: string }>(),
+            // id, name, slug — без city: колонки city может не быть в public.businesses
             admin
                 .from('businesses')
-                .select('id, name, city, slug')
+                .select('id, name, slug')
                 .eq('owner_id', userId),
             admin
                 .from('user_roles')
@@ -40,7 +41,7 @@ export async function GET() {
         const bizMap = new Map<string, { id: string; name: string | null; city: string | null; slug: string | null }>();
 
         (ownedBusinesses ?? []).forEach((b) => {
-            bizMap.set(b.id, { id: b.id, name: b.name ?? null, city: b.city ?? null, slug: b.slug ?? null });
+            bizMap.set(b.id, { id: b.id, name: b.name ?? null, city: null, slug: b.slug ?? null });
         });
 
         // Роли: оставляем только owner/admin/manager
@@ -59,10 +60,10 @@ export async function GET() {
             if (missingIds.length > 0) {
                 const { data: bizRows } = await admin
                     .from('businesses')
-                    .select('id, name, city, slug')
+                    .select('id, name, slug')
                     .in('id', missingIds);
-                (bizRows ?? []).forEach((b: { id: string; name: string | null; city: string | null; slug: string | null }) => {
-                    bizMap.set(b.id, { id: b.id, name: b.name ?? null, city: b.city ?? null, slug: b.slug ?? null });
+                (bizRows ?? []).forEach((b: { id: string; name: string | null; slug: string | null }) => {
+                    bizMap.set(b.id, { id: b.id, name: b.name ?? null, city: null, slug: b.slug ?? null });
                 });
             }
         }
