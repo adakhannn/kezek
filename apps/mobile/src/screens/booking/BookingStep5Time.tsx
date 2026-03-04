@@ -3,16 +3,18 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { formatInTimeZone } from 'date-fns-tz';
 import { addMinutes } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
+
+import { formatTimeSlot } from '@shared-client/formatters';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { colors } from '../../constants/colors';
 import { supabase } from '../../lib/supabase';
-import Button from '../../components.ui.Button';
+import Button from '../../components/ui/Button';
+import OfflineBanner from '../../components/ui/OfflineBanner';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
@@ -138,11 +140,6 @@ export default function BookingStep5Time() {
     const domainErrorMessage =
         slotsResult && !slotsResult.ok ? slotsResult.error.message : null;
 
-    const formatTimeSlot = (dateString: string) => {
-        const date = new Date(dateString);
-        return formatInTimeZone(date, TZ, 'HH:mm');
-    };
-
     const handleSelectSlot = (slot: TimeSlot) => {
         setSelectedSlot(slot);
         if (bookingData.business?.id) {
@@ -158,8 +155,7 @@ export default function BookingStep5Time() {
 
     const handleNext = () => {
         if (bookingData.selectedSlot) {
-            // Навигация в BookingStep6Confirm находится в RootStack
-            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep6Confirm');
+            navigation.navigate('BookingStep6Confirm');
         }
     };
 
@@ -180,24 +176,7 @@ export default function BookingStep5Time() {
 
             <View style={styles.section}>
                 {showOfflineBanner && (
-                    <View style={styles.offlineBanner}>
-                        <Ionicons name="cloud-offline-outline" size={18} color={colors.text.secondary} />
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.offlineTitle}>Нет подключения к интернету</Text>
-                            <Text style={styles.offlineText}>
-                                Мы не можем загрузить свободное время. Проверьте сеть и нажмите кнопку обновления,
-                                когда соединение восстановится.
-                            </Text>
-                            <View style={styles.offlineActions}>
-                                <Button
-                                    title="Обновить"
-                                    onPress={() => refetch()}
-                                    variant="outline"
-                                    style={styles.offlineRetryButton}
-                                />
-                            </View>
-                        </View>
-                    </View>
+                    <OfflineBanner onRetry={() => refetch()} />
                 )}
 
                 {isLoading && !slotsResult ? (
@@ -222,7 +201,7 @@ export default function BookingStep5Time() {
                                         bookingData.selectedSlot?.start_at === slot.start_at && styles.slotTextSelected,
                                     ]}
                                 >
-                                    {formatTimeSlot(slot.start_at)}
+                                    {formatTimeSlot(slot.start_at, TZ)}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -289,36 +268,6 @@ const styles = StyleSheet.create({
     },
     section: {
         padding: 20,
-    },
-    offlineBanner: {
-        marginBottom: 16,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderRadius: 12,
-        backgroundColor: colors.background.secondary,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 10,
-    },
-    offlineTitle: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 2,
-    },
-    offlineText: {
-        fontSize: 12,
-        color: colors.text.secondary,
-    },
-    offlineActions: {
-        marginTop: 8,
-        flexDirection: 'row',
-        gap: 8,
-    },
-    offlineRetryButton: {
-        flex: 0,
     },
     slotsLoadingContainer: {
         padding: 40,

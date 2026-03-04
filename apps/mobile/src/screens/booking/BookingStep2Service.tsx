@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { formatServicePrice } from '@shared-client/formatters';
 import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
@@ -48,15 +49,6 @@ export default function BookingStep2Service() {
         }
     }, [servicesData, setServices, setServiceId]);
 
-    const formatPrice = (service: typeof servicesData[0]) => {
-        if (service.price_from && service.price_to) {
-            return `${service.price_from} - ${service.price_to} сом`;
-        } else if (service.price_from) {
-            return `от ${service.price_from} сом`;
-        }
-        return null;
-    };
-
     const handleSelectService = (serviceId: string) => {
         setServiceId(serviceId);
         if (bookingData.business?.id) {
@@ -71,8 +63,7 @@ export default function BookingStep2Service() {
 
     const handleNext = () => {
         if (bookingData.serviceId) {
-            // Навигация в BookingStep3Staff находится в RootStack
-            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep3Staff');
+            navigation.navigate('BookingStep3Staff');
         }
     };
 
@@ -115,7 +106,7 @@ export default function BookingStep2Service() {
                     <View style={styles.section}>
                         <View style={styles.optionsList}>
                             {servicesData.map((service) => {
-                                const price = formatPrice(service);
+                                const price = formatServicePrice(service, 'сом');
                                 const isSelected = bookingData.serviceId === service.id;
                                 return (
                                     <TouchableOpacity

@@ -11,6 +11,7 @@ import type {
     StaffInfo,
     ScheduleContext,
     SlotFilterContext,
+    ServiceInfo,
 } from './types';
 
 /**
@@ -97,6 +98,83 @@ export function filterSlotsByContext(
         // Для обычного мастера принимаем слоты из выбранного филиала.
         return s.branch_id === branchId;
     });
+}
+
+/**
+ * Строит множество ID услуг, которые привязаны к указанному мастеру (service_staff).
+ */
+function getServiceIdsForStaff(
+    serviceToStaffMap: Map<string, Set<string>>,
+    staffId: string,
+): Set<string> {
+    const serviceIds = new Set<string>();
+    for (const [sid, staffSet] of serviceToStaffMap.entries()) {
+        if (staffSet.has(staffId)) {
+            serviceIds.add(sid);
+        }
+    }
+    return serviceIds;
+}
+
+/**
+ * Проверяет, есть ли у услуги «похожая» в списке доступных мастеру:
+ * та же name_ru, тот же duration_min, другой id, и эта другая привязана к мастеру.
+ * Используется при временном переводе: мастер может оказывать услуги филиала по «эквиваленту» своей.
+ */
+function hasSimilarServiceLinkedToStaff(
+    service: ServiceInfo,
+    allServices: ServiceInfo[],
+    servicesForStaff: Set<string>,
+): boolean {
+    return allServices.some(
+        (s) =>
+            s.id !== service.id &&
+            s.name_ru === service.name_ru &&
+            s.duration_min === service.duration_min &&
+            servicesForStaff.has(s.id),
+    );
+}
+
+/**
+ * Фильтрует услуги по целевому филиалу и привязке к мастеру (service_staff).
+ * При временном переводе допускает «похожие» услуги (одинаковые name_ru + duration_min),
+ * привязанные к мастеру в другом филиале.
+ * Специальное значение staffId === 'any': услуги филиала, которые выполняет хотя бы один мастер.
+ *
+ * @param params - services, targetBranchId, staffId, serviceToStaffMap, isTemporaryTransfer
+ * @returns Отфильтрованный массив услуг
+ */
+export function filterServicesForStaff(params: {
+    services: ServiceInfo[];
+    targetBranchId: string;
+    staffId: string;
+    serviceToStaffMap: Map<string, Set<string>> | null;
+    isTemporaryTransfer: boolean;
+}): ServiceInfo[] {
+    const { services, targetBranchId, staffId, serviceToStaffMap, isTemporaryTransfer } = params;
+
+    let list = services.filter((s) => s.branch_id === targetBranchId);
+    if (!serviceToStaffMap || serviceToStaffMap.size === 0) {
+        return list;
+    }
+
+    if (staffId === 'any') {
+        return list.filter(
+            (s) => serviceToStaffMap.has(s.id) && serviceToStaffMap.get(s.id)!.size > 0,
+        );
+    }
+
+    const servicesForStaff = getServiceIdsForStaff(serviceToStaffMap, staffId);
+    if (isTemporaryTransfer) {
+        list = list.filter(
+            (s) =>
+                servicesForStaff.has(s.id) ||
+                hasSimilarServiceLinkedToStaff(s, services, servicesForStaff),
+        );
+    } else {
+        list = list.filter((s) => servicesForStaff.has(s.id));
+    }
+    return list;
 }
 
 

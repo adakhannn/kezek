@@ -105,8 +105,6 @@ export function BookingsList({
                             const service = Array.isArray(b.services) ? b.services[0] : b.services;
                             const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
                             const isPast = new Date(b.start_at) < new Date();
-                            const canMarkAttendance = isPast && b.status !== 'cancelled' && b.status !== 'no_show' && b.status !== 'paid';
-
                             return (
                                 <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                     <td className="p-3 lg:p-4 text-sm font-mono text-gray-600 dark:text-gray-400">
@@ -147,8 +145,6 @@ export function BookingsList({
                     const service = Array.isArray(b.services) ? b.services[0] : b.services;
                     const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
                     const isPast = new Date(b.start_at) < new Date();
-                    const canMarkAttendance = isPast && b.status !== 'cancelled' && b.status !== 'no_show' && b.status !== 'paid';
-
                     return (
                         <div key={b.id} className="bg-white dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700 shadow-sm">
                             <div className="flex items-start justify-between gap-2">

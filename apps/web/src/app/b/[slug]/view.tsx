@@ -1,6 +1,7 @@
 // apps/web/src/app/b/[slug]/view.tsx
 'use client';
 
+import { resolveScheduleContext } from '@core-domain/schedule';
 import { addDays, format } from 'date-fns';
 import { enGB } from 'date-fns/locale/en-GB';
 import { ru } from 'date-fns/locale/ru';
@@ -27,7 +28,7 @@ import { useSlotsLoader } from './hooks/useSlotsLoader';
 import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
 import type { Data, Service, ServiceStaffRow, Slot, Staff } from './types';
 
-import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
+import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { useBookingFlowStart, trackBookingFlowStep } from '@/lib/analyticsTrackEvent';
 import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
@@ -229,13 +230,17 @@ export default function BookingForm({ data }: { data: Data }) {
         staff,
     });
 
-    /* ---------- фильтрация услуг ---------- */
+    /* ---------- фильтрация услуг (те же правила, что и в QuickDesk: core-domain schedule) ---------- */
+    const staffForSchedule = useMemo(
+        () => staff.map((s) => ({ id: s.id, branch_id: s.branch_id })),
+        [staff],
+    );
     const servicesFiltered = useServicesFilter({
         services,
-        servicesByBranch,
         staffId,
         branchId,
         dayStr,
+        staff: staffForSchedule,
         serviceToStaffMap,
         temporaryTransfers,
     });
@@ -357,20 +362,14 @@ export default function BookingForm({ data }: { data: Data }) {
         let ignore = false;
         (async () => {
             try {
-                // Определяем targetBranchId для временных переводов
-                const isTemporaryTransfer = dayStr && temporaryTransfers.some(
-                    (t) => t.staff_id === staffId && t.date === dayStr
-                );
-                const _staffCurrent = staff.find((m) => m.id === staffId);
-                let targetBranchId = branchId;
-                if (isTemporaryTransfer && dayStr) {
-                    const tempTransfer = temporaryTransfers.find(
-                        (t) => t.staff_id === staffId && t.date === dayStr
-                    );
-                    if (tempTransfer) {
-                        targetBranchId = tempTransfer.branch_id;
-                    }
-                }
+                const scheduleContext = resolveScheduleContext({
+                    staffId,
+                    dayStr,
+                    selectedBranchId: branchId,
+                    temporaryTransfers,
+                    staff: staffForSchedule,
+                });
+                const targetBranchId = scheduleContext.targetBranchId;
 
                 // Запрашиваем все брони для этого мастера и филиала на выбранный день
                 const dayStartUTC = new Date(dayStr + 'T00:00:00Z');
@@ -436,7 +435,7 @@ export default function BookingForm({ data }: { data: Data }) {
         return () => {
             ignore = true;
         };
-    }, [slotsFromHook, staffId, branchId, dayStr, temporaryTransfers, staff]);
+    }, [slotsFromHook, staffId, branchId, dayStr, temporaryTransfers, staffForSchedule]);
 
 
     // Обновляем список слотов при возврате на страницу (например, через кнопку "Назад")

@@ -1,5 +1,7 @@
 import type { BranchRepository, BookingRepository } from '../ports';
-import type { BookingStatus, CreateBookingParams, PromotionApplicationResult } from './types';
+import type { BookingStatus, CreateBookingParams } from './types';
+import { validateBranchForBooking } from './validation';
+import { isTerminalStatus, canMarkAttendance } from './statusTransitions';
 
 /**
  * Порт для команд над бронированиями, реализуемый инфраструктурой (Supabase RPC и т.п.).
@@ -72,7 +74,7 @@ export async function createBookingUseCase(
             branchId: params.branch_id,
         });
 
-        if (!branch) {
+        if (!validateBranchForBooking(branch)) {
             return {
                 ok: false,
                 error: {
@@ -82,11 +84,11 @@ export async function createBookingUseCase(
             };
         }
 
-        targetBranchId = branch.id;
+        targetBranchId = branch!.id;
     } else {
         const branch = await branchRepository.findFirstActiveByBizId(params.biz_id);
 
-        if (!branch) {
+        if (!validateBranchForBooking(branch)) {
             return {
                 ok: false,
                 error: {
@@ -96,7 +98,7 @@ export async function createBookingUseCase(
             };
         }
 
-        targetBranchId = branch.id;
+        targetBranchId = branch!.id;
     }
 
     // Создаём hold-бронирование.
@@ -226,7 +228,7 @@ export async function decideMarkAttendanceUseCase(
         };
     }
 
-    if (booking.status === 'paid' || booking.status === 'no_show') {
+    if (isTerminalStatus(booking.status)) {
         return {
             ok: false,
             reason: 'BOOKING_ALREADY_FINAL',
@@ -245,7 +247,7 @@ export async function decideMarkAttendanceUseCase(
         };
     }
 
-    if (startAt > nowDate) {
+    if (!canMarkAttendance(booking.status, { bookingStartAt: startAt, now: nowDate })) {
         return {
             ok: false,
             reason: 'BOOKING_NOT_IN_PAST',

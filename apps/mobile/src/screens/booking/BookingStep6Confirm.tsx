@@ -1,18 +1,22 @@
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { useMutation } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { formatInTimeZone } from 'date-fns-tz';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { apiRequest } from '../../lib/api';
+import {
+    formatTimeSlot,
+    formatDateLabel,
+    formatServicePrice,
+} from '@shared-client/formatters';
 import { useBooking } from '../../contexts/BookingContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useConfirmBooking } from '../../hooks/useConfirmBooking';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { logError } from '../../lib/log';
 import { colors } from '../../constants/colors';
 import Card from '../../components/ui/Card';
+import OfflineBanner from '../../components/ui/OfflineBanner';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
@@ -28,54 +32,15 @@ export default function BookingStep6Confirm() {
     const { showToast } = useToast();
     const { isOffline } = useNetworkStatus();
 
-    const formatTimeSlot = (dateString: string) => {
-        const date = new Date(dateString);
-        return formatInTimeZone(date, TZ, 'HH:mm');
-    };
-
-    const formatDateLabel = (dateString: string) => {
-        const date = new Date(dateString + 'T00:00:00');
-        const day = date.getDate();
-        const month = date.toLocaleDateString('ru-RU', { month: 'long' });
-        return { day, month };
-    };
-
-    const formatPrice = (service: typeof bookingData.services[0] | undefined) => {
-        if (!service) return null;
-        if (service.price_from && service.price_to) {
-            return `${service.price_from} - ${service.price_to} сом`;
-        } else if (service.price_from) {
-            return `от ${service.price_from} сом`;
-        }
-        return null;
-    };
-
     const selectedService = bookingData.services.find((s) => s.id === bookingData.serviceId);
     const selectedStaff = bookingData.staff.find((s) => s.id === bookingData.staffId);
 
-    const createBookingMutation = useMutation({
-        mutationFn: async () => {
-            if (!bookingData.business || !bookingData.selectedSlot) {
-                throw new Error('Данные бронирования неполные');
-            }
-
-            return apiRequest<{ ok: boolean; booking_id: string }>('/api/quick-hold', {
-                method: 'POST',
-                body: JSON.stringify({
-                    biz_id: bookingData.business.id,
-                    branch_id: bookingData.branchId, // Передаем явно выбранный филиал
-                    service_id: bookingData.serviceId,
-                    staff_id: bookingData.staffId,
-                    start_at: bookingData.selectedSlot.start_at,
-                }),
-            });
-        },
-        onSuccess: (data) => {
+    const { createBooking, isPending } = useConfirmBooking({
+        onSuccess: (bookingId) => {
             showToast('Запись создана!', 'success');
             reset();
             setTimeout(() => {
-                // Навигация в BookingDetails находится в RootStack
-                (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingDetails', { id: data.booking_id });
+                navigation.navigate('BookingDetails', { id: bookingId });
             }, 500);
         },
         onError: (error: Error) => {
@@ -101,17 +66,31 @@ export default function BookingStep6Confirm() {
             showToast('Выберите время', 'error');
             return;
         }
+        if (!bookingData.business) {
+            showToast('Данные бронирования неполные', 'error');
+            return;
+        }
 
         Alert.alert('Подтверждение', 'Создать запись?', [
             { text: 'Отмена', style: 'cancel' },
             {
                 text: 'Создать',
-                onPress: () => createBookingMutation.mutate(),
+                onPress: () =>
+                    createBooking({
+                        biz_id: bookingData.business!.id,
+                        branch_id: bookingData.branchId,
+                        service_id: bookingData.serviceId,
+                        staff_id: bookingData.staffId,
+                        start_at: bookingData.selectedSlot!.start_at,
+                    }),
             },
         ]);
     };
 
-    const dateLabel = bookingData.selectedDate ? formatDateLabel(bookingData.selectedDate) : null;
+    const dateLabel = bookingData.selectedDate
+        ? formatDateLabel(bookingData.selectedDate, 'ru-RU')
+        : null;
+    const priceLabel = formatServicePrice(selectedService, 'сом');
 
     return (
         <LinearGradient
@@ -130,6 +109,11 @@ export default function BookingStep6Confirm() {
                 </View>
 
             <View style={styles.section}>
+                {isOffline && (
+                    <OfflineBanner
+                        message="Создание записи недоступно без сети. Дождитесь восстановления соединения."
+                    />
+                )}
                 <Card style={styles.summaryCard}>
                     <View style={styles.summaryRow}>
                         <Ionicons name="business-outline" size={24} color="#6366f1" />
@@ -147,8 +131,8 @@ export default function BookingStep6Confirm() {
                             {selectedService?.duration_min && (
                                 <Text style={styles.summaryHint}>{selectedService.duration_min} минут</Text>
                             )}
-                            {formatPrice(selectedService) && (
-                                <Text style={styles.summaryPrice}>{formatPrice(selectedService)}</Text>
+                            {priceLabel && (
+                                <Text style={styles.summaryPrice}>{priceLabel}</Text>
                             )}
                         </View>
                     </View>
@@ -172,7 +156,7 @@ export default function BookingStep6Confirm() {
                             )}
                             {bookingData.selectedSlot && (
                                 <Text style={styles.summaryHint}>
-                                    {formatTimeSlot(bookingData.selectedSlot.start_at)}
+                                    {formatTimeSlot(bookingData.selectedSlot.start_at, TZ)}
                                 </Text>
                             )}
                         </View>
@@ -189,8 +173,8 @@ export default function BookingStep6Confirm() {
                     <Button
                         title="Записаться"
                         onPress={handleCreateBooking}
-                        loading={createBookingMutation.isPending}
-                        disabled={createBookingMutation.isPending || !bookingData.selectedSlot}
+                        loading={isPending}
+                        disabled={isPending || !bookingData.selectedSlot || isOffline}
                         variant="primary"
                         style={styles.nextButton}
                     />

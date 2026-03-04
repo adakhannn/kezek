@@ -4,6 +4,20 @@
 
 import type { CreateBookingParams, CreateGuestBookingParams, PromotionType, PromotionParams } from './types';
 
+/** Минимальный тип филиала для проверки при бронировании */
+export type BranchForBookingCheck = { id: string; is_active?: boolean } | null;
+
+/**
+ * Проверяет, подходит ли филиал для создания/привязки бронирования.
+ * Используется для упрощения ветвлений в use-case и API (после получения филиала из репозитория или ответа).
+ */
+export function validateBranchForBooking(branch: BranchForBookingCheck): boolean {
+    if (branch == null || typeof branch !== 'object') return false;
+    if (typeof branch.id !== 'string' || branch.id.trim() === '') return false;
+    if (branch.is_active !== undefined && branch.is_active !== true) return false;
+    return true;
+}
+
 /**
  * Валидирует параметры создания бронирования (biz_id, service_id, staff_id, start_at; branch_id опционален).
  *

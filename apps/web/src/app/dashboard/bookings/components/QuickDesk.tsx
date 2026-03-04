@@ -1,19 +1,25 @@
 'use client';
 
-import { addDays, addMinutes } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
-import { useEffect, useMemo, useState } from 'react';
 
-import { notify } from '../notify';
+import { filterServicesForStaff, resolveScheduleContext } from '@core-domain/schedule';
+import { addDays } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
+import { useMemo, useState } from 'react';
+
+
+import { QuickDeskClientSection } from './QuickDeskClientSection';
+import { useQuickBooking } from './useQuickBooking';
+import { useQuickDeskClient } from './useQuickDeskClient';
+import { useQuickDeskFormResets } from './useQuickDeskFormResets';
+import { useQuickDeskSlots } from './useQuickDeskSlots';
+import { useServiceStaffMap } from './useServiceStaffMap';
+import { useSyncServiceId } from './useSyncServiceId';
+import { useTemporaryTransfers } from './useTemporaryTransfers';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { StatusPanel, StatusItem } from '@/components/dashboard';
 import { useToast } from '@/hooks/useToast';
-import { createInternalBooking, getFreeSlotsForServiceDay, DashboardSlot } from '@/lib/bookingDashboardService';
-import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
-import { logDebug, logError, logWarn } from '@/lib/log';
-import { supabase } from '@/lib/supabaseClient';
-import { validateName, validatePhone } from '@/lib/validation';
+import { logDebug } from '@/lib/log';
 
 
 type TabKey = 'calendar' | 'list' | 'desk';
@@ -56,146 +62,59 @@ export function QuickDesk({
     const [staffId, setStaffId] = useState<string>('');
     const [date, setDate] = useState<string>(() => formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd'));
 
-    const [temporaryTransfers, setTemporaryTransfers] = useState<
-        Array<{ staff_id: string; branch_id: string; date: string }>
-    >([]);
+    const temporaryTransfers = useTemporaryTransfers(bizId, date, staff);
+    const serviceToStaffMap = useServiceStaffMap(staff);
 
-    useEffect(() => {
-        if (!date || !bizId || staff.length === 0) {
-            setTemporaryTransfers([]);
-            return;
-        }
-        let ignore = false;
-        (async () => {
-            const staffHomeBranches = new Map<string, string>();
-            for (const s of staff) {
-                staffHomeBranches.set(s.id, s.branch_id);
-            }
-            const staffIds = Array.from(staffHomeBranches.keys());
-            const { data, error } = await supabase
-                .from('staff_schedule_rules')
-                .select('staff_id, branch_id, date_on')
-                .eq('biz_id', bizId)
-                .in('staff_id', staffIds)
-                .eq('kind', 'date')
-                .eq('is_active', true)
-                .eq('date_on', date);
-            if (ignore) return;
-            if (error) {
-                logError('QuickDesk', 'Error loading temporary transfers', error);
-                setTemporaryTransfers([]);
-                return;
-            }
-            const transfers = (data ?? [])
-                .filter((rule: { staff_id: string; branch_id: string; date_on: string }) => {
-                    const homeBranchId = staffHomeBranches.get(rule.staff_id);
-                    return homeBranchId && rule.branch_id !== homeBranchId;
-                })
-                .map((rule: { staff_id: string; branch_id: string; date_on: string }) => ({
-                    staff_id: rule.staff_id,
-                    branch_id: rule.branch_id,
-                    date: rule.date_on,
-                }));
-            setTemporaryTransfers(transfers);
-        })();
-        return () => {
-            ignore = true;
-        };
-    }, [date, bizId, staff]);
+    const staffForSchedule = useMemo(
+        () => staff.map((s) => ({ id: s.id, branch_id: s.branch_id })),
+        [staff],
+    );
 
-    const [serviceStaff, setServiceStaff] = useState<Array<{ service_id: string; staff_id: string; is_active: boolean }> | null>(null);
-
-    useEffect(() => {
-        let ignore = false;
-        (async () => {
-            const staffIds = staff.map((s) => s.id);
-            if (staffIds.length === 0) {
-                setServiceStaff([]);
-                return;
-            }
-            const { data, error } = await supabase
-                .from('service_staff')
-                .select('service_id,staff_id,is_active')
-                .eq('is_active', true)
-                .in('staff_id', staffIds);
-            if (ignore) return;
-            if (error) {
-                logWarn('QuickDesk', 'service_staff read error', error);
-                setServiceStaff(null);
-            } else {
-                setServiceStaff((data ?? []) as Array<{ service_id: string; staff_id: string; is_active: boolean }>);
-            }
-        })();
-        return () => {
-            ignore = true;
-        };
-    }, [staff]);
-
-    const serviceToStaffMap = useMemo(() => {
-        if (!serviceStaff || serviceStaff.length === 0) return null;
-        const map = new Map<string, Set<string>>();
-        for (const row of serviceStaff) {
-            if (!row.is_active) continue;
-            if (!map.has(row.service_id)) map.set(row.service_id, new Set());
-            map.get(row.service_id)!.add(row.staff_id);
-        }
-        return map;
-    }, [serviceStaff]);
+    const scheduleContext = useMemo(
+        () =>
+            branchId && date
+                ? resolveScheduleContext({
+                      staffId: staffId || '',
+                      dayStr: date,
+                      selectedBranchId: branchId,
+                      temporaryTransfers,
+                      staff: staffForSchedule,
+                  })
+                : null,
+        [branchId, date, staffId, temporaryTransfers, staffForSchedule],
+    );
 
     const servicesByBranch = useMemo(() => {
-        if (!branchId || !date || !staffId) return [];
-        const tempTransfer = temporaryTransfers.find(
-            (t: { staff_id: string; branch_id: string; date: string }) => t.staff_id === staffId && t.date === date,
-        );
-        const targetBranchId = tempTransfer ? tempTransfer.branch_id : branchId;
+        if (!branchId || !date || !staffId || !scheduleContext) return [];
+        return filterServicesForStaff({
+            services,
+            targetBranchId: scheduleContext.targetBranchId,
+            staffId,
+            serviceToStaffMap,
+            isTemporaryTransfer: scheduleContext.isTemporaryTransfer,
+        });
+    }, [services, branchId, staffId, date, scheduleContext, serviceToStaffMap]);
 
-        let filteredServices = services.filter((s) => s.branch_id === targetBranchId);
-        if (serviceToStaffMap) {
-            const servicesForStaff = new Set<string>();
-            for (const [serviceId, staffSet] of serviceToStaffMap.entries()) {
-                if (staffSet.has(staffId)) {
-                    servicesForStaff.add(serviceId);
-                }
-            }
-            if (tempTransfer) {
-                filteredServices = filteredServices.filter((s) => {
-                    if (servicesForStaff.has(s.id)) {
-                        return true;
-                    }
-                    const hasSimilarServiceLink = services.some(
-                        (svc) =>
-                            svc.name_ru === s.name_ru &&
-                            svc.duration_min === s.duration_min &&
-                            svc.id !== s.id &&
-                            servicesForStaff.has(svc.id),
-                    );
-                    return hasSimilarServiceLink;
-                });
-            } else {
-                filteredServices = filteredServices.filter((s) => servicesForStaff.has(s.id));
-            }
-        }
-        return filteredServices;
-    }, [services, branchId, staffId, date, temporaryTransfers, serviceToStaffMap]);
+    const slotsApi = useQuickDeskSlots({
+        bizId,
+        branchId,
+        staffId,
+        serviceId,
+        date,
+        scheduleContext,
+    });
 
-    useEffect(() => {
-        if (!staffId || !date || !serviceId) return;
-        const isServiceValid = servicesByBranch.some((s) => s.id === serviceId);
-        if (!isServiceValid) {
-            logDebug('QuickDesk', 'Service is not valid for current staff/date, clearing serviceId', {
-                serviceId,
-                staffId,
-                date,
-                servicesByBranch: servicesByBranch.map((s) => s.id),
-            });
-            setServiceId('');
-        }
-    }, [staffId, date, servicesByBranch, serviceId]);
-
-    const [slots, setSlots] = useState<DashboardSlot[]>([]);
-    const [slotStartISO, setSlotStartISO] = useState<string>('');
-    const [_slotsLoading, setSlotsLoading] = useState(false);
-    const [creating, setCreating] = useState(false);
+    useSyncServiceId(serviceId, setServiceId, staffId, date, servicesByBranch);
+    useQuickDeskFormResets({
+        branchId,
+        timezone,
+        date,
+        staffId,
+        setDate,
+        setServiceId,
+        setStaffId,
+        clearSlots: slotsApi.clearSlots,
+    });
 
     const [statusStats] = useState<{
         todayCount: number;
@@ -211,266 +130,78 @@ export function QuickDesk({
         loading: true,
     });
 
-    type ClientMode = 'none' | 'existing' | 'new';
-    const [clientMode, setClientMode] = useState<ClientMode>('none');
+    const client = useQuickDeskClient();
 
-    const [searchQ, setSearchQ] = useState('');
-    const [_searchLoading, setSearchLoading] = useState(false);
-    const [_searchErr, setSearchErr] = useState<string | null>(null);
-    const [_foundUsers, setFoundUsers] = useState<
-        { id: string; full_name: string; email: string | null; phone: string | null }[]
-    >([]);
-    const [selectedClientId, setSelectedClientId] = useState<string>('');
-
-    const [newClientName, setNewClientName] = useState('');
-    const [newClientPhone, setNewClientPhone] = useState('');
-
-    async function searchUsers(q: string) {
-        setSearchLoading(true);
-        setSearchErr(null);
-        try {
-            const res = await fetch('/api/users/search', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ q }),
-            });
-            const j = await res.json();
-            if (!j.ok) throw new Error(j.error || 'SEARCH_FAILED');
-            setFoundUsers(j.items ?? []);
-        } catch (e: unknown) {
-            setSearchErr(e instanceof Error ? e.message : String(e));
-            setFoundUsers([]);
-        } finally {
-            setSearchLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        setDate(formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd'));
-        setServiceId('');
-        setStaffId('');
-        setSlots([]);
-        setSlotStartISO('');
-    }, [branchId, timezone]);
-
-    useEffect(() => {
-        setStaffId('');
-        setServiceId('');
-        setSlots([]);
-        setSlotStartISO('');
-    }, [date]);
-
-    useEffect(() => {
-        setServiceId('');
-        setSlots([]);
-        setSlotStartISO('');
-    }, [staffId]);
-
-    useEffect(() => {
-        let ignore = false;
-        (async () => {
-            if (!branchId || !serviceId || !date) {
-                setSlots([]);
-                setSlotStartISO('');
-                setSlotsLoading(false);
-                return;
+    const quickBooking = useQuickBooking({
+        getParams: () => {
+            const svc = servicesByBranch.find((s) => s.id === serviceId);
+            if (!svc) {
+                return { ok: false, error: t('bookings.desk.errors.selectService', 'Выбери услугу') };
             }
-            let targetBranchId = branchId;
-            if (staffId && date) {
-                const tempTransfer = temporaryTransfers.find(
-                    (t: { staff_id: string; branch_id: string; date: string }) =>
-                        t.staff_id === staffId && t.date === date,
-                );
-                if (tempTransfer) {
-                    targetBranchId = tempTransfer.branch_id;
-                    logDebug('QuickDesk', 'Temporary transfer found for slots loading', {
-                        staffId,
-                        date,
-                        tempBranch: tempTransfer.branch_id,
-                        selectedBranch: branchId,
-                    });
-                }
+            if (!slotsApi.slotStartISO) {
+                return {
+                    ok: false,
+                    error: t('bookings.desk.errors.noSlots', 'Нет свободных слотов на выбранные параметры'),
+                };
             }
-            setSlotsLoading(true);
-            let raw: DashboardSlot[];
-            try {
-                raw = await getFreeSlotsForServiceDay({
-                    bizId,
-                    serviceId,
-                    day: date,
-                    perStaff: 400,
-                    stepMinutes: 15,
-                });
-            } catch (error: unknown) {
-                if (ignore) return;
-                logError('QuickDesk', 'get_free_slots_service_day_v2 error', error);
-                setSlots([]);
-                setSlotStartISO('');
-                setSlotsLoading(false);
-                return;
+            if (!staffId) {
+                return { ok: false, error: t('bookings.desk.errors.selectMaster', 'Выбери мастера') };
             }
-            const now = new Date();
-            const minTime = addMinutes(now, 30);
-
-            const filtered = raw
-                .filter((s) => {
-                    if (staffId && targetBranchId !== branchId) {
-                        return s.branch_id === targetBranchId;
-                    }
-                    return s.branch_id === branchId;
-                })
-                .filter((s) => (staffId ? s.staff_id === staffId : true))
-                .filter((s) => new Date(s.start_at) > minTime);
-
-            const uniq = Array.from(new Map(filtered.map((s) => [s.start_at, s])).values());
-            setSlots(uniq);
-            setSlotStartISO((prev) => (prev && uniq.some((u) => u.start_at === prev) ? prev : uniq[0]?.start_at || ''));
-            setSlotsLoading(false);
-        })();
-        return () => {
-            ignore = true;
-        };
-    }, [bizId, serviceId, staffId, date, branchId, temporaryTransfers]);
-
-    useEffect(() => {
-        if (!searchQ.trim() || clientMode !== 'existing') {
-            setFoundUsers([]);
-            return;
-        }
-        const timer = setTimeout(() => {
-            searchUsers(searchQ);
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [searchQ, clientMode]);
-
-    useEffect(() => {
-        if (clientMode !== 'new') {
-            setNewClientName('');
-            setNewClientPhone('');
-        }
-        if (clientMode !== 'existing') {
-            setSearchQ('');
-            setFoundUsers([]);
-            setSelectedClientId('');
-        }
-    }, [clientMode]);
-
-    async function quickCreate() {
-        const svc = servicesByBranch.find((s) => s.id === serviceId);
-        if (!svc) {
-            toast.showError(t('bookings.desk.errors.selectService', 'Выбери услугу'));
-            return;
-        }
-        if (!slotStartISO) {
-            toast.showError(t('bookings.desk.errors.noSlots', 'Нет свободных слотов на выбранные параметры'));
-            return;
-        }
-        if (!staffId) {
-            toast.showError(t('bookings.desk.errors.selectMaster', 'Выбери мастера'));
-            return;
-        }
-        let targetBranchId = branchId;
-        if (date) {
-            const tempTransfer = temporaryTransfers.find(
-                (t: { staff_id: string; branch_id: string; date: string }) =>
-                    t.staff_id === staffId && t.date === date,
-            );
-            if (tempTransfer) {
-                targetBranchId = tempTransfer.branch_id;
+            const createCtx =
+                branchId && date
+                    ? resolveScheduleContext({
+                          staffId,
+                          dayStr: date,
+                          selectedBranchId: branchId,
+                          temporaryTransfers,
+                          staff: staffForSchedule,
+                      })
+                    : null;
+            const targetBranchId = createCtx?.targetBranchId ?? branchId;
+            if (createCtx?.isTemporaryTransfer) {
                 logDebug('QuickDesk', 'Creating booking with temporary branch', {
                     staffId,
                     date,
-                    tempBranch: tempTransfer.branch_id,
+                    targetBranchId,
                     selectedBranch: branchId,
                 });
             }
-        }
-        let p_client_id: string | null = null;
-        let p_client_name: string | null = null;
-        let p_client_phone: string | null = null;
-        if (clientMode === 'existing') {
-            if (!selectedClientId) {
-                toast.showError(t('bookings.desk.errors.selectClient', 'Выбери клиента из поиска'));
-                return;
+            const clientResult = client.getClientPayload(t);
+            if (!clientResult.ok) {
+                return { ok: false, error: clientResult.error };
             }
-            p_client_id = selectedClientId;
-        } else if (clientMode === 'new') {
-            const name = newClientName.trim();
-            const phone = newClientPhone.trim();
-            const nameValidation = validateName(name, true);
-            if (!nameValidation.valid) {
-                toast.showError(
-                    nameValidation.error || t('bookings.desk.errors.nameRequired', 'Введите имя клиента'),
-                );
-                return;
-            }
-            const phoneValidation = validatePhone(phone, true);
-            if (!phoneValidation.valid) {
-                toast.showError(
-                    phoneValidation.error ||
-                        t('bookings.desk.errors.phoneRequired', 'Введите корректный номер телефона'),
-                );
-                return;
-            }
-            p_client_name = name;
-            p_client_phone = phone;
-        }
-        setCreating(true);
-        let bookingId: string;
-        try {
-            bookingId = await createInternalBooking({
-                bizId,
-                branchId: targetBranchId,
-                serviceId,
-                staffId,
-                startAtISO: slotStartISO,
-                minutes: svc.duration_min,
-                clientId: p_client_id,
-                clientName: p_client_name,
-                clientPhone: p_client_phone,
-            });
-            trackFunnelEvent({
-                event_type: 'booking_success',
-                source: 'quickdesk',
-                biz_id: bizId,
-                branch_id: targetBranchId,
-                service_id: serviceId,
-                staff_id: staffId,
-                slot_start_at: slotStartISO,
-                booking_id: bookingId,
-                session_id: getSessionId(),
-            });
-            await notify('confirm', bookingId);
-            toast.showSuccess(
-                `${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`,
-            );
+            const { clientId, clientName, clientPhone } = clientResult.payload;
+            return {
+                ok: true,
+                payload: {
+                    bizId,
+                    branchId: targetBranchId,
+                    serviceId,
+                    staffId,
+                    startAtISO: slotsApi.slotStartISO,
+                    minutes: svc.duration_min,
+                    clientId,
+                    clientName,
+                    clientPhone,
+                },
+            };
+        },
+        onSuccess: (bookingId) => {
+            toast.showSuccess(`${t('bookings.desk.created', 'Создана запись')} #${bookingId.slice(0, 8)}`);
             setServiceId('');
             setStaffId('');
-            setSlotStartISO('');
-            setSlots([]);
-            setClientMode('none');
-            setSelectedClientId('');
-            setSearchQ('');
-            setFoundUsers([]);
-            setNewClientName('');
-            setNewClientPhone('');
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error);
-            toast.showError(message);
-            return;
-        } finally {
-            setCreating(false);
-        }
-    }
+            slotsApi.clearSlots();
+            client.reset();
+        },
+        showError: (msg) => toast.showError(msg),
+    });
 
     const canCreate =
         branchId &&
         serviceId &&
         staffId &&
-        slotStartISO &&
-        (clientMode === 'none' ||
-            (clientMode === 'existing' && selectedClientId) ||
-            (clientMode === 'new' && newClientName.trim() && newClientPhone.trim()));
+        slotsApi.slotStartISO &&
+        client.canSubmitClient;
 
     const today = formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd');
     const tomorrow = formatInTimeZone(addDays(new Date(), 1), timezone, 'yyyy-MM-dd');
@@ -489,8 +220,8 @@ export function QuickDesk({
                             'записей',
                         )}`}
                         subtitle={
-                            slots.length > 0 && date === today
-                                ? `${slots.length} ${t(
+                            slotsApi.slots.length > 0 && date === today
+                                ? `${slotsApi.slots.length} ${t(
                                       'bookings.desk.statusPanel.freeSlots',
                                       'свободных слотов',
                                   )}`
@@ -504,8 +235,8 @@ export function QuickDesk({
                             'записей',
                         )}`}
                         subtitle={
-                            slots.length > 0 && date === tomorrow
-                                ? `${slots.length} ${t(
+                            slotsApi.slots.length > 0 && date === tomorrow
+                                ? `${slotsApi.slots.length} ${t(
                                       'bookings.desk.statusPanel.freeSlots',
                                       'свободных слотов',
                                   )}`
@@ -542,14 +273,14 @@ export function QuickDesk({
                     <button
                         type="button"
                         className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white shadow-md transition-all duration-200 bg-gradient-to-r from-indigo-600 to-pink-600 ${
-                            !canCreate || creating
+                            !canCreate || quickBooking.creating
                                 ? 'opacity-60 cursor-not-allowed'
                                 : 'hover:from-indigo-700 hover:to-pink-700 hover:shadow-lg'
                         }`}
-                        onClick={quickCreate}
-                        disabled={!canCreate || creating}
+                        onClick={quickBooking.create}
+                        disabled={!canCreate || quickBooking.creating}
                     >
-                        {creating ? (
+                        {quickBooking.creating ? (
                             <>
                                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                     <circle
@@ -595,7 +326,7 @@ export function QuickDesk({
                             <button
                                 type="button"
                                 onClick={() => onTabChange('list')}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-indigo-300 dark:border-indigo-700 bg_WHITE dark:bg-gray-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
                             >
                                 {t('bookings.desk.statusPanel.goToList', 'Список')}
                             </button>
@@ -604,8 +335,22 @@ export function QuickDesk({
                 </div>
             </div>
 
-            {/* Остальной JSX (параметры записи, слоты и блок клиента) оставлен неизменным при переносе */}
-            {/* ... */}
+            <QuickDeskClientSection
+                clientMode={client.clientMode}
+                setClientMode={client.setClientMode}
+                searchQ={client.searchQ}
+                setSearchQ={client.setSearchQ}
+                foundUsers={client.foundUsers}
+                selectedClientId={client.selectedClientId}
+                setSelectedClientId={client.setSelectedClientId}
+                newClientName={client.newClientName}
+                setNewClientName={client.setNewClientName}
+                newClientPhone={client.newClientPhone}
+                setNewClientPhone={client.setNewClientPhone}
+                searchLoading={client.searchLoading}
+                searchErr={client.searchErr}
+                t={t}
+            />
         </section>
     );
 }

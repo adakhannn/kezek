@@ -2,6 +2,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { formatInTimeZone } from 'date-fns-tz';
 import { addDays } from 'date-fns';
 import { useNavigation } from '@react-navigation/native';
+
+import { formatDateLabel as formatDateLabelShared } from '@shared-client/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,9 +24,8 @@ export default function BookingStep4Date() {
     const { bookingData, setSelectedDate } = useBooking();
 
     const formatDateLabel = (dateString: string) => {
-        const date = new Date(dateString + 'T00:00:00');
-        const day = date.getDate();
-        const month = date.toLocaleDateString('ru-RU', { month: 'long' });
+        const { day, month } = formatDateLabelShared(dateString, 'ru-RU');
+        const date = new Date(dateString + 'T12:00:00');
         const weekday = date.toLocaleDateString('ru-RU', { weekday: 'short' });
         return { day, month, weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1) };
     };
@@ -53,8 +54,7 @@ export default function BookingStep4Date() {
 
     const handleNext = () => {
         if (bookingData.selectedDate) {
-            // Навигация в BookingStep5Time находится в RootStack
-            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep5Time');
+            navigation.navigate('BookingStep5Time');
         }
     };
 

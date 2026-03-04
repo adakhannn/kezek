@@ -18,6 +18,7 @@ import { colors } from '../constants/colors';
 import { formatDate, formatTime, formatPhone } from '../utils/format';
 import { logError, logDebug } from '../lib/log';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import OfflineBanner from '../components/ui/OfflineBanner';
 import type { ClientBookingListItemDto, PublicBusinessDto } from '@shared-client/types';
 import { trackMobileEvent } from '../lib/analytics';
 
@@ -245,14 +246,8 @@ export default function HomeScreen() {
             </View>
 
             {showOfflineBanner && (
-                <View style={styles.offlineBanner}>
-                    <Ionicons name="cloud-offline-outline" size={18} color={colors.text.secondary} />
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.offlineTitle}>Нет подключения к интернету</Text>
-                        <Text style={styles.offlineText}>
-                            Список обновится автоматически, когда сеть появится. Попробуйте потянуть вниз для обновления.
-                        </Text>
-                    </View>
+                <View style={styles.offlineBannerWrapper}>
+                    <OfflineBanner />
                 </View>
             )}
 
@@ -530,28 +525,9 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         maxWidth: 320,
     },
-    offlineBanner: {
+    offlineBannerWrapper: {
         marginHorizontal: 20,
         marginBottom: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderRadius: 12,
-        backgroundColor: colors.background.secondary,
-        borderWidth: 1,
-        borderColor: colors.border.light,
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 10,
-    },
-    offlineTitle: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 2,
-    },
-    offlineText: {
-        fontSize: 12,
-        color: colors.text.secondary,
     },
     searchContainer: {
         paddingHorizontal: 20,

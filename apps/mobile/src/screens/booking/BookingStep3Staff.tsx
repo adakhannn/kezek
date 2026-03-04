@@ -64,8 +64,7 @@ export default function BookingStep3Staff() {
 
     const handleNext = () => {
         if (bookingData.staffId) {
-            // Навигация в BookingStep4Date находится в RootStack
-            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep4Date');
+            navigation.navigate('BookingStep4Date');
         }
     };
 

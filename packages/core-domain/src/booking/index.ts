@@ -34,12 +34,24 @@ export {
 } from './dto';
 
 // Валидация
+export type { BranchForBookingCheck } from './validation';
 export {
     validateCreateBookingParams,
     validateCreateGuestBookingParams,
     validatePromotionParams,
+    validateBranchForBooking,
     extractBookingId,
 } from './validation';
+
+// Правила переходов статусов
+export type { CanMarkAttendanceContext, CanChangeStatusOptions } from './statusTransitions';
+export {
+    isTerminalStatus,
+    canCancel,
+    canConfirm,
+    canMarkAttendance,
+    canChangeStatus,
+} from './statusTransitions';
 
 // Application use-cases
 export type {

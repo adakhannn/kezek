@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { createClient } from '@supabase/supabase-js';
 
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { buildApprovedBusinessesQuery } from '@/lib/branches/buildApprovedBusinessesQuery';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
@@ -61,20 +62,14 @@ export async function GET(req: Request) {
                         },
                     });
 
-                    // 1. Загружаем бизнесы (одиночным запросом, с фильтрацией по категории/городу)
-                    let bizQuery = supabase
-                        .from('businesses')
+                    // 1. Загружаем бизнесы (одобренные, опционально по категории и городу)
+                    const bizQuery = buildApprovedBusinessesQuery(supabase, {
+                        categoryId: rawCategoryId || undefined,
+                        cityId: rawCityId || undefined,
+                    });
+                    const { data: bizData, error: bizError } = await bizQuery
                         .select('id,name,slug,categories')
-                        .eq('is_approved', true);
-
-                    if (rawCategoryId) {
-                        bizQuery = bizQuery.contains('categories', [rawCategoryId]);
-                    }
-
-                    // TODO: когда появится city_id у businesses — добавить фильтр по городу:
-                    // if (rawCityId) { bizQuery = bizQuery.eq('city_id', rawCityId); }
-
-                    const { data: bizData, error: bizError } = await bizQuery.limit(500);
+                        .limit(500);
                     if (bizError) {
                         logError('BranchesMap', 'Error loading businesses for branches map', bizError);
                         return createErrorResponse('internal', 'Не удалось загрузить компании для карты филиалов', bizError.message, 500);

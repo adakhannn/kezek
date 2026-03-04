@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { createClient } from '@supabase/supabase-js';
 
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { buildApprovedBusinessesQuery } from '@/lib/branches/buildApprovedBusinessesQuery';
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { haversineDistanceKm } from '@/lib/geo';
 import { logError } from '@/lib/log';
@@ -105,17 +106,14 @@ export async function GET(req: Request) {
                         auth: { persistSession: false, autoRefreshToken: false },
                     });
 
-                    // 1. Бизнесы (одобренные, опционально по категории)
-                    let bizQuery = supabase
-                        .from('businesses')
+                    // 1. Бизнесы (одобренные, опционально по категории и городу)
+                    const bizQuery = buildApprovedBusinessesQuery(supabase, {
+                        categoryId: rawCategoryId || undefined,
+                        cityId: rawCityId || undefined,
+                    });
+                    const { data: bizData, error: bizError } = await bizQuery
                         .select('id,name,slug,categories')
-                        .eq('is_approved', true);
-                    if (rawCategoryId) {
-                        bizQuery = bizQuery.contains('categories', [rawCategoryId]);
-                    }
-                    // TODO: cityId когда появится в businesses
-
-                    const { data: bizData, error: bizError } = await bizQuery.limit(500);
+                        .limit(500);
                     if (bizError) {
                         logError('BranchesNearby', 'Error loading businesses', bizError);
                         return createErrorResponse('internal', 'Не удалось загрузить компании', bizError.message, 500);

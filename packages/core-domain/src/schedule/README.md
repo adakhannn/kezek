@@ -14,6 +14,7 @@
 - **`helpers.ts`** — чистые функции:
   - `resolveScheduleContext` — определение контекста расписания (временный перевод, целевой филиал)
   - `filterSlotsByContext` — фильтрация слотов по мастеру, филиалу и минимальному времени
+  - `filterServicesForStaff` — фильтрация услуг по филиалу и привязке к мастеру (service_staff), с учётом «похожих» услуг при временном переводе
 - **`index.ts`** — публичный API модуля
 
 ---
@@ -30,8 +31,10 @@ import {
   type StaffInfo,
   type ScheduleContext,
   type SlotFilterContext,
+  type ServiceInfo,
   resolveScheduleContext,
   filterSlotsByContext,
+  filterServicesForStaff,
 } from '@core-domain/schedule';
 ```
 
@@ -52,6 +55,20 @@ const filteredSlots = filterSlotsByContext(allSlotsFromRpc, {
   targetBranchId: scheduleCtx.targetBranchId,
   isTemporaryTransfer: scheduleCtx.isTemporaryTransfer,
   minStart: new Date(Date.now() + 30 * 60 * 1000), // минимум через 30 минут
+});
+```
+
+### Фильтрация услуг по мастеру и временному переводу
+
+При временном переводе мастер может оказывать в филиале перевода услуги, «похожие» на привязанные к нему (одинаковые `name_ru` + `duration_min`). Используйте `filterServicesForStaff`:
+
+```ts
+const servicesForDesk = filterServicesForStaff({
+  services,
+  targetBranchId: scheduleContext.targetBranchId,
+  staffId,
+  serviceToStaffMap, // Map<service_id, Set<staff_id>>
+  isTemporaryTransfer: scheduleContext.isTemporaryTransfer,
 });
 ```
 

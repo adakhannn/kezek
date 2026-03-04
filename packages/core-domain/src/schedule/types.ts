@@ -69,4 +69,14 @@ export type ScheduleContext = {
     homeBranchId?: string;
 };
 
+/**
+ * Минимальное описание услуги для фильтрации по филиалу/мастеру/временному переводу
+ */
+export type ServiceInfo = {
+    id: string;
+    name_ru: string;
+    duration_min: number;
+    branch_id: string;
+};
+
 

@@ -15,8 +15,9 @@ export type {
     StaffInfo,
     SlotFilterContext,
     ScheduleContext,
+    ServiceInfo,
 } from './types';
 
-export { resolveScheduleContext, filterSlotsByContext } from './helpers';
+export { resolveScheduleContext, filterSlotsByContext, filterServicesForStaff } from './helpers';
 
 

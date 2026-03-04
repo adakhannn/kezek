@@ -5,6 +5,8 @@
 
 'use client';
 
+import { canMarkAttendance as canMarkAttendanceRule, canCancel, canConfirm } from '@core-domain/booking';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 type BookingActionsProps = {
@@ -26,12 +28,13 @@ export function BookingActions({
 }: BookingActionsProps) {
     const { t } = useLanguage();
 
-    const isPast = new Date(startAt) < new Date();
-    const canMarkAttendance = isPast && (status === 'confirmed' || status === 'hold');
+    const showMarkAttendance = canMarkAttendanceRule(status, { bookingStartAt: startAt });
+    const showConfirm = canConfirm(status);
+    const showCancel = canCancel(status);
 
     return (
         <div className="flex flex-wrap gap-2">
-            {status === 'hold' && (
+            {showConfirm && (
                 <button
                     onClick={() => onConfirm(bookingId)}
                     className="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm hover:shadow"
@@ -39,7 +42,7 @@ export function BookingActions({
                     {t('bookings.actions.confirm', 'Подтвердить')}
                 </button>
             )}
-            {status !== 'cancelled' && status !== 'paid' && (
+            {showCancel && (
                 <button
                     onClick={() => onCancel(bookingId)}
                     className="flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors shadow-sm hover:shadow"
@@ -47,7 +50,7 @@ export function BookingActions({
                     {t('bookings.actions.cancel', 'Отменить')}
                 </button>
             )}
-            {canMarkAttendance && (
+            {showMarkAttendance && (
                 <>
                     <button
                         onClick={() => onMarkAttendance(bookingId, true)}

@@ -1,13 +1,12 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
+import { useBusinessWithBranches } from '../../hooks/useBusinessWithBranches';
 import { colors } from '../../constants.colors';
 import Button from '../../components/ui.Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
@@ -28,36 +27,7 @@ export default function BookingStep1Branch() {
     const { slug } = route.params || {};
     const { bookingData, setBusiness, setBranches, setBranchId } = useBooking();
 
-    const { data: businessData, isLoading } = useQuery({
-        queryKey: ['business', slug],
-        queryFn: async () => {
-            const { data: biz, error } = await supabase
-                .from('businesses')
-                .select('id, name, slug, rating_score')
-                .eq('slug', slug)
-                .eq('is_approved', true)
-                .single();
-
-            if (error) throw error;
-            if (!biz) throw new Error('Бизнес не найден');
-
-            const { data: branches, error: branchesError } = await supabase
-                .from('branches')
-                .select('id, name, rating_score')
-                .eq('biz_id', biz.id)
-                .eq('is_active', true)
-                .order('rating_score', { ascending: false, nullsFirst: false })
-                .order('name');
-
-            if (branchesError) throw branchesError;
-
-            return {
-                business: biz,
-                branches: branches || [],
-            };
-        },
-        enabled: !!slug,
-    });
+    const { data: businessData, isLoading } = useBusinessWithBranches(slug);
 
     useEffect(() => {
         if (businessData) {
@@ -84,8 +54,7 @@ export default function BookingStep1Branch() {
 
     const handleNext = () => {
         if (bookingData.branchId) {
-            // Навигация в BookingStep2Service находится в RootStack
-            (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('BookingStep2Service');
+            navigation.navigate('BookingStep2Service');
         }
     };
 

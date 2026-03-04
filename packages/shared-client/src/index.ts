@@ -106,3 +106,11 @@ export type {
     StatusColorConfigMobile,
 } from './i18n';
 
+// Форматтеры дат, времени и цен
+export {
+    formatTimeSlot,
+    formatDateLabel,
+    formatServicePrice,
+} from './formatters';
+export type { DateLocale, PriceRange } from './formatters';
+

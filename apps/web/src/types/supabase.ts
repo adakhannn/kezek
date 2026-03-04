@@ -181,6 +181,7 @@ export type Database = {
         Row: {
           address: string | null
           categories: string[] | null
+          city_id: string | null
           coords: unknown
           created_at: string | null
           email_notify_to: string[] | null
@@ -196,6 +197,7 @@ export type Database = {
         Insert: {
           address?: string | null
           categories?: string[] | null
+          city_id?: string | null
           coords?: unknown
           created_at?: string | null
           email_notify_to?: string[] | null
@@ -211,6 +213,7 @@ export type Database = {
         Update: {
           address?: string | null
           categories?: string[] | null
+          city_id?: string | null
           coords?: unknown
           created_at?: string | null
           email_notify_to?: string[] | null

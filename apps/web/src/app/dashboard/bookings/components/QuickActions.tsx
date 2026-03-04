@@ -6,9 +6,11 @@
 
 'use client';
 
+import { canMarkAttendance as canMarkAttendanceRule, canCancel, canConfirm } from '@core-domain/booking';
+import { useState } from 'react';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { ConfirmDialog } from '@/components/dashboard';
-import { useState } from 'react';
 
 interface QuickActionsProps {
     bookingId: string;
@@ -32,8 +34,9 @@ export function QuickActions({
     const { t } = useLanguage();
     const [confirmDialog, setConfirmDialog] = useState<'confirm' | 'cancel' | 'attended' | 'noShow' | null>(null);
 
-    const isPast = new Date(startAt) < new Date();
-    const canMarkAttendance = isPast && (status === 'confirmed' || status === 'hold');
+    const showMarkAttendance = canMarkAttendanceRule(status, { bookingStartAt: startAt });
+    const showConfirm = canConfirm(status);
+    const showCancel = canCancel(status);
 
     const handleConfirm = () => {
         setConfirmDialog('confirm');
@@ -75,7 +78,7 @@ export function QuickActions({
         return (
             <>
                 <div className="flex items-center gap-1">
-                    {status === 'hold' && (
+                    {showConfirm && (
                         <button
                             onClick={handleConfirm}
                             className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
@@ -86,7 +89,7 @@ export function QuickActions({
                             </svg>
                         </button>
                     )}
-                    {status !== 'cancelled' && status !== 'paid' && (
+                    {showCancel && (
                         <button
                             onClick={handleCancel}
                             className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
@@ -97,7 +100,7 @@ export function QuickActions({
                             </svg>
                         </button>
                     )}
-                    {canMarkAttendance && (
+                    {showMarkAttendance && (
                         <>
                             <button
                                 onClick={handleAttended}
@@ -153,7 +156,7 @@ export function QuickActions({
     return (
         <>
             <div className="flex flex-wrap gap-2">
-                {status === 'hold' && (
+                {showConfirm && (
                     <button
                         onClick={handleConfirm}
                         className="px-3 py-2 text-xs sm:text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm hover:shadow"
@@ -161,7 +164,7 @@ export function QuickActions({
                         {t('bookings.actions.confirm', 'Подтвердить')}
                     </button>
                 )}
-                {status !== 'cancelled' && status !== 'paid' && (
+                {showCancel && (
                     <button
                         onClick={handleCancel}
                         className="px-3 py-2 text-xs sm:text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors shadow-sm hover:shadow"
@@ -169,7 +172,7 @@ export function QuickActions({
                         {t('bookings.actions.cancel', 'Отменить')}
                     </button>
                 )}
-                {canMarkAttendance && (
+                {showMarkAttendance && (
                     <>
                         <button
                             onClick={handleAttended}
