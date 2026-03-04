@@ -1,5 +1,6 @@
 'use client';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -7,9 +8,9 @@ import { useEffect, useState } from 'react';
 import { SignOutButton } from './SignOutButton';
 import { useLanguage } from './i18n/LanguageProvider';
 
-import {logDebug, logError, logWarn} from '@/lib/log';
+import { getUserRoleProfile, resolveDefaultDashboard } from '@/lib/authContext';
+import { logDebug, logError, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-
 
 type User = {
     id: string;
@@ -22,73 +23,6 @@ type TargetPath = {
     label: string;
     isStaff?: boolean;
 };
-
-async function getTargetPath(userId: string, t: (key: string, fallback?: string) => string): Promise<TargetPath> {
-    try {
-        // Проверяем, является ли пользователь супер-админом
-        const { data: isSuperData } = await supabase.rpc('is_super_admin');
-        if (isSuperData) {
-            return { href: '/admin', label: t('header.adminPanel', 'Админ-панель'), isStaff: false };
-        }
-
-        // Проверяем, владеет ли пользователь бизнесом
-        const { count } = await supabase
-            .from('businesses')
-            .select('id', { count: 'exact', head: true })
-            .eq('owner_id', userId);
-        if ((count ?? 0) > 0) {
-            return { href: '/dashboard', label: t('header.ownerCabinet', 'Кабинет владельца'), isStaff: false };
-        }
-
-        // Проверяем, является ли пользователь сотрудником - ищем запись в staff (источник правды)
-        let isStaff = false;
-        try {
-            const { data: staff } = await supabase
-                .from('staff')
-                .select('id, biz_id')
-                .eq('user_id', userId)
-                .eq('is_active', true)
-                .maybeSingle();
-            
-            isStaff = !!staff;
-        } catch (error) {
-            logWarn('AuthStatusClient', 'error checking staff record', error);
-            // Fallback: проверяем через user_roles
-            try {
-                const [{ data: ur }, { data: roleRows }] = await Promise.all([
-                    supabase.from('user_roles').select('biz_id, role_id').eq('user_id', userId),
-                    supabase.from('roles').select('id, key'),
-                ]);
-                
-                if (ur && roleRows) {
-                    const rolesMap = new Map<string, string>(roleRows.map(r => [String(r.id), String(r.key)]));
-                    const staffRole = ur.find(r => rolesMap.get(String(r.role_id)) === 'staff');
-                    isStaff = !!staffRole?.biz_id;
-                }
-            } catch (fallbackError) {
-                logWarn('AuthStatusClient', 'fallback check also failed', fallbackError);
-            }
-        }
-        
-        if (isStaff) {
-            return { href: '/staff', label: t('header.staffCabinet', 'Кабинет сотрудника'), isStaff: true };
-        }
-        
-        // Проверяем другие роли через RPC
-        const { data: roleKeys } = await supabase.rpc('my_role_keys');
-        const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
-        if (roles.some((r) => ['owner', 'admin', 'manager'].includes(r))) {
-            return { href: '/dashboard', label: t('header.businessCabinet', 'Кабинет бизнеса'), isStaff: false };
-        }
-
-        // По умолчанию — личный кабинет клиента
-        return { href: '/cabinet', label: t('header.myBookings', 'Мои записи'), isStaff: false };
-    } catch (error) {
-        // В случае ошибки возвращаем кабинет по умолчанию
-        logWarn('AuthStatusClient', 'error getting target path', error);
-        return { href: '/cabinet', label: t('header.myBookings', 'Мои записи'), isStaff: false };
-    }
-}
 
 /**
  * Клиентский компонент для отображения статуса авторизации
@@ -105,48 +39,72 @@ export function AuthStatusClient({ onAction }: { onAction?: () => void }) {
     useEffect(() => {
         let mounted = true;
 
-        // Функция для обновления статуса
+        const computeTargetFromProfile = async () => {
+            try {
+                const profile = await getUserRoleProfile(supabase as SupabaseClient);
+                const result = resolveDefaultDashboard(profile);
+
+                let label = t('header.myBookings', 'Мои записи');
+                if (result.path === '/admin') {
+                    label = t('header.adminPanel', 'Админ-панель');
+                } else if (result.path === '/dashboard') {
+                    label = t('header.businessCabinet', 'Кабинет бизнеса');
+                } else if (result.path === '/staff') {
+                    label = t('header.staffCabinet', 'Кабинет сотрудника');
+                }
+
+                if (mounted) {
+                    setTarget({ href: result.path, label, isStaff: !!profile?.canStaff });
+                }
+            } catch (error) {
+                logWarn('AuthStatusClient', 'error computing target from profile', error);
+                if (mounted) {
+                    setTarget({
+                        href: '/cabinet',
+                        label: t('header.myBookings', 'Мои записи'),
+                        isStaff: false,
+                    });
+                }
+            }
+        };
+
         const updateStatus = async () => {
             try {
-                // Сначала проверяем сессию (читает из localStorage/cookies)
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                
+                const {
+                    data: { session },
+                    error: sessionError,
+                } = await supabase.auth.getSession();
+
                 if (!mounted) return;
 
                 if (sessionError) {
                     logWarn('AuthStatusClient', 'session error', sessionError);
                 }
 
-                // Логируем для отладки
-                logDebug('AuthStatusClient', 'session check', { 
-                    hasSession: !!session, 
+                logDebug('AuthStatusClient', 'session check', {
+                    hasSession: !!session,
                     hasUser: !!session?.user,
-                    userId: session?.user?.id 
+                    userId: session?.user?.id,
                 });
 
                 if (session?.user) {
                     setUser(session.user);
-                    // Определяем путь для редиректа
-                    const path = await getTargetPath(session.user.id, t);
-                    if (mounted) {
-                        setTarget(path);
-                    }
+                    await computeTargetFromProfile();
                 } else {
-                    // Если сессии нет, пробуем getUser (может быть в процессе обновления)
-                    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-                    
-                    logDebug('AuthStatusClient', 'getUser check', { 
-                        hasUser: !!currentUser, 
+                    const {
+                        data: { user: currentUser },
+                        error: userError,
+                    } = await supabase.auth.getUser();
+
+                    logDebug('AuthStatusClient', 'getUser check', {
+                        hasUser: !!currentUser,
                         userId: currentUser?.id,
-                        error: userError 
+                        error: userError,
                     });
 
                     if (currentUser) {
                         setUser(currentUser);
-                        const path = await getTargetPath(currentUser.id, t);
-                        if (mounted) {
-                            setTarget(path);
-                        }
+                        await computeTargetFromProfile();
                     } else {
                         setUser(null);
                         setTarget(null);
@@ -165,32 +123,27 @@ export function AuthStatusClient({ onAction }: { onAction?: () => void }) {
             }
         };
 
-        // Обновляем статус при монтировании
         updateStatus();
 
-        // Подписываемся на изменения авторизации
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (!mounted) return;
 
-            logDebug('AuthStatusClient', 'auth state change', { event, hasSession: !!session, hasUser: !!session?.user });
+            logDebug('AuthStatusClient', 'auth state change', {
+                event,
+                hasSession: !!session,
+                hasUser: !!session?.user,
+            });
 
             if (session?.user) {
                 setUser(session.user);
-                // Определяем путь для редиректа
-                const path = await getTargetPath(session.user.id, t);
-                if (mounted) {
-                    setTarget(path);
-                }
-                // Обновляем серверные компоненты
+                await computeTargetFromProfile();
                 router.refresh();
             } else {
-                // Выход из системы - очищаем состояние
                 setUser(null);
                 setTarget(null);
                 setLoading(false);
-                // Обновляем серверные компоненты
                 router.refresh();
             }
         });

@@ -1,8 +1,8 @@
 // apps/web/src/app/api/dashboard/branches/[branchId]/promotions/[promotionId]/route.ts
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
+import { toNormalizedDateString } from '@/lib/dateUtils';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,12 +29,9 @@ type PromotionUpdateBody = {
  */
 export async function PATCH(req: Request, context: unknown) {
     return withErrorHandler('BranchPromotion', async () => {
-        // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'branchId');
         const promotionId = await getRouteParamUuid(context, 'promotionId');
-        const { bizId } = await getBizContextForManagers();
-        const admin = getServiceClient();
-
+        return withManagerContext(req, 'BranchPromotion', async ({ admin, bizId }) => {
         // Проверяем, что филиал и акция принадлежат этому бизнесу
         const { data: promotion, error: promotionError } = await admin
             .from('branch_promotions')
@@ -82,8 +79,8 @@ export async function PATCH(req: Request, context: unknown) {
         if (body.description_ky !== undefined) updateData.description_ky = body.description_ky || null;
         if (body.description_en !== undefined) updateData.description_en = body.description_en || null;
         if (body.is_active !== undefined) updateData.is_active = body.is_active;
-        if (body.valid_from !== undefined) updateData.valid_from = body.valid_from ? new Date(body.valid_from).toISOString().split('T')[0] : null;
-        if (body.valid_to !== undefined) updateData.valid_to = body.valid_to ? new Date(body.valid_to).toISOString().split('T')[0] : null;
+        if (body.valid_from !== undefined) updateData.valid_from = toNormalizedDateString(body.valid_from) ?? null;
+        if (body.valid_to !== undefined) updateData.valid_to = toNormalizedDateString(body.valid_to) ?? null;
 
         // Обновляем акцию
         const { data: updatedPromotion, error: updateError } = await admin
@@ -98,6 +95,7 @@ export async function PATCH(req: Request, context: unknown) {
         }
 
         return createSuccessResponse({ promotion: updatedPromotion });
+        });
     });
 }
 
@@ -107,12 +105,9 @@ export async function PATCH(req: Request, context: unknown) {
  */
 export async function DELETE(req: Request, context: unknown) {
     return withErrorHandler('BranchPromotion', async () => {
-        // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'branchId');
         const promotionId = await getRouteParamUuid(context, 'promotionId');
-        const { bizId } = await getBizContextForManagers();
-        const admin = getServiceClient();
-
+        return withManagerContext(req, 'BranchPromotion', async ({ admin, bizId }) => {
         // Проверяем, что филиал и акция принадлежат этому бизнесу
         const { data: promotion, error: promotionError } = await admin
             .from('branch_promotions')
@@ -137,6 +132,7 @@ export async function DELETE(req: Request, context: unknown) {
         }
 
         return createSuccessResponse();
+        });
     });
 }
 

@@ -5,6 +5,7 @@ import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
 import { getCached, setCached } from '@/lib/simpleCache';
 import { getServiceClient } from '@/lib/supabaseService';
+import { addDaysToDateString, fromZonedTime, getTimezone, todayDateString } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 
 export const dynamic = 'force-dynamic';
@@ -40,14 +41,11 @@ export async function GET(req: Request) {
       return createErrorResponse('forbidden', 'Access to this business is not allowed', undefined, 403);
     }
 
-    const end = endDate ? new Date(`${endDate}T00:00:00Z`) : new Date();
-    const start =
-      startDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate)
-        ? new Date(`${startDate}T00:00:00Z`)
-        : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    const startIso = start.toISOString();
-    const endIso = end.toISOString();
+    const tz = getTimezone();
+    const endStr = endDate ?? todayDateString(tz);
+    const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
+    const startIso = fromZonedTime(`${startStr}T00:00:00`, tz).toISOString();
+    const endIso = fromZonedTime(`${endStr}T23:59:59.999`, tz).toISOString();
 
     const cacheKey = `analytics_funnel:${effectiveBizId}:${startIso}:${endIso}:${source || 'all'}`;
     const cached = getCached<unknown>(cacheKey);
@@ -132,8 +130,8 @@ export async function GET(req: Request) {
       steps,
       overallConversion,
       period: {
-        startDate: start.toISOString().slice(0, 10),
-        endDate: end.toISOString().slice(0, 10),
+        startDate: startStr,
+        endDate: endStr,
       },
     };
 

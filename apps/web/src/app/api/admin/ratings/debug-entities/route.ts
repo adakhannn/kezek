@@ -2,6 +2,7 @@ import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { getServiceClient } from '@/lib/supabaseService';
+import { addDaysToDateString, getTimezone, todayDateString } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -55,10 +56,8 @@ export async function GET(req: Request) {
                 );
 
                 const admin = getServiceClient();
-
-                const windowStart = new Date();
-                windowStart.setDate(windowStart.getDate() - days);
-                const windowStartStr = windowStart.toISOString().slice(0, 10);
+                const tz = getTimezone();
+                const windowStartStr = addDaysToDateString(todayDateString(tz), -days, tz);
 
                 // 1. Сущности с rating_score IS NULL (с полями для отображения)
                 const [

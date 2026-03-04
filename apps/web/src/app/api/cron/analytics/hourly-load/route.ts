@@ -6,7 +6,14 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
-import { getBusinessTimezone } from '@/lib/time';
+import {
+  addDaysToDateString,
+  dateRangeInclusive,
+  fromZonedTime,
+  getBusinessTimezone,
+  getTimezone,
+  todayDateString,
+} from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -20,26 +27,15 @@ type HourlyCounters = {
   clientIds: Set<string>;
 };
 
-function addDay(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d;
-}
+const YMD_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-function dateRange(start: Date, endInclusive: Date): string[] {
-  const res: string[] = [];
-  let cur = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
-  const end = new Date(Date.UTC(endInclusive.getUTCFullYear(), endInclusive.getUTCMonth(), endInclusive.getUTCDate()));
-  while (cur <= end) {
-    res.push(cur.toISOString().slice(0, 10));
-    cur = addDay(cur, 1);
-  }
-  return res;
-}
-
-async function recalcHourlyForDate(supabase: ReturnType<typeof getServiceClient>, dateStr: string) {
-  const dayStartIso = `${dateStr}T00:00:00Z`;
-  const dayEndIso = `${dateStr}T23:59:59.999Z`;
+async function recalcHourlyForDate(
+  supabase: ReturnType<typeof getServiceClient>,
+  dateStr: string,
+  tz: string,
+) {
+  const dayStartIso = fromZonedTime(`${dateStr}T00:00:00`, tz).toISOString();
+  const dayEndIso = fromZonedTime(`${dateStr}T23:59:59.999`, tz).toISOString();
 
   type Key = string;
   const byKey: Map<Key, HourlyCounters> = new Map();
@@ -201,26 +197,21 @@ async function handle(req: Request) {
     const url = new URL(req.url);
     const startParam = url.searchParams.get('startDate');
     const endParam = url.searchParams.get('endDate');
+    const tz = getTimezone();
 
-    const today = new Date();
-    const yesterday = addDay(today, -1);
-
-    const parseDate = (value: string | null, fallback: Date): Date => {
-      if (!value) return fallback;
-      const d = new Date(`${value}T00:00:00Z`);
-      if (Number.isNaN(d.getTime())) return fallback;
-      return d;
-    };
-
-    const startDate = parseDate(startParam, yesterday);
-    const endDate = parseDate(endParam, yesterday);
+    let days: string[];
+    if (startParam && endParam && YMD_REGEX.test(startParam) && YMD_REGEX.test(endParam) && startParam <= endParam) {
+      days = dateRangeInclusive(startParam, endParam, tz);
+    } else {
+      const yesterdayStr = addDaysToDateString(todayDateString(tz), -1, tz);
+      days = [yesterdayStr];
+    }
 
     const supabase = getServiceClient();
-    const days = dateRange(startDate, endDate);
     const results: Array<{ date: string; updated: number }> = [];
 
     for (const d of days) {
-      const res = await recalcHourlyForDate(supabase, d);
+      const res = await recalcHourlyForDate(supabase, d, tz);
       results.push(res);
     }
 

@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
+import { BusinessCardEdit } from './BusinessCardEdit';
+
 import { DeleteBizButton } from '@/components/admin/DeleteBizButton';
 
 export const dynamic = 'force-dynamic';
@@ -251,88 +253,18 @@ export default async function BizPage({ params }: { params: Promise<RouteParams>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-                {/* Основная информация */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                        <div className="p-2 bg-gradient-to-br from-indigo-600 to-pink-600 rounded-lg">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Основная информация</h2>
-                    </div>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Slug (URL)</label>
-                            <div className="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                                /b/{biz.slug}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Категории</label>
-                            {categories.length > 0 ? (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {categories.map((cat) => (
-                                        <span
-                                            key={cat}
-                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                                        >
-                                            {cat}
-                                        </span>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Категории не указаны</p>
-                            )}
-                        </div>
-                        {biz.address && (
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Адрес</label>
-                                <div className="mt-1 flex items-start gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    <span>{biz.address}</span>
-                                </div>
-                            </div>
-                        )}
-                        {biz.phones && biz.phones.length > 0 && (
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Телефоны</label>
-                                <div className="mt-1 space-y-1">
-                                    {biz.phones.map((phone, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                            </svg>
-                                            <span>{phone}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {biz.created_at && (
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Дата создания</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                    {new Date(biz.created_at).toLocaleDateString('ru-RU', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}
-                                </p>
-                            </div>
-                        )}
-                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Адреса указываются в филиалах. Перейдите в раздел «Филиалы», чтобы добавить адрес(а).
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <BusinessCardEdit
+                    bizId={biz.id}
+                    initial={{
+                        name: biz.name,
+                        slug: biz.slug,
+                        categories,
+                        address: biz.address,
+                        phones: biz.phones,
+                        is_approved: isApproved,
+                        created_at: biz.created_at,
+                    }}
+                />
 
                 {/* Владелец */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">

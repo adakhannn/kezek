@@ -2,11 +2,10 @@
 // Журнал изменений финансовых настроек сотрудника (audit-trail). Доступен менеджерам/владельцам.
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -27,9 +26,7 @@ export type AuditLogEntry = {
 export async function GET(req: Request, context: unknown) {
     return withErrorHandler('FinanceAuditLog', async () => {
         const staffId = await getRouteParamUuid(context, 'id');
-        const { bizId } = await getBizContextForManagers();
-        const admin = getServiceClient();
-
+        return withManagerContext(req, 'FinanceAuditLog', async ({ admin, bizId }) => {
         if (!staffId) {
             return createErrorResponse('validation', 'Отсутствует ID сотрудника', undefined, 400);
         }
@@ -90,5 +87,6 @@ export async function GET(req: Request, context: unknown) {
         });
 
         return createSuccessResponse({ entries });
+        });
     });
 }

@@ -7,17 +7,18 @@ import { getServiceClient } from '@/lib/supabaseService';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
     return withErrorHandler('StaffAvatarRemove', async () => {
-        const { staffId } = await getStaffContext();
+        const { staffId, bizId } = await getStaffContext();
 
         const admin = getServiceClient();
 
-        // Получаем текущую аватарку
+        // Получаем текущую аватарку (фильтр по biz_id — принадлежность к бизнесу)
         const { data: currentStaff } = await admin
             .from('staff')
             .select('avatar_url')
             .eq('id', staffId)
+            .eq('biz_id', bizId)
             .single();
 
         if (!currentStaff?.avatar_url) {
@@ -33,11 +34,12 @@ export async function POST(req: Request) {
             // Продолжаем, даже если удаление файла не удалось
         }
 
-        // Обновляем запись в БД
+        // Обновляем запись в БД (фильтр по biz_id)
         const { error: updateError } = await admin
             .from('staff')
             .update({ avatar_url: null })
-            .eq('id', staffId);
+            .eq('id', staffId)
+            .eq('biz_id', bizId);
 
         if (updateError) {
             logError('StaffAvatarRemove', 'Update error', updateError);

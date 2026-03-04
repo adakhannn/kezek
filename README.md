@@ -9,7 +9,7 @@ Monorepo для платформы онлайн‑записи и управле
 
 Основные техдоки:
 
-- Архитектура и домены: `PROJECT_DOCUMENTATION.md`
-- Бизнес‑фичи: `SYSTEM_FEATURES_DOCUMENTATION.md`
+- Архитектура и домены: `PROJECT_DOCUMENTATION.md` (в т.ч. раздел «Роли и кабинеты»)
+- Бизнес‑фичи: `SYSTEM_FEATURES_DOCUMENTATION.md` (в т.ч. таблица «Роль → Доступные кабинеты → Основные функции»)
 - API: `API_DOCUMENTATION.md` (`/api-docs` для Swagger UI)
 - Состояние проекта и техдолг: `PROJECT_REVIEW.md`, `EVOLUTION_TECH_PLAN.md`

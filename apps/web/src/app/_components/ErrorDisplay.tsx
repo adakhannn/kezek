@@ -6,6 +6,7 @@
 'use client';
 
 import Link from 'next/link';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
 export type ErrorType = 
@@ -66,6 +67,8 @@ export function ErrorDisplay({
                         </svg>
                     ),
                     actions: [
+                        { href: '/cabinet', label: t('header.myBookings', 'Мои записи') },
+                        { href: '/dashboard', label: t('header.businessCabinet', 'Кабинет бизнеса') },
                         { href: '/', label: t('error.noStaffRecord.action.home', 'На главную') },
                         { href: '/auth/sign-in', label: t('error.noStaffRecord.action.signIn', 'Войти под другой учётной записью') },
                     ],
@@ -81,6 +84,8 @@ export function ErrorDisplay({
                         </svg>
                     ),
                     actions: [
+                        { href: '/cabinet', label: t('header.myBookings', 'Мои записи') },
+                        { href: '/staff', label: t('header.staffCabinet', 'Кабинет сотрудника') },
                         { href: '/b/kezek', label: t('error.noBizAccess.action.public', 'Перейти на публичную витрину') },
                         { href: '/auth/sign-in', label: t('error.noBizAccess.action.signIn', 'Войти под другой учётной записью') },
                     ],

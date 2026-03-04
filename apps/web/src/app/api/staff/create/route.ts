@@ -7,7 +7,8 @@ import {getBizContextForManagers} from '@/lib/authBiz';
 import {logDebug, logWarn, logError} from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import {initializeStaffSchedule} from '@/lib/staffSchedule';
-import {getServiceClient} from '@/lib/supabaseService';
+import { getServiceClient } from '@/lib/supabaseService';
+import { todayDateString } from '@/lib/time';
 
 /**
  * Добавляет роль staff пользователю в бизнесе (idempotent)
@@ -122,7 +123,7 @@ export async function POST(req: Request) {
 
         // Создаём первую запись в истории закреплений сотрудника за филиалом
         try {
-            const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            const todayISO = todayDateString();
             const { error: eAssign } = await admin.from('staff_branch_assignments').insert({
                 biz_id: bizId,
                 staff_id: data?.id,

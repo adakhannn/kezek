@@ -2,12 +2,11 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
-import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { financeAllQuerySchema } from '@/lib/validation/schemas';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -49,8 +48,7 @@ type BusinessFinanceStatsResult = {
 
 export async function GET(req: Request) {
     return withErrorHandler('FinanceAll', async () => {
-        const { supabase, bizId } = await getBizContextForManagers();
-
+        return withManagerContext(req, 'FinanceAll', async ({ supabase, admin, bizId }) => {
         // Валидация query параметров
         const url = new URL(req.url);
         const queryValidation = validateQuery(url, financeAllQuerySchema);
@@ -117,9 +115,6 @@ export async function GET(req: Request) {
             logError('FinanceAll', 'Error loading staff', staffError);
             return createErrorResponse('internal', staffError.message, undefined, 500);
         }
-
-        // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
-        const admin = getServiceClient();
 
         // Используем оптимизированную SQL функцию для получения статистики
         // Это уменьшает количество запросов к БД и выполняет агрегацию на стороне сервера
@@ -232,7 +227,7 @@ export async function GET(req: Request) {
             let totalConsumables = sqlStats?.stats.total_consumables || 0;
             let totalLateMinutes = sqlStats?.stats.total_late_minutes || 0;
             let closedShiftsCount = sqlStats?.shifts.closed || 0;
-            let openShiftsCount = sqlStats?.shifts.open || 0;
+            let _openShiftsCount = sqlStats?.shifts.open || 0;
             
             // Находим открытые смены для этого сотрудника
             const staffOpenShifts = (openShifts || []).filter((s) => s.staff_id === staff.id);
@@ -320,20 +315,7 @@ export async function GET(req: Request) {
             staffStats,
             totalStats,
         });
+        });
     });
-}
-
-// Fallback функция для обратной совместимости (старый метод)
-// Пока не реализована, так как SQL функция должна работать
-// Если понадобится, можно добавить полную реализацию старого метода
-async function getFinanceStatsLegacy(
-    _admin: ReturnType<typeof getServiceClient>,
-    _bizId: string,
-    _dateFrom: string,
-    _dateTo: string,
-    _branchId: string | null,
-    _staffList: Array<{ id: string; full_name: string; is_active: boolean }>
-) {
-    return createErrorResponse('internal', 'Legacy method not implemented. Please check SQL function.', undefined, 500);
 }
 

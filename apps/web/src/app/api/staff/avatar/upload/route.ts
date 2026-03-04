@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
     return withErrorHandler('StaffAvatarUpload', async () => {
-        const { staffId } = await getStaffContext();
+        const { staffId, bizId } = await getStaffContext();
 
         const formData = await req.formData();
         const file = formData.get('file') as File;
@@ -30,11 +30,12 @@ export async function POST(req: Request) {
 
         const admin = getServiceClient();
 
-        // Получаем текущую аватарку для удаления
+        // Получаем текущую аватарку для удаления (фильтр по biz_id — принадлежность к бизнесу)
         const { data: currentStaff } = await admin
             .from('staff')
             .select('avatar_url')
             .eq('id', staffId)
+            .eq('biz_id', bizId)
             .single();
 
         // Удаляем старую аватарку, если есть
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
 
         // Загружаем файл через service client (обходит RLS)
         logDebug('StaffAvatarUpload', 'Uploading file', { filePath, fileSize: file.size, fileType: file.type });
-        const { data: uploadData, error: uploadError } = await admin.storage
+        const { data: _uploadData, error: uploadError } = await admin.storage
             .from('avatars')
             .upload(filePath, buffer, {
                 cacheControl: '3600',
@@ -80,11 +81,12 @@ export async function POST(req: Request) {
             data: { publicUrl },
         } = admin.storage.from('avatars').getPublicUrl(filePath);
 
-        // Обновляем запись в БД
+        // Обновляем запись в БД (фильтр по biz_id)
         const { error: updateError } = await admin
             .from('staff')
             .update({ avatar_url: publicUrl })
-            .eq('id', staffId);
+            .eq('id', staffId)
+            .eq('biz_id', bizId);
 
         if (updateError) {
             logError('StaffAvatarUpload', 'Update error', updateError);

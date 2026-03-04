@@ -4,7 +4,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { CabinetOtherRolesBanner } from './components/CabinetOtherRolesBanner';
+
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+
 
 export default function CabinetLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -13,6 +16,7 @@ export default function CabinetLayout({ children }: { children: React.ReactNode 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
             <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+                <CabinetOtherRolesBanner />
                 {/* Навигация */}
                 <nav className="mb-6 bg-white dark:bg-gray-900 rounded-2xl p-2 shadow-lg border border-gray-200 dark:border-gray-800">
                     <div className="flex flex-wrap gap-2">

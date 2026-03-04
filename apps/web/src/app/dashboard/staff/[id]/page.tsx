@@ -61,8 +61,7 @@ export default async function Page({
     // (владелец бизнеса должен видеть отзывы для своих сотрудников)
     const admin = getServiceClient();
 
-    // Оптимизированный запрос: загружаем bookings с отзывами и услугами в одном запросе
-    // Это уменьшает количество запросов к БД с 3 до 1
+    // Оптимизированный запрос: загружаем bookings с отзывами и услугами в одном запросе (фильтр по biz_id)
     const { data: bookingsData } = await admin
         .from('bookings')
         .select(`
@@ -75,6 +74,7 @@ export default async function Page({
             services:services!bookings_service_id_fkey(name_ru, name_ky, name_en),
             reviews:reviews!reviews_booking_id_fkey(id, rating, comment, created_at)
         `)
+        .eq('biz_id', bizId)
         .eq('staff_id', id)
         .order('start_at', { ascending: false })
         .limit(100);

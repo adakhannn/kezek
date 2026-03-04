@@ -4,6 +4,7 @@ import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/
 import { logDebug, logError } from '@/lib/log';
 import { measurePerformance } from '@/lib/performance';
 import { getServiceClient } from '@/lib/supabaseService';
+import { addDaysToDateString, getTimezone, todayDateString } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -21,10 +22,9 @@ export async function GET(req: Request) {
 
         const supabase = getServiceClient();
 
-        // Оцениваем целевую дату метрик (по умолчанию — вчера, в UTC) для дополнительной диагностики
-        const metricDate = new Date();
-        metricDate.setUTCDate(metricDate.getUTCDate() - 1);
-        const metricDateStr = metricDate.toISOString().slice(0, 10);
+        // Целевая дата метрик (по умолчанию — вчера в эталонной таймзоне) для логирования
+        const tz = getTimezone();
+        const metricDateStr = addDaysToDateString(todayDateString(tz), -1, tz);
 
         logDebug('RecalculateRatingsCron', 'Starting ratings recalculation', {
             metricDate: metricDateStr,

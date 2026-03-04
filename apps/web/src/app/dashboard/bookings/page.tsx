@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { BookingsClientWrapper } from './BookingsClientWrapper';
@@ -72,12 +73,26 @@ export default async function Page() {
                         <h1 className="text-xl font-semibold mb-2">
                             {t('dashboard.bookings.noAccess.title', 'Нет доступа к кабинету')}
                         </h1>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 mb-4">
                             {t(
                                 'dashboard.bookings.noAccess.description',
                                 'У вашей учётной записи нет ролей owner / admin / manager ни в одном бизнесе.',
                             )}
                         </p>
+                        <div className="flex flex-wrap gap-3">
+                            <Link
+                                href="/cabinet"
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                            >
+                                {t('header.myBookings', 'Мои записи')}
+                            </Link>
+                            <Link
+                                href="/staff"
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                            >
+                                {t('header.staffCabinet', 'Кабинет сотрудника')}
+                            </Link>
+                        </div>
                     </main>
                 );
             }
@@ -93,12 +108,26 @@ export default async function Page() {
                         <h1 className="text-xl font-semibold mb-2">
                             {t('dashboard.bookings.noAccess.title', 'Нет доступа к кабинету')}
                         </h1>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 mb-4">
                             {t(
                                 'dashboard.bookings.noAccess.description',
                                 'У вашей учётной записи нет ролей owner / admin / manager ни в одном бизнесе.',
                             )}
                         </p>
+                        <div className="flex flex-wrap gap-3">
+                            <Link
+                                href="/cabinet"
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                            >
+                                {t('header.myBookings', 'Мои записи')}
+                            </Link>
+                            <Link
+                                href="/staff"
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                            >
+                                {t('header.staffCabinet', 'Кабинет сотрудника')}
+                            </Link>
+                        </div>
                     </main>
                 );
             }

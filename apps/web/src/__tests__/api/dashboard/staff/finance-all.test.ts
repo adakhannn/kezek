@@ -9,15 +9,14 @@ import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccess
 setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { getServiceClient } from '@/lib/supabaseService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
-// Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
 
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 describe('/api/dashboard/staff/finance/all', () => {
@@ -30,10 +29,11 @@ describe('/api/dashboard/staff/finance/all', () => {
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
+            userId: 'user-uuid',
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
     });
 
     describe('Валидация', () => {
@@ -49,66 +49,42 @@ describe('/api/dashboard/staff/finance/all', () => {
 
     describe('Успешное получение статистики', () => {
         test('должен успешно вернуть статистику всех сотрудников за день', async () => {
-            // Мокаем получение сотрудников
-            mockAdmin.from.mockReturnValueOnce({
+            mockSupabase.from.mockReturnValue({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 order: jest.fn().mockResolvedValue({
                     data: [
-                        {
-                            id: 'staff-1',
-                            full_name: 'Staff 1',
-                            is_active: true,
-                            branch_id: 'branch-1',
-                        },
-                        {
-                            id: 'staff-2',
-                            full_name: 'Staff 2',
-                            is_active: true,
-                            branch_id: 'branch-2',
-                        },
+                        { id: 'staff-1', full_name: 'Staff 1', is_active: true, branch_id: 'branch-1', hourly_rate: null, percent_master: 60, percent_salon: 40 },
+                        { id: 'staff-2', full_name: 'Staff 2', is_active: true, branch_id: 'branch-2', hourly_rate: null, percent_master: 60, percent_salon: 40 },
                     ],
                     error: null,
                 }),
             });
-
-            // Мокаем получение смен для каждого сотрудника
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                gte: jest.fn().mockReturnThis(),
-                lte: jest.fn().mockResolvedValue({
-                    data: [
-                        {
-                            id: 'shift-1',
-                            total_amount: 10000,
-                            master_share: 6000,
-                            salon_share: 4000,
-                            consumables_amount: 1000,
-                            late_minutes: 0,
-                        },
+            (mockAdmin.rpc as jest.Mock).mockResolvedValue({
+                data: {
+                    staff_stats: [
+                        { staff_id: 'staff-1', staff_name: 'Staff 1', is_active: true, branch_id: 'branch-1', shifts: { total: 1, closed: 1, open: 0 }, stats: { total_amount: 10000, total_master: 6000, total_salon: 4000, total_consumables: 1000, total_late_minutes: 0 } },
+                        { staff_id: 'staff-2', staff_name: 'Staff 2', is_active: true, branch_id: 'branch-2', shifts: { total: 1, closed: 1, open: 0 }, stats: { total_amount: 15000, total_master: 9000, total_salon: 6000, total_consumables: 1500, total_late_minutes: 5 } },
                     ],
-                    error: null,
-                }),
+                    total_stats: { total_shifts: 2, closed_shifts: 2, open_shifts: 0, total_amount: 25000, total_master: 15000, total_salon: 10000, total_consumables: 2500, total_late_minutes: 5 },
+                },
+                error: null,
             });
-
-            mockAdmin.from.mockReturnValueOnce({
+            mockAdmin.from.mockReturnValue({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 gte: jest.fn().mockReturnThis(),
-                lte: jest.fn().mockResolvedValue({
-                    data: [
-                        {
-                            id: 'shift-2',
-                            total_amount: 15000,
-                            master_share: 9000,
-                            salon_share: 6000,
-                            consumables_amount: 1500,
-                            late_minutes: 5,
-                        },
-                    ],
-                    error: null,
-                }),
+                lte: jest.fn().mockResolvedValue({ data: [], error: null }),
             });
 
             const req = createMockRequest('http://localhost/api/dashboard/staff/finance/all?period=day&date=2024-01-15', {
@@ -119,19 +95,35 @@ describe('/api/dashboard/staff/finance/all', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('staff_stats');
-            expect(data).toHaveProperty('total_stats');
+            expect(data.data).toHaveProperty('staffStats');
+            expect(data.data).toHaveProperty('totalStats');
         });
 
         test('должен успешно вернуть статистику за месяц', async () => {
-            // Мокаем получение сотрудников
-            mockAdmin.from.mockReturnValueOnce({
+            mockSupabase.from.mockReturnValue({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+            });
+            (mockAdmin.rpc as jest.Mock).mockResolvedValue({
+                data: { staff_stats: [], total_stats: null },
+                error: null,
+            });
+            mockAdmin.from.mockReturnValue({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                gte: jest.fn().mockReturnThis(),
+                lte: jest.fn().mockResolvedValue({ data: [], error: null }),
             });
 
             const req = createMockRequest('http://localhost/api/dashboard/staff/finance/all?period=month&date=2024-01', {
@@ -142,8 +134,8 @@ describe('/api/dashboard/staff/finance/all', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('staff_stats');
-            expect(data).toHaveProperty('total_stats');
+            expect(data.data).toHaveProperty('staffStats');
+            expect(data.data).toHaveProperty('totalStats');
         });
     });
 });

@@ -10,15 +10,14 @@ setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
-// Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
 
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 jest.mock('@/lib/routeParams', () => ({
@@ -36,10 +35,11 @@ describe('/api/dashboard/staff/[id]/finance (deprecated)', () => {
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
+            userId: 'user-uuid',
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
 
         (getRouteParamUuid as jest.Mock).mockResolvedValue(staffId);
     });
@@ -75,6 +75,9 @@ describe('/api/dashboard/staff/[id]/finance (deprecated)', () => {
                         id: staffId,
                         biz_id: bizId,
                         branch_id: 'branch-id',
+                        percent_master: 60,
+                        percent_salon: 40,
+                        hourly_rate: 500,
                     },
                     error: null,
                 }),
@@ -103,6 +106,36 @@ describe('/api/dashboard/staff/[id]/finance (deprecated)', () => {
                     data: [],
                     error: null,
                 }),
+            });
+
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                gte: jest.fn().mockReturnThis(),
+                lte: jest.fn().mockReturnThis(),
+                neq: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                gte: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+            });
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({ data: [], error: null }),
             });
 
             const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/finance?date=2024-01-15`, {

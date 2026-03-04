@@ -1,12 +1,12 @@
 /**
  * GET /api/dashboard/integrations-status
  * Статус интеграций WhatsApp и Telegram для отображения в дашборде.
- * Доступно только менеджерам/владельцам (getBizContextForManagers).
+ * Доступно только менеджерам/владельцам (withManagerContext).
  */
 
 import { withErrorHandler, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
 import { logWarn } from '@/lib/log';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -90,15 +90,14 @@ async function checkTelegram(): Promise<IntegrationStatus> {
     }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
     return withErrorHandler('IntegrationsStatus', async () => {
-        await getBizContextForManagers();
-
-        const [whatsapp, telegram] = await Promise.all([checkWhatsApp(), checkTelegram()]);
-
-        return createSuccessResponse({
-            whatsapp,
-            telegram,
+        return withManagerContext(req, 'IntegrationsStatus', async () => {
+            const [whatsapp, telegram] = await Promise.all([checkWhatsApp(), checkTelegram()]);
+            return createSuccessResponse({
+                whatsapp,
+                telegram,
+            });
         });
     });
 }

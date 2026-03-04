@@ -2,11 +2,10 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
 import { logDebug, logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,10 +28,8 @@ export async function GET(
     context: unknown
 ) {
     return withErrorHandler('StaffFinanceStats', async () => {
-        // Валидация UUID для предотвращения потенциальных проблем безопасности
         const staffId = await getRouteParamUuid(context, 'id');
-        const { supabase, bizId } = await getBizContextForManagers();
-
+        return withManagerContext(req, 'StaffFinanceStats', async ({ supabase, admin, bizId }) => {
         // Получаем параметры запроса
         const { searchParams } = new URL(req.url);
         const period = (searchParams.get('period') || 'day') as Period;
@@ -181,9 +178,6 @@ export async function GET(
             period,
             date,
         });
-
-        // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
-        const admin = getServiceClient();
 
         // Сначала проверим, есть ли открытая смена на сегодня
         // Это важно, потому что открытая смена должна показываться
@@ -518,6 +512,7 @@ export async function GET(
         });
 
         return createSuccessResponse({ stats });
+        });
     });
 }
 

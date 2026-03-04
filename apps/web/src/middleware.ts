@@ -2,12 +2,19 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import {
+    countAvailableCabinetTypes,
+    getPathForPreferredCabinet,
+    getUserRoleProfile,
+    PREFERRED_CABINET_COOKIE_NAME,
+    resolveDefaultDashboard,
+    shouldRedirectToSelectBusiness,
+} from '@/lib/authContext';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 
 export async function middleware(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
-    
-    // Пропускаем проверку для статических файлов, API routes и страниц авторизации
+
     if (
         pathname.startsWith('/_next') ||
         pathname.startsWith('/api') ||
@@ -21,9 +28,7 @@ export async function middleware(req: NextRequest) {
     }
 
     const res = NextResponse.next();
-    
-    // Добавляем Security Headers (дополнительно к headers() в next.config.ts)
-    // Это гарантирует, что headers применяются даже для динамических routes
+
     res.headers.set('X-DNS-Prefetch-Control', 'on');
     res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
     res.headers.set('X-Frame-Options', 'SAMEORIGIN');
@@ -31,7 +36,7 @@ export async function middleware(req: NextRequest) {
     res.headers.set('X-XSS-Protection', '1; mode=block');
     res.headers.set('Referrer-Policy', 'origin-when-cross-origin');
     res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-    
+
     const supabase = createServerClient(
         getSupabaseUrl(),
         getSupabaseAnonKey(),
@@ -51,104 +56,60 @@ export async function middleware(req: NextRequest) {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) return res;
 
-    // Ролевые редиректы включаем ТОЛЬКО для главной страницы ('/').
-    // Это исключает циклы вида /dashboard -> /dashboard и /staff -> /staff.
     if (pathname === '/') {
-        const { data: roles, error } = await supabase.rpc('my_role_keys');
-        if (error) {
-            // Логируем ошибку, но не прерываем запрос - пользователь останется на текущей странице
-            const { logWarn } = await import('@/lib/log');
-            logWarn('middleware', 'Failed to get user roles', error);
-            return res;
-        }
+        try {
+            const profile = await getUserRoleProfile(supabase);
+            if (!profile) return res;
 
-        const keys = Array.isArray(roles) ? (roles as string[]) : [];
-        if (keys.includes('super_admin')) {
-            const url = req.nextUrl.clone();
-            url.pathname = '/admin';
-            return NextResponse.redirect(url, 302);
-        }
-        // Владельцы, админы и менеджеры → либо выбор бизнеса, либо dashboard
-        if (keys.includes('owner') || keys.some(k => ['admin', 'manager'].includes(k))) {
-            try {
-                // Если уже есть выбранный текущий бизнес — идём сразу в /dashboard
+            const cabinetCount = countAvailableCabinetTypes(profile);
+
+            if (cabinetCount >= 2) {
+                const preferred = req.cookies.get(PREFERRED_CABINET_COOKIE_NAME)?.value;
+                const path = getPathForPreferredCabinet(profile, preferred);
+                if (path) {
+                    if (path === '/dashboard') {
+                        const { data: current } = await supabase
+                            .from('user_current_business')
+                            .select('biz_id')
+                            .eq('user_id', profile.userId)
+                            .maybeSingle<{ biz_id: string }>();
+                        if (shouldRedirectToSelectBusiness(profile, !!current?.biz_id)) {
+                            const url = req.nextUrl.clone();
+                            url.pathname = '/select-business';
+                            return NextResponse.redirect(url, 302);
+                        }
+                    }
+                    const url = req.nextUrl.clone();
+                    url.pathname = path;
+                    return NextResponse.redirect(url, 302);
+                }
+                const url = req.nextUrl.clone();
+                url.pathname = '/select-cabinet';
+                return NextResponse.redirect(url, 302);
+            }
+
+            const result = resolveDefaultDashboard(profile);
+            if (result.path === '/dashboard') {
                 const { data: current } = await supabase
                     .from('user_current_business')
                     .select('biz_id')
-                    .eq('user_id', userRes.user.id)
+                    .eq('user_id', profile.userId)
                     .maybeSingle<{ biz_id: string }>();
 
-                if (!current?.biz_id) {
-                    // Нет current_biz_id — считаем доступные бизнесы
-                    const ALLOWED_ROLE_KEYS = new Set(['owner', 'admin', 'manager']);
-
-                    const [{ data: ownedBusinesses }, { data: roleBusinesses }] = await Promise.all([
-                        supabase
-                            .from('businesses')
-                            .select('id')
-                            .eq('owner_id', userRes.user.id),
-                        supabase
-                            .from('user_roles')
-                            .select('biz_id, roles:key!inner(key)')
-                            .eq('user_id', userRes.user.id)
-                            .not('biz_id', 'is', null),
-                    ]);
-
-                    const bizIds = new Set<string>();
-
-                    (ownedBusinesses ?? []).forEach((b: { id: string }) => {
-                        if (b?.id) bizIds.add(b.id);
-                    });
-
-                    const roleBizRows = (roleBusinesses ?? []) as Array<{
-                        biz_id: string | null;
-                        roles: { key: string }[] | null;
-                    }>;
-
-                    roleBizRows.forEach((r) => {
-                        if (!r.biz_id) return;
-                        const roleKey = r.roles?.[0]?.key;
-                        if (!roleKey || !ALLOWED_ROLE_KEYS.has(roleKey)) return;
-                        bizIds.add(r.biz_id);
-                    });
-
-                    if (bizIds.size > 1) {
-                        const url = req.nextUrl.clone();
-                        url.pathname = '/select-business';
-                        return NextResponse.redirect(url, 302);
-                    }
+                if (shouldRedirectToSelectBusiness(profile, !!current?.biz_id)) {
+                    const url = req.nextUrl.clone();
+                    url.pathname = '/select-business';
+                    return NextResponse.redirect(url, 302);
                 }
-
-                const url = req.nextUrl.clone();
-                url.pathname = '/dashboard';
-                return NextResponse.redirect(url, 302);
-            } catch {
-                // В случае ошибок фоллбек на старое поведение
-                const url = req.nextUrl.clone();
-                url.pathname = '/dashboard';
-                return NextResponse.redirect(url, 302);
             }
-        }
-        
-        // Сотрудники → проверяем наличие записи в staff (источник правды)
-        const { data: staff } = await supabase
-            .from('staff')
-            .select('id')
-            .eq('user_id', userRes.user.id)
-            .eq('is_active', true)
-            .maybeSingle();
-        
-        if (staff) {
+
             const url = req.nextUrl.clone();
-            url.pathname = '/staff';
+            url.pathname = result.path;
             return NextResponse.redirect(url, 302);
-        }
-        
-        // Fallback: проверяем роль через RPC
-        if (keys.includes('staff')) {
-            const url = req.nextUrl.clone();
-            url.pathname = '/staff';
-            return NextResponse.redirect(url, 302);
+        } catch (e) {
+            const { logWarn } = await import('@/lib/log');
+            logWarn('middleware', 'Redirect from / failed', e);
+            return res;
         }
     }
 

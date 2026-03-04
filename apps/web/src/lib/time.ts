@@ -1,5 +1,7 @@
-import { addMinutes, isBefore, max as maxDate, min as minDate } from 'date-fns';
+import { addMinutes, addDays, isBefore, max as maxDate, min as minDate } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+
+export { fromZonedTime };
 
 /**
  * Получает таймзону из переменной окружения или возвращает значение по умолчанию
@@ -7,6 +9,47 @@ import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
  */
 export function getTimezone(): string {
     return process.env.NEXT_PUBLIC_TZ || 'Asia/Bishkek';
+}
+
+/**
+ * Текущая календарная дата в заданной таймзоне (YYYY-MM-DD).
+ * Использовать вместо new Date().toISOString().slice(0, 10) для «сегодня» в бизнес-логике.
+ */
+export function todayDateString(timezone?: string): string {
+    const tz = timezone || getTimezone();
+    return formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
+}
+
+/**
+ * Календарная дата (YYYY-MM-DD) для произвольного момента в заданной таймзоне.
+ */
+export function toDateString(d: Date, timezone?: string): string {
+    const tz = timezone || getTimezone();
+    return formatInTimeZone(d, tz, 'yyyy-MM-dd');
+}
+
+/**
+ * Добавляет дни к календарной дате (YYYY-MM-DD) в заданной таймзоне, возвращает YYYY-MM-DD.
+ * Использовать для вычисления начальной даты диапазона (например, «сегодня минус 30 дней»).
+ */
+export function addDaysToDateString(dateStr: string, days: number, timezone?: string): string {
+    const tz = timezone || getTimezone();
+    const d = fromZonedTime(`${dateStr}T12:00:00`, tz);
+    return formatInTimeZone(addDays(d, days), tz, 'yyyy-MM-dd');
+}
+
+/**
+ * Список календарных дат (YYYY-MM-DD) от start до end включительно в заданной таймзоне.
+ */
+export function dateRangeInclusive(startStr: string, endStr: string, timezone?: string): string[] {
+    const tz = timezone || getTimezone();
+    const res: string[] = [];
+    let cur = startStr;
+    while (cur <= endStr) {
+        res.push(cur);
+        cur = addDaysToDateString(cur, 1, tz);
+    }
+    return res;
 }
 
 /**

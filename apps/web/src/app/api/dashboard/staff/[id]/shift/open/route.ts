@@ -2,12 +2,11 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
 import { TZ, dateAtTz } from '@/lib/time';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -24,10 +23,8 @@ export async function POST(
         RateLimitConfigs.critical,
         async () => {
             return withErrorHandler('OwnerShiftOpen', async () => {
-                // Валидация UUID для предотвращения потенциальных проблем безопасности
                 const staffId = await getRouteParamUuid(context, 'id');
-                const { supabase, bizId } = await getBizContextForManagers();
-
+                return withManagerContext(req, 'OwnerShiftOpen', async ({ supabase, admin, bizId }) => {
                 // Получаем дату из query параметров или используем сегодня
                 const { searchParams } = new URL(req.url);
                 const dateParam = searchParams.get('date');
@@ -76,11 +73,8 @@ export async function POST(
                     return createErrorResponse('validation', 'У сотрудника не указан филиал. Укажите филиал в карточке сотрудника и попробуйте снова.', undefined, 400);
                 }
 
-                // Используем service client для работы со staff_shifts, чтобы обойти RLS и корректно обрабатывать существующие смены
-                const writeClient = getServiceClient();
-
                 // Проверяем, не открыта ли уже смена за эту дату
-                const { data: existingShift, error: checkError } = await writeClient
+                const { data: existingShift, error: checkError } = await admin
                     .from('staff_shifts')
                     .select('id, status')
                     .eq('staff_id', staffId)
@@ -175,7 +169,7 @@ export async function POST(
 
                 // Если смена уже существует (закрыта или в другом состоянии) — переоткрываем
                 if (existingShift) {
-                    const { data: updatedShift, error: updateError } = await writeClient
+                    const { data: updatedShift, error: updateError } = await admin
                         .from('staff_shifts')
                         .update({
                             status: 'open',
@@ -202,7 +196,7 @@ export async function POST(
                 }
 
                 // Создаем новую смену
-                const { data: newShift, error: createError } = await writeClient
+                const { data: newShift, error: createError } = await admin
                     .from('staff_shifts')
                     .insert({
                         staff_id: staffId,
@@ -237,6 +231,7 @@ export async function POST(
                 });
 
                 return createSuccessResponse({ shift: newShift });
+                });
             });
         }
     );

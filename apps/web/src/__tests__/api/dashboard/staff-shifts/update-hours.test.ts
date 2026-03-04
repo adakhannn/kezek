@@ -11,15 +11,14 @@ setupApiTestMocks();
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
-// Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
 
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 jest.mock('@/lib/routeParams', () => ({
@@ -39,10 +38,12 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
         jest.clearAllMocks();
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
+            supabase: mockAdmin,
+            userId: 'user-uuid',
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
 
         (getRouteParamRequired as jest.Mock).mockResolvedValue(shiftId);
     });
@@ -55,7 +56,7 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
             });
 
             const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'INVALID_JSON');
+            await expectErrorResponse(res, 400, 'validation');
         });
 
         test('должен вернуть 400 при отсутствии hours_worked', async () => {
@@ -65,7 +66,7 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
             });
 
             const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'INVALID_HOURS_VALUE');
+            await expectErrorResponse(res, 400, 'validation');
         });
 
         test('должен вернуть 400 при отрицательном hours_worked', async () => {
@@ -77,7 +78,7 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
             });
 
             const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'INVALID_HOURS_VALUE');
+            await expectErrorResponse(res, 400, 'validation');
         });
 
         test('должен вернуть 400 при hours_worked > 48', async () => {
@@ -89,7 +90,7 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
             });
 
             const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'INVALID_HOURS_VALUE');
+            await expectErrorResponse(res, 400, 'validation');
         });
     });
 
@@ -108,7 +109,7 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
             });
 
             const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 404, 'SHIFT_NOT_FOUND_OR_FORBIDDEN');
+            await expectErrorResponse(res, 404, 'not_found');
         });
 
         test('должен вернуть 400 если смена не закрыта', async () => {
@@ -139,7 +140,7 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
             });
 
             const res = await POST(req, { params: { id: shiftId } });
-            await expectErrorResponse(res, 400, 'ONLY_CLOSED_SHIFTS_CAN_BE_ADJUSTED');
+            await expectErrorResponse(res, 400, 'validation');
         });
     });
 
@@ -164,17 +165,16 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
                 error: null,
             });
 
-            // Мокаем обновление смены
-            mockAdmin.from.mockReturnValueOnce({
+            const updateChain = {
                 update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: {
-                        id: shiftId,
-                        hours_worked: 8,
-                    },
+                eq: jest.fn().mockReturnThis(),
+                select: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: { id: shiftId, hours_worked: 8 },
                     error: null,
                 }),
-            });
+            };
+            mockAdmin.from.mockReturnValueOnce(updateChain);
 
             const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
                 method: 'POST',
@@ -209,17 +209,16 @@ describe('/api/dashboard/staff-shifts/[id]/update-hours', () => {
                 error: null,
             });
 
-            // Мокаем обновление смены
-            mockAdmin.from.mockReturnValueOnce({
+            const updateChain2 = {
                 update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: {
-                        id: shiftId,
-                        hours_worked: 8.33, // Округлено до 2 знаков
-                    },
+                eq: jest.fn().mockReturnThis(),
+                select: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: { id: shiftId, hours_worked: 8.33 },
                     error: null,
                 }),
-            });
+            };
+            mockAdmin.from.mockReturnValueOnce(updateChain2);
 
             const req = createMockRequest(`http://localhost/api/dashboard/staff-shifts/${shiftId}/update-hours`, {
                 method: 'POST',

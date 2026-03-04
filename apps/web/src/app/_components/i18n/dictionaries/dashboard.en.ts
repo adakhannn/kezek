@@ -10,7 +10,7 @@ export const dashboardEn = {
     'dashboard.error.goToPublic': 'Go to public showcase',
     'dashboard.error.noAccess': 'No access to cabinet',
     'dashboard.error.noAccessDesc': 'Your account does not have <code>owner / admin / manager</code> roles in any business.',
-    'dashboard.header.badge': 'Business owner cabinet',
+    'dashboard.header.badge': 'Business cabinet',
     'dashboard.header.defaultBizName': 'Your business in Kezek',
     'dashboard.kpi.activeServices': 'Active services',
     'dashboard.kpi.activeStaff': 'Active staff',

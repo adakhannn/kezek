@@ -5,7 +5,7 @@ export const dashboardKy = {
     'dashboard.error.goToPublic': 'Жалпы көрүнүшкө өтүү',
     'dashboard.error.noAccess': 'Кабинетке кирүү мүмкүн эмес',
     'dashboard.error.noAccessDesc': 'Сиздин эсебиңизде эч бир бизнесте <code>owner / admin / manager</code> ролдору жок.',
-    'dashboard.header.badge': 'Бизнес ээсинин кабинети',
+    'dashboard.header.badge': 'Бизнес кабинети',
     'dashboard.header.defaultBizName': 'Сиздин бизнесиңиз Kezekте',
     'dashboard.kpi.activeServices': 'Активдүү кызматтар',
     'dashboard.kpi.activeStaff': 'Активдүү кызматкерлер',

@@ -10,15 +10,14 @@ setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
-// Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
 
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 jest.mock('@/lib/routeParams', () => ({
@@ -43,10 +42,11 @@ describe('/api/dashboard/staff/[id]/shift/open', () => {
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
+            userId: 'user-uuid',
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
 
         (getRouteParamUuid as jest.Mock).mockResolvedValue(staffId);
     });
@@ -95,18 +95,27 @@ describe('/api/dashboard/staff/[id]/shift/open', () => {
 
     describe('Успешное открытие смены', () => {
         test('должен успешно открыть смену для сотрудника', async () => {
-            // Мокаем проверку сотрудника
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: staffId,
-                        biz_id: bizId,
-                        branch_id: 'branch-id',
-                    },
+                    data: { id: staffId, biz_id: bizId, branch_id: 'branch-id' },
                     error: null,
                 }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
             });
 
             // Мокаем проверку существующей смены
@@ -143,22 +152,31 @@ describe('/api/dashboard/staff/[id]/shift/open', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('shift');
+            expect(data.data).toHaveProperty('shift');
         });
 
         test('должен вернуть существующую смену если она уже открыта', async () => {
-            // Мокаем проверку сотрудника
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: staffId,
-                        biz_id: bizId,
-                        branch_id: 'branch-id',
-                    },
+                    data: { id: staffId, biz_id: bizId, branch_id: 'branch-id' },
                     error: null,
                 }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
             });
 
             // Мокаем проверку существующей смены (найдена)
@@ -185,7 +203,7 @@ describe('/api/dashboard/staff/[id]/shift/open', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('shift');
+            expect(data.data).toHaveProperty('shift');
         });
     });
 });

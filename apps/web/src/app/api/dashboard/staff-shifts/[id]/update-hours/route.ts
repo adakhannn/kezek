@@ -1,11 +1,10 @@
 // apps/web/src/app/api/dashboard/staff-shifts/[id]/update-hours/route.ts
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamRequired } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -21,9 +20,7 @@ export async function POST(req: Request, context: unknown) {
         RateLimitConfigs.normal,
         () => withErrorHandler('UpdateShiftHours', async () => {
         const shiftId = await getRouteParamRequired(context, 'id');
-        const { bizId } = await getBizContextForManagers();
-        const admin = getServiceClient();
-
+        return withManagerContext(req, 'UpdateShiftHours', async ({ admin, bizId }) => {
         let body: Body;
         try {
             body = await req.json();
@@ -126,6 +123,7 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return createSuccessResponse({ shift: updated });
+        });
         })
     );
 }

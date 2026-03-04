@@ -15,12 +15,7 @@ const DAYS_BACK_MIN = 1;
 const DAYS_BACK_MAX = 365;
 /** Максимум дней в одном батче при вызове с start_date/end_date (чтобы не превышать таймаут). */
 const DATE_RANGE_CHUNK_DAYS_MAX = 31;
-
-function parseDate(s: unknown): Date | null {
-    if (typeof s !== 'string') return null;
-    const d = new Date(s);
-    return Number.isNaN(d.getTime()) ? null : d;
-}
+const YMD_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * POST /api/admin/initialize-ratings
@@ -87,12 +82,16 @@ export async function POST(req: Request) {
         }
 
         // Режим: пересчёт метрик только за указанный диапазон дат (без обновления агрегатов)
-        const startDate = parseDate(body.start_date);
-        const endDate = parseDate(body.end_date);
-        if (startDate != null && endDate != null) {
-            if (startDate > endDate) {
+        const startStrRaw =
+            typeof body.start_date === 'string' && YMD_REGEX.test(body.start_date) ? body.start_date : null;
+        const endStrRaw =
+            typeof body.end_date === 'string' && YMD_REGEX.test(body.end_date) ? body.end_date : null;
+        if (startStrRaw != null && endStrRaw != null) {
+            if (startStrRaw > endStrRaw) {
                 return createErrorResponse('validation', 'start_date не должен быть больше end_date', undefined, 400);
             }
+            const startDate = new Date(startStrRaw + 'T12:00:00Z');
+            const endDate = new Date(endStrRaw + 'T12:00:00Z');
             const diffDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
             if (diffDays > DATE_RANGE_CHUNK_DAYS_MAX) {
                 return createErrorResponse(
@@ -102,8 +101,8 @@ export async function POST(req: Request) {
                     400,
                 );
             }
-            const startStr = startDate.toISOString().slice(0, 10);
-            const endStr = endDate.toISOString().slice(0, 10);
+            const startStr = startStrRaw;
+            const endStr = endStrRaw;
             const { error: rangeError } = await admin.rpc('recalculate_ratings_for_date_range', {
                 p_start_date: startStr,
                 p_end_date: endStr,

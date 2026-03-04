@@ -10,13 +10,12 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
 import { logError, logDebug, logWarn } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
 import { TZ } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { staffFinanceByIdQuerySchema } from '@/lib/validation/schemas';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -26,13 +25,9 @@ export async function GET(
     context: unknown
 ) {
     return withErrorHandler('StaffFinance', async () => {
-        // Предупреждение о deprecated endpoint
         logWarn('StaffFinance', 'Deprecated endpoint used. Please migrate to /api/staff/finance?staffId={id}');
-        
-        // Валидация UUID для предотвращения потенциальных проблем безопасности
         const staffId = await getRouteParamUuid(context, 'id');
-        const { supabase, bizId } = await getBizContextForManagers();
-
+        return withManagerContext(req, 'StaffFinance', async ({ supabase, admin, bizId }) => {
         // Валидация query параметров
         const url = new URL(req.url);
         const queryValidation = validateQuery(url, staffFinanceByIdQuerySchema);
@@ -72,7 +67,6 @@ export async function GET(
         }
 
         // Нормализуем значения для надежного сравнения
-        // bizId из getBizContextForManagers всегда строка, но нормализуем на всякий случай
         const normalizedBizId = bizId ? String(bizId).trim() : null;
         const normalizedStaffBizId = staff.biz_id != null ? String(staff.biz_id).trim() : null;
 
@@ -127,9 +121,6 @@ export async function GET(
                 }
             }
         }
-
-        // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
-        const admin = getServiceClient();
 
         // Смена за выбранную дату
         const { data: shift, error: shiftError } = await admin
@@ -303,7 +294,7 @@ export async function GET(
         };
 
         // Тип для статистики смены
-        type ShiftStatsRow = {
+        type _ShiftStatsRow = {
             total_amount: number | null;
             master_share: number | null;
             salon_share: number | null;
@@ -384,6 +375,7 @@ export async function GET(
             currentGuaranteedAmount,
             isDayOff,
             stats,
+        });
         });
     });
 }

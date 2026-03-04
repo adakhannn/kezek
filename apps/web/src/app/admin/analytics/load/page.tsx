@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { loadPersistedAnalyticsFilters, persistAnalyticsFilters } from '../filterPersistence';
 
+import { addDaysToDateString, todayDateString } from '@/lib/time';
+
 type LoadPoint = {
   date: string;
   hour: number;
@@ -76,10 +78,8 @@ export default function AdminAnalyticsLoadPage() {
   const [data, setData] = useState<LoadResponse['data'] | null>(null);
 
   useEffect(() => {
-    const today = new Date();
-    const endDefault = today.toISOString().slice(0, 10);
-    const startDefault = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
+    const endDefault = todayDateString();
+    const startDefault = addDaysToDateString(endDefault, -30);
     const persisted = loadPersistedAnalyticsFilters();
 
     setStartDate(persisted.startDate ?? startDefault);
@@ -160,9 +160,8 @@ export default function AdminAnalyticsLoadPage() {
     setPeriodPreset(preset);
     if (preset === 'custom') return;
     const days = preset === '7' ? 7 : preset === '30' ? 30 : 90;
-    const today = new Date();
-    const end = today.toISOString().slice(0, 10);
-    const start = new Date(today.getTime() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const end = todayDateString();
+    const start = addDaysToDateString(end, -days);
     setStartDate(start);
     setEndDate(end);
   };

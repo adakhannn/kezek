@@ -26,6 +26,7 @@ export default async function EditServicePage({
             .from('services')
             .select('id,name_ru,name_ky,name_en,duration_min,price_from,price_to,active,branch_id,biz_id')
             .eq('id', id)
+            .eq('biz_id', bizId)
             .maybeSingle(),
         admin
             .from('branches')

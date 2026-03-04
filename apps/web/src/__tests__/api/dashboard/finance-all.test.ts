@@ -9,15 +9,14 @@ import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccess
 setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { getServiceClient } from '@/lib/supabaseService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
-// Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
 
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 describe('/api/dashboard/finance/all', () => {
@@ -30,21 +29,38 @@ describe('/api/dashboard/finance/all', () => {
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
+            userId: 'user-uuid',
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
     });
 
     test('должен успешно вернуть статистику (реэкспорт)', async () => {
-        // Мокаем получение сотрудников
-        mockAdmin.from.mockReturnValueOnce({
+        mockSupabase.from.mockReturnValue({
             select: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
-            order: jest.fn().mockResolvedValue({
-                data: [],
-                error: null,
-            }),
+            order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        });
+        mockSupabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        });
+        mockSupabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        });
+        (mockAdmin.rpc as jest.Mock).mockResolvedValue({
+            data: { staff_stats: [], total_stats: null },
+            error: null,
+        });
+        mockAdmin.from.mockReturnValue({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            gte: jest.fn().mockReturnThis(),
+            lte: jest.fn().mockResolvedValue({ data: [], error: null }),
         });
 
         const req = createMockRequest('http://localhost/api/dashboard/finance/all?period=day&date=2024-01-15', {

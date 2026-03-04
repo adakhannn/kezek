@@ -10,6 +10,7 @@ setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { getRouteParamUuid } from '@/lib/routeParams';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 // Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
@@ -20,8 +21,8 @@ jest.mock('@/lib/routeParams', () => ({
     getRouteParamUuid: jest.fn(),
 }));
 
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 describe('/api/dashboard/staff/[id]/finance/stats', () => {
@@ -34,10 +35,12 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
+            userId: 'user-uuid',
             bizId,
         });
 
         (getRouteParamUuid as jest.Mock).mockResolvedValue(staffId);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockSupabase);
     });
 
     describe('Валидация', () => {
@@ -71,25 +74,28 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
 
     describe('Успешное получение статистики', () => {
         test('должен успешно получить статистику за день', async () => {
-            // Мокаем проверку сотрудника
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: staffId,
-                        biz_id: bizId,
-                    },
+                    data: { id: staffId, biz_id: bizId, full_name: 'Test Staff' },
                     error: null,
                 }),
             });
-
-            // Мокаем получение смен
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 gte: jest.fn().mockReturnThis(),
-                lte: jest.fn().mockResolvedValue({
+                lte: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({
                     data: [
                         {
                             id: 'shift-1',
@@ -97,20 +103,30 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
                             total_amount: 10000,
                             master_share: 6000,
                             salon_share: 4000,
+                            status: 'closed',
+                            consumables_amount: 0,
+                            late_minutes: 0,
+                            percent_master: 60,
+                            percent_salon: 40,
+                            hourly_rate: null,
+                            guaranteed_amount: 0,
+                            hours_worked: null,
+                            opened_at: null,
+                            closed_at: null,
+                            staff: null,
                         },
                     ],
                     error: null,
                 }),
             });
-
-            // Мокаем получение элементов смен
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                in: jest.fn().mockResolvedValue({
+                in: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({
                     data: [
                         {
                             id: 'item-1',
+                            shift_id: 'shift-1',
                             client_name: 'Client 1',
                             service_name: 'Service 1',
                             service_amount: 5000,
@@ -129,39 +145,48 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('stats');
+            expect(data.data).toHaveProperty('stats');
         });
 
         test('должен успешно получить статистику за месяц', async () => {
-            // Мокаем проверку сотрудника
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: staffId,
-                        biz_id: bizId,
-                    },
+                    data: { id: staffId, biz_id: bizId, full_name: 'Test Staff' },
                     error: null,
                 }),
             });
-
-            // Мокаем получение смен
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            });
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 gte: jest.fn().mockReturnThis(),
-                lte: jest.fn().mockResolvedValue({
+                lte: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({
                     data: [],
                     error: null,
                 }),
             });
-
-            // Мокаем получение элементов смен
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                in: jest.fn().mockResolvedValue({
+                in: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({
                     data: [],
                     error: null,
                 }),
@@ -175,7 +200,7 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('stats');
+            expect(data.data).toHaveProperty('stats');
         });
     });
 });

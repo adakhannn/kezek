@@ -3,19 +3,18 @@
  * Критичная операция: агрегация финансовых данных для всех сотрудников
  */
 
-// Импортируем из правильного пути (реэкспорт из staff/finance/all)
 import { GET } from '@/app/api/dashboard/staff/finance/all/route';
-// Мокируем зависимости
+
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
 
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { getServiceClient } from '@/lib/supabaseService';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 describe('/api/dashboard/finance/all', () => {
     const mockSupabase = {
@@ -31,9 +30,10 @@ describe('/api/dashboard/finance/all', () => {
         jest.clearAllMocks();
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
+            userId: 'user-uuid',
             bizId: 'test-biz-id',
         });
-        (getServiceClient as jest.Mock).mockReturnValue(mockSupabase);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockSupabase);
     });
 
     describe('Edge cases', () => {
@@ -80,7 +80,6 @@ describe('/api/dashboard/finance/all', () => {
                 error: null,
             });
 
-            // Мокируем запрос открытых смен
             const mockShiftsQuery = {
                 eq: jest.fn().mockReturnThis(),
                 gte: jest.fn().mockReturnThis(),
@@ -93,7 +92,7 @@ describe('/api/dashboard/finance/all', () => {
                 select: jest.fn().mockReturnValue(mockShiftsQuery),
             });
 
-            const req = new Request('http://localhost/api/dashboard/finance/all', {
+            const req = new Request('http://localhost/api/dashboard/finance/all?period=day&date=2026-03-04', {
                 method: 'GET',
             });
 
@@ -102,7 +101,7 @@ describe('/api/dashboard/finance/all', () => {
 
             expect(response.status).toBe(200);
             expect(data.ok).toBe(true);
-            expect(Array.isArray(data.staffList)).toBe(true);
+            expect(Array.isArray(data.data?.staffStats)).toBe(true);
         });
 
         test('должен обработать фильтрацию по филиалу', async () => {
@@ -132,9 +131,7 @@ describe('/api/dashboard/finance/all', () => {
                 select: jest.fn().mockReturnValue(mockStaffQuery),
             });
 
-            // Мокируем RPC для получения статистики
-            const mockAdmin = getServiceClient();
-            (mockAdmin as { rpc: jest.Mock }).rpc = jest.fn().mockResolvedValue({
+            mockSupabase.rpc.mockResolvedValue({
                 data: {
                     staff_stats: [],
                     total_stats: {
@@ -151,7 +148,6 @@ describe('/api/dashboard/finance/all', () => {
                 error: null,
             });
 
-            // Мокируем запрос открытых смен
             const mockShiftsQuery = {
                 eq: jest.fn().mockReturnThis(),
                 gte: jest.fn().mockReturnThis(),
@@ -160,11 +156,11 @@ describe('/api/dashboard/finance/all', () => {
                     error: null,
                 }),
             };
-            (mockAdmin as { from: jest.Mock }).from = jest.fn().mockReturnValueOnce({
+            mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnValue(mockShiftsQuery),
             });
 
-            const req = new Request(`http://localhost/api/dashboard/finance/all?branchId=${branchId}`, {
+            const req = new Request(`http://localhost/api/dashboard/finance/all?period=day&date=2026-03-04&branchId=${branchId}`, {
                 method: 'GET',
             });
 
@@ -173,7 +169,7 @@ describe('/api/dashboard/finance/all', () => {
 
             expect(response.status).toBe(200);
             expect(data.ok).toBe(true);
-            expect(data.branchId).toBe(branchId);
+            expect(data.data?.branchId).toBe(branchId);
         });
 
         test('должен обработать ошибку RPC', async () => {

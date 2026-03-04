@@ -8,6 +8,7 @@ import { logDebug, logWarn, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { getServiceClient } from '@/lib/supabaseService';
+import { todayDateString } from '@/lib/time';
 
 type Body = {
     user_id: string;
@@ -107,7 +108,7 @@ export async function POST(req: Request) {
         // 3.1) Гарантируем наличие записи в истории закреплений (staff_branch_assignments)
         if (staffId) {
             try {
-                const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                const todayISO = todayDateString();
 
                 // Проверяем, есть ли уже активное назначение на этот филиал
                 const { data: existingAssign } = await admin

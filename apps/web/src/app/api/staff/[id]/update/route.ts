@@ -8,6 +8,7 @@ import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
+import { todayDateString } from '@/lib/time';
 
 type Body = {
     full_name: string;
@@ -173,7 +174,7 @@ export async function POST(req: Request, context: unknown) {
 
         // 4) если филиал меняется — делаем корректный перенос (assignments + кэш)
         if (isBranchChanged) {
-            const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            const today = todayDateString();
 
             // закрыть открытое назначение
             await admin

@@ -8,15 +8,12 @@ import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
+import { toDateString } from '@/lib/time';
 
 type Body = {
     target_branch_id: string;
     copy_schedule?: boolean;
 };
-
-function isoDate(d: Date) {
-    return d.toISOString().slice(0, 10); // YYYY-MM-DD
-}
 
 export async function POST(req: Request, context: unknown) {
     // Применяем rate limiting для операции перевода сотрудника
@@ -78,8 +75,8 @@ export async function POST(req: Request, context: unknown) {
             .maybeSingle();
 
         const today = new Date();
-        const todayISO = isoDate(today);
-        const yesterdayISO = isoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1));
+        const todayISO = toDateString(today);
+        const yesterdayISO = toDateString(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1));
 
         if (currentAssign) {
             // если активная запись уже про этот же филиал — это гонка
@@ -112,7 +109,7 @@ export async function POST(req: Request, context: unknown) {
 
         if (futureAny) {
             // чтобы не словить EXCLUDE, начинаем со следующего дня
-            const startNextDay = isoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
+            const startNextDay = toDateString(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
             const { error: eInsFuture } = await admin.from('staff_branch_assignments').insert({
                 biz_id: bizId,
                 staff_id: staffId,
@@ -133,7 +130,7 @@ export async function POST(req: Request, context: unknown) {
             if (eIns) {
                 // если всё равно поймали EXCLUDE (например, интервалы [] в constraint),
                 // попробуем начать со следующего дня
-                const startNextDay = isoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
+                const startNextDay = toDateString(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
                 const { error: eIns2 } = await admin.from('staff_branch_assignments').insert({
                     biz_id: bizId,
                     staff_id: staffId,

@@ -10,7 +10,7 @@ export const dashboardRu = {
     'dashboard.error.goToPublic': 'Перейти на публичную витрину',
     'dashboard.error.noAccess': 'Нет доступа к кабинету',
     'dashboard.error.noAccessDesc': 'У твоей учётной записи нет ролей <code>owner / admin / manager</code> ни в одном бизнесе.',
-    'dashboard.header.badge': 'Кабинет владельца бизнеса',
+    'dashboard.header.badge': 'Кабинет бизнеса',
     'dashboard.header.defaultBizName': 'Ваш бизнес в Kezek',
     'dashboard.kpi.activeServices': 'Активные услуги',
     'dashboard.kpi.activeStaff': 'Активные сотрудники',

@@ -1,11 +1,11 @@
 // apps/web/src/app/api/dashboard/branches/[branchId]/promotions/route.ts
 
-import { withErrorHandler, createErrorResponse, createSuccessResponse, ApiSuccessResponse } from '@/lib/apiErrorHandler';
-import { getBizContextForManagers } from '@/lib/authBiz';
+import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { toNormalizedDateString } from '@/lib/dateUtils';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { getServiceClient } from '@/lib/supabaseService';
+import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -31,12 +31,9 @@ type PromotionBody = {
  * Получает список акций филиала
  */
 export async function GET(req: Request, context: unknown) {
-    return withErrorHandler<ApiSuccessResponse<{ promotions: unknown[] } | { promotion: unknown }>>('BranchPromotions', async () => {
-        // Валидация UUID для предотвращения потенциальных проблем безопасности
+    return withErrorHandler('BranchPromotions', async () => {
         const branchId = await getRouteParamUuid(context, 'branchId');
-        const { bizId } = await getBizContextForManagers();
-        const admin = getServiceClient();
-
+        return withManagerContext(req, 'BranchPromotions', async ({ admin, bizId }) => {
         // Проверяем, что филиал принадлежит этому бизнесу
         const { data: branch, error: branchError } = await admin
             .from('branches')
@@ -81,6 +78,7 @@ export async function GET(req: Request, context: unknown) {
         );
 
         return createSuccessResponse({ promotions: promotionsWithStats });
+        });
     });
 }
 
@@ -94,11 +92,8 @@ export async function POST(req: Request, context: unknown) {
         req,
         RateLimitConfigs.normal,
         () => withErrorHandler('BranchPromotions', async () => {
-        // Валидация UUID для предотвращения потенциальных проблем безопасности
         const branchId = await getRouteParamUuid(context, 'branchId');
-        const { bizId } = await getBizContextForManagers();
-        const admin = getServiceClient();
-
+        return withManagerContext(req, 'BranchPromotions', async ({ admin, bizId }) => {
         // Проверяем, что филиал принадлежит этому бизнесу
         const { data: branch, error: branchError } = await admin
             .from('branches')
@@ -150,8 +145,8 @@ export async function POST(req: Request, context: unknown) {
                 description_ky: body.description_ky || null,
                 description_en: body.description_en || null,
                 is_active: is_active !== undefined ? is_active : true,
-                valid_from: valid_from ? new Date(valid_from).toISOString().split('T')[0] : null,
-                valid_to: valid_to ? new Date(valid_to).toISOString().split('T')[0] : null,
+                valid_from: toNormalizedDateString(valid_from) ?? null,
+                valid_to: toNormalizedDateString(valid_to) ?? null,
             })
             .select('*')
             .single();
@@ -161,6 +156,7 @@ export async function POST(req: Request, context: unknown) {
         }
 
         return createSuccessResponse({ promotion });
+        });
         })
     );
 }

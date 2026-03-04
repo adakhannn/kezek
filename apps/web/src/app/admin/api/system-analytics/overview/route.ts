@@ -7,6 +7,7 @@ import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
 import { logError } from '@/lib/log';
 import { getCached, setCached } from '@/lib/simpleCache';
 import { getServiceClient } from '@/lib/supabaseService';
+import { addDaysToDateString, getTimezone, todayDateString } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 
 export const dynamic = 'force-dynamic';
@@ -69,14 +70,9 @@ export async function GET(req: Request) {
     }
     const { startDate, endDate } = queryValidation.data;
 
-    const end = endDate ? new Date(`${endDate}T00:00:00Z`) : new Date();
-    const start =
-      startDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate)
-        ? new Date(`${startDate}T00:00:00Z`)
-        : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    const startStr = start.toISOString().slice(0, 10);
-    const endStr = end.toISOString().slice(0, 10);
+    const tz = getTimezone();
+    const endStr = endDate ?? todayDateString(tz);
+    const startStr = startDate ?? addDaysToDateString(endStr, -30, tz);
 
     const cacheKey = `system_analytics_overview:${startStr}:${endStr}`;
     const cached = getCached<unknown>(cacheKey);

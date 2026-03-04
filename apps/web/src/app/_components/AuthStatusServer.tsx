@@ -1,6 +1,7 @@
 // kezek/apps/web/src/app/_components/AuthStatusServer.tsx
 // Серверный статус авторизации с роутингом по ролям
 import { createServerClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { unstable_noStore as noStore } from 'next/cache';
 import { cookies } from 'next/headers';
 
@@ -9,47 +10,11 @@ import { PersonalCabinetButton } from './PersonalCabinetButton';
 import { SignInButton } from './SignInButton';
 import { SignOutButton } from './SignOutButton';
 import { StaffCabinetButton } from './StaffCabinetButton';
+import { getT } from './i18n/server';
 
-import {logWarn} from '@/lib/log';
+import { getUserRoleProfile, resolveDefaultDashboard } from '@/lib/authContext';
 
 export const dynamic = 'force-dynamic';
-
-async function getTargetPath(supabase: ReturnType<typeof createServerClient>, userId?: string | null) {
-    if (!userId) return { href: '/cabinet', label: 'Мои записи' };
-
-    // super admin?
-    const { data: isSuperData } = await supabase.rpc('is_super_admin');
-    if (isSuperData) return { href: '/admin', label: 'Админ-панель' };
-
-    // владеет хоть одним бизнесом?
-    const { count } = await supabase
-        .from('businesses')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', userId);
-    if ((count ?? 0) > 0) return { href: '/dashboard', label: 'Кабинет владельца' };
-
-    // Проверяем наличие записи в staff (источник правды)
-    const { data: staff } = await supabase
-        .from('staff')
-        .select('id, biz_id')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .maybeSingle();
-    
-    if (staff) {
-        return { href: '/staff', label: 'Кабинет сотрудника' };
-    }
-
-    // роли пользователя (перестрахуемся на случай делегированных ролей)
-    const { data: roleKeys } = await supabase.rpc('my_role_keys');
-    const roles = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
-    if (roles.some((r) => ['owner', 'admin', 'manager'].includes(r))) {
-        return { href: '/dashboard', label: 'Кабинет бизнеса' };
-    }
-
-    // по умолчанию — личный кабинет клиента
-    return { href: '/cabinet', label: 'Мои записи' };
-}
 
 export async function AuthStatusServer() {
     noStore();
@@ -79,55 +44,37 @@ export async function AuthStatusServer() {
         );
     }
 
-    // Получаем имя из профиля
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .maybeSingle();
-    
-    const label = profile?.full_name?.trim() || user.email || (user.phone as string | undefined) || 'аккаунт';
-    const target = await getTargetPath(supabase, user.id);
-    
-    // Проверяем, является ли пользователь сотрудником - ищем запись в staff (источник правды)
-    let isStaff = false;
-    try {
-        const { data: staff } = await supabase
-            .from('staff')
-            .select('id, biz_id')
-            .eq('user_id', user.id)
-            .eq('is_active', true)
-            .maybeSingle();
-        
-        isStaff = !!staff;
-    } catch (error) {
-        logWarn('AuthStatusServer', 'error checking staff record', error);
-        // Fallback: проверяем через user_roles
-        try {
-            const [{ data: ur }, { data: roleRows }] = await Promise.all([
-                supabase.from('user_roles').select('biz_id, role_id').eq('user_id', user.id),
-                supabase.from('roles').select('id, key'),
-            ]);
-            
-            if (ur && roleRows) {
-                const rolesMap = new Map<string, string>(roleRows.map(r => [String(r.id), String(r.key)]));
-                const staffRole = ur.find(r => rolesMap.get(String(r.role_id)) === 'staff');
-                isStaff = !!staffRole?.biz_id;
-            }
-        } catch (fallbackError) {
-            logWarn('AuthStatusServer', 'fallback check also failed', fallbackError);
-        }
-    }
+    const profile = await getUserRoleProfile(supabase as SupabaseClient);
+    const t = await getT();
+
+    // Имя/аккаунт в шапке
+    const accountLabel =
+        (await (async () => {
+            const { data: profileRow } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', user.id)
+                .maybeSingle();
+            return profileRow?.full_name?.trim();
+        })()) ||
+        user.email ||
+        (user.phone as string | undefined) ||
+        t('header.account', 'аккаунт');
+
+    resolveDefaultDashboard(profile);
+
+    const isStaff = !!profile?.canStaff;
 
     return (
         <div className="hidden md:flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-gray-700 dark:text-gray-300">
-                    <span className="font-medium">{label}</span>
+                    <span className="font-medium">{accountLabel}</span>
                 </span>
             </div>
             {isStaff && <StaffCabinetButton />}
+            {/* Кнопка личного кабинета/дефолтного кабинета */}
             <PersonalCabinetButton />
             <SignOutButton />
         </div>
