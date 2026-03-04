@@ -5,6 +5,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import type { Database } from '@/types/supabase';
+
 export type ApprovedBusinessesFilters = {
     categoryId?: string;
     cityId?: string;
@@ -13,24 +15,20 @@ export type ApprovedBusinessesFilters = {
 /**
  * Строит запрос к таблице businesses: только одобренные, опционально по категории и городу.
  * Возвращает query builder — вызывающая сторона добавляет .select() и .limit().
+ * Цепочка .eq().contains() в Supabase сужает тип, поэтому используем приведение для гибкой сборки запроса.
  */
 export function buildApprovedBusinessesQuery(
-    supabase: SupabaseClient,
+    supabase: SupabaseClient<Database>,
     filters: ApprovedBusinessesFilters,
 ) {
-    let query = supabase
-        .from('businesses')
-        .eq('is_approved', true);
-
-    const categoryId = filters.categoryId?.trim();
-    if (categoryId) {
-        query = query.contains('categories', [categoryId]);
-    }
-
     const cityId = filters.cityId?.trim();
-    if (cityId) {
-        query = query.eq('city_id', cityId);
-    }
+    const categoryId = filters.categoryId?.trim();
 
+    // Типы Supabase сужаются после .eq() и не экспонируют следующий .eq()/.contains() — приводим к any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const table: any = supabase.from('businesses');
+    let query = table.eq('is_approved', true);
+    if (cityId) query = query.eq('city_id', cityId);
+    if (categoryId) query = query.contains('categories', [categoryId]);
     return query;
 }
