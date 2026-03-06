@@ -1,6 +1,4 @@
 // apps/web/src/app/api/staff/shift/close/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getStaffContext } from '@/lib/authBiz';
@@ -10,7 +8,7 @@ import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { closeStaffShiftUseCase } from '@/lib/staffShift/closeUseCase';
 import { getServiceClient } from '@/lib/supabaseService';
-import { TZ, dateAtTz } from '@/lib/time';
+import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { closeShiftSchema } from '@/lib/validation/schemas';
 
@@ -94,7 +92,7 @@ export async function POST(req: Request) {
         }
 
         const now = new Date();
-        const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const ymd = formatDateInTz(now, TZ);
 
         const { data: existing, error: loadError } = await supabase
             .from('staff_shifts')
@@ -117,10 +115,10 @@ export async function POST(req: Request) {
         }
         // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
         // Правильно вычисляем следующую дату в часовом поясе TZ
-        const todayInTz = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const todayInTz = formatDateInTz(now, TZ);
         const todayDate = new Date(todayInTz + 'T12:00:00'); // Создаем дату в локальном времени для манипуляций
         todayDate.setDate(todayDate.getDate() + 1);
-        const nextDayYmd = formatInTimeZone(todayDate, TZ, 'yyyy-MM-dd');
+        const nextDayYmd = formatDateInTz(todayDate, TZ);
         // Создаем полночь следующего дня в часовом поясе TZ
         const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
         const closedAt = midnightNextDay.toISOString();

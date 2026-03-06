@@ -1,12 +1,10 @@
 // apps/web/src/app/api/staff/shift/open/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug, logWarn } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
-import { TZ, dateAtTz, todayTz } from '@/lib/time';
+import { TZ, dateAtTz, todayTz, formatDateInTz } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -85,7 +83,7 @@ export async function POST(req: Request) {
                 userId = user?.id;
 
         const now = new Date();
-        const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const ymd = formatDateInTz(now, TZ);
 
         // Проверяем, не выходной ли сегодня
         const baseDate = todayTz();

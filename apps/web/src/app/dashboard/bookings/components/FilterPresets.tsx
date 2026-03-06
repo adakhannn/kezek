@@ -7,7 +7,7 @@
 'use client';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { formatInTimeZone } from 'date-fns-tz';
+import { todayStringInTz } from '@/lib/time';
 
 export type FilterPreset = 'today' | 'myStaff' | 'holdConfirmed' | null;
 
@@ -100,7 +100,7 @@ export function applyPreset(
     dateFilter?: { gte: string; lte: string };
     staffFilter?: string;
 } {
-    const today = formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd');
+    const today = todayStringInTz(timezone);
     const todayStart = `${today}T00:00:00`;
     const todayEnd = `${today}T23:59:59`;
 

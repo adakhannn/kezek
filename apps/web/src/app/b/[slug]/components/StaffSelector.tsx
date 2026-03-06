@@ -10,7 +10,7 @@ import type { Staff } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
-import { transliterate } from '@/lib/transliterate';
+import { formatStaffName } from '@/lib/i18nHelpers';
 
 
 type StaffSelectorProps = {
@@ -23,12 +23,7 @@ type StaffSelectorProps = {
 export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: StaffSelectorProps) {
     const { t, locale } = useLanguage();
 
-    const formatStaffName = (name: string): string => {
-        if (locale === 'en') {
-            return transliterate(name);
-        }
-        return name;
-    };
+    const formatName = (name: string): string => formatStaffName(name, locale);
 
     if (!dayStr) {
         return (
@@ -101,7 +96,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: Staf
                             {m.avatar_url ? (
                                 <img
                                     src={m.avatar_url}
-                                    alt={formatStaffName(m.full_name)}
+                                    alt={formatName(m.full_name)}
                                     className="h-12 w-12 rounded-full object-cover flex-shrink-0"
                                     onError={(e) => {
                                         e.currentTarget.style.display = 'none';
@@ -109,7 +104,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: Staf
                                 />
                             ) : (
                                 <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-base font-semibold text-gray-500 dark:text-gray-400 flex-shrink-0">
-                                    {formatStaffName(m.full_name).charAt(0).toUpperCase()}
+                                    {formatName(m.full_name).charAt(0).toUpperCase()}
                                 </div>
                             )}
                             <div className="flex-1 flex items-center justify-between">
@@ -117,7 +112,7 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: Staf
                                     className="text-left"
                                     data-testid="master-option"
                                 >
-                                    {formatStaffName(m.full_name)}
+                                    {formatName(m.full_name)}
                                 </span>
                                 <RatingDisplay score={m.rating_score} t={t} variant="badge" className="ml-2 px-2 py-0.5 [&_svg]:w-3 [&_svg]:h-3" />
                             </div>

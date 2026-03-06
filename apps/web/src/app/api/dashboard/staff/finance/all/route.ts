@@ -1,9 +1,7 @@
 // apps/web/src/app/api/dashboard/staff/finance/all/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError, logDebug } from '@/lib/log';
-import { TZ } from '@/lib/time';
+import { TZ, todayStringInTz } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { financeAllQuerySchema } from '@/lib/validation/schemas';
 import { withManagerContext } from '@/lib/withManagerContext';
@@ -63,7 +61,7 @@ export async function GET(req: Request) {
         if (dateParam) {
             date = dateParam;
         } else {
-            date = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+            date = todayStringInTz(TZ);
         }
 
         // Определяем диапазон дат в зависимости от периода

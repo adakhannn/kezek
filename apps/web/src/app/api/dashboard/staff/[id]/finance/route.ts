@@ -7,12 +7,10 @@
  * - Новый: GET /api/staff/finance?staffId={id}&date=YYYY-MM-DD
  */
 // apps/web/src/app/api/dashboard/staff/[id]/finance/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError, logDebug, logWarn } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { TZ } from '@/lib/time';
+import { TZ, todayStringInTz, formatDateInTz } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { staffFinanceByIdQuerySchema } from '@/lib/validation/schemas';
 import { withManagerContext } from '@/lib/withManagerContext';
@@ -87,11 +85,11 @@ export async function GET(
         const hourlyRate = staff.hourly_rate ? Number(staff.hourly_rate) : null;
 
         // Дата в локальной TZ (без времени)
-        const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
+        const ymd = formatDateInTz(targetDate, TZ);
 
         // Проверяем, выходной ли для выбранной даты (только если это сегодня)
         let isDayOff = false;
-        const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+        const today = todayStringInTz(TZ);
         if (ymd === today) {
             // 1. Проверяем staff_time_off
             const { data: timeOffs } = await supabase
@@ -258,7 +256,7 @@ export async function GET(
         // Статистика за последние 30 дней
         const thirtyDaysAgo = new Date(targetDate);
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const statsStart = formatInTimeZone(thirtyDaysAgo, TZ, 'yyyy-MM-dd');
+        const statsStart = formatDateInTz(thirtyDaysAgo, TZ);
 
         const { data: recentShifts, error: statsError } = await admin
             .from('staff_shifts')

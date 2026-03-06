@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
-import { transliterate } from '@/lib/transliterate';
+import { formatStaffName } from '@/lib/i18nHelpers';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
 type Branch = { id: string; name: string; address?: string | null; rating_score: number | null };
@@ -35,10 +35,7 @@ export default function PromotionsPageClient({ data }: { data: Data }) {
     const { t, locale } = useLanguage();
 
     const formatBranchName = (name: string): string => {
-        if (locale === 'en') {
-            return transliterate(name);
-        }
-        return name;
+        return formatStaffName(name, locale);
     };
 
     const getPromotionTitle = (promo: Promotion): string => {

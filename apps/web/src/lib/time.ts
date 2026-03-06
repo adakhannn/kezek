@@ -29,6 +29,22 @@ export function toDateString(d: Date, timezone?: string): string {
 }
 
 /**
+ * Текущая календарная дата (yyyy-MM-dd) в заданной таймзоне.
+ * Алиас для единообразного использования по коду вместо formatInTimeZone(new Date(), tz, 'yyyy-MM-dd').
+ */
+export function todayStringInTz(tz: string): string {
+    return formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
+}
+
+/**
+ * Календарная дата (yyyy-MM-dd) для произвольного Date в заданной таймзоне.
+ * Алиас для единообразного использования вместо formatInTimeZone(date, tz, 'yyyy-MM-dd').
+ */
+export function formatDateInTz(date: Date, tz: string): string {
+    return formatInTimeZone(date, tz, 'yyyy-MM-dd');
+}
+
+/**
  * Добавляет дни к календарной дате (YYYY-MM-DD) в заданной таймзоне, возвращает YYYY-MM-DD.
  * Использовать для вычисления начальной даты диапазона (например, «сегодня минус 30 дней»).
  */

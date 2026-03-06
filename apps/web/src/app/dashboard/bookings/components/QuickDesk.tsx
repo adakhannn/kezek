@@ -3,8 +3,8 @@
 
 import { filterServicesForStaff, resolveScheduleContext } from '@core-domain/schedule';
 import { addDays } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
 import { useMemo, useState } from 'react';
+
 
 
 import { QuickDeskClientSection } from './QuickDeskClientSection';
@@ -20,6 +20,7 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { StatusPanel, StatusItem } from '@/components/dashboard';
 import { useToast } from '@/hooks/useToast';
 import { logDebug } from '@/lib/log';
+import { formatDateInTz, todayStringInTz } from '@/lib/time';
 
 
 type TabKey = 'calendar' | 'list' | 'desk';
@@ -60,7 +61,7 @@ export function QuickDesk({
 
     const [serviceId, setServiceId] = useState<string>('');
     const [staffId, setStaffId] = useState<string>('');
-    const [date, setDate] = useState<string>(() => formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd'));
+    const [date, setDate] = useState<string>(() => todayStringInTz(timezone));
 
     const temporaryTransfers = useTemporaryTransfers(bizId, date, staff);
     const serviceToStaffMap = useServiceStaffMap(staff);
@@ -203,8 +204,8 @@ export function QuickDesk({
         slotsApi.slotStartISO &&
         client.canSubmitClient;
 
-    const today = formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd');
-    const tomorrow = formatInTimeZone(addDays(new Date(), 1), timezone, 'yyyy-MM-dd');
+    const today = todayStringInTz(timezone);
+    const tomorrow = formatDateInTz(addDays(new Date(), 1), timezone);
 
     return (
         <section className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4 sm:space-y-6">

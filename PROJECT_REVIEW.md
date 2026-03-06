@@ -29,9 +29,7 @@
 - ✅ Документация включает правила, примеры использования, чеклист для разработчиков и инструкции по исправлению ошибок
 
 **Документация:** 
-- `apps/web/src/lib/LOGGING_POLICY.md` - **Политика логирования для команды** ✨
-- `apps/web/src/lib/CONSOLE_LOG_MIGRATION.md` - Руководство по миграции
-- `MIGRATION_SUMMARY.md` - Резюме миграции
+- `apps/web/src/lib/LOGGING_POLICY.md` - **Политика логирования для команды** ✨ (история миграции с console.log — в docs/archive/)
 
 **Приоритет**: ✅ **ЗАВЕРШЕНО** (безопасность и процессы логирования)  
 **Прогресс**: 100% (техническая защита реализована, документация создана)
@@ -277,7 +275,7 @@
 - `SYSTEM_FEATURES_DOCUMENTATION.md` - Документация функций системы
 - `API_DOCUMENTATION.md` - Документация API endpoints
 - `MONITORING_AND_ANALYTICS.md` - Документация по мониторингу и аналитике
-- `MIGRATION_SUMMARY.md` - Резюме миграции console.log
+- Резюме миграции console.log — в docs/archive/; актуальные правила в LOGGING_POLICY.md
 
 ---
 

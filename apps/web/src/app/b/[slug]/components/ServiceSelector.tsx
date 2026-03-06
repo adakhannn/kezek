@@ -9,7 +9,7 @@ import { BookingEmptyState } from '../BookingEmptyState';
 import type { Service } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { transliterate } from '@/lib/transliterate';
+import { getServiceName } from '@/lib/i18nHelpers';
 
 
 type ServiceSelectorProps = {
@@ -22,18 +22,7 @@ type ServiceSelectorProps = {
 export function ServiceSelector({ services, selectedServiceId, onSelect, staffId }: ServiceSelectorProps) {
     const { t, locale } = useLanguage();
 
-    const formatServiceName = (service: Service): string => {
-        if (locale === 'en' && service.name_en) {
-            return service.name_en;
-        }
-        if (locale === 'ky' && service.name_ky) {
-            return service.name_ky;
-        }
-        if (locale === 'en') {
-            return transliterate(service.name_ru);
-        }
-        return service.name_ru;
-    };
+    const formatServiceName = (service: Service): string => getServiceName(service, locale);
 
     if (!staffId) {
         return (

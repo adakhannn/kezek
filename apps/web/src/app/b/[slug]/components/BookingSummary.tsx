@@ -8,7 +8,7 @@
 import type { Service, Staff } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { transliterate } from '@/lib/transliterate';
+import { formatStaffName, getServiceName } from '@/lib/i18nHelpers';
 
 
 type BookingSummaryProps = {
@@ -37,12 +37,7 @@ export function BookingSummary({
 }: BookingSummaryProps) {
     const { t, locale } = useLanguage();
 
-    const formatStaffName = (name: string): string => {
-        if (locale === 'en') {
-            return transliterate(name);
-        }
-        return name;
-    };
+    const formatName = (name: string): string => formatStaffName(name, locale);
 
     return (
         <aside className="sticky top-4 h-fit rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -57,15 +52,7 @@ export function BookingSummary({
                 <div className="flex justify-between gap-2">
                     <span className="text-gray-500">{t('booking.summary.service', 'Услуга:')}</span>
                     <span className="text-right font-medium">
-                        {serviceCurrent
-                            ? locale === 'en' && serviceCurrent.name_en
-                                ? serviceCurrent.name_en
-                                : locale === 'ky' && serviceCurrent.name_ky
-                                ? serviceCurrent.name_ky
-                                : locale === 'en'
-                                ? transliterate(serviceCurrent.name_ru)
-                                : serviceCurrent.name_ru
-                            : t('booking.summary.notSelected', 'Не выбран')}
+                        {serviceCurrent ? getServiceName(serviceCurrent, locale) : t('booking.summary.notSelected', 'Не выбран')}
                     </span>
                 </div>
                 <div className="flex justify-between gap-2">
@@ -74,7 +61,7 @@ export function BookingSummary({
                         {staffCurrent?.avatar_url ? (
                             <img
                                 src={staffCurrent.avatar_url}
-                                alt={formatStaffName(staffCurrent.full_name)}
+                                alt={formatName(staffCurrent.full_name)}
                                 className="h-8 w-8 rounded-full object-cover"
                                 onError={(e) => {
                                     e.currentTarget.style.display = 'none';
@@ -82,11 +69,11 @@ export function BookingSummary({
                             />
                         ) : staffCurrent ? (
                             <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-400">
-                                {formatStaffName(staffCurrent.full_name).charAt(0).toUpperCase()}
+                                {formatName(staffCurrent.full_name).charAt(0).toUpperCase()}
                             </div>
                         ) : null}
                         <span className="text-right font-medium">
-                            {staffCurrent ? formatStaffName(staffCurrent.full_name) : t('booking.summary.notSelected', 'Не выбран')}
+                            {staffCurrent ? formatName(staffCurrent.full_name) : t('booking.summary.notSelected', 'Не выбран')}
                         </span>
                     </div>
                 </div>

@@ -1,10 +1,8 @@
 // apps/web/src/app/api/cron/close-shifts/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
-import { TZ, dateAtTz } from '@/lib/time';
+import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -27,7 +25,7 @@ export async function GET(req: Request) {
         // Вычитаем один день
         const yesterday = new Date(now);
         yesterday.setDate(yesterday.getDate() - 1);
-        const ymd = formatInTimeZone(yesterday, TZ, 'yyyy-MM-dd');
+        const ymd = formatDateInTz(yesterday, TZ);
 
         logDebug('CloseShiftsCron', 'Closing shifts for date', { ymd });
 
@@ -159,10 +157,10 @@ export async function GET(req: Request) {
                     const openedAt = new Date(shift.opened_at);
                     // ВАЖНО: для cron job используем полночь следующего дня как время закрытия
                     // (так как cron закрывает смены автоматически в полночь)
-                    const todayInTz = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+                    const todayInTz = formatDateInTz(now, TZ);
                     const todayDate = new Date(todayInTz + 'T12:00:00');
                     todayDate.setDate(todayDate.getDate() + 1);
-                    const nextDayYmd = formatInTimeZone(todayDate, TZ, 'yyyy-MM-dd');
+                    const nextDayYmd = formatDateInTz(todayDate, TZ);
                     const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
                     
                     const diffMs = midnightNextDay.getTime() - openedAt.getTime();
@@ -182,10 +180,10 @@ export async function GET(req: Request) {
                 const finalSalonShare = Math.max(0, salonShare - topupAmount);
 
                 // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
-                const todayInTz = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+                const todayInTz = formatDateInTz(now, TZ);
                 const todayDate = new Date(todayInTz + 'T12:00:00');
                 todayDate.setDate(todayDate.getDate() + 1);
-                const nextDayYmd = formatInTimeZone(todayDate, TZ, 'yyyy-MM-dd');
+                const nextDayYmd = formatDateInTz(todayDate, TZ);
                 const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
                 const closedAt = midnightNextDay.toISOString();
 

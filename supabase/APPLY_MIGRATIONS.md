@@ -111,6 +111,30 @@ SELECT COUNT(*) FROM public.branches WHERE rating_score IS NOT NULL AND rating_s
 SELECT COUNT(*) FROM public.staff WHERE rating_score IS NOT NULL AND rating_score > 0;
 ```
 
+## Особые случаи
+
+Некоторые миграции при применении через Supabase CLI могут давать ошибку (`cannot insert multiple commands into a prepared statement`) или их удобнее применить вручную через SQL Editor. Ниже — список таких миграций и порядок действий.
+
+### save_shift_items_atomic (смены, позиции)
+
+**Файлы миграций:**
+- `supabase/migrations/20260213000000_add_shift_constraints_and_transactions.sql` (ограничения; может быть применена через CLI)
+- `supabase/migrations/20260213000001_add_save_shift_items_function.sql` — функция `save_shift_items_atomic`
+- `supabase/migrations/20260213000002_grant_save_shift_items_permissions.sql` — права
+- `supabase/migrations/20260213000003_comment_save_shift_items_function.sql` — комментарий
+
+**Если CLI не применяет:** откройте каждый из этих файлов, скопируйте содержимое в SQL Editor в Supabase Dashboard и выполните по порядку. Проверка: `SELECT proname FROM pg_proc WHERE proname = 'save_shift_items_atomic';` должен вернуть одну строку.
+
+**Опционально (чтобы CLI считал миграции применёнными):** добавьте записи в `supabase_migrations.schema_migrations` для версий `20260213000001`, `20260213000002`, `20260213000003` (см. пример в документации Supabase).
+
+### Метрики производительности фронтенда (frontend_metrics)
+
+**Файл:** `supabase/migrations/20250127000000_create_frontend_metrics_table.sql`
+
+Создаёт таблицу `frontend_metrics` и функцию `log_frontend_metric` для Core Web Vitals и метрик рендеринга. После применения заработает `/api/metrics/frontend`.
+
+**Как применить:** открыть файл в `supabase/migrations/`, скопировать содержимое в SQL Editor, выполнить. Проверка: `SELECT * FROM public.frontend_metrics LIMIT 1;` и `SELECT proname FROM pg_proc WHERE proname = 'log_frontend_metric';`.
+
 ## Если возникли ошибки
 
 1. **"relation already exists"** - таблица/функция уже существует, это нормально (используется `create or replace` / `if not exists`)

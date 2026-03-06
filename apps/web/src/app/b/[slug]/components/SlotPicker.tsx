@@ -9,6 +9,7 @@ import { BookingEmptyState } from '../BookingEmptyState';
 import type { Slot, Staff } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { formatStaffName } from '@/lib/i18nHelpers';
 import { toLabel } from '@/lib/time';
 
 
@@ -49,13 +50,9 @@ export function SlotPicker({
     clientBookingsLoading,
     bookingLoading,
 }: SlotPickerProps) {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
 
-    const formatStaffName = (name: string): string => {
-        // Транслитерируем имя мастера для английского языка
-        // Для простоты используем базовую транслитерацию
-        return name;
-    };
+    const formatName = (name: string) => formatStaffName(name, locale);
 
     // Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги
     const isServiceValid = serviceId && servicesFiltered.some((s) => s.id === serviceId);
@@ -138,7 +135,7 @@ export function SlotPicker({
                                     <span>{toLabel(d)}</span>
                                     {showStaffName && slotStaff && (
                                         <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                                            {formatStaffName(slotStaff.full_name)}
+                                            {formatName(slotStaff.full_name)}
                                         </span>
                                     )}
                                 </div>

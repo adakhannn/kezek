@@ -98,6 +98,8 @@ logDebug('Auth', 'Token received', {
 });
 ```
 
+Подробнее о маскировании и безопасном выводе: **`apps/web/src/lib/LOGGING_SECURITY.md`**.
+
 ### Что НЕ логировать
 
 **НИКОГДА не логируйте:**
@@ -162,12 +164,26 @@ pnpm -C apps/web lint
 
 Эти файлы используют `eslint-disable-next-line no-console` для обоснованных случаев.
 
+## Миграция с console.log
+
+Миграция с прямых вызовов `console.*` на `logDebug`/`logWarn`/`logError` из `@/lib/log` завершена: ESLint и CI не допускают появления новых `console.*` в коде. Если в старом коде или при ревью встречается `console.log`/`warn`/`error`, замените по образцу:
+
+```typescript
+// Было:
+console.log('Debug info', data);
+
+// Стало:
+import { logDebug } from '@/lib/log';
+logDebug('MyScope', 'Debug info', data);
+```
+
+История миграции и детальные инструкции (для справки): **docs/archive/** — файлы `CONSOLE_LOG_MIGRATION.md`, `CONSOLE_LOG_MIGRATION_PROGRESS.md`, `MIGRATION_SUMMARY.md`.
+
 ## 📚 Дополнительные ресурсы
 
 - **Основной модуль**: `apps/web/src/lib/log.ts`
 - **Утилиты маскирования**: `apps/web/src/lib/logSafe.ts`
-- **Миграция**: `apps/web/src/lib/CONSOLE_LOG_MIGRATION.md`
-- **Резюме миграции**: `MIGRATION_SUMMARY.md`
+- **Безопасность логирования**: `apps/web/src/lib/LOGGING_SECURITY.md`
 
 ## ✅ Чеклист для разработчиков
 
@@ -189,9 +205,7 @@ pnpm -C apps/web lint
 
 ## 📞 Вопросы?
 
-Если у вас есть вопросы по политике логирования, обратитесь к:
-- Документации: `apps/web/src/lib/CONSOLE_LOG_MIGRATION.md`
-- Техническому лиду проекта
+Если у вас есть вопросы по политике логирования, обратитесь к этому документу и к `LOGGING_SECURITY.md`; история миграции с console.log — в `docs/archive/`.
 
 ---
 

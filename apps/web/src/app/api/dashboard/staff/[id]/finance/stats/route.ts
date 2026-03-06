@@ -1,10 +1,8 @@
 // apps/web/src/app/api/dashboard/staff/[id]/finance/stats/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logDebug, logError } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { TZ } from '@/lib/time';
+import { TZ, todayStringInTz } from '@/lib/time';
 import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
@@ -110,7 +108,7 @@ export async function GET(
             
             date = dateParam;
         } else {
-            date = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+            date = todayStringInTz(TZ);
         }
 
         // Проверяем, что сотрудник принадлежит этому бизнесу
@@ -181,7 +179,7 @@ export async function GET(
 
         // Сначала проверим, есть ли открытая смена на сегодня
         // Это важно, потому что открытая смена должна показываться
-        const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+        const today = todayStringInTz(TZ);
         const { data: todayOpenShift } = await admin
             .from('staff_shifts')
             .select('*')

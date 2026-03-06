@@ -1,4 +1,8 @@
-# Резюме миграции console.log на безопасное логирование
+# Резюме миграции console.log на безопасное логирование (архив)
+
+**Архив.** Миграция завершена; актуальная политика и правила — [LOGGING_POLICY.md](../../apps/web/src/lib/LOGGING_POLICY.md).
+
+---
 
 ## ✅ Выполнено
 
@@ -12,40 +16,10 @@
    - ✅ Скрипт проверки: `scripts/check-console-logs.sh`
    - ✅ Документация прогресса: `apps/web/src/lib/CONSOLE_LOG_MIGRATION_PROGRESS.md`
 
-## 📊 Статистика
+## 📊 Статистика (на момент архивации)
 
 - **Всего заменено:** ~27 использований console.*
 - **Осталось мигрировать:** ~312 использований (по оценке)
-
-## 🔄 Следующие шаги
-
-### Приоритет 1: API Routes (осталось ~12 файлов)
-- `apps/web/src/app/api/staff/create/route.ts`
-- `apps/web/src/app/api/staff/create-from-user/route.ts`
-- `apps/web/src/app/api/staff/avatar/upload/route.ts`
-- `apps/web/src/app/api/staff/[id]/update/route.ts`
-- `apps/web/src/app/api/auth/whatsapp/*`
-- `apps/web/src/app/api/whatsapp/*`
-
-### Приоритет 2: Критичные компоненты
-- Client components с логированием
-- Server components с логированием
-
-### Приоритет 3: Утилиты и библиотеки
-- `apps/web/src/lib/*`
-- `apps/web/src/components/*`
-
-## 🛠️ Инструменты
-
-### Проверка прогресса
-```bash
-bash scripts/check-console-logs.sh
-```
-
-### Ручная замена
-1. Найдите `console.log/warn/error`
-2. Замените на `logDebug/logWarn/logError` из `@/lib/log`
-3. Добавьте осмысленный scope
 
 ## 📝 Примеры замены
 
@@ -85,4 +59,3 @@ logError('MyScope', 'Error occurred', error);
 2. ✅ **Контроль уровня логирования** - debug только в dev
 3. ✅ **Единый формат** - структурированные логи
 4. ✅ **Готовность к мониторингу** - легко интегрировать с Sentry/LogRocket
-

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Card } from '@/components/ui/Card';
 import { getFreeSlotsForServiceDay, createInternalBooking } from '@/lib/bookingDashboardService';
-import { TZ } from '@/lib/time';
+import { TZ, todayStringInTz } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 import { validateName, validatePhone } from '@/lib/validation';
 
@@ -43,7 +43,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
     const [branchId, setBranchId] = useState<string>(defaultBranchId || '');
     const [serviceId, setServiceId] = useState<string>('');
     const selectedStaffId = staffId;
-    const [date, setDate] = useState<string>(() => formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
+    const [date, setDate] = useState<string>(() => todayStringInTz(TZ));
     const [slots, setSlots] = useState<RpcSlot[]>([]);
     const [slotStartISO, setSlotStartISO] = useState<string>('');
     const [slotsLoading, setSlotsLoading] = useState(false);
@@ -242,7 +242,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                         type="date"
                         className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         value={date}
-                        min={formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd')}
+                        min={todayStringInTz(TZ)}
                         onChange={(e) => setDate(e.target.value)}
                     />
                 </div>

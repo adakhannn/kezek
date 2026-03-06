@@ -1,6 +1,4 @@
 // apps/web/src/app/api/staff/shift/items/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
@@ -9,7 +7,7 @@ import { calculateBaseShares, normalizePercentages } from '@/lib/financeDomain';
 import { logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
-import { TZ } from '@/lib/time';
+import { TZ, formatDateInTz } from '@/lib/time';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { saveShiftItemsSchema } from '@/lib/validation/schemas';
 
@@ -200,7 +198,7 @@ export async function POST(req: Request) {
         } else {
             // Используем текущую дату
             const now = new Date();
-            ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+            ymd = formatDateInTz(now, TZ);
         }
 
         // Получаем настройки сотрудника для расчета процентов

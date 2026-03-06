@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
+import { formatStaffName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
-import { transliterate } from '@/lib/transliterate';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
 type Branch = { id: string; name: string; address?: string | null; rating_score: number | null };
@@ -80,19 +80,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
         }
     };
 
-    const formatBranchName = (name: string): string => {
-        if (locale === 'en') {
-            return transliterate(name);
-        }
-        return name;
-    };
-
-    const formatStaffName = (name: string): string => {
-        if (locale === 'en') {
-            return transliterate(name);
-        }
-        return name;
-    };
+    const formatName = (name: string): string => formatStaffName(name, locale);
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
@@ -129,7 +117,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {branches.map((b) => (
                                     <div key={b.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                                        <span className="text-sm text-gray-700 dark:text-gray-300">{formatBranchName(b.name)}</span>
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">{formatName(b.name)}</span>
                                         <RatingDisplay score={b.rating_score} t={t} variant="badge" className="px-1.5 py-0.5 [&_svg]:w-3 [&_svg]:h-3" />
                                     </div>
                                 ))}
@@ -147,13 +135,13 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                 {staff.slice(0, 9).map((s) => (
                                     <div key={s.id} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                                         {s.avatar_url ? (
-                                            <img src={s.avatar_url} alt={formatStaffName(s.full_name)} className="w-8 h-8 rounded-full object-cover" />
+                                            <img src={s.avatar_url} alt={formatName(s.full_name)} className="w-8 h-8 rounded-full object-cover" />
                                         ) : (
                                             <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-400">
-                                                {formatStaffName(s.full_name).charAt(0).toUpperCase()}
+                                                {formatName(s.full_name).charAt(0).toUpperCase()}
                                             </div>
                                         )}
-                                        <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{formatStaffName(s.full_name)}</span>
+                                        <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{formatName(s.full_name)}</span>
                                     </div>
                                 ))}
                                 {staff.length > 9 && (
@@ -202,7 +190,7 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                             <div className="flex-1">
                                                 <p className="text-sm text-emerald-900 dark:text-emerald-100 font-semibold">{description}</p>
                                                 {branch && (
-                                                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">{formatBranchName(branch.name)}</p>
+                                                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">{formatName(branch.name)}</p>
                                                 )}
                                             </div>
                                         </div>

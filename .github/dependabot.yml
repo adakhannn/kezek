@@ -5,8 +5,6 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    # Dependabot понимает pnpm-lock.yaml и будет открывать PR-ы с обновлениями пакетов
-    # для всех пакетов в монорепозитории
     commit-message:
       prefix: "deps"
     open-pull-requests-limit: 10

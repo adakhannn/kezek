@@ -1,49 +1,43 @@
 # Rate Limiting для API Endpoints
 
-## Обзор
+## Как работает
 
-Реализован rate limiting для защиты критичных и публичных API endpoints от злоупотреблений и DDoS атак.
+### Обзор
 
-## Реализация
+Реализован rate limiting для защиты критичных и публичных API endpoints от злоупотреблений и DDoS атак через утилиту `apps/web/src/lib/rateLimit.ts`.
 
-Rate limiting реализован через утилиту `apps/web/src/lib/rateLimit.ts`, которая:
+- **В продакшене:** используется **Upstash Redis** для распределённого rate limiting (serverless).
+- **В dev:** автоматический fallback на in-memory хранилище (настройка не требуется).
 
-- **В продакшене:** Использует **Upstash Redis** для распределенного rate limiting (работает в serverless окружении)
-- **В dev окружении:** Автоматически fallback на in-memory хранилище (не требует настройки)
+### Конфигурации (пресеты)
 
-**Настройка:** См. `RATE_LIMITING_SETUP.md` для инструкций по настройке Upstash Redis.
+| Пресет | Лимит | Endpoints |
+|--------|-------|-----------|
+| **public** | 10 запросов/мин | `/api/quick-book-guest`, `/api/quick-hold` |
+| **critical** | 5 запросов/мин | `/api/staff/shift/open`, `/api/staff/shift/close` |
+| **normal** | 30 запросов/мин | `/api/staff/shift/items`, `/api/bookings/[id]/mark-attendance` |
+| **auth** | 5 запросов / 15 мин | `/api/whatsapp/send-otp`, `/api/whatsapp/verify-otp`, `/api/auth/telegram/login`, `/api/auth/telegram/link` |
 
-## Конфигурации
+### Использование в API
 
-### Публичные endpoints (`RateLimitConfigs.public`)
-- **Лимит:** 10 запросов в минуту
-- **Применяется к:**
-  - `/api/quick-book-guest` - гостевые бронирования без авторизации
-  - `/api/quick-hold` - быстрое бронирование слотов
+```typescript
+import { withRateLimit, RateLimitConfigs } from '@/lib/rateLimit';
 
-### Критичные операции (`RateLimitConfigs.critical`)
-- **Лимит:** 5 запросов в минуту
-- **Применяется к:**
-  - `/api/staff/shift/open` - открытие смены
-  - `/api/staff/shift/close` - закрытие смены
+export async function POST(req: Request) {
+  return withRateLimit(
+    req,
+    RateLimitConfigs.public, // или .auth, .normal, .critical
+    async () => {
+      // ваш код
+      return NextResponse.json({ ok: true });
+    }
+  );
+}
+```
 
-### Обычные операции (`RateLimitConfigs.normal`)
-- **Лимит:** 30 запросов в минуту
-- **Применяется к:**
-  - `/api/staff/shift/items` - добавление клиентов в смену
-  - `/api/bookings/[id]/mark-attendance` - отметка посещения
+### Ответ при превышении лимита
 
-### Аутентификация (`RateLimitConfigs.auth`)
-- **Лимит:** 5 запросов в 15 минут
-- **Применяется к:**
-  - `/api/whatsapp/send-otp` - отправка OTP кода
-  - `/api/whatsapp/verify-otp` - проверка OTP кода
-  - `/api/auth/telegram/login` - вход через Telegram
-  - `/api/auth/telegram/link` - привязка Telegram аккаунта
-
-## Ответ при превышении лимита
-
-При превышении лимита запросов API возвращает ответ с кодом `429 Too Many Requests`:
+Код `429 Too Many Requests`, тело:
 
 ```json
 {
@@ -54,63 +48,90 @@ Rate limiting реализован через утилиту `apps/web/src/lib/r
 }
 ```
 
-Заголовки ответа:
-- `X-RateLimit-Limit` - максимальное количество запросов
-- `X-RateLimit-Remaining` - оставшееся количество запросов
-- `X-RateLimit-Reset` - timestamp когда лимит сбросится
-- `Retry-After` - секунды до следующего запроса
+Заголовки: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After`.
 
-## Идентификация клиентов
+### Идентификация клиентов
 
-Rate limiting использует IP адрес клиента, определяемый из заголовков:
-1. `x-forwarded-for` (первый IP в списке)
-2. `x-real-ip`
-3. `cf-connecting-ip` (Cloudflare)
-4. `unknown` (если IP не определен)
+IP берётся из заголовков (по порядку): `x-forwarded-for`, `x-real-ip`, `cf-connecting-ip`; иначе `unknown`.
 
-## Автоматический выбор хранилища
+### Выбор хранилища
 
-Система автоматически выбирает хранилище:
+1. **Redis доступен** (`UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` заданы) — Upstash Redis, общее состояние между инстансами.
+2. **Redis недоступен** — in-memory, автоочистка каждые 5 минут (удобно для разработки).
 
-1. **Если Redis доступен** (настроены `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN`):
-   - Используется Upstash Redis
-   - Работает в serverless окружении (Vercel)
-   - Общее состояние между всеми инстансами
+---
 
-2. **Если Redis недоступен**:
-   - Автоматический fallback на in-memory хранилище
-   - Работает локально для разработки
-   - Автоматическая очистка устаревших записей каждые 5 минут
+## Настройка
 
-## Настройка для продакшена
+### Зачем нужен Redis в продакшене
 
-См. подробные инструкции в `RATE_LIMITING_SETUP.md`.
+In-memory не подходит для serverless (Vercel): у каждого инстанса своё состояние. Upstash Redis даёт общий счётчик для всех запросов.
 
-Кратко:
-1. Создайте Redis database на https://upstash.com
-2. Добавьте переменные окружения в Vercel:
-   - `UPSTASH_REDIS_REST_URL`
-   - `UPSTASH_REDIS_REST_TOKEN`
-3. Установите зависимость: `pnpm add @upstash/redis`
+### 1. Создание Upstash Redis
 
-## Будущие улучшения
+1. Зайти на https://upstash.com, создать аккаунт при необходимости.
+2. Создать Redis database, выбрать регион (ближе к деплою Vercel), план (Free tier достаточно для старта).
+3. Скопировать `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN`.
 
-- Добавить идентификацию по `user_id` для аутентифицированных пользователей (более справедливый лимит)
-- Использовать Vercel Edge Middleware для rate limiting на уровне CDN
-
-## Тестирование
-
-Для тестирования rate limiting можно использовать `curl`:
+### 2. Установка зависимости
 
 ```bash
-# Отправляем 11 запросов подряд (лимит 10)
+cd apps/web
+pnpm add @upstash/redis
+```
+
+### 3. Переменные окружения
+
+**Локально** (`.env.local`):
+
+```env
+UPSTASH_REDIS_REST_URL=https://your-redis-url.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-redis-token
+```
+
+**Vercel:**
+
+- **Вариант A:** Vercel Dashboard → проект → Settings → Integrations → Upstash → подключить базу (переменные подставятся сами).
+- **Вариант B:** Settings → Environment Variables → добавить `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` для Production/Preview/Development → сохранить и передеплоить.
+
+### 4. Проверка
+
+В ответах API должны быть заголовки `X-RateLimit-Limit`, `X-RateLimit-Remaining`. При превышении лимита — `429` и `Retry-After`.
+
+**Тест через curl:**
+
+```bash
+# например, 11 запросов подряд к лимитированному endpoint (лимит 10)
 for i in {1..11}; do
-  curl -X POST http://localhost:3000/api/quick-book-guest \
+  curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/quick-book-guest \
     -H "Content-Type: application/json" \
     -d '{"biz_id":"...","service_id":"...","staff_id":"...","start_at":"...","client_name":"Test","client_phone":"+996555123456"}'
-  echo ""
 done
 ```
 
-11-й запрос должен вернуть `429 Too Many Requests`.
+Ожидается один ответ `429`.
 
+### Мониторинг (Upstash)
+
+https://console.upstash.com → ваша база → Commands: количество операций, память, latency.
+
+### Стоимость
+
+- Free tier: 10 000 команд/день, 256 MB — обычно достаточно.
+- Pay-as-you-go: $0.20 за 100K команд.
+
+### Troubleshooting
+
+- **Rate limiting не срабатывает в проде:** проверить наличие `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` в Vercel, логи на ошибки Redis, `pnpm list @upstash/redis` в apps/web.
+- **Fallback на in-memory:** если Redis недоступен, используется память процесса. Для локальной разработки и тестов это нормально; в продакшене нужно убедиться, что Redis настроен.
+
+### Альтернативы
+
+При необходимости можно заменить Upstash на Vercel KV, Redis Cloud или свой Redis, обновив `getRedisClient()` в `apps/web/src/lib/rateLimit.ts`.
+
+---
+
+## Дальнейшие улучшения
+
+- Идентификация по `user_id` для авторизованных пользователей.
+- Rate limiting на уровне CDN (например, Vercel Edge Middleware).

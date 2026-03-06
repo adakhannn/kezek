@@ -1,7 +1,8 @@
 'use client';
 
-import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect } from 'react';
+
+import { todayStringInTz } from '@/lib/time';
 
 export type UseQuickDeskFormResetsParams = {
     branchId: string;
@@ -31,7 +32,7 @@ export function useQuickDeskFormResets(params: UseQuickDeskFormResetsParams) {
     } = params;
 
     useEffect(() => {
-        setDate(formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd'));
+        setDate(todayStringInTz(timezone));
         setServiceId('');
         setStaffId('');
         clearSlots();

@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/useToast';
 import { cancelBookingWithFallback, confirmBooking } from '@/lib/bookingDashboardService';
 import { logError, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { getBusinessTimezone } from '@/lib/time';
+import { getBusinessTimezone, todayStringInTz } from '@/lib/time';
 
 
 type ServiceRow = { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number; branch_id: string };
@@ -73,7 +73,7 @@ function BookingPill({ id, startISO, endISO, status, timezone }: { id: string; s
 
 function CalendarDay({ bizId, staff, branches, timezone }: { bizId: string; staff: StaffRow[]; branches: BranchRow[]; timezone: string }) {
     const { t } = useLanguage();
-    const [date, setDate] = useState<string>(() => formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd'));
+    const [date, setDate] = useState<string>(() => todayStringInTz(timezone));
     const [selectedBranchId, setSelectedBranchId] = useState<string>('all');
     const [items, setItems] = useState<{ id: string; staff_id: string; start_at: string; end_at: string; status: BookingItem['status'] }[]>([]);
     

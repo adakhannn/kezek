@@ -1,11 +1,9 @@
 // apps/web/src/app/api/dashboard/staff/[id]/shift/open/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError, logDebug } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { TZ, dateAtTz } from '@/lib/time';
+import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
 import { withManagerContext } from '@/lib/withManagerContext';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +29,7 @@ export async function POST(
                 const targetDate = dateParam 
                     ? new Date(dateParam + 'T00:00:00')
                     : new Date();
-                const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
+                const ymd = formatDateInTz(targetDate, TZ);
 
                 // Проверяем, что сотрудник принадлежит этому бизнесу
                 const { data: staff, error: staffError } = await supabase

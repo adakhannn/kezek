@@ -7,12 +7,10 @@
  * - Новый: GET /api/staff/finance
  */
 // apps/web/src/app/api/staff/shift/today/route.ts
-import { formatInTimeZone } from 'date-fns-tz';
-
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logWarn } from '@/lib/log';
-import { TZ } from '@/lib/time';
+import { TZ, formatDateInTz } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -40,7 +38,7 @@ export async function GET() {
 
         // Текущая дата в локальной TZ (без времени)
         const now = new Date();
-        const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const ymd = formatDateInTz(now, TZ);
         const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
 
         // Проверяем, выходной ли сегодня

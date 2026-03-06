@@ -5,7 +5,6 @@ import { resolveScheduleContext } from '@core-domain/schedule';
 import { addDays, format } from 'date-fns';
 import { enGB } from 'date-fns/locale/en-GB';
 import { ru } from 'date-fns/locale/ru';
-import { formatInTimeZone } from 'date-fns-tz';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -26,16 +25,16 @@ import { useGuestBooking } from './hooks/useGuestBooking';
 import { useServicesFilter } from './hooks/useServicesFilter';
 import { useSlotsLoader } from './hooks/useSlotsLoader';
 import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
-import type { Data, Service, ServiceStaffRow, Slot, Staff } from './types';
+import type { Data, ServiceStaffRow, Slot, Staff } from './types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { useBookingFlowStart, trackBookingFlowStep } from '@/lib/analyticsTrackEvent';
 import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
+import { formatStaffName } from '@/lib/i18nHelpers';
 import { logDebug, logWarn, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { todayTz, dateAtTz, getBusinessTimezone } from '@/lib/time';
-import { transliterate } from '@/lib/transliterate';
+import { todayTz, dateAtTz, getBusinessTimezone, formatDateInTz, todayStringInTz } from '@/lib/time';
 
 // Используем безопасное логирование из @/lib/log
 // debugLog и debugWarn удалены - используйте logDebug и logWarn из @/lib/log
@@ -48,38 +47,8 @@ export default function BookingForm({ data }: { data: Data }) {
     const router = useRouter();
     const pathname = usePathname();
 
-    // Функции для форматирования названий (используем нужный язык, если доступен)
-    const formatBranchName = (name: string): string => {
-        // Для филиалов используется транслитерация, так как нет отдельных полей для языков
-        if (locale === 'en') {
-            return transliterate(name);
-        }
-        return name;
-    };
-    
-    const _formatServiceName = (service: Service): string => {
-        // Используем поле для выбранного языка, если оно заполнено
-        if (locale === 'en' && service.name_en) {
-            return service.name_en;
-        }
-        if (locale === 'ky' && service.name_ky) {
-            return service.name_ky;
-        }
-        // Если поля для выбранного языка нет, используем транслитерацию для английского
-        if (locale === 'en') {
-            return transliterate(service.name_ru);
-        }
-        // Для русского и кыргызского (если name_ky нет) используем name_ru
-        return service.name_ru;
-    };
-    
-    const _formatStaffName = (name: string): string => {
-        // Транслитерируем имя мастера для английского языка
-        if (locale === 'en') {
-            return transliterate(name);
-        }
-        return name;
-    };
+    // Тонкие обёртки над shared i18n (formatBranchName = formatStaffName для строк без мультиязычных полей)
+    const formatBranchName = (name: string) => formatStaffName(name, locale);
 
     // Получаем локаль для форматирования дат
     const dateLocale = useMemo(() => {
@@ -219,9 +188,9 @@ export default function BookingForm({ data }: { data: Data }) {
     /* ---------- дата и слоты через RPC get_free_slots_service_day_v2 ---------- */
     const businessTz = getBusinessTimezone(biz.tz);
     const [day, setDay] = useState<Date>(todayTz(businessTz));
-    const dayStr = formatInTimeZone(day, businessTz, 'yyyy-MM-dd');
-    const todayStr = formatInTimeZone(todayTz(businessTz), businessTz, 'yyyy-MM-dd');
-    const maxStr = formatInTimeZone(addDays(todayTz(businessTz), 60), businessTz, 'yyyy-MM-dd');
+    const dayStr = formatDateInTz(day, businessTz);
+    const todayStr = todayStringInTz(businessTz);
+    const maxStr = formatDateInTz(addDays(todayTz(businessTz), 60), businessTz);
 
     /* ---------- временные переводы сотрудников (staff_schedule_rules) ---------- */
     const { temporaryTransfers } = useTemporaryTransfers({
