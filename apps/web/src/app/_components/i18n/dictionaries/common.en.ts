@@ -10,6 +10,8 @@ export const commonEn = {
     'common.map.geoError': 'Could not get your location',
     'common.map.geoUnavailable': 'Could not get your location. Make sure location is enabled on your device and try again.',
     'common.map.geoLocating': 'Getting your location...',
+    'common.map.nearbyFetchError': 'Error loading nearby branches. Try again later.',
+    'common.map.nearbyEmpty': 'No branches within 20 km. Pick a branch from the list.',
     'common.daysAgo': 'days ago',
     'common.editShort': 'Edit',
     'common.loading': 'Loading...',

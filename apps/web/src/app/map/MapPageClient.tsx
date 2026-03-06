@@ -161,6 +161,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             return;
         }
         setGeoLoading(true);
+        // enableHighAccuracy: false — быстрее ответ по сети/сотовой, меньше таймаутов в помещении
         navigator.geolocation.getCurrentPosition(
             async (pos) => {
                 setGeoLoading(false);
@@ -176,13 +177,18 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                     const data = (json.data ?? []) as BranchItem[];
                     setNearbyList(data);
                     setSelectedId(data[0]?.id ?? null);
-                    if (data[0] && ymapsMapRef.current) {
-                        ymapsMapRef.current.setCenter([data[0].lat, data[0].lon], NEARBY_ZOOM, { duration: 300 });
+                    if (data.length === 0) {
+                        setGeoError(t('common.map.nearbyEmpty', 'В радиусе 20 км филиалов не найдено. Выберите филиал из списка слева.'));
+                    } else {
+                        setGeoError(null);
+                        if (data[0] && ymapsMapRef.current) {
+                            ymapsMapRef.current.setCenter([data[0].lat, data[0].lon], NEARBY_ZOOM, { duration: 300 });
+                        }
+                        listContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
                     }
-                    listContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
                 } catch (e) {
                     logError('MapPage', 'Nearby fetch failed', e);
-                    setGeoError(t('common.map.geoError', 'Не удалось определить местоположение'));
+                    setGeoError(t('common.map.nearbyFetchError', 'Ошибка при поиске ближайших филиалов. Попробуйте позже.'));
                 }
             },
             (err: GeolocationPositionError) => {
@@ -195,7 +201,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                     setGeoError(t('common.map.geoUnavailable', 'Не удалось определить местоположение. Убедитесь, что геолокация включена на устройстве, и попробуйте снова.'));
                 }
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+            { enableHighAccuracy: false, timeout: 20000, maximumAge: 300000 }
         );
     }, [categoryId, t]);
 

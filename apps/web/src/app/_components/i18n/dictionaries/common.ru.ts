@@ -10,6 +10,8 @@ export const commonRu = {
     'common.map.geoError': 'Не удалось определить местоположение',
     'common.map.geoUnavailable': 'Не удалось определить местоположение. Убедитесь, что геолокация включена на устройстве, и попробуйте снова.',
     'common.map.geoLocating': 'Определяем местоположение...',
+    'common.map.nearbyFetchError': 'Ошибка при поиске ближайших филиалов. Попробуйте позже.',
+    'common.map.nearbyEmpty': 'В радиусе 20 км филиалов не найдено. Выберите филиал из списка слева.',
     'common.daysAgo': 'дн. назад',
     'common.editShort': 'Редакт.',
     'common.loading': 'Загрузка...',
