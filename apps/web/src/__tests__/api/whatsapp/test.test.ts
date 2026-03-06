@@ -4,7 +4,7 @@
  */
 
 import { GET } from '@/app/api/whatsapp/test/route';
-import { setupApiTestMocks, createMockRequest, expectSuccessResponse } from '../../testHelpers';
+import { setupApiTestMocks, createMockRequest, expectSuccessResponse } from '../testHelpers';
 
 setupApiTestMocks();
 
@@ -34,9 +34,9 @@ describe('/api/whatsapp/test', () => {
         const res = await GET(req);
         const data = await expectSuccessResponse(res, 200);
 
-        expect(data).toHaveProperty('configured', true);
-        expect(data).toHaveProperty('details');
-        expect(data).toHaveProperty('message');
+        expect(data.data).toHaveProperty('configured', true);
+        expect(data.data).toHaveProperty('details');
+        expect(data.data).toHaveProperty('message');
     });
 
     test('должен вернуть информацию о неполной конфигурации', async () => {
@@ -54,9 +54,9 @@ describe('/api/whatsapp/test', () => {
         const res = await GET(req);
         const data = await expectSuccessResponse(res, 200);
 
-        expect(data).toHaveProperty('configured', false);
-        expect(data).toHaveProperty('details');
-        expect(data).toHaveProperty('message');
+        expect(data.data).toHaveProperty('configured', false);
+        expect(data.data).toHaveProperty('details');
+        expect(data.data).toHaveProperty('message');
     });
 
     test('должен вернуть информацию о невалидном Phone Number ID', async () => {
@@ -74,8 +74,8 @@ describe('/api/whatsapp/test', () => {
         const res = await GET(req);
         const data = await expectSuccessResponse(res, 200);
 
-        expect(data).toHaveProperty('configured', false);
-        expect((data as { details: { WHATSAPP_PHONE_NUMBER_ID_VALID: boolean } }).details.WHATSAPP_PHONE_NUMBER_ID_VALID).toBe(false);
+        expect(data.data).toHaveProperty('configured', false);
+        expect((data.data as { details: { WHATSAPP_PHONE_NUMBER_ID_VALID: boolean } }).details.WHATSAPP_PHONE_NUMBER_ID_VALID).toBe(false);
     });
 });
 

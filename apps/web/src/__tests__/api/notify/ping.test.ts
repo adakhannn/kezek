@@ -72,7 +72,7 @@ describe('/api/notify/ping', () => {
       text: '{"id":"email_123"}',
     });
   });
-}
+});
 
 
 

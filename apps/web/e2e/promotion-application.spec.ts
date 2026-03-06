@@ -5,6 +5,31 @@
 
 import { test, expect } from '@playwright/test';
 
+// Фиксированные даты для E2E, чтобы не зависеть от локальной TZ машины.
+// Можно переопределить через E2E_TEST_TODAY=YYYY-MM-DD.
+function getTodayDateString(): string {
+    const fromEnv = process.env.E2E_TEST_TODAY;
+    if (fromEnv && /^\d{4}-\d{2}-\d{2}$/.test(fromEnv)) {
+        return fromEnv;
+    }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getTomorrowDateString(): string {
+    const today = getTodayDateString();
+    const [y, m, d] = today.split('-').map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() + 1);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 test.describe('Применение промо при бронировании', () => {
     test.beforeEach(async ({ page }) => {
         const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
@@ -44,9 +69,7 @@ test.describe('Применение промо при бронировании',
             const datePicker = page.locator('[data-testid="date-picker"]').first();
             if (await datePicker.isVisible()) {
                 await datePicker.click();
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                const tomorrowStr = getTomorrowDateString();
                 await page.locator(`[data-date="${tomorrowStr}"]`).first().click();
             }
 
@@ -143,10 +166,7 @@ test.describe('Применение промо при бронировании',
 
             const datePicker = page.locator('[data-testid="date-picker"], input[type="date"]').first();
             if (await datePicker.isVisible({ timeout: 3000 })) {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
-                await datePicker.fill(tomorrowStr);
+                await datePicker.fill(getTomorrowDateString());
                 await page.waitForTimeout(1000);
             }
 

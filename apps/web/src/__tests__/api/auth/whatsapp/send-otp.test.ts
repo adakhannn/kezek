@@ -27,10 +27,13 @@ jest.mock('@/lib/supabaseHelpers', () => ({
 
 describe('/api/auth/whatsapp/send-otp', () => {
     const mockAdmin = createMockSupabase();
+    (mockAdmin.auth as { admin?: { listUsers: jest.Mock; updateUserById: jest.Mock } }).admin = {
+        listUsers: jest.fn(),
+        updateUserById: jest.fn(),
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
-
         (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
     });
 

@@ -4,7 +4,7 @@
  */
 
 import { GET } from '@/app/api/whatsapp/get-business-account/route';
-import { setupApiTestMocks, createMockRequest, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
+import { setupApiTestMocks, createMockRequest, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 setupApiTestMocks();
 
@@ -35,7 +35,7 @@ describe('/api/whatsapp/get-business-account', () => {
             });
 
             const res = await GET(req);
-            await expectErrorResponse(res, 500, 'no_token');
+            await expectErrorResponse(res, 500, 'internal');
         });
     });
 
@@ -76,8 +76,8 @@ describe('/api/whatsapp/get-business-account', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('business_accounts');
-            expect(data).toHaveProperty('phone_numbers');
+            expect(data.data).toHaveProperty('business_accounts');
+            expect(data.data).toHaveProperty('phone_numbers');
         });
 
         test('должен обработать ошибку от Graph API', async () => {

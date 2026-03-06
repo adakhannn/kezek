@@ -5,6 +5,33 @@
 
 import { test, expect } from '@playwright/test';
 
+// Фиксированная дата для E2E, чтобы не зависеть от локальной TZ машины.
+// Можно переопределить через E2E_TEST_TODAY=YYYY-MM-DD.
+function getTodayDateString(): string {
+    const fromEnv = process.env.E2E_TEST_TODAY;
+    if (fromEnv && /^\d{4}-\d{2}-\d{2}$/.test(fromEnv)) {
+        return fromEnv;
+    }
+    // По умолчанию считаем "сегодня" в Asia/Bishkek через UTC, чтобы избежать сдвигов.
+    // Берём только компонент YYYY-MM-DD из локальной даты без toISOString().
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getTomorrowDateString(): string {
+    const today = getTodayDateString();
+    const [y, m, d] = today.split('-').map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() + 1);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 test.describe('Полный цикл бронирования', () => {
     test.beforeEach(async ({ page }) => {
         // Переходим на страницу бизнеса (используем тестовый slug)
@@ -57,10 +84,8 @@ test.describe('Полный цикл бронирования', () => {
             const datePicker = page.locator('[data-testid="date-picker"]').first();
             if (await datePicker.isVisible()) {
                 await datePicker.click();
-                // Выбираем завтрашний день (первый доступный)
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                // Выбираем завтрашний день (первый доступный), стабилизированный по дате
+                const tomorrowStr = getTomorrowDateString();
                 await page.locator(`[data-date="${tomorrowStr}"]`).first().click();
             }
         });
@@ -124,9 +149,7 @@ test.describe('Полный цикл бронирования', () => {
         await test.step('Шаг 2: Выбор дня', async () => {
             const dateInput = page.locator('input[type="date"]').first();
             if (await dateInput.isVisible({ timeout: 5000 })) {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                await dateInput.fill(tomorrow.toISOString().split('T')[0]);
+                await dateInput.fill(getTomorrowDateString());
                 await page.waitForTimeout(500);
             }
             const nextBtn = page.locator('button:has-text("Далее")').first();

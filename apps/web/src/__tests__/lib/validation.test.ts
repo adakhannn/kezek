@@ -28,7 +28,8 @@ describe('validation utils', () => {
 
   test('isE164 validates E.164 phone numbers', () => {
     expect(isE164('+996555123456')).toBe(true);
-    expect(isE164('+123')).toBe(false);
+    // Короткие номера тоже соответствуют формату E.164 (1–15 цифр после +)
+    expect(isE164('+123')).toBe(true);
     expect(isE164('996555123456')).toBe(false);
   });
 

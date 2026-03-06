@@ -4,7 +4,7 @@
  */
 
 import { GET } from '@/app/api/whatsapp/diagnose/route';
-import { setupApiTestMocks, createMockRequest, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
+import { setupApiTestMocks, createMockRequest, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 setupApiTestMocks();
 
@@ -36,7 +36,7 @@ describe('/api/whatsapp/diagnose', () => {
             });
 
             const res = await GET(req);
-            await expectErrorResponse(res, 500, 'no_token');
+            await expectErrorResponse(res, 500, 'internal');
         });
     });
 
@@ -85,10 +85,11 @@ describe('/api/whatsapp/diagnose', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('tokenCheck');
-            expect(data).toHaveProperty('businessAccounts');
-            expect(data).toHaveProperty('phoneNumbers');
-            expect(data).toHaveProperty('recommendations');
+            expect(data.data).toBeDefined();
+            expect(data.data).toHaveProperty('tokenCheck');
+            expect(data.data).toHaveProperty('businessAccounts');
+            expect(data.data).toHaveProperty('phoneNumbers');
+            expect(data.data).toHaveProperty('recommendations');
         });
     });
 });

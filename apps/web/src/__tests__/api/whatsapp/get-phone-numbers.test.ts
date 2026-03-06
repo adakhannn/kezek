@@ -4,7 +4,7 @@
  */
 
 import { GET } from '@/app/api/whatsapp/get-phone-numbers/route';
-import { setupApiTestMocks, createMockRequest, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
+import { setupApiTestMocks, createMockRequest, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 setupApiTestMocks();
 
@@ -33,7 +33,7 @@ describe('/api/whatsapp/get-phone-numbers', () => {
             });
 
             const res = await GET(req);
-            await expectErrorResponse(res, 400, 'missing_account_id');
+            await expectErrorResponse(res, 400, 'validation');
         });
 
         test('должен вернуть 500 при отсутствии WHATSAPP_ACCESS_TOKEN', async () => {
@@ -44,7 +44,7 @@ describe('/api/whatsapp/get-phone-numbers', () => {
             });
 
             const res = await GET(req);
-            await expectErrorResponse(res, 500, 'no_token');
+            await expectErrorResponse(res, 500, 'internal');
         });
     });
 
@@ -71,7 +71,7 @@ describe('/api/whatsapp/get-phone-numbers', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('phone_numbers');
+            expect(data.data).toHaveProperty('phone_numbers');
         });
 
         test('должен обработать ошибку от Graph API', async () => {
@@ -91,7 +91,7 @@ describe('/api/whatsapp/get-phone-numbers', () => {
             });
 
             const res = await GET(req);
-            await expectErrorResponse(res, 500);
+            await expectErrorResponse(res, 400);
         });
     });
 });

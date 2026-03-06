@@ -63,6 +63,32 @@ function formatCurrencyKGS(n: number) {
   }).format(n);
 }
 
+type FiltersProps = {
+  periodPreset: PeriodPreset;
+  onPresetChange: (preset: PeriodPreset) => void;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (value: string) => void;
+  onEndDateChange: (value: string) => void;
+  branchId: string;
+  onBranchIdChange: (value: string) => void;
+  branches: Array<{ id: string; name: string }>;
+};
+
+type KpiSectionProps = {
+  summary: OverviewSummary;
+  promoShare: number;
+};
+
+type TrendsProps = {
+  trendChartData: {
+    bookings: { x: string; y: number }[];
+    revenue: { x: string; y: number }[];
+    promoShare: { x: string; y: number }[];
+  } | null;
+  byDay: OverviewByDayPoint[];
+};
+
 export default function AdminAnalyticsOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -234,150 +260,184 @@ export default function AdminAnalyticsOverviewPage() {
 
   return (
     <div className="space-y-6 py-6">
-      {/* Фильтры */}
-      <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Период и филиал задают срез для всех метрик и трендов.
-            </p>
+      <FiltersSection
+        periodPreset={periodPreset}
+        onPresetChange={handlePresetChange}
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={(value) => {
+          setStartDate(value);
+          setPeriodPreset('custom');
+        }}
+        onEndDateChange={(value) => {
+          setEndDate(value);
+          setPeriodPreset('custom');
+        }}
+        branchId={branchId}
+        onBranchIdChange={setBranchId}
+        branches={branches}
+      />
+
+      <KpiSection summary={summary} promoShare={promoShare} />
+
+      <TrendsSection trendChartData={trendChartData} byDay={byDay} />
+    </div>
+  );
+}
+
+function FiltersSection({
+  periodPreset,
+  onPresetChange,
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
+  branchId,
+  onBranchIdChange,
+  branches,
+}: FiltersProps) {
+  return (
+    <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Период и филиал задают срез для всех метрик и трендов.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+            Период
+          </p>
+          <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
+            {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onPresetChange(p)}
+                className={`px-3 py-1 rounded-full transition-colors ${
+                  periodPreset === p
+                    ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
+                }`}
+              >
+                {p === '7' && '7 дней'}
+                {p === '30' && '30 дней'}
+                {p === '90' && '90 дней'}
+                {p === 'custom' && 'Кастомный'}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {/* Пресеты периода */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Период
-            </p>
-            <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
-              {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => handlePresetChange(p)}
-                  className={`px-3 py-1 rounded-full transition-colors ${
-                    periodPreset === p
-                      ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
-                  }`}
-                >
-                  {p === '7' && '7 дней'}
-                  {p === '30' && '30 дней'}
-                  {p === '90' && '90 дней'}
-                  {p === 'custom' && 'Кастомный'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Даты */}
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата начала
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                setPeriodPreset('custom');
-              }}
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата окончания
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => {
-                setEndDate(e.target.value);
-                setPeriodPreset('custom');
-              }}
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-
-          {/* Филиал */}
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Филиал
-            </label>
-            <select
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="all">Все филиалы</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </section>
-
-      {/* KPI */}
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Брони (успешные)
-          </p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {formatNumber(summary.bookings.confirmedOrPaid)}
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Из {formatNumber(summary.bookings.created)} созданных за период
-          </p>
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+            Дата начала
+          </label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => onStartDateChange(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Конверсия home → бронь
-          </p>
-          <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-            {summary.funnel.conversionHomeToBooking.toFixed(2)}%
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {formatNumber(summary.funnel.homeViews)} просмотров главной,
-            {' '}
-            {formatNumber(summary.bookings.confirmedOrPaid)} успешных броней
-          </p>
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+            Дата окончания
+          </label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => onEndDateChange(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Выручка (оценка)
-          </p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {formatCurrencyKGS(summary.revenue.total)}
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Включая промо‑выручку {formatCurrencyKGS(summary.revenue.promoRevenue)}
-          </p>
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+            Филиал
+          </label>
+          <select
+            value={branchId}
+            onChange={(e) => onBranchIdChange(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="all">Все филиалы</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
         </div>
+      </div>
+    </section>
+  );
+}
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Доля промо‑бронирований
-          </p>
-          <p className="mt-2 text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-            {promoShare.toFixed(2)}%
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {formatNumber(summary.revenue.promoBookings)} броней с промо за период
-          </p>
-        </div>
-      </section>
+function KpiSection({ summary, promoShare }: KpiSectionProps) {
+  return (
+    <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          Брони (успешные)
+        </p>
+        <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+          {formatNumber(summary.bookings.confirmedOrPaid)}
+        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Из {formatNumber(summary.bookings.created)} созданных за период
+        </p>
+      </div>
 
-      {/* Тренды */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          Конверсия home → бронь
+        </p>
+        <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+          {summary.funnel.conversionHomeToBooking.toFixed(2)}%
+        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {formatNumber(summary.funnel.homeViews)} просмотров главной,
+          {' '}
+          {formatNumber(summary.bookings.confirmedOrPaid)} успешных броней
+        </p>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          Выручка (оценка)
+        </p>
+        <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+          {formatCurrencyKGS(summary.revenue.total)}
+        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Включая промо‑выручку {formatCurrencyKGS(summary.revenue.promoRevenue)}
+        </p>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          Доля промо‑бронирований
+        </p>
+        <p className="mt-2 text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+          {promoShare.toFixed(2)}%
+        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {formatNumber(summary.revenue.promoBookings)} броней с промо за период
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function TrendsSection({ trendChartData, byDay }: TrendsProps) {
+  return (
+    <>
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2">
@@ -440,7 +500,6 @@ export default function AdminAnalyticsOverviewPage() {
         </div>
       </section>
 
-      {/* Доля промо по дням */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between gap-2">
           <div>
@@ -470,7 +529,6 @@ export default function AdminAnalyticsOverviewPage() {
           )}
         </div>
 
-        {/* Сырые данные (для отладки и сверки) */}
         <details className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           <summary className="cursor-pointer select-none">
             Сырые данные по дням (для тех. сверки)
@@ -509,6 +567,7 @@ export default function AdminAnalyticsOverviewPage() {
           </div>
         </details>
       </section>
-    </div>
+    </>
   );
 }
+

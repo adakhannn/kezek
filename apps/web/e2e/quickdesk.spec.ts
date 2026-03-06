@@ -9,6 +9,42 @@
 
 import { test, expect } from '@playwright/test';
 
+// Фиксированные дата/дни для E2E, чтобы не зависеть от локальной TZ машины.
+// Можно переопределить через E2E_TEST_TODAY=YYYY-MM-DD.
+function getTodayDateString(): string {
+    const fromEnv = process.env.E2E_TEST_TODAY;
+    if (fromEnv && /^\d{4}-\d{2}-\d{2}$/.test(fromEnv)) {
+        return fromEnv;
+    }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getTomorrowDateString(): string {
+    const today = getTodayDateString();
+    const [y, m, d] = today.split('-').map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() + 1);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getYesterdayDateString(): string {
+    const today = getTodayDateString();
+    const [y, m, d] = today.split('-').map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() - 1);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 test.describe('QuickDesk - управление бронированиями', () => {
     let managerAuthState: any;
     let testBookingId: string | null = null;
@@ -88,11 +124,8 @@ test.describe('QuickDesk - управление бронированиями', (
         await test.step('Выбор даты', async () => {
             const dateInput = page.locator('input[type="date"], [data-testid="date-picker"]').first();
             if (await dateInput.isVisible({ timeout: 3000 })) {
-                // Выбираем завтрашний день
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
-                await dateInput.fill(tomorrowStr);
+                // Выбираем завтрашний день (стабилизированный по дате)
+                await dateInput.fill(getTomorrowDateString());
                 await page.waitForTimeout(1000); // Ждем загрузки слотов
             }
         });
@@ -429,12 +462,8 @@ test.describe('QuickDesk - управление бронированиями', (
         await test.step('Выбор прошедшей даты', async () => {
             const dateInput = page.locator('input[type="date"], [data-testid="date-picker"]').first();
             if (await dateInput.isVisible({ timeout: 3000 })) {
-                // Выбираем вчерашний день
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
-                
-                await dateInput.fill(yesterdayStr);
+                // Выбираем вчерашний день (стабилизированный по дате)
+                await dateInput.fill(getYesterdayDateString());
                 await page.waitForTimeout(1000);
                 
                 // Проверяем, что показывается ошибка или слоты недоступны
@@ -474,10 +503,7 @@ test.describe('QuickDesk - управление бронированиями', (
 
             const dateInput = page.locator('input[type="date"], [data-testid="date-picker"]').first();
             if (await dateInput.isVisible({ timeout: 3000 })) {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
-                await dateInput.fill(tomorrowStr);
+                await dateInput.fill(getTomorrowDateString());
                 await page.waitForTimeout(1000);
             }
 

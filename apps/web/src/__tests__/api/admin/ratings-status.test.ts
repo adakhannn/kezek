@@ -4,7 +4,7 @@
  */
 
 import { GET } from '@/app/api/admin/ratings/status/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
+import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
 
 setupApiTestMocks();
 

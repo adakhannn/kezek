@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # Обновления npm/pnpm-зависимостей монорепозитория
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Dependabot понимает pnpm-lock.yaml и будет открывать PR-ы с обновлениями пакетов
+    # для всех пакетов в монорепозитории
+    commit-message:
+      prefix: "deps"
+    open-pull-requests-limit: 10
+
+  # Обновления GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+

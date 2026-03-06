@@ -11,10 +11,15 @@ import {
     createMockSupabase,
     expectSuccessResponse,
     expectErrorResponse,
-} from '../../testHelpers';
+} from '../testHelpers';
+import { getServiceClient } from '@/lib/supabaseService';
 
 jest.mock('@/lib/senders/whatsapp', () => ({
     sendWhatsApp: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/lib/supabaseService', () => ({
+    getServiceClient: jest.fn(),
 }));
 
 setupApiTestMocks();
@@ -79,9 +84,8 @@ describe('/api/webhooks/whatsapp', () => {
 
     describe('POST /api/webhooks/whatsapp (обработка событий)', () => {
         test('должен успешно обработать входящее текстовое сообщение', async () => {
-            const mockSupabase = require('../../testHelpers').createMockSupabase();
-            const { createClient } = require('@supabase/supabase-js');
-            createClient.mockReturnValue(mockSupabase);
+            const mockSupabase = createMockSupabase();
+            (getServiceClient as jest.Mock).mockReturnValue(mockSupabase);
 
             // Мокаем проверку существующего сообщения (не найдено)
             mockSupabase.from.mockReturnValueOnce({
@@ -281,8 +285,7 @@ describe('/api/webhooks/whatsapp', () => {
 
         test('должен привязать сообщение к гостевой брони по client_phone', async () => {
             const mockSupabase = createMockSupabase();
-            const { createClient } = require('@supabase/supabase-js');
-            createClient.mockReturnValue(mockSupabase);
+            (getServiceClient as jest.Mock).mockReturnValue(mockSupabase);
 
             const bookingId = 'booking-guest-1';
             const bizId = 'biz-1';
@@ -366,8 +369,7 @@ describe('/api/webhooks/whatsapp', () => {
     describe('POST: команды отмена и подтверждение', () => {
         test('при команде "отмена" без брони отправляет сообщение об отсутствии бронирований', async () => {
             const mockSupabase = createMockSupabase();
-            const { createClient } = require('@supabase/supabase-js');
-            createClient.mockReturnValue(mockSupabase);
+            (getServiceClient as jest.Mock).mockReturnValue(mockSupabase);
             const sendWhatsApp = require('@/lib/senders/whatsapp').sendWhatsApp;
 
             mockSupabase.from

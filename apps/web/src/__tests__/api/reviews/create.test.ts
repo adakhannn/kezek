@@ -42,7 +42,7 @@ describe('/api/reviews/create', () => {
             });
 
             const res = await POST(req);
-            await expectErrorResponse(res, 401, 'UNAUTHORIZED');
+            await expectErrorResponse(res, 401, 'auth');
         });
     });
 
@@ -65,7 +65,7 @@ describe('/api/reviews/create', () => {
             });
 
             const res = await POST(req);
-            await expectErrorResponse(res, 400, 'BAD_REQUEST');
+            await expectErrorResponse(res, 400, 'validation');
         });
 
         test('должен вернуть 400 при отсутствии booking_id', async () => {
@@ -86,7 +86,7 @@ describe('/api/reviews/create', () => {
             });
 
             const res = await POST(req);
-            await expectErrorResponse(res, 400, 'BAD_REQUEST');
+            await expectErrorResponse(res, 400, 'validation');
         });
 
         test('должен вернуть 400 при отсутствии rating', async () => {
@@ -140,7 +140,7 @@ describe('/api/reviews/create', () => {
             });
 
             const res = await POST(req);
-            await expectErrorResponse(res, 404, 'BOOKING_NOT_FOUND');
+            await expectErrorResponse(res, 404, 'not_found');
         });
 
         test('должен вернуть 403 если бронирование принадлежит другому пользователю', async () => {
@@ -175,7 +175,7 @@ describe('/api/reviews/create', () => {
             });
 
             const res = await POST(req);
-            await expectErrorResponse(res, 403, 'FORBIDDEN');
+            await expectErrorResponse(res, 403, 'forbidden');
         });
     });
 
@@ -252,8 +252,8 @@ describe('/api/reviews/create', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('id', 'review-id');
-            expect(data).toHaveProperty('updated', false);
+            expect(data.data).toHaveProperty('id', 'review-id');
+            expect(data.data).toHaveProperty('updated', false);
         });
 
         test('должен обновить существующий отзыв если он принадлежит пользователю', async () => {
@@ -333,11 +333,11 @@ describe('/api/reviews/create', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('id', reviewId);
-            expect(data).toHaveProperty('updated', true);
+            expect(data.data).toHaveProperty('id', reviewId);
+            expect(data.data).toHaveProperty('updated', true);
         });
 
-        test('должен вернуть 400 если отзыв существует и принадлежит другому пользователю', async () => {
+        test('должен вернуть 409 если отзыв существует и принадлежит другому пользователю', async () => {
             const userId = 'user-id';
             const bookingId = 'booking-id';
 
@@ -394,7 +394,7 @@ describe('/api/reviews/create', () => {
             });
 
             const res = await POST(req);
-            await expectErrorResponse(res, 400, 'REVIEW_ALREADY_EXISTS');
+            await expectErrorResponse(res, 409, 'conflict');
         });
     });
 });

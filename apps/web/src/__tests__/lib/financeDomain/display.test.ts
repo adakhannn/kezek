@@ -26,7 +26,8 @@ describe('calculateDisplayShares', () => {
     test('должен учитывать гарантию для открытой смены, если она больше базовой доли', () => {
         const result = calculateDisplayShares(6000, 4000, 8000, true);
         expect(result.masterShare).toBe(8000); // Гарантия
-        expect(result.salonShare).toBe(0); // 4000 - 2000 (topup) = 2000, но минимум 0
+        // 4000 - 2000 (topup) = 2000, салон не уходит в минус
+        expect(result.salonShare).toBe(2000);
     });
 
     test('должен округлить результат до 2 знаков', () => {

@@ -7,6 +7,31 @@
 
 import { test, expect } from '@playwright/test';
 
+// Фиксированные даты для E2E, чтобы не зависеть от локальной TZ машины.
+// Можно переопределить через E2E_TEST_TODAY=YYYY-MM-DD.
+function getTodayDateString(): string {
+    const fromEnv = process.env.E2E_TEST_TODAY;
+    if (fromEnv && /^\d{4}-\d{2}-\d{2}$/.test(fromEnv)) {
+        return fromEnv;
+    }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getYesterdayDateString(): string {
+    const today = getTodayDateString();
+    const [y, m, d] = today.split('-').map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() - 1);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 test.describe('Страницы финансов сотрудника', () => {
     test.describe('Публичная страница /staff/finance', () => {
         test.beforeEach(async ({ page }) => {
@@ -336,11 +361,10 @@ test.describe('Страницы финансов сотрудника', () => {
                 if (await datePicker.isVisible({ timeout: 5000 })) {
                     await expect(datePicker).toBeVisible();
                     
-                    // Получаем текущую дату
-                    const currentDate = new Date();
-                    const currentDateStr = currentDate.toISOString().split('T')[0];
+                    // Получаем стабилизированную текущую дату
+                    const currentDateStr = getTodayDateString();
                     
-                    // Проверяем, что датапикер показывает текущую дату или позволяет выбрать
+                    // Проверяем, что датапикер показывает какую-то дату или позволяет выбрать
                     const dateValue = await datePicker.inputValue();
                     expect(dateValue).toBeTruthy();
                 }
@@ -350,11 +374,8 @@ test.describe('Страницы финансов сотрудника', () => {
             await test.step('Изменение даты и проверка обновления', async () => {
                 const datePicker = page.locator('input[type="date"], [data-testid="date-picker"]').first();
                 if (await datePicker.isVisible({ timeout: 5000 })) {
-                    // Выбираем вчерашний день
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    const yesterdayStr = yesterday.toISOString().split('T')[0];
-                    
+                    // Выбираем вчерашний день (стабилизированный по дате)
+                    const yesterdayStr = getYesterdayDateString();
                     // Перехватываем запрос к API
                     const apiResponsePromise = page.waitForResponse(
                         response => response.url().includes('/api/staff/finance') || response.url().includes('/api/dashboard/staff'),

@@ -18,19 +18,20 @@ const customJestConfig = {
         '**/__tests__/**/*.test.[jt]s?(x)',
         '**/?(*.)+(spec|test).[jt]s?(x)',
     ],
+    testPathIgnorePatterns: ['<rootDir>/e2e/', '/node_modules/'],
     collectCoverageFrom: [
         'src/app/api/**/*.ts',
         '!src/app/api/**/*.d.ts',
         '!src/app/api/**/route.ts', // Исключаем route.ts, так как они тестируются через интеграционные тесты
     ],
     testTimeout: 30000, // 30 секунд для API тестов
-    // Минимальный порог покрытия тестами (50%+)
+    // Минимальный порог покрытия тестами (60%+)
     coverageThreshold: {
         global: {
-            branches: 50,
-            functions: 50,
-            lines: 50,
-            statements: 50,
+            branches: 60,
+            functions: 60,
+            lines: 60,
+            statements: 60,
         },
     },
 };

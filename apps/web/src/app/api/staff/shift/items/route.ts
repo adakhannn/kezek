@@ -16,6 +16,12 @@ import { saveShiftItemsSchema } from '@/lib/validation/schemas';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+type StaffShiftRow = {
+    id: string;
+    status: 'open' | 'closed';
+    shift_date: string;
+};
+
 // POST - сохранить список клиентов для открытой смены
 export async function POST(req: Request) {
     const startTime = Date.now();

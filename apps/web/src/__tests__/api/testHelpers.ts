@@ -60,6 +60,7 @@ type MockSupabaseClient = {
     auth: {
         getUser: jest.Mock;
         signOut: jest.Mock;
+        updateUser?: jest.Mock;
     };
     from: jest.Mock<MockSupabaseClient>;
     select: jest.Mock<MockSupabaseClient>;
@@ -91,6 +92,7 @@ export function createMockSupabase(): MockSupabaseClient {
         auth: {
             getUser: jest.fn(),
             signOut: jest.fn(),
+            updateUser: jest.fn(),
         },
         from: jest.fn(() => mockSupabase),
         select: jest.fn(() => mockSupabase),
@@ -154,16 +156,40 @@ export function setupApiTestMocks() {
 /**
  * Проверяет стандартный формат ответа об ошибке
  */
+const LEGACY_ERROR_CODE_MAP: Record<string, string> = {
+    // Старые символические коды → новые краткие значения поля error
+    UNAUTHORIZED: 'auth',
+    BAD_REQUEST: 'validation',
+    BOOKING_NOT_FOUND: 'not_found',
+    FORBIDDEN: 'forbidden',
+    REVIEW_ALREADY_EXISTS: 'conflict',
+    // WhatsApp и прочие
+    missing_data: 'validation',
+    invalid_phone: 'validation',
+    missing_account_id: 'validation',
+    no_token: 'internal',
+    user_not_found: 'not_found',
+    no_phone: 'validation',
+    invalid_code: 'validation',
+    no_code: 'validation',
+    expired: 'validation',
+    wrong_code: 'validation',
+    already_verified: 'validation',
+    send_failed: 'internal',
+};
+
 export function expectErrorResponse(
     response: Response,
     expectedStatus: number,
-    expectedError?: string
+    expectedError?: string,
 ) {
     expect(response.status).toBe(expectedStatus);
     return response.json().then((data) => {
         expect(data).toHaveProperty('ok', false);
         if (expectedError) {
-            expect(data).toHaveProperty('error', expectedError);
+            const normalizedExpected =
+                LEGACY_ERROR_CODE_MAP[expectedError] ?? expectedError;
+            expect(data).toHaveProperty('error', normalizedExpected);
         }
         return data;
     });

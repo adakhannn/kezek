@@ -31,9 +31,24 @@
 | `RESEND_API_KEY` | Ключ Resend для email (без него часть уведомлений не работает) |
 | `EMAIL_FROM` | Адрес отправителя писем |
 
-### 1.2. Полный список переменных
+### 1.2. Полный список переменных (web)
 
-См. **`apps/web/.env.example`** и **`apps/web/README.md`** — там перечислены все переменные (Supabase, сайт, Resend, WhatsApp, Telegram, Yandex, SMS, Redis, cron, E2E).
+Ниже приведён консолидированный список ключевых переменных web-приложения. Актуальный и исчерпывающий перечень всегда можно посмотреть в **`apps/web/.env.example`**.
+
+| Переменная | Где используется | Обязательно | Описание / комментарий |
+|-----------|------------------|------------|------------------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | клиент и сервер (`createBrowserSupabaseClient`, `createServerClient`) | Да | URL проекта Supabase (Dashboard → Settings → API). |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | клиент и сервер | Да | Публичный anon-ключ Supabase. |
+| `SUPABASE_SERVICE_ROLE_KEY` | серверный код (`apps/web/src/lib/supabaseAdmin.ts`, cron, миграции) | Да (prod) | Service Role ключ, обходит RLS. **Только на сервере**, никогда не в client components. |
+| `NEXT_PUBLIC_SITE_ORIGIN` | ссылки в письмах, редиректы, метрики | Рекомендуется | Origin сайта, напр. `http://localhost:3000` или боевой домен. |
+| `RESEND_API_KEY` | отправка email (уведомления, подтверждения) | Да, если включены email-уведомления | Ключ Resend. |
+| `EMAIL_FROM` | отправка писем | Нет (есть дефолт) | Адрес отправителя, по умолчанию `Kezek <noreply@mail.kezek.kg>`. |
+| `WHATSAPP_ACCESS_TOKEN` | WhatsApp webhooks/отправка сообщений | Опционально | Токен Business Cloud API; без него WhatsApp-интеграция не работает. |
+| `WHATSAPP_PHONE_NUMBER_ID` | WhatsApp webhooks/отправка сообщений | Опционально | ID номера WhatsApp. |
+| `NEXT_PUBLIC_TZ` | форматирование дат/времени | Нет (есть дефолт) | Часовой пояс по умолчанию, например `Asia/Bishkek`. |
+| `NEXT_PUBLIC_YANDEX_MAPS_API_KEY` | страница филиала с картой (админка) | Опционально | API-ключ Яндекс.Карт; без него карта может быть недоступна. |
+
+Дополнительные переменные для логирования, Redis, cron-задач, e2e и интеграций описаны в `apps/web/.env.example` и в профильных документах.
 
 ### 1.3. Опциональные интеграции (web)
 
@@ -48,11 +63,11 @@
 
 ### 2.1. Требуемые переменные
 
-| Переменная | Описание |
-|------------|----------|
-| `EXPO_PUBLIC_SUPABASE_URL` | URL проекта Supabase |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Anon-ключ Supabase |
-| `EXPO_PUBLIC_API_URL` | URL веб-приложения (например `https://kezek.kg`) |
+| Переменная | Где используется | Обязательно | Описание |
+|------------|------------------|------------|----------|
+| `EXPO_PUBLIC_SUPABASE_URL` | клиентское мобильное приложение | Да | URL проекта Supabase. |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | клиентское мобильное приложение | Да | Публичный anon-ключ Supabase. |
+| `EXPO_PUBLIC_API_URL` | HTTP‑запросы из mobile в web API | Да | URL веб-приложения (`https://kezek.kg` или dev-окружение/туннель). |
 
 ### 2.2. Где взять значения
 
@@ -108,7 +123,23 @@
 
 ---
 
-## 3. Специфичные гайды по интеграциям
+## 3. CI/CD и секреты
+
+Переменные для CI/CD (GitHub Actions) задаются через **Settings → Secrets and variables → Actions** в репозитории/организации.
+
+Примеры (см. `.github/workflows/ci.yml`):
+
+- `EXPO_TOKEN` — токен для `eas build` (mobile-сборки).
+- `SUPABASE_SERVICE_ROLE_KEY` — может использоваться для миграций/скриптов в CI (строго как секрет).
+
+Правила:
+
+- Никогда не коммитить значения секретов в репозиторий.
+- Для локальной разработки использовать `.env.local`; для CI — secrets/variables в настройках репозитория.
+
+---
+
+## 4. Специфичные гайды по интеграциям
 
 | Интеграция | Документ | Что внутри |
 |------------|----------|------------|
@@ -119,7 +150,7 @@
 
 ---
 
-## 4. Быстрые ссылки
+## 5. Быстрые ссылки
 
 - **Быстрый старт (установка + первые команды):** [GETTING_STARTED.md](GETTING_STARTED.md)
 - **Web: команды и структура:** [apps/web/README.md](apps/web/README.md)
