@@ -136,6 +136,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             const pm = new ym.Placemark(
                 [b.lat, b.lon],
                 {
+                    preset: 'islands#redIcon',
                     balloonContentBody: [
                         `<div class="p-2 min-w-[200px]">`,
                         `<div class="font-semibold">${escapeHtml(b.branchName)}</div>`,
@@ -152,12 +153,12 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             map.geoObjects.add(pm);
             placemarksRef.current.push(pm);
         });
-        // Метка «Вы здесь» при использовании «Ближайший ко мне»
+        // Метка «Вы здесь» — зелёный круг, чтобы отличаться от красных булавок филиалов
         if (userPosition) {
             const userPm = new ym.Placemark(
                 [userPosition.lat, userPosition.lon],
                 {
-                    preset: 'islands#blueCircleDotIcon',
+                    preset: 'islands#greenCircleDotIcon',
                     balloonContentBody: escapeHtml(t('common.map.youAreHere', 'Вы здесь')),
                 },
                 {}
