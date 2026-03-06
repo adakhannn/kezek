@@ -51,6 +51,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
     const [mapError, setMapError] = useState<string | null>(null);
     const [geoError, setGeoError] = useState<string | null>(null);
     const [geoErrorDenied, setGeoErrorDenied] = useState(false);
+    const [geoLoading, setGeoLoading] = useState(false);
 
     const displayList = nearbyList ?? branches;
     const hasDistance = nearbyList != null;
@@ -159,8 +160,10 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             setGeoError(t('common.map.geoError', 'Не удалось определить местоположение'));
             return;
         }
+        setGeoLoading(true);
         navigator.geolocation.getCurrentPosition(
             async (pos) => {
+                setGeoLoading(false);
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
                 setUserPosition({ lat, lon });
@@ -182,11 +185,17 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                     setGeoError(t('common.map.geoError', 'Не удалось определить местоположение'));
                 }
             },
-            () => {
-                setGeoError(t('common.map.geoDenied', 'Доступ к геолокации запрещён. Выберите филиал из списка.'));
-                setGeoErrorDenied(true);
+            (err: GeolocationPositionError) => {
+                setGeoLoading(false);
+                // 1 = PERMISSION_DENIED, 2 = POSITION_UNAVAILABLE, 3 = TIMEOUT
+                if (err.code === 1) {
+                    setGeoError(t('common.map.geoDenied', 'Доступ к геолокации запрещён. Выберите филиал из списка.'));
+                    setGeoErrorDenied(true);
+                } else {
+                    setGeoError(t('common.map.geoUnavailable', 'Не удалось определить местоположение. Убедитесь, что геолокация включена на устройстве, и попробуйте снова.'));
+                }
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
         );
     }, [categoryId, t]);
 
@@ -213,9 +222,10 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                         <button
                             type="button"
                             onClick={handleFindNearest}
-                            className="px-3 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500"
+                            disabled={geoLoading}
+                            className="px-3 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-wait"
                         >
-                            {t('common.map.findNearest', 'Ближайший ко мне')}
+                            {geoLoading ? t('common.map.geoLocating', 'Определяем местоположение...') : t('common.map.findNearest', 'Ближайший ко мне')}
                         </button>
                     </div>
                     {geoError && (
