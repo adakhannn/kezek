@@ -50,6 +50,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
     const [mapReady, setMapReady] = useState(false);
     const [mapError, setMapError] = useState<string | null>(null);
     const [geoError, setGeoError] = useState<string | null>(null);
+    const [geoErrorDenied, setGeoErrorDenied] = useState(false);
 
     const displayList = nearbyList ?? branches;
     const hasDistance = nearbyList != null;
@@ -153,6 +154,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
 
     const handleFindNearest = useCallback(() => {
         setGeoError(null);
+        setGeoErrorDenied(false);
         if (!navigator.geolocation) {
             setGeoError(t('common.map.geoError', 'Не удалось определить местоположение'));
             return;
@@ -180,7 +182,10 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                     setGeoError(t('common.map.geoError', 'Не удалось определить местоположение'));
                 }
             },
-            () => setGeoError(t('common.map.geoDenied', 'Доступ к геолокации запрещён. Выберите филиал из списка.')),
+            () => {
+                setGeoError(t('common.map.geoDenied', 'Доступ к геолокации запрещён. Выберите филиал из списка.'));
+                setGeoErrorDenied(true);
+            },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
     }, [categoryId, t]);
@@ -214,9 +219,14 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                         </button>
                     </div>
                     {geoError && (
-                        <p className="text-sm text-amber-600 dark:text-amber-400" role="alert">
-                            {geoError}
-                        </p>
+                        <div className="space-y-1" role="alert">
+                            <p className="text-sm text-amber-600 dark:text-amber-400">{geoError}</p>
+                            {geoErrorDenied && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {t('common.map.geoDeniedHint', 'Чтобы включить: нажмите на значок замка или «i» в адресной строке → Настройки сайта → Местоположение → Разрешить, затем нажмите кнопку снова.')}
+                                </p>
+                            )}
+                        </div>
                     )}
                 </div>
                 <div ref={listContainerRef} className="flex-1 overflow-y-auto min-h-0">

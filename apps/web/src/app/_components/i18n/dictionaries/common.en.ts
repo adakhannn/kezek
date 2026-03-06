@@ -6,6 +6,7 @@ export const commonEn = {
     'common.map.loadingMap': 'Loading map...',
     'common.map.geoExplain': 'Allow location to find the nearest branch',
     'common.map.geoDenied': 'Location access denied. Pick a branch from the list.',
+    'common.map.geoDeniedHint': 'To allow: click the lock or info icon in the address bar → Site settings → Location → Allow, then try again.',
     'common.map.geoError': 'Could not get your location',
     'common.daysAgo': 'days ago',
     'common.editShort': 'Edit',
