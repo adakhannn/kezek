@@ -136,7 +136,6 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             const pm = new ym.Placemark(
                 [b.lat, b.lon],
                 {
-                    preset: 'islands#redIcon',
                     balloonContentBody: [
                         `<div class="p-2 min-w-[200px]">`,
                         `<div class="font-semibold">${escapeHtml(b.branchName)}</div>`,
@@ -147,21 +146,18 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                         `</div>`,
                     ].join(''),
                 },
-                {}
+                { preset: 'islands#redIcon' }
             );
             (pm as { events: { add: (type: string, fn: () => void) => void } }).events.add('click', () => setSelectedId(b.id));
             map.geoObjects.add(pm);
             placemarksRef.current.push(pm);
         });
-        // Метка «Вы здесь» — зелёный круг, чтобы отличаться от красных булавок филиалов
+        // Метка «Вы здесь» — зелёный круг (preset + iconColor в options), филиалы — красные булавки
         if (userPosition) {
             const userPm = new ym.Placemark(
                 [userPosition.lat, userPosition.lon],
-                {
-                    preset: 'islands#greenCircleDotIcon',
-                    balloonContentBody: escapeHtml(t('common.map.youAreHere', 'Вы здесь')),
-                },
-                {}
+                { balloonContentBody: escapeHtml(t('common.map.youAreHere', 'Вы здесь')) },
+                { preset: 'islands#circleDotIcon', iconColor: '#22c55e' }
             );
             map.geoObjects.add(userPm);
             placemarksRef.current.push(userPm);
