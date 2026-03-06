@@ -67,9 +67,7 @@ export async function GET(req: Request) {
                         categoryId: rawCategoryId || undefined,
                         cityId: rawCityId || undefined,
                     });
-                    const { data: bizData, error: bizError } = await bizQuery
-                        .select('id,name,slug,categories')
-                        .limit(500);
+                    const { data: bizData, error: bizError } = await bizQuery.limit(500);
                     if (bizError) {
                         logError('BranchesMap', 'Error loading businesses for branches map', bizError);
                         return createErrorResponse('internal', 'Не удалось загрузить компании для карты филиалов', bizError.message, 500);

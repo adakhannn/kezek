@@ -111,9 +111,7 @@ export async function GET(req: Request) {
                         categoryId: rawCategoryId || undefined,
                         cityId: rawCityId || undefined,
                     });
-                    const { data: bizData, error: bizError } = await bizQuery
-                        .select('id,name,slug,categories')
-                        .limit(500);
+                    const { data: bizData, error: bizError } = await bizQuery.limit(500);
                     if (bizError) {
                         logError('BranchesNearby', 'Error loading businesses', bizError);
                         return createErrorResponse('internal', 'Не удалось загрузить компании', bizError.message, 500);
