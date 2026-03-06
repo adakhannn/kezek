@@ -35,7 +35,8 @@ export async function middleware(req: NextRequest) {
     res.headers.set('X-Content-Type-Options', 'nosniff');
     res.headers.set('X-XSS-Protection', '1; mode=block');
     res.headers.set('Referrer-Policy', 'origin-when-cross-origin');
-    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    // geolocation=(self) — для страницы карты «Ближайший ко мне»
+    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
 
     const supabase = createServerClient(
         getSupabaseUrl(),

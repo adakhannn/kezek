@@ -45,23 +45,20 @@ export function RoleAndBusinessSwitcher() {
 
         const load = async () => {
             try {
-                const [{ data: sessionRes }, currentBizRes] = await Promise.all([
-                    supabase.auth.getSession(),
-                    fetch('/api/me/current-business', {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
-                    }).catch(() => null),
-                ]);
-
+                const { data: sessionRes } = await supabase.auth.getSession();
                 const user = sessionRes.session?.user;
                 if (!user) {
                     if (!cancelled) setState({ status: 'error' });
                     return;
                 }
 
-                const [{ data: isSuperData }, { data: roleKeys }] = await Promise.all([
+                const [{ data: isSuperData }, { data: roleKeys }, currentBizRes] = await Promise.all([
                     supabase.rpc('is_super_admin'),
                     supabase.rpc('my_role_keys'),
+                    fetch('/api/me/current-business', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                    }).catch(() => null),
                 ]);
 
                 const rolesArr = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
