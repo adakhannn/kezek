@@ -2,6 +2,7 @@ export const commonRu = {
     'common.map.title': 'Карта филиалов',
     'common.map.allCategories': 'Все категории',
     'common.map.findNearest': 'Ближайший ко мне',
+    'common.map.youAreHere': 'Вы здесь',
     'common.map.book': 'Записаться',
     'common.map.loadingMap': 'Загрузка карты...',
     'common.map.geoExplain': 'Покажите местоположение, чтобы найти ближайший филиал',

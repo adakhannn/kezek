@@ -2,6 +2,7 @@ export const commonKy = {
     'common.map.title': 'Филиалдар картасы',
     'common.map.allCategories': 'Бардык категориялар',
     'common.map.findNearest': 'Мага жакын',
+    'common.map.youAreHere': 'Сиз бул жердесиз',
     'common.map.book': 'Жазылуу',
     'common.map.loadingMap': 'Карта жүктөлүүдө...',
     'common.map.geoExplain': 'Жакын филиалды табуу үчүн жайгашкан жериңизди көрсөтүңүз',

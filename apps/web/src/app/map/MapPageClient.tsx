@@ -67,6 +67,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             const data = (json.data ?? []) as BranchItem[];
             setBranches(data);
             setNearbyList(null);
+            setUserPosition(null);
             const ids = Array.from(new Set(data.map((b) => b.categoryId).filter(Boolean))) as string[];
             setCategories(ids.map((id) => ({ id: id!, label: id })));
         } catch (e) {
@@ -151,7 +152,20 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             map.geoObjects.add(pm);
             placemarksRef.current.push(pm);
         });
-    }, [mapReady, displayList, t]);
+        // Метка «Вы здесь» при использовании «Ближайший ко мне»
+        if (userPosition) {
+            const userPm = new ym.Placemark(
+                [userPosition.lat, userPosition.lon],
+                {
+                    preset: 'islands#blueCircleDotIcon',
+                    balloonContentBody: escapeHtml(t('common.map.youAreHere', 'Вы здесь')),
+                },
+                {}
+            );
+            map.geoObjects.add(userPm);
+            placemarksRef.current.push(userPm);
+        }
+    }, [mapReady, displayList, userPosition, t]);
 
     const handleFindNearest = useCallback(() => {
         setGeoError(null);

@@ -2,6 +2,7 @@ export const commonEn = {
     'common.map.title': 'Branches map',
     'common.map.allCategories': 'All categories',
     'common.map.findNearest': 'Nearest to me',
+    'common.map.youAreHere': 'You are here',
     'common.map.book': 'Book',
     'common.map.loadingMap': 'Loading map...',
     'common.map.geoExplain': 'Allow location to find the nearest branch',
