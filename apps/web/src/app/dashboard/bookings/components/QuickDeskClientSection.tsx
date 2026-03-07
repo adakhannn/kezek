@@ -1,5 +1,8 @@
 'use client';
 
+import { useState } from 'react';
+
+import { SellVisitPackageModal } from './SellVisitPackageModal';
 import type { QuickDeskClientMode } from './useQuickDeskClient';
 import type { FoundUser } from './useQuickDeskClient';
 
@@ -38,6 +41,10 @@ export function QuickDeskClientSection({
     searchErr,
     t,
 }: QuickDeskClientSectionProps) {
+    const [showSellPackageModal, setShowSellPackageModal] = useState(false);
+    const selectedClient = foundUsers.find((u) => u.id === selectedClientId);
+    const canSellPackage = clientMode === 'existing' && selectedClientId && selectedClient;
+
     const modeBtn = (mode: QuickDeskClientMode, labelKey: string, hintKey: string) => (
         <button
             type="button"
@@ -105,11 +112,30 @@ export function QuickDeskClientSection({
                         </ul>
                     )}
                     {selectedClientId && foundUsers.some((u) => u.id === selectedClientId) && (
-                        <p className="text-xs text-green-600 dark:text-green-400">
-                            {t('bookings.desk.clientMode.found', '')}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs text-green-600 dark:text-green-400">
+                                {t('bookings.desk.clientMode.found', '')}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => setShowSellPackageModal(true)}
+                                className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                            >
+                                {t('dashboard.visitPackages.sell.button', 'Продать пакет')}
+                            </button>
+                        </div>
                     )}
                 </div>
+            )}
+
+            {canSellPackage && selectedClient && (
+                <SellVisitPackageModal
+                    isOpen={showSellPackageModal}
+                    onClose={() => setShowSellPackageModal(false)}
+                    clientId={selectedClientId}
+                    clientName={selectedClient.full_name}
+                    onSuccess={() => setShowSellPackageModal(false)}
+                />
             )}
 
             {clientMode === 'new' && (

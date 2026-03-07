@@ -1,9 +1,10 @@
 // apps/web/src/app/cabinet/ClientCabinet.tsx
 'use client';
 
-import {useState} from 'react';
+import { useState } from 'react';
 
 import BookingCard from './components/BookingCard';
+import MyVisitPackagesBlock from './components/MyVisitPackagesBlock';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
@@ -13,6 +14,7 @@ type Booking = {
     start_at: string;
     end_at: string;
     promotion_applied?: Record<string, unknown> | null;
+    subscription_applied?: Record<string, unknown> | null;
     service_id?: string | null;
     staff_id?: string | null;
     branch_id?: string | null;
@@ -80,6 +82,9 @@ export default function ClientCabinet({
 
     return (
         <div className="space-y-6">
+            {/* Пакеты визитов */}
+            <MyVisitPackagesBlock />
+
             {/* Заголовок */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200 dark:border-gray-800">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -162,6 +167,7 @@ export default function ClientCabinet({
                                         bizId={b.biz_id ?? business?.id}
                                         review={extractReview(b.reviews)}
                                         promotionApplied={b.promotion_applied}
+                                        subscriptionApplied={b.subscription_applied}
                                         canCancel
                                     />
                                 );
@@ -208,6 +214,7 @@ export default function ClientCabinet({
                                         branchId={b.branch_id ?? branch?.id}
                                         bizId={b.biz_id ?? business?.id}
                                         review={extractReview(b.reviews)}
+                                        subscriptionApplied={b.subscription_applied}
                                         canCancel={false}
                                     />
                                 );

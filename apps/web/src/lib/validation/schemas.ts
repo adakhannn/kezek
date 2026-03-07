@@ -290,3 +290,56 @@ export const staffFinanceByIdQuerySchema = z.object({
     date: dateStringSchema.optional(),
 }).strict();
 
+/**
+ * Схема для создания/редактирования типа пакета визитов (visit_package_plans)
+ */
+export const visitPackagePlanSchema = z.object({
+    name_ru: z.string().min(1, 'Название обязательно').max(200, 'Название слишком длинное'),
+    name_ky: z.string().max(200).optional().nullable(),
+    name_en: z.string().max(200).optional().nullable(),
+    visit_count: z.number().int().positive('Количество визитов должно быть больше 0').max(1000),
+    validity_days: z.number().int().positive('Срок действия в днях должен быть больше 0').max(3650),
+    discount_type: z.enum(['percent', 'fixed_price']),
+    discount_value: z.number().nonnegative('Значение скидки не может быть отрицательным').max(100000),
+    service_id: uuidSchema.optional().nullable(),
+    branch_ids: z.array(uuidSchema).optional().nullable(),
+}).strict().refine(
+    (data) => {
+        if (data.discount_type === 'percent') return data.discount_value <= 100;
+        return true;
+    },
+    { message: 'При типе "percent" значение не должно превышать 100', path: ['discount_value'] }
+);
+
+/**
+ * Схема для PATCH типа пакета (все поля опциональны, кроме is_active при деактивации)
+ */
+export const visitPackagePlanPatchSchema = z.object({
+    name_ru: z.string().min(1).max(200).optional(),
+    name_ky: z.string().max(200).optional().nullable(),
+    name_en: z.string().max(200).optional().nullable(),
+    visit_count: z.number().int().positive().max(1000).optional(),
+    validity_days: z.number().int().positive().max(3650).optional(),
+    discount_type: z.enum(['percent', 'fixed_price']).optional(),
+    discount_value: z.number().nonnegative().max(100000).optional(),
+    service_id: uuidSchema.optional().nullable(),
+    branch_ids: z.array(uuidSchema).optional().nullable(),
+    is_active: z.boolean().optional(),
+}).strict();
+
+/**
+ * Схема для продажи пакета клиенту (POST body)
+ */
+export const sellVisitPackageSchema = z.object({
+    plan_id: uuidSchema,
+}).strict();
+
+/**
+ * Схема для query GET /api/dashboard/visit-packages
+ */
+export const visitPackagesListQuerySchema = z.object({
+    clientId: uuidSchema.optional(),
+    branchId: uuidSchema.optional(),
+    status: z.enum(['active', 'expired', 'all']).optional().default('all'),
+}).strict();
+

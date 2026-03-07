@@ -57,6 +57,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
     // Билд должен падать при ошибках типов
     typescript: { ignoreBuildErrors: false },
+
+    // /favicon.ico отдаём нашу иконку (icon-192.png), а не дефолтную от Vercel/Next
+    async rewrites() {
+        return [{ source: '/favicon.ico', destination: '/icon-192.png' }];
+    },
     
     // Оптимизации для bundle size
     compiler: {

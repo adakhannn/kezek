@@ -197,5 +197,108 @@ describe('/api/bookings/[id]/mark-attendance', () => {
             expect(data.ok).toBe(false);
         });
     });
+
+    describe('Пакет визитов (visit package)', () => {
+        test('при применении пакета RPC возвращает applied: true и plan_id — в ответе subscription_applied и promotion_info с названием плана', async () => {
+            mockAdmin.maybeSingle.mockResolvedValueOnce({
+                data: {
+                    id: 'test-booking-id',
+                    biz_id: 'test-biz-id',
+                    start_at: new Date(Date.now() - 86400000).toISOString(),
+                    status: 'confirmed',
+                },
+                error: null,
+            });
+
+            mockAdmin.rpc.mockResolvedValue({
+                data: {
+                    applied: true,
+                    plan_id: 'plan-uuid',
+                    plan_name_ru: '5 визитов',
+                    final_amount: 100,
+                    remaining_after: 4,
+                },
+                error: null,
+            });
+
+            const req = new Request('http://localhost/api/bookings/test-booking-id/mark-attendance', {
+                method: 'POST',
+                body: JSON.stringify({ attended: true }),
+            });
+
+            const response = await POST(req, { params: { id: 'test-booking-id' } });
+            const data = await response.json();
+
+            expect(response.status).toBe(200);
+            expect(data.ok).toBe(true);
+            expect(data.status).toBe('paid');
+            expect(data.subscription_applied).toBe(true);
+            expect(data.promotion_info).toBeDefined();
+            expect(data.promotion_info?.title).toBe('5 визитов');
+        });
+
+        test('если RPC возвращает applied: false (нет подходящего пакета) — subscription_applied не устанавливается', async () => {
+            mockAdmin.maybeSingle.mockResolvedValueOnce({
+                data: {
+                    id: 'test-booking-id',
+                    biz_id: 'test-biz-id',
+                    start_at: new Date(Date.now() - 86400000).toISOString(),
+                    status: 'confirmed',
+                },
+                error: null,
+            });
+
+            mockAdmin.rpc.mockResolvedValue({
+                data: { applied: false, reason: 'No applicable visit package' },
+                error: null,
+            });
+
+            const req = new Request('http://localhost/api/bookings/test-booking-id/mark-attendance', {
+                method: 'POST',
+                body: JSON.stringify({ attended: true }),
+            });
+
+            const response = await POST(req, { params: { id: 'test-booking-id' } });
+            const data = await response.json();
+
+            expect(response.status).toBe(200);
+            expect(data.ok).toBe(true);
+            expect(data.status).toBe('paid');
+            expect(data.subscription_applied).not.toBe(true);
+        });
+
+        test('повторное списание с той же брони: RPC возвращает applied: false — в ответе нет subscription_applied', async () => {
+            mockAdmin.maybeSingle.mockResolvedValueOnce({
+                data: {
+                    id: 'test-booking-id',
+                    biz_id: 'test-biz-id',
+                    start_at: new Date(Date.now() - 86400000).toISOString(),
+                    status: 'confirmed',
+                },
+                error: null,
+            });
+
+            mockAdmin.rpc.mockResolvedValue({
+                data: {
+                    applied: false,
+                    reason: 'No applicable visit package',
+                },
+                error: null,
+            });
+
+            const req = new Request('http://localhost/api/bookings/test-booking-id/mark-attendance', {
+                method: 'POST',
+                body: JSON.stringify({ attended: true }),
+            });
+
+            const response = await POST(req, { params: { id: 'test-booking-id' } });
+            const data = await response.json();
+
+            expect(response.status).toBe(200);
+            expect(data.ok).toBe(true);
+            expect(data.status).toBe('paid');
+            expect(data.subscription_applied).not.toBe(true);
+        });
+    });
 });
 

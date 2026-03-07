@@ -161,21 +161,35 @@ export async function POST(req: Request, context: unknown) {
                 );
 
                 if (!rpcError) {
-                    const result: PromotionApplicationResult = promotionResult;
+                    const result = promotionResult as PromotionApplicationResult & {
+                        plan_id?: string;
+                        plan_name_ru?: string;
+                        promotion_title?: string;
+                        final_amount?: number;
+                        remaining_after?: number;
+                    };
                     if (newStatus === 'paid' && result) {
                         const applied = result.applied || false;
                         const promotionApplied = normalizePromotionApplied(result);
+                        const isPackage = Boolean(result.plan_id);
+                        const title =
+                            result.plan_name_ru ??
+                            result.promotion_title ??
+                            promotionApplied?.promotion_title ??
+                            '';
 
                         return createSuccessResponse(undefined, {
                             status: newStatus,
-                            promotion_applied: applied,
+                            promotion_applied: applied && !isPackage,
+                            subscription_applied: applied && isPackage,
                             promotion_info:
-                                applied && promotionApplied
+                                applied && (promotionApplied || title)
                                     ? {
-                                          title: promotionApplied.promotion_title || '',
-                                          discount_percent: promotionApplied.discount_percent || 0,
-                                          discount_amount: promotionApplied.discount_amount || 0,
-                                          final_amount: promotionApplied.final_amount || 0,
+                                          title,
+                                          discount_percent: promotionApplied?.discount_percent ?? 0,
+                                          discount_amount: promotionApplied?.discount_amount ?? 0,
+                                          final_amount:
+                                              promotionApplied?.final_amount ?? result.final_amount ?? 0,
                                       }
                                     : null,
                         });

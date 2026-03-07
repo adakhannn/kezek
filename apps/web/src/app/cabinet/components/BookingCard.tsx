@@ -30,6 +30,7 @@ export default function BookingCard({
                                         canCancel,
                                         review: initialReview,
                                         promotionApplied,
+                                        subscriptionApplied,
                                     }: {
     bookingId: string;
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
@@ -46,6 +47,7 @@ export default function BookingCard({
     canCancel: boolean;
     review?: { id: string; rating: number; comment: string | null } | null;
     promotionApplied?: Record<string, unknown> | null;
+    subscriptionApplied?: Record<string, unknown> | null;
 }) {
     const [showMap, setShowMap] = useState(false);
     const [openReview, setOpenReview] = useState(false);
@@ -294,6 +296,31 @@ export default function BookingCard({
                     </div>
                 </div>
             )}
+
+            {/* Оплачено пакетом визитов */}
+            {subscriptionApplied && typeof subscriptionApplied === 'object' && ('plan_id' in subscriptionApplied || 'plan_name_ru' in subscriptionApplied || 'promotion_title' in subscriptionApplied) && (() => {
+                const name = String((subscriptionApplied as Record<string, unknown>).plan_name_ru ?? (subscriptionApplied as Record<string, unknown>).promotion_title ?? '');
+                const finalAmount = (subscriptionApplied as Record<string, unknown>).final_amount;
+                return (
+                    <div className="mb-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 dark:border-indigo-800 dark:bg-indigo-950/40">
+                        <div className="flex items-start gap-2">
+                            <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            <div className="flex-1">
+                                <p className="text-xs font-medium text-indigo-900 dark:text-indigo-100">
+                                    {t('cabinet.bookings.card.paidWithPackage', 'Оплачено пакетом')}: «{name}»
+                                    {finalAmount != null && (
+                                        <span className="ml-2 font-semibold text-indigo-800 dark:text-indigo-200">
+                                            {t('cabinet.bookings.card.finalAmount', 'Итоговая сумма:')} {String(finalAmount)} {t('booking.currency', 'сом')}
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Время */}
             <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
