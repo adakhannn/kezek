@@ -11,7 +11,8 @@
 module.exports = {
     preset: 'jest-expo',
     transformIgnorePatterns: [
-        'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@supabase|@tanstack)',
+        // Transform react-native and expo (including inside pnpm store)
+        'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@supabase|@tanstack|.pnpm/[^/]+/node_modules/((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?))',
     ],
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
     testMatch: [

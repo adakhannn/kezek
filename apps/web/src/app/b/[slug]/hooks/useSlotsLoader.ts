@@ -1,6 +1,6 @@
+import { filterSlotsByContext, resolveScheduleContext, type Slot as ScheduleSlot } from '@core-domain/schedule';
 import { useEffect, useRef, useState } from 'react';
 
-import { filterSlotsByContext, resolveScheduleContext, type Slot as ScheduleSlot } from '@core-domain/schedule';
 
 import { logDebug, logWarn } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
@@ -250,10 +250,10 @@ export function useSlotsLoader(params: {
 
                     if (errorMessage.includes('not assigned') || errorMessage.includes('не прикреплён')) {
                         userMessage = t('booking.error.masterNotAssigned', 'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.');
-                    } else if (errorMessage.includes('schedule') || errorMessage.includes('расписание')) {
-                        userMessage = t('booking.error.noSchedule', 'У выбранного мастера нет расписания на выбранный день. Выберите другой день.');
                     } else if (errorMessage.includes('conflict') || errorMessage.includes('конфликт')) {
                         userMessage = t('booking.error.scheduleConflict', 'Есть конфликт в расписании мастера на выбранный день. Выберите другой день или мастера.');
+                    } else if (errorMessage.includes('schedule') || errorMessage.includes('расписание')) {
+                        userMessage = t('booking.error.noSchedule', 'У выбранного мастера нет расписания на выбранный день. Выберите другой день.');
                     } else if (rpcError.code === 'PGRST301' || rpcError.code === 'PGRST116') {
                         userMessage = t('booking.error.technical', 'Произошла техническая ошибка. Пожалуйста, обновите страницу или попробуйте позже.');
                     }

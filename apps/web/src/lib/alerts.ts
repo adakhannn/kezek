@@ -2,7 +2,16 @@ import { Resend } from 'resend';
 
 import { logDebug, logError } from './log';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendClient: Resend | null = null;
+
+function getResend(): Resend {
+    if (!resendClient) {
+        const key = process.env.RESEND_API_KEY;
+        if (!key) throw new Error('RESEND_API_KEY is not configured');
+        resendClient = new Resend(key);
+    }
+    return resendClient;
+}
 
 const ALERT_EMAIL_TO = process.env.ALERT_EMAIL_TO || process.env.EMAIL_FROM || 'admin@kezek.kg';
 const ALERT_EMAIL_FROM = process.env.EMAIL_FROM || 'Kezek <noreply@mail.kezek.kg>';
@@ -78,7 +87,7 @@ export async function sendAlertEmail(alerts: Alert[]): Promise<{ success: boolea
     `;
 
     try {
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await getResend().emails.send({
             from: ALERT_EMAIL_FROM,
             to: ALERT_EMAIL_TO,
             subject,

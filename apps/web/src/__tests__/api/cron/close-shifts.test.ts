@@ -38,7 +38,7 @@ describe('/api/cron/close-shifts', () => {
 
             expect(response.status).toBe(401);
             expect(data.ok).toBe(false);
-            expect(data.error).toBe('Unauthorized');
+            expect(data.error).toBe('auth');
         });
 
         test('должен отклонить запрос с неверным секретным ключом', async () => {
@@ -57,15 +57,15 @@ describe('/api/cron/close-shifts', () => {
         });
 
         test('должен принять запрос с правильным секретным ключом', async () => {
-            // Мокируем цепочку вызовов для поиска открытых смен
-            const mockQuery = {
+            // Мокируем цепочку: from().select().eq('status','open').eq('shift_date', ymd)
+            const mockChain = {
+                select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
-                select: jest.fn().mockResolvedValue({
-                    data: [], // нет открытых смен
-                    error: null,
-                }),
             };
-            mockSupabase.from.mockReturnValueOnce(mockQuery);
+            (mockChain.eq as jest.Mock).mockImplementationOnce(() => mockChain).mockImplementationOnce(() =>
+                Promise.resolve({ data: [], error: null })
+            );
+            mockSupabase.from.mockReturnValueOnce(mockChain);
 
             const req = new Request('http://localhost/api/cron/close-shifts', {
                 method: 'GET',

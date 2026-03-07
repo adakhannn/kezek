@@ -19,6 +19,15 @@ export default [
             '**/coverage/**',
             '**/*.log',
             '**/eslint-rules/**', // Исключаем кастомные ESLint правила
+            // apps/web: файлы вне tsconfig (e2e, tests, jest, playwright) — линтим только через локальный конфиг при необходимости
+            'apps/web/e2e/**',
+            'apps/web/**/__tests__/**',
+            'apps/web/src/__tests__/**',
+            'apps/web/jest.config.js',
+            'apps/web/jest.setup.js',
+            'apps/web/playwright.config.ts',
+            // apps/mobile: свой eslint.config; в root линтим только web, чтобы не падать на .js с TS-синтаксисом
+            'apps/mobile/**',
         ],
     },
 

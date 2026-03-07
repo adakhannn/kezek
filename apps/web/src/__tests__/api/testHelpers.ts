@@ -163,6 +163,7 @@ const LEGACY_ERROR_CODE_MAP: Record<string, string> = {
     BOOKING_NOT_FOUND: 'not_found',
     FORBIDDEN: 'forbidden',
     REVIEW_ALREADY_EXISTS: 'conflict',
+    REVIEW_NOT_FOUND: 'not_found',
     // WhatsApp и прочие
     missing_data: 'validation',
     invalid_phone: 'validation',

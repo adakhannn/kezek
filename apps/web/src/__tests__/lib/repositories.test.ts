@@ -156,10 +156,9 @@ describe('SupabaseStaffRepository', () => {
             eq: eqMock,
         }).mockReturnValueOnce({
             eq: eqMock,
-        }).mockReturnValueOnce({
-            // последний вызов возвращает промис результата
-            then: selectResultMock.then.bind(selectResultMock),
-        } as unknown as Promise<unknown>);
+        }).mockReturnValueOnce(
+            Promise.resolve({ data: null, error: null, count: 1 })
+        );
 
         const repo = new SupabaseStaffRepository(supabase);
         const exists = await repo.existsActiveStaff({

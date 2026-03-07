@@ -108,7 +108,7 @@ describe('/api/services/[id]/delete', () => {
             });
 
             const res = await POST(req, { params: { id: serviceId } });
-            await expectErrorResponse(res, 400, 'HAS_BOOKINGS');
+            await expectErrorResponse(res, 409, 'conflict');
         });
     });
 

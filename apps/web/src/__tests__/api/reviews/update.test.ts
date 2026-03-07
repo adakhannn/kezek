@@ -243,7 +243,7 @@ describe('/api/reviews/update', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('id', reviewId);
+            expect(data.data).toHaveProperty('id', reviewId);
         });
     });
 });

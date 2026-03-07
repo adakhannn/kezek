@@ -4,7 +4,7 @@
  */
 
 import { POST } from '@/app/api/auth/telegram/login/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
 
 setupApiTestMocks();
 

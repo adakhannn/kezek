@@ -74,6 +74,6 @@ describe('rateLimit (in-memory fallback)', () => {
     const req = createRequest('203.0.113.1');
     expect(getRateLimitIdentifier(req)).toBe('203.0.113.1');
   });
-}
+});
 
 

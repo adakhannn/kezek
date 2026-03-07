@@ -13,6 +13,7 @@ const customJestConfig = {
         '^@/(.*)$': '<rootDir>/src/$1',
         '^@core-domain/(.*)$': '<rootDir>/../../packages/core-domain/src/$1',
         '^@shared-client/(.*)$': '<rootDir>/../../packages/shared-client/src/$1',
+        '^next-intl$': '<rootDir>/src/__tests__/mocks/next-intl.ts',
     },
     testMatch: [
         '**/__tests__/**/*.test.[jt]s?(x)',
