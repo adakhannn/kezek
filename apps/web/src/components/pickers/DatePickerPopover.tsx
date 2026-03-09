@@ -76,12 +76,15 @@ export default function DatePickerPopover({
     min,
     max,
     className = '',
+    inline = false,
 }: {
     value: string; // 'yyyy-MM-dd'
     onChange: (val: string) => void;
     min?: string; // 'yyyy-MM-dd'
     max?: string; // 'yyyy-MM-dd'
     className?: string;
+    /** Если true, календарь показывается всегда под кнопкой (без попапа) */
+    inline?: boolean;
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const popoverRef = useRef<HTMLDivElement>(null);
@@ -130,6 +133,77 @@ export default function DatePickerPopover({
     const MONTHS = MONTHS_BY_LOCALE[locale];
     const WEEKDAYS_SHORT = WEEKDAYS_SHORT_BY_LOCALE[locale];
 
+    const dayPickerProps = {
+        mode: 'single' as const,
+        selected,
+        onSelect: (d: Date | undefined) => {
+            if (d) {
+                onChange(toYmdLocal(d));
+                if (!inline) setIsOpen(false);
+            }
+        },
+        disabled: (date: Date) => {
+            if (minDate && date < minDate) return true;
+            if (maxDate && date > maxDate) return true;
+            return false;
+        },
+        weekStartsOn: 1 as const,
+        showOutsideDays: true,
+        formatters: {
+            formatMonthCaption: (month: Date) => MONTHS[month.getMonth()] + ' ' + month.getFullYear(),
+            formatWeekdayName: (day: Date) => WEEKDAYS_SHORT[day.getDay()],
+        },
+        labels: {
+            labelMonthDropdown: () => t('datePicker.monthLabel', 'Месяц'),
+            labelYearDropdown: () => t('datePicker.yearLabel', 'Год'),
+            labelNext: () => t('datePicker.nextMonth', 'Следующий месяц'),
+            labelPrevious: () => t('datePicker.prevMonth', 'Предыдущий месяц'),
+        },
+        classNames: {
+            root: 'w-full',
+            months: 'w-full',
+            month: 'w-full',
+            caption: 'font-semibold text-sm px-2 py-1',
+            caption_label: '',
+            caption_dropdowns: '',
+            dropdown: '',
+            dropdown_month: '',
+            dropdown_year: '',
+            nav: '',
+            nav_button: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
+            nav_button_previous: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
+            nav_button_next: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
+            table: 'w-full',
+            head_row: '',
+            head_cell: 'text-[11px] text-gray-500 dark:text-gray-400',
+            row: '',
+            cell: 'p-0',
+            day: 'text-sm sm:text-[12px] px-2 py-2 sm:py-1 m-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] flex items-center justify-center touch-manipulation',
+            day_selected: 'bg-gray-900 text-white hover:bg-gray-900 dark:bg-gray-100 dark:text-gray-900',
+            day_today: 'ring-1 ring-gray-500 dark:ring-gray-400',
+            day_disabled: 'opacity-40 cursor-not-allowed hover:bg-transparent',
+            day_outside: 'text-gray-400 dark:text-gray-600',
+            day_hidden: 'invisible',
+        },
+    };
+
+    const calendarEl = <DayPicker {...dayPickerProps} />;
+
+    if (inline) {
+        return (
+            <div className={`${className}`}>
+                <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900 dark:p-2 flex justify-center">
+                    {calendarEl}
+                </div>
+                {selected && (
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        {t('datePicker.selected', 'Выбрано:')} {displayValue}
+                    </p>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className={`relative ${className}`}>
             <button
@@ -146,7 +220,6 @@ export default function DatePickerPopover({
                 }
                 className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[40px] sm:py-2 sm:text-sm touch-manipulation"
             >
-                {/* Иконка календаря */}
                 <svg
                     className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400"
                     fill="none"
@@ -163,7 +236,6 @@ export default function DatePickerPopover({
                     />
                 </svg>
                 <span className="flex-1 text-left">{displayValue}</span>
-                {/* Стрелка вниз */}
                 <svg
                     className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                     fill="none"
@@ -179,8 +251,6 @@ export default function DatePickerPopover({
                     />
                 </svg>
             </button>
-
-            {/* Попап с календарем */}
             {isOpen && (
                 <div
                     ref={popoverRef}
@@ -189,63 +259,7 @@ export default function DatePickerPopover({
                     aria-label={t('datePicker.dialogLabel', 'Выбор даты')}
                     className="absolute left-0 top-full z-50 mt-2 border rounded-lg p-3 bg-white dark:bg-[#0b0b0d] shadow-lg sm:left-auto sm:right-0 sm:p-2 max-w-[calc(100vw-2rem)] sm:max-w-none"
                 >
-                    <DayPicker
-                        mode="single"
-                        selected={selected}
-                        onSelect={(d) => {
-                            if (d) {
-                                onChange(toYmdLocal(d));
-                                setIsOpen(false);
-                            }
-                        }}
-                        disabled={(date) => {
-                            if (minDate && date < minDate) return true;
-                            if (maxDate && date > maxDate) return true;
-                            return false;
-                        }}
-                        weekStartsOn={1}
-                        showOutsideDays
-                        formatters={{
-                            formatMonthCaption: (month) => {
-                                return MONTHS[month.getMonth()] + ' ' + month.getFullYear();
-                            },
-                            formatWeekdayName: (day) => {
-                                return WEEKDAYS_SHORT[day.getDay()];
-                            },
-                        }}
-                        labels={{
-                            labelMonthDropdown: () => t('datePicker.monthLabel', 'Месяц'),
-                            labelYearDropdown: () => t('datePicker.yearLabel', 'Год'),
-                            labelNext: () => t('datePicker.nextMonth', 'Следующий месяц'),
-                            labelPrevious: () => t('datePicker.prevMonth', 'Предыдущий месяц'),
-                        }}
-                        classNames={{
-                            root: 'w-full',
-                            months: 'w-full',
-                            month: 'w-full',
-                            caption: 'font-semibold text-sm px-2 py-1',
-                            caption_label: '',
-                            caption_dropdowns: '',
-                            dropdown: '',
-                            dropdown_month: '',
-                            dropdown_year: '',
-                            nav: '',
-                            nav_button: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
-                            nav_button_previous: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
-                            nav_button_next: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
-                            table: 'w-full',
-                            head_row: '',
-                            head_cell: 'text-[11px] text-gray-500 dark:text-gray-400',
-                            row: '',
-                            cell: 'p-0',
-                            day: 'text-sm sm:text-[12px] px-2 py-2 sm:py-1 m-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] flex items-center justify-center touch-manipulation',
-                            day_selected: 'bg-gray-900 text-white hover:bg-gray-900 dark:bg-gray-100 dark:text-gray-900',
-                            day_today: 'ring-1 ring-gray-500 dark:ring-gray-400',
-                            day_disabled: 'opacity-40 cursor-not-allowed hover:bg-transparent',
-                            day_outside: 'text-gray-400 dark:text-gray-600',
-                            day_hidden: 'invisible',
-                        }}
-                    />
+                    {calendarEl}
                 </div>
             )}
         </div>

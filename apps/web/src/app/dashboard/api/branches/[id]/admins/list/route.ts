@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import {NextResponse} from 'next/server';
 
 import {getBizContextForManagers} from '@/lib/authBiz';
+import {createSupabaseAdminClient} from '@/lib/supabaseHelpers';
 
 export async function POST(_: Request, ctx: unknown) {
     try {
@@ -13,15 +14,16 @@ export async function POST(_: Request, ctx: unknown) {
                 : {};
         const branchId = params.id;
 
-        const {supabase} = await getBizContextForManagers(); // проверка доступа уже внутри
-        const {data, error} = await supabase.rpc('branch_admins_effective', {p_branch_id: branchId});
+        await getBizContextForManagers(); // проверка доступа уже внутри
+        const admin = createSupabaseAdminClient();
+        const {data, error} = await admin.rpc('branch_admins_effective', {p_branch_id: branchId});
         if (error) return NextResponse.json({ok: false, error: error.message}, {status: 400});
 
-        // Подтянем e-mail/phone/full_name (через твою вьюху auth_users_view и profiles)
+        // Подтянем e-mail/phone/full_name через service_role (auth_users_view недоступна для authenticated после Security Advisor)
         const userIds: string[] = Array.from(new Set((data ?? []).map((x: { user_id: number }) => x.user_id)));
         let metaMap = new Map<string, { email: string | null; phone: string | null; full_name: string | null }>();
         if (userIds.length) {
-            const {data: users} = await supabase
+            const {data: users} = await admin
                 .from('auth_users_view')
                 .select('id,email,phone,full_name')
                 .in('id', userIds);

@@ -676,6 +676,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                         }}
                                         min={todayStr}
                                         max={maxStr}
+                                        inline
                                     />
                                     {dayStr && (
                                         <div className="text-xs text-gray-600 dark:text-gray-400">

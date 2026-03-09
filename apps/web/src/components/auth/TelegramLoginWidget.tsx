@@ -139,8 +139,17 @@ function TelegramLoginWidgetComponent({
         };
     }, [size, cornerRadius, requestAccess, router]); // Убрали onSuccess, onError, redirectTo из зависимостей
 
+    const isLocalhost =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
     return (
         <div className="relative w-full">
+            {isLocalhost && (
+                <p className="mb-2 text-xs text-amber-600 dark:text-amber-400 text-center">
+                    Telegram не поддерживает <code className="bg-black/5 dark:bg-white/10 px-1 rounded">localhost</code> в @BotFather. Чтобы тестировать вход локально: запустите туннель (ngrok, localhost.run), откройте сайт по выданному URL и добавьте этот домен в @BotFather → <code className="bg-black/5 dark:bg-white/10 px-1 rounded">/setdomain</code>. Или проверяйте вход на проде.
+                </p>
+            )}
             {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 rounded-lg z-10">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">

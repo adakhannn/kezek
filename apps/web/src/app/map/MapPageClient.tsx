@@ -320,7 +320,9 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                                     {t('common.map.loadingMap', 'Загрузка карты...')} — ошибка
                                 </p>
                                 <p className="text-sm max-w-lg text-center break-words" title={mapError}>
-                                    {mapError}
+                                    {mapError.includes('NEXT_PUBLIC_YANDEX_MAPS_API_KEY is not set')
+                                        ? 'Задайте NEXT_PUBLIC_YANDEX_MAPS_API_KEY в apps/web/.env.local. Ключ: https://developer.tech.yandex.ru/'
+                                        : mapError}
                                 </p>
                             </>
                         ) : (
