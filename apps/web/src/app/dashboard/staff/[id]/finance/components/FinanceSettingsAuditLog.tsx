@@ -1,9 +1,10 @@
 'use client';
 
+import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { formatInTimeZone } from 'date-fns-tz';
+import { logError } from '@/lib/log';
 
 type FieldChange = { field: string; old_value: number | null; new_value: number | null };
 type AuditLogEntry = {
@@ -15,6 +16,7 @@ type AuditLogEntry = {
     message: string | null;
 };
 import { ru, enUS } from 'date-fns/locale';
+
 import { TZ } from '@/lib/time';
 
 const FIELD_LABELS: Record<string, string> = {
@@ -38,9 +40,10 @@ export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }
         let cancelled = false;
         setLoading(true);
         setError(null);
-        fetch(`/api/dashboard/staff/${staffId}/finance/audit-log`)
+        const url = `/api/dashboard/staff/${staffId}/finance/audit-log`;
+        fetch(url)
             .then((res) => {
-                if (!res.ok) throw new Error('Failed to load');
+                if (!res.ok) throw new Error(`HTTP_${res.status}`);
                 return res.json();
             })
             .then((data) => {
@@ -48,7 +51,13 @@ export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }
                 setEntries(data.data?.entries ?? []);
             })
             .catch((e) => {
-                if (!cancelled) setError(e instanceof Error ? e.message : 'Error');
+                const message = e instanceof Error ? e.message : String(e);
+                logError('FinanceSettingsAuditLog', 'Failed to load audit log', {
+                    staffId,
+                    url,
+                    message,
+                });
+                if (!cancelled) setError(message);
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);

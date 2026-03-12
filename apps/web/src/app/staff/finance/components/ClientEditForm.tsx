@@ -4,7 +4,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 
 import type { ShiftItem, Booking, ServiceName } from '../types';
-import { getServiceName } from '../utils';
+import { deduplicateServiceNameString, getServiceName } from '../utils';
 import { validateShiftItem } from '../utils/validation';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -94,11 +94,15 @@ function ClientEditFormInner({
 
     const handleBookingChange = (bookingId: string | null) => {
         const booking = bookingId ? bookings.find((b) => b.id === bookingId) : null;
-        const service = booking?.services
+        const servicesArray = booking?.services
             ? Array.isArray(booking.services)
-                ? booking.services[0]
-                : booking.services
-            : null;
+                ? booking.services
+                : [booking.services]
+            : [];
+        const serviceLabel =
+            servicesArray.length > 0
+                ? servicesArray.map((s) => getServiceName(s, locale)).join(' + ')
+                : null;
         
         // Если bookingId убран, генерируем автоматическое имя "Клиент N"
         let newClientName = item.clientName;
@@ -127,7 +131,7 @@ function ClientEditFormInner({
             clientName: booking
                 ? booking.client_name || booking.client_phone || item.clientName
                 : newClientName,
-            serviceName: service ? service.name_ru : item.serviceName,
+            serviceName: serviceLabel ?? item.serviceName,
         });
     };
 
@@ -142,6 +146,35 @@ function ClientEditFormInner({
     const handleConsumablesAmountChange = (consumablesAmount: number) => {
         onUpdate(idx, { ...item, consumablesAmount });
     };
+
+    // Для клиентов без брони (`bookingId` пустой) поддерживаем выбор нескольких услуг через чекбоксы.
+    const isWalkIn = !item.bookingId;
+    const [selectedServiceNames, setSelectedServiceNames] = useState<string[]>(() =>
+        item.serviceName ? item.serviceName.split('+').map((s) => s.trim()).filter(Boolean) : []
+    );
+
+    // Синхронизируем локальное состояние чекбоксов, если serviceName обновили извне (например, при загрузке из БД)
+    useEffect(() => {
+        const parts = item.serviceName ? item.serviceName.split('+').map((s) => s.trim()).filter(Boolean) : [];
+        setSelectedServiceNames(parts);
+    }, [item.serviceName]);
+
+    const toggleServiceForWalkIn = (label: string) => {
+        if (!isWalkIn || !isOpen || isReadOnly) return;
+        setSelectedServiceNames((prev) => {
+            const exists = prev.includes(label);
+            return exists ? prev.filter((n) => n !== label) : [...prev, label];
+        });
+    };
+
+    // После изменения набора чекбоксов обновляем serviceName в родителе (FinancePage) один раз, после рендера
+    useEffect(() => {
+        if (!isWalkIn) return;
+        const nextLabel = selectedServiceNames.join(' + ');
+        if (nextLabel !== (item.serviceName || '')) {
+            handleServiceChange(nextLabel);
+        }
+    }, [isWalkIn, selectedServiceNames]);
 
     // Обработка горячих клавиш
     useEffect(() => {
@@ -184,6 +217,13 @@ function ClientEditFormInner({
             };
         }
     }, [isOpen, isReadOnly, hasErrors, onSave, onCollapse, idx]);
+
+    const isMultipleServiceSelect = !item.bookingId;
+    const serviceSelectValue = isMultipleServiceSelect
+        ? (item.serviceName
+            ? item.serviceName.split('+').map((part) => part.trim()).filter(Boolean)
+            : [])
+        : (item.serviceName || '');
 
     return (
         <div className="p-5 bg-gradient-to-br from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-gray-900 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 shadow-lg space-y-5">
@@ -229,13 +269,16 @@ function ClientEditFormInner({
                         >
                             <option value="">{t('staff.finance.clients.selectFromBookings', 'Выберите клиента из записей...')}</option>
                             {bookings.map((b) => {
-                                const service = b.services
+                                const servicesList = b.services
                                     ? Array.isArray(b.services)
-                                        ? b.services[0]
-                                        : b.services
-                                    : null;
+                                        ? b.services
+                                        : [b.services]
+                                    : [];
                                 const clientLabel = b.client_name || b.client_phone || t('staff.finance.clients.client', 'Клиент');
-                                const serviceLabel = service ? getServiceName(service, locale) : '';
+                                const serviceLabel =
+                                    servicesList.length > 0
+                                        ? servicesList.map((s) => getServiceName(s, locale)).join(' + ')
+                                        : '';
                                 const time = formatInTimeZone(new Date(b.start_at), TZ, 'HH:mm');
                                 return (
                                     <option key={b.id} value={b.id}>
@@ -267,41 +310,72 @@ function ClientEditFormInner({
                         )}
                         {validationErrors.clientName && (
                             <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                                {validationErrors.clientName}
+                                {t(validationErrors.clientName)}
                             </p>
                         )}
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                            {t('staff.finance.clients.service', 'Услуга')}
-                            <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
-                                ({t('staff.finance.clients.serviceHint', 'опционально, до 200 символов')})
-                            </span>
-                        </label>
-                        <select
-                            className={`w-full rounded-lg border-2 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 transition-all shadow-sm hover:shadow ${
-                                validationErrors.serviceName
-                                    ? 'border-red-500 dark:border-red-600 focus:border-red-500 focus:ring-red-500/20'
-                                    : 'border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-indigo-500/20'
-                            }`}
-                            value={item.serviceName || ''}
-                            onChange={(e) => handleServiceChange(e.target.value)}
-                            onBlur={() => handleBlur('serviceName')}
-                            disabled={!isOpen || isReadOnly}
-                        >
-                            <option value="">{t('staff.finance.clients.selectService', 'Выберите услугу...')}</option>
-                            {serviceOptions.map((svc) => {
-                                const displayName = getServiceName(svc, locale);
-                                const value = svc.name_ru;
-                                return (
-                                    <option key={value} value={value}>
-                                        {displayName}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </div>
+                    {/* Для клиентов ИЗ ЗАПИСИ выбор услуг не нужен — они уже заданы в брони.
+                        Блок ниже показывается только для клиентов "с улицы". */}
+                    {isWalkIn && (
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                {t('staff.finance.clients.service', 'Услуга / комментарий')}
+                                <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                                    {t(
+                                        'staff.finance.clients.serviceHintMulti',
+                                        'отметьте одну или несколько услуг; они будут сохранены в одну строку',
+                                    )}
+                                </span>
+                            </label>
+
+                            {/* Чекбоксы для выбора нескольких услуг.
+                                Используем только базовые услуги (без уже составленных "A + B"),
+                                чтобы не дублировать комплекс как отдельный вариант. */}
+                            <div className="space-y-2">
+                                <div className="flex flex-wrap gap-2">
+                                    {Array.from(
+                                        new Set(
+                                            serviceOptions
+                                                .map((svc) => getServiceName(svc, locale))
+                                                .filter((label) => label && !label.includes('+')),
+                                        ),
+                                    ).map((label) => {
+                                        const checked = selectedServiceNames.includes(label);
+                                        return (
+                                            <label
+                                                key={label}
+                                                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs border cursor-pointer transition ${
+                                                    checked
+                                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-indigo-400'
+                                                }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    className="h-3 w-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                    checked={checked}
+                                                    onChange={() => toggleServiceForWalkIn(label)}
+                                                    disabled={!isOpen || isReadOnly}
+                                                />
+                                                <span>{label}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                                        {item.serviceName && (
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                                {t('staff.finance.clients.serviceSummary', 'Выбрано:')} {deduplicateServiceNameString(item.serviceName)}
+                                            </p>
+                                        )}
+                            </div>
+                            {validationErrors.serviceName && (
+                                <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                                    {t(validationErrors.serviceName)}
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Правая колонка */}
@@ -368,7 +442,7 @@ function ClientEditFormInner({
                         </div>
                         {validationErrors.consumablesAmount && (
                             <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                                {validationErrors.consumablesAmount}
+                                {t(validationErrors.consumablesAmount)}
                             </p>
                         )}
                     </div>
@@ -382,10 +456,10 @@ function ClientEditFormInner({
                         {t('staff.finance.validation.errors', 'Обнаружены ошибки валидации')}
                     </p>
                     <ul className="text-xs text-red-700 dark:text-red-300 list-disc list-inside space-y-0.5">
-                        {validationErrors.clientName && <li>{validationErrors.clientName}</li>}
-                        {validationErrors.serviceName && <li>{validationErrors.serviceName}</li>}
-                        {validationErrors.serviceAmount && <li>{validationErrors.serviceAmount}</li>}
-                        {validationErrors.consumablesAmount && <li>{validationErrors.consumablesAmount}</li>}
+                        {validationErrors.clientName && <li>{t(validationErrors.clientName)}</li>}
+                        {validationErrors.serviceName && <li>{t(validationErrors.serviceName)}</li>}
+                        {validationErrors.serviceAmount && <li>{t(validationErrors.serviceAmount)}</li>}
+                        {validationErrors.consumablesAmount && <li>{t(validationErrors.consumablesAmount)}</li>}
                     </ul>
                 </div>
             )}

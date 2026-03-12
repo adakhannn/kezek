@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import EditServicePageClient from './EditServicePageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import {logError} from '@/lib/log';
+import { logError, logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 
@@ -17,9 +17,17 @@ export default async function EditServicePage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const { bizId } = await getBizContextForManagers();
-    // Используем service client для обхода RLS, т.к. доступ уже проверен через getBizContextForManagers
-    const admin = getServiceClient();
+    const { bizId, supabase } = await getBizContextForManagers();
+    // Service client для обхода RLS (опционально).
+    // В dev окружениях ключ может отсутствовать — тогда работаем через server client с RLS и не падаем.
+    let admin = supabase;
+    try {
+        admin = getServiceClient();
+    } catch (e) {
+        logWarn('EditServicePage', 'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS)', {
+            error: e instanceof Error ? e.message : String(e),
+        });
+    }
 
     const [{ data: svc, error: svcError }, { data: branches, error: branchesError }] = await Promise.all([
         admin

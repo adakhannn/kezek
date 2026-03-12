@@ -1,6 +1,9 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { logWarn } from '@/lib/log';
 import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
-import { createSupabaseClients } from '@/lib/supabaseHelpers';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -8,9 +11,23 @@ export const runtime = 'nodejs';
 // Допустимые роли для владения/управления бизнесом
 const ALLOWED_ROLE_KEYS = new Set(['owner', 'admin', 'manager']);
 
+async function getClients(): Promise<{ supabase: SupabaseClient; admin: SupabaseClient }> {
+    const supabase = await createSupabaseServerClient();
+    let admin: SupabaseClient = supabase;
+    try {
+        admin = createSupabaseAdminClient();
+    } catch (e) {
+        logWarn('GetCurrentBusiness', 'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS)', {
+            error: e instanceof Error ? e.message : String(e),
+        });
+        admin = supabase;
+    }
+    return { supabase, admin };
+}
+
 export async function GET() {
     return withErrorHandler('GetCurrentBusiness', async () => {
-        const { supabase, admin } = await createSupabaseClients();
+        const { supabase, admin } = await getClients();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -82,7 +99,7 @@ export async function POST(req: Request) {
         req,
         routeRateLimit('api/me/current-business', RateLimitConfigs.normal),
         () => withErrorHandler('SetCurrentBusiness', async () => {
-            const { supabase, admin } = await createSupabaseClients();
+            const { supabase, admin } = await getClients();
 
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {

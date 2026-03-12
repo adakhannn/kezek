@@ -2,10 +2,8 @@
 // Журнал изменений финансовых настроек сотрудника (audit-trail). Доступен менеджерам/владельцам.
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError } from '@/lib/log';
-import { getRouteParamUuid } from '@/lib/routeParams';
-import { withManagerContext } from '@/lib/withManagerContext';
+import { withManagerAndStaffContext } from '@/lib/withManagerAndStaffContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -25,22 +23,11 @@ export type AuditLogEntry = {
 
 export async function GET(req: Request, context: unknown) {
     return withErrorHandler('FinanceAuditLog', async () => {
-        const staffId = await getRouteParamUuid(context, 'id');
-        return withManagerContext(req, 'FinanceAuditLog', async ({ admin, bizId }) => {
-        if (!staffId) {
-            return createErrorResponse('validation', 'Отсутствует ID сотрудника', undefined, 400);
-        }
-
-        const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
-            admin,
-            'staff',
-            staffId,
-            bizId,
-            'id'
-        );
-        if (staffCheck.error || !staffCheck.data) {
-            return createErrorResponse('forbidden', staffCheck.error ?? 'Сотрудник не принадлежит этому бизнесу', undefined, 403);
-        }
+        return withManagerAndStaffContext<{ id: string; biz_id: string | number | null }>(
+            req,
+            context,
+            { scope: 'FinanceAuditLog', staffIdParamName: 'id', staffSelect: 'id, biz_id' },
+            async ({ admin, bizId, staffId }) => {
 
         const { data: rows, error } = await admin
             .from('finance_settings_audit_log')
@@ -87,6 +74,7 @@ export async function GET(req: Request, context: unknown) {
         });
 
         return createSuccessResponse({ entries });
-        });
+        },
+        );
     });
 }

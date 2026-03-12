@@ -15,10 +15,10 @@ export function Tabs({ activeTab, onTabChange, itemsCount, showStats }: TabsProp
     const { t } = useLanguage();
 
     return (
-        <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+        <div className="flex flex-wrap gap-2 bg-gray-100 dark:bg-gray-800 p-1.5 sm:p-1 rounded-lg">
             <button
                 onClick={() => onTabChange('shift')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                className={`px-3 py-2 sm:px-4 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 whitespace-nowrap ${
                     activeTab === 'shift'
                         ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -28,7 +28,7 @@ export function Tabs({ activeTab, onTabChange, itemsCount, showStats }: TabsProp
             </button>
             <button
                 onClick={() => onTabChange('clients')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                className={`px-3 py-2 sm:px-4 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 whitespace-nowrap ${
                     activeTab === 'clients'
                         ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -39,7 +39,7 @@ export function Tabs({ activeTab, onTabChange, itemsCount, showStats }: TabsProp
             {showStats && (
                 <button
                     onClick={() => onTabChange('stats')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    className={`px-3 py-2 sm:px-4 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 whitespace-nowrap ${
                         activeTab === 'stats'
                             ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
                             : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'

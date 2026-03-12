@@ -20,6 +20,24 @@ export function formatTime(iso: string | null, locale: string): string {
 }
 
 /**
+ * Убирает повторяющиеся названия услуг в строке вида "Услуга A + Услуга A + Услуга B" → "Услуга A + Услуга B".
+ * Сохраняет порядок первого вхождения.
+ */
+export function deduplicateServiceNameString(serviceName: string | null | undefined): string {
+    if (!serviceName || typeof serviceName !== 'string') return '';
+    const parts = serviceName.split('+').map((s) => s.trim()).filter(Boolean);
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const p of parts) {
+        if (!seen.has(p)) {
+            seen.add(p);
+            unique.push(p);
+        }
+    }
+    return unique.join(' + ');
+}
+
+/**
  * Получает правильное название услуги с учетом языка
  */
 export function getServiceName(service: ServiceName | string, locale: string): string {

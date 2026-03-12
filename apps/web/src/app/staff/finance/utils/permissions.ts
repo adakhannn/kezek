@@ -40,8 +40,7 @@ export function checkPermissions(context: PermissionContext): PermissionResult {
     
     // Для владельца (staffId передан)
     if (staffId) {
-        // Владелец может редактировать открытые смены или смены, которые еще не созданы
-        // Владелец НЕ может редактировать закрытые смены
+        // Владелец НЕ может редактировать или добавлять клиентов в закрытые смены
         if (isClosed) {
             return {
                 canEdit: false,
@@ -53,14 +52,18 @@ export function checkPermissions(context: PermissionContext): PermissionResult {
             };
         }
         
-        // Владелец может открывать смены, если они еще не открыты
+        // Для владельца:
+        // - открывать смену можно, если она ещё не открыта;
+        // - добавлять/редактировать/удалять клиентов можно только при ОТКРЫТОЙ смене.
         return {
-            canEdit: true,
-            canAdd: true,
-            canDelete: true,
+            canEdit: isOpen,
+            canAdd: isOpen,
+            canDelete: isOpen,
             canOpenShift: !isOpen,
             canCloseShift: isOpen,
-            reason: undefined
+            reason: isOpen
+                ? undefined
+                : 'Смена не открыта. Сначала откройте смену, чтобы добавлять клиентов.'
         };
     }
     

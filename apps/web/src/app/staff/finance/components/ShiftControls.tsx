@@ -30,9 +30,10 @@ export function ShiftControls({
 }: ShiftControlsProps) {
     const { t } = useLanguage();
 
-    // Для владельца: показываем кнопку, если смена не открыта (может быть не создана или закрыта)
-    // Для сотрудника: показываем кнопку только если смена не создана
-    const canShowOpenButton = staffId ? (!isOpen && !isDayOff) : (!hasShift && !isDayOff);
+    // Открыть смену можно только если на дату ещё нет смены.
+    // При закрытой смене показываем не «Открыть», а отдельную кнопку переоткрытия,
+    // чтобы не создавать ощущение двух смен за день.
+    const canShowOpenButton = !hasShift && !isDayOff;
 
     return (
         <div className="flex gap-2 items-center flex-wrap">
@@ -73,7 +74,7 @@ export function ShiftControls({
                     </Button>
                 </>
             )}
-            {isClosed && (
+            {isClosed && hasShift && (
                 <Button
                     variant="outline"
                     onClick={onOpenShift}

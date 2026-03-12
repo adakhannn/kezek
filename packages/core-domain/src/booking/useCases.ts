@@ -15,6 +15,19 @@ export interface BookingCommandsPort {
         startAt: string;
     }): Promise<string>; // bookingId
 
+    /**
+     * Зарезервировать слот под комплекс услуг (несколько услуг за один визит).
+     * Пока опционален: инфраструктура может реализовать тот же RPC что и holdSlot,
+     * а доменная логика будет вызывать его только при наличии services в params.
+     */
+    holdComplexSlot?(params: {
+        bizId: string;
+        branchId: string;
+        staffId: string;
+        startAt: string;
+        services: { service_id: string; duration_min: number; order_index?: number }[];
+    }): Promise<string>; // bookingId
+
     confirmBooking(bookingId: string): Promise<void>;
 
     cancelBooking(bookingId: string): Promise<void>;
@@ -102,13 +115,30 @@ export async function createBookingUseCase(
     }
 
     // Создаём hold-бронирование.
-    const bookingId = await commands.holdSlot({
-        bizId: params.biz_id,
-        branchId: targetBranchId,
-        serviceId: params.service_id,
-        staffId: params.staff_id,
-        startAt: params.start_at,
-    });
+    // Если передан массив services и инфраструктура поддерживает holdComplexSlot,
+    // используем его, иначе остаёмся на классическом одноуслужном сценарии.
+    let bookingId: string;
+    if (params.services && params.services.length > 0 && commands.holdComplexSlot) {
+        bookingId = await commands.holdComplexSlot({
+            bizId: params.biz_id,
+            branchId: targetBranchId,
+            staffId: params.staff_id,
+            startAt: params.start_at,
+            services: params.services.map((s, index) => ({
+                service_id: s.service_id,
+                duration_min: s.duration_min,
+                order_index: s.order_index ?? index,
+            })),
+        });
+    } else {
+        bookingId = await commands.holdSlot({
+            bizId: params.biz_id,
+            branchId: targetBranchId,
+            serviceId: params.service_id,
+            staffId: params.staff_id,
+            startAt: params.start_at,
+        });
+    }
 
     // Подтверждаем.
     await commands.confirmBooking(bookingId);

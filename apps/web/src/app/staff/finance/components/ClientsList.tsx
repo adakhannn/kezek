@@ -49,8 +49,39 @@ export function ClientsList({
 }: ClientsListProps) {
     const { t } = useLanguage();
 
-    // Для владельца: показываем список, даже если смена не открыта (может быть не создана)
-    // Для сотрудника: показываем сообщение, если смена не открыта
+    // Все хуки вызываем до любых условных return (Rules of Hooks)
+    const usedBookingIdsSet = useMemo(() => {
+        return new Set(items.map(it => it.bookingId).filter(Boolean));
+    }, [items]);
+
+    const now = useMemo(() => new Date(), []);
+    const availableBookingsBase = useMemo(() => {
+        return bookings.filter((b) => {
+            if (usedBookingIdsSet.has(b.id)) return false;
+            try {
+                const start = new Date(b.start_at);
+                return start <= now;
+            } catch {
+                return false;
+            }
+        });
+    }, [bookings, usedBookingIdsSet, now]);
+
+    const handleEdit = useCallback((idx: number) => {
+        onExpand(idx);
+    }, [onExpand]);
+
+    const handleDelete = useCallback((idx: number) => {
+        onDeleteItem(idx);
+    }, [onDeleteItem]);
+
+    const handleDuplicate = useCallback((idx: number) => {
+        if (onDuplicateItem) {
+            onDuplicateItem(idx);
+        }
+    }, [onDuplicateItem]);
+
+    // Условный UI после всех хуков
     if (!staffId && (!shift || !isOpen)) {
         return (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
@@ -67,44 +98,8 @@ export function ClientsList({
         );
     }
 
-    // Мемоизируем вычисление использованных booking IDs для оптимизации производительности
-    // Это предотвращает повторное вычисление при каждом рендере
-    const usedBookingIdsSet = useMemo(() => {
-        return new Set(items.map(it => it.bookingId).filter(Boolean));
-    }, [items]);
-
-    // Мемоизируем фильтрацию доступных бронирований
-    // Фильтруем только прошедшие бронирования, которые еще не использованы
-    const now = useMemo(() => new Date(), []);
-    const availableBookingsBase = useMemo(() => {
-        return bookings.filter((b) => {
-            if (usedBookingIdsSet.has(b.id)) return false;
-            try {
-                const start = new Date(b.start_at);
-                return start <= now;
-            } catch {
-                return false;
-            }
-        });
-    }, [bookings, usedBookingIdsSet, now]);
-
-    // Мемоизируем функции-обработчики для предотвращения лишних ре-рендеров
-    const handleEdit = useCallback((idx: number) => {
-        onExpand(idx);
-    }, [onExpand]);
-
-    const handleDelete = useCallback((idx: number) => {
-        onDeleteItem(idx);
-    }, [onDeleteItem]);
-
-    const handleDuplicate = useCallback((idx: number) => {
-        if (onDuplicateItem) {
-            onDuplicateItem(idx);
-        }
-    }, [onDuplicateItem]);
-
     return (
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm min-w-0">
             {/* Заголовок колонок */}
             <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr,1fr,auto] gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
                 <span>{t('staff.finance.clients.client', 'Клиент')}</span>

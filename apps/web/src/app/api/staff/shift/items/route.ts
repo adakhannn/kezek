@@ -102,53 +102,22 @@ export async function POST(req: Request) {
                 return createErrorResponse('auth', 'Не авторизован', undefined, statusCode);
             }
 
-            const { data: roles } = await supabase
-                .from('user_roles')
-                .select('roles!inner(key)')
-                .eq('user_id', user.id)
-                .eq('biz_id', bizId);
+            // Дополнительная проверка ролей (owner/admin/manager) здесь избыточна,
+            // так как getBizContextForManagers уже гарантирует доступ.
+            // Оставляем только проверку, что целевой сотрудник принадлежит текущему бизнесу.
 
-            const hasPermission = (roles ?? []).some(r => {
-                if (!r || typeof r !== 'object' || !('roles' in r)) return false;
-                const roleObj = (r as { roles?: { key?: unknown } | null }).roles;
-                if (!roleObj || typeof roleObj !== 'object' || !('key' in roleObj)) return false;
-                const key = roleObj.key;
-                return typeof key === 'string' && ['owner', 'admin', 'manager'].includes(key);
-            });
-
-            // Также проверяем через owner_id
-            const { data: owned } = await supabase
-                .from('businesses')
-                .select('id')
-                .eq('owner_id', user.id)
-                .eq('id', bizId)
-                .maybeSingle();
-
-            if (!hasPermission && !owned) {
-                statusCode = 403;
-                
-                // Логируем метрику
-                logApiMetric({
-                    endpoint,
-                    method: 'POST',
-                    statusCode,
-                    durationMs: Date.now() - startTime,
-                    userId,
-                    staffId,
-                    bizId,
-                    errorMessage: 'FORBIDDEN',
-                    errorType: 'auth',
-                    ipAddress: getIpAddress(req),
-                    userAgent: req.headers.get('user-agent') || undefined,
-                }).catch(() => {});
-                
-                return createErrorResponse('forbidden', 'Доступ запрещен', undefined, statusCode);
+            // Проверяем, что сотрудник принадлежит бизнесу (используем унифицированную утилиту).
+            // Service client может быть недоступен в дев-окружении (нет SUPABASE_SERVICE_ROLE_KEY),
+            // поэтому используем его по возможности, а при ошибке — обычный supabase клиент с RLS.
+            let adminForCheck = supabase;
+            try {
+                adminForCheck = getServiceClient();
+            } catch {
+                // игнорируем, просто остаёмся на supabase с RLS
             }
 
-            // Проверяем, что сотрудник принадлежит бизнесу (используем унифицированную утилиту)
-            const admin = getServiceClient();
             const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
-                admin,
+                adminForCheck,
                 'staff',
                 targetStaffId,
                 bizId,
@@ -398,8 +367,16 @@ export async function POST(req: Request) {
             shiftId = existing.id;
         }
 
-        // Для операций записи в режиме владельца используем service client
-        const writeClient = useServiceClient ? getServiceClient() : supabase;
+        // Для операций записи в режиме владельца пытаемся использовать service client,
+        // но в дев-окружении (без SUPABASE_SERVICE_ROLE_KEY) безопасно падаем обратно на supabase.
+        let writeClient = supabase;
+        if (useServiceClient) {
+            try {
+                writeClient = getServiceClient();
+            } catch {
+                writeClient = supabase;
+            }
+        }
 
         // Получаем существующие записи для определения, какие нужно обновить, а какие удалить
         const { data: existingItemsData } = await writeClient
@@ -427,7 +404,12 @@ export async function POST(req: Request) {
         // Примечание: статус "paid" означает "выполнено/пришел", а не "оплачено"
         // Используем функцию с автоматическим применением акций,
         // но не трогаем уже финальные статусы (paid / no_show) и будущие записи
-        const admin = getServiceClient();
+        let admin = supabase;
+        try {
+            admin = getServiceClient();
+        } catch {
+            admin = supabase;
+        }
 
         if (allBookingIds.length > 0) {
             try {
@@ -451,20 +433,22 @@ export async function POST(req: Request) {
                         });
                     }
 
-                    for (const bookingId of allBookingIds) {
+                    // Обновление статусов бронирований выполняем параллельно,
+                    // чтобы не накапливать задержку из-за серии последовательных RPC-вызовов.
+                    const updatePromises = allBookingIds.map(async (bookingId) => {
                         const booking = bookingsMap.get(bookingId);
-                        if (!booking) continue;
+                        if (!booking) return;
 
                         // Пропускаем уже финальные статусы
                         if (booking.status === 'paid' || booking.status === 'no_show') {
-                            continue;
+                            return;
                         }
 
                         // Не отмечаем как paid записи из будущего
                         if (booking.start_at) {
                             const startAt = new Date(booking.start_at);
                             if (startAt > nowTs) {
-                                continue;
+                                return;
                             }
                         }
 
@@ -498,7 +482,9 @@ export async function POST(req: Request) {
                         } catch (e) {
                             logError('StaffShiftItems', `Error updating booking ${booking.id} status`, e);
                         }
-                    }
+                    });
+
+                    await Promise.allSettled(updatePromises);
                 }
             } catch (e) {
                 logError('StaffShiftItems', 'Unexpected error while updating bookings to paid', e);
@@ -542,9 +528,10 @@ export async function POST(req: Request) {
                 return !item.id;
             });
             
-            // Для существующих записей делаем UPDATE, сохраняя их created_at
+            // Для существующих записей делаем UPDATE, сохраняя их created_at.
+            // Выполняем обновления параллельно, чтобы не ждать каждый запрос по очереди.
             if (existingItems.length > 0) {
-                for (const it of existingItems) {
+                const updatePromises = existingItems.map(async (it) => {
                     const bookingId = (it as { bookingId?: string | null; booking_id?: string | null }).bookingId ?? (it as { bookingId?: string | null; booking_id?: string | null }).booking_id ?? null;
                     const serviceAmount = bookingId && promotionMap.has(bookingId)
                         ? promotionMap.get(bookingId)!
@@ -565,7 +552,9 @@ export async function POST(req: Request) {
                     if (updateError) {
                         logError('StaffShiftItems', `Error updating item ${it.id}`, updateError);
                     }
-                }
+                });
+
+                await Promise.allSettled(updatePromises);
             }
             
             // Для новых записей делаем INSERT с разным created_at

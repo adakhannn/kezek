@@ -13,6 +13,20 @@ import { formatStaffName } from '@/lib/i18nHelpers';
 import { toLabel } from '@/lib/time';
 
 
+/** Форматирует длительность в минутах в строку вида «1 ч 15 мин» или «45 мин». */
+function formatVisitDuration(totalMin: number, t: (key: string, fallback?: string) => string): string {
+    if (totalMin <= 0) return '';
+    const hours = Math.floor(totalMin / 60);
+    const mins = totalMin % 60;
+    if (hours > 0 && mins > 0) {
+        return `${hours} ${t('booking.duration.hour', 'ч')} ${mins} ${t('booking.duration.min', 'мин')}`;
+    }
+    if (hours > 0) {
+        return `${hours} ${t('booking.duration.hour', 'ч')}`;
+    }
+    return `${mins} ${t('booking.duration.min', 'мин')}`;
+}
+
 type SlotPickerProps = {
     slots: Slot[];
     selectedSlot: Date | null;
@@ -26,6 +40,8 @@ type SlotPickerProps = {
     serviceId: string | null;
     servicesFiltered: Array<{ id: string }>;
     serviceStaff: Array<{ service_id: string; staff_id: string; is_active: boolean }> | null;
+    /** Суммарная длительность визита в минутах (при нескольких услугах); при задании показывается в слоте */
+    totalDurationMin?: number;
     isAuthed: boolean;
     clientBookingsCount: number | null;
     clientBookingsLoading: boolean;
@@ -45,6 +61,7 @@ export function SlotPicker({
     serviceId,
     servicesFiltered,
     serviceStaff,
+    totalDurationMin,
     isAuthed,
     clientBookingsCount,
     clientBookingsLoading,
@@ -133,6 +150,11 @@ export function SlotPicker({
                             >
                                 <div className="flex flex-col items-center">
                                     <span>{toLabel(d)}</span>
+                                    {totalDurationMin != null && totalDurationMin > 0 && (
+                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                            {formatVisitDuration(totalDurationMin, t)}
+                                        </span>
+                                    )}
                                     {showStaffName && slotStaff && (
                                         <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
                                             {formatName(slotStaff.full_name)}

@@ -16,6 +16,8 @@ type BookingSummaryProps = {
     dayLabel: string | null;
     staffCurrent: Staff | null;
     serviceCurrent: Service | null;
+    /** При мультиселекте услуг — массив выбранных услуг для отображения и суммы цен */
+    servicesSelected?: Service[];
     branchId: string | null;
     branchPromotions: Array<{
         id: string;
@@ -31,6 +33,7 @@ export function BookingSummary({
     dayLabel,
     staffCurrent,
     serviceCurrent,
+    servicesSelected,
     branchId,
     branchPromotions,
     isAuthed,
@@ -38,6 +41,26 @@ export function BookingSummary({
     const { t, locale } = useLanguage();
 
     const formatName = (name: string): string => formatStaffName(name, locale);
+
+    const hasMultiple = servicesSelected && servicesSelected.length > 0;
+    const serviceLabel =
+        hasMultiple
+            ? null // показываем список ниже
+            : serviceCurrent
+                ? getServiceName(serviceCurrent, locale)
+                : null;
+    const totalPriceFrom =
+        hasMultiple
+            ? servicesSelected!.reduce((sum, s) => sum + (typeof s.price_from === 'number' ? s.price_from : 0), 0)
+            : serviceCurrent?.price_from ?? 0;
+    const totalPriceTo =
+        hasMultiple
+            ? servicesSelected!.reduce((sum, s) => sum + (typeof s.price_to === 'number' ? s.price_to : 0), 0)
+            : serviceCurrent?.price_to ?? 0;
+    const totalDurationMin = hasMultiple
+        ? servicesSelected!.reduce((sum, s) => sum + s.duration_min, 0)
+        : serviceCurrent?.duration_min ?? 0;
+    const hasPrice = totalPriceFrom > 0 || totalPriceTo > 0;
 
     return (
         <aside className="sticky top-4 h-fit rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -49,12 +72,72 @@ export function BookingSummary({
                     <span className="text-gray-500">{t('booking.summary.branch', 'Филиал:')}</span>
                     <span className="text-right font-medium">{branchName || t('booking.summary.notSelected', 'Не выбран')}</span>
                 </div>
-                <div className="flex justify-between gap-2">
-                    <span className="text-gray-500">{t('booking.summary.service', 'Услуга:')}</span>
-                    <span className="text-right font-medium">
-                        {serviceCurrent ? getServiceName(serviceCurrent, locale) : t('booking.summary.notSelected', 'Не выбран')}
-                    </span>
-                </div>
+                {hasMultiple ? (
+                    <>
+                        <div className="text-gray-500 font-medium">
+                            {t('booking.summary.services', 'Услуги:')}
+                        </div>
+                        <ul className="space-y-1.5 pl-0 list-none">
+                            {servicesSelected!.map((s) => {
+                                const name = getServiceName(s, locale);
+                                const priceFrom = typeof s.price_from === 'number' ? s.price_from : null;
+                                const priceTo = typeof s.price_to === 'number' ? s.price_to : null;
+                                const hasServicePrice = priceFrom != null || priceTo != null;
+                                return (
+                                    <li
+                                        key={s.id}
+                                        className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 border-b border-dashed border-gray-200 pb-1 last:border-0 last:pb-0 dark:border-gray-700"
+                                    >
+                                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                                            {name}
+                                        </span>
+                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                            {s.duration_min} {t('booking.duration.min', 'мин')}
+                                            {hasServicePrice && (
+                                                <>
+                                                    {' · '}
+                                                    {priceFrom ?? priceTo ?? 0}
+                                                    {priceTo != null && priceTo !== (priceFrom ?? priceTo)
+                                                        ? `–${priceTo}`
+                                                        : ''}{' '}
+                                                    {t('booking.currency', 'сом')}
+                                                </>
+                                            )}
+                                        </span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                        <div className="flex justify-between gap-2 border-t border-dashed border-gray-300 pt-1.5 dark:border-gray-700">
+                            <span className="text-gray-500 font-medium">
+                                {t('booking.summary.total', 'Всего:')}
+                            </span>
+                            <span
+                                className="text-right font-semibold text-gray-900 dark:text-gray-100"
+                                data-testid="final-price"
+                            >
+                                {totalDurationMin} {t('booking.duration.min', 'мин')}
+                                {hasPrice && (
+                                    <>
+                                        {', '}
+                                        {totalPriceFrom}
+                                        {totalPriceTo > 0 && totalPriceTo !== totalPriceFrom
+                                            ? `–${totalPriceTo}`
+                                            : ''}{' '}
+                                        {t('booking.currency', 'сом')}
+                                    </>
+                                )}
+                            </span>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex justify-between gap-2">
+                        <span className="text-gray-500">{t('booking.summary.service', 'Услуга:')}</span>
+                        <span className="text-right font-medium">
+                            {serviceLabel ?? t('booking.summary.notSelected', 'Не выбран')}
+                        </span>
+                    </div>
+                )}
                 <div className="flex justify-between gap-2">
                     <span className="text-gray-500">{t('booking.summary.master', 'Мастер:')}</span>
                     <div className="flex items-center gap-2">
@@ -87,17 +170,16 @@ export function BookingSummary({
                         {t('booking.summary.selectSlot', 'Выберите слот')}
                     </span>
                 </div>
-                {serviceCurrent?.price_from && (
+                {hasPrice && !hasMultiple && (
                     <div className="mt-1 flex justify-between gap-2 border-t border-dashed border-gray-300 pt-1 dark:border-gray-700">
                         <span className="text-gray-500">{t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}</span>
                         <span
                             className="text-right font-semibold text-emerald-600 dark:text-emerald-400"
                             data-testid="final-price"
                         >
-                            {serviceCurrent.price_from}
-                            {serviceCurrent.price_to &&
-                            serviceCurrent.price_to !== serviceCurrent.price_from
-                                ? `–${serviceCurrent.price_to}`
+                            {totalPriceFrom}
+                            {totalPriceTo > 0 && totalPriceTo !== totalPriceFrom
+                                ? `–${totalPriceTo}`
                                 : ''}{' '}
                             {t('booking.currency', 'сом')}
                         </span>

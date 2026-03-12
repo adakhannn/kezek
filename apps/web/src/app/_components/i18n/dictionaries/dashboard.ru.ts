@@ -47,6 +47,7 @@ export const dashboardRu = {
     'dashboard.sidebar.closeMenu': 'Закрыть меню',
     'dashboard.sidebar.openMenu': 'Открыть меню',
     'dashboard.sidebar.title': 'Кабинет бизнеса',
+    'dashboard.sidebar.switchInHeader': 'Смена бизнеса — в меню сверху',
     'dashboard.stats.activeStaff': 'Активных сотрудников',
     'dashboard.stats.activeStaffHint': 'готовы принимать клиентов',
     'dashboard.stats.bookingsToday': 'Брони сегодня',

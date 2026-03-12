@@ -1,13 +1,15 @@
 'use client';
 
 import { format } from 'date-fns';
+import type { Locale } from 'date-fns';
+import { enUS, ru as ruLocale } from 'date-fns/locale';
 import { useEffect, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
-// Локализованные названия месяцев и дней недели
+// Локализованные названия месяцев
 const MONTHS_BY_LOCALE: Record<'ky' | 'ru' | 'en', string[]> = {
     ru: [
         'Январь',
@@ -52,10 +54,19 @@ const MONTHS_BY_LOCALE: Record<'ky' | 'ru' | 'en', string[]> = {
         'December',
     ],
 };
-const WEEKDAYS_SHORT_BY_LOCALE: Record<'ky' | 'ru' | 'en', string[]> = {
-    ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
-    ky: ['Жк', 'Дш', 'Шш', 'Шр', 'Бш', 'Жм', 'Иш'],
-    en: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+
+// Отображаемые короткие названия дней недели (Пн–Вс)
+const WEEKDAYS_DISPLAY: Record<'ky' | 'ru' | 'en', string[]> = {
+    ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+    ky: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+    en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+};
+
+// date-fns локали (ky пока используем как ru)
+const DATE_FNS_LOCALES: Record<'ky' | 'ru' | 'en', Locale> = {
+    ru: ruLocale,
+    en: enUS,
+    ky: ruLocale,
 };
 
 // --- helpers: локальное форматирование/парсинг YYYY-MM-DD без UTC-сдвига
@@ -130,9 +141,6 @@ export default function DatePickerPopover({
         ? format(selected, 'dd.MM.yyyy')
         : t('datePicker.placeholder', 'Выберите дату');
 
-    const MONTHS = MONTHS_BY_LOCALE[locale];
-    const WEEKDAYS_SHORT = WEEKDAYS_SHORT_BY_LOCALE[locale];
-
     const dayPickerProps = {
         mode: 'single' as const,
         selected,
@@ -149,9 +157,14 @@ export default function DatePickerPopover({
         },
         weekStartsOn: 1 as const,
         showOutsideDays: true,
+        locale: DATE_FNS_LOCALES[locale],
         formatters: {
-            formatMonthCaption: (month: Date) => MONTHS[month.getMonth()] + ' ' + month.getFullYear(),
-            formatWeekdayName: (day: Date) => WEEKDAYS_SHORT[day.getDay()],
+            formatMonthCaption: (month: Date) => {
+                // Делаем первую букву заглавной для ru/ky, чтобы выглядело аккуратнее
+                const raw = format(month, 'LLLL yyyy', { locale: DATE_FNS_LOCALES[locale] });
+                if (!raw) return raw;
+                return raw.charAt(0).toUpperCase() + raw.slice(1);
+            },
         },
         labels: {
             labelMonthDropdown: () => t('datePicker.monthLabel', 'Месяц'),
@@ -160,28 +173,28 @@ export default function DatePickerPopover({
             labelPrevious: () => t('datePicker.prevMonth', 'Предыдущий месяц'),
         },
         classNames: {
-            root: 'w-full',
-            months: 'w-full',
-            month: 'w-full',
-            caption: 'font-semibold text-sm px-2 py-1',
-            caption_label: '',
-            caption_dropdowns: '',
-            dropdown: '',
-            dropdown_month: '',
-            dropdown_year: '',
-            nav: '',
-            nav_button: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
-            nav_button_previous: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
-            nav_button_next: 'min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] touch-manipulation',
-            table: 'w-full',
-            head_row: '',
-            head_cell: 'text-[11px] text-gray-500 dark:text-gray-400',
+            root: 'w-full text-sm text-gray-900 dark:text-gray-50',
+            months: 'w-full flex justify-center',
+            month: 'w-full space-y-2',
+            caption: 'flex items-center justify-between px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400',
+            caption_label: 'text-sm font-semibold text-gray-900 dark:text-gray-50',
+            nav: 'flex items-center gap-1',
+            nav_button:
+                'h-7 w-7 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-white hover:bg-indigo-600/80 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-offset-1 focus:ring-offset-gray-950',
+            nav_button_previous: '',
+            nav_button_next: '',
+            table: 'w-full border-collapse',
+            // Скрываем встроенную строку с днями недели и выводим свою (см. ниже),
+            // чтобы избежать дублирования заголовка дней.
+            head_row: 'hidden',
+            head_cell: 'pb-1 text-center',
             row: '',
-            cell: 'p-0',
-            day: 'text-sm sm:text-[12px] px-2 py-2 sm:py-1 m-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 min-h-[40px] sm:min-h-[32px] min-w-[40px] sm:min-w-[32px] flex items-center justify-center touch-manipulation',
-            day_selected: 'bg-gray-900 text-white hover:bg-gray-900 dark:bg-gray-100 dark:text-gray-900',
-            day_today: 'ring-1 ring-gray-500 dark:ring-gray-400',
-            day_disabled: 'opacity-40 cursor-not-allowed hover:bg-transparent',
+            cell: 'p-0 text-center',
+            day: 'mx-auto my-0.5 flex h-9 w-9 items-center justify-center rounded-full text-sm text-gray-900 dark:text-gray-50 hover:bg-indigo-500/10 hover:text-indigo-900 dark:hover:text-indigo-100 cursor-pointer transition-colors',
+            day_selected:
+                'bg-gradient-to-r from-indigo-500 to-pink-500 text-white hover:from-indigo-500 hover:to-pink-500 hover:text-white shadow-sm',
+            day_today: 'ring-2 ring-indigo-400 dark:ring-indigo-400',
+            day_disabled: 'opacity-30 cursor-not-allowed hover:bg-transparent hover:text-gray-500',
             day_outside: 'text-gray-400 dark:text-gray-600',
             day_hidden: 'invisible',
         },
@@ -191,15 +204,37 @@ export default function DatePickerPopover({
 
     if (inline) {
         return (
-            <div className={`${className}`}>
-                <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900 dark:p-2 flex justify-center">
-                    {calendarEl}
+            <div className={className}>
+                <div className="rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm shadow-gray-200/60 dark:border-gray-700/70 dark:bg-[#05060a] dark:shadow-black/40 flex justify-center">
+                    <div className="w-full max-w-md">
+                        <div className="mb-2 flex items-center justify-between px-1">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                {t('datePicker.chooseDate', 'Выберите удобный день')}
+                            </p>
+                            {selected && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-200 dark:ring-indigo-900/60">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                                    {displayValue}
+                                </span>
+                            )}
+                        </div>
+                        {calendarEl}
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-gray-500">
+                            <div className="flex items-center gap-1">
+                                <span className="inline-block h-2.5 w-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500" />
+                                <span>{t('datePicker.legend.selected', 'Выбранный день')}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="inline-flex h-2.5 w-2.5 items-center justify-center rounded-full ring-2 ring-indigo-400" />
+                                <span>{t('datePicker.legend.today', 'Сегодня')}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="inline-block h-2.5 w-2.5 rounded-full bg-gray-300/60 dark:bg-gray-600/80" />
+                                <span>{t('datePicker.legend.disabled', 'Недоступно для записи')}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                {selected && (
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        {t('datePicker.selected', 'Выбрано:')} {displayValue}
-                    </p>
-                )}
             </div>
         );
     }
@@ -259,7 +294,14 @@ export default function DatePickerPopover({
                     aria-label={t('datePicker.dialogLabel', 'Выбор даты')}
                     className="absolute left-0 top-full z-50 mt-2 border rounded-lg p-3 bg-white dark:bg-[#0b0b0d] shadow-lg sm:left-auto sm:right-0 sm:p-2 max-w-[calc(100vw-2rem)] sm:max-w-none"
                 >
-                    {calendarEl}
+                    <div className="w-full">
+                        <div className="mb-2 grid grid-cols-7 text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 text-center">
+                            {WEEKDAYS_DISPLAY[locale].map((label) => (
+                                <span key={label}>{label}</span>
+                            ))}
+                        </div>
+                        {calendarEl}
+                    </div>
                 </div>
             )}
         </div>

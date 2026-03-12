@@ -38,6 +38,8 @@ export function useQuickBooking(options: UseQuickBookingOptions) {
                 biz_id: payload.bizId,
                 branch_id: payload.branchId,
                 service_id: payload.serviceId,
+                service_ids: payload.serviceId ? [payload.serviceId] : undefined,
+                services_count: payload.serviceId ? 1 : 0,
                 staff_id: payload.staffId,
                 slot_start_at: payload.startAtISO,
                 booking_id: bookingId,

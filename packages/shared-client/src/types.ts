@@ -25,12 +25,23 @@ export type PromotionApplied = {
     [key: string]: unknown;
 };
 
+/** Описание одной услуги в составе бронирования (для комплексов услуг) */
+export type BookingServiceItem = {
+    service_id: string;
+    duration_min: number;
+    order_index?: number;
+    price_from?: number;
+    price_to?: number;
+};
+
 /** DTO бронирования (упрощённая версия для API ответов) */
 export type BookingDto = {
     id: string;
     biz_id: string;
     branch_id: string;
     service_id: string;
+    /** Состав услуг визита; при отсутствующем массиве считать, что визит состоит из одной услуги service_id */
+    services?: BookingServiceItem[];
     staff_id: string;
     client_id?: string | null;
     client_name?: string | null;

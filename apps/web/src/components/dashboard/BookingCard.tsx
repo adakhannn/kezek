@@ -6,10 +6,12 @@
 
 'use client';
 
-import Link from 'next/link';
-import { formatInTimeZone } from 'date-fns-tz';
-import { bookingStatusColors, BookingStatus } from './tokens';
 import { clsx } from 'clsx';
+import { formatInTimeZone } from 'date-fns-tz';
+import Link from 'next/link';
+
+import { bookingStatusColors, BookingStatus } from './tokens';
+
 
 interface BookingCardProps {
     id: string;
@@ -18,6 +20,8 @@ interface BookingCardProps {
     status: BookingStatus;
     timezone: string;
     href?: string;
+    /** Пользовательская подсказка при наведении (например, состав услуг); по умолчанию показываем номер брони */
+    title?: string;
     className?: string;
     onClick?: () => void;
 }
@@ -29,6 +33,7 @@ export function BookingCard({
     status,
     timezone,
     href,
+    title,
     className,
     onClick,
 }: BookingCardProps) {
@@ -46,11 +51,11 @@ export function BookingCard({
         className
     );
 
-    const title = `Открыть бронь #${id.slice(0, 8)}`;
+    const computedTitle = title ?? `Открыть бронь #${id.slice(0, 8)}`;
 
     if (href) {
         return (
-            <Link href={href} onClick={onClick} className={baseStyles} title={title}>
+            <Link href={href} onClick={onClick} className={baseStyles} title={computedTitle}>
                 {label}
             </Link>
         );
@@ -58,14 +63,14 @@ export function BookingCard({
 
     if (onClick) {
         return (
-            <button type="button" onClick={onClick} className={baseStyles} title={title}>
+            <button type="button" onClick={onClick} className={baseStyles} title={computedTitle}>
                 {label}
             </button>
         );
     }
 
     return (
-        <span className={baseStyles} title={title}>
+        <span className={baseStyles} title={computedTitle}>
             {label}
         </span>
     );

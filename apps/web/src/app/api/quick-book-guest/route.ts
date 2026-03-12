@@ -1,3 +1,4 @@
+import { validateCreateGuestBookingParams, extractBookingId } from '@core-domain/booking';
 import { createClient } from "@supabase/supabase-js";
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
@@ -6,14 +7,24 @@ import { logDebug, logError } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { quickBookGuestSchema } from '@/lib/validation/bookingSchemas';
-import { validateCreateGuestBookingParams, extractBookingId } from '@core-domain/booking';
 
 type HoldSlotGuestArgs = {
     p_biz_id: string;
     p_branch_id: string;
     p_service_id: string;
     p_staff_id: string;
-    p_start: string; // ISO-строка с таймзоной
+    p_start: string;
+    p_client_name: string;
+    p_client_phone: string;
+    p_client_email?: string | null;
+};
+
+type HoldComplexSlotGuestArgs = {
+    p_biz_id: string;
+    p_branch_id: string;
+    p_staff_id: string;
+    p_start: string;
+    p_services: { service_id: string; duration_min: number; order_index?: number }[];
     p_client_name: string;
     p_client_phone: string;
     p_client_email?: string | null;
@@ -40,18 +51,31 @@ export async function POST(req: Request) {
                 },
             });
 
-            // Валидация входных данных через Zod схему
             const validationResult = await validateRequest(req, quickBookGuestSchema);
             if (!validationResult.success) {
                 return validationResult.response;
             }
-            
-            // Дополнительная доменная валидация (включает нормализацию телефона)
-            const domainValidation = validateCreateGuestBookingParams(validationResult.data);
+
+            const raw = validationResult.data as {
+                biz_id: string;
+                branch_id: string;
+                service_id?: string;
+                services?: { service_id: string; duration_min: number; order_index?: number }[];
+                staff_id: string;
+                start_at: string;
+                client_name: string;
+                client_phone: string;
+                client_email?: string | null;
+            };
+            const forDomain = {
+                ...raw,
+                service_id: raw.service_id ?? (raw.services?.[0] ? raw.services[0].service_id : undefined),
+            };
+            const domainValidation = validateCreateGuestBookingParams(forDomain);
             if (!domainValidation.valid || !domainValidation.data) {
                 return createErrorResponse('validation', domainValidation.error || 'Неверные параметры гостевой брони', undefined, 400);
             }
-            
+
             const body = domainValidation.data;
 
             // Проверяем, что переданный филиал существует и активен
@@ -67,19 +91,40 @@ export async function POST(req: Request) {
                 return createErrorResponse('not_found', 'Филиал не найден или неактивен', { code: 'no_branch' }, 400);
             }
 
-            // Вызываем RPC для создания гостевой брони
-            logDebug('QuickBookGuest', 'Calling hold_slot_guest RPC');
-            const { data: rpcData, error } = await supabase.rpc<string, HoldSlotGuestArgs>('hold_slot_guest', {
-                p_biz_id: body.biz_id,
-                p_branch_id: branch.id,
-                p_service_id: body.service_id,
-                p_staff_id: body.staff_id,
-                p_start: body.start_at,
-                p_client_name: body.client_name,
-                p_client_phone: body.client_phone, // уже нормализован в validateCreateGuestBookingParams
-                p_client_email: body.client_email,
-            });
-            
+            const useComplex = body.services && body.services.length > 1;
+            let rpcData: string | null = null;
+            let error: { message: string } | null = null;
+
+            if (useComplex) {
+                logDebug('QuickBookGuest', 'Calling hold_complex_slot_guest RPC', { servicesCount: body.services!.length });
+                const result = await supabase.rpc<string, HoldComplexSlotGuestArgs>('hold_complex_slot_guest', {
+                    p_biz_id: body.biz_id,
+                    p_branch_id: branch.id,
+                    p_staff_id: body.staff_id,
+                    p_start: body.start_at,
+                    p_services: body.services!,
+                    p_client_name: body.client_name,
+                    p_client_phone: body.client_phone,
+                    p_client_email: body.client_email,
+                });
+                rpcData = result.data;
+                error = result.error;
+            } else {
+                logDebug('QuickBookGuest', 'Calling hold_slot_guest RPC');
+                const result = await supabase.rpc<string, HoldSlotGuestArgs>('hold_slot_guest', {
+                    p_biz_id: body.biz_id,
+                    p_branch_id: branch.id,
+                    p_service_id: body.service_id,
+                    p_staff_id: body.staff_id,
+                    p_start: body.start_at,
+                    p_client_name: body.client_name,
+                    p_client_phone: body.client_phone,
+                    p_client_email: body.client_email,
+                });
+                rpcData = result.data;
+                error = result.error;
+            }
+
             if (error) {
                 logError('QuickBookGuest', 'RPC error', error);
                 return createErrorResponse('validation', error.message, { code: 'rpc' }, 400);

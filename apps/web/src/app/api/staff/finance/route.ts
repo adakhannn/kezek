@@ -9,7 +9,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
+import { getShiftData, buildFinanceResponsePayload } from '@/app/staff/finance/services/shiftDataService';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics';
 import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
@@ -121,52 +121,28 @@ export async function GET(req: Request) {
             useServiceClient,
         });
 
-        // Преобразуем items из snake_case в camelCase
-        const items = (result.today.items || []).map((item: {
-            id: string;
-            client_name: string | null;
-            service_name: string | null;
-            service_amount: number;
-            consumables_amount: number;
-            note: string | null;
-            booking_id: string | null;
-            created_at: string;
-        }) => ({
-            id: item.id,
-            clientName: item.client_name || '',
-            serviceName: item.service_name || '',
-            serviceAmount: item.service_amount || 0,
-            consumablesAmount: item.consumables_amount || 0,
-            bookingId: item.booking_id || null,
-            createdAt: item.created_at || null,
-        }));
-
-        // Форматируем ответ в едином формате
-        const responseData = {
-            today: {
-                ...result.today,
-                items,
-            },
-            bookings: result.bookings,
-            services: result.services,
-            allShifts: result.allShifts,
-            staffPercentMaster: result.staffPercentMaster,
-            staffPercentSalon: result.staffPercentSalon,
-            hourlyRate: result.hourlyRate,
-            currentHoursWorked: result.currentHoursWorked,
-            currentGuaranteedAmount: result.currentGuaranteedAmount,
-            isDayOff: result.isDayOff,
-            stats: result.stats,
-        };
+        const responseData = buildFinanceResponsePayload(result);
         
         statusCode = 200;
+
+        const durationMs = Date.now() - startTime;
+
+        // Детальное логирование тайминга для диагностики производительности
+        logDebug('StaffFinance', 'Timing', {
+            durationMs,
+            endpoint,
+            staffId,
+            bizId,
+            date: dateParam ?? null,
+            useServiceClient,
+        });
         
         // Логируем метрику асинхронно (не блокируем ответ)
         logApiMetric({
             endpoint,
             method: 'GET',
             statusCode,
-            durationMs: Date.now() - startTime,
+            durationMs,
             userId,
             staffId,
             bizId,

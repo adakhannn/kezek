@@ -6,7 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { formatInTimeZone } from 'date-fns-tz';
 
-import { logError } from '@/lib/log';
+import { logError, logDebug } from '@/lib/log';
 import { TZ } from '@/lib/time';
 
 export interface ShiftDataServiceOptions {
@@ -102,8 +102,16 @@ export async function getShiftData({
     // Если нужен service client для обхода RLS, получаем его
     let client = supabase;
     if (useServiceClient) {
-        const { getServiceClient } = await import('@/lib/supabaseService');
-        client = getServiceClient();
+        try {
+            const { getServiceClient } = await import('@/lib/supabaseService');
+            client = getServiceClient();
+        } catch (e) {
+            // В деве/локально сервисный ключ может быть не задан.
+            // В этом случае падает getServiceClient со ссылкой на SUPABASE_SERVICE_ROLE_KEY.
+            // Чтобы страница не ломалась, логируем как debug и продолжаем с обычным клиентом (c RLS).
+            logDebug('ShiftDataService', 'Failed to create service client, falling back to provided supabase client', e);
+            client = supabase;
+        }
     }
     
     // Дата в локальной TZ (без времени)
@@ -113,72 +121,123 @@ export async function getShiftData({
     const dateStart = `${ymd}T00:00:00`;
     const dateEnd = `${ymd}T23:59:59`;
 
+    // Вспомогательная обёртка для замера времени выполнения отдельных частей
+    // Supabase возвращает PostgrestBuilder (thenable), поэтому принимаем PromiseLike<T>
+    const measurePart = async <T>(part: string, fn: () => PromiseLike<T>): Promise<T> => {
+        const t0 = Date.now();
+        try {
+            return await Promise.resolve(fn());
+        } finally {
+            const durationMs = Date.now() - t0;
+            logDebug('ShiftDataService', 'Query timing', {
+                part,
+                durationMs,
+                staffId,
+                ymd,
+            });
+        }
+    };
+
     // Выполняем все независимые запросы параллельно для ускорения загрузки
     const basePromises = [
         // 1. Настройки сотрудника (проценты и ставка)
-        client
-            .from('staff')
-            .select('percent_master, percent_salon, hourly_rate')
-            .eq('id', staffId)
-            .maybeSingle(),
-        
+        measurePart('staff', () =>
+            client
+                .from('staff')
+                .select('percent_master, percent_salon, hourly_rate')
+                .eq('id', staffId)
+                .maybeSingle(),
+        ),
+
         // 2. Смена за выбранную дату с позициями (объединенный запрос для уменьшения количества запросов)
-        client
-            .from('staff_shifts')
-            .select('id, shift_date, opened_at, closed_at, expected_start, late_minutes, status, total_amount, consumables_amount, master_share, salon_share, percent_master, percent_salon, hours_worked, hourly_rate, guaranteed_amount, topup_amount, staff_shift_items(id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at)')
-            .eq('staff_id', staffId)
-            .eq('shift_date', ymd)
-            .maybeSingle(),
-        
+        measurePart('shift_with_items', () =>
+            client
+                .from('staff_shifts')
+                .select('id, shift_date, opened_at, closed_at, expected_start, late_minutes, status, total_amount, consumables_amount, master_share, salon_share, percent_master, percent_salon, hours_worked, hourly_rate, guaranteed_amount, topup_amount, staff_shift_items(id, client_name, service_name, service_amount, consumables_amount, note, booking_id, created_at)')
+                .eq('staff_id', staffId)
+                .eq('shift_date', ymd)
+                .maybeSingle(),
+        ),
+
         // 3. Записи (bookings) сотрудника за выбранную дату
-        client
-            .from('bookings')
-            .select('id, client_name, client_phone, start_at, services:services!bookings_service_id_fkey (name_ru, name_ky, name_en)')
-            .eq('staff_id', staffId)
-            .gte('start_at', dateStart)
-            .lte('start_at', dateEnd)
-            .neq('status', 'cancelled')
-            .order('start_at', { ascending: true }),
-        
+        measurePart('bookings', () =>
+            client
+                .from('bookings')
+                .select(
+                    `
+                id,
+                client_name,
+                client_phone,
+                start_at,
+                services:services!bookings_service_id_fkey (name_ru, name_ky, name_en),
+                booking_services (
+                    service:services (name_ru, name_ky, name_en)
+                )
+            `,
+                )
+                .eq('staff_id', staffId)
+                .gte('start_at', dateStart)
+                .lte('start_at', dateEnd)
+                .neq('status', 'cancelled')
+                .order('start_at', { ascending: true }),
+        ),
+
         // 4. Услуги сотрудника для выпадающего списка
-        client
-            .from('service_staff')
-            .select('services:services!inner (name_ru, name_ky, name_en)')
-            .eq('staff_id', staffId)
-            .eq('is_active', true)
-            .eq('services.active', true),
+        measurePart('services', () =>
+            client
+                .from('service_staff')
+                .select('services:services!inner (name_ru, name_ky, name_en)')
+                .eq('staff_id', staffId)
+                .eq('is_active', true)
+                .eq('services.active', true),
+        ),
     ];
 
-    // Добавляем проверку выходного дня только если это сегодня
+    // Добавляем проверку выходного дня и allShifts только если это сегодня (всё в одном батче)
     const dayOffPromises = ymd === today ? [
         // 5. Проверяем staff_time_off
-        client
-            .from('staff_time_off')
-            .select('id')
-            .eq('biz_id', bizId)
-            .eq('staff_id', staffId)
-            .lte('date_from', ymd)
-            .gte('date_to', ymd),
-        
+        measurePart('day_off_time_off', () =>
+            client
+                .from('staff_time_off')
+                .select('id')
+                .eq('biz_id', bizId)
+                .eq('staff_id', staffId)
+                .lte('date_from', ymd)
+                .gte('date_to', ymd),
+        ),
+
         // 6. Проверяем staff_schedule_rules для конкретной даты
-        client
-            .from('staff_schedule_rules')
-            .select('intervals, is_active')
-            .eq('biz_id', bizId)
-            .eq('staff_id', staffId)
-            .eq('kind', 'date')
-            .eq('date_on', ymd)
-            .eq('is_active', true)
-            .maybeSingle(),
-        
+        measurePart('day_off_date_rule', () =>
+            client
+                .from('staff_schedule_rules')
+                .select('intervals, is_active')
+                .eq('biz_id', bizId)
+                .eq('staff_id', staffId)
+                .eq('kind', 'date')
+                .eq('date_on', ymd)
+                .eq('is_active', true)
+                .maybeSingle(),
+        ),
+
         // 7. Проверяем еженедельное расписание
-        client
-            .from('working_hours')
-            .select('intervals')
-            .eq('biz_id', bizId)
-            .eq('staff_id', staffId)
-            .eq('day_of_week', dow)
-            .maybeSingle(),
+        measurePart('day_off_weekly_schedule', () =>
+            client
+                .from('working_hours')
+                .select('intervals')
+                .eq('biz_id', bizId)
+                .eq('staff_id', staffId)
+                .eq('day_of_week', dow)
+                .maybeSingle(),
+        ),
+
+        // 8. allShifts для сегодня — в том же батче, без второго await
+        measurePart('all_shifts_today', () =>
+            client
+                .from('staff_shifts')
+                .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
+                .eq('staff_id', staffId)
+                .order('shift_date', { ascending: false }),
+        ),
     ] : [];
 
     const allPromises = [...basePromises, ...dayOffPromises];
@@ -187,17 +246,29 @@ export async function getShiftData({
     // Обрабатываем результаты с явной типизацией
     const staffDataResult = results[0] as { data: { percent_master: number | null; percent_salon: number | null; hourly_rate: number | null } | null; error: unknown };
     const shiftResult = results[1] as { data: unknown; error: { message?: string } | null };
-    const bookingsResult = results[2] as { data: Array<{
-        id: string;
-        client_name: string | null;
-        client_phone: string | null;
-        start_at: string;
-        services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
-    }> | null; error: unknown };
+    const bookingsResult = results[2] as {
+        data: Array<{
+            id: string;
+            client_name: string | null;
+            client_phone: string | null;
+            start_at: string;
+            services:
+                | { name_ru: string; name_ky?: string | null; name_en?: string | null }
+                | { name_ru: string; name_ky?: string | null; name_en?: string | null }[]
+                | null;
+            booking_services?:
+                | {
+                      service?: { name_ru: string; name_ky?: string | null; name_en?: string | null } | null;
+                  }[]
+                | null;
+        }> | null;
+        error: unknown;
+    };
     const servicesResult = results[3] as { data: Array<{
         services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
     }> | null; error: unknown };
     const dayOffResults = results.slice(4) as Array<{ data: unknown; error: unknown }>;
+    const allShiftsFromBatch = ymd === today ? (dayOffResults[3] as AllShiftsResult) : null;
     
     const { data: staffData, error: staffError } = staffDataResult;
     if (staffError) {
@@ -332,7 +403,7 @@ export async function getShiftData({
         });
     }
 
-    // Загружаем allShifts (только если запрашивается сегодня)
+    // allShifts уже загружены в первом батче (allShiftsFromBatch), когда ymd === today
     type AllShiftsResult = { data: Array<{
         shift_date: string | Date;
         status: string;
@@ -344,41 +415,78 @@ export async function getShiftData({
         topup_amount?: number | null;
     }> | null; error: unknown };
     
-    let allShiftsResult: AllShiftsResult | null = null;
-    
-    if (ymd === today) {
-        const result = await client
-            .from('staff_shifts')
-            .select('id, shift_date, status, total_amount, master_share, salon_share, late_minutes, guaranteed_amount, topup_amount')
-            .eq('staff_id', staffId)
-            .order('shift_date', { ascending: false });
-        
-        allShiftsResult = result as AllShiftsResult;
-    }
+    const allShiftsResult: AllShiftsResult | null = allShiftsFromBatch;
 
-    // Преобразуем bookings: services может быть массивом из-за join, но нам нужен объект или null
-    const dateBookings = (dateBookingsRaw ?? []).map((booking: {
-        id: string;
-        client_name: string | null;
-        client_phone: string | null;
-        start_at: string;
-        services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
-    }) => {
-        const services = Array.isArray(booking.services) 
-            ? (booking.services.length > 0 ? booking.services[0] : null)
-            : booking.services;
-        return {
-            id: booking.id,
-            client_name: booking.client_name,
-            client_phone: booking.client_phone,
-            start_at: booking.start_at,
-            services: services ? {
-                name_ru: services.name_ru || '',
-                name_ky: services.name_ky ?? null,
-                name_en: services.name_en ?? null,
-            } : null,
-        };
-    });
+    // Преобразуем bookings:
+    // - базовая услуга из bookings.service_id (services)
+    // - дополнительные услуги из booking_services (complex)
+    const dateBookings = (dateBookingsRaw ?? []).map(
+        (booking: {
+            id: string;
+            client_name: string | null;
+            client_phone: string | null;
+            start_at: string;
+            services:
+                | { name_ru: string; name_ky?: string | null; name_en?: string | null }
+                | { name_ru: string; name_ky?: string | null; name_en?: string | null }[]
+                | null;
+            booking_services?:
+                | {
+                      service?: { name_ru: string; name_ky?: string | null; name_en?: string | null } | null;
+                  }[]
+                | null;
+        }) => {
+            const baseServices = Array.isArray(booking.services)
+                ? booking.services
+                : booking.services
+                ? [booking.services]
+                : [];
+            const extraServices =
+                booking.booking_services && Array.isArray(booking.booking_services)
+                    ? booking.booking_services
+                          .map((bs) => bs.service)
+                          .filter(
+                              (s): s is { name_ru: string; name_ky?: string | null; name_en?: string | null } =>
+                                  !!s && typeof s === 'object' && typeof s.name_ru === 'string',
+                          )
+                    : [];
+
+            // Убираем дубликаты по name_ru: базовая услуга может повторяться в booking_services
+            const seenNames = new Set<string>();
+            const allServices: Array<{ name_ru: string; name_ky?: string | null; name_en?: string | null }> = [];
+            for (const svc of [...baseServices, ...extraServices]) {
+                const key = (svc.name_ru || '').trim();
+                if (key && !seenNames.has(key)) {
+                    seenNames.add(key);
+                    allServices.push(svc);
+                }
+            }
+
+            if (allServices.length === 0) {
+                return {
+                    id: booking.id,
+                    client_name: booking.client_name,
+                    client_phone: booking.client_phone,
+                    start_at: booking.start_at,
+                    services: null,
+                };
+            }
+
+            // Интерфейс ожидает одну услугу или null; для комплексов берём первую
+            const first = allServices[0];
+            return {
+                id: booking.id,
+                client_name: booking.client_name,
+                client_phone: booking.client_phone,
+                start_at: booking.start_at,
+                services: {
+                    name_ru: first.name_ru || '',
+                    name_ky: first.name_ky ?? null,
+                    name_en: first.name_en ?? null,
+                },
+            };
+        },
+    );
 
     const availableServices = (staffServices ?? [])
         .map((ss: { services: { name_ru: string; name_ky?: string | null; name_en?: string | null } | { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null }) => {
@@ -494,6 +602,63 @@ export async function getShiftData({
         isDayOff,
         allShifts,
         stats,
+    };
+}
+
+/** Элемент смены в формате API (camelCase) */
+export type FinanceResponsePayloadItem = {
+    id: string;
+    clientName: string;
+    serviceName: string;
+    serviceAmount: number;
+    consumablesAmount: number;
+    bookingId: string | null;
+    createdAt: string | null;
+};
+
+/** Формат ответа для API и SSR: today.items в camelCase, остальное без изменений */
+export type FinanceResponsePayload = {
+    today: Omit<ShiftDataServiceResult['today'], 'items'> & {
+        items: FinanceResponsePayloadItem[];
+    };
+    bookings: ShiftDataServiceResult['bookings'];
+    services: ShiftDataServiceResult['services'];
+    allShifts: ShiftDataServiceResult['allShifts'];
+    staffPercentMaster: number;
+    staffPercentSalon: number;
+    hourlyRate: number | null;
+    currentHoursWorked: number | null;
+    currentGuaranteedAmount: number | null;
+    isDayOff: boolean;
+    stats: ShiftDataServiceResult['stats'];
+};
+
+/**
+ * Строит payload для API / SSR из результата getShiftData (items в camelCase).
+ * Используется в API route и при серверном prefetch для страницы финансов.
+ */
+export function buildFinanceResponsePayload(result: ShiftDataServiceResult): FinanceResponsePayload {
+    const items: FinanceResponsePayloadItem[] = (result.today.items || []).map((item) => ({
+        id: item.id,
+        clientName: item.client_name || '',
+        serviceName: item.service_name || '',
+        serviceAmount: item.service_amount || 0,
+        consumablesAmount: item.consumables_amount || 0,
+        bookingId: item.booking_id || null,
+        createdAt: item.created_at ?? null,
+    }));
+    return {
+        today: { ...result.today, items },
+        bookings: result.bookings,
+        services: result.services,
+        allShifts: result.allShifts,
+        staffPercentMaster: result.staffPercentMaster,
+        staffPercentSalon: result.staffPercentSalon,
+        hourlyRate: result.hourlyRate,
+        currentHoursWorked: result.currentHoursWorked,
+        currentGuaranteedAmount: result.currentGuaranteedAmount,
+        isDayOff: result.isDayOff,
+        stats: result.stats,
     };
 }
 

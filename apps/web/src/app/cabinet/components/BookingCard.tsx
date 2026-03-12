@@ -20,6 +20,7 @@ export default function BookingCard({
                                         start_at,
                                         end_at,
                                         service,
+                                        servicesList,
                                         staff,
                                         branch,
                                         business,
@@ -37,6 +38,8 @@ export default function BookingCard({
     start_at: string;
     end_at: string;
     service: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number } | null;
+    /** Полный список услуг визита (если это комплекс); при отсутствии — ведём себя как сейчас (одна услуга) */
+    servicesList?: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number }[];
     staff: { id: string; full_name: string } | null;
     branch: { id: string; name: string; lat: number | null; lon: number | null; address: string | null } | null;
     business: { id: string; name: string; slug: string } | null;
@@ -150,7 +153,13 @@ export default function BookingCard({
     const startDate = new Date(start_at);
     const endDate = new Date(end_at);
     const when = `${dateFormatter.format(startDate)} — ${timeFormatter.format(endDate)}`;
-    
+
+    const totalDurationMin =
+        servicesList && servicesList.length > 0
+            ? servicesList.reduce((sum, s) => sum + (s.duration_min || 0), 0)
+            : service?.duration_min ?? 0;
+    const hasMultipleServices = servicesList && servicesList.length > 1;
+
     const statusColors = {
         hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
         confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
@@ -221,6 +230,29 @@ export default function BookingCard({
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                         {getServiceName(service)}
                     </h3>
+                    {hasMultipleServices && servicesList && (
+                        <div className="mt-1 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+                            <p className="font-medium">
+                                {t('cabinet.bookings.card.servicesList.title', 'Услуги в визите:')}
+                            </p>
+                            <ul className="space-y-0.5">
+                                {servicesList.map((s) => (
+                                    <li key={s.id} className="flex items-baseline justify-between gap-2">
+                                        <span className="font-medium text-gray-800 dark:text-gray-100">
+                                            {getServiceName(s as typeof service)}
+                                        </span>
+                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                            {s.duration_min}{' '}{t('booking.duration.min', 'мин')}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+                                {t('cabinet.bookings.card.totalDuration', 'Всего:')}{' '}
+                                {totalDurationMin}{' '}{t('booking.duration.min', 'мин')}
+                            </p>
+                        </div>
+                    )}
                     <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <span className="flex items-center gap-1">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

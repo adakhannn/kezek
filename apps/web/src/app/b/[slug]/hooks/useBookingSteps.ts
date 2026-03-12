@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
+
 import type { BookingStep } from '../types';
 import type { Service } from '../types';
+
 import { logDebug } from '@/lib/log';
 
 type UseBookingStepsParams = {
     branchId: string;
     dayStr: string;
     staffId: string;
-    serviceId: string;
+    serviceIds: string[];
     servicesFiltered: Service[];
     t: (key: string, fallback?: string) => string;
     initialStep?: number;
@@ -15,7 +17,7 @@ type UseBookingStepsParams = {
 };
 
 export function useBookingSteps(params: UseBookingStepsParams) {
-    const { branchId, dayStr, staffId, serviceId, servicesFiltered, t, initialStep, onStepChange } = params;
+    const { branchId, dayStr, staffId, serviceIds, servicesFiltered, t, initialStep, onStepChange } = params;
 
     const [step, setStep] = useState<BookingStep>((Math.min(5, Math.max(1, initialStep ?? 1)) as BookingStep));
     const totalSteps: BookingStep = 5;
@@ -43,26 +45,27 @@ export function useBookingSteps(params: UseBookingStepsParams) {
         // Шаг 3 -> 4: должен быть выбран мастер
         if (step === 3) return !!staffId;
 
-        // Шаг 4 -> 5: должна быть выбрана услуга И мастер должен делать эту услугу
+        // Шаг 4 -> 5: выбрана хотя бы одна услуга и все выбранные входят в servicesFiltered
         if (step === 4) {
-            if (!serviceId || !staffId) return false;
+            if (!staffId) return false;
+            if (serviceIds.length === 0) return false;
 
-            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            if (!isServiceValid) {
-                logDebug('Booking', 'canGoNext: service not in servicesFiltered', {
-                    serviceId,
+            const filteredIds = new Set(servicesFiltered.map((s) => s.id));
+            const allValid = serviceIds.every((id) => filteredIds.has(id));
+            if (!allValid) {
+                logDebug('Booking', 'canGoNext: not all selected services in servicesFiltered', {
+                    serviceIds,
                     servicesFiltered: servicesFiltered.map((s) => s.id),
-                    servicesFilteredNames: servicesFiltered.map((s) => s.name_ru),
                 });
                 return false;
             }
 
-            logDebug('Booking', 'canGoNext: service is valid (in servicesFiltered)', { serviceId });
+            logDebug('Booking', 'canGoNext: all selected services valid (in servicesFiltered)', { serviceIds });
             return true;
         }
 
         return true;
-    }, [step, totalSteps, branchId, dayStr, staffId, serviceId, servicesFiltered]);
+    }, [step, totalSteps, branchId, dayStr, staffId, serviceIds, servicesFiltered]);
 
     const canGoPrev = step > 1;
 

@@ -8,12 +8,11 @@
  */
 // apps/web/src/app/api/dashboard/staff/[id]/finance/route.ts
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import { logError, logDebug, logWarn } from '@/lib/log';
-import { getRouteParamUuid } from '@/lib/routeParams';
+import { logError, logWarn } from '@/lib/log';
 import { TZ, todayStringInTz, formatDateInTz } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { staffFinanceByIdQuerySchema } from '@/lib/validation/schemas';
-import { withManagerContext } from '@/lib/withManagerContext';
+import { withManagerAndStaffContext } from '@/lib/withManagerAndStaffContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -24,8 +23,22 @@ export async function GET(
 ) {
     return withErrorHandler('StaffFinance', async () => {
         logWarn('StaffFinance', 'Deprecated endpoint used. Please migrate to /api/staff/finance?staffId={id}');
-        const staffId = await getRouteParamUuid(context, 'id');
-        return withManagerContext(req, 'StaffFinance', async ({ supabase, admin, bizId }) => {
+        return withManagerAndStaffContext<{
+            id: string;
+            biz_id: string | number | null;
+            percent_master: number | null;
+            percent_salon: number | null;
+            hourly_rate: number | null;
+        }>(
+            req,
+            context,
+            {
+                scope: 'StaffFinance',
+                staffIdParamName: 'id',
+                staffSelect: 'id, biz_id, percent_master, percent_salon, hourly_rate',
+                notFoundMessage: 'Сотрудник не найден или доступ запрещен',
+            },
+            async ({ supabase, admin, bizId, staffId, staff }) => {
         // Валидация query параметров
         const url = new URL(req.url);
         const queryValidation = validateQuery(url, staffFinanceByIdQuerySchema);
@@ -41,43 +54,6 @@ export async function GET(
             targetDate = new Date(year, month - 1, day);
         } else {
             targetDate = new Date();
-        }
-
-        // Проверяем, что сотрудник принадлежит этому бизнесу
-        const { data: staff, error: staffError } = await supabase
-            .from('staff')
-            .select('id, biz_id, percent_master, percent_salon, hourly_rate')
-            .eq('id', staffId)
-            .maybeSingle();
-
-        if (staffError) {
-            logError('StaffFinance', 'Error loading staff', { 
-                error: staffError.message, 
-                staffId,
-                bizId 
-            });
-            return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
-        }
-
-        if (!staff) {
-            logDebug('StaffFinance', 'Staff not found', { staffId, bizId });
-            return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
-        }
-
-        // Нормализуем значения для надежного сравнения
-        const normalizedBizId = bizId ? String(bizId).trim() : null;
-        const normalizedStaffBizId = staff.biz_id != null ? String(staff.biz_id).trim() : null;
-
-        // Проверяем принадлежность к бизнесу
-        if (!normalizedStaffBizId || !normalizedBizId || normalizedStaffBizId !== normalizedBizId) {
-            logError('StaffFinance', 'Staff business mismatch', {
-                staffId,
-                staffBizId: normalizedStaffBizId,
-                requestedBizId: normalizedBizId,
-                staffBizIdType: typeof staff.biz_id,
-                bizIdType: typeof bizId,
-            });
-            return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
         }
 
         const staffPercentMaster = Number(staff.percent_master ?? 60);
@@ -374,7 +350,8 @@ export async function GET(
             isDayOff,
             stats,
         });
-        });
+        },
+        );
     });
 }
 

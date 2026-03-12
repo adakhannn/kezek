@@ -35,6 +35,13 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
+/** Fallback when useLanguage is used outside LanguageProvider (e.g. streaming/hydration edge case). */
+const fallbackContextValue: LanguageContextValue = {
+    locale: defaultLocale,
+    setLocale: () => {},
+    t: (key, fallback) => fallback ?? (typeof key === 'string' ? key : ''),
+};
+
 export function LanguageProvider({children}: {children: React.ReactNode}) {
     const [locale, setLocaleState] = useState<Locale>(defaultLocale);
 
@@ -124,7 +131,10 @@ export function LanguageProvider({children}: {children: React.ReactNode}) {
 export function useLanguage() {
     const ctx = useContext(LanguageContext);
     if (!ctx) {
-        throw new Error('useLanguage must be used within LanguageProvider');
+        if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+            console.warn('[useLanguage] Used outside LanguageProvider — using fallback (ru). Wrap the app in <LanguageProvider> in the root layout.');
+        }
+        return fallbackContextValue;
     }
     return ctx;
 }

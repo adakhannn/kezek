@@ -3,7 +3,7 @@
 import { memo } from 'react';
 
 import type { ShiftItem } from '../types';
-import { formatTime } from '../utils';
+import { deduplicateServiceNameString, formatTime } from '../utils';
 import { checkPermissions, getPermissionMessage, type PermissionContext } from '../utils/permissions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -75,12 +75,12 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                 </div>
                 <div className="min-w-0">
                     <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                        {item.serviceName || <span className="text-gray-400 italic">—</span>}
+                        {deduplicateServiceNameString(item.serviceName) || <span className="text-gray-400 italic">—</span>}
                     </div>
                 </div>
                 <div className="text-right">
                     <div className={`text-sm font-bold ${(item.serviceAmount ?? 0) > 0 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
-                        {(item.serviceAmount ?? 0) === 0 && !item.serviceName
+                        {(item.serviceAmount ?? 0) === 0 && !deduplicateServiceNameString(item.serviceName)
                             ? <span className="text-gray-400">—</span>
                             : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${t('staff.finance.shift.som', 'сом')}`}
                     </div>
@@ -127,13 +127,13 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                     </div>
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mb-2 truncate">
-                    {item.serviceName || <span className="text-gray-400 italic">—</span>}
+                    {deduplicateServiceNameString(item.serviceName) || <span className="text-gray-400 italic">—</span>}
                 </div>
                 <div className="flex items-center justify-between gap-3">
                     <div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{t('staff.finance.clients.amount', 'Сумма')}</div>
                         <div className={`text-sm font-bold ${(item.serviceAmount ?? 0) > 0 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
-                            {(item.serviceAmount ?? 0) === 0 && !item.serviceName
+                            {(item.serviceAmount ?? 0) === 0 && !deduplicateServiceNameString(item.serviceName)
                                 ? <span className="text-gray-400">—</span>
                                 : `${(item.serviceAmount ?? 0).toLocaleString('ru-RU')} ${t('staff.finance.shift.som', 'сом')}`}
                         </div>

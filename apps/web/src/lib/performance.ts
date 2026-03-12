@@ -22,6 +22,7 @@ const MAX_METRICS = 1000;
 // Пороговые значения для алертов (в миллисекундах)
 const PERFORMANCE_THRESHOLDS: Record<string, { warn: number; error: number }> = {
     'get_free_slots_service_day_v2': { warn: 2000, error: 5000 }, // 2s warn, 5s error
+    'get_free_slots_complex_day_v1': { warn: 2000, error: 5000 }, // 2s warn, 5s error
     'shift_close': { warn: 3000, error: 10000 }, // 3s warn, 10s error
     'apply_promotion': { warn: 1000, error: 3000 }, // 1s warn, 3s error
     'recalculate_ratings': { warn: 30000, error: 60000 }, // 30s warn, 60s error

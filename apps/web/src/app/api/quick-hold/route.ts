@@ -151,9 +151,24 @@ export async function POST(req: Request) {
     if (!validationResult.success) {
         return validationResult.response;
     }
-    
+
+    // Нормализуем тело для доменной валидации:
+    // если service_id не передан, но есть services[], подставляем первый service_id.
+    const raw = validationResult.data as {
+        biz_id: string;
+        branch_id?: string;
+        service_id?: string;
+        services?: { service_id: string; duration_min: number; order_index?: number }[];
+        staff_id: string;
+        start_at: string;
+    };
+    const forDomain = {
+        ...raw,
+        service_id: raw.service_id ?? (raw.services?.[0] ? raw.services[0].service_id : undefined),
+    };
+
     // Дополнительная доменная валидация (структура/бизнес-инварианты)
-    const domainValidation = validateCreateBookingParams(validationResult.data);
+    const domainValidation = validateCreateBookingParams(forDomain);
     if (!domainValidation.valid || !domainValidation.data) {
         return createErrorResponse(
             'validation',

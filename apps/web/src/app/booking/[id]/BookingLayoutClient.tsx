@@ -8,24 +8,62 @@ import { transliterate } from '@/lib/transliterate';
 
 type BookingLayoutProps = {
     id: string;
-    service: { name_ru: string; name_ky: string | null; name_en: string | null } | null;
+    services: { name_ru: string; name_ky: string | null; name_en: string | null; duration_min: number | null }[] | null;
     masterName: string;
     startAt: Date;
     status: string;
     promotionApplied?: Record<string, unknown> | null;
 };
 
-export default function BookingLayoutClient({ id, service, masterName, startAt, status, promotionApplied }: BookingLayoutProps) {
+export default function BookingLayoutClient({ id, services, masterName, startAt, status, promotionApplied }: BookingLayoutProps) {
     const { t, locale } = useLanguage();
 
-    function getServiceName(): string {
-        if (!service) return '—';
-        if (locale === 'ky' && service.name_ky) return service.name_ky;
-        if (locale === 'en' && service.name_en) return service.name_en;
-        return service.name_ru;
+    function buildServicesSummary(): { primary: string; details?: string } {
+        if (!services || services.length === 0) return { primary: '—' };
+
+        const pickName = (s: { name_ru: string; name_ky: string | null; name_en: string | null }): string => {
+            if (locale === 'ky' && s.name_ky) return s.name_ky;
+            if (locale === 'en' && s.name_en) return s.name_en;
+            return s.name_ru;
+        };
+
+        if (services.length === 1) {
+            const s = services[0];
+            const name = pickName(s);
+            if (s.duration_min && s.duration_min > 0) {
+                return {
+                    primary: `${name} (${s.duration_min} ${t('booking.duration.min', 'мин')})`,
+                };
+            }
+            return { primary: name };
+        }
+
+        const parts: string[] = [];
+        let totalDuration = 0;
+        for (const s of services) {
+            const name = pickName(s);
+            const duration = s.duration_min && s.duration_min > 0 ? s.duration_min : null;
+            if (duration) totalDuration += duration;
+            parts.push(
+                duration
+                    ? `${name} (${duration} ${t('booking.duration.min', 'мин')})`
+                    : name,
+            );
+        }
+
+        const primary = parts.join('; ');
+        const details =
+            totalDuration > 0
+                ? `${t('cabinet.bookings.card.totalDuration', 'Всего:')} ${totalDuration} ${t(
+                      'booking.duration.min',
+                      'мин',
+                  )}`
+                : undefined;
+
+        return { primary, details };
     }
 
-    const serviceName = getServiceName();
+    const servicesSummary = buildServicesSummary();
 
     function getStatusLabel(status: string): { text: string; className: string } {
         const statusMap: Record<string, { textKey: string; className: string }> = {
@@ -115,7 +153,12 @@ export default function BookingLayoutClient({ id, service, masterName, startAt, 
                                 {t('booking.service', 'Service')}
                             </dt>
                             <dd className="font-medium text-gray-900 dark:text-gray-100 text-right">
-                                {serviceName}
+                                <div>{servicesSummary.primary}</div>
+                                {servicesSummary.details && (
+                                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        {servicesSummary.details}
+                                    </div>
+                                )}
                             </dd>
                         </div>
                         <div className="flex items-start justify-between gap-3">

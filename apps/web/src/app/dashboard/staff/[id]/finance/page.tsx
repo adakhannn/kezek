@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import StaffFinancePageClient from './StaffFinancePageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { logError, logDebug } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -17,43 +18,28 @@ export default async function StaffFinancePage({
         const { id } = await params;
         const { supabase, bizId } = await getBizContextForManagers();
 
-        // Проверяем, что сотрудник принадлежит этому бизнесу
-        const { data: staff, error } = await supabase
-            .from('staff')
-            .select('id, biz_id, full_name')
-            .eq('id', id)
-            .maybeSingle();
+        // Проверяем, что сотрудник принадлежит этому бизнесу (общий хелпер)
+        const staffResult = await checkResourceBelongsToBiz<{ id: string; biz_id: string | number | null; full_name: string | null }>(
+            supabase,
+            'staff',
+            id,
+            bizId,
+            'id, biz_id, full_name'
+        );
 
-        if (error) {
-            logError('StaffFinancePage', 'Error loading staff', { 
-                error: error.message, 
-                staffId: id,
-                bizId 
-            });
+        if (staffResult.error || !staffResult.data) {
+            // Не раскрываем причину пользователю; для UX это 404
+            if (staffResult.error === 'Resource not found') {
+                logDebug('StaffFinancePage', 'Staff not found', { staffId: id, bizId });
+            } else {
+                logError('StaffFinancePage', 'Staff business check failed', { staffId: id, bizId, error: staffResult.error });
+            }
             return notFound();
         }
 
-        if (!staff) {
-            logDebug('StaffFinancePage', 'Staff not found', { staffId: id, bizId });
-            return notFound();
-        }
+        const staff = staffResult.data;
 
-        // Нормализуем значения для надежного сравнения (консистентно с API роутами)
-        const normalizedBizId = bizId ? String(bizId).trim() : null;
-        const normalizedStaffBizId = staff.biz_id != null ? String(staff.biz_id).trim() : null;
-
-        // Проверяем принадлежность к бизнесу
-        if (!normalizedStaffBizId || !normalizedBizId || normalizedStaffBizId !== normalizedBizId) {
-            logError('StaffFinancePage', 'Staff business mismatch', {
-                staffId: id,
-                staffBizId: normalizedStaffBizId,
-                requestedBizId: normalizedBizId,
-                staffBizIdType: typeof staff.biz_id,
-                bizIdType: typeof bizId,
-            });
-            return notFound();
-        }
-
+        // Без server-prefetch: данные смены загрузит клиент через /api/staff/finance
         return <StaffFinancePageClient id={id} fullName={staff.full_name} />;
     } catch (e) {
         // Если getBizContextForManagers выбросил ошибку, она будет обработана в layout

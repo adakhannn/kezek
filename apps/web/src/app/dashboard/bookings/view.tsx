@@ -29,8 +29,12 @@ type BookingItem = {
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled' | 'no_show';
     start_at: string;
     end_at: string;
-    services?: { name_ru: string; name_ky?: string | null }[];
+    services?: { name_ru: string; name_ky?: string | null; name_en?: string | null }[];
     staff?: { full_name: string }[];
+    /** Человекочитаемое описание состава услуг (для комплексов) */
+    servicesSummary?: string;
+    client_name?: string | null;
+    client_phone?: string | null;
 };
 
 // ---------------- Tabs ----------------
@@ -58,7 +62,7 @@ function hourRange(start: number, end: number) { const a: number[] = []; for (le
 function minutesFromMidnight(d: Date) { return d.getHours() * 60 + d.getMinutes(); }
 function cellKey(staffId: string, hour: number) { return `${staffId}-${hour}`; }
 
-function BookingPill({ id, startISO, endISO, status, timezone }: { id: string; startISO: string; endISO: string; status: BookingItem['status']; timezone: string }) {
+function BookingPill({ id, startISO, endISO, status, timezone, title }: { id: string; startISO: string; endISO: string; status: BookingItem['status']; timezone: string; title?: string }) {
     return (
         <BookingCard
             id={id}
@@ -67,15 +71,16 @@ function BookingPill({ id, startISO, endISO, status, timezone }: { id: string; s
             status={status}
             timezone={timezone}
             href={`/booking/${id}`}
+            title={title}
         />
     );
 }
 
 function CalendarDay({ bizId, staff, branches, timezone }: { bizId: string; staff: StaffRow[]; branches: BranchRow[]; timezone: string }) {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
     const [date, setDate] = useState<string>(() => todayStringInTz(timezone));
     const [selectedBranchId, setSelectedBranchId] = useState<string>('all');
-    const [items, setItems] = useState<{ id: string; staff_id: string; start_at: string; end_at: string; status: BookingItem['status'] }[]>([]);
+    const [items, setItems] = useState<{ id: string; staff_id: string; start_at: string; end_at: string; status: BookingItem['status']; servicesSummary?: string }[]>([]);
     
     // Фильтруем мастеров по филиалу
     const filteredStaff = useMemo(() => {
@@ -108,7 +113,17 @@ function CalendarDay({ bizId, staff, branches, timezone }: { bizId: string; staf
             const endDay = endOfDay.toISOString();
             const { data, error } = await supabase
                 .from('bookings')
-                .select('id,staff_id,start_at,end_at,status')
+                .select(`
+                    id,
+                    staff_id,
+                    start_at,
+                    end_at,
+                    status,
+                    booking_services (
+                        duration_min,
+                        service:services (name_ru, name_ky, name_en)
+                    )
+                `)
                 .eq('biz_id', bizId)
                 .neq('status', 'cancelled')
                 .gte('start_at', startDay)
@@ -116,20 +131,73 @@ function CalendarDay({ bizId, staff, branches, timezone }: { bizId: string; staf
                 .order('start_at', { ascending: true });
             if (ignore) return;
             if (error) { logError('CalendarDay', 'Error loading bookings', error); setItems([]); return; }
-            setItems((data ?? []).map(r => ({
-                id: String(r.id),
-                staff_id: String(r.staff_id),
-                start_at: String(r.start_at),
-                end_at: String(r.end_at),
-                status: r.status as BookingItem['status'],
-            })));
+
+            type CalendarBookingRow = {
+                id: string | number;
+                staff_id: string | number;
+                start_at: string | Date;
+                end_at: string | Date;
+                status: BookingItem['status'];
+                booking_services?: {
+                    duration_min: number | null;
+                    service?: { name_ru?: string; name_ky?: string | null; name_en?: string | null } | null;
+                }[] | null;
+            };
+
+            const rows = (data ?? []) as CalendarBookingRow[];
+            const mapped = rows.map((r) => {
+                const rawServices = Array.isArray(r.booking_services) ? r.booking_services : [];
+                if (rawServices.length === 0) {
+                    return {
+                        id: String(r.id),
+                        staff_id: String(r.staff_id),
+                        start_at: String(r.start_at),
+                        end_at: String(r.end_at),
+                        status: r.status as BookingItem['status'],
+                        servicesSummary: undefined,
+                    };
+                }
+
+                const parts: string[] = [];
+                let totalDuration = 0;
+                for (const s of rawServices) {
+                    const svc = s.service || {};
+                    const name =
+                        (locale === 'ky' && svc.name_ky) ||
+                        (locale === 'en' && svc.name_en) ||
+                        svc.name_ru ||
+                        '';
+                    const duration = typeof s.duration_min === 'number' ? s.duration_min : 0;
+                    totalDuration += duration;
+                    const label = name
+                        ? `${name} (${duration} ${t('booking.duration.min', 'мин')})`
+                        : `${duration} ${t('booking.duration.min', 'мин')}`;
+                    parts.push(label);
+                }
+                const summaryBase = parts.join('; ');
+                const summaryTotal =
+                    totalDuration > 0
+                        ? ` — ${t('cabinet.bookings.card.totalDuration', 'Всего:')} ${totalDuration} ${t('booking.duration.min', 'мин')}`
+                        : '';
+
+                return {
+                    id: String(r.id),
+                    staff_id: String(r.staff_id),
+                    start_at: String(r.start_at),
+                    end_at: String(r.end_at),
+                    status: r.status as BookingItem['status'],
+                    servicesSummary: `${summaryBase}${summaryTotal}`,
+                };
+            });
+
+            setItems(mapped);
         })();
         return () => { ignore = true; };
     }, [bizId, date, timezone]);
 
     const hours = hourRange(9, 21);
-    const byStaff = useMemo(() => {
-        const map = new Map<string, { id: string; staff_id: string; start_at: string; end_at: string; status: BookingItem['status'] }[]>();
+            const byStaff = useMemo(() => {
+        const map = new Map<string, { id: string; staff_id: string; start_at: string; end_at: string; status: BookingItem['status']; servicesSummary?: string }[]>();
         for (const s of filteredStaff) map.set(s.id, []);
         for (const it of items) { if (!map.has(it.staff_id)) map.set(it.staff_id, []); map.get(it.staff_id)!.push(it); }
         return map;
@@ -182,18 +250,25 @@ function CalendarDay({ bizId, staff, branches, timezone }: { bizId: string; staf
                                 <td className="p-4 text-sm text-gray-400 dark:text-gray-500">{t('bookings.calendar.noStaffInBranch', '—')}</td>
                             ) : (
                                 filteredStaff.map(s => {
-                                const events = (byStaff.get(s.id) ?? []).filter(ev => Math.floor(minutesFromMidnight(new Date(ev.start_at)) / 60) === h);
-                                return (
-                                    <td key={cellKey(s.id, h)} className="p-4">
-                                        {events.length === 0 && <span className="text-gray-300 dark:text-gray-600 text-xs">—</span>}
-                                        {events.map(ev => (
-                                            <div key={ev.id} className="mb-1">
-                                                <BookingPill id={ev.id} startISO={ev.start_at} endISO={ev.end_at} status={ev.status} timezone={timezone} />
-                                            </div>
-                                        ))}
-                                    </td>
-                                );
-                            }))}
+                                    const events = (byStaff.get(s.id) ?? []).filter(ev => Math.floor(minutesFromMidnight(new Date(ev.start_at)) / 60) === h);
+                                    return (
+                                        <td key={cellKey(s.id, h)} className="p-4">
+                                            {events.length === 0 && <span className="text-gray-300 dark:text-gray-600 text-xs">—</span>}
+                                            {events.map(ev => (
+                                                <div key={ev.id} className="mb-1">
+                                                    <BookingPill
+                                                        id={ev.id}
+                                                        startISO={ev.start_at}
+                                                        endISO={ev.end_at}
+                                                        status={ev.status}
+                                                        timezone={timezone}
+                                                        title={ev.servicesSummary}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </td>
+                                    );
+                                }))}
                         </tr>
                     ))}
                     </tbody>
@@ -306,7 +381,25 @@ function ListTable({ bizId, initial, branches, timezone }: { bizId: string; init
             // Загружаем прошедшие брони (для отметки посещения) и будущие
             let query = supabase
                 .from('bookings')
-                .select('id,status,start_at,end_at,branch_id,staff_id,services(name_ru,name_ky),staff(full_name),client_name,client_phone', { count: 'exact' })
+                .select(
+                    `
+                    id,
+                    status,
+                    start_at,
+                    end_at,
+                    branch_id,
+                    staff_id,
+                    services (name_ru, name_ky, name_en),
+                    staff (full_name),
+                    client_name,
+                    client_phone,
+                    booking_services (
+                        duration_min,
+                        service:services (name_ru, name_ky, name_en)
+                    )
+                `,
+                    { count: 'exact' }
+                )
                 .eq('biz_id', bizId);
             
             // Применяем пресет
@@ -346,14 +439,82 @@ function ListTable({ bizId, initial, branches, timezone }: { bizId: string; init
             const from = (currentPage - 1) * ITEMS_PER_PAGE;
             const to = from + ITEMS_PER_PAGE - 1;
             
+            type ListBookingRow = {
+                id: string | number;
+                status: BookingItem['status'];
+                start_at: string | Date;
+                end_at: string | Date;
+                branch_id: string | null;
+                staff_id: string | null;
+                services?: { name_ru: string; name_ky?: string | null; name_en?: string | null }[] | null;
+                staff?: { full_name: string }[] | null;
+                client_name?: string | null;
+                client_phone?: string | null;
+                booking_services?: {
+                    duration_min: number | null;
+                    service?: { name_ru?: string; name_ky?: string | null; name_en?: string | null } | null;
+                }[] | null;
+            };
+
             const { data, count } = await query
                 .order('start_at', { ascending: false })
                 .range(from, to);
-            
+
             setTotalCount(count ?? 0);
-            
+
+            const rawRows = (data ?? []) as ListBookingRow[];
+
+            // Строим человекочитаемое описание услуг для комплексов,
+            // чтобы в списке было видно весь состав визита.
+            const mapped: BookingItem[] = rawRows.map((r) => {
+                const base: BookingItem = {
+                    id: String(r.id),
+                    status: r.status as BookingItem['status'],
+                    start_at: String(r.start_at),
+                    end_at: String(r.end_at),
+                    services: r.services as BookingItem['services'],
+                    staff: r.staff as BookingItem['staff'],
+                    client_name: r.client_name ?? undefined,
+                    client_phone: r.client_phone ?? undefined,
+                };
+
+                const rawServices = Array.isArray(r.booking_services) ? r.booking_services : [];
+                if (rawServices.length > 0) {
+                    const parts: string[] = [];
+                    let totalDuration = 0;
+
+                    for (const bs of rawServices) {
+                        const svc = bs.service || {};
+                        const name =
+                            (locale === 'ky' && svc.name_ky) ||
+                            (locale === 'en' && svc.name_en) ||
+                            svc.name_ru ||
+                            '';
+                        const duration = typeof bs.duration_min === 'number' ? bs.duration_min : 0;
+                        totalDuration += duration;
+                        const label = name
+                            ? `${name} (${duration} ${t('booking.duration.min', 'мин')})`
+                            : `${duration} ${t('booking.duration.min', 'мин')}`;
+                        parts.push(label);
+                    }
+
+                    const summaryBase = parts.join('; ');
+                    const summaryTotal =
+                        totalDuration > 0
+                            ? ` — ${t('cabinet.bookings.card.totalDuration', 'Всего:')} ${totalDuration} ${t(
+                                  'booking.duration.min',
+                                  'мин',
+                              )}`
+                            : '';
+
+                    base.servicesSummary = `${summaryBase}${summaryTotal}`;
+                }
+
+                return base;
+            });
+
             // Фильтруем по поисковому запросу на клиенте
-            let filtered = data || [];
+            let filtered = mapped;
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase().trim();
                 filtered = filtered.filter(b => {

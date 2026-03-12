@@ -9,6 +9,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AuthChoiceModal } from './components/AuthChoiceModal';
+import { BookingDateCalendar } from './components/BookingDateCalendar';
 import { BookingHeader } from './components/BookingHeader';
 import { BookingSteps } from './components/BookingSteps';
 import { BookingSummary } from './components/BookingSummary';
@@ -28,7 +29,6 @@ import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
 import type { Data, ServiceStaffRow, Slot, Staff } from './types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { useBookingFlowStart, trackBookingFlowStep } from '@/lib/analyticsTrackEvent';
 import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 import { formatStaffName } from '@/lib/i18nHelpers';
@@ -125,7 +125,8 @@ export default function BookingForm({ data }: { data: Data }) {
         [staff, branchId]
     );
 
-    const [serviceId, setServiceId] = useState<string>('');
+    const [serviceIds, setServiceIds] = useState<string[]>([]);
+    const serviceId = serviceIds[0] ?? '';
     const [staffId, setStaffId] = useState<string>('');
     const [restoredFromStorage, setRestoredFromStorage] = useState(false);
     const urlRestoredRef = useRef(false);
@@ -143,7 +144,7 @@ export default function BookingForm({ data }: { data: Data }) {
             return;
         }
         setStaffId('');
-        setServiceId('');
+        setServiceIds([]);
     }, [branchId, restoredFromStorage]);
 
     // Восстановление дня, мастера и услуги из URL при загрузке (прогресс в URL — при обновлении страницы не теряем выбор)
@@ -161,8 +162,15 @@ export default function BookingForm({ data }: { data: Data }) {
         }
         const staffParam = searchParams.get('staff');
         if (staffParam) setStaffId(staffParam);
-        const serviceParam = searchParams.get('service');
-        if (serviceParam) setServiceId(serviceParam);
+
+        const servicesFromUrl = searchParams.getAll('service');
+        if (servicesFromUrl.length > 0) {
+            // Фильтруем по известным услугам; если что-то невалидное — игнорируем.
+            const valid = servicesFromUrl.filter((id) => services.some((s) => s.id === id));
+            if (valid.length > 0) {
+                setServiceIds(valid);
+            }
+        }
         skipBranchClearOnceRef.current = true;
         skipDayClearOnceRef.current = true;
     }, [searchParams, biz.tz]);
@@ -214,31 +222,34 @@ export default function BookingForm({ data }: { data: Data }) {
         temporaryTransfers,
     });
 
-    // при смене мастера или даты — сбрасываем выбор услуги, если текущая не подходит
+    // при смене мастера или даты — сбрасываем выбор услуг, если текущие не подходят
     useEffect(() => {
         if (!staffId || !dayStr) {
-            if (!staffId) logDebug('Booking', 'Staff cleared, clearing service');
-            if (!dayStr) logDebug('Booking', 'Day cleared, clearing service');
-            setServiceId('');
+            if (!staffId) logDebug('Booking', 'Staff cleared, clearing services');
+            if (!dayStr) logDebug('Booking', 'Day cleared, clearing services');
+            setServiceIds((prev) => (prev.length > 0 ? [] : prev));
             return;
         }
-        // Если выбранная услуга не подходит под нового мастера или дату — сбрасываем выбор
-        if (serviceId) {
-            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            logDebug('Booking', 'Checking service validity after staff/day change', { 
-                serviceId, 
-                staffId, 
+        setServiceIds((prev) => {
+            if (prev.length === 0) return prev;
+            const validIds = prev.filter((id) => servicesFiltered.some((s) => s.id === id));
+            const wasChanged = validIds.length !== prev.length;
+
+            logDebug('Booking', 'Checking services validity after staff/day change', {
+                serviceIds: prev,
+                validIds,
+                staffId,
                 dayStr,
-                isServiceValid, 
-                servicesFilteredCount: servicesFiltered.length, 
-                servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru })) 
+                servicesFilteredCount: servicesFiltered.length,
             });
-            if (!isServiceValid) {
-                logWarn('Booking', 'Service is not valid for current staff/day, clearing serviceId');
-                setServiceId('');
+
+            if (validIds.length === 0) {
+                logWarn('Booking', 'Selected services are not valid for current staff/day, clearing serviceIds');
+                return [];
             }
-        }
-    }, [staffId, dayStr, servicesFiltered, serviceId]);
+            return wasChanged ? validIds : prev;
+        });
+    }, [staffId, dayStr, servicesFiltered]);
 
 
     // Список мастеров: по филиалу + временные переводы В этот филиал на выбранную дату
@@ -291,7 +302,7 @@ export default function BookingForm({ data }: { data: Data }) {
             return;
         }
         setStaffId('');
-        setServiceId('');
+        setServiceIds([]);
     }, [dayStr, restoredFromStorage]);
 
     const [slotsRefreshKey, setSlotsRefreshKey] = useState(0); // Ключ для принудительного обновления
@@ -306,7 +317,7 @@ export default function BookingForm({ data }: { data: Data }) {
 
     /* ---------- загрузка слотов ---------- */
     const { slots: slotsFromHook, loading: slotsLoading, error: slotsError } = useSlotsLoader({
-        serviceId,
+        serviceIds,
         staffId,
         dayStr,
         branchId,
@@ -431,7 +442,7 @@ export default function BookingForm({ data }: { data: Data }) {
     /* ---------- создание бронирования ---------- */
     // Создаем стабильные ссылки на Set'ы ID для валидации восстановленных значений
     const branchIds = useMemo(() => new Set(branches.map((b) => b.id)), [branches]);
-    const serviceIds = useMemo(() => new Set(services.map((s) => s.id)), [services]);
+    const serviceIdSet = useMemo(() => new Set(services.map((s) => s.id)), [services]);
     const staffIdSet = useMemo(() => new Set(staff.map((m) => m.id)), [staff]);
     
     // Восстановление состояния после авторизации (localStorage)
@@ -448,7 +459,8 @@ export default function BookingForm({ data }: { data: Data }) {
             }
             const parsed = JSON.parse(raw) as {
                 branchId?: string;
-                serviceId?: string;
+                serviceId?: string; // старый формат
+                serviceIds?: string[]; // новый формат
                 staffId?: string;
                 day?: string;
                 step?: number;
@@ -457,9 +469,22 @@ export default function BookingForm({ data }: { data: Data }) {
             if (parsed.branchId && branchIds.has(parsed.branchId)) {
                 setBranchId(parsed.branchId);
             }
-            if (parsed.serviceId && serviceIds.has(parsed.serviceId)) {
-                setServiceId(parsed.serviceId);
+
+            // Восстанавливаем услуги: сначала новый формат (serviceIds[]), затем fallback на старый serviceId
+            const restoredServiceIds: string[] = [];
+            if (Array.isArray(parsed.serviceIds)) {
+                for (const id of parsed.serviceIds) {
+                    if (typeof id === 'string' && serviceIdSet.has(id)) {
+                        restoredServiceIds.push(id);
+                    }
+                }
+            } else if (parsed.serviceId && serviceIdSet.has(parsed.serviceId)) {
+                restoredServiceIds.push(parsed.serviceId);
             }
+            if (restoredServiceIds.length > 0) {
+                setServiceIds(restoredServiceIds);
+            }
+
             // Восстанавливаем мастера только если он валиден (будет проверен в useEffect ниже)
             if (parsed.staffId && staffIdSet.has(parsed.staffId)) {
                 setStaffId(parsed.staffId);
@@ -479,19 +504,19 @@ export default function BookingForm({ data }: { data: Data }) {
         } finally {
             setRestoredFromStorage(true);
         }
-    }, [biz.id, restoredFromStorage, branchIds, serviceIds, staffIds]);
+    }, [biz.id, restoredFromStorage, branchIds, serviceIdSet, staffIdSet]);
 
     const service = useMemo(
         () => {
             // Ищем услугу сначала в отфильтрованных услугах (для временно переведенного мастера)
             // Если не найдена, ищем во всех услугах филиала
             // Если не найдена, ищем во всех услугах
-            const found = servicesFiltered.find((s) => s.id === serviceId) 
+            const found = servicesFiltered.find((s) => s.id === serviceId)
                 ?? servicesByBranch.find((s) => s.id === serviceId)
                 ?? services.find((s) => s.id === serviceId);
-            logDebug('Booking', 'Finding service', { 
-                serviceId, 
-                found: found ? found.name_ru : null, 
+            logDebug('Booking', 'Finding service', {
+                serviceId,
+                found: found ? found.name_ru : null,
                 foundInFiltered: !!servicesFiltered.find((s) => s.id === serviceId),
                 foundInBranch: !!servicesByBranch.find((s) => s.id === serviceId),
                 foundInAll: !!services.find((s) => s.id === serviceId)
@@ -501,15 +526,31 @@ export default function BookingForm({ data }: { data: Data }) {
         [servicesFiltered, servicesByBranch, services, serviceId]
     );
 
-    // Используем хуки для создания бронирования
+    const selectedServicesForStep4 = useMemo(
+        () => servicesFiltered.filter((s) => serviceIds.includes(s.id)),
+        [servicesFiltered, serviceIds]
+    );
+    const { totalDurationStep4, totalPriceFromStep4, totalPriceToStep4 } = useMemo(() => {
+        let duration = 0;
+        let from = 0;
+        let to = 0;
+        for (const s of selectedServicesForStep4) {
+            duration += s.duration_min;
+            if (typeof s.price_from === 'number') from += s.price_from;
+            if (typeof s.price_to === 'number') to += s.price_to;
+        }
+        return { totalDurationStep4: duration, totalPriceFromStep4: from, totalPriceToStep4: to };
+    }, [selectedServicesForStep4]);
+
+    const servicesForBooking = selectedServicesForStep4.length > 0 ? selectedServicesForStep4 : (service ? [service] : []);
+
     const guestBooking = useGuestBooking({
         bizId: biz.id,
-        service,
+        services: servicesForBooking,
         staffId,
         branchId,
         t,
         onBookingCreated: () => {
-            // Обновляем кэш слотов после создания бронирования
             setSlotsRefreshKey((k) => k + 1);
         },
     });
@@ -522,7 +563,7 @@ export default function BookingForm({ data }: { data: Data }) {
     const { createBooking, loading: bookingLoading } = useBookingCreation({
         bizId: biz.id,
         branchId,
-        service,
+        services: servicesForBooking,
         staffId,
         isAuthed,
         t,
@@ -555,7 +596,7 @@ export default function BookingForm({ data }: { data: Data }) {
             const key = `booking_state_${biz.id}`;
             const payload = {
                 branchId,
-                serviceId,
+                serviceIds,
                 staffId,
                 day: dayStr,
                 step,
@@ -585,7 +626,7 @@ export default function BookingForm({ data }: { data: Data }) {
         branchId,
         dayStr,
         staffId,
-        serviceId,
+        serviceIds,
         servicesFiltered,
         t,
         initialStep,
@@ -598,10 +639,12 @@ export default function BookingForm({ data }: { data: Data }) {
         if (branchId) next.set('branch', branchId);
         if (dayStr) next.set('day', dayStr);
         if (staffId) next.set('staff', staffId);
-        if (serviceId) next.set('service', serviceId);
+        if (serviceIds.length > 0) {
+            serviceIds.forEach((id) => next.append('service', id));
+        }
         const q = next.toString();
         router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
-    }, [step, branchId, dayStr, staffId, serviceId, pathname, router]);
+    }, [step, branchId, dayStr, staffId, serviceIds, pathname, router]);
 
     const stepIndicatorText = useMemo(
         () =>
@@ -662,21 +705,18 @@ export default function BookingForm({ data }: { data: Data }) {
                                     {t('booking.step2.title', 'Шаг 2. Выберите день')}
                                 </h2>
                                 <div className="space-y-3">
-                                    <DatePickerPopover
-                                        value={dayStr}
-                                        onChange={(val) => {
-                                            if (val) {
-                                                setDay(dateAtTz(val, '00:00', businessTz));
-                                                trackBookingFlowStep({
-                                                    bizId: biz.id,
-                                                    branchId: branchId || undefined,
-                                                    step: 'date',
-                                                });
-                                            }
+                                    <BookingDateCalendar
+                                        value={day}
+                                        min={todayTz(businessTz)}
+                                        max={addDays(todayTz(businessTz), 60)}
+                                        onChange={(nextDay) => {
+                                            setDay(nextDay);
+                                            trackBookingFlowStep({
+                                                bizId: biz.id,
+                                                branchId: branchId || undefined,
+                                                step: 'date',
+                                            });
                                         }}
-                                        min={todayStr}
-                                        max={maxStr}
-                                        inline
                                     />
                                     {dayStr && (
                                         <div className="text-xs text-gray-600 dark:text-gray-400">
@@ -726,42 +766,45 @@ export default function BookingForm({ data }: { data: Data }) {
                                 </h2>
                                 <ServiceSelector
                                     services={servicesFiltered}
-                                    selectedServiceId={serviceId}
-                                    onSelect={(id) => {
-                                        logDebug('Booking', 'Service clicked', {
-                                            serviceId: id,
-                                            currentServiceId: serviceId,
-                                        });
-                                        setServiceId(id);
+                                    selectedServiceIds={serviceIds}
+                                    onToggle={(id) => {
+                                        const next = serviceIds.includes(id)
+                                            ? serviceIds.filter((x) => x !== id)
+                                            : [...serviceIds, id];
+                                        setServiceIds(next);
+                                        logDebug('Booking', 'Service toggled', { serviceId: id, next });
                                         trackBookingFlowStep({
                                             bizId: biz.id,
                                             branchId: branchId || undefined,
                                             step: 'service',
                                             serviceId: id,
                                         });
+                                        const nextSelected = next;
                                         trackFunnelEvent({
                                             event_type: 'service_select',
                                             source: 'public',
                                             biz_id: biz.id,
                                             branch_id: branchId || null,
                                             service_id: id,
+                                            service_ids: nextSelected,
+                                            services_count: nextSelected.length,
                                             staff_id: staffId === 'any' ? null : staffId || null,
                                             session_id: getSessionId(),
                                         });
                                     }}
                                     staffId={staffId}
                                 />
-                                {serviceCurrent && (
+                                {selectedServicesForStep4.length > 0 && (
                                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        {t('booking.duration.label', 'Продолжительность:')} {serviceCurrent.duration_min} {t('booking.duration.min', 'мин')}.
-                                        {serviceCurrent.price_from && (
+                                        {t('booking.duration.label', 'Продолжительность:')}{' '}
+                                        {totalDurationStep4} {t('booking.duration.min', 'мин')}.
+                                        {(totalPriceFromStep4 > 0 || totalPriceToStep4 > 0) && (
                                             <>
                                                 {' '}
                                                 {t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}{' '}
-                                                {serviceCurrent.price_from}
-                                                {serviceCurrent.price_to &&
-                                                serviceCurrent.price_to !== serviceCurrent.price_from
-                                                    ? `–${serviceCurrent.price_to}`
+                                                {totalPriceFromStep4}
+                                                {totalPriceToStep4 !== totalPriceFromStep4 && totalPriceToStep4 > 0
+                                                    ? `–${totalPriceToStep4}`
                                                     : ''}{' '}
                                                 {t('booking.currency', 'сом')}.
                                             </>
@@ -792,6 +835,8 @@ export default function BookingForm({ data }: { data: Data }) {
                                             biz_id: biz.id,
                                             branch_id: branchId || null,
                                             service_id: serviceId || null,
+                                            service_ids: serviceIds,
+                                            services_count: serviceIds.length,
                                             staff_id: slotStaffId || staffId === 'any' ? null : staffId || null,
                                             slot_start_at: slotTime.toISOString(),
                                             session_id: getSessionId(),
@@ -807,6 +852,7 @@ export default function BookingForm({ data }: { data: Data }) {
                                     serviceId={serviceId}
                                     servicesFiltered={servicesFiltered}
                                     serviceStaff={serviceStaff}
+                                    totalDurationMin={serviceIds.length > 1 ? totalDurationStep4 : undefined}
                                     isAuthed={isAuthed}
                                     clientBookingsCount={clientBookingsCount}
                                     clientBookingsLoading={clientBookingsLoading}
@@ -852,6 +898,7 @@ export default function BookingForm({ data }: { data: Data }) {
                         dayLabel={dayLabel}
                         staffCurrent={staffCurrent}
                         serviceCurrent={serviceCurrent}
+                        servicesSelected={selectedServicesForStep4.length > 0 ? selectedServicesForStep4 : undefined}
                         branchId={branchId}
                         branchPromotions={branchPromotions}
                         isAuthed={isAuthed}

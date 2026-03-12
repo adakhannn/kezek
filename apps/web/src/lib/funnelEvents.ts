@@ -21,6 +21,10 @@ export type FunnelEvent = {
     biz_id: string;
     branch_id?: string | null;
     service_id?: string | null;
+    /** Для комплексов: все выбранные услуги (ID); для обратной совместимости service_id остаётся основной/первой услугой */
+    service_ids?: string[];
+    /** Количество выбранных услуг (для агрегаций без джойна по массиву) */
+    services_count?: number;
     staff_id?: string | null;
     slot_start_at?: string | null;
     booking_id?: string | null;

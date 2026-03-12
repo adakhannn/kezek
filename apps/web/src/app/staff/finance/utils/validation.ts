@@ -1,12 +1,28 @@
 /**
- * Утилиты валидации для данных смены (ShiftItem)
+ * Утилиты валидации для данных смены (ShiftItem).
+ * Возвращают i18n-ключи (staff.finance.validation.*); текст подставляется в UI через t().
  */
 
 import type { ShiftItem } from '../types';
+
 import { validateName, validatePositiveNumber } from '@/lib/validation';
+
+/** i18n-ключи для сообщений валидации (staff.finance.validation.*) */
+export const VALIDATION_KEYS = {
+    clientNameRequired: 'staff.finance.validation.clientNameRequired',
+    clientNameTooLong: 'staff.finance.validation.clientNameTooLong',
+    serviceNameTooLong: 'staff.finance.validation.serviceNameTooLong',
+    serviceAmountInvalid: 'staff.finance.validation.serviceAmountInvalid',
+    serviceAmountTooLarge: 'staff.finance.validation.serviceAmountTooLarge',
+    consumablesAmountInvalid: 'staff.finance.validation.consumablesAmountInvalid',
+    consumablesAmountTooLarge: 'staff.finance.validation.consumablesAmountTooLarge',
+    fillAtLeastOneField: 'staff.finance.validation.fillAtLeastOneField',
+    multipleErrors: 'staff.finance.validation.multipleErrors',
+} as const;
 
 export interface ShiftItemValidationResult {
     valid: boolean;
+    /** Значения — i18n-ключи (staff.finance.validation.*); в UI использовать t(errors.xxx). */
     errors: {
         clientName?: string;
         serviceName?: string;
@@ -16,85 +32,77 @@ export interface ShiftItemValidationResult {
 }
 
 /**
- * Валидирует один ShiftItem
+ * Валидирует один ShiftItem. Возвращает ошибки в виде i18n-ключей.
  */
 export function validateShiftItem(item: ShiftItem): ShiftItemValidationResult {
     const errors: ShiftItemValidationResult['errors'] = {};
-    
-    // Валидация имени клиента
-    // Имя клиента обязательно, если нет bookingId
+    const K = VALIDATION_KEYS;
+
+    // Валидация имени клиента (обязательно, если нет bookingId)
     if (!item.bookingId) {
         const nameValidation = validateName(item.clientName || '', true);
         if (!nameValidation.valid) {
-            errors.clientName = nameValidation.error || 'Имя клиента обязательно';
+            errors.clientName = K.clientNameRequired;
         } else {
-            // Дополнительная проверка: имя не должно быть пустым
             const trimmed = (item.clientName || '').trim();
             if (trimmed.length === 0) {
-                errors.clientName = 'Имя клиента обязательно';
+                errors.clientName = K.clientNameRequired;
             } else if (trimmed.length > 200) {
-                errors.clientName = 'Имя клиента слишком длинное (максимум 200 символов)';
+                errors.clientName = K.clientNameTooLong;
             }
         }
     }
-    
-    // Валидация названия услуги (опционально, но если указано, должно быть валидным)
+
+    // Валидация названия услуги
     if (item.serviceName && item.serviceName.trim()) {
         const trimmed = item.serviceName.trim();
         if (trimmed.length > 200) {
-            errors.serviceName = 'Название услуги слишком длинное (максимум 200 символов)';
+            errors.serviceName = K.serviceNameTooLong;
         }
     }
-    
-    // Валидация суммы услуги (должна быть неотрицательной)
+
+    // Валидация суммы услуги
     const serviceAmountValidation = validatePositiveNumber(item.serviceAmount, {
         min: 0,
         allowZero: true,
         required: false,
     });
     if (!serviceAmountValidation.valid) {
-        errors.serviceAmount = serviceAmountValidation.error || 'Сумма услуги должна быть неотрицательным числом';
+        errors.serviceAmount = K.serviceAmountInvalid;
     } else {
-        // Дополнительная проверка: максимальное значение (защита от переполнения)
         const amount = Number(item.serviceAmount) || 0;
-        if (amount > 100000000) { // 100 миллионов
-            errors.serviceAmount = 'Сумма услуги слишком большая (максимум 100,000,000)';
+        if (amount > 100000000) {
+            errors.serviceAmount = K.serviceAmountTooLarge;
         }
     }
-    
-    // Валидация суммы расходников (должна быть неотрицательной)
+
+    // Валидация суммы расходников
     const consumablesAmountValidation = validatePositiveNumber(item.consumablesAmount, {
         min: 0,
         allowZero: true,
         required: false,
     });
     if (!consumablesAmountValidation.valid) {
-        errors.consumablesAmount = consumablesAmountValidation.error || 'Сумма расходников должна быть неотрицательным числом';
+        errors.consumablesAmount = K.consumablesAmountInvalid;
     } else {
-        // Дополнительная проверка: максимальное значение
         const amount = Number(item.consumablesAmount) || 0;
-        if (amount > 100000000) { // 100 миллионов
-            errors.consumablesAmount = 'Сумма расходников слишком большая (максимум 100,000,000)';
+        if (amount > 100000000) {
+            errors.consumablesAmount = K.consumablesAmountTooLarge;
         }
     }
-    
-    // Проверка: хотя бы одно поле должно быть заполнено (кроме bookingId)
-    // Это проверка для новых items без id
+
+    // Хотя бы одно поле должно быть заполнено для нового item без bookingId
     if (!item.id) {
-        const hasData = 
+        const hasData =
             (item.serviceAmount && Number(item.serviceAmount) > 0) ||
             (item.consumablesAmount && Number(item.consumablesAmount) > 0) ||
             (item.serviceName && item.serviceName.trim().length > 0) ||
             (item.clientName && item.clientName.trim().length > 0 && !item.bookingId);
-        
-        // Если нет данных и нет bookingId, это ошибка
-        if (!hasData && !item.bookingId) {
-            if (!errors.clientName) {
-                errors.clientName = 'Заполните хотя бы одно поле';
-            }
+        if (!hasData && !item.bookingId && !errors.clientName) {
+            errors.clientName = K.fillAtLeastOneField;
         }
     }
-    
+
     return {
         valid: Object.keys(errors).length === 0,
         errors,
@@ -127,27 +135,21 @@ export function validateShiftItems(items: ShiftItem[]): {
 }
 
 /**
- * Получает общее сообщение об ошибке валидации
+ * Возвращает общее сообщение об ошибке валидации (уже переведённое, если передана t).
+ * errors содержат i18n-ключи; при одной ошибке возвращается перевод первой, иначе — multipleErrors.
  */
 export function getValidationErrorMessage(
     validation: ShiftItemValidationResult,
     t?: (key: string, fallback?: string) => string
 ): string | null {
-    const errors = Object.values(validation.errors).filter(Boolean);
-    if (errors.length === 0) {
+    const errorKeys = Object.values(validation.errors).filter(Boolean);
+    if (errorKeys.length === 0) {
         return null;
     }
-    
-    const translate = t || ((key: string, fallback?: string) => fallback || key);
-    
-    // Возвращаем первую ошибку или общее сообщение
-    if (errors.length === 1) {
-        return errors[0];
+    const translate = t || ((key: string) => key);
+    if (errorKeys.length === 1) {
+        return translate(errorKeys[0]);
     }
-    
-    return translate(
-        'staff.finance.validation.multipleErrors',
-        `Обнаружены ошибки: ${errors.join(', ')}`
-    );
+    return translate(VALIDATION_KEYS.multipleErrors);
 }
 

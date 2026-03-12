@@ -7,7 +7,6 @@ import { exportClientsToCSV } from '../utils/export';
 import { checkPermissions, getPermissionMessage, type PermissionContext } from '../utils/permissions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import DatePickerPopover from '@/components/pickers/DatePickerPopover';
 import { Button } from '@/components/ui/Button';
 import { TZ } from '@/lib/time';
 
@@ -57,31 +56,21 @@ export function ClientsListHeader({
     };
 
     return (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-4">
-                <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 min-w-0">
+            <div className="flex items-center gap-4 min-w-0">
+                <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                             {t('staff.finance.clients.title', 'Клиенты за смену')}
                         </span>
-                        {staffId && (
-                            <DatePickerPopover
-                                value={formatInTimeZone(shiftDate, TZ, 'yyyy-MM-dd')}
-                                onChange={(dateStr) => {
-                                    const [year, month, day] = dateStr.split('-').map(Number);
-                                    onShiftDateChange(new Date(year, month - 1, day));
-                                }}
-                                className="inline-block"
-                            />
-                        )}
                     </div>
-                    <div className="text-base text-gray-600 dark:text-gray-400">
+                    <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                         {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
                     </div>
                 </div>
             </div>
             {/* Показываем кнопки действий */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
                 {/* Кнопка экспорта */}
                 {items.length > 0 && (
                     <Button

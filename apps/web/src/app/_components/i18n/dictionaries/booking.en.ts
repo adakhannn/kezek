@@ -9,6 +9,7 @@ export const bookingEn = {
     'booking.dateTime': 'Date and time',
     'booking.duration.label': 'Duration:',
     'booking.duration.min': 'min',
+    'booking.duration.hour': 'h',
     'booking.empty.noBranches': 'This business has no active branches. Please come back later.',
     'booking.empty.noServices': 'The selected master has no assigned services yet. Choose another master.',
     'booking.empty.noSlots': 'No available slots for the selected day. Choose another day or master.',

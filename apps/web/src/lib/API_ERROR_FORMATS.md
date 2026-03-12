@@ -200,6 +200,14 @@
 
 ## Примеры ответов для разных endpoints
 
+### POST /api/dashboard/staff/[id]/shift/close
+
+Закрытие смены сотрудника от имени менеджера/владельца.
+
+- **Query**: `date=YYYY-MM-DD` (опционально)
+- **Body**: соответствует `closeShiftSchema` (см. `@/lib/validation/schemas`): `items?: ShiftItem[]`, `totalAmount?: number`, `consumablesAmount?: number`
+- **Успех**: возвращает обновлённую смену в `data.shift`
+
 ### POST /api/staff/create
 
 **Успех:**

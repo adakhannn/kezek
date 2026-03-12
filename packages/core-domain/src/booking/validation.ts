@@ -2,7 +2,7 @@
  * Валидация данных для бронирований и промоакций
  */
 
-import type { CreateBookingParams, CreateGuestBookingParams, PromotionType, PromotionParams } from './types';
+import type { BookingServiceItem, CreateBookingParams, CreateGuestBookingParams, PromotionType, PromotionParams } from './types';
 
 /** Минимальный тип филиала для проверки при бронировании */
 export type BranchForBookingCheck = { id: string; is_active?: boolean } | null;
@@ -63,6 +63,59 @@ export function validateCreateBookingParams(params: unknown): {
         ? (typeof p.branch_id === 'string' ? p.branch_id : null)
         : null;
 
+    // Опциональная поддержка массива services (комплексы услуг).
+    // На этом этапе не требуем обязательного наличия services, но если оно есть — проверяем базовую структуру.
+    let services: BookingServiceItem[] | undefined;
+    if (Array.isArray(p.services)) {
+        const parsed: BookingServiceItem[] = [];
+        for (const raw of p.services) {
+            if (!raw || typeof raw !== 'object') {
+                return { valid: false, error: 'Каждый элемент services должен быть объектом' };
+            }
+            const item = raw as Record<string, unknown>;
+            if (typeof item.service_id !== 'string' || !item.service_id.trim()) {
+                return { valid: false, error: 'service_id в каждом элементе services обязателен и должен быть строкой' };
+            }
+            if (typeof item.duration_min !== 'number' || !Number.isFinite(item.duration_min) || item.duration_min <= 0) {
+                return { valid: false, error: 'duration_min в services должен быть положительным числом' };
+            }
+
+            const normalized: BookingServiceItem = {
+                service_id: item.service_id.trim(),
+                duration_min: item.duration_min,
+            };
+
+            if (item.order_index !== undefined) {
+                if (typeof item.order_index !== 'number' || !Number.isInteger(item.order_index) || item.order_index < 0) {
+                    return { valid: false, error: 'order_index в services должен быть целым неотрицательным числом' };
+                }
+                normalized.order_index = item.order_index;
+            }
+
+            if (item.price_from !== undefined) {
+                if (typeof item.price_from !== 'number' || !Number.isFinite(item.price_from) || item.price_from < 0) {
+                    return { valid: false, error: 'price_from в services должен быть неотрицательным числом' };
+                }
+                normalized.price_from = item.price_from;
+            }
+
+            if (item.price_to !== undefined) {
+                if (typeof item.price_to !== 'number' || !Number.isFinite(item.price_to) || item.price_to < 0) {
+                    return { valid: false, error: 'price_to в services должен быть неотрицательным числом' };
+                }
+                normalized.price_to = item.price_to;
+            }
+
+            parsed.push(normalized);
+        }
+
+        if (parsed.length === 0) {
+            return { valid: false, error: 'Если передан массив services, он не должен быть пустым' };
+        }
+
+        services = parsed;
+    }
+
     return {
         valid: true,
         data: {
@@ -71,6 +124,7 @@ export function validateCreateBookingParams(params: unknown): {
             service_id: p.service_id.trim(),
             staff_id: p.staff_id.trim(),
             start_at: p.start_at.trim(),
+            services,
         },
     };
 }
@@ -100,6 +154,7 @@ export function validateCreateGuestBookingParams(params: unknown): {
         service_id: p.service_id,
         staff_id: p.staff_id,
         start_at: p.start_at,
+        services: Array.isArray(p.services) ? p.services : undefined,
     });
 
     if (!bookingValidation.valid || !bookingValidation.data) {

@@ -2,9 +2,8 @@
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { logError, logDebug } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
-import { getRouteParamUuid } from '@/lib/routeParams';
 import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
-import { withManagerContext } from '@/lib/withManagerContext';
+import { withManagerAndStaffContext } from '@/lib/withManagerAndStaffContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -21,8 +20,11 @@ export async function POST(
         RateLimitConfigs.critical,
         async () => {
             return withErrorHandler('OwnerShiftOpen', async () => {
-                const staffId = await getRouteParamUuid(context, 'id');
-                return withManagerContext(req, 'OwnerShiftOpen', async ({ supabase, admin, bizId }) => {
+                return withManagerAndStaffContext<{ id: string; biz_id: string | number | null; branch_id: string | null }>(
+                    req,
+                    context,
+                    { scope: 'OwnerShiftOpen', staffIdParamName: 'id', staffSelect: 'id, biz_id, branch_id' },
+                    async ({ supabase, admin, bizId, staffId, staff }) => {
                 // Получаем дату из query параметров или используем сегодня
                 const { searchParams } = new URL(req.url);
                 const dateParam = searchParams.get('date');
@@ -30,40 +32,6 @@ export async function POST(
                     ? new Date(dateParam + 'T00:00:00')
                     : new Date();
                 const ymd = formatDateInTz(targetDate, TZ);
-
-                // Проверяем, что сотрудник принадлежит этому бизнесу
-                const { data: staff, error: staffError } = await supabase
-                    .from('staff')
-                    .select('id, biz_id, branch_id')
-                    .eq('id', staffId)
-                    .maybeSingle();
-
-                if (staffError) {
-                    logError('OwnerShiftOpen', 'Error loading staff', { 
-                        error: staffError.message, 
-                        staffId,
-                        bizId 
-                    });
-                    return createErrorResponse('internal', 'Не удалось загрузить данные сотрудника', undefined, 500);
-                }
-
-                if (!staff) {
-                    return createErrorResponse('not_found', 'Сотрудник не найден', undefined, 404);
-                }
-
-                // Нормализуем значения для надежного сравнения
-                const normalizedBizId = bizId ? String(bizId).trim() : null;
-                const normalizedStaffBizId = staff.biz_id != null ? String(staff.biz_id).trim() : null;
-
-                // Проверяем принадлежность к бизнесу
-                if (!normalizedStaffBizId || !normalizedBizId || normalizedStaffBizId !== normalizedBizId) {
-                    logError('OwnerShiftOpen', 'Staff business mismatch', {
-                        staffId,
-                        staffBizId: normalizedStaffBizId,
-                        requestedBizId: normalizedBizId,
-                    });
-                    return createErrorResponse('forbidden', 'Сотрудник не принадлежит этому бизнесу', undefined, 403);
-                }
 
                 // staff_shifts.branch_id NOT NULL — у сотрудника должен быть указан филиал
                 if (staff.branch_id == null) {
@@ -209,7 +177,7 @@ export async function POST(
                     .single();
 
                 if (createError) {
-                    logError('OwnerShiftOpen', 'Error creating shift', {
+                    const errorPayload = {
                         code: (createError as { code?: string })?.code,
                         message: (createError as { message?: string })?.message,
                         details: (createError as { details?: string })?.details,
@@ -218,8 +186,14 @@ export async function POST(
                         bizId,
                         branch_id: staff.branch_id,
                         shift_date: ymd,
-                    });
-                    return createErrorResponse('internal', 'Не удалось создать смену', undefined, 500);
+                    };
+                    logError('OwnerShiftOpen', 'Error creating shift', errorPayload);
+                    // В дев-окружении полезнее вернуть реальное сообщение БД, чтобы понять причину:
+                    // например, нарушение RLS или constraint.
+                    const humanMessage =
+                        (createError as { message?: string })?.message ||
+                        'Не удалось создать смену';
+                    return createErrorResponse('internal', humanMessage, errorPayload, 500);
                 }
 
                 logDebug('OwnerShiftOpen', 'Shift opened successfully', {
@@ -229,7 +203,8 @@ export async function POST(
                 });
 
                 return createSuccessResponse({ shift: newShift });
-                });
+                },
+                );
             });
         }
     );

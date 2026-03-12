@@ -20,6 +20,8 @@ interface UseShiftItemsOptions {
     shiftDate?: Date;
     onSaveSuccess?: () => void;
     onSaveError?: (error: string) => void;
+    /** Функция перевода для сообщений валидации (i18n). Если передана, ошибки показываются переведёнными. */
+    t?: (key: string, fallback?: string) => string;
 }
 
 interface UseShiftItemsReturn {
@@ -45,7 +47,8 @@ export function useShiftItems({
     staffId,
     shiftDate,
     onSaveSuccess,
-    onSaveError
+    onSaveError,
+    t: tOption,
 }: UseShiftItemsOptions): UseShiftItemsReturn {
     const toast = useToast();
     const toastRef = useRef(toast);
@@ -407,15 +410,17 @@ export function useShiftItems({
             const validation = validateShiftItems(currentItemsToSave);
             
             if (!validation.valid) {
-                // Есть ошибки валидации - не отправляем запрос
+                // Ошибки валидации — значения являются i18n-ключами; переводим при наличии t
+                const t = tOption ?? ((key: string) => key);
+                const clientLabel = t('staff.finance.clients.client', 'Клиент');
+                const title = t('staff.finance.validation.validationErrorsTitle', 'Ошибки валидации');
                 const errorMessages = validation.errors.map(({ index, errors }) => {
                     const item = currentItemsToSave[index];
-                    const clientName = item.clientName || `Клиент #${index + 1}`;
-                    const errorList = Object.values(errors).filter(Boolean).join(', ');
+                    const clientName = item.clientName || `${clientLabel} #${index + 1}`;
+                    const errorList = Object.values(errors).filter(Boolean).map((key) => t(key)).join(', ');
                     return `${clientName}: ${errorList}`;
                 });
-                
-                const errorMessage = `Ошибки валидации:\n${errorMessages.join('\n')}`;
+                const errorMessage = `${title}:\n${errorMessages.join('\n')}`;
                 toastRef.current.showError(errorMessage);
                 saveAbortControllerRef.current = null;
                 isSavingRef.current = false;
@@ -470,9 +475,11 @@ export function useShiftItems({
                         signal: abortController.signal,
                     },
                     {
-                        retries: 2, // Меньше попыток для сохранения, чтобы не задерживать пользователя
-                        baseDelayMs: 500,
-                        maxDelayMs: 5000,
+                        // Автосохранение: сильно уменьшаем количество повторов и задержки,
+                        // чтобы не блокировать интерфейс и не копить долгие запросы
+                        retries: 1,
+                        baseDelayMs: 300,
+                        maxDelayMs: 1500,
                         scope: 'ShiftItemsAutoSave'
                     }
                 );
@@ -802,9 +809,11 @@ export function useShiftItems({
                     }),
                 },
                 {
-                    retries: 3,
-                    baseDelayMs: 1000,
-                    maxDelayMs: 10000,
+                    // Добавление клиента: не больше одной доп. попытки и короткие задержки,
+                    // чтобы пользователь не ждал по 10+ секунд при временных ошибках
+                    retries: 1,
+                    baseDelayMs: 500,
+                    maxDelayMs: 2000,
                     scope: 'ShiftItemsAddClient'
                 }
             );
@@ -1023,9 +1032,11 @@ export function useShiftItems({
                     }),
                 },
                 {
-                    retries: 3,
-                    baseDelayMs: 1000,
-                    maxDelayMs: 10000,
+                    // Удаление клиента: тоже ограничиваем количество повторов и время ожидания,
+                    // чтобы операция либо быстро завершилась, либо сразу показала ошибку
+                    retries: 1,
+                    baseDelayMs: 500,
+                    maxDelayMs: 2000,
                     scope: 'ShiftItemsDeleteClient'
                 }
             );

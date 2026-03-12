@@ -17,7 +17,8 @@ type GuestBookingForm = {
 
 type UseGuestBookingParams = {
     bizId: string;
-    service: Service | null;
+    /** Одна или несколько услуг (комплекс); при одной — hold_slot_guest, при нескольких — hold_complex_slot_guest */
+    services: Service[];
     staffId: string; // Может быть 'any'
     branchId: string;
     t: (key: string, fallback?: string) => string;
@@ -25,7 +26,7 @@ type UseGuestBookingParams = {
 };
 
 export function useGuestBooking(params: UseGuestBookingParams) {
-    const { bizId, service, staffId, branchId, t, onBookingCreated } = params;
+    const { bizId, services, staffId, branchId, t, onBookingCreated } = params;
     
     const [modalOpen, setModalOpen] = useState(false);
     const [slotTime, setSlotTime] = useState<Date | null>(null);
@@ -56,7 +57,7 @@ export function useGuestBooking(params: UseGuestBookingParams) {
             staffId, 
             slotStaffId, 
             branchId, 
-            serviceId: service?.id,
+            servicesCount: services.length,
             slotTime 
         });
         
@@ -80,9 +81,9 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         
         logDebug('GuestBooking', 'Determined actualStaffId', { actualStaffId, wasAny: staffId === 'any' });
         
-        if (!service || !actualStaffId || !branchId || !slotTime) {
+        if (!services.length || !actualStaffId || !branchId || !slotTime) {
             const missingFields = [];
-            if (!service) missingFields.push(t('booking.selectService', 'услуга'));
+            if (!services.length) missingFields.push(t('booking.selectService', 'услуга'));
             if (!actualStaffId) missingFields.push(t('booking.selectMaster', 'мастер'));
             if (!branchId) missingFields.push(t('booking.selectBranch', 'филиал'));
             if (!slotTime) missingFields.push(t('booking.selectTime', 'время'));
@@ -137,15 +138,12 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 timezone: TZ 
             });
             
-            // Проверяем, что все обязательные поля заполнены и валидны
-            if (!bizId || !branchId || !service.id || !actualStaffId) {
+            if (!bizId || !branchId || !actualStaffId) {
                 const missing = [];
                 if (!bizId) missing.push('biz_id');
                 if (!branchId) missing.push('branch_id');
-                if (!service.id) missing.push('service_id');
                 if (!actualStaffId) missing.push('staff_id');
-                
-                logError('GuestBooking', 'Missing required fields', { missing, bizId, branchId, serviceId: service.id, staffId: actualStaffId });
+                logError('GuestBooking', 'Missing required fields', { missing, bizId, branchId, staffId: actualStaffId });
                 alert(
                     t(
                         'booking.guest.missingData',
@@ -154,17 +152,25 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 );
                 return;
             }
-            
-            const requestBody = {
+
+            const requestBody: Record<string, unknown> = {
                 biz_id: bizId,
                 branch_id: branchId,
-                service_id: service.id,
                 staff_id: actualStaffId,
                 start_at: startISO,
                 client_name: name,
                 client_phone: phone,
                 client_email: email || null,
             };
+            if (services.length === 1) {
+                requestBody.service_id = services[0].id;
+            } else {
+                requestBody.services = services.map((s, index) => ({
+                    service_id: s.id,
+                    duration_min: s.duration_min,
+                    order_index: index,
+                }));
+            }
             
             // Логируем отправляемые данные для отладки
             logDebug('GuestBooking', 'Sending request', requestBody);
@@ -183,6 +189,12 @@ export function useGuestBooking(params: UseGuestBookingParams) {
             
             // Логируем ответ для отладки
             logDebug('GuestBooking', 'Received response', { status: response.status, result });
+
+            // ApiSuccessResponse оборачивает данные в поле `data`, поэтому booking_id может быть как в корне, так и внутри `data`
+            const bookingId: string | undefined =
+                (result && typeof result === 'object'
+                    ? (result.booking_id as string | undefined) || (result.data?.booking_id as string | undefined)
+                    : undefined);
 
             if (!response.ok || !result.ok) {
                 // Если есть детали ошибок валидации, показываем их
@@ -229,6 +241,18 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 throw new Error(message);
             }
 
+            if (!bookingId) {
+                // Успешный ответ без booking_id — это некорректное состояние, логируем и показываем пользователю сообщение
+                logError('GuestBooking', 'Successful response without booking_id', { result });
+                alert(
+                    t(
+                        'booking.guest.error.noBookingId',
+                        'Бронирование было создано, но не удалось получить его номер. Свяжитесь с салоном для уточнения.'
+                    )
+                );
+                return;
+            }
+
             // Обновляем кэш слотов ПЕРЕД закрытием модального окна и редиректом
             // Это важно, чтобы слоты обновились до того, как пользователь увидит страницу
             logDebug('GuestBooking', 'Updating slots cache before redirect');
@@ -244,14 +268,12 @@ export function useGuestBooking(params: UseGuestBookingParams) {
 
             // Редирект на страницу бронирования
             // Используем небольшую задержку, чтобы дать время обновиться кэшу слотов
-            if (result.booking_id) {
-                logDebug('GuestBooking', 'Redirecting to booking page', { bookingId: result.booking_id });
-                // Используем setTimeout для гарантии, что onBookingCreated успеет выполниться
-                // и React успеет обработать обновление состояния
-                setTimeout(() => {
-                    location.href = `/booking/${result.booking_id}`;
-                }, 200);
-            }
+            logDebug('GuestBooking', 'Redirecting to booking page', { bookingId });
+            // Используем setTimeout для гарантии, что onBookingCreated успеет выполниться
+            // и React успеет обработать обновление состояния
+            setTimeout(() => {
+                location.href = `/booking/${bookingId}`;
+            }, 200);
         } catch (e) {
             logError('GuestBooking', '[createGuestBooking] unexpected error', e);
             let message =

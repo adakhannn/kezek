@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import type { ShiftItem } from '../types';
+import { deduplicateServiceNameString } from '../utils';
 
 import type { FinanceDataResponse } from './useFinanceData';
 
@@ -53,38 +54,36 @@ async function openShift(staffId: string | undefined, date: Date): Promise<void>
 }
 
 /**
- * Закрытие смены
- * Примечание: для владельца также используется /api/staff/shift/close,
- * так как отдельного endpoint для владельца нет
+ * Закрытие смены.
+ * Для владельца (staffId передан) — POST /api/dashboard/staff/[id]/shift/close?date=YYYY-MM-DD.
+ * Для сотрудника — POST /api/staff/shift/close (смена текущего пользователя на сегодня).
  */
 async function closeShift(
     staffId: string | undefined,
     date: Date,
     items: ShiftItem[]
 ): Promise<void> {
-    // Всегда используем endpoint для сотрудника
-    // (владелец не может закрывать смены сотрудников - только сотрудник может закрыть свою смену)
-    const url = '/api/staff/shift/close';
+    const dateStr = formatInTimeZone(date, TZ, 'yyyy-MM-dd');
 
-    // Преобразуем items в camelCase формат согласно closeShiftSchema
     const formattedItems = items.map((item) => ({
         id: item.id,
         clientName: item.clientName,
-        serviceName: item.serviceName,
+        serviceName: deduplicateServiceNameString(item.serviceName) || item.serviceName || '',
         serviceAmount: item.serviceAmount,
         consumablesAmount: item.consumablesAmount,
         bookingId: item.bookingId,
     }));
 
-    // Согласно closeShiftSchema: либо items (массив), либо totalAmount должны быть указаны
-    // Если items пустой, передаем totalAmount: 0
     const body: { items?: typeof formattedItems; totalAmount?: number } = {};
-    
     if (formattedItems.length > 0) {
         body.items = formattedItems;
     } else {
         body.totalAmount = 0;
     }
+
+    const url = staffId
+        ? `/api/dashboard/staff/${staffId}/shift/close?date=${dateStr}`
+        : '/api/staff/shift/close';
 
     const res = await fetch(url, {
         method: 'POST',
@@ -123,7 +122,7 @@ async function saveShiftItems(
             items: items.map((item) => ({
                 id: item.id,
                 clientName: item.clientName,
-                serviceName: item.serviceName,
+                serviceName: deduplicateServiceNameString(item.serviceName) || item.serviceName || '',
                 serviceAmount: item.serviceAmount,
                 consumablesAmount: item.consumablesAmount,
                 bookingId: item.bookingId,

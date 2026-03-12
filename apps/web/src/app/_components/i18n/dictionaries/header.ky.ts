@@ -21,6 +21,7 @@ export const headerKy = {
     'header.roleBusiness.someBusiness': 'Бизнес',
     'header.roleBusiness.noBusiness': 'Бизнес жок',
     'header.roleBusiness.caption': 'Кабинет же бизнести тандаңыз',
+    'header.roleBusiness.captionRoles': 'Кабинетти (ролду) тандаңыз',
     'header.roleBusiness.sections.cabinets': 'Кабинеттер',
     'header.roleBusiness.sections.businesses': 'Бизнесдер',
 } as const;

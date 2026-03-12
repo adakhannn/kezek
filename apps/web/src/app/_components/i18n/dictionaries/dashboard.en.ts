@@ -46,6 +46,7 @@ export const dashboardEn = {
     'dashboard.sidebar.closeMenu': 'Close menu',
     'dashboard.sidebar.openMenu': 'Open menu',
     'dashboard.sidebar.title': 'Business cabinet',
+    'dashboard.sidebar.switchInHeader': 'Switch business in the header menu',
     'dashboard.stats.activeStaff': 'Active staff',
     'dashboard.stats.activeStaffHint': 'ready to serve clients',
     'dashboard.stats.bookingsToday': 'Bookings today',

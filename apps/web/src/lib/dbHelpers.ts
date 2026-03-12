@@ -96,8 +96,12 @@ export async function checkResourceBelongsToBiz<T extends { biz_id: string | num
         };
     }
 
-    const resourceBizId = result.data.biz_id;
-    if (String(resourceBizId) !== String(bizId)) {
+    // Нормализуем значения для надежного сравнения (null-safe + trim)
+    const normalizedBizId = bizId != null ? String(bizId).trim() : '';
+    const normalizedResourceBizId = result.data.biz_id != null ? String(result.data.biz_id).trim() : '';
+
+    // Если biz_id отсутствует или не совпадает — запрещаем доступ
+    if (!normalizedResourceBizId || !normalizedBizId || normalizedResourceBizId !== normalizedBizId) {
         return {
             data: null,
             error: 'Resource does not belong to this business',

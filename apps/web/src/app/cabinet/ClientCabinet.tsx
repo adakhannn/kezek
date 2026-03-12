@@ -47,7 +47,7 @@ function extractReview(reviews: { id: string; rating: number; comment: string | 
 }
 
 export default function ClientCabinet({
-                                          userId,
+                                          userId: _userId,
                                           upcoming,
                                           past,
                                       }: {
@@ -146,7 +146,12 @@ export default function ClientCabinet({
                             </div>
                         ) : (
                             upcoming.map((b) => {
-                                const service = first(b.services);
+                                const servicesArray = b.services
+                                    ? Array.isArray(b.services)
+                                        ? b.services
+                                        : [b.services]
+                                    : [];
+                                const service = servicesArray[0] ?? null;
                                 const staff = first(b.staff);
                                 const branch = first(b.branches);
                                 const business = first(b.businesses);
@@ -158,6 +163,13 @@ export default function ClientCabinet({
                                         start_at={b.start_at}
                                         end_at={b.end_at}
                                         service={service ? { id: service.id, name_ru: service.name_ru, name_ky: service.name_ky || null, name_en: service.name_en || null, duration_min: service.duration_min } : null}
+                                        servicesList={servicesArray.map((s) => ({
+                                            id: s.id,
+                                            name_ru: s.name_ru,
+                                            name_ky: s.name_ky || null,
+                                            name_en: s.name_en || null,
+                                            duration_min: s.duration_min,
+                                        }))}
                                         staff={staff ? { id: staff.id, full_name: staff.full_name } : null}
                                         branch={branch ? { id: branch.id, name: branch.name, lat: branch.lat, lon: branch.lon, address: branch.address } : null}
                                         business={business ? { id: business.id, name: business.name, slug: business.slug } : null}
@@ -194,7 +206,12 @@ export default function ClientCabinet({
                             </div>
                         ) : (
                             past.map((b) => {
-                                const service = first(b.services);
+                                const servicesArray = b.services
+                                    ? Array.isArray(b.services)
+                                        ? b.services
+                                        : [b.services]
+                                    : [];
+                                const service = servicesArray[0] ?? null;
                                 const staff = first(b.staff);
                                 const branch = first(b.branches);
                                 const business = first(b.businesses);
@@ -206,6 +223,13 @@ export default function ClientCabinet({
                                         start_at={b.start_at}
                                         end_at={b.end_at}
                                         service={service ? { id: service.id, name_ru: service.name_ru, name_ky: service.name_ky || null, name_en: service.name_en || null, duration_min: service.duration_min } : null}
+                                        servicesList={servicesArray.map((s) => ({
+                                            id: s.id,
+                                            name_ru: s.name_ru,
+                                            name_ky: s.name_ky || null,
+                                            name_en: s.name_en || null,
+                                            duration_min: s.duration_min,
+                                        }))}
                                         staff={staff ? { id: staff.id, full_name: staff.full_name } : null}
                                         branch={branch ? { id: branch.id, name: branch.name, lat: branch.lat, lon: branch.lon, address: branch.address } : null}
                                         business={business ? { id: business.id, name: business.name, slug: business.slug } : null}

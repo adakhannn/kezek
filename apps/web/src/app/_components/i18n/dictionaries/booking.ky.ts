@@ -9,6 +9,7 @@ export const bookingKy = {
     'booking.dateTime': 'Дата жана убакыт',
     'booking.duration.label': 'Узактыгы:',
     'booking.duration.min': 'мин',
+    'booking.duration.hour': 'саат',
     'booking.empty.noBranches': 'Бул бизнесде активдүү филиалдар жок. Сураныч, кийинчерээк кайра келиңиз.',
     'booking.empty.noServices': 'Тандалган кызматкерде азырынча ыйгарылган кызматтар жок. Башка кызматкерди тандаңыз.',
     'booking.empty.noSlots': 'Тандалган күнгө бош слоттор жок. Башка күндү же кызматкерди тандаңыз.',

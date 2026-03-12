@@ -12,14 +12,17 @@ import type { NextResponse } from 'next/server';
 import { createErrorResponse } from './apiErrorHandler';
 import { getBizContextForManagers } from './authBiz';
 import { BizAccessError } from './authDiagnostics';
+import { logWarn } from './log';
 import { createSupabaseAdminClient } from './supabaseHelpers';
+
+type SupabaseClientType = Awaited<ReturnType<typeof getBizContextForManagers>>['supabase'];
 
 /** Контекст для handler: клиенты Supabase и идентификаторы. */
 export type ManagerContext = {
     /** Server client (cookies, RLS). */
-    supabase: Awaited<ReturnType<typeof getBizContextForManagers>>['supabase'];
-    /** Admin/client без RLS — для запросов с явной фильтрацией по biz_id. */
-    admin: ReturnType<typeof createSupabaseAdminClient>;
+    supabase: SupabaseClientType;
+    /** Admin/client без RLS — для запросов с явной фильтрацией по biz_id. При отсутствии ключа совпадает с supabase. */
+    admin: SupabaseClientType;
     /** Текущий бизнес (из user_current_business / ролей / owner_id). */
     bizId: string;
     /** ID авторизованного пользователя. */
@@ -60,7 +63,14 @@ export async function withManagerContext(
         throw e;
     }
 
-    const admin = createSupabaseAdminClient();
+    let admin: SupabaseClientType = supabase;
+    try {
+        admin = createSupabaseAdminClient();
+    } catch (e) {
+        logWarn(scope, 'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS)', {
+            error: e instanceof Error ? e.message : String(e),
+        });
+    }
     const managerCtx: ManagerContext = { supabase, admin, bizId, userId };
     return handler(managerCtx);
 }

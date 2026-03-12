@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import StaffDetailPageClient from './StaffDetailPageClient';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { logWarn } from '@/lib/log';
 import { getServiceClient } from '@/lib/supabaseService';
 
 export const dynamic = 'force-dynamic';
@@ -57,9 +58,16 @@ export default async function Page({
         return <main className="p-6 text-red-600">{eBr.message}</main>;
     }
 
-    // Используем service client для обхода RLS при загрузке отзывов
-    // (владелец бизнеса должен видеть отзывы для своих сотрудников)
-    const admin = getServiceClient();
+    // Service client для обхода RLS при загрузке отзывов (опционально).
+    // В dev окружениях ключ может отсутствовать — тогда работаем через server client с RLS и не падаем.
+    let admin = supabase;
+    try {
+        admin = getServiceClient();
+    } catch (e) {
+        logWarn('StaffDetailPage', 'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS) for reviews', {
+            error: e instanceof Error ? e.message : String(e),
+        });
+    }
 
     // Оптимизированный запрос: загружаем bookings с отзывами и услугами в одном запросе (фильтр по biz_id)
     const { data: bookingsData } = await admin

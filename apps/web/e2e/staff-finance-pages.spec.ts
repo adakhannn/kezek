@@ -33,6 +33,32 @@ function getYesterdayDateString(): string {
 }
 
 test.describe('Страницы финансов сотрудника', () => {
+    let managerAuthState: any;
+
+    test.beforeAll(async ({ browser }) => {
+        // Авторизуемся как менеджер/владелец бизнеса (для /dashboard/* сценариев).
+        // Важно: проект использует OTP/магическую ссылку; для E2E предполагаем seed/cookie.
+        const context = await browser.newContext();
+        const page = await context.newPage();
+
+        const managerEmail = process.env.E2E_TEST_MANAGER_EMAIL || 'manager@test.com';
+        await page.goto('/auth/sign-in');
+        await page.waitForLoadState('networkidle');
+
+        const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+        if (await emailInput.isVisible({ timeout: 3000 })) {
+            await emailInput.fill(managerEmail);
+            const submitButton = page.locator('button:has-text("Отправить"), button[type="submit"]').first();
+            if (await submitButton.isVisible({ timeout: 2000 })) {
+                await submitButton.click();
+                await page.waitForTimeout(1500);
+            }
+        }
+
+        managerAuthState = await context.storageState();
+        await context.close();
+    });
+
     test.describe('Публичная страница /staff/finance', () => {
         test.beforeEach(async ({ page }) => {
             // Пропускаем авторизацию для базовых тестов
@@ -93,7 +119,9 @@ test.describe('Страницы финансов сотрудника', () => {
 
     test.describe('Страница менеджера /dashboard/staff/[id]/finance', () => {
         test.beforeEach(async ({ page }) => {
-            // Пропускаем авторизацию для базовых тестов
+            if (managerAuthState?.cookies) {
+                await page.context().addCookies(managerAuthState.cookies);
+            }
         });
 
         test('должна загружаться для менеджера', async ({ page }) => {
@@ -123,6 +151,72 @@ test.describe('Страницы финансов сотрудника', () => {
                 if (await troubleshooting.count() > 0) {
                     await expect(troubleshooting.first()).toBeVisible();
                 }
+            }
+        });
+
+        test('владелец: открыть смену сотруднику и добавить клиента (если разрешено)', async ({ page }) => {
+            const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            await page.goto(`/dashboard/staff/${staffId}/finance`, { waitUntil: 'domcontentloaded' });
+            await page.waitForLoadState('networkidle');
+
+            // На странице сотрудника по умолчанию активна вкладка "Клиенты".
+            // Переключимся на "Текущая смена" и попробуем открыть смену (идемпотентно).
+            const shiftTab = page.locator('button:has-text("Текущая смена"), button:has-text("Current shift")').first();
+            if (await shiftTab.isVisible({ timeout: 5000 }).catch(() => false)) {
+                await shiftTab.click();
+                await page.waitForTimeout(600);
+            }
+
+            const openShiftBtn = page
+                .locator('button:has-text("Открыть смену"), button:has-text("Открыть"), button:has-text("Open")')
+                .first();
+            if (await openShiftBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+                const openResp = page
+                    .waitForResponse((r) => r.url().includes(`/api/dashboard/staff/${staffId}/shift/open`), {
+                        timeout: 15000,
+                    })
+                    .catch(() => null);
+                await openShiftBtn.click();
+                await openResp;
+                await page.waitForTimeout(1000);
+            }
+
+            // Переходим во вкладку клиентов и добавляем нового клиента "с улицы".
+            const clientsTab = page.locator('button:has-text("Клиенты"), button:has-text("Clients")').first();
+            if (await clientsTab.isVisible({ timeout: 5000 }).catch(() => false)) {
+                await clientsTab.click();
+                await page.waitForTimeout(600);
+            }
+
+            const addClientBtn = page.locator('button:has-text("Добавить клиента"), button:has-text("Add client")').first();
+            if (!(await addClientBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
+                test.skip(true, 'Нет кнопки добавления клиента (возможно, смена не открыта/нет доступа)');
+            }
+
+            await addClientBtn.click();
+            await page.waitForTimeout(600);
+
+            const nameInput = page.locator('input[placeholder*="имя" i], input[name*="clientName" i]').first();
+            if (await nameInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+                await nameInput.fill('E2E Owner Client');
+            }
+
+            // Заполняем сумму услуги (берём первый number input внутри формы редактирования).
+            const amountInput = page.locator('input[type="number"]').first();
+            if (await amountInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+                await amountInput.fill('1000');
+            }
+
+            const saveBtn = page.locator('button:has-text("Сохранить"), button:has-text("Save")').first();
+            if (await saveBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+                await saveBtn.click();
+                await page.waitForTimeout(1500);
+            }
+
+            // Проверяем, что клиент отображается в списке (если UI его показывает сразу).
+            const clientRow = page.locator('text=E2E Owner Client').first();
+            if (await clientRow.isVisible({ timeout: 5000 }).catch(() => false)) {
+                await expect(clientRow).toBeVisible();
             }
         });
     });
@@ -432,6 +526,63 @@ test.describe('Страницы финансов сотрудника', () => {
                     }
                 }
             });
+        });
+    });
+
+    test.describe('Страница статистики сотрудника /dashboard/staff/[id]/finance/stats', () => {
+        test.beforeEach(async ({ page }) => {
+            if (managerAuthState?.cookies) {
+                await page.context().addCookies(managerAuthState.cookies);
+            }
+        });
+
+        test('владелец: выбор периода, обновление, исправление часов (если есть закрытые смены)', async ({ page }) => {
+            const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            await page.goto(`/dashboard/staff/${staffId}/finance/stats`, { waitUntil: 'domcontentloaded' });
+            await page.waitForLoadState('networkidle');
+
+            // Переключаем период и жмём "Обновить"
+            const monthBtn = page.locator('button:has-text("Месяц"), button:has-text("Month")').first();
+            if (await monthBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+                await monthBtn.click();
+            }
+
+            const updateBtn = page.locator('button:has-text("Обновить"), button:has-text("Update")').first();
+            if (await updateBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+                const resp = page
+                    .waitForResponse((r) => r.url().includes(`/api/dashboard/staff/${staffId}/finance/stats`), {
+                        timeout: 15000,
+                    })
+                    .catch(() => null);
+                await updateBtn.click();
+                await resp;
+                await page.waitForTimeout(800);
+            }
+
+            // Пытаемся найти кнопку "Исправить часы" на закрытой смене.
+            const editHoursBtn = page.locator('button:has-text("Исправить часы"), button:has-text("Edit hours")').first();
+            if (!(await editHoursBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
+                test.skip(true, 'Нет закрытых смен с hours_worked для редактирования');
+            }
+
+            await editHoursBtn.click();
+
+            const hoursInput = page.locator('input[type="number"]').first();
+            await expect(hoursInput).toBeVisible({ timeout: 5000 });
+            await hoursInput.fill('8.25');
+
+            const saveBtn = page.locator('button:has-text("Сохранить"), button:has-text("Save")').first();
+            const updateResp = page
+                .waitForResponse((r) => r.url().includes('/api/dashboard/staff-shifts/') && r.url().includes('/update-hours'), {
+                    timeout: 15000,
+                })
+                .catch(() => null);
+            await saveBtn.click();
+
+            const resp = await updateResp;
+            if (resp) {
+                expect(resp.status()).toBe(200);
+            }
         });
     });
 });

@@ -1,36 +1,26 @@
 // apps/web/src/app/api/dashboard/staff/[id]/finance/stats/route.ts
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import type { StaffFinanceStatsPeriod, StaffFinanceStatsShiftItem } from '@/lib/finance/types';
 import { logDebug, logError } from '@/lib/log';
-import { getRouteParamUuid } from '@/lib/routeParams';
 import { TZ, todayStringInTz } from '@/lib/time';
-import { withManagerContext } from '@/lib/withManagerContext';
+import { withManagerAndStaffContext } from '@/lib/withManagerAndStaffContext';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-type Period = 'day' | 'month' | 'year';
-
-type ShiftItem = {
-    id: string;
-    client_name: string;
-    service_name: string;
-    service_amount: number;
-    consumables_amount: number;
-    note: string | null;
-    booking_id: string | null;
-    created_at: string | null;
-};
 
 export async function GET(
     req: Request,
     context: unknown
 ) {
     return withErrorHandler('StaffFinanceStats', async () => {
-        const staffId = await getRouteParamUuid(context, 'id');
-        return withManagerContext(req, 'StaffFinanceStats', async ({ supabase, admin, bizId }) => {
+        return withManagerAndStaffContext<{ id: string; biz_id: string | number | null; full_name: string | null }>(
+            req,
+            context,
+            { scope: 'StaffFinanceStats', staffIdParamName: 'id', staffSelect: 'id, biz_id, full_name' },
+            async ({ admin, bizId, staffId, staff }) => {
         // Получаем параметры запроса
         const { searchParams } = new URL(req.url);
-        const period = (searchParams.get('period') || 'day') as Period;
+        const period = (searchParams.get('period') || 'day') as StaffFinanceStatsPeriod;
         const dateParam = searchParams.get('date');
         let date: string;
         
@@ -109,43 +99,6 @@ export async function GET(
             date = dateParam;
         } else {
             date = todayStringInTz(TZ);
-        }
-
-        // Проверяем, что сотрудник принадлежит этому бизнесу
-        const { data: staff, error: staffError } = await supabase
-            .from('staff')
-            .select('id, biz_id, full_name')
-            .eq('id', staffId)
-            .maybeSingle();
-
-        if (staffError) {
-            logError('StaffFinanceStats', 'Error loading staff', { 
-                error: staffError.message, 
-                staffId,
-                bizId 
-            });
-            return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
-        }
-
-        if (!staff) {
-            logDebug('StaffFinanceStats', 'Staff not found', { staffId, bizId });
-            return createErrorResponse('not_found', 'Сотрудник не найден или доступ запрещен', undefined, 404);
-        }
-
-        // Нормализуем значения для надежного сравнения
-        const normalizedBizId = bizId ? String(bizId).trim() : null;
-        const normalizedStaffBizId = staff.biz_id != null ? String(staff.biz_id).trim() : null;
-
-        // Проверяем принадлежность к бизнесу
-        if (!normalizedStaffBizId || !normalizedBizId || normalizedStaffBizId !== normalizedBizId) {
-            logError('StaffFinanceStats', 'Staff business mismatch', {
-                staffId,
-                staffBizId: normalizedStaffBizId,
-                requestedBizId: normalizedBizId,
-                staffBizIdType: typeof staff.biz_id,
-                bizIdType: typeof bizId,
-            });
-            return createErrorResponse('forbidden', 'Сотрудник не принадлежит этому бизнесу', undefined, 403);
         }
 
         // Определяем диапазон дат в зависимости от периода
@@ -234,7 +187,7 @@ export async function GET(
         // Получаем позиции (клиентов) для всех смен
         // Используем service client для обхода RLS, так как владелец должен видеть данные своих сотрудников
         const shiftIds = (finalShifts || []).map(s => s.id);
-        const shiftItemsMap: Record<string, ShiftItem[]> = {};
+        const shiftItemsMap: Record<string, StaffFinanceStatsShiftItem[]> = {};
         
         if (shiftIds.length > 0) {
             const { data: itemsData, error: itemsError } = await admin
@@ -261,7 +214,7 @@ export async function GET(
                         note: item.note,
                         booking_id: item.booking_id,
                         created_at: item.created_at ?? null,
-                    } as ShiftItem);
+                    } as StaffFinanceStatsShiftItem);
                 }
             }
         }
@@ -438,8 +391,9 @@ export async function GET(
                     displayGuaranteedAmount = Math.round(displayHoursWorked * hourlyRate * 100) / 100;
                 }
                 
-                // Создаем items с явным типом ShiftItem[] (используем уже объявленную переменную shiftItems)
-                const shiftItemsTyped: ShiftItem[] = shiftItems.map((item): ShiftItem => ({
+                // Создаем items с явным типом StaffFinanceStatsShiftItem[]
+                const shiftItemsTyped: StaffFinanceStatsShiftItem[] = shiftItems.map(
+                    (item): StaffFinanceStatsShiftItem => ({
                     id: item.id,
                     client_name: item.client_name || '',
                     service_name: item.service_name || '',
@@ -448,7 +402,8 @@ export async function GET(
                     note: item.note || null,
                     booking_id: item.booking_id || null,
                     created_at: item.created_at ?? null,
-                }));
+                }),
+                );
                 
                 return {
                     id: s.id,
@@ -510,7 +465,8 @@ export async function GET(
         });
 
         return createSuccessResponse({ stats });
-        });
+        },
+        );
     });
 }
 

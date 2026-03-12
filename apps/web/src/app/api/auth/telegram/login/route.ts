@@ -28,7 +28,17 @@ export async function POST(req: Request) {
         async () => {
             return withErrorHandler('TelegramLogin', async () => {
                 const URL = getSupabaseUrl();
-                const SERVICE = getSupabaseServiceRoleKey();
+                let SERVICE: string;
+                try {
+                    SERVICE = getSupabaseServiceRoleKey();
+                } catch {
+                    return createErrorResponse(
+                        'service_unavailable',
+                        'Вход через Telegram временно недоступен. Обратитесь к администратору сайта.',
+                        { code: 'service_key_missing' },
+                        503
+                    );
+                }
 
         const body = (await req.json()) as TelegramAuthData;
 

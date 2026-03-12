@@ -39,7 +39,23 @@ export type PromotionApplied = {
 };
 
 /**
+ * Описание одной услуги в составе бронирования.
+ * Используется для поддержки комплексов услуг (несколько услуг за один визит).
+ */
+export type BookingServiceItem = {
+    service_id: string;
+    duration_min: number;
+    order_index?: number;
+    price_from?: number;
+    price_to?: number;
+};
+
+/**
  * Параметры для создания бронирования (авторизованный пользователь)
+ *
+ * Для обратной совместимости пока сохраняем обязательный service_id.
+ * Поле services зарезервировано под поддержку комплексов услуг и
+ * может быть не заполнено на первом этапе внедрения.
  */
 export type CreateBookingParams = {
     biz_id: string;
@@ -47,10 +63,14 @@ export type CreateBookingParams = {
     service_id: string;
     staff_id: string;
     start_at: string; // ISO-строка с таймзоной
+    services?: BookingServiceItem[];
 };
 
 /**
  * Параметры для создания гостевой брони
+ *
+ * Аналогично CreateBookingParams, поле services добавлено для будущей
+ * поддержки комплексов услуг, при этом service_id остаётся обязательным.
  */
 export type CreateGuestBookingParams = {
     biz_id: string;
@@ -61,6 +81,7 @@ export type CreateGuestBookingParams = {
     client_name: string;
     client_phone: string;
     client_email?: string | null;
+    services?: BookingServiceItem[];
 };
 
 /**

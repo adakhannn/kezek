@@ -42,6 +42,7 @@ export const dashboardKy = {
     'dashboard.sidebar.closeMenu': 'Менюну жабуу',
     'dashboard.sidebar.openMenu': 'Менюну ачуу',
     'dashboard.sidebar.title': 'Бизнес кабинети',
+    'dashboard.sidebar.switchInHeader': 'Бизнести өзгөртүү — үстүнкү менюда',
     'dashboard.stats.activeStaff': 'Активдүү кызматкерлер',
     'dashboard.stats.activeStaffHint': 'кардарларды кабыл алууга даяр',
     'dashboard.stats.bookingsToday': 'Бүгүнкү брондоолор',

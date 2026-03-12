@@ -45,6 +45,13 @@ function TelegramLoginWidgetComponent({
     const router = useRouter();
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [loading, setLoading] = useState(false);
+    const [currentHostname, setCurrentHostname] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            setCurrentHostname(window.location.hostname);
+        }
+    }, []);
     
     // Храним последние версии callback'ов в ref, чтобы не перезапускать useEffect
     const onSuccessRef = useRef(onSuccess);
@@ -78,10 +85,11 @@ function TelegramLoginWidgetComponent({
                     body: JSON.stringify(user),
                 });
 
-                const data = await resp.json();
+                const data = await resp.json().catch(() => ({}));
 
                 if (!data?.ok) {
-                    throw new Error(data?.message || 'Ошибка авторизации через Telegram');
+                    const apiMessage = data?.message || 'Ошибка авторизации через Telegram';
+                    throw new Error(apiMessage);
                 }
 
                 // Если API вернул данные для входа — выполняем вход через Supabase
@@ -105,8 +113,17 @@ function TelegramLoginWidgetComponent({
                 router.push(data.redirect || redirectToRef.current);
             } catch (e) {
                 const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
-                logError('TelegramLoginWidget', 'Error during login', e);
-                onErrorRef.current?.(msg);
+                // Ожидаемые сообщения не логируем в консоль как ошибку — пользователь видит их на экране
+                const isExpectedUnavailable = /временно недоступен|обратитесь к администратору/i.test(msg);
+                const isRateLimit = /лимит запросов|rate limit/i.test(msg);
+                if (!isExpectedUnavailable && !isRateLimit) {
+                    logError('TelegramLoginWidget', `Error during login: ${msg}`);
+                }
+                // «Bot domain invalid» на проде: домен не добавлен в @BotFather → /setdomain
+                const displayMessage = /bot domain invalid|domain invalid/i.test(msg)
+                    ? 'Домен сайта не привязан к боту Telegram. Администратору нужно в @BotFather выполнить /setdomain и указать домен этого сайта.'
+                    : msg;
+                onErrorRef.current?.(displayMessage);
             } finally {
                 setLoading(false);
             }
@@ -149,6 +166,19 @@ function TelegramLoginWidgetComponent({
                 <p className="mb-2 text-xs text-amber-600 dark:text-amber-400 text-center">
                     Telegram не поддерживает <code className="bg-black/5 dark:bg-white/10 px-1 rounded">localhost</code> в @BotFather. Чтобы тестировать вход локально: запустите туннель (ngrok, localhost.run), откройте сайт по выданному URL и добавьте этот домен в @BotFather → <code className="bg-black/5 dark:bg-white/10 px-1 rounded">/setdomain</code>. Или проверяйте вход на проде.
                 </p>
+            )}
+            {!isLocalhost && currentHostname && (
+                <div className="mb-2 text-xs text-gray-500 dark:text-gray-400 text-center space-y-1">
+                    <p>
+                        Если видите «Bot domain invalid» — в @BotFather выберите бота <strong>@{TELEGRAM_BOT_USERNAME}</strong>, отправьте <code className="bg-black/5 dark:bg-white/10 px-1 rounded">/setdomain</code> и введите <strong>точно</strong> этот домен (как в адресной строке, без https://):
+                    </p>
+                    <p className="font-mono font-semibold text-gray-700 dark:text-gray-300 break-all">
+                        {currentHostname}
+                    </p>
+                    <p>
+                        Проверьте: домен один на бота; если заходите с www — добавьте www. Если без www — добавьте без www.
+                    </p>
+                </div>
             )}
             {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 rounded-lg z-10">

@@ -21,10 +21,12 @@ type BookingItem = {
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled' | 'no_show';
     start_at: string;
     end_at: string;
-    services?: { name_ru: string; name_ky?: string | null }[];
+    services?: { name_ru: string; name_ky?: string | null; name_en?: string | null }[];
     staff?: { full_name: string }[];
     client_name?: string | null;
     client_phone?: string | null;
+    /** Человекочитаемое описание состава услуг (для комплексов) */
+    servicesSummary?: string;
 };
 
 type BookingsListProps = {
@@ -105,6 +107,7 @@ export function BookingsList({
                             const service = Array.isArray(b.services) ? b.services[0] : b.services;
                             const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
                             const isPast = new Date(b.start_at) < new Date();
+                            const serviceLabel = b.servicesSummary || getServiceName(service);
                             return (
                                 <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                     <td className="p-3 lg:p-4 text-sm font-mono text-gray-600 dark:text-gray-400">
@@ -112,7 +115,9 @@ export function BookingsList({
                                             {String(b.id).slice(0, 8)}
                                         </Link>
                                     </td>
-                                    <td className="p-3 lg:p-4 text-sm font-medium text-gray-900 dark:text-gray-100">{getServiceName(service)}</td>
+                                    <td className="p-3 lg:p-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {serviceLabel}
+                                    </td>
                                     <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{master?.full_name}</td>
                                     <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
                                     <td className="p-3 lg:p-4">
@@ -145,6 +150,7 @@ export function BookingsList({
                     const service = Array.isArray(b.services) ? b.services[0] : b.services;
                     const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
                     const isPast = new Date(b.start_at) < new Date();
+                    const serviceLabel = b.servicesSummary || getServiceName(service);
                     return (
                         <div key={b.id} className="bg-white dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700 shadow-sm">
                             <div className="flex items-start justify-between gap-2">
@@ -152,7 +158,9 @@ export function BookingsList({
                                     <Link href={`/booking/${b.id}`} className="text-xs font-mono text-indigo-600 dark:text-indigo-400 hover:underline block mb-1">
                                         #{String(b.id).slice(0, 8)}
                                     </Link>
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{getServiceName(service) || '—'}</p>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                        {serviceLabel || '—'}
+                                    </p>
                                     {master?.full_name && (
                                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 truncate">{master.full_name}</p>
                                     )}

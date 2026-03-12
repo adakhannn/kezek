@@ -21,6 +21,7 @@ export const headerRu = {
     'header.roleBusiness.someBusiness': 'Бизнес',
     'header.roleBusiness.noBusiness': 'Без бизнеса',
     'header.roleBusiness.caption': 'Выберите кабинет или бизнес',
+    'header.roleBusiness.captionRoles': 'Выберите кабинет (роль)',
     'header.roleBusiness.sections.cabinets': 'Кабинеты',
     'header.roleBusiness.sections.businesses': 'Бизнесы',
 } as const;

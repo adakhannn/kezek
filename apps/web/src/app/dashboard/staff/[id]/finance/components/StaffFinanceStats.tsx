@@ -5,52 +5,38 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { ToastContainer } from '@/components/ui/Toast';
-import { formatDate, formatDateBrowser, formatMonthYear, formatTime } from '@/lib/dateFormat';
 import { useToast } from '@/hooks/useToast';
+import { formatDate, formatDateBrowser, formatMonthYear, formatTime } from '@/lib/dateFormat';
+import type {
+    StaffFinanceStatsPayload,
+    StaffFinanceStatsPeriod,
+    StaffFinanceStatsResponse,
+    StaffFinanceStatsShift,
+} from '@/lib/finance/types';
 import { logDebug, logError } from '@/lib/log';
 import { TZ } from '@/lib/time';
-
-type ShiftItem = {
-    id: string;
-    client_name: string;
-    service_name: string;
-    service_amount: number;
-    consumables_amount: number;
-    note: string | null;
-    booking_id: string | null;
-    created_at: string | null;
-};
-
-type Shift = {
-    id: string;
-    shift_date: string;
-    status: 'open' | 'closed';
-    opened_at: string | null;
-    closed_at: string | null;
-    total_amount: number;
-    consumables_amount: number;
-    master_share: number;
-    salon_share: number;
-    late_minutes: number;
-    hours_worked: number | null;
-    hourly_rate: number | null;
-    guaranteed_amount: number;
-    items: ShiftItem[];
-};
 
 function ShiftCard({
     shift,
     formatDate,
     locale,
     t,
+    onHoursUpdated,
 }: {
-    shift: Shift;
+    shift: StaffFinanceStatsShift;
     formatDate: (dateStr: string) => string;
     locale: string;
     t: (key: string, fallback: string) => string;
+    onHoursUpdated?: () => void | Promise<void>;
 }) {
     const toast = useToast();
     const [isExpanded, setIsExpanded] = useState(shift.status === 'open');
+    const [isEditingHours, setIsEditingHours] = useState(false);
+    const [hoursInput, setHoursInput] = useState(() => {
+        const current = shift.hours_worked ?? 0;
+        return Number.isFinite(current) ? current.toFixed(2) : '0.00';
+    });
+    const [isSavingHours, setIsSavingHours] = useState(false);
 
     return (
         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -139,56 +125,13 @@ function ShiftCard({
                         <div className="mt-1">
                             <button
                                 type="button"
-                                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                                onClick={async (e) => {
+                                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 disabled:opacity-50"
+                                disabled={isSavingHours}
+                                onClick={(e) => {
                                     e.stopPropagation();
                                     const current = shift.hours_worked ?? 0;
-                                    const input = window.prompt(
-                                        t(
-                                            'finance.staffStats.editHoursPrompt',
-                                            'Введите фактическое количество отработанных часов для этой смены'
-                                        ),
-                                        current.toFixed(2)
-                                    );
-                                    if (!input) return;
-                                    const next = Number(input.replace(',', '.'));
-                                    if (!Number.isFinite(next) || next < 0) {
-                                        toast.showError(
-                                            t(
-                                                'finance.staffStats.editHoursInvalid',
-                                                'Некорректное значение часов'
-                                            )
-                                        );
-                                        return;
-                                    }
-                                    try {
-                                        const res = await fetch(
-                                            `/api/dashboard/staff-shifts/${shift.id}/update-hours`,
-                                            {
-                                                method: 'POST',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                },
-                                                body: JSON.stringify({
-                                                    hours_worked: next,
-                                                }),
-                                            }
-                                        );
-                                        const json = await res.json().catch(() => ({}));
-                                        if (!res.ok || !json.ok) {
-                                            throw new Error(json.error || `HTTP_${res.status}`);
-                                        }
-                                        // Обновляем страницу, чтобы подтянуть актуальную статистику
-                                        window.location.reload();
-                                    } catch (err) {
-                                        logError('StaffFinanceStats', 'Failed to update shift hours', err);
-                                        toast.showError(
-                                            t(
-                                                'finance.staffStats.editHoursError',
-                                                'Не удалось обновить часы. Попробуйте позже.'
-                                            )
-                                        );
-                                    }
+                                    setHoursInput(Number.isFinite(current) ? current.toFixed(2) : '0.00');
+                                    setIsEditingHours((v) => !v);
                                 }}
                             >
                                 <svg
@@ -211,6 +154,95 @@ function ShiftCard({
                                     )}
                                 </span>
                             </button>
+                            {isEditingHours && (
+                                <div
+                                    className="mt-2 flex flex-col gap-2"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            inputMode="decimal"
+                                            min={0}
+                                            max={24}
+                                            step={0.25}
+                                            value={hoursInput}
+                                            onChange={(e) => setHoursInput(e.target.value)}
+                                            className="w-28 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100"
+                                        />
+                                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                            {t('finance.staffStats.hours', 'ч')}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            className="rounded-md bg-indigo-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                            disabled={isSavingHours}
+                                            onClick={async () => {
+                                                const raw = hoursInput.trim().replace(',', '.');
+                                                const next = Number(raw);
+                                                if (!Number.isFinite(next) || next < 0 || next > 24) {
+                                                    toast.showError(
+                                                        t(
+                                                            'finance.staffStats.editHoursInvalid',
+                                                            'Некорректное значение часов'
+                                                        )
+                                                    );
+                                                    return;
+                                                }
+                                                try {
+                                                    setIsSavingHours(true);
+                                                    const res = await fetch(
+                                                        `/api/dashboard/staff-shifts/${shift.id}/update-hours`,
+                                                        {
+                                                            method: 'POST',
+                                                            headers: {
+                                                                'Content-Type': 'application/json',
+                                                            },
+                                                            body: JSON.stringify({
+                                                                hours_worked: next,
+                                                            }),
+                                                        }
+                                                    );
+                                                    const json = await res.json().catch(() => ({}));
+                                                    if (!res.ok || !json.ok) {
+                                                        throw new Error(json.error || `HTTP_${res.status}`);
+                                                    }
+                                                    setIsEditingHours(false);
+                                                    await onHoursUpdated?.();
+                                                } catch (err) {
+                                                    logError('StaffFinanceStats', 'Failed to update shift hours', err);
+                                                    toast.showError(
+                                                        t(
+                                                            'finance.staffStats.editHoursError',
+                                                            'Не удалось обновить часы. Попробуйте позже.'
+                                                        )
+                                                    );
+                                                } finally {
+                                                    setIsSavingHours(false);
+                                                }
+                                            }}
+                                        >
+                                            {isSavingHours ? t('finance.loading', 'Загрузка...') : t('common.save', 'Сохранить')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
+                                            disabled={isSavingHours}
+                                            onClick={() => setIsEditingHours(false)}
+                                        >
+                                            {t('common.cancel', 'Отмена')}
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                                        {t(
+                                            'finance.staffStats.editHoursHint',
+                                            'Введите фактические часы (0–24)'
+                                        )}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -321,78 +353,42 @@ function ShiftCard({
     );
 }
 
-type Period = 'day' | 'month' | 'year';
-
-type Stats = {
-    period: Period;
-    dateFrom: string;
-    dateTo: string;
-    staffName: string;
-    shiftsCount: number;
-    openShiftsCount: number;
-    closedShiftsCount: number;
-    totalAmount: number;
-    totalMaster: number;
-    totalSalon: number;
-    totalConsumables: number;
-    totalLateMinutes: number;
-    totalClients: number;
-    totalBaseMasterShare?: number; // Базовая доля (без гарантированной суммы)
-    totalGuaranteedAmount?: number; // Гарантированная сумма за выход
-    hasGuaranteedPayment?: boolean; // Есть ли гарантированная оплата, превышающая базовую долю
-        shifts: Array<{
-            id: string;
-            shift_date: string;
-            status: 'open' | 'closed';
-            opened_at: string | null;
-            closed_at: string | null;
-            total_amount: number;
-            consumables_amount: number;
-            master_share: number;
-            salon_share: number;
-            late_minutes: number;
-            hours_worked: number | null;
-            hourly_rate: number | null;
-            guaranteed_amount: number;
-            items: Array<{
-                id: string;
-                client_name: string;
-                service_name: string;
-                service_amount: number;
-                consumables_amount: number;
-                note: string | null;
-                booking_id: string | null;
-                created_at: string | null;
-            }>;
-        }>;
-};
-
 export default function StaffFinanceStats({ staffId }: { staffId: string }) {
     const { t, locale } = useLanguage();
     const toast = useToast();
     const [loading, setLoading] = useState(true);
-    const [period, setPeriod] = useState<Period>('day');
+    const [period, setPeriod] = useState<StaffFinanceStatsPeriod>('day');
     const [date, setDate] = useState(formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd'));
-    const [stats, setStats] = useState<Stats | null>(null);
+    const [stats, setStats] = useState<StaffFinanceStatsPayload | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const loadStats = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const url = `/api/dashboard/staff/${staffId}/finance/stats?period=${period}&date=${date}`;
-            logDebug('StaffFinanceStats', 'Loading stats', { url, staffId, period, date });
+            // API для месяца ожидает date=YYYY-MM, для года — YYYY; для дня — YYYY-MM-DD
+            const dateParam =
+                period === 'year'
+                    ? (date.split('-')[0] ?? date)
+                    : period === 'month'
+                        ? (date.length >= 7 ? date.substring(0, 7) : date)
+                        : date.length === 7
+                            ? `${date}-01`
+                            : date.length === 4
+                                ? `${date}-01-01`
+                                : date;
+            const url = `/api/dashboard/staff/${staffId}/finance/stats?period=${period}&date=${encodeURIComponent(dateParam)}`;
+            logDebug('StaffFinanceStats', 'Loading stats', { url, staffId, period, date: dateParam });
             const res = await fetch(url, { cache: 'no-store' });
-            const json = await res.json();
+            const json = (await res.json()) as StaffFinanceStatsResponse;
             logDebug('StaffFinanceStats', 'Stats response', json);
             if (!json.ok) {
                 throw new Error(json.error || t('finance.loading', 'Не удалось загрузить статистику'));
             }
-            
-            // УБИРАЕМ автоматическое переключение на сегодня - это вызывает бесконечный цикл
-            // Если нужно, пользователь может переключиться вручную
-            
-            setStats(json.stats);
+            // API возвращает { ok: true, data: { stats } }, а не { ok: true, stats }
+            const payload = (json as { data?: { stats?: StaffFinanceStatsPayload }; stats?: StaffFinanceStatsPayload }).data?.stats
+                ?? (json as { stats?: StaffFinanceStatsPayload }).stats;
+            setStats(payload ?? null);
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setError(msg);
@@ -443,31 +439,34 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                 <div className="flex items-center gap-2 flex-wrap">
                     <button
                         onClick={() => setPeriod('day')}
+                        disabled={loading}
                         className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                             period === 'day'
                                 ? 'bg-indigo-600 text-white shadow-sm'
                                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
-                        }`}
+                        } ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                         {t('finance.period.day', 'День')}
                     </button>
                     <button
                         onClick={() => setPeriod('month')}
+                        disabled={loading}
                         className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                             period === 'month'
                                 ? 'bg-indigo-600 text-white shadow-sm'
                                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
-                        }`}
+                        } ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                         {t('finance.period.month', 'Месяц')}
                     </button>
                     <button
                         onClick={() => setPeriod('year')}
+                        disabled={loading}
                         className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                             period === 'year'
                                 ? 'bg-indigo-600 text-white shadow-sm'
                                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
-                        }`}
+                        } ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                         {t('finance.period.year', 'Год')}
                     </button>
@@ -475,15 +474,18 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                 <div className="flex items-center gap-2">
                     <input
                         type={period === 'year' ? 'number' : period === 'month' ? 'month' : 'date'}
-                        value={period === 'year' ? date.split('-')[0] : date}
+                        value={period === 'year' ? date.split('-')[0] : period === 'month' ? (date.substring(0, 7) || date) : date}
+                        disabled={loading}
                         onChange={(e) => {
                             if (period === 'year') {
                                 setDate(`${e.target.value}-01-01`);
+                            } else if (period === 'month') {
+                                setDate(e.target.value.length === 7 ? e.target.value + '-01' : e.target.value);
                             } else {
                                 setDate(e.target.value);
                             }
                         }}
-                        className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm"
+                        className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <button
                         onClick={loadStats}
@@ -494,6 +496,20 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                     </button>
                 </div>
             </div>
+            {/* Индикатор фоновой загрузки (без мигания контента) */}
+            {loading && stats && (
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 -mt-2">
+                    <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                    </svg>
+                    <span>{t('finance.loading', 'Загрузка...')}</span>
+                </div>
+            )}
 
             {/* Основная статистика - ключевые метрики */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -647,7 +663,14 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                     </h3>
                     <div className="space-y-2">
                         {stats.shifts.map((shift) => (
-                            <ShiftCard key={shift.id} shift={shift} formatDate={formatDate} locale={locale} t={t} />
+                            <ShiftCard
+                                key={shift.id}
+                                shift={shift}
+                                formatDate={formatDate}
+                                locale={locale}
+                                t={t}
+                                onHoursUpdated={loadStats}
+                            />
                         ))}
                     </div>
                 </div>

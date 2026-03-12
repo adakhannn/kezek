@@ -286,8 +286,18 @@ export async function resolveBizContextForManagers() {
     const userEmail = userData.user.email;
     logDebug('AuthBiz', 'User authenticated', { userId, email: userEmail });
 
-    // service client для обхода RLS
-    const serviceClient = createSupabaseAdminClient();
+    // service client для обхода RLS (опционально).
+    // В dev окружениях ключ может отсутствовать — тогда используем обычный server client с RLS.
+    // Это достаточно для owner/admin/manager сценариев и не должно ломать /dashboard.
+    let serviceClient: SupabaseClient = supabase;
+    try {
+        serviceClient = createSupabaseAdminClient();
+    } catch (e) {
+        logWarn('AuthBiz', 'SUPABASE_SERVICE_ROLE_KEY not set, falling back to server client (RLS)', {
+            error: e instanceof Error ? e.message : String(e),
+        });
+        serviceClient = supabase;
+    }
 
     // 1) super_admin через RPC
     let isSuper = false;

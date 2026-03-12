@@ -9,6 +9,7 @@ export const bookingRu = {
     'booking.dateTime': 'Дата и время',
     'booking.duration.label': 'Продолжительность:',
     'booking.duration.min': 'мин',
+    'booking.duration.hour': 'ч',
     'booking.empty.noBranches': 'У этого бизнеса нет активных филиалов. Пожалуйста, вернитесь позже.',
     'booking.empty.noServices': 'У выбранного мастера пока нет назначенных услуг. Выберите другого мастера.',
     'booking.empty.noSlots': 'На выбранный день нет свободных слотов. Выберите другой день или мастера.',

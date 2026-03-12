@@ -5,9 +5,6 @@
 
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
-import { addDays, subDays } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
 import { useMemo, useState, useCallback, memo, useEffect, useRef, lazy, Suspense } from 'react';
 
 import { useFinanceData } from '../hooks/useFinanceData';
@@ -32,32 +29,26 @@ import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { LoadingOverlay } from '@/components/ui/ProgressBar';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
-import { todayTz, TZ } from '@/lib/time';
+import { todayTz } from '@/lib/time';
 
 interface FinancePageProps {
     staffId?: string;
     showHeader?: boolean;
+    /** Данные смены с сервера (SSR prefetch) — сразу отображаются без загрузки */
+    initialData?: import('@/app/staff/finance/services/shiftDataService').FinanceResponsePayload;
 }
 
 /**
  * Оптимизированный компонент страницы финансов
  */
-export const FinancePage = memo(function FinancePage({ staffId, showHeader = true }: FinancePageProps) {
+export const FinancePage = memo(function FinancePage({ staffId, showHeader = true, initialData }: FinancePageProps) {
     const { t } = useLanguage();
     const toast = useToast();
 
     // Состояние для вкладок и дат
-    // Сохраняем активную вкладку в sessionStorage для сохранения после перезагрузки
-    const getInitialTab = useCallback(() => {
-        if (typeof window === 'undefined') {
-            return staffId ? 'clients' : 'shift';
-        }
-        const savedTab = sessionStorage.getItem(`finance-active-tab-${staffId || 'current'}`);
-        if (savedTab && (savedTab === 'shift' || savedTab === 'clients' || savedTab === 'stats')) {
-            return savedTab as TabKey;
-        }
-        return staffId ? 'clients' : 'shift';
-    }, [staffId]);
+    // ВАЖНО: начальное значение activeTab должно быть детерминированным и одинаковым на сервере и клиенте,
+    // чтобы избежать ошибок гидратации. Поэтому при инициализации НЕ читаем sessionStorage.
+    const getInitialTab = useCallback(() => (staffId ? 'clients' : 'shift'), [staffId]);
     
     const [activeTab, setActiveTab] = useState<TabKey>(getInitialTab);
     const activeTabRef = useRef<TabKey>(getInitialTab());
@@ -68,6 +59,17 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [showShiftDetails, setShowShiftDetails] = useState(false);
     
+    // После монтирования на клиенте подхватываем сохранённую вкладку из sessionStorage (если есть)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const key = `finance-active-tab-${staffId || 'current'}`;
+        const savedTab = sessionStorage.getItem(key);
+        if (savedTab === 'shift' || savedTab === 'clients' || savedTab === 'stats') {
+            activeTabRef.current = savedTab as TabKey;
+            setActiveTab((current) => (current !== savedTab ? (savedTab as TabKey) : current));
+        }
+    }, [staffId, getInitialTab]);
+
     // Обновляем ref и sessionStorage при изменении activeTab
     useEffect(() => {
         activeTabRef.current = activeTab;
@@ -95,92 +97,16 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     // Флаг для предотвращения синхронизации сразу после добавления нового элемента
     const skipNextSyncRef = useRef(false);
 
-    // Загрузка данных через React Query
+    // Загрузка данных через React Query (initialData от SSR убирает первый запрос)
     const financeData = useFinanceData({
         staffId,
         date: shiftDate,
         enabled: true,
+        initialData,
     });
 
     // Мутации
     const mutations = useFinanceMutations({ staffId, date: shiftDate });
-
-    // Предзагрузка данных для соседних дат для мгновенного переключения
-    const queryClient = useQueryClient();
-    useEffect(() => {
-        // Предзагружаем данные для предыдущего и следующего дня
-        const prevDate = subDays(shiftDate, 1);
-        const nextDate = addDays(shiftDate, 1);
-        
-        const prevDateStr = formatInTimeZone(prevDate, TZ, 'yyyy-MM-dd');
-        const nextDateStr = formatInTimeZone(nextDate, TZ, 'yyyy-MM-dd');
-        const todayStr = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
-        
-        // Предзагружаем предыдущий день (если он не в будущем)
-        if (prevDateStr <= todayStr) {
-            const prevQueryKey = ['finance', staffId || 'current', prevDateStr];
-            queryClient.prefetchQuery({
-                queryKey: prevQueryKey,
-                queryFn: async ({ signal }: { signal?: AbortSignal }) => {
-                    const dateStr = formatInTimeZone(prevDate, TZ, 'yyyy-MM-dd');
-                    const apiUrl = staffId
-                        ? `/api/staff/finance?staffId=${encodeURIComponent(staffId)}&date=${dateStr}`
-                        : `/api/staff/finance?date=${dateStr}`;
-                    
-                    const res = await fetch(apiUrl, {
-                        cache: 'no-store',
-                        signal,
-                    });
-                    
-                    if (!res.ok) {
-                        throw new Error('Не удалось загрузить данные');
-                    }
-                    
-                    const json = await res.json();
-                    if (!json.ok) {
-                        throw new Error(json.error || 'Не удалось загрузить данные');
-                    }
-                    
-                    return json;
-                },
-                staleTime: 30 * 1000, // 30 секунд для прошлых дат
-                gcTime: 60 * 60 * 1000, // 60 минут в кэше
-            });
-        }
-        
-        // Предзагружаем следующий день (если он не слишком далеко в будущем, максимум +7 дней)
-        const maxFutureDate = addDays(new Date(), 7);
-        if (nextDateStr <= formatInTimeZone(maxFutureDate, TZ, 'yyyy-MM-dd')) {
-            const nextQueryKey = ['finance', staffId || 'current', nextDateStr];
-            queryClient.prefetchQuery({
-                queryKey: nextQueryKey,
-                queryFn: async ({ signal }: { signal?: AbortSignal }) => {
-                    const dateStr = formatInTimeZone(nextDate, TZ, 'yyyy-MM-dd');
-                    const apiUrl = staffId
-                        ? `/api/staff/finance?staffId=${encodeURIComponent(staffId)}&date=${dateStr}`
-                        : `/api/staff/finance?date=${dateStr}`;
-                    
-                    const res = await fetch(apiUrl, {
-                        cache: 'no-store',
-                        signal,
-                    });
-                    
-                    if (!res.ok) {
-                        throw new Error('Не удалось загрузить данные');
-                    }
-                    
-                    const json = await res.json();
-                    if (!json.ok) {
-                        throw new Error(json.error || 'Не удалось загрузить данные');
-                    }
-                    
-                    return json;
-                },
-                staleTime: nextDateStr === todayStr ? 5 * 1000 : 30 * 1000,
-                gcTime: nextDateStr === todayStr ? 5 * 60 * 1000 : 60 * 60 * 1000,
-            });
-        }
-    }, [shiftDate, staffId, queryClient]);
 
     // Синхронизируем локальные items с данными из сервера
     useEffect(() => {
@@ -277,8 +203,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
     // Вычисляем состояние смены
     const shift = financeData.data?.shift ?? null;
-    const isOpen = shift?.status === 'open';
-    const isClosed = shift?.status === 'closed';
+    const todayStatus = financeData.data?.todayStatus ?? 'none';
+    const isOpen = todayStatus === 'open';
+    const isClosed = todayStatus === 'closed';
 
     // Для владельца: режим только для чтения, если смена закрыта
     const isReadOnlyForOwner = !!staffId && isClosed;
@@ -374,15 +301,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             // Пропускаем следующую синхронизацию с сервером, чтобы не потерять новый элемент
             skipNextSyncRef.current = true;
             
-            // Открываем форму для нового элемента (индекс 0) и сдвигаем остальные индексы
-            setExpandedItems((expanded) => {
-                const newExpanded = new Set([0]);
-                // Сдвигаем все существующие открытые формы на +1
-                expanded.forEach((idx) => {
-                    newExpanded.add(idx + 1);
-                });
-                return newExpanded;
-            });
+            // Открываем форму только для нового элемента (индекс 0),
+            // все предыдущие формы сворачиваем, чтобы не мешали.
+            setExpandedItems(new Set([0]));
             
             return updatedItems;
         });
@@ -403,12 +324,12 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         const validation = validateShiftItem(item);
         
         if (!validation.valid) {
-            // Если есть ошибки валидации, не сохраняем
-            const errorMessages = Object.values(validation.errors).filter(Boolean);
-            if (errorMessages.length > 0) {
-                toast.showError(errorMessages[0]);
+            // Ошибки валидации — ключи i18n; переводим при показе
+            const errorKeys = Object.values(validation.errors).filter(Boolean);
+            if (errorKeys.length > 0) {
+                toast.showError(t(errorKeys[0]));
             } else {
-                toast.showError(t('staff.finance.clients.validationError', 'Обнаружены ошибки валидации'));
+                toast.showError(t('staff.finance.validation.errors'));
             }
             return;
         }
@@ -524,8 +445,13 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         skipNextSyncRef.current = true;
     }, [localItems]);
 
-    // Определяем, нужно ли показывать индикатор загрузки
-    const shouldShowLoading = financeData.isLoading || mutations.isOpening || mutations.isClosing || mutations.isSaving;
+    // Определяем, нужно ли показывать индикатор загрузки.
+    // Показываем только при мутациях (открытие/закрытие смены, сохранение клиента),
+    // а не при первой загрузке данных — за initial loading отвечает skeleton от Next.
+    const shouldShowLoading =
+        mutations.isOpening ||
+        mutations.isClosing ||
+        mutations.isSaving;
     
     // Определяем сообщение для лоадера
     const loadingMessage = useMemo(() => {
@@ -563,7 +489,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 </div>
             )}
 
-            <div className={staffId ? '' : 'px-6'}>
+            <div className={`min-w-0 ${staffId ? 'px-3 sm:px-4' : 'px-6'}`}>
                 <Tabs
                     activeTab={activeTab}
                     onTabChange={handleTabChange}
@@ -574,7 +500,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
             {/* Таб: Текущая смена */}
             {activeTab === 'shift' && (
-                <div className={`space-y-4 ${staffId ? 'p-6' : 'px-6 pb-6'}`}>
+                <div className={`space-y-4 ${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'}`}>
                     {financeData.isError && financeData.error && (
                         <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 px-4 py-3">
                             <div className="flex items-start gap-3">
@@ -604,7 +530,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                             shiftDate={shiftDate}
                             onShiftDateChange={setShiftDate}
                             shift={shift}
-                            isOpen={isOpen ?? false}
+                            status={todayStatus}
                             staffId={staffId}
                         />
                         <ShiftControls
@@ -701,7 +627,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
             {/* Таб: Клиенты */}
             {activeTab === 'clients' && (
-                <div className={`space-y-4 ${staffId ? 'p-6' : 'px-6 pb-6'}`}>
+                <div className={`space-y-4 ${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'}`}>
                     <ClientsListHeader
                         shiftDate={shiftDate}
                         onShiftDateChange={setShiftDate}
@@ -745,7 +671,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
             {/* Таб: Статистика */}
             {activeTab === 'stats' && stats && !staffId && (
-                <div className={`${staffId ? 'p-6' : 'px-6 pb-6'}`}>
+                <div className={`${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'} min-w-0`}>
                     <Suspense
                         fallback={
                             <div className="flex items-center justify-center py-12">

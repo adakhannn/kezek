@@ -21,7 +21,11 @@ export function createLogger(isDev: IsDevFn) {
         if (!isDev()) return;
         const sanitized = extra !== undefined ? sanitizeObject(extra) : undefined;
         // eslint-disable-next-line no-console
-        console.log(`[${scope}] ${message}`, sanitized ?? '');
+        if (sanitized !== undefined) {
+            console.log(`[${scope}] ${message}`, sanitized);
+        } else {
+            console.log(`[${scope}] ${message}`);
+        }
     }
 
     /**
@@ -32,7 +36,11 @@ export function createLogger(isDev: IsDevFn) {
         if (!isDev()) return;
         const sanitized = extra !== undefined ? sanitizeObject(extra) : undefined;
         // eslint-disable-next-line no-console
-        console.warn(`[${scope}] ${message}`, sanitized ?? '');
+        if (sanitized !== undefined) {
+            console.warn(`[${scope}] ${message}`, sanitized);
+        } else {
+            console.warn(`[${scope}] ${message}`);
+        }
     }
 
     /**
@@ -44,7 +52,11 @@ export function createLogger(isDev: IsDevFn) {
         if (isDev()) {
             const sanitized = extra !== undefined ? sanitizeObject(extra) : undefined;
             // eslint-disable-next-line no-console
-            console.error(`[${scope}] ${message}`, sanitized ?? '');
+            if (sanitized !== undefined) {
+                console.error(`[${scope}] ${message}`, sanitized);
+            } else {
+                console.error(`[${scope}] ${message}`);
+            }
         } else {
             // В production логируем только сообщение без деталей (для mobile)
             // eslint-disable-next-line no-console

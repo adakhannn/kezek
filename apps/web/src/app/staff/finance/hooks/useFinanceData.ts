@@ -5,7 +5,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatInTimeZone } from 'date-fns-tz';
-import { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import type { Booking, ServiceName, Shift, ShiftItem, Stats } from '../types';
 import { fetchWithRetry } from '../utils/networkRetry';
@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/useToast';
 import { TZ } from '@/lib/time';
 
 export interface FinanceData {
+    todayStatus: 'open' | 'closed' | 'none';
+    todayExists: boolean;
     shift: Shift | null;
     items: ShiftItem[];
     bookings: Booking[];
@@ -39,7 +41,8 @@ export interface FinanceData {
 }
 
 export interface FinanceDataResponse {
-    ok: true;
+    /** Присутствует только в ответе API; при initialData (SSR) может отсутствовать */
+    ok?: true;
     today: {
         exists: boolean;
         status: 'open' | 'closed' | 'none';
@@ -71,6 +74,8 @@ interface UseFinanceDataOptions {
     staffId?: string;
     date: Date;
     enabled?: boolean;
+    /** Данные с сервера (SSR prefetch) — используются только для текущей даты, без отдельного запроса */
+    initialData?: FinanceDataResponse | import('../services/shiftDataService').FinanceResponsePayload;
 }
 
 interface UseFinanceDataReturn {
@@ -95,19 +100,52 @@ async function fetchFinanceData(
         ? `/api/staff/finance?staffId=${encodeURIComponent(staffId)}&date=${dateStr}`
         : `/api/staff/finance?date=${dateStr}`;
 
-    const res = await fetchWithRetry(
-        apiUrl,
-        {
-            cache: 'no-store',
-            signal,
-        },
-        {
-            retries: 3,
-            baseDelayMs: 1000,
-            maxDelayMs: 10000,
-            scope: 'FinanceData',
+    // Жесткий таймаут для запроса финансов, чтобы не ждать по 15–20 секунд.
+    // Если сервер зависает или долго отвечает, прерываем запрос и показываем
+    // понятную ошибку пользователю.
+    const timeoutMs = 8000;
+    const controller = new AbortController();
+
+    // Пробрасываем внешний signal (от React Query) в наш AbortController
+    if (signal) {
+        if (signal.aborted) {
+            controller.abort();
+        } else {
+            signal.addEventListener('abort', () => controller.abort(), { once: true });
         }
-    );
+    }
+
+    const timeoutId = setTimeout(() => {
+        controller.abort();
+    }, timeoutMs);
+
+    let res: Response;
+    try {
+        res = await fetchWithRetry(
+            apiUrl,
+            {
+                cache: 'no-store',
+                signal: controller.signal,
+            },
+            {
+                // Для основного запроса финансов полностью отключаем повторы:
+                // если запрос не проходит, лучше быстро показать ошибку,
+                // чем ждать несколько циклов ретраев.
+                retries: 0,
+                baseDelayMs: 500,
+                maxDelayMs: 2000,
+                scope: 'FinanceData',
+            }
+        );
+    } catch (e) {
+        // Преобразуем AbortError в более понятное сообщение о таймауте
+        if (e instanceof Error && e.name === 'AbortError') {
+            throw new Error('Превышено время ожидания ответа сервера по финансам. Попробуйте обновить страницу или повторить попытку позже.');
+        }
+        throw e;
+    } finally {
+        clearTimeout(timeoutId);
+    }
 
     if (!res.ok) {
         let errorMessage = 'Не удалось загрузить данные смены';
@@ -125,7 +163,12 @@ async function fetchFinanceData(
         throw new Error(json.error || 'Не удалось загрузить данные смены');
     }
 
-    return json as FinanceDataResponse;
+    // API возвращает { ok: true, data: { today, bookings, ... } }; храним в кэше только payload
+    const payload = (json as { data?: FinanceDataResponse }).data;
+    if (!payload) {
+        throw new Error('Неверный формат ответа: отсутствует data');
+    }
+    return payload as FinanceDataResponse;
 }
 
 /**
@@ -136,8 +179,9 @@ export function useFinanceData({
     staffId,
     date,
     enabled = true,
+    initialData: initialDataProp,
 }: UseFinanceDataOptions): UseFinanceDataReturn {
-    const { t } = useLanguage();
+    const { t: _t } = useLanguage();
     const toast = useToast();
     const queryClient = useQueryClient();
 
@@ -166,22 +210,16 @@ export function useFinanceData({
         queryKey,
         queryFn: ({ signal }) => fetchFinanceData(staffId, date, signal),
         enabled,
+        initialData: isToday && initialDataProp ? initialDataProp : undefined,
         staleTime,
         gcTime,
         refetchOnWindowFocus: false, // Не рефетчить при фокусе (полагаемся на invalidateQueries)
         refetchOnReconnect: isToday, // Рефетчить при переподключении только для текущей смены
         refetchOnMount: false, // Не рефетчить при монтировании, если данные свежие
-        retry: (failureCount, error) => {
-            // Не повторяем для ошибок авторизации
-            if (error instanceof Error) {
-                const msg = error.message.toLowerCase();
-                if (msg.includes('unauthorized') || msg.includes('401')) {
-                    return false;
-                }
-            }
-            return failureCount < 2; // Максимум 2 попытки
-        },
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+        // Отключаем встроенные retry React Query, так как у нас уже есть
+        // собственная логика повторов в fetchWithRetry. Это предотвращает
+        // удвоение количества попыток и длинные «подвисания» запросов.
+        retry: false,
     });
 
     // Преобразуем данные в удобный формат (защита от отсутствия response.today — например, при «Бизнес не найден»)
@@ -194,6 +232,8 @@ export function useFinanceData({
             return null;
         }
         return {
+            todayStatus: today.status,
+            todayExists: today.exists,
             shift: today.shift ?? null,
             items: today.items ?? [],
             bookings: response.bookings ?? [],
@@ -209,14 +249,29 @@ export function useFinanceData({
         };
     }, [query.data]);
 
-    // Обработка ошибок
-    if (query.isError && query.error) {
-        const error = query.error instanceof Error ? query.error : new Error(String(query.error));
-        // Показываем ошибку только если это не ошибка авторизации (она обрабатывается на уровне layout)
-        if (!error.message.toLowerCase().includes('unauthorized')) {
-            toast.showError(error.message);
+    // Обработка ошибок (через useEffect, чтобы избежать бесконечных перерисовок)
+    // Храним последнее показанное сообщение, чтобы не спамить тостами при одном и том же query.error
+    const lastErrorMessageRef = useRef<string | null>(null);
+
+    React.useEffect(() => {
+        if (query.isError && query.error) {
+            const error = query.error instanceof Error ? query.error : new Error(String(query.error));
+            const message = error.message;
+
+            // Показываем ошибку только если это не ошибка авторизации (она обрабатывается на уровне layout)
+            // и если мы ещё не показывали тост с таким текстом
+            if (
+                !message.toLowerCase().includes('unauthorized') &&
+                lastErrorMessageRef.current !== message
+            ) {
+                lastErrorMessageRef.current = message;
+                toast.showError(message);
+            }
+        } else if (!query.isError) {
+            // Сбрасываем, когда ошибки больше нет (например, после успешного refetch)
+            lastErrorMessageRef.current = null;
         }
-    }
+    }, [query.isError, query.error]);
 
     return {
         data,

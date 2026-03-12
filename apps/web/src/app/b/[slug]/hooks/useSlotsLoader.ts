@@ -21,12 +21,19 @@ type Staff = {
 
 /**
  * Кэш для хранения загруженных слотов
- * Ключ: `${dayStr}-${staffId}-${serviceId}`
+ * Ключ: `${dayStr}-${staffId}-${serviceId}` (одна услуга) или `${dayStr}-${staffId}-complex-${sortedIds}` (комплекс)
  */
 type CacheEntry = {
     slots: ScheduleSlot[];
     timestamp: number;
 };
+
+function buildSlotsCacheKey(dayStr: string, staffId: string, serviceIds: string[], totalDurationMin?: number): string {
+    if (serviceIds.length <= 1) {
+        return `${dayStr}-${staffId}-${serviceIds[0] ?? ''}`;
+    }
+    return `${dayStr}-${staffId}-complex-${totalDurationMin ?? 0}-${serviceIds.slice().sort().join(',')}`;
+}
 
 const SLOTS_CACHE_TTL = 10 * 1000; // 10 секунд (уменьшено для уменьшения race conditions)
 const SLOTS_CACHE_MAX_SIZE = 100; // Максимальное количество записей в кэше
@@ -38,12 +45,12 @@ const DEBOUNCE_DELAY = 300; // 300ms
  * Использует debounce для оптимизации частых изменений и кэширование для повторных запросов
  */
 export function useSlotsLoader(params: {
-    serviceId: string;
+    serviceIds: string[];
     staffId: string;
     dayStr: string;
     branchId: string;
     bizId: string;
-    servicesFiltered: Array<{ id: string }>;
+    servicesFiltered: Array<{ id: string; duration_min: number }>;
     serviceStaff: Array<{ service_id: string; staff_id: string }> | null;
     temporaryTransfers: TemporaryTransfer[];
     staff: Staff[];
@@ -51,7 +58,7 @@ export function useSlotsLoader(params: {
     slotsRefreshKey?: number; // Ключ для принудительного обновления
 }) {
     const {
-        serviceId,
+        serviceIds,
         staffId,
         dayStr,
         branchId,
@@ -63,6 +70,8 @@ export function useSlotsLoader(params: {
         t,
         slotsRefreshKey = 0,
     } = params;
+
+    const serviceId = serviceIds[0] ?? '';
 
     const [slots, setSlots] = useState<ScheduleSlot[]>([]);
     const [loading, setLoading] = useState(false);
@@ -80,15 +89,23 @@ export function useSlotsLoader(params: {
 
         // Если параметры неполные, сразу очищаем состояние
         // Для 'any' мастера staffId может быть 'any', но это валидное значение
-        if (!serviceId || !dayStr || (staffId !== 'any' && !staffId)) {
+        if (serviceIds.length === 0 || !dayStr || (staffId !== 'any' && !staffId)) {
             setSlots([]);
             setError(null);
             setLoading(false);
             return;
         }
 
+        const totalDurationMin =
+            serviceIds.length > 1
+                ? serviceIds.reduce((sum, id) => {
+                      const s = servicesFiltered.find((x) => x.id === id);
+                      return sum + (s?.duration_min ?? 0);
+                  }, 0)
+                : 0;
+
         // Формируем ключ кэша
-        const cacheKey = `${dayStr}-${staffId}-${serviceId}`;
+        const cacheKey = buildSlotsCacheKey(dayStr, staffId, serviceIds, totalDurationMin || undefined);
 
         // Проверяем кэш (только если slotsRefreshKey не изменился, т.е. не было принудительного обновления)
         if (slotsRefreshKey === 0) {
@@ -116,53 +133,46 @@ export function useSlotsLoader(params: {
         // Debounce: откладываем выполнение запроса
         debounceTimerRef.current = setTimeout(() => {
             let ignore = false;
+            const isComplex = serviceIds.length > 1;
+            const effectiveTotalDuration = isComplex
+                ? serviceIds.reduce((sum, id) => sum + (servicesFiltered.find((x) => x.id === id)?.duration_min ?? 0), 0)
+                : 0;
 
             (async () => {
-                if (!serviceId || !staffId || !dayStr) {
+                if (serviceIds.length === 0 || !dayStr || (staffId !== 'any' && !staffId)) {
                     setSlots([]);
                     setError(null);
                     setLoading(false);
                     return;
                 }
 
-            // Проверка: если услуга не в servicesFiltered, значит мастер не выполняет её
-            // Для "любого мастера" пропускаем эту проверку, так как показываем слоты от всех мастеров
+            // Проверка: все выбранные услуги должны быть в servicesFiltered (мастер их выполняет)
             if (staffId !== 'any' && serviceStaff !== null) {
-                const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-                if (!isServiceValid) {
-                    logDebug('Booking', 'Slots loading: service not in servicesFiltered, skipping RPC call', {
-                        serviceId,
+                const invalidIds = serviceIds.filter((id) => !servicesFiltered.some((s) => s.id === id));
+                if (invalidIds.length > 0) {
+                    logDebug('Booking', 'Slots loading: not all services in servicesFiltered, skipping RPC call', {
+                        serviceIds,
+                        invalidIds,
                         staffId,
-                        servicesFiltered: servicesFiltered.map((s) => s.id),
                     });
                     setSlots([]);
                     setError(t('booking.step4.masterNoService', 'Выбранный мастер не выполняет эту услугу'));
                     setLoading(false);
                     return;
                 }
-                logDebug('Booking', 'Slots loading: service is valid (in servicesFiltered), proceeding with RPC call', {
-                    serviceId,
+                logDebug('Booking', 'Slots loading: services valid, proceeding with RPC call', {
+                    serviceIds,
                     staffId,
+                    isComplex,
                 });
-            } else {
-                if (staffId === 'any') {
-                    logDebug('Booking', 'Slots loading: any master selected, showing slots from all masters', {
-                        serviceId,
-                    });
-                } else {
-                    logDebug('Booking', 'Slots loading: serviceStaff not loaded yet, proceeding with RPC call (will check validity)', {
-                        serviceId,
-                        staffId,
-                        serviceStaffLoaded: false,
-                    });
-                }
+            } else if (staffId === 'any') {
+                logDebug('Booking', 'Slots loading: any master selected', { serviceIds, isComplex });
             }
 
             setLoading(true);
             setError(null);
 
             try {
-                // Вычисляем контекст расписания (учёт временного перевода мастера)
                 const { isTemporaryTransfer, targetBranchId, homeBranchId } = resolveScheduleContext({
                     staffId,
                     dayStr,
@@ -181,7 +191,6 @@ export function useSlotsLoader(params: {
                     });
                 }
 
-                // Проверяем, есть ли у мастера расписание на эту дату во временном филиале
                 if (isTemporaryTransfer && dayStr && targetBranchId) {
                     const { data: scheduleRule, error: scheduleError } = await supabase
                         .from('staff_schedule_rules')
@@ -211,37 +220,66 @@ export function useSlotsLoader(params: {
                     }
                 }
 
-                // Вызываем RPC для получения слотов
-                logDebug('Booking', 'Calling RPC with params', {
-                    biz_id: bizId,
-                    service_id: serviceId,
-                    day: dayStr,
-                    targetBranchId,
-                    homeBranchId,
-                    isTemporaryTransfer,
-                });
-
-                // Мониторинг производительности загрузки слотов
                 const { measurePerformance } = await import('@/lib/performance');
-                const rpcResult = await measurePerformance(
-                    'get_free_slots_service_day_v2',
-                    async () => {
-                        return await supabase.rpc('get_free_slots_service_day_v2', {
-                            p_biz_id: bizId,
-                            p_service_id: serviceId,
-                            p_day: dayStr,
-                            p_per_staff: 400,
-                            p_step_min: 15,
-                        });
-                    },
-                    { bizId, serviceId, dayStr, staffId }
-                );
+                let rpcResult: { data: ScheduleSlot[] | null; error: { message: string; code?: string } | null };
+
+                if (isComplex && effectiveTotalDuration > 0) {
+                    logDebug('Booking', 'Calling get_free_slots_complex_day_v1', {
+                        bizId,
+                        dayStr,
+                        totalDurationMin: effectiveTotalDuration,
+                        staffId: staffId === 'any' ? null : staffId,
+                        // ВАЖНО: не передаём branch_id в RPC, чтобы не "пережимать" выборку.
+                        // Эффективный филиал/временные переводы учитываются resolve_staff_day внутри RPC,
+                        // а финальная фильтрация по выбранному branchId выполняется на фронте через filterSlotsByContext
+                        // (как и для get_free_slots_service_day_v2).
+                        branchId: null,
+                    });
+                    rpcResult = await measurePerformance(
+                        'get_free_slots_complex_day_v1',
+                        async () => {
+                            return await supabase.rpc('get_free_slots_complex_day_v1', {
+                                p_biz_id: bizId,
+                                p_branch_id: null,
+                                p_staff_id: staffId === 'any' ? null : staffId,
+                                p_day: dayStr,
+                                p_duration_min: effectiveTotalDuration,
+                                p_step_min: 15,
+                                p_per_staff: 400,
+                            });
+                        },
+                        { bizId, dayStr, staffId, totalDurationMin: effectiveTotalDuration }
+                    );
+                } else {
+                    logDebug('Booking', 'Calling get_free_slots_service_day_v2', {
+                        biz_id: bizId,
+                        service_id: serviceId,
+                        day: dayStr,
+                        targetBranchId,
+                        homeBranchId,
+                        isTemporaryTransfer,
+                    });
+                    rpcResult = await measurePerformance(
+                        'get_free_slots_service_day_v2',
+                        async () => {
+                            return await supabase.rpc('get_free_slots_service_day_v2', {
+                                p_biz_id: bizId,
+                                p_service_id: serviceId,
+                                p_day: dayStr,
+                                p_per_staff: 400,
+                                p_step_min: 15,
+                            });
+                        },
+                        { bizId, serviceId, dayStr, staffId }
+                    );
+                }
+
                 const { data, error: rpcError } = rpcResult;
 
                 if (ignore) return;
 
                 if (rpcError) {
-                    logWarn('Booking', 'get_free_slots_service_day_v2 error', rpcError);
+                    logWarn('Booking', isComplex ? 'get_free_slots_complex_day_v1 error' : 'get_free_slots_service_day_v2 error', rpcError);
                     setSlots([]);
 
                     // Определяем тип ошибки для более детального сообщения
@@ -301,7 +339,7 @@ export function useSlotsLoader(params: {
                 }
 
                 // Сохраняем в кэш
-                const cacheKey = `${dayStr}-${staffId}-${serviceId}`;
+                const cacheKey = buildSlotsCacheKey(dayStr, staffId, serviceIds, isComplex ? effectiveTotalDuration : undefined);
                 
                 // Ограничиваем размер кэша: если превышен лимит, удаляем самые старые записи
                 if (cacheRef.current.size >= SLOTS_CACHE_MAX_SIZE) {
@@ -340,7 +378,7 @@ export function useSlotsLoader(params: {
                 debounceTimerRef.current = null;
             }
         };
-    }, [serviceId, staffId, dayStr, branchId, bizId, servicesFiltered, serviceStaff, temporaryTransfers, staff, t, slotsRefreshKey]);
+    }, [serviceIds, staffId, dayStr, branchId, bizId, servicesFiltered, serviceStaff, temporaryTransfers, staff, t, slotsRefreshKey]);
 
     // Очистка устаревших записей кэша при размонтировании или периодически
     useEffect(() => {

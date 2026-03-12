@@ -35,7 +35,11 @@ export default async function BookingPage({
         .select(`
       id,status,start_at,end_at,promotion_applied,
       services:services!bookings_service_id_fkey(name_ru, name_ky, name_en),
-      staff:staff!bookings_staff_id_fkey(full_name)
+      staff:staff!bookings_staff_id_fkey(full_name),
+      booking_services (
+        duration_min,
+        service:services (name_ru, name_ky, name_en)
+      )
     `)
         .eq('id', id)
         .maybeSingle();
@@ -47,18 +51,46 @@ export default async function BookingPage({
         return <FallbackBooking id={id}/>;
     }
 
-    const service = Array.isArray(data.services) ? data.services[0] : data.services;
+    const primaryService = Array.isArray(data.services) ? data.services[0] : data.services;
+
+    type BookingServiceRow = {
+        duration_min: number | null;
+        service?: { name_ru?: string; name_ky?: string | null; name_en?: string | null } | null;
+    };
+    type BookingWithServices = typeof data & {
+        booking_services?: BookingServiceRow[] | null;
+    };
+
+    const bookingWithServices = data as BookingWithServices;
+    const complexServicesRaw: BookingServiceRow[] = Array.isArray(bookingWithServices.booking_services)
+        ? bookingWithServices.booking_services
+        : [];
+
+    const services =
+        complexServicesRaw.length > 0
+            ? complexServicesRaw.map((bs) => ({
+                  name_ru: bs.service?.name_ru ?? '',
+                  name_ky: bs.service?.name_ky ?? null,
+                  name_en: bs.service?.name_en ?? null,
+                  duration_min: typeof bs.duration_min === 'number' ? bs.duration_min : null,
+              }))
+            : primaryService
+            ? [
+                  {
+                      name_ru: primaryService.name_ru,
+                      name_ky: primaryService.name_ky ?? null,
+                      name_en: primaryService.name_en ?? null,
+                      duration_min: null,
+                  },
+              ]
+            : null;
     const master = Array.isArray(data.staff) ? data.staff[0] : data.staff;
 
     return (
         <LanguageProvider>
             <BookingLayoutClient
                 id={String(data.id)}
-                service={service ? {
-                    name_ru: service.name_ru,
-                    name_ky: service.name_ky ?? null,
-                    name_en: service.name_en ?? null,
-                } : null}
+                services={services}
                 masterName={master?.full_name ?? '—'}
                 startAt={new Date(data.start_at)}
                 status={data.status}
@@ -99,11 +131,18 @@ async function FallbackBooking({ id }: { id: string }) {
         <LanguageProvider>
             <BookingLayoutClient
                 id={String(row.id)}
-                service={row.service_name ? {
-                    name_ru: row.service_name,
-                    name_ky: null,
-                    name_en: null,
-                } : null}
+                services={
+                    row.service_name
+                        ? [
+                              {
+                                  name_ru: row.service_name,
+                                  name_ky: null,
+                                  name_en: null,
+                                  duration_min: null,
+                              },
+                          ]
+                        : null
+                }
                 masterName={row.staff_name}
                 startAt={new Date(row.start_at)}
                 status={row.status}
