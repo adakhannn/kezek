@@ -23,6 +23,10 @@ interface ClientsListHeaderProps {
     onAddClient: () => void;
     items: ShiftItem[];
     shift: Shift | null;
+    /** Есть несохранённые изменения списка клиентов (показываем индикатор) */
+    hasUnsavedChanges?: boolean;
+    /** Явное сохранение всех изменений по требованию пользователя */
+    onSaveNow?: () => void;
 }
 
 export function ClientsListHeader({
@@ -37,6 +41,8 @@ export function ClientsListHeader({
     onAddClient,
     items,
     shift,
+    hasUnsavedChanges = false,
+    onSaveNow,
 }: ClientsListHeaderProps) {
     const { t } = useLanguage();
     
@@ -59,10 +65,15 @@ export function ClientsListHeader({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 min-w-0">
             <div className="flex items-center gap-4 min-w-0">
                 <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                             {t('staff.finance.clients.title', 'Клиенты за смену')}
                         </span>
+                        {hasUnsavedChanges && !savingItems && (
+                            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium" title={t('staff.finance.clients.unsavedHint', 'Будет сохранено автоматически через несколько секунд')}>
+                                {t('staff.finance.clients.unsaved', 'Изменения не сохранены')}
+                            </span>
+                        )}
                     </div>
                     <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                         {formatInTimeZone(shiftDate, TZ, 'dd.MM.yyyy')} ({TZ})
@@ -71,6 +82,18 @@ export function ClientsListHeader({
             </div>
             {/* Показываем кнопки действий */}
             <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                {hasUnsavedChanges && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={saving || savingItems || !onSaveNow}
+                        onClick={onSaveNow}
+                        className="text-xs px-2 py-1 h-7 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                    >
+                        {t('staff.finance.clients.saveNow', 'Сохранить сейчас')}
+                    </Button>
+                )}
+
                 {/* Кнопка экспорта */}
                 {items.length > 0 && (
                     <Button

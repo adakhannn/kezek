@@ -26,10 +26,26 @@ import { Tabs } from './Tabs';
 const StatsView = lazy(() => import('./StatsView').then((module) => ({ default: module.StatsView })));
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { SAVE_DEBOUNCE_MS } from '@/app/staff/finance/constants';
 import { LoadingOverlay } from '@/components/ui/ProgressBar';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { todayTz } from '@/lib/time';
+
+function serializeShiftItems(items: ShiftItem[]): string {
+    // Сериализуем только значимые поля, чтобы отслеживать изменения для автосохранения
+    return JSON.stringify(
+        items.map((it) => ({
+            id: it.id ?? null,
+            clientName: it.clientName ?? '',
+            serviceName: it.serviceName ?? '',
+            serviceAmount: it.serviceAmount ?? 0,
+            consumablesAmount: it.consumablesAmount ?? 0,
+            bookingId: it.bookingId ?? null,
+            createdAt: it.createdAt ?? null,
+        })),
+    );
+}
 
 interface FinancePageProps {
     staffId?: string;
@@ -78,6 +94,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }
     }, [activeTab, staffId]);
     
+    // Предыдущая вкладка — для flush при уходе с «Клиенты» (инициализируем текущей, чтобы не срабатывать на первый рендер)
+    const previousTabRef = useRef<TabKey | null>(null);
+
     // Обертка для setActiveTab, которая также обновляет ref и sessionStorage
     const handleTabChange = useCallback((tab: TabKey) => {
         activeTabRef.current = tab;
@@ -92,10 +111,21 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
     // Отслеживаем, какие элементы были только что сохранены (новые элементы без id)
     const savedItemsWithoutIdRef = useRef<Set<number>>(new Set());
-    // Ref для отслеживания предыдущих localItems, чтобы избежать бесконечного цикла
-    const previousLocalItemsRef = useRef<ShiftItem[]>([]);
+    // Сигнатура последнего успешно сохранённого списка клиентов (для предотвращения повторных сохранений)
+    const lastSavedItemsRef = useRef<string | null>(null);
+    // Текущая сигнатура локального списка (для flush на размонтировании)
+    const currentItemsSignatureRef = useRef<string | null>(null);
+    // Ref с последним значением localItems (для flush на размонтировании)
+    const localItemsRef = useRef<ShiftItem[]>([]);
+    // Таймер для отложенного сохранения
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // Актуальные флаги для проверки внутри колбэка таймера (смена открыта, не readonly)
+    const isOpenRef = useRef(false);
+    const isReadOnlyForOwnerRef = useRef(false);
     // Флаг для предотвращения синхронизации сразу после добавления нового элемента
     const skipNextSyncRef = useRef(false);
+    // Сигнатура последнего сохранённого состояния (для UI «есть несохранённые изменения»)
+    const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(null);
 
     // Загрузка данных через React Query (initialData от SSR убирает первый запрос)
     const financeData = useFinanceData({
@@ -107,6 +137,12 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
     // Мутации
     const mutations = useFinanceMutations({ staffId, date: shiftDate });
+
+    // Держим в ref актуальный список клиентов для возможного flush при размонтировании / смене вкладки
+    useEffect(() => {
+        localItemsRef.current = localItems;
+        currentItemsSignatureRef.current = serializeShiftItems(localItems);
+    }, [localItems]);
 
     // Синхронизируем локальные items с данными из сервера
     useEffect(() => {
@@ -173,6 +209,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 
                 return mergedItems;
             });
+
+            lastSavedItemsRef.current = serializeShiftItems(serverItems);
+            setLastSavedSignature(serializeShiftItems(serverItems));
             
             // Закрываем все открытые формы после синхронизации с сервером
             // Это нужно, чтобы пользователь видел окончательный список клиентов
@@ -210,6 +249,105 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     // Для владельца: режим только для чтения, если смена закрыта
     const isReadOnlyForOwner = !!staffId && isClosed;
 
+    // Держим в ref актуальные флаги для проверки внутри колбэка дебаунса
+    isOpenRef.current = isOpen;
+    isReadOnlyForOwnerRef.current = isReadOnlyForOwner;
+
+    // Автосохранение списка клиентов с дебаунсом.
+    // После каждого изменения localItems ждём SAVE_DEBOUNCE_MS и отправляем один запрос,
+    // если смена открыта и есть отличия от последнего успешно сохранённого состояния.
+    useEffect(() => {
+        // Сохраняем только на вкладке \"Клиенты\", при открытой смене и не в режиме readonly
+        if (activeTabRef.current !== 'clients') {
+            return;
+        }
+        if (!isOpen || isReadOnlyForOwner) {
+            return;
+        }
+        if (localItems.length === 0) {
+            return;
+        }
+
+        const itemsSignature = serializeShiftItems(localItems);
+
+        // Если изменений нет относительно последнего успешного сохранения — ничего не делаем
+        if (itemsSignature === lastSavedItemsRef.current) {
+            return;
+        }
+
+        // Сбрасываем предыдущий таймер, если он был
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = setTimeout(() => {
+            // Повторная проверка условий на момент срабатывания таймера (вкладка/смена могли измениться)
+            if (activeTabRef.current !== 'clients') return;
+            if (!isOpenRef.current || isReadOnlyForOwnerRef.current) return;
+
+            const latestItems = localItemsRef.current;
+            const latestSignature = serializeShiftItems(latestItems);
+            if (latestSignature === lastSavedItemsRef.current) return;
+
+            // Вызываем сохранение; ошибки обрабатываются внутри мутации
+            void mutations
+                .saveItems(latestItems)
+                .then(() => {
+                    lastSavedItemsRef.current = latestSignature;
+                    setLastSavedSignature(latestSignature);
+                })
+                .catch(() => {
+                    // Ошибка уже показана пользователю в мутации
+                });
+        }, SAVE_DEBOUNCE_MS);
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = null;
+            }
+        };
+    }, [localItems, isOpen, isReadOnlyForOwner, mutations]);
+
+    // При переключении с вкладки «Клиенты» на другую — сбрасываем таймер дебаунса и при несохранённых изменениях делаем flush.
+    useEffect(() => {
+        const wasClients = previousTabRef.current === 'clients';
+        previousTabRef.current = activeTab;
+
+        if (wasClients && activeTab !== 'clients') {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = null;
+            }
+            const latestItems = localItemsRef.current;
+            const latestSignature = currentItemsSignatureRef.current;
+            if (
+                latestItems.length > 0 &&
+                latestSignature &&
+                latestSignature !== lastSavedItemsRef.current &&
+                isOpen &&
+                !isReadOnlyForOwner
+            ) {
+                void mutations.saveItems(latestItems);
+            }
+        }
+    }, [activeTab, isOpen, isReadOnlyForOwner, mutations]);
+
+    // При размонтировании FinancePage пробуем дозакинуть несохранённые изменения одним запросом.
+    useEffect(() => {
+        return () => {
+            const latestItems = localItemsRef.current;
+            const latestSignature = currentItemsSignatureRef.current;
+
+            if (!latestItems || latestItems.length === 0) return;
+            if (!latestSignature || latestSignature === lastSavedItemsRef.current) return;
+            if (!isOpen || isReadOnlyForOwner) return;
+
+            // Best-effort flush: не ждём завершения, ошибки обработает мутация.
+            void mutations.saveItems(latestItems);
+        };
+    }, [mutations, isOpen, isReadOnlyForOwner]);
+
     // Расчеты финансов
     const calculations = useShiftCalculations(
         localItems,
@@ -243,6 +381,10 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         return allShifts.filter((s) => s.status === 'closed').length;
     }, [financeData.data?.allShifts]);
 
+    // Есть несохранённые изменения (для индикатора в шапке списка клиентов)
+    const hasUnsavedChanges =
+        lastSavedSignature !== null && serializeShiftItems(localItems) !== lastSavedSignature;
+
     // Обработчики
     const handleOpenShift = useCallback(async () => {
         try {
@@ -261,6 +403,34 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             // Ошибка уже обработана в мутации
         }
     }, [mutations, localItems]);
+
+    const handleSaveNow = useCallback(() => {
+        // Принудительное сохранение текущего списка клиентов
+        if (!isOpen || isReadOnlyForOwner) return;
+
+        const latestItems = localItemsRef.current;
+        if (!latestItems || latestItems.length === 0) return;
+
+        const latestSignature = serializeShiftItems(latestItems);
+        if (lastSavedSignature !== null && latestSignature === lastSavedSignature) {
+            return;
+        }
+
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+        }
+
+        void mutations
+            .saveItems(latestItems)
+            .then(() => {
+                lastSavedItemsRef.current = latestSignature;
+                setLastSavedSignature(latestSignature);
+            })
+            .catch(() => {
+                // Ошибка уже будет показана в мутации
+            });
+    }, [isOpen, isReadOnlyForOwner, lastSavedSignature, mutations]);
 
     const handleAddClient = useCallback(() => {
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
@@ -353,6 +523,12 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }
 
         try {
+            // При явном сохранении сбрасываем отложенный таймер, чтобы не делать лишний запрос
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = null;
+            }
+
             // Отмечаем, что этот элемент был сохранен (если он новый, без id)
             const wasNewItem = !item.id;
             if (wasNewItem) {
@@ -360,6 +536,11 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             }
             
             await mutations.saveItems(localItems);
+
+            // Обновляем сигнатуру последнего успешно сохранённого состояния
+            const sig = serializeShiftItems(localItems);
+            lastSavedItemsRef.current = sig;
+            setLastSavedSignature(sig);
             
             // После успешного сохранения всегда закрываем форму сразу
             // Это нужно, чтобы пользователь видел обновленный список клиентов
@@ -388,9 +569,17 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
         // Удаляем на сервере
         try {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = null;
+            }
+
             const updatedItems = localItems.filter((_, i) => i !== idx);
             await mutations.saveItems(updatedItems);
             // invalidateQueries в мутации автоматически вызовет refetch
+            const sig = serializeShiftItems(updatedItems);
+            lastSavedItemsRef.current = sig;
+            setLastSavedSignature(sig);
         } catch (error) {
             // Откатываем при ошибке
             setLocalItems((prev) => {
@@ -640,6 +829,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                         onAddClient={handleAddClient}
                         items={localItems}
                         shift={shift}
+                        hasUnsavedChanges={hasUnsavedChanges}
+                        onSaveNow={handleSaveNow}
                     />
 
                     <ClientsList

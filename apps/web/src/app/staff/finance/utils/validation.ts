@@ -11,7 +11,9 @@ import { validateName, validatePositiveNumber } from '@/lib/validation';
 export const VALIDATION_KEYS = {
     clientNameRequired: 'staff.finance.validation.clientNameRequired',
     clientNameTooLong: 'staff.finance.validation.clientNameTooLong',
+    serviceRequired: 'staff.finance.validation.serviceRequired',
     serviceNameTooLong: 'staff.finance.validation.serviceNameTooLong',
+    serviceAmountRequired: 'staff.finance.validation.serviceAmountRequired',
     serviceAmountInvalid: 'staff.finance.validation.serviceAmountInvalid',
     serviceAmountTooLarge: 'staff.finance.validation.serviceAmountTooLarge',
     consumablesAmountInvalid: 'staff.finance.validation.consumablesAmountInvalid',
@@ -53,25 +55,25 @@ export function validateShiftItem(item: ShiftItem): ShiftItemValidationResult {
         }
     }
 
-    // Валидация названия услуги
-    if (item.serviceName && item.serviceName.trim()) {
-        const trimmed = item.serviceName.trim();
-        if (trimmed.length > 200) {
-            errors.serviceName = K.serviceNameTooLong;
-        }
+    // Услуга обязательна: должно быть выбрано название услуги
+    const serviceNameTrimmed = (item.serviceName || '').trim();
+    if (serviceNameTrimmed.length === 0) {
+        errors.serviceName = K.serviceRequired;
+    } else if (serviceNameTrimmed.length > 200) {
+        errors.serviceName = K.serviceNameTooLong;
     }
 
-    // Валидация суммы услуги
-    const serviceAmountValidation = validatePositiveNumber(item.serviceAmount, {
-        min: 0,
-        allowZero: true,
-        required: false,
-    });
-    if (!serviceAmountValidation.valid) {
-        errors.serviceAmount = K.serviceAmountInvalid;
+    // Сумма услуги обязательна и должна быть больше 0
+    const serviceAmountNum = Number(item.serviceAmount);
+    const amountIsEmpty = item.serviceAmount === undefined || item.serviceAmount === null;
+    const amountIsZero = !amountIsEmpty && !Number.isNaN(serviceAmountNum) && serviceAmountNum === 0;
+    if (amountIsEmpty || Number.isNaN(serviceAmountNum) || amountIsZero) {
+        errors.serviceAmount = K.serviceAmountRequired;
     } else {
-        const amount = Number(item.serviceAmount) || 0;
-        if (amount > 100000000) {
+        const serviceAmountValidation = validatePositiveNumber(item.serviceAmount, { min: 0, allowZero: false, required: true });
+        if (!serviceAmountValidation.valid) {
+            errors.serviceAmount = K.serviceAmountInvalid;
+        } else if (serviceAmountNum > 100000000) {
             errors.serviceAmount = K.serviceAmountTooLarge;
         }
     }
