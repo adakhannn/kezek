@@ -120,6 +120,7 @@ export function ClientsListHeader({
                         )}
                         {canAdd ? (
                             <Button
+                                type="button"
                                 variant="primary"
                                 size="sm"
                                 onClick={onAddClient}

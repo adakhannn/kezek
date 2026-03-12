@@ -124,6 +124,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const isReadOnlyForOwnerRef = useRef(false);
     // Флаг для предотвращения синхронизации сразу после добавления нового элемента
     const skipNextSyncRef = useRef(false);
+    // Блокировка повторного добавления клиента (защита от петли при быстрых кликах или двойном срабатывании)
+    const addClientLockRef = useRef(false);
+    const addClientUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Сигнатура последнего сохранённого состояния (для UI «есть несохранённые изменения»)
     const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(null);
 
@@ -333,6 +336,16 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }
     }, [activeTab, isOpen, isReadOnlyForOwner, mutations]);
 
+    // Очистка таймера разблокировки кнопки «Добавить клиента» при размонтировании
+    useEffect(() => {
+        return () => {
+            if (addClientUnlockTimerRef.current) {
+                clearTimeout(addClientUnlockTimerRef.current);
+                addClientUnlockTimerRef.current = null;
+            }
+        };
+    }, []);
+
     // При размонтировании FinancePage пробуем дозакинуть несохранённые изменения одним запросом.
     useEffect(() => {
         return () => {
@@ -433,6 +446,16 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     }, [isOpen, isReadOnlyForOwner, lastSavedSignature, mutations]);
 
     const handleAddClient = useCallback(() => {
+        if (addClientLockRef.current) return;
+        addClientLockRef.current = true;
+        if (addClientUnlockTimerRef.current) {
+            clearTimeout(addClientUnlockTimerRef.current);
+        }
+        addClientUnlockTimerRef.current = setTimeout(() => {
+            addClientLockRef.current = false;
+            addClientUnlockTimerRef.current = null;
+        }, 500);
+
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
         
         // Используем функциональное обновление для получения актуального состояния

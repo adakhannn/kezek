@@ -92,6 +92,18 @@ function ClientEditFormInner({
         return Object.keys(fullValidation.errors).length > 0;
     }, [item]);
 
+    // Список всех текущих ошибок для блока «Обнаружены ошибки валидации» (чтобы пользователь видел, что именно исправить)
+    const errorMessagesForSummary = useMemo(() => {
+        const validation = validateShiftItem(item);
+        const err = validation.errors;
+        const list: string[] = [];
+        if (err.clientName) list.push(err.clientName);
+        if (err.serviceName) list.push(err.serviceName);
+        if (err.serviceAmount) list.push(err.serviceAmount);
+        if (err.consumablesAmount) list.push(err.consumablesAmount);
+        return list;
+    }, [item]);
+
     const handleBookingChange = (bookingId: string | null) => {
         const booking = bookingId ? bookings.find((b) => b.id === bookingId) : null;
         const servicesArray = booking?.services
@@ -449,17 +461,16 @@ function ClientEditFormInner({
                 </div>
             </div>
             
-            {/* Общее сообщение об ошибках валидации */}
+            {/* Общее сообщение об ошибках валидации — показываем все текущие ошибки, чтобы пользователь видел, что исправить */}
             {hasErrors && (
                 <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <p className="text-xs font-semibold text-red-800 dark:text-red-200 mb-1">
                         {t('staff.finance.validation.errors', 'Обнаружены ошибки валидации')}
                     </p>
                     <ul className="text-xs text-red-700 dark:text-red-300 list-disc list-inside space-y-0.5">
-                        {validationErrors.clientName && <li>{t(validationErrors.clientName)}</li>}
-                        {validationErrors.serviceName && <li>{t(validationErrors.serviceName)}</li>}
-                        {validationErrors.serviceAmount && <li>{t(validationErrors.serviceAmount)}</li>}
-                        {validationErrors.consumablesAmount && <li>{t(validationErrors.consumablesAmount)}</li>}
+                        {errorMessagesForSummary.map((key) => (
+                            <li key={key}>{t(key)}</li>
+                        ))}
                     </ul>
                 </div>
             )}
