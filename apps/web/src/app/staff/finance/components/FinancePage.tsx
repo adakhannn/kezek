@@ -140,6 +140,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
     // Мутации
     const mutations = useFinanceMutations({ staffId, date: shiftDate });
+    const mutationsRef = useRef(mutations);
+    mutationsRef.current = mutations;
 
     // Держим в ref актуальный список клиентов для возможного flush при размонтировании / смене вкладки
     useEffect(() => {
@@ -292,8 +294,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             const latestSignature = serializeShiftItems(latestItems);
             if (latestSignature === lastSavedItemsRef.current) return;
 
-            // Вызываем сохранение; ошибки обрабатываются внутри мутации
-            void mutations
+            // Вызываем сохранение через ref, чтобы не зависеть от mutations в deps (объект новый каждый рендер — иначе эффект крутится и таймер сбрасывается)
+            void mutationsRef.current
                 .saveItems(latestItems)
                 .then(() => {
                     lastSavedItemsRef.current = latestSignature;
@@ -310,7 +312,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 saveTimeoutRef.current = null;
             }
         };
-    }, [localItems, isOpen, isReadOnlyForOwner, mutations]);
+    }, [localItems, isOpen, isReadOnlyForOwner]);
 
     // При переключении с вкладки «Клиенты» на другую — сбрасываем таймер дебаунса и при несохранённых изменениях делаем flush.
     useEffect(() => {
@@ -331,10 +333,10 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 isOpen &&
                 !isReadOnlyForOwner
             ) {
-                void mutations.saveItems(latestItems);
+                void mutationsRef.current.saveItems(latestItems);
             }
         }
-    }, [activeTab, isOpen, isReadOnlyForOwner, mutations]);
+    }, [activeTab, isOpen, isReadOnlyForOwner]);
 
     // Очистка таймера разблокировки кнопки «Добавить клиента» при размонтировании
     useEffect(() => {
@@ -357,9 +359,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             if (!isOpen || isReadOnlyForOwner) return;
 
             // Best-effort flush: не ждём завершения, ошибки обработает мутация.
-            void mutations.saveItems(latestItems);
+            void mutationsRef.current.saveItems(latestItems);
         };
-    }, [mutations, isOpen, isReadOnlyForOwner]);
+    }, [isOpen, isReadOnlyForOwner]);
 
     // Расчеты финансов
     const calculations = useShiftCalculations(
@@ -458,7 +460,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
         
-        // Используем функциональное обновление для получения актуального состояния
+        // Используем функциональное обновление для получения актуального состояния.
+        // setExpandedItems вызываем снаружи — не внутри updater'а, чтобы избежать лишних ре-рендеров и петель.
         setLocalItems((prev) => {
             const existingClients = prev.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
             const existingIndices = existingClients
@@ -488,18 +491,11 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 createdAt,
             };
 
-            // Добавляем новый элемент в начало массива
             const updatedItems = [newItem, ...prev];
-            
-            // Пропускаем следующую синхронизацию с сервером, чтобы не потерять новый элемент
             skipNextSyncRef.current = true;
-            
-            // Открываем форму только для нового элемента (индекс 0),
-            // все предыдущие формы сворачиваем, чтобы не мешали.
-            setExpandedItems(new Set([0]));
-            
             return updatedItems;
         });
+        setExpandedItems(new Set([0]));
     }, [t]);
 
     // Обновление элемента без сохранения на сервер (только локальное состояние)
