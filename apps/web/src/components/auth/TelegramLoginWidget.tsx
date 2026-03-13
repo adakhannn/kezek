@@ -92,8 +92,18 @@ function TelegramLoginWidgetComponent({
                     throw new Error(apiMessage);
                 }
 
+                // Отладка: смотрим, что вернул API
+                if (process.env.NODE_ENV === 'development') {
+                    // eslint-disable-next-line no-console
+                    console.log('[TelegramLoginWidget] API response', data);
+                }
+
                 // Если API вернул данные для входа — выполняем вход через Supabase
                 if (data.needsSignIn && data.email && data.password) {
+                    if (process.env.NODE_ENV === 'development') {
+                        // eslint-disable-next-line no-console
+                        console.log('[TelegramLoginWidget] Starting Supabase signInWithPassword');
+                    }
                     const { supabase } = await import('@/lib/supabaseClient');
                     const { error: signInError } = await supabase.auth.signInWithPassword({
                         email: data.email,
@@ -101,7 +111,16 @@ function TelegramLoginWidgetComponent({
                     });
 
                     if (signInError) {
+                        if (process.env.NODE_ENV === 'development') {
+                             
+                            console.error('[TelegramLoginWidget] Supabase signIn error', signInError);
+                        }
                         throw new Error(signInError.message);
+                    }
+
+                    if (process.env.NODE_ENV === 'development') {
+                        // eslint-disable-next-line no-console
+                        console.log('[TelegramLoginWidget] Supabase signIn success, refreshing router');
                     }
 
                     // Обновляем серверные компоненты и даём кукам установиться
@@ -118,6 +137,10 @@ function TelegramLoginWidgetComponent({
                 const isRateLimit = /лимит запросов|rate limit/i.test(msg);
                 if (!isExpectedUnavailable && !isRateLimit) {
                     logError('TelegramLoginWidget', `Error during login: ${msg}`);
+                }
+                if (process.env.NODE_ENV === 'development') {
+                     
+                    console.error('[TelegramLoginWidget] Error during login', e);
                 }
                 // «Bot domain invalid» на проде: домен не добавлен в @BotFather → /setdomain
                 const displayMessage = /bot domain invalid|domain invalid/i.test(msg)
