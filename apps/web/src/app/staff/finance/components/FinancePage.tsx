@@ -189,8 +189,10 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                     }
                 }
                 
-                // Затем добавляем локальные элементы без id, которые еще не сохранены на сервере
-                // Проверяем по содержимому (createdAt, clientName, serviceAmount и т.д.)
+                // Затем добавляем локальные элементы без id, которые еще не сохранены на сервере.
+                // Проверяем по содержимому (clientName, serviceAmount и т.п.), НО БЕЗ createdAt:
+                // сервер при вставке проставляет своё created_at, поэтому сравнение по времени
+                // ломает сопоставление и приводит к дублям после первого сохранения/удаления.
                 for (const localItemWithoutId of localItemsWithoutId) {
                     // Проверяем, нет ли на сервере элемента с таким же содержимым
                     const isOnServer = serverItems.some((serverItem) => {
@@ -201,8 +203,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                             serverItem.serviceName === localItemWithoutId.serviceName &&
                             serverItem.serviceAmount === localItemWithoutId.serviceAmount &&
                             serverItem.consumablesAmount === localItemWithoutId.consumablesAmount &&
-                            serverItem.bookingId === localItemWithoutId.bookingId &&
-                            serverItem.createdAt === localItemWithoutId.createdAt
+                            serverItem.bookingId === localItemWithoutId.bookingId
                         );
                     });
                     
