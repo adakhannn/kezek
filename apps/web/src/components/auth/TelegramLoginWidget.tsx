@@ -137,7 +137,17 @@ function TelegramLoginWidgetComponent({
                 }
 
                 onSuccessRef.current?.();
-                router.push(payload.redirect || redirectToRef.current);
+
+                const targetUrl = payload.redirect || redirectToRef.current;
+
+                // Для корректного обновления серверного хедера после входа
+                // выполняем полноценную навигацию браузера, чтобы куки и
+                // серверные компоненты гарантированно были в актуальном состоянии.
+                if (typeof window !== 'undefined') {
+                    window.location.assign(targetUrl);
+                } else {
+                    router.push(targetUrl);
+                }
             } catch (e) {
                 const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
                 // Ожидаемые сообщения не логируем в консоль как ошибку — пользователь видит их на экране

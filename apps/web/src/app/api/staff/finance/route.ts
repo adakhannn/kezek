@@ -106,7 +106,11 @@ export async function GET(req: Request) {
             supabase = context.supabase;
             staffId = context.staffId;
             bizId = context.bizId;
-            useServiceClient = false; // Сотрудник использует обычный клиент с RLS
+            // Для сотрудников тоже используем service client для чтения финансов,
+            // как и для владельца, чтобы обходить сложные RLS и ускорить запросы.
+            // Безопасность обеспечивается тем, что staffId/bizId получены из getStaffContext()
+            // под защитой RLS и используются во всех фильтрах запросов.
+            useServiceClient = true;
             // Получаем user_id из сессии для логирования
             const { data: { user } } = await supabase.auth.getUser();
             userId = user?.id;
