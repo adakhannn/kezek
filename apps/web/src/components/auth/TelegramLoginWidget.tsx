@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { memo, useEffect, useRef, useState } from 'react';
 
 import {logError} from '@/lib/log';
+import type { TelegramAuthData } from '@/lib/telegram/verify';
 
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'kezek_auth_bot';
 
@@ -87,6 +88,21 @@ function TelegramLoginWidgetComponent({
 
                 const data = await resp.json().catch(() => ({}));
 
+                // API-ответы стандартизированы через createSuccessResponse/createErrorResponse:
+                // успешный ответ: { ok: true, data: { ...payload }, ...additionalFields }
+                // Для этого виджета нам важно корректно вытащить payload:
+                type TelegramLoginPayload = TelegramAuthData & {
+                    needsSignIn?: boolean;
+                    redirect?: string;
+                    email?: string;
+                    password?: string;
+                };
+
+                const payload: TelegramLoginPayload =
+                    data && typeof data === 'object' && 'data' in data && data.data
+                        ? (data as { data: TelegramLoginPayload }).data
+                        : (data as TelegramLoginPayload);
+
                 if (!data?.ok) {
                     const apiMessage = data?.message || 'Ошибка авторизации через Telegram';
                     throw new Error(apiMessage);
@@ -97,13 +113,13 @@ function TelegramLoginWidgetComponent({
                 console.log('[TelegramLoginWidget] API response', data);
 
                 // Если API вернул данные для входа — выполняем вход через Supabase
-                if (data.needsSignIn && data.email && data.password) {
+                if (payload.needsSignIn && payload.email && payload.password) {
                     // eslint-disable-next-line no-console
                     console.log('[TelegramLoginWidget] Starting Supabase signInWithPassword');
                     const { supabase } = await import('@/lib/supabaseClient');
                     const { error: signInError } = await supabase.auth.signInWithPassword({
-                        email: data.email,
-                        password: data.password,
+                        email: payload.email,
+                        password: payload.password,
                     });
 
                     if (signInError) {
@@ -121,7 +137,7 @@ function TelegramLoginWidgetComponent({
                 }
 
                 onSuccessRef.current?.();
-                router.push(data.redirect || redirectToRef.current);
+                router.push(payload.redirect || redirectToRef.current);
             } catch (e) {
                 const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
                 // Ожидаемые сообщения не логируем в консоль как ошибку — пользователь видит их на экране
