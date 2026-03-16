@@ -75,6 +75,53 @@ export async function createInternalBooking(params: CreateInternalBookingParams)
     return String(data);
 }
 
+export type CreateInternalComplexBookingService = {
+    serviceId: string;
+    durationMin: number;
+    orderIndex?: number;
+};
+
+export type CreateInternalComplexBookingParams = {
+    bizId: string;
+    branchId: string;
+    staffId: string;
+    startAtISO: string;
+    services: CreateInternalComplexBookingService[];
+    clientId: string | null;
+    clientName: string | null;
+    clientPhone: string | null;
+    clientEmail?: string | null;
+};
+
+export async function createInternalComplexBooking(params: CreateInternalComplexBookingParams): Promise<string> {
+    const { bizId, branchId, staffId, startAtISO, services, clientId, clientName, clientPhone, clientEmail } = params;
+
+    const servicesPayload = services.map((s, index) => ({
+        service_id: s.serviceId,
+        duration_min: s.durationMin,
+        order_index: typeof s.orderIndex === 'number' ? s.orderIndex : index,
+    }));
+
+    const { data, error } = await supabase.rpc('create_internal_complex_booking', {
+        p_biz_id: bizId,
+        p_branch_id: branchId,
+        p_staff_id: staffId,
+        p_start: startAtISO,
+        p_services: servicesPayload,
+        p_client_id: clientId,
+        p_client_name: clientName,
+        p_client_phone: clientPhone,
+        p_client_email: clientEmail ?? null,
+    });
+
+    if (error) {
+        logError('BookingDashboardService', 'create_internal_complex_booking error', { params, error });
+        throw error;
+    }
+
+    return String(data);
+}
+
 export type GetFreeSlotsParams = {
     bizId: string;
     serviceId: string;
@@ -96,6 +143,37 @@ export async function getFreeSlotsForServiceDay(params: GetFreeSlotsParams): Pro
 
     if (error) {
         logError('BookingDashboardService', 'get_free_slots_service_day_v2 error', { params, error });
+        throw error;
+    }
+
+    return (data ?? []) as DashboardSlot[];
+}
+
+export type GetFreeSlotsComplexParams = {
+    bizId: string;
+    branchId: string | null;
+    staffId: string;
+    day: string;
+    totalDurationMin: number;
+    perStaff?: number;
+    stepMinutes?: number;
+};
+
+export async function getFreeSlotsForComplexDay(params: GetFreeSlotsComplexParams): Promise<DashboardSlot[]> {
+    const { bizId, branchId, staffId, day, totalDurationMin, perStaff = 200, stepMinutes = 15 } = params;
+
+    const { data, error } = await supabase.rpc('get_free_slots_complex_day_v1', {
+        p_biz_id: bizId,
+        p_branch_id: branchId,
+        p_staff_id: staffId,
+        p_day: day,
+        p_duration_min: totalDurationMin,
+        p_step_min: stepMinutes,
+        p_per_staff: perStaff,
+    });
+
+    if (error) {
+        logError('BookingDashboardService', 'get_free_slots_complex_day_v1 error', { params, error });
         throw error;
     }
 

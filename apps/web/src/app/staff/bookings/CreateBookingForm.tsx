@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Card } from '@/components/ui/Card';
-import { getFreeSlotsForServiceDay, createInternalBooking } from '@/lib/bookingDashboardService';
+import { getFreeSlotsForServiceDay, getFreeSlotsForComplexDay, createInternalBooking, createInternalComplexBooking } from '@/lib/bookingDashboardService';
+import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
 import { TZ, todayStringInTz } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 import { validateName, validatePhone } from '@/lib/validation';
@@ -41,7 +42,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
     const { t, locale } = useLanguage();
 
     const [branchId, setBranchId] = useState<string>(defaultBranchId || '');
-    const [serviceId, setServiceId] = useState<string>('');
+    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
     const selectedStaffId = staffId;
     const [date, setDate] = useState<string>(() => todayStringInTz(TZ));
     const [slots, setSlots] = useState<RpcSlot[]>([]);
@@ -60,7 +61,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
     useEffect(() => {
         let ignore = false;
         (async () => {
-            if (!branchId || !serviceId || !date) {
+            if (!branchId || selectedServiceIds.length === 0 || !date) {
                 setSlots([]);
                 setSlotStartISO('');
                 setSlotsLoading(false);
@@ -69,13 +70,41 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
 
             setSlotsLoading(true);
             try {
-                const raw = await getFreeSlotsForServiceDay({
-                    bizId,
-                    serviceId,
-                    day: date,
-                    perStaff: 400,
-                    stepMinutes: 15,
-                });
+                let raw: RpcSlot[] = [];
+
+                if (selectedServiceIds.length === 1) {
+                    const singleServiceId = selectedServiceIds[0];
+                    raw = (await getFreeSlotsForServiceDay({
+                        bizId,
+                        serviceId: singleServiceId,
+                        day: date,
+                        perStaff: 400,
+                        stepMinutes: 15,
+                    })) as RpcSlot[];
+                } else {
+                    // Комплекс услуг: считаем суммарную длительность и используем get_free_slots_complex_day_v1
+                    const totalDurationMin = selectedServiceIds.reduce((sum, id) => {
+                        const svc = servicesByBranch.find((s) => s.id === id);
+                        return sum + (svc?.duration_min ?? 0);
+                    }, 0);
+
+                    if (totalDurationMin <= 0) {
+                        setSlots([]);
+                        setSlotStartISO('');
+                        setSlotsLoading(false);
+                        return;
+                    }
+
+                    raw = (await getFreeSlotsForComplexDay({
+                        bizId,
+                        branchId,
+                        staffId: selectedStaffId,
+                        day: date,
+                        totalDurationMin,
+                        perStaff: 200,
+                        stepMinutes: 15,
+                    })) as RpcSlot[];
+                }
                 if (ignore) return;
                 const cast = (raw || []) as RpcSlot[];
                 const now = new Date();
@@ -107,10 +136,10 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
         return () => {
             ignore = true;
         };
-    }, [bizId, serviceId, selectedStaffId, date, branchId]);
+    }, [bizId, selectedServiceIds, selectedStaffId, date, branchId]);
 
     useEffect(() => {
-        setServiceId('');
+        setSelectedServiceIds([]);
         setSlots([]);
         setSlotStartISO('');
     }, [branchId]);
@@ -127,15 +156,22 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
         return service.name_ru;
     }
 
+    function toggleService(serviceId: string) {
+        setSelectedServiceIds((prev) =>
+            prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId],
+        );
+    }
+
     async function createBooking() {
-        const svc = servicesByBranch.find((s) => s.id === serviceId);
-        if (!svc)
+        const selectedServices = servicesByBranch.filter((s) => selectedServiceIds.includes(s.id));
+        if (selectedServices.length === 0) {
             return alert(
                 t(
                     'staff.cabinet.bookings.create.errors.selectService',
-                    'Выберите услугу',
+                    'Выберите хотя бы одну услугу',
                 ),
             );
+        }
         if (!slotStartISO)
             return alert(
                 t(
@@ -173,17 +209,62 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
 
         setCreating(true);
         try {
-            const bookingId = await createInternalBooking({
-                bizId,
-                branchId,
-                serviceId,
-                staffId: selectedStaffId,
-                startAtISO: slotStartISO,
-                minutes: svc.duration_min,
-                clientId: null,
-                clientName: name,
-                clientPhone: phone,
-            });
+            let bookingId: string;
+
+            if (selectedServices.length === 1) {
+                const svc = selectedServices[0];
+                bookingId = await createInternalBooking({
+                    bizId,
+                    branchId,
+                    serviceId: svc.id,
+                    staffId: selectedStaffId,
+                    startAtISO: slotStartISO,
+                    minutes: svc.duration_min,
+                    clientId: null,
+                    clientName: name,
+                    clientPhone: phone,
+                });
+            } else {
+                bookingId = await createInternalComplexBooking({
+                    bizId,
+                    branchId,
+                    staffId: selectedStaffId,
+                    startAtISO: slotStartISO,
+                    services: selectedServices.map((s, index) => ({
+                        serviceId: s.id,
+                        durationMin: s.duration_min,
+                        orderIndex: index,
+                    })),
+                    clientId: null,
+                    clientName: name,
+                    clientPhone: phone,
+                    clientEmail: null,
+                });
+            }
+
+            // Отправляем событие воронки для внутренних бронирований
+            try {
+                const firstService = selectedServices[0];
+                const serviceIds = selectedServices.map((s) => s.id);
+                await trackFunnelEvent({
+                    event_type: 'booking_success',
+                    source: 'quickdesk',
+                    biz_id: bizId,
+                    branch_id: branchId,
+                    service_id: firstService.id,
+                    service_ids: serviceIds,
+                    services_count: serviceIds.length,
+                    staff_id: selectedStaffId,
+                    slot_start_at: slotStartISO,
+                    booking_id: bookingId,
+                    session_id: getSessionId(),
+                });
+            } catch (e) {
+                // Не блокируем UX, если трекинг не сработал
+                 
+                const { logError } = require('@/lib/log');
+                logError('StaffBookings', 'Failed to track booking_success funnel event', e);
+            }
             alert(
                 t(
                     'staff.cabinet.bookings.create.success',
@@ -191,7 +272,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 ),
             );
 
-            setServiceId('');
+            setSelectedServiceIds([]);
             setSlotStartISO('');
             setSlots([]);
             setNewClientName('');
@@ -203,7 +284,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
     }
 
     const canCreate =
-        branchId && serviceId && slotStartISO && newClientName.trim() && newClientPhone.trim();
+        branchId && selectedServiceIds.length > 0 && slotStartISO && newClientName.trim() && newClientPhone.trim();
 
     return (
         <Card variant="elevated" className="p-6 space-y-6">
@@ -249,23 +330,50 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t('staff.cabinet.bookings.create.service', 'Услуга')}
+                        {t('staff.cabinet.bookings.create.service', 'Услуги (можно несколько)')}
                     </label>
-                    <select
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        value={serviceId}
-                        onChange={(e) => setServiceId(e.target.value)}
-                        disabled={!branchId}
-                    >
-                        <option value="">
-                            {t('staff.cabinet.bookings.create.selectService', 'Выберите услугу')}
-                        </option>
-                        {servicesByBranch.map((s) => (
-                            <option key={s.id} value={s.id}>
-                                {getServiceName(s)} ({s.duration_min}м)
-                            </option>
-                        ))}
-                    </select>
+                    {!branchId ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {t('staff.cabinet.bookings.create.selectBranchFirst', 'Сначала выберите филиал')}
+                        </p>
+                    ) : servicesByBranch.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {t('staff.cabinet.bookings.create.noServicesInBranch', 'В этом филиале нет активных услуг')}
+                        </p>
+                    ) : (
+                        <div className="space-y-2">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {t(
+                                    'staff.cabinet.bookings.create.serviceHint',
+                                    'Можно выбрать одну или несколько услуг (комплекс).'
+                                )}
+                            </p>
+                            <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 space-y-1">
+                                {servicesByBranch.map((s) => {
+                                    const checked = selectedServiceIds.includes(s.id);
+                                    return (
+                                        <label
+                                            key={s.id}
+                                            className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200 cursor-pointer select-none"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                checked={checked}
+                                                onChange={() => toggleService(s.id)}
+                                            />
+                                            <span className="flex-1">
+                                                {getServiceName(s)}{' '}
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                    ({s.duration_min}м)
+                                                </span>
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -299,7 +407,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                         })}
                     </div>
                 </div>
-            ) : branchId && serviceId && date ? (
+            ) : branchId && selectedServiceIds.length > 0 && date ? (
                 <div className="text-center py-4 text-gray-500 dark:text-gray-400">
                     {t('staff.cabinet.bookings.create.noSlots', 'Нет свободных слотов')}
                 </div>
