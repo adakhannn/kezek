@@ -21,6 +21,6 @@ export const commonRu = {
     'common.ok': 'ОК',
     'common.problem': 'Проблема',
     'common.rating.lowRatingHint': 'низкий рейтинг',
-    'common.rating.noRating': 'Нет рейтинга',
+    'common.rating.noRating': 'Недостаточно данных для рейтинга',
     'common.warning': 'Предупреждение',
 } as const;

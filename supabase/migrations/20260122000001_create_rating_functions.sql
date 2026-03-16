@@ -21,6 +21,8 @@ declare
     v_total_shifts integer;
     v_biz_id uuid;
     v_branch_id uuid;
+    v_no_show_count integer;
+    v_cancelled_count integer;
     
     -- Компоненты рейтинга
     v_reviews_score numeric;
@@ -34,17 +36,6 @@ declare
     v_late_ratio numeric;
     v_avg_clients_per_day numeric;
 begin
-    -- Получаем активную конфигурацию
-    select * into v_config
-    from public.rating_global_config
-    where is_active = true
-    order by valid_from desc
-    limit 1;
-    
-    if v_config is null then
-        raise exception 'No active rating configuration found';
-    end if;
-    
     -- Получаем biz_id и branch_id сотрудника
     select biz_id, branch_id into v_biz_id, v_branch_id
     from public.staff
@@ -52,6 +43,26 @@ begin
     
     if v_biz_id is null then
         raise exception 'Staff not found or has no business';
+    end if;
+
+    -- Получаем активную конфигурацию: сначала пер-бизнесовую, если есть, иначе глобальную
+    select * into v_config
+    from public.rating_biz_config
+    where is_active = true
+      and biz_id = v_biz_id
+    order by valid_from desc
+    limit 1;
+
+    if v_config is null then
+        select * into v_config
+        from public.rating_global_config
+        where is_active = true
+        order by valid_from desc
+        limit 1;
+    end if;
+    
+    if v_config is null then
+        raise exception 'No active rating configuration found';
     end if;
     
     -- 1. Метрики отзывов (за день)
@@ -143,6 +154,16 @@ begin
     where staff_id = p_staff_id
       and shift_date = p_metric_date;
 
+    -- Дополнительные дисциплинарные сигналы: no-show и отмены
+    select
+        count(*) filter (where status = 'no_show')::integer,
+        count(*) filter (where status = 'cancelled')::integer
+    into v_no_show_count, v_cancelled_count
+    from public.bookings
+    where staff_id = p_staff_id
+      and status in ('no_show', 'cancelled')
+      and date(start_at at time zone 'Asia/Bishkek') = p_metric_date;
+
     -- Если за день не было ни смен, ни клиентов, ни отзывов — считаем день неактивным
     -- и не создаем/не обновляем запись в staff_day_metrics
     if v_total_shifts = 0
@@ -151,8 +172,9 @@ begin
         return;
     end if;
     
-    -- Штраф за опоздания: если есть опоздания, снижаем рейтинг
-    -- 0 опозданий = 100, каждые 30 минут опоздания = -10 баллов, максимум -50
+    -- Штраф за опоздания и поведение по дисциплине:
+    -- 0 опозданий = 100, каждые 30 минут опоздания = -10 баллов, максимум -50.
+    -- Дополнительно: no-show и отмены визитов дают штраф до -30 баллов.
     if v_total_shifts > 0 then
         v_late_penalty := least(50.0, (v_late_minutes::numeric / 30.0) * 10.0);
         v_discipline_score := 100.0 - v_late_penalty;
@@ -161,6 +183,13 @@ begin
         if v_shifts_with_late > 0 then
             v_late_ratio := (v_shifts_with_late::numeric / v_total_shifts::numeric) * 100.0;
             v_discipline_score := v_discipline_score - (v_late_ratio * 0.3); -- Дополнительный штраф
+        end if;
+
+        -- Дополнительный штраф за no-show и отмены: no-show "тяжелее" отмены
+        if v_no_show_count > 0 or v_cancelled_count > 0 then
+            -- Каждое no-show = 2 условные единицы, каждая отмена = 1
+            v_late_penalty := least(30.0, (v_no_show_count * 2 + v_cancelled_count) * 5.0);
+            v_discipline_score := v_discipline_score - v_late_penalty;
         end if;
     else
         v_discipline_score := 100.0; -- Если нет смен, считаем идеально
@@ -224,32 +253,71 @@ declare
     v_config record;
     v_avg_day_score numeric;
     v_rating numeric;
+    v_days_with_data integer;
+    v_total_clients integer;
+    v_total_shifts integer;
+    v_min_days integer := 5; -- минимальное количество дней с активностью
+    v_min_clients integer := 10; -- минимальное количество клиентов за окно
+    v_min_shifts integer := 3; -- минимальное количество смен за окно
 begin
-    -- Получаем активную конфигурацию
+    -- Получаем бизнес сотрудника
+    select biz_id into v_config
+    from public.staff
+    where id = p_staff_id;
+    
+    -- Получаем активную конфигурацию: сначала пер-бизнесовую, если есть, иначе глобальную
     select * into v_config
-    from public.rating_global_config
+    from public.rating_biz_config
     where is_active = true
+      and biz_id = (select biz_id from public.staff where id = p_staff_id)
     order by valid_from desc
     limit 1;
+    
+    if v_config is null then
+        select * into v_config
+        from public.rating_global_config
+        where is_active = true
+        order by valid_from desc
+        limit 1;
+    end if;
     
     if v_config is null then
         return null;
     end if;
     
-    -- Рассчитываем средний дневной рейтинг за последние N дней
-    select coalesce(avg(day_score), 0) into v_avg_day_score
+    -- Рассчитываем агрегаты по дневным метрикам за окно N дней
+    select
+        count(*)::integer,
+        coalesce(sum(clients_count), 0)::integer,
+        coalesce(sum(total_shifts), 0)::integer,
+        coalesce(avg(day_score), 0)
+    into v_days_with_data, v_total_clients, v_total_shifts, v_avg_day_score
     from public.staff_day_metrics
     where staff_id = p_staff_id
       and metric_date >= current_date - (v_config.window_days || ' days')::interval
       and metric_date < current_date;
-    
+
+    -- Если данных недостаточно, не выставляем числовой рейтинг
+    if v_days_with_data < v_min_days
+       or v_total_clients < v_min_clients
+       or v_total_shifts < v_min_shifts then
+        update public.staff
+        set
+            rating_score = null,
+            rating_updated_at = timezone('utc'::text, now()),
+            last_rating_recalculated_at = timezone('utc'::text, now())
+        where id = p_staff_id;
+        return null;
+    end if;
+
     v_rating := round(v_avg_day_score::numeric, 2);
     
     -- Обновляем рейтинг в таблице staff
     update public.staff
     set 
         rating_score = v_rating,
-        rating_updated_at = timezone('utc'::text, now())
+        rating_updated_at = timezone('utc'::text, now()),
+        last_rating_recalculated_at = timezone('utc'::text, now())
     where id = p_staff_id;
     
     return v_rating;
@@ -343,12 +411,26 @@ declare
     v_avg_day_score numeric;
     v_rating numeric;
 begin
-    -- Получаем активную конфигурацию
+    -- Получаем бизнес филиала
+    select biz_id into v_config
+    from public.branches
+    where id = p_branch_id;
+    
+    -- Получаем активную конфигурацию: сначала пер-бизнесовую, если есть, иначе глобальную
     select * into v_config
-    from public.rating_global_config
+    from public.rating_biz_config
     where is_active = true
+      and biz_id = (select biz_id from public.branches where id = p_branch_id)
     order by valid_from desc
     limit 1;
+    
+    if v_config is null then
+        select * into v_config
+        from public.rating_global_config
+        where is_active = true
+        order by valid_from desc
+        limit 1;
+    end if;
     
     if v_config is null then
         return null;
@@ -367,7 +449,8 @@ begin
     update public.branches
     set 
         rating_score = v_rating,
-        rating_updated_at = timezone('utc'::text, now())
+        rating_updated_at = timezone('utc'::text, now()),
+        last_rating_recalculated_at = timezone('utc'::text, now())
     where id = p_branch_id;
     
     return v_rating;
@@ -451,12 +534,21 @@ declare
     v_avg_day_score numeric;
     v_rating numeric;
 begin
-    -- Получаем активную конфигурацию
+    -- Получаем активную конфигурацию: сначала пер-бизнесовую, если есть, иначе глобальную
     select * into v_config
-    from public.rating_global_config
+    from public.rating_biz_config
     where is_active = true
+      and biz_id = p_biz_id
     order by valid_from desc
     limit 1;
+    
+    if v_config is null then
+        select * into v_config
+        from public.rating_global_config
+        where is_active = true
+        order by valid_from desc
+        limit 1;
+    end if;
     
     if v_config is null then
         return null;
@@ -475,7 +567,8 @@ begin
     update public.businesses
     set 
         rating_score = v_rating,
-        rating_updated_at = timezone('utc'::text, now())
+        rating_updated_at = timezone('utc'::text, now()),
+        last_rating_recalculated_at = timezone('utc'::text, now())
     where id = p_biz_id;
     
     return v_rating;

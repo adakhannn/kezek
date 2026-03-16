@@ -16,6 +16,7 @@ type DashboardHomeClientProps = {
     branchesCount: number;
     needOnboarding: boolean;
     ratingScore: number | null;
+    ratingConfigScope: 'biz' | 'global' | null;
     ratingWeights: {
         reviews: number;
         productivity: number;
@@ -41,6 +42,7 @@ export function DashboardHomeClient({
     branchesCount,
     needOnboarding,
     ratingScore,
+    ratingConfigScope,
     ratingWeights,
 }: DashboardHomeClientProps) {
     const { t, locale } = useLanguage();
@@ -254,6 +256,19 @@ export function DashboardHomeClient({
                                         'Каждый день влияет на итоговый балл за последние {days} дней.',
                                     ).replace('{days}', String(ratingWeights.windowDays))}
                                 </p>
+                                {ratingConfigScope && (
+                                    <p className="mt-1 text-[11px] text-amber-800/80 dark:text-amber-200/90">
+                                        {ratingConfigScope === 'biz'
+                                            ? t(
+                                                  'dashboard.rating.scope.biz',
+                                                  'Для этого бизнеса действует своя формула рейтинга.',
+                                              )
+                                            : t(
+                                                  'dashboard.rating.scope.global',
+                                                  'Сейчас используется глобальная формула рейтинга платформы.',
+                                              )}
+                                    </p>
+                                )}
                                 <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-amber-900/90 dark:text-amber-100">
                                     <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 dark:bg-amber-900/40">
                                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -271,6 +286,16 @@ export function DashboardHomeClient({
                                         <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                                         {t('dashboard.rating.factor.discipline', 'Дисциплина (опоздания)')}: {ratingWeights.discipline}%
                                     </span>
+                                </div>
+                                <div className="mt-2">
+                                    <a
+                                        href="/docs/RATINGS_HOW_IT_WORKS"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[11px] text-amber-800 underline hover:no-underline dark:text-amber-200"
+                                    >
+                                        {t('dashboard.rating.moreInfo', 'Как считается рейтинг →')}
+                                    </a>
                                 </div>
                             </div>
                         </div>

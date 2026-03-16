@@ -11,9 +11,9 @@ type DebugEntity = {
     days: number;
     window_since: string;
     with_null_rating: {
-        staff: { id: string; full_name: string | null; biz_id: string; branch_id: string }[];
-        branches: { id: string; name: string; biz_id: string }[];
-        businesses: { id: string; name: string | null; slug: string | null }[];
+        staff: { id: string; full_name: string | null; biz_id: string; branch_id: string; last_rating_recalculated_at: string | null }[];
+        branches: { id: string; name: string; biz_id: string; last_rating_recalculated_at: string | null }[];
+        businesses: { id: string; name: string | null; slug: string | null; last_rating_recalculated_at: string | null }[];
     };
     without_metrics_since: {
         staff: { id: string; full_name: string | null; biz_id: string; branch_id: string }[];
@@ -93,6 +93,7 @@ export function RatingsDebugClient() {
     const [data, setData] = useState<DebugEntity | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [recalcLoadingId, setRecalcLoadingId] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -128,6 +129,29 @@ export function RatingsDebugClient() {
         u.set('days', String(d));
         router.replace(`/admin/ratings-debug?${u.toString()}`, { scroll: false });
     };
+
+    const triggerRecalc = useCallback(
+        async (entityType: 'staff' | 'branch' | 'biz', entityId: string) => {
+            setRecalcLoadingId(`${entityType}:${entityId}`);
+            try {
+                const res = await fetch('/api/admin/ratings/recalculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entity_type: entityType, entity_id: entityId }),
+                });
+                if (!res.ok) {
+                    const json = (await res.json().catch(() => null)) as { error?: string } | null;
+                    throw new Error(json?.error || 'Ошибка пересчёта рейтинга');
+                }
+                await fetchData();
+            } catch (e) {
+                setError(e instanceof Error ? e.message : 'Ошибка пересчёта рейтинга');
+            } finally {
+                setRecalcLoadingId(null);
+            }
+        },
+        [fetchData],
+    );
 
     return (
         <main className="max-w-5xl mx-auto space-y-6">
@@ -198,32 +222,89 @@ export function RatingsDebugClient() {
                             <Table
                                 title={t('admin.ratingsDebug.staff', 'Сотрудники')}
                                 count={data.with_null_rating.staff.length}
-                                rows={data.with_null_rating.staff}
+                                rows={data.with_null_rating.staff.map((row) => ({
+                                    ...row,
+                                    last_rating_recalculated_at: row.last_rating_recalculated_at
+                                        ? formatDateTime(row.last_rating_recalculated_at, 'ru', true)
+                                        : '—',
+                                    _actions: (
+                                        <button
+                                            type="button"
+                                            className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                                            onClick={() => triggerRecalc('staff', row.id)}
+                                            disabled={recalcLoadingId === `staff:${row.id}`}
+                                        >
+                                            {recalcLoadingId === `staff:${row.id}`
+                                                ? t('admin.ratingsDebug.recalculating', 'Пересчёт…')
+                                                : t('admin.ratingsDebug.recalculate', 'Пересчитать')}
+                                        </button>
+                                    ),
+                                }))}
                                 columns={[
                                     { key: 'id', label: 'ID' },
                                     { key: 'full_name', label: t('admin.ratingsDebug.name', 'Имя') },
                                     { key: 'biz_id', label: 'biz_id' },
                                     { key: 'branch_id', label: 'branch_id' },
+                                    { key: 'last_rating_recalculated_at', label: t('admin.ratingsDebug.lastRatingDate', 'Последний пересчёт') },
+                                    { key: '_actions', label: t('admin.ratingsDebug.actions', 'Действия') },
                                 ]}
                             />
                             <Table
                                 title={t('admin.ratingsDebug.branches', 'Филиалы')}
                                 count={data.with_null_rating.branches.length}
-                                rows={data.with_null_rating.branches}
+                                rows={data.with_null_rating.branches.map((row) => ({
+                                    ...row,
+                                    last_rating_recalculated_at: row.last_rating_recalculated_at
+                                        ? formatDateTime(row.last_rating_recalculated_at, 'ru', true)
+                                        : '—',
+                                    _actions: (
+                                        <button
+                                            type="button"
+                                            className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                                            onClick={() => triggerRecalc('branch', row.id)}
+                                            disabled={recalcLoadingId === `branch:${row.id}`}
+                                        >
+                                            {recalcLoadingId === `branch:${row.id}`
+                                                ? t('admin.ratingsDebug.recalculating', 'Пересчёт…')
+                                                : t('admin.ratingsDebug.recalculate', 'Пересчитать')}
+                                        </button>
+                                    ),
+                                }))}
                                 columns={[
                                     { key: 'id', label: 'ID' },
                                     { key: 'name', label: t('admin.ratingsDebug.name', 'Имя') },
                                     { key: 'biz_id', label: 'biz_id' },
+                                    { key: 'last_rating_recalculated_at', label: t('admin.ratingsDebug.lastRatingDate', 'Последний пересчёт') },
+                                    { key: '_actions', label: t('admin.ratingsDebug.actions', 'Действия') },
                                 ]}
                             />
                             <Table
                                 title={t('admin.ratingsDebug.businesses', 'Бизнесы')}
                                 count={data.with_null_rating.businesses.length}
-                                rows={data.with_null_rating.businesses}
+                                rows={data.with_null_rating.businesses.map((row) => ({
+                                    ...row,
+                                    last_rating_recalculated_at: row.last_rating_recalculated_at
+                                        ? formatDateTime(row.last_rating_recalculated_at, 'ru', true)
+                                        : '—',
+                                    _actions: (
+                                        <button
+                                            type="button"
+                                            className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                                            onClick={() => triggerRecalc('biz', row.id)}
+                                            disabled={recalcLoadingId === `biz:${row.id}`}
+                                        >
+                                            {recalcLoadingId === `biz:${row.id}`
+                                                ? t('admin.ratingsDebug.recalculating', 'Пересчёт…')
+                                                : t('admin.ratingsDebug.recalculate', 'Пересчитать')}
+                                        </button>
+                                    ),
+                                }))}
                                 columns={[
                                     { key: 'id', label: 'ID' },
                                     { key: 'name', label: t('admin.ratingsDebug.name', 'Имя') },
                                     { key: 'slug', label: 'slug' },
+                                    { key: 'last_rating_recalculated_at', label: t('admin.ratingsDebug.lastRatingDate', 'Последний пересчёт') },
+                                    { key: '_actions', label: t('admin.ratingsDebug.actions', 'Действия') },
                                 ]}
                             />
                         </div>

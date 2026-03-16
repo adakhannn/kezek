@@ -37,6 +37,7 @@ export default async function DashboardHome() {
         [, staffActive, servicesActive, branchesCount],
         { data: biz },
         { data: ratingConfig },
+        { data: bizRatingConfig },
     ] = await Promise.all([
         Promise.all([
             // bookingsToday будет пересчитан после получения таймзоны бизнеса
@@ -53,6 +54,22 @@ export default async function DashboardHome() {
         supabase
             .from('rating_global_config')
             .select('staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days')
+            .eq('is_active', true)
+            .order('valid_from', { ascending: false })
+            .limit(1)
+            .maybeSingle<{
+                staff_reviews_weight: number;
+                staff_productivity_weight: number;
+                staff_loyalty_weight: number;
+                staff_discipline_weight: number;
+                window_days: number;
+            }>(),
+        supabase
+            .from('rating_biz_config')
+            .select(
+                'staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days',
+            )
+            .eq('biz_id', bizId)
             .eq('is_active', true)
             .order('valid_from', { ascending: false })
             .limit(1)
@@ -95,6 +112,13 @@ export default async function DashboardHome() {
     const needOnboarding =
         bookingsToday === 0 || staffActive === 0 || servicesActive === 0 || branchesCount === 0;
 
+    const effectiveRatingConfig = bizRatingConfig ?? ratingConfig;
+    const ratingConfigScope: 'biz' | 'global' | null = effectiveRatingConfig
+        ? bizRatingConfig
+            ? 'biz'
+            : 'global'
+        : null;
+
     return (
         <DashboardHomeClient
             bizName={bizName}
@@ -106,14 +130,15 @@ export default async function DashboardHome() {
             branchesCount={branchesCount}
             needOnboarding={needOnboarding}
             ratingScore={bizRatingScore}
+            ratingConfigScope={ratingConfigScope}
             ratingWeights={
-                ratingConfig
+                effectiveRatingConfig
                     ? {
-                          reviews: Number(ratingConfig.staff_reviews_weight),
-                          productivity: Number(ratingConfig.staff_productivity_weight),
-                          loyalty: Number(ratingConfig.staff_loyalty_weight),
-                          discipline: Number(ratingConfig.staff_discipline_weight),
-                          windowDays: Number(ratingConfig.window_days),
+                          reviews: Number(effectiveRatingConfig.staff_reviews_weight),
+                          productivity: Number(effectiveRatingConfig.staff_productivity_weight),
+                          loyalty: Number(effectiveRatingConfig.staff_loyalty_weight),
+                          discipline: Number(effectiveRatingConfig.staff_discipline_weight),
+                          windowDays: Number(effectiveRatingConfig.window_days),
                       }
                     : null
             }

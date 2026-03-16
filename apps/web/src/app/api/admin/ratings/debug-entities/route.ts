@@ -67,17 +67,17 @@ export async function GET(req: Request) {
                 ] = await Promise.all([
                     admin
                         .from('staff')
-                        .select('id, full_name, biz_id, branch_id')
+                        .select('id, full_name, biz_id, branch_id, last_rating_recalculated_at')
                         .is('rating_score', null)
                         .order('full_name'),
                     admin
                         .from('branches')
-                        .select('id, name, biz_id')
+                        .select('id, name, biz_id, last_rating_recalculated_at')
                         .is('rating_score', null)
                         .order('name'),
                     admin
                         .from('businesses')
-                        .select('id, name, slug')
+                        .select('id, name, slug, last_rating_recalculated_at')
                         .is('rating_score', null)
                         .order('name'),
                 ]);
