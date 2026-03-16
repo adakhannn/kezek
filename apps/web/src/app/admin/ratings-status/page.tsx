@@ -51,17 +51,37 @@ function isStale(dateStr: string | null, maxDaysWithoutMetrics = 2): boolean {
 }
 
 export default async function RatingsStatusPage() {
-    // Вызов уже существующего API, который сам проверяет супер‑админа
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const [statusRes, jobsRes] = await Promise.all([
-        fetch(`${baseUrl}/api/admin/ratings/status`, {
-            // Пробрасываем cookie автоматически на сервере Next
-            cache: 'no-store',
-        }),
-        fetch(`${baseUrl}/api/admin/ratings/jobs`, {
-            cache: 'no-store',
-        }),
-    ]);
+    // Вызов уже существующего API, который сам проверяет супер‑админа.
+    // Используем относительные URL, чтобы в проде не было сетевых ошибок из-за baseUrl.
+    let statusRes: Response;
+    let jobsRes: Response;
+    try {
+        [statusRes, jobsRes] = await Promise.all([
+            fetch('/api/admin/ratings/status', {
+                cache: 'no-store',
+            }),
+            fetch('/api/admin/ratings/jobs', {
+                cache: 'no-store',
+            }),
+        ]);
+    } catch {
+        const t = await getT('ru');
+        return (
+            <main className="max-w-3xl mx-auto">
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
+                    <h1 className="text-lg font-semibold mb-2">
+                        {t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
+                    </h1>
+                    <p>
+                        {t(
+                            'admin.ratingsStatus.error.description',
+                            'Не удалось получить состояние рейтинговой системы.',
+                        )}
+                    </p>
+                </div>
+            </main>
+        );
+    }
 
     if (statusRes.status === 401 || statusRes.status === 403 || jobsRes.status === 401 || jobsRes.status === 403) {
         // На всякий случай уводим на логин / ошибку доступа
