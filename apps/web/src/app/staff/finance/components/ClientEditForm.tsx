@@ -116,24 +116,21 @@ function ClientEditFormInner({
                 ? servicesArray.map((s) => getServiceName(s, locale)).join(' + ')
                 : null;
         
-        // Если bookingId убран, генерируем автоматическое имя "Клиент N"
+        // Если bookingId убран и нет брони, генерируем автоматическое имя "Клиент N",
+        // избегая дубликатов по текущему списку клиентов.
         let newClientName = item.clientName;
         if (!bookingId && !booking) {
             const clientLabel = t('staff.finance.clients.client', 'Клиент');
-            // Считаем порядковый номер для автоматического имени
-            // на основе существующих клиентов без bookingId (кроме текущего)
-            const existingClients = allItems
-                .filter((it, i) => i !== idx && !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
-            const existingIndices = existingClients
-                .map((it) => {
-                    const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
-                    const match = it.clientName?.match(regex);
-                    return match ? Number(match[1]) : 0;
-                })
-                .filter((n) => n > 0);
-            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
-            const nextIndex = maxIndex + 1;
+            const usedNames = new Set(
+                allItems
+                    .filter((_, i) => i !== idx)
+                    .map((it) => it.clientName)
+                    .filter(Boolean) as string[],
+            );
+            let nextIndex = 1;
+            while (usedNames.has(`${clientLabel} ${nextIndex}`)) {
+                nextIndex += 1;
+            }
             newClientName = `${clientLabel} ${nextIndex}`;
         }
         

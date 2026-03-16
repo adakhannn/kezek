@@ -130,6 +130,41 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     // Сигнатура последнего сохранённого состояния (для UI «есть несохранённые изменения»)
     const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(null);
 
+    const isAutoClientName = useCallback(
+        (name: string | null | undefined): boolean => {
+            if (!name) return false;
+            const trimmed = name.trim();
+            if (!trimmed) return false;
+            const clientLabel = t('staff.finance.clients.client', 'Клиент');
+            // Простая проверка: начинается с локализованного "Клиент" и заканчивается цифрой
+            return trimmed.startsWith(`${clientLabel} `) && /\d+$/.test(trimmed);
+        },
+        [t],
+    );
+
+    const hasMeaningfulData = useCallback(
+        (item: ShiftItem): boolean => {
+            if (item.id) return true;
+            if (item.bookingId) return true;
+            if (item.serviceAmount && item.serviceAmount > 0) return true;
+            if (item.consumablesAmount && item.consumablesAmount > 0) return true;
+            if (item.serviceName && item.serviceName.trim() !== '') return true;
+            if (item.clientName && item.clientName.trim() !== '' && !isAutoClientName(item.clientName)) {
+                return true;
+            }
+            return false;
+        },
+        [isAutoClientName],
+    );
+
+    const prepareItemsForSave = useCallback(
+        (items: ShiftItem[]): ShiftItem[] => {
+            // Отбрасываем полностью пустые новые элементы (без id/bookingId и без значимых данных)
+            return items.filter((item) => hasMeaningfulData(item));
+        },
+        [hasMeaningfulData],
+    );
+
     // Загрузка данных через React Query (initialData от SSR убирает первый запрос)
     const financeData = useFinanceData({
         staffId,
@@ -291,7 +326,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             if (activeTabRef.current !== 'clients') return;
             if (!isOpenRef.current || isReadOnlyForOwnerRef.current) return;
 
-            const latestItems = localItemsRef.current;
+            const latestItemsRaw = localItemsRef.current;
+            const latestItems = prepareItemsForSave(latestItemsRaw);
             const latestSignature = serializeShiftItems(latestItems);
             if (latestSignature === lastSavedItemsRef.current) return;
 
@@ -313,20 +349,21 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 saveTimeoutRef.current = null;
             }
         };
-    }, [localItems, isOpen, isReadOnlyForOwner]);
+    }, [localItems, isOpen, isReadOnlyForOwner, prepareItemsForSave]);
 
     // При переключении с вкладки «Клиенты» на другую — сбрасываем таймер дебаунса и при несохранённых изменениях делаем flush.
     useEffect(() => {
         const wasClients = previousTabRef.current === 'clients';
         previousTabRef.current = activeTab;
 
-        if (wasClients && activeTab !== 'clients') {
+            if (wasClients && activeTab !== 'clients') {
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
                 saveTimeoutRef.current = null;
             }
-            const latestItems = localItemsRef.current;
-            const latestSignature = currentItemsSignatureRef.current;
+            const latestItemsRaw = localItemsRef.current;
+            const latestItems = prepareItemsForSave(latestItemsRaw);
+            const latestSignature = latestItems.length > 0 ? serializeShiftItems(latestItems) : null;
             if (
                 latestItems.length > 0 &&
                 latestSignature &&
@@ -337,7 +374,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 void mutationsRef.current.saveItems(latestItems);
             }
         }
-    }, [activeTab, isOpen, isReadOnlyForOwner]);
+    }, [activeTab, isOpen, isReadOnlyForOwner, prepareItemsForSave]);
 
     // Очистка таймера разблокировки кнопки «Добавить клиента» при размонтировании
     useEffect(() => {
@@ -352,8 +389,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     // При размонтировании FinancePage пробуем дозакинуть несохранённые изменения одним запросом.
     useEffect(() => {
         return () => {
-            const latestItems = localItemsRef.current;
-            const latestSignature = currentItemsSignatureRef.current;
+            const latestItemsRaw = localItemsRef.current;
+            const latestItems = prepareItemsForSave(latestItemsRaw);
+            const latestSignature = latestItems.length > 0 ? serializeShiftItems(latestItems) : null;
 
             if (!latestItems || latestItems.length === 0) return;
             if (!latestSignature || latestSignature === lastSavedItemsRef.current) return;
@@ -424,7 +462,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         // Принудительное сохранение текущего списка клиентов
         if (!isOpen || isReadOnlyForOwner) return;
 
-        const latestItems = localItemsRef.current;
+        const latestItemsRaw = localItemsRef.current;
+        const latestItems = prepareItemsForSave(latestItemsRaw);
         if (!latestItems || latestItems.length === 0) return;
 
         const latestSignature = serializeShiftItems(latestItems);
@@ -446,7 +485,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             .catch(() => {
                 // Ошибка уже будет показана в мутации
             });
-    }, [isOpen, isReadOnlyForOwner, lastSavedSignature, mutations]);
+    }, [isOpen, isReadOnlyForOwner, lastSavedSignature, mutations, prepareItemsForSave]);
 
     const handleAddClient = useCallback(() => {
         if (addClientLockRef.current) return;
@@ -460,21 +499,13 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }, 500);
 
         const clientLabel = t('staff.finance.clients.client', 'Клиент');
-        
-        // Используем функциональное обновление для получения актуального состояния.
-        // setExpandedItems вызываем снаружи — не внутри updater'а, чтобы избежать лишних ре-рендеров и петель.
+
         setLocalItems((prev) => {
-            const existingClients = prev.filter((it) => !it.bookingId && it.clientName?.startsWith(`${clientLabel} `));
-            const existingIndices = existingClients
-                .map((it) => {
-                    const escapedLabel = clientLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const regex = new RegExp(`^${escapedLabel} (\\d+)$`);
-                    const match = it.clientName?.match(regex);
-                    return match ? Number(match[1]) : 0;
-                })
-                .filter((n) => n > 0);
-            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : 0;
-            const nextIndex = maxIndex + 1;
+            const usedNames = new Set(prev.map((it) => it.clientName).filter(Boolean) as string[]);
+            let nextIndex = 1;
+            while (usedNames.has(`${clientLabel} ${nextIndex}`)) {
+                nextIndex += 1;
+            }
 
             const now = Date.now();
             const lastItemTime = prev.length > 0 && prev[0].createdAt
@@ -555,10 +586,11 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 savedItemsWithoutIdRef.current.add(idx);
             }
             
-            await mutations.saveItems(localItems);
+            const itemsForSave = prepareItemsForSave(localItems);
+            await mutations.saveItems(itemsForSave);
 
             // Обновляем сигнатуру последнего успешно сохранённого состояния
-            const sig = serializeShiftItems(localItems);
+            const sig = serializeShiftItems(itemsForSave);
             lastSavedItemsRef.current = sig;
             setLastSavedSignature(sig);
             
@@ -594,7 +626,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 saveTimeoutRef.current = null;
             }
 
-            const updatedItems = localItems.filter((_, i) => i !== idx);
+            const updatedItemsRaw = localItems.filter((_, i) => i !== idx);
+            const updatedItems = prepareItemsForSave(updatedItemsRaw);
             await mutations.saveItems(updatedItems);
             // invalidateQueries в мутации автоматически вызовет refetch
             const sig = serializeShiftItems(updatedItems);
