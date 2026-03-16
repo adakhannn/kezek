@@ -55,9 +55,9 @@ export default async function RatingsStatusPage() {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const [statusRes, jobsRes] = await Promise.all([
         fetch(`${baseUrl}/api/admin/ratings/status`, {
-        // Пробрасываем cookie автоматически на сервере Next
-        cache: 'no-store',
-    }),
+            // Пробрасываем cookie автоматически на сервере Next
+            cache: 'no-store',
+        }),
         fetch(`${baseUrl}/api/admin/ratings/jobs`, {
             cache: 'no-store',
         }),
@@ -68,13 +68,51 @@ export default async function RatingsStatusPage() {
         redirect('/auth/sign-in?redirect=/admin/ratings-status');
     }
 
-    const data = (await statusRes.json()) as RatingsStatusResponse;
+    const t = await getT('ru');
+
+    if (!statusRes.ok) {
+        return (
+            <main className="max-w-3xl mx-auto">
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
+                    <h1 className="text-lg font-semibold mb-2">
+                        {t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
+                    </h1>
+                    <p>
+                        {t(
+                            'admin.ratingsStatus.error.description',
+                            'Не удалось получить состояние рейтинговой системы.',
+                        )}
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
+    let data: RatingsStatusResponse;
+    try {
+        data = (await statusRes.json()) as RatingsStatusResponse;
+    } catch {
+        return (
+            <main className="max-w-3xl mx-auto">
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
+                    <h1 className="text-lg font-semibold mb-2">
+                        {t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
+                    </h1>
+                    <p>
+                        {t(
+                            'admin.ratingsStatus.error.description',
+                            'Не удалось получить состояние рейтинговой системы.',
+                        )}
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
     const jobsJson = (await jobsRes.json().catch(() => ({ ok: false }))) as
         | { ok: true; jobs: RatingJob[] }
         | { ok: false; error?: string };
 
-    const t = await getT('ru');
-    
     if (!data.ok) {
         return (
             <main className="max-w-3xl mx-auto">
