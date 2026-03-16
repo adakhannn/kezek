@@ -73,7 +73,7 @@ export default async function RatingsStatusPage() {
         | { ok: true; jobs: RatingJob[] }
         | { ok: false; error?: string };
 
-    const t = getT('ru');
+    const t = await getT('ru');
     
     if (!data.ok) {
         return (
