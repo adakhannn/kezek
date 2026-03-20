@@ -37,6 +37,7 @@ describe('/api/dashboard/staff/[id]/finance (deprecated)', () => {
             supabase: mockSupabase,
             userId: 'user-uuid',
             bizId,
+            businessTz: 'Asia/Almaty',
         });
 
         (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
@@ -86,26 +87,34 @@ describe('/api/dashboard/staff/[id]/finance (deprecated)', () => {
             // Мокаем получение смены
             mockAdmin.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'shift-id',
-                        shift_date: '2024-01-15',
-                        status: 'open',
-                        total_amount: 10000,
-                    },
-                    error: null,
-                }),
+                eq: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        eq: jest.fn(() => ({
+                            maybeSingle: jest.fn().mockResolvedValue({
+                                data: {
+                                    id: 'shift-id',
+                                    shift_date: '2024-01-15',
+                                    status: 'open',
+                                    total_amount: 10000,
+                                },
+                                error: null,
+                            }),
+                        })),
+                    })),
+                })),
             });
 
             // Мокаем получение элементов смены
             mockAdmin.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
+                eq: jest.fn(() => ({
+                    order: jest.fn(() => ({
+                        order: jest.fn().mockResolvedValue({
+                            data: [],
+                            error: null,
+                        }),
+                    })),
+                })),
             });
 
             mockSupabase.from.mockReturnValueOnce({
@@ -118,24 +127,31 @@ describe('/api/dashboard/staff/[id]/finance (deprecated)', () => {
             });
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+                eq: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    })),
+                })),
             });
             mockAdmin.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                gte: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                eq: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        eq: jest.fn(() => ({
+                            gte: jest.fn(() => ({
+                                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                            })),
+                        })),
+                    })),
+                })),
             });
             mockAdmin.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                eq: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+                    })),
+                })),
             });
 
             const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/finance?date=2024-01-15`, {
@@ -146,7 +162,7 @@ describe('/api/dashboard/staff/[id]/finance (deprecated)', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('shift');
+            expect(data.data).toHaveProperty('today.shift');
         });
     });
 });

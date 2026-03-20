@@ -37,6 +37,7 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
             supabase: mockSupabase,
             userId: 'user-uuid',
             bizId,
+            businessTz: 'Asia/Almaty',
         });
 
         (getRouteParamUuid as jest.Mock).mockResolvedValue(staffId);
@@ -156,14 +157,6 @@ describe('/api/dashboard/staff/[id]/finance/stats', () => {
                     data: { id: staffId, biz_id: bizId, full_name: 'Test Staff' },
                     error: null,
                 }),
-            });
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
             });
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
