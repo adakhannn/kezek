@@ -5,6 +5,7 @@
 import {
   addDaysToDateString,
   dateRangeInclusive,
+  getBusinessTimezone,
   getTimezone,
   todayDateString,
   toDateString,
@@ -92,5 +93,31 @@ describe('getTimezone', () => {
     test('возвращает Asia/Bishkek по умолчанию', () => {
         delete process.env.NEXT_PUBLIC_TZ;
         expect(getTimezone()).toBe('Asia/Bishkek');
+    });
+});
+
+describe('getBusinessTimezone', () => {
+    const orig = process.env.NEXT_PUBLIC_TZ;
+
+    afterEach(() => {
+        process.env.NEXT_PUBLIC_TZ = orig;
+    });
+
+    test('использует timezone бизнеса, если она задана', () => {
+        process.env.NEXT_PUBLIC_TZ = 'Asia/Bishkek';
+        expect(getBusinessTimezone('Asia/Almaty')).toBe('Asia/Almaty');
+    });
+
+    test('обрезает пробелы вокруг timezone бизнеса', () => {
+        process.env.NEXT_PUBLIC_TZ = 'Asia/Bishkek';
+        expect(getBusinessTimezone('  Europe/Berlin  ')).toBe('Europe/Berlin');
+    });
+
+    test('падает обратно на глобальную timezone, если biz.tz пустая', () => {
+        process.env.NEXT_PUBLIC_TZ = 'Asia/Almaty';
+        expect(getBusinessTimezone('')).toBe('Asia/Almaty');
+        expect(getBusinessTimezone('   ')).toBe('Asia/Almaty');
+        expect(getBusinessTimezone(null)).toBe('Asia/Almaty');
+        expect(getBusinessTimezone(undefined)).toBe('Asia/Almaty');
     });
 });
