@@ -1,60 +1,25 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, TextInput } from 'react-native';
-import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+﻿import { StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { apiRequest } from '../lib/api';
 import { MainTabParamList, RootStackParamList } from '../navigation/types';
-import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
-import EmptyState from '../components/ui/EmptyState';
-import Logo from '../components/Logo';
-import RatingBadge from '../components/ui/RatingBadge';
 import { colors } from '../constants/colors';
-import { formatDate, formatTime, formatPhone } from '../utils/format';
-import { logError, logDebug } from '../lib/log';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import OfflineBanner from '../components/ui/OfflineBanner';
-import type { ClientBookingListItemDto, PublicBusinessDto } from '@shared-client/types';
+import { HomeBusinessListSection } from './home/HomeBusinessListSection';
+import { HomeCategoriesSection } from './home/HomeCategoriesSection';
+import { HomeHeroSection } from './home/HomeHeroSection';
+import { HomeOfflineBannerSection } from './home/HomeOfflineBannerSection';
+import { HomeRecentPlacesSection } from './home/HomeRecentPlacesSection';
+import { HomeSearchSection } from './home/HomeSearchSection';
+import { HomeUpcomingBookingsSection } from './home/HomeUpcomingBookingsSection';
 import { trackMobileEvent } from '../lib/analytics';
+import { getAvailableCategories, getRecentPlaces, getUpcomingBookings } from './home/selectors';
+import type { RecentPlace } from './home/types';
+import { useHomeData } from './home/useHomeData';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Home'>;
-
-type Business = {
-    id: string;
-    name: string;
-    slug: string;
-    address: string | null;
-    phones: string[] | null;
-    categories: string[] | null;
-    rating_score: number | null;
-};
-
-type HomeBooking = {
-    id: string;
-    start_at: string;
-    end_at: string;
-    status: string;
-    business: {
-        name: string;
-        slug: string | null;
-    } | null;
-    branch: {
-        name: string | null;
-    } | null;
-    service: {
-        name_ru: string | null;
-    } | null;
-};
-
-type RecentPlace = {
-    slug: string;
-    name: string;
-};
 
 export default function HomeScreen() {
     const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -65,138 +30,35 @@ export default function HomeScreen() {
 
     const { isOffline } = useNetworkStatus();
 
-    // Аналитика: home_view при первом открытии экрана за сессию
+    // Аналитика: фиксируем первое открытие домашнего экрана за сессию.
     useEffect(() => {
         trackMobileEvent({ eventType: 'home_view' });
     }, []);
 
-    const { data: user } = useQuery({
-        queryKey: ['user'],
-        queryFn: async () => {
-            const {
-                data: { user },
-                error,
-            } = await supabase.auth.getUser();
-            if (error) throw error;
-            return user;
-        },
+    const { user, businessesQuery, bookingsQuery } = useHomeData({
+        search,
+        selectedCategory,
+        onNetworkError: setHasNetworkError,
     });
 
-    const { data: businesses, isLoading, refetch } = useQuery({
-        queryKey: ['businesses', search, selectedCategory],
-        queryFn: async () => {
-            const params = new URLSearchParams();
-            if (search.trim()) {
-                params.set('search', search.trim());
-            }
-            if (selectedCategory) {
-                params.set('category', selectedCategory);
-            }
-            const endpoint = `/mobile/businesses${params.toString() ? `?${params.toString()}` : ''}`;
-            const data = await apiRequest<PublicBusinessDto[]>(endpoint);
-            logDebug('HomeScreen', 'Businesses loaded', { count: data?.length || 0 });
-            return (data ?? []).map(
-                (b): Business => ({
-                    id: b.id,
-                    name: b.name,
-                    slug: b.slug,
-                    address: b.address,
-                    phones: b.phones,
-                    categories: b.categories,
-                    rating_score: b.rating_score,
-                }),
-            );
-        },
-        onError: (error: unknown) => {
-            const message = error instanceof Error ? error.message : String(error);
-            if (/network request failed|failed to fetch|network/i.test(message)) {
-                setHasNetworkError(true);
-            }
-        },
-        onSuccess: () => {
-            setHasNetworkError(false);
-        },
-    });
-
-    const { data: bookings } = useQuery({
-        queryKey: ['home-bookings', user?.id],
-        enabled: !!user?.id,
-        queryFn: async () => {
-            if (!user?.id) return [];
-
-            const data = await apiRequest<ClientBookingListItemDto[]>('/mobile/bookings');
-            logDebug('HomeScreen', 'Home bookings loaded', { count: data?.length || 0 });
-            return (data ?? []).map(
-                (b): HomeBooking => ({
-                    id: b.id,
-                    start_at: b.start_at,
-                    end_at: b.end_at,
-                    status: b.status,
-                    business: b.business
-                        ? {
-                              name: b.business.name ?? '',
-                              slug: b.business.slug ?? null,
-                          }
-                        : null,
-                    branch: b.branch
-                        ? {
-                              name: b.branch.name ?? null,
-                          }
-                        : null,
-                    service: b.service
-                        ? {
-                              name_ru: b.service.name_ru ?? '',
-                          }
-                        : null,
-                }),
-            );
-        },
-    });
+    const businesses = businessesQuery.data;
+    const bookings = bookingsQuery.data;
+    const isLoading = businessesQuery.isLoading;
+    const refetch = businessesQuery.refetch;
 
     const now = useMemo(() => new Date(), []);
 
     const upcomingBookings = useMemo(() => {
-        if (!bookings || bookings.length === 0) return [] as HomeBooking[];
-        const nowTime = now.getTime();
-        return bookings
-            .filter((b) => {
-                if (b.status === 'cancelled' || b.status === 'no_show') return false;
-                const start = new Date(b.start_at).getTime();
-                return Number.isFinite(start) && start >= nowTime;
-            })
-            .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
-            .slice(0, 3);
+        return getUpcomingBookings(bookings, now);
     }, [bookings, now]);
 
     const recentPlaces: RecentPlace[] = useMemo(() => {
-        if (!bookings || bookings.length === 0) return [];
-        const seen = new Set<string>();
-        const places: RecentPlace[] = [];
-
-        [...bookings]
-            .sort((a, b) => new Date(b.start_at).getTime() - new Date(a.start_at).getTime())
-            .forEach((b) => {
-                const slug = b.business?.slug;
-                const name = b.business?.name;
-                if (!slug || !name) return;
-                if (seen.has(slug)) return;
-                seen.add(slug);
-                places.push({ slug, name });
-            });
-
-        return places.slice(0, 3);
+        return getRecentPlaces(bookings);
     }, [bookings]);
 
-    // Собираем доступные категории из загруженных бизнесов
+    // Собираем доступные категории из загруженных бизнесов.
     const availableCategories = useMemo(() => {
-        if (!businesses) return [];
-        const cats = new Set<string>();
-        businesses.forEach((b) => {
-            if (b.categories) {
-                b.categories.forEach((c) => cats.add(c));
-            }
-        });
-        return Array.from(cats).sort();
+        return getAvailableCategories(businesses);
     }, [businesses]);
 
     const onRefresh = async () => {
@@ -206,8 +68,23 @@ export default function HomeScreen() {
     };
 
     const handleBusinessPress = (slug: string) => {
-        // Навигация в Booking находится в RootStack, поэтому используем type assertion
+        // Навигация в Booking живет в RootStack, поэтому здесь нужен type assertion.
         (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate('Booking', { slug });
+    };
+
+    const handleOpenAllBookings = () => {
+        (navigation as unknown as {
+            navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void;
+        }).navigate('CabinetMain' as any);
+    };
+
+    const handleOpenBookingDetails = (id: string) => {
+        (navigation as unknown as {
+            navigate: (
+                screen: keyof RootStackParamList,
+                params?: RootStackParamList[keyof RootStackParamList],
+            ) => void;
+        }).navigate('BookingDetails', { id });
     };
 
     const handleCategoryPress = (category: string | null) => {
@@ -232,255 +109,51 @@ export default function HomeScreen() {
                 style={styles.container}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
-                {/* Header с логотипом */}
-                <View style={styles.header}>
-                    <Logo style={styles.logo} />
-                </View>
+                <HomeHeroSection styles={styles} />
 
-            {/* Заголовок с градиентом */}
-            <View style={styles.heroSection}>
-                <Text style={styles.heroTitle}>Найдите свой сервис</Text>
-                <Text style={styles.heroSubtitle}>
-                    Запись в салоны и студии города Ош за пару кликов — без звонков и переписок
-                </Text>
-            </View>
-
-            {showOfflineBanner && (
-                <View style={styles.offlineBannerWrapper}>
-                    <OfflineBanner />
-                </View>
-            )}
-
-            {/* Ближайшие записи */}
-            {user && upcomingBookings.length > 0 && (
-                <View style={styles.section}>
-                    <View style={styles.sectionHeaderRow}>
-                        <Text style={styles.sectionTitle}>Ближайшие записи</Text>
-                        <TouchableOpacity
-                            onPress={() =>
-                                (navigation as unknown as {
-                                    navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void;
-                                }).navigate('CabinetMain' as any)
-                            }
-                        >
-                            <Text style={styles.sectionLink}>Открыть все</Text>
-                        </TouchableOpacity>
-                    </View>
-                    {upcomingBookings.map((b) => (
-                        <Card key={b.id} style={styles.bookingCard}>
-                            <TouchableOpacity
-                                activeOpacity={0.8}
-                                onPress={() =>
-                                    (navigation as unknown as {
-                                        navigate: (
-                                            screen: keyof RootStackParamList,
-                                            params?: RootStackParamList[keyof RootStackParamList],
-                                        ) => void;
-                                    }).navigate('BookingDetails', { id: b.id })
-                                }
-                            >
-                                <View style={styles.bookingRow}>
-                                    <View style={styles.bookingMain}>
-                                        <Text style={styles.bookingBusiness}>
-                                            {b.business?.name || 'Запись'}
-                                        </Text>
-                                        {b.branch?.name && (
-                                            <Text style={styles.bookingBranch}>{b.branch.name}</Text>
-                                        )}
-                                        {b.service?.name_ru && (
-                                            <Text style={styles.bookingService}>{b.service.name_ru}</Text>
-                                        )}
-                                    </View>
-                                    <View style={styles.bookingMeta}>
-                                        <Text style={styles.bookingDate}>
-                                            {formatDate(b.start_at)} • {formatTime(b.start_at)}
-                                        </Text>
-                                        <View style={styles.bookingStatusPill}>
-                                            <Text style={styles.bookingStatusText}>
-                                                {b.status === 'confirmed'
-                                                    ? 'Подтверждено'
-                                                    : b.status === 'hold'
-                                                    ? 'Ожидает'
-                                                    : b.status === 'paid'
-                                                    ? 'Оплачено'
-                                                    : 'Запись'}
-                                            </Text>
-                                        </View>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        </Card>
-                    ))}
-                </View>
-            )}
-
-            {/* Поиск */}
-            <View style={styles.searchContainer}>
-                <View style={styles.searchInputContainer}>
-                    <Ionicons name="search" size={20} color={colors.text.secondary} style={styles.searchIcon} />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Поиск по названию или адресу..."
-                        placeholderTextColor={colors.text.tertiary}
-                        value={search}
-                        onChangeText={setSearch}
-                    />
-                    {search && (
-                        <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
-                            <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
-
-            {/* Недавние места */}
-            {user && recentPlaces.length > 0 && (
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Недавние места</Text>
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.recentPlacesRow}
-                    >
-                        {recentPlaces.map((place) => (
-                            <TouchableOpacity
-                                key={place.slug}
-                                style={styles.recentPlaceChip}
-                                activeOpacity={0.7}
-                                onPress={() => handleBusinessPress(place.slug)}
-                            >
-                                <Ionicons
-                                    name="time-outline"
-                                    size={16}
-                                    color={colors.text.secondary}
-                                    style={{ marginRight: 6 }}
-                                />
-                                <Text style={styles.recentPlaceText}>{place.name}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                </View>
-            )}
-
-            {/* Фильтры по категориям */}
-            {availableCategories.length > 0 && (
-                <View style={styles.categoriesContainer}>
-                    <Text style={styles.categoriesLabel}>Популярные категории:</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
-                        <TouchableOpacity
-                            style={[
-                                styles.categoryChip,
-                                !selectedCategory && styles.categoryChipActive,
-                            ]}
-                            onPress={() => handleCategoryPress(null)}
-                        >
-                            {!selectedCategory ? (
-                                <LinearGradient
-                                    colors={[colors.primary.from, colors.primary.to]}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    style={styles.categoryChipGradient}
-                                >
-                                    <Text style={styles.categoryChipTextActive}>Все</Text>
-                                </LinearGradient>
-                            ) : (
-                                <Text style={styles.categoryChipText}>Все</Text>
-                            )}
-                        </TouchableOpacity>
-                        {availableCategories.map((category) => (
-                            <TouchableOpacity
-                                key={category}
-                                style={[
-                                    styles.categoryChip,
-                                    selectedCategory === category && styles.categoryChipActive,
-                                ]}
-                                onPress={() => handleCategoryPress(category)}
-                            >
-                                {selectedCategory === category ? (
-                                    <LinearGradient
-                                        colors={[colors.primary.from, colors.primary.to]}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 0 }}
-                                        style={styles.categoryChipGradient}
-                                    >
-                                        <Text style={styles.categoryChipTextActive}>{category}</Text>
-                                    </LinearGradient>
-                                ) : (
-                                    <Text style={styles.categoryChipText}>{category}</Text>
-                                )}
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                </View>
-            )}
-
-            {/* Список бизнесов */}
-            {isLoading && !refreshing ? (
-                <LoadingSpinner message="Загрузка..." />
-            ) : businesses && businesses.length > 0 ? (
-                <View style={styles.businessList}>
-                    {businesses.map((business) => (
-                        <TouchableOpacity
-                            key={business.id}
-                            onPress={() => handleBusinessPress(business.slug)}
-                            activeOpacity={0.7}
-                        >
-                            <Card style={styles.businessCard}>
-                                <View style={styles.businessHeader}>
-                                    <View style={styles.businessNameRow}>
-                                        <Text style={styles.businessName}>{business.name}</Text>
-                                        <RatingBadge rating={business.rating_score ?? null} size="small" />
-                                    </View>
-                                </View>
-
-                                {business.address && (
-                                    <View style={styles.businessInfo}>
-                                        <Ionicons name="location-outline" size={16} color={colors.text.secondary} />
-                                        <Text style={styles.businessAddress}>{business.address}</Text>
-                                    </View>
-                                )}
-
-                                {business.phones && business.phones.length > 0 && (
-                                    <View style={styles.businessInfo}>
-                                        <Ionicons name="call-outline" size={16} color={colors.text.secondary} />
-                                        <Text style={styles.businessPhone}>
-                                            {formatPhone(business.phones[0])}
-                                        </Text>
-                                    </View>
-                                )}
-
-                                {business.categories && business.categories.length > 0 && (
-                                    <View style={styles.businessCategories}>
-                                        {business.categories.map((cat) => (
-                                            <View key={cat} style={styles.businessCategoryTag}>
-                                                <Text style={styles.businessCategoryText}>{cat}</Text>
-                                            </View>
-                                        ))}
-                                    </View>
-                                )}
-
-                                <View style={styles.businessFooter}>
-                                    <LinearGradient
-                                        colors={[colors.primary.from, colors.primary.to]}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 0 }}
-                                        style={styles.bookButton}
-                                    >
-                                        <Text style={styles.bookButtonText}>Записаться</Text>
-                                        <Ionicons name="arrow-forward" size={16} color="#fff" />
-                                    </LinearGradient>
-                                </View>
-                            </Card>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            ) : (
-                <EmptyState
-                    icon="search"
-                    title={search || selectedCategory ? 'Ничего не найдено' : 'Нет доступных бизнесов'}
-                    message={search || selectedCategory ? 'Попробуйте другой запрос' : 'Бизнесы появятся здесь после регистрации'}
+                <HomeOfflineBannerSection
+                    styles={styles}
+                    visible={showOfflineBanner}
                 />
-            )}
+
+                <HomeUpcomingBookingsSection
+                    user={user}
+                    bookings={upcomingBookings}
+                    styles={styles}
+                    onOpenAll={handleOpenAllBookings}
+                    onOpenBooking={handleOpenBookingDetails}
+                />
+
+                <HomeSearchSection
+                    styles={styles}
+                    search={search}
+                    onChangeSearch={setSearch}
+                    onClear={handleClearSearch}
+                />
+
+                <HomeRecentPlacesSection
+                    user={user}
+                    places={recentPlaces}
+                    styles={styles}
+                    onOpenPlace={handleBusinessPress}
+                />
+
+                <HomeCategoriesSection
+                    styles={styles}
+                    categories={availableCategories}
+                    selectedCategory={selectedCategory}
+                    onSelectCategory={handleCategoryPress}
+                />
+
+                <HomeBusinessListSection
+                    styles={styles}
+                    isLoading={isLoading}
+                    refreshing={refreshing}
+                    businesses={businesses}
+                    search={search}
+                    selectedCategory={selectedCategory}
+                    onOpenBusiness={handleBusinessPress}
+                />
             </ScrollView>
         </LinearGradient>
     );
@@ -780,3 +453,5 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 });
+
+

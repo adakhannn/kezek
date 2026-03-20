@@ -26,7 +26,7 @@ type Booking = {
         lon: number | null;
         address: string | null
     } | null;
-    businesses?: { id: string; name: string; slug: string }[] | { id: string; name: string; slug: string } | null;
+    businesses?: { id: string; name: string; slug: string; tz?: string | null }[] | { id: string; name: string; slug: string; tz?: string | null } | null;
     reviews?: { id: string; rating: number; comment: string | null }[] | null;
 };
 
@@ -156,6 +156,7 @@ export default function ClientCabinet({
                                         staff={staff ? { id: staff.id, full_name: staff.full_name } : null}
                                         branch={branch ? { id: branch.id, name: branch.name, lat: branch.lat, lon: branch.lon, address: branch.address } : null}
                                         business={business ? { id: business.id, name: business.name, slug: business.slug } : null}
+                                        businessTz={business?.tz ?? null}
                                         serviceId={b.service_id ?? service?.id}
                                         staffId={b.staff_id ?? staff?.id}
                                         branchId={b.branch_id ?? branch?.id}
@@ -203,6 +204,7 @@ export default function ClientCabinet({
                                         staff={staff ? { id: staff.id, full_name: staff.full_name } : null}
                                         branch={branch ? { id: branch.id, name: branch.name, lat: branch.lat, lon: branch.lon, address: branch.address } : null}
                                         business={business ? { id: business.id, name: business.name, slug: business.slug } : null}
+                                        businessTz={business?.tz ?? null}
                                         serviceId={b.service_id ?? service?.id}
                                         staffId={b.staff_id ?? staff?.id}
                                         branchId={b.branch_id ?? branch?.id}

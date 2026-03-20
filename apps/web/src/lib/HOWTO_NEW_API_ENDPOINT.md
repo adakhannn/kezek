@@ -16,7 +16,8 @@
 
 3. **Доменная валидация** (по необходимости)  
    - для сложных кейсов используем функции из доменных модулей (`@core-domain/booking`, `@core-domain/schedule`);
-   - сюда попадают уже нормализованные данные после Zod.
+   - сюда попадают уже нормализованные данные после Zod;
+   - правило границы: Zod валидирует форму payload, domain layer валидирует смысл и инварианты.
 
 4. **Use‑case**  
    - собираем зависимости доменного use‑case: репозитории (`@core-domain/ports` + адаптеры в `lib/repositories.ts`), команды (RPC/SQL) и нотификации;
@@ -50,24 +51,18 @@ export async function POST(req: Request) {
           return validationResult.response;
         }
 
-        // 3) Доменная валидация (booking)
-        const domainValidation = validateCreateBookingParams(validationResult.data);
-        if (!domainValidation.valid || !domainValidation.data) {
-          return createErrorResponse('validation', domainValidation.error ?? 'Invalid params', undefined, 400);
-        }
-
-        // 4) Use-case deps
+        // 3) Use-case deps
         const branchRepository = new SupabaseBranchRepository(supabase);
         const commands: BookingCommandsPort = { /* реализация RPC */ };
         const notifications: BookingNotificationPort = { /* вызов /api/notify или локальной функции */ };
 
-        // 5) Вызов use-case
+        // 4) Вызов use-case
         const { bookingId } = await createBookingUseCase(
           { branchRepository, commands, notifications },
-          domainValidation.data,
+          validationResult.data,
         );
 
-        // 6) HTTP-ответ
+        // 5) HTTP-ответ
         return createSuccessResponse({ booking_id: bookingId, confirmed: true });
       }),
   );
@@ -77,7 +72,7 @@ export async function POST(req: Request) {
 ## 3. Выбор места для логики
 
 - **Валидация формата** (`string`, `uuid`, `date-time`) → Zod‑схемы в `lib/validation`.
-- **Бизнес‑инварианты** (обязательность полей, комбинации статусов, промо и т.п.) → доменные модули в `@core-domain/*`.
+- **Бизнес‑инварианты** (допустимые комбинации, статусная семантика, предметные ограничения) → доменные модули в `@core-domain/*`.
 - **Работа с БД** (Supabase таблицы/RPC) → адаптеры в `lib/repositories.ts` или локальные "команды" (реализация портов).  
   Доменные use‑case видят только интерфейсы из `@core-domain/ports`.
 

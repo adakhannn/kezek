@@ -1,6 +1,7 @@
 import { BizAccessError } from './authDiagnostics';
 import { logWarn } from './log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from './supabaseHelpers';
+import { getBusinessTimezone } from './time';
 
 /**
  * Резолвит контекст сотрудника и при необходимости синхронизирует роль staff.
@@ -64,6 +65,19 @@ export async function resolveStaffContext() {
         }
     }
 
-    return { supabase, userId, staffId: staff.id, bizId, branchId: staff.branch_id };
+    const { data: business } = await serviceClient
+        .from('businesses')
+        .select('tz')
+        .eq('id', bizId)
+        .maybeSingle<{ tz: string | null }>();
+
+    return {
+        supabase,
+        userId,
+        staffId: staff.id,
+        bizId,
+        branchId: staff.branch_id,
+        businessTz: getBusinessTimezone(business?.tz),
+    };
 }
 

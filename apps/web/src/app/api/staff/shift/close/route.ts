@@ -10,7 +10,7 @@ import { measurePerformance } from '@/lib/performance';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
 import { closeStaffShiftUseCase } from '@/lib/staffShift/closeUseCase';
 import { getServiceClient } from '@/lib/supabaseService';
-import { TZ, dateAtTz } from '@/lib/time';
+import { dateAtTz } from '@/lib/time';
 import { validateRequest } from '@/lib/validation/apiValidation';
 import { closeShiftSchema } from '@/lib/validation/schemas';
 
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
             try {
                 return await withErrorHandler('StaffShiftClose', async () => {
                 const context = await getStaffContext();
-                const { supabase, staffId: ctxStaffId, bizId: ctxBizId } = context;
+                const { supabase, staffId: ctxStaffId, bizId: ctxBizId, businessTz } = context;
                 staffId = ctxStaffId;
                 bizId = ctxBizId;
                 
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
         }
 
         const now = new Date();
-        const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const ymd = formatInTimeZone(now, businessTz, 'yyyy-MM-dd');
 
         const { data: existing, error: loadError } = await supabase
             .from('staff_shifts')
@@ -117,12 +117,12 @@ export async function POST(req: Request) {
         }
         // Время закрытия - полночь следующего дня в правильном часовом поясе TZ
         // Правильно вычисляем следующую дату в часовом поясе TZ
-        const todayInTz = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const todayInTz = formatInTimeZone(now, businessTz, 'yyyy-MM-dd');
         const todayDate = new Date(todayInTz + 'T12:00:00'); // Создаем дату в локальном времени для манипуляций
         todayDate.setDate(todayDate.getDate() + 1);
-        const nextDayYmd = formatInTimeZone(todayDate, TZ, 'yyyy-MM-dd');
+        const nextDayYmd = formatInTimeZone(todayDate, businessTz, 'yyyy-MM-dd');
         // Создаем полночь следующего дня в часовом поясе TZ
-        const midnightNextDay = dateAtTz(nextDayYmd, '00:00');
+        const midnightNextDay = dateAtTz(nextDayYmd, '00:00', businessTz);
         const closedAt = midnightNextDay.toISOString();
 
         const decision = closeStaffShiftUseCase({

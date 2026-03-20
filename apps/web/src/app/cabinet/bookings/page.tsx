@@ -7,7 +7,7 @@ import ClientCabinet from '../ClientCabinet';
 
 import BookingsPageClient from './BookingsPageClient';
 
-import { TZ } from '@/lib/time';
+import { getBusinessTimezone } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -30,9 +30,6 @@ export default async function BookingsPage() {
         return <BookingsPageClient />;
     }
 
-    // Текущее время в нужной TZ как ISO (с оффсетом)
-    const nowISO = formatInTimeZone(new Date(), TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
-
     // Берём только свои брони (client_id = текущий пользователь)
     // Исключаем отменённые из предстоящих
     // Предстоящие брони - записи, которые еще не закончились (end_at >= now)
@@ -44,12 +41,11 @@ export default async function BookingsPage() {
       services:services!bookings_service_id_fkey ( id, name_ru, name_ky, name_en, duration_min ),
       staff:staff!bookings_staff_id_fkey ( id, full_name ),
       branches:branches!bookings_branch_id_fkey ( id, name, lat, lon, address ),
-      businesses:businesses!bookings_biz_id_fkey ( id, name, slug ),
+      businesses:businesses!bookings_biz_id_fkey ( id, name, slug, tz ),
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)
         .neq('status', 'cancelled')
-        .gte('end_at', nowISO)
         .order('start_at', { ascending: true });
 
     // Прошедшие брони - записи, которые уже закончились (end_at < now)
@@ -61,18 +57,44 @@ export default async function BookingsPage() {
       services:services!bookings_service_id_fkey ( id, name_ru, name_ky, name_en, duration_min ),
       staff:staff!bookings_staff_id_fkey ( id, full_name ),
       branches:branches!bookings_branch_id_fkey ( id, name, lat, lon, address ),
-      businesses:businesses!bookings_biz_id_fkey ( id, name, slug ),
+      businesses:businesses!bookings_biz_id_fkey ( id, name, slug, tz ),
       reviews:reviews ( id, rating, comment )
     `)
         .eq('client_id', userId)
-        .lt('end_at', nowISO)
         .order('start_at', { ascending: false });
+
+    const now = new Date();
+    const allBookings = [...(upcoming ?? []), ...(past ?? [])] as Array<{
+        id: string;
+        end_at: string;
+        businesses?: { tz?: string | null }[] | { tz?: string | null } | null;
+    }>;
+
+    const getBusinessTz = (booking: { businesses?: { tz?: string | null }[] | { tz?: string | null } | null }) => {
+        const business = Array.isArray(booking.businesses) ? booking.businesses[0] : booking.businesses;
+        return getBusinessTimezone(business?.tz ?? null);
+    };
+
+    const isUpcomingBooking = (booking: { end_at: string; businesses?: { tz?: string | null }[] | { tz?: string | null } | null }) => {
+        const timezone = getBusinessTz(booking);
+        const nowLabel = formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+        const endLabel = formatInTimeZone(new Date(booking.end_at), timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+        return endLabel >= nowLabel;
+    };
+
+    const upcomingFiltered = allBookings
+        .filter(isUpcomingBooking)
+        .sort((a, b) => new Date(a.end_at).getTime() - new Date(b.end_at).getTime());
+
+    const pastFiltered = allBookings
+        .filter((booking) => !isUpcomingBooking(booking))
+        .sort((a, b) => new Date(b.end_at).getTime() - new Date(a.end_at).getTime());
 
     return (
         <ClientCabinet
             userId={userId}
-            upcoming={upcoming ?? []}
-            past={past ?? []}
+            upcoming={upcomingFiltered}
+            past={pastFiltered}
         />
     );
 }

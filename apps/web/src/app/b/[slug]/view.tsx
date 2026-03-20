@@ -1,44 +1,41 @@
 // apps/web/src/app/b/[slug]/view.tsx
 'use client';
 
-import { resolveScheduleContext } from '@core-domain/schedule';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { enGB } from 'date-fns/locale/en-GB';
 import { ru } from 'date-fns/locale/ru';
-import { formatInTimeZone } from 'date-fns-tz';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { AuthChoiceModal } from './components/AuthChoiceModal';
 import { BookingHeader } from './components/BookingHeader';
+import { BookingStepContent } from './components/BookingStepContent';
+import { BookingStepNavigation } from './components/BookingStepNavigation';
 import { BookingSteps } from './components/BookingSteps';
 import { BookingSummary } from './components/BookingSummary';
-import { BranchSelector } from './components/BranchSelector';
 import { GuestBookingModal } from './components/GuestBookingModal';
 import { PromotionsList } from './components/PromotionsList';
-import { ServiceSelector } from './components/ServiceSelector';
-import { SlotPicker } from './components/SlotPicker';
-import { StaffSelector } from './components/StaffSelector';
+import { useBookingAvailability } from './hooks/useBookingAvailability';
+import { useBookingAnalytics } from './hooks/useBookingAnalytics';
+import { useBookingAuthState } from './hooks/useBookingAuthState';
 import { useBookingCreation } from './hooks/useBookingCreation';
-import { useBranchPromotions, useClientBookings, useServiceStaff } from './hooks/useBookingData';
+import { useBranchPromotions, useClientBookings } from './hooks/useBookingData';
+import { useBookingSelectionState } from './hooks/useBookingSelectionState';
 import { useBookingSteps } from './hooks/useBookingSteps';
+import { useBookingVisibleSlots } from './hooks/useBookingVisibleSlots';
 import { useGuestBooking } from './hooks/useGuestBooking';
-import { useServicesFilter } from './hooks/useServicesFilter';
 import { useSlotsLoader } from './hooks/useSlotsLoader';
+import { useSlotsRefreshKey } from './hooks/useSlotsRefreshKey';
 import { useTemporaryTransfers } from './hooks/useTemporaryTransfers';
-import type { Data, Service, ServiceStaffRow, Slot, Staff } from './types';
+import type { Data, Service, Staff } from './types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import DatePickerPopover from '@/components/pickers/DatePickerPopover';
-import { useBookingFlowStart, trackBookingFlowStep } from '@/lib/analyticsTrackEvent';
-import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
-import { logDebug, logWarn, logError } from '@/lib/log';
-import { supabase } from '@/lib/supabaseClient';
-import { todayTz, dateAtTz, getBusinessTimezone } from '@/lib/time';
+import { logDebug } from '@/lib/log';
+import { dateAtTz } from '@/lib/time';
 import { transliterate } from '@/lib/transliterate';
 
-// Используем безопасное логирование из @/lib/log
-// debugLog и debugWarn удалены - используйте logDebug и logWarn из @/lib/log
+// Р ВРЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµР С Р В±Р ВµР В·Р С•Р С—Р В°РЎРѓР Р…Р С•Р Вµ Р В»Р С•Р С–Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘Р Вµ Р С‘Р В· @/lib/log
+// debugLog Р С‘ debugWarn РЎС“Р Т‘Р В°Р В»Р ВµР Р…РЎвЂ№ - Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р в„–РЎвЂљР Вµ logDebug Р С‘ logWarn Р С‘Р В· @/lib/log
 
 
 export default function BookingForm({ data }: { data: Data }) {
@@ -48,9 +45,9 @@ export default function BookingForm({ data }: { data: Data }) {
     const router = useRouter();
     const pathname = usePathname();
 
-    // Функции для форматирования названий (используем нужный язык, если доступен)
+    // Р В¤РЎС“Р Р…Р С”РЎвЂ Р С‘Р С‘ Р Т‘Р В»РЎРЏ РЎвЂћР С•РЎР‚Р СР В°РЎвЂљР С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ Р Р…Р В°Р В·Р Р†Р В°Р Р…Р С‘Р в„– (Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµР С Р Р…РЎС“Р В¶Р Р…РЎвЂ№Р в„– РЎРЏР В·РЎвЂ№Р С”, Р ВµРЎРѓР В»Р С‘ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р…)
     const formatBranchName = (name: string): string => {
-        // Для филиалов используется транслитерация, так как нет отдельных полей для языков
+        // Р вЂќР В»РЎРЏ РЎвЂћР С‘Р В»Р С‘Р В°Р В»Р С•Р Р† Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµРЎвЂљРЎРѓРЎРЏ РЎвЂљРЎР‚Р В°Р Р…РЎРѓР В»Р С‘РЎвЂљР ВµРЎР‚Р В°РЎвЂ Р С‘РЎРЏ, РЎвЂљР В°Р С” Р С”Р В°Р С” Р Р…Р ВµРЎвЂљ Р С•РЎвЂљР Т‘Р ВµР В»РЎРЉР Р…РЎвЂ№РЎвЂ¦ Р С—Р С•Р В»Р ВµР в„– Р Т‘Р В»РЎРЏ РЎРЏР В·РЎвЂ№Р С”Р С•Р Р†
         if (locale === 'en') {
             return transliterate(name);
         }
@@ -58,284 +55,122 @@ export default function BookingForm({ data }: { data: Data }) {
     };
     
     const _formatServiceName = (service: Service): string => {
-        // Используем поле для выбранного языка, если оно заполнено
+        // Р ВРЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµР С Р С—Р С•Р В»Р Вµ Р Т‘Р В»РЎРЏ Р Р†РЎвЂ№Р В±РЎР‚Р В°Р Р…Р Р…Р С•Р С–Р С• РЎРЏР В·РЎвЂ№Р С”Р В°, Р ВµРЎРѓР В»Р С‘ Р С•Р Р…Р С• Р В·Р В°Р С—Р С•Р В»Р Р…Р ВµР Р…Р С•
         if (locale === 'en' && service.name_en) {
             return service.name_en;
         }
         if (locale === 'ky' && service.name_ky) {
             return service.name_ky;
         }
-        // Если поля для выбранного языка нет, используем транслитерацию для английского
+        // Р вЂўРЎРѓР В»Р С‘ Р С—Р С•Р В»РЎРЏ Р Т‘Р В»РЎРЏ Р Р†РЎвЂ№Р В±РЎР‚Р В°Р Р…Р Р…Р С•Р С–Р С• РЎРЏР В·РЎвЂ№Р С”Р В° Р Р…Р ВµРЎвЂљ, Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµР С РЎвЂљРЎР‚Р В°Р Р…РЎРѓР В»Р С‘РЎвЂљР ВµРЎР‚Р В°РЎвЂ Р С‘РЎР‹ Р Т‘Р В»РЎРЏ Р В°Р Р…Р С–Р В»Р С‘Р в„–РЎРѓР С”Р С•Р С–Р С•
         if (locale === 'en') {
             return transliterate(service.name_ru);
         }
-        // Для русского и кыргызского (если name_ky нет) используем name_ru
+        // Р вЂќР В»РЎРЏ РЎР‚РЎС“РЎРѓРЎРѓР С”Р С•Р С–Р С• Р С‘ Р С”РЎвЂ№РЎР‚Р С–РЎвЂ№Р В·РЎРѓР С”Р С•Р С–Р С• (Р ВµРЎРѓР В»Р С‘ name_ky Р Р…Р ВµРЎвЂљ) Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµР С name_ru
         return service.name_ru;
     };
     
     const _formatStaffName = (name: string): string => {
-        // Транслитерируем имя мастера для английского языка
+        // Р СћРЎР‚Р В°Р Р…РЎРѓР В»Р С‘РЎвЂљР ВµРЎР‚Р С‘РЎР‚РЎС“Р ВµР С Р С‘Р СРЎРЏ Р СР В°РЎРѓРЎвЂљР ВµРЎР‚Р В° Р Т‘Р В»РЎРЏ Р В°Р Р…Р С–Р В»Р С‘Р в„–РЎРѓР С”Р С•Р С–Р С• РЎРЏР В·РЎвЂ№Р С”Р В°
         if (locale === 'en') {
             return transliterate(name);
         }
         return name;
     };
 
-    // Получаем локаль для форматирования дат
+    // Р СџР С•Р В»РЎС“РЎвЂЎР В°Р ВµР С Р В»Р С•Р С”Р В°Р В»РЎРЉ Р Т‘Р В»РЎРЏ РЎвЂћР С•РЎР‚Р СР В°РЎвЂљР С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ Р Т‘Р В°РЎвЂљ
     const dateLocale = useMemo(() => {
         if (locale === 'en') {
             return enGB;
         }
-        // Для русского и кыргызского используем русскую локаль
-        // (в date-fns нет встроенной киргизской локали)
+        // Р вЂќР В»РЎРЏ РЎР‚РЎС“РЎРѓРЎРѓР С”Р С•Р С–Р С• Р С‘ Р С”РЎвЂ№РЎР‚Р С–РЎвЂ№Р В·РЎРѓР С”Р С•Р С–Р С• Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµР С РЎР‚РЎС“РЎРѓРЎРѓР С”РЎС“РЎР‹ Р В»Р С•Р С”Р В°Р В»РЎРЉ
+        // (Р Р† date-fns Р Р…Р ВµРЎвЂљ Р Р†РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р…Р Р…Р С•Р в„– Р С”Р С‘РЎР‚Р С–Р С‘Р В·РЎРѓР С”Р С•Р в„– Р В»Р С•Р С”Р В°Р В»Р С‘)
         return ru;
     }, [locale]);
 
-    /* ---------- analytics: один раз за сессию — старт потока бронирования ---------- */
-    useBookingFlowStart(biz.id);
+    /* ---------- analytics: Р С•Р Т‘Р С‘Р Р… РЎР‚Р В°Р В· Р В·Р В° РЎРѓР ВµРЎРѓРЎРѓР С‘РЎР‹ РІР‚вЂќ РЎРѓРЎвЂљР В°РЎР‚РЎвЂљ Р С—Р С•РЎвЂљР С•Р С”Р В° Р В±РЎР‚Р С•Р Р…Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ ---------- */
+    const bookingAnalytics = useBookingAnalytics({ bizId: biz.id });
 
     /* ---------- auth ---------- */
-    const [isAuthed, setIsAuthed] = useState<boolean>(false);
-    
-    
-    useEffect(() => {
-        let ignore = false;
-        (async () => {
-            const { data: auth } = await supabase.auth.getUser();
-            if (!ignore) setIsAuthed(!!auth.user);
-        })();
-        const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-            setIsAuthed(!!s?.user);
-        });
-        return () => {
-            ignore = true;
-            sub.subscription.unsubscribe();
-        };
-    }, []);
+    const { isAuthed } = useBookingAuthState();
 
-    /* ---------- выбор филиала/услуги/мастера ---------- */
-    // Читаем параметр branch из URL при первой загрузке
-    const branchFromUrl = searchParams.get('branch');
-    const [branchId, setBranchId] = useState<string>('');
-    const [initialBranchSet, setInitialBranchSet] = useState(false);
+    /* ---------- Р Р†РЎвЂ№Р В±Р С•РЎР‚ РЎвЂћР С‘Р В»Р С‘Р В°Р В»Р В°/РЎС“РЎРѓР В»РЎС“Р С–Р С‘/Р СР В°РЎРѓРЎвЂљР ВµРЎР‚Р В° ---------- */
+    // РЎРѕСЃС‚РѕСЏРЅРёРµ РІС‹Р±РѕСЂР° Рё СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ СЃ URL/localStorage РґРµСЂР¶РёРј РІ РѕС‚РґРµР»СЊРЅРѕРј orchestration-hook.
+    const {
+        branchId,
+        setBranchId,
+        serviceId,
+        setServiceId,
+        staffId,
+        setStaffId,
+        day,
+        setDay,
+        dayStr,
+        todayStr,
+        maxStr,
+        businessTz,
+        servicesByBranch,
+        staffByBranch,
+        persistSelectionForAuth,
+        syncSelectionToUrl,
+    } = useBookingSelectionState({
+        bizId: biz.id,
+        bizTz: biz.tz,
+        branches,
+        services,
+        staff,
+        pathname,
+        router,
+        searchParams,
+    });
 
-    // Устанавливаем филиал из URL при первой загрузке
-    useEffect(() => {
-        if (!initialBranchSet && branchFromUrl) {
-            // Проверяем, что филиал существует в списке
-            const branchExists = branches.some((b) => b.id === branchFromUrl);
-            if (branchExists) {
-                setBranchId(branchFromUrl);
-                setInitialBranchSet(true);
-            }
-        } else if (!initialBranchSet && !branchFromUrl) {
-            setInitialBranchSet(true);
-        }
-    }, [branchFromUrl, branches, initialBranchSet]);
 
-    // Отслеживание просмотра бизнеса
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            trackFunnelEvent({
-                event_type: 'business_view',
-                source: 'public',
-                biz_id: biz.id,
-                session_id: getSessionId(),
-                user_agent: navigator.userAgent,
-                referrer: document.referrer || null,
-            });
-        }
-    }, [biz.id]);
-
-    const servicesByBranch = useMemo(
-        () => services.filter((s) => s.branch_id === branchId),
-        [services, branchId]
-    );
-    const staffByBranch = useMemo(
-        () => staff.filter((m) => m.branch_id === branchId),
-        [staff, branchId]
-    );
-
-    const [serviceId, setServiceId] = useState<string>('');
-    const [staffId, setStaffId] = useState<string>('');
-    const [restoredFromStorage, setRestoredFromStorage] = useState(false);
-    const urlRestoredRef = useRef(false);
-    const skipBranchClearOnceRef = useRef(false);
-    const skipDayClearOnceRef = useRef(false);
-    
-    // Загружаем активные акции филиала с кэшированием через React Query
+    // Р С›РЎвЂљРЎРѓР В»Р ВµР В¶Р С‘Р Р†Р В°Р Р…Р С‘Р Вµ Р С—РЎР‚Р С•РЎРѓР СР С•РЎвЂљРЎР‚Р В° Р В±Р С‘Р В·Р Р…Р ВµРЎРѓР В°
+    // Р вЂ”Р В°Р С–РЎР‚РЎС“Р В¶Р В°Р ВµР С Р В°Р С”РЎвЂљР С‘Р Р†Р Р…РЎвЂ№Р Вµ Р В°Р С”РЎвЂ Р С‘Р С‘ РЎвЂћР С‘Р В»Р С‘Р В°Р В»Р В° РЎРѓ Р С”РЎРЊРЎв‚¬Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘Р ВµР С РЎвЂЎР ВµРЎР‚Р ВµР В· React Query
     const { data: branchPromotions = [], isLoading: _promotionsLoading } = useBranchPromotions(branchId || null);
 
-    // при смене филиала — сбрасываем выборы мастеров и услуг (пропускаем один раз после восстановления из URL)
-    useEffect(() => {
-        if (restoredFromStorage) return;
-        if (skipBranchClearOnceRef.current) {
-            skipBranchClearOnceRef.current = false;
-            return;
-        }
-        setStaffId('');
-        setServiceId('');
-    }, [branchId, restoredFromStorage]);
 
-    // Восстановление дня, мастера и услуги из URL при загрузке (прогресс в URL — при обновлении страницы не теряем выбор)
-    useEffect(() => {
-        if (urlRestoredRef.current) return;
-        urlRestoredRef.current = true;
-        const dayParam = searchParams.get('day');
-        if (dayParam) {
-            try {
-                const tz = getBusinessTimezone(biz.tz);
-                setDay(dateAtTz(dayParam, '00:00', tz));
-            } catch {
-                // ignore invalid date
-            }
-        }
-        const staffParam = searchParams.get('staff');
-        if (staffParam) setStaffId(staffParam);
-        const serviceParam = searchParams.get('service');
-        if (serviceParam) setServiceId(serviceParam);
-        skipBranchClearOnceRef.current = true;
-        skipDayClearOnceRef.current = true;
-    }, [searchParams, biz.tz]);
-
-    /* ---------- сервисные навыки мастеров (service_staff) ---------- */
-    // Загружаем связи услуга-мастер с кэшированием через React Query
-    const staffIds = useMemo(() => staff.map((s) => s.id), [staff]);
-    const { data: serviceStaffData, isLoading: serviceStaffLoading } = useServiceStaff(biz.id, staffIds);
-    const serviceStaff: ServiceStaffRow[] | null = serviceStaffLoading ? null : (serviceStaffData || null);
-
-    // мапка service_id -> Set(staff_id)
-    const serviceToStaffMap = useMemo(() => {
-        if (!serviceStaff || serviceStaff.length === 0) return null;
-        const map = new Map<string, Set<string>>();
-        for (const row of serviceStaff) {
-            if (!row.is_active) continue;
-            if (!map.has(row.service_id)) map.set(row.service_id, new Set());
-            map.get(row.service_id)!.add(row.staff_id);
-        }
-        return map;
-    }, [serviceStaff]);
-
-    /* ---------- дата и слоты через RPC get_free_slots_service_day_v2 ---------- */
-    const businessTz = getBusinessTimezone(biz.tz);
-    const [day, setDay] = useState<Date>(todayTz(businessTz));
-    const dayStr = formatInTimeZone(day, businessTz, 'yyyy-MM-dd');
-    const todayStr = formatInTimeZone(todayTz(businessTz), businessTz, 'yyyy-MM-dd');
-    const maxStr = formatInTimeZone(addDays(todayTz(businessTz), 60), businessTz, 'yyyy-MM-dd');
-
-    /* ---------- временные переводы сотрудников (staff_schedule_rules) ---------- */
     const { temporaryTransfers } = useTemporaryTransfers({
         branchId,
         bizId: biz.id,
+        businessTz,
         staff,
     });
 
-    /* ---------- фильтрация услуг (те же правила, что и в QuickDesk: core-domain schedule) ---------- */
-    const staffForSchedule = useMemo(
-        () => staff.map((s) => ({ id: s.id, branch_id: s.branch_id })),
-        [staff],
-    );
-    const servicesFiltered = useServicesFilter({
-        services,
-        staffId,
+    const {
+        serviceStaff,
+        staffForSchedule,
+        servicesFiltered,
+        staffFiltered,
+        service,
+    } = useBookingAvailability({
+        bizId: biz.id,
         branchId,
         dayStr,
-        staff: staffForSchedule,
-        serviceToStaffMap,
+        serviceId,
+        staffId,
+        staff,
+        services,
+        servicesByBranch,
+        staffByBranch,
         temporaryTransfers,
+        onInvalidService: () => {
+            setServiceId('');
+        },
     });
 
-    // при смене мастера или даты — сбрасываем выбор услуги, если текущая не подходит
-    useEffect(() => {
-        if (!staffId || !dayStr) {
-            if (!staffId) logDebug('Booking', 'Staff cleared, clearing service');
-            if (!dayStr) logDebug('Booking', 'Day cleared, clearing service');
-            setServiceId('');
-            return;
-        }
-        // Если выбранная услуга не подходит под нового мастера или дату — сбрасываем выбор
-        if (serviceId) {
-            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            logDebug('Booking', 'Checking service validity after staff/day change', { 
-                serviceId, 
-                staffId, 
-                dayStr,
-                isServiceValid, 
-                servicesFilteredCount: servicesFiltered.length, 
-                servicesFiltered: servicesFiltered.map(s => ({ id: s.id, name: s.name_ru })) 
-            });
-            if (!isServiceValid) {
-                logWarn('Booking', 'Service is not valid for current staff/day, clearing serviceId');
-                setServiceId('');
-            }
-        }
-    }, [staffId, dayStr, servicesFiltered, serviceId]);
 
+    const { slotsRefreshKey, bumpSlotsRefreshKey } = useSlotsRefreshKey({ serviceId, staffId, dayStr }); // Р С™Р В»РЎР‹РЎвЂЎ Р Т‘Р В»РЎРЏ Р С—РЎР‚Р С‘Р Р…РЎС“Р Т‘Р С‘РЎвЂљР ВµР В»РЎРЉР Р…Р С•Р С–Р С• Р С•Р В±Р Р…Р С•Р Р†Р В»Р ВµР Р…Р С‘РЎРЏ
 
-    // Список мастеров: по филиалу + временные переводы В этот филиал на выбранную дату
-    // Исключаем мастеров, которые временно переведены В ДРУГОЙ филиал на эту дату
-    const staffFiltered = useMemo<Staff[]>(() => {
-        if (!branchId) return [];
-        
-        // Основные сотрудники филиала
-        const mainStaff = staffByBranch;
-        const mainStaffIds = new Set(mainStaff.map(s => s.id));
-        
-        // Если дата выбрана, проверяем временные переводы
-        if (dayStr) {
-            // Временно переведенные В выбранный филиал на эту дату
-            const transfersToThisBranch = temporaryTransfers.filter((t: { staff_id: string; branch_id: string; date: string }) => 
-                t.date === dayStr && t.branch_id === branchId
-            );
-            const tempStaffIdsToThisBranch = new Set(transfersToThisBranch.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
-            
-            // Мастера, временно переведенные В ДРУГОЙ филиал на эту дату (их нужно исключить из основного филиала)
-            const transfersToOtherBranch = temporaryTransfers.filter((t: { staff_id: string; branch_id: string; date: string }) => 
-                t.date === dayStr && t.branch_id !== branchId
-            );
-            const tempStaffIdsToOtherBranch = new Set(transfersToOtherBranch.map((t: { staff_id: string; branch_id: string; date: string }) => t.staff_id));
-            
-            // Объединяем основных сотрудников и временно переведенных В этот филиал
-            const allStaffIds = new Set([...mainStaffIds, ...tempStaffIdsToThisBranch]);
-            
-            // Исключаем мастеров, которые временно переведены В ДРУГОЙ филиал
-            return staff.filter(s => {
-                const isIncluded = allStaffIds.has(s.id);
-                const isTransferredToOther = tempStaffIdsToOtherBranch.has(s.id);
-                
-                // Показываем мастера, если он включен (основной в филиале или переведен в этот филиал)
-                // И не переведен в другой филиал
-                return isIncluded && !isTransferredToOther;
-            });
-        }
-        
-        // Дата не выбрана - показываем только основных сотрудников филиала
-        // (не показываем временно переведенных, так как не знаем дату)
-        return mainStaff;
-    }, [staffByBranch, staff, branchId, temporaryTransfers, dayStr]);
-
-    // при смене даты — сбрасываем выборы мастеров и услуг (пропускаем один раз после восстановления из URL)
-    useEffect(() => {
-        if (restoredFromStorage) return;
-        if (skipDayClearOnceRef.current) {
-            skipDayClearOnceRef.current = false;
-            return;
-        }
-        setStaffId('');
-        setServiceId('');
-    }, [dayStr, restoredFromStorage]);
-
-    const [slotsRefreshKey, setSlotsRefreshKey] = useState(0); // Ключ для принудительного обновления
-
-    // Брони клиента в этом бизнесе на выбранный день (для мягкого уведомления)
-    // Используем React Query для кэширования
+    // Р вЂРЎР‚Р С•Р Р…Р С‘ Р С”Р В»Р С‘Р ВµР Р…РЎвЂљР В° Р Р† РЎРЊРЎвЂљР С•Р С Р В±Р С‘Р В·Р Р…Р ВµРЎРѓР Вµ Р Р…Р В° Р Р†РЎвЂ№Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№Р в„– Р Т‘Р ВµР Р…РЎРЉ (Р Т‘Р В»РЎРЏ Р СРЎРЏР С–Р С”Р С•Р С–Р С• РЎС“Р Р†Р ВµР Т‘Р С•Р СР В»Р ВµР Р…Р С‘РЎРЏ)
+    // Р ВРЎРѓР С—Р С•Р В»РЎРЉР В·РЎС“Р ВµР С React Query Р Т‘Р В»РЎРЏ Р С”РЎРЊРЎв‚¬Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ
     const { data: clientBookingsCount = null, isLoading: clientBookingsLoading } = useClientBookings(
         biz.id,
         dayStr || null,
         isAuthed
     );
 
-    /* ---------- загрузка слотов ---------- */
+    /* ---------- Р В·Р В°Р С–РЎР‚РЎС“Р В·Р С”Р В° РЎРѓР В»Р С•РЎвЂљР С•Р Р† ---------- */
     const { slots: slotsFromHook, loading: slotsLoading, error: slotsError } = useSlotsLoader({
         serviceId,
         staffId,
@@ -350,208 +185,38 @@ export default function BookingForm({ data }: { data: Data }) {
         slotsRefreshKey,
     });
 
-    // Дополнительная фильтрация слотов по существующим броням
-    // (на случай, если RPC не учитывает все статусы)
-    const [slots, setSlots] = useState<Slot[]>([]);
-    useEffect(() => {
-        if (!slotsFromHook.length) {
-            setSlots([]);
-            return;
-        }
+    // Р вЂќР С•Р С—Р С•Р В»Р Р…Р С‘РЎвЂљР ВµР В»РЎРЉР Р…Р В°РЎРЏ РЎвЂћР С‘Р В»РЎРЉРЎвЂљРЎР‚Р В°РЎвЂ Р С‘РЎРЏ РЎРѓР В»Р С•РЎвЂљР С•Р Р† Р С—Р С• РЎРѓРЎС“РЎвЂ°Р ВµРЎРѓРЎвЂљР Р†РЎС“РЎР‹РЎвЂ°Р С‘Р С Р В±РЎР‚Р С•Р Р…РЎРЏР С
+    // (Р Р…Р В° РЎРѓР В»РЎС“РЎвЂЎР В°Р в„–, Р ВµРЎРѓР В»Р С‘ RPC Р Р…Р Вµ РЎС“РЎвЂЎР С‘РЎвЂљРЎвЂ№Р Р†Р В°Р ВµРЎвЂљ Р Р†РЎРѓР Вµ РЎРѓРЎвЂљР В°РЎвЂљРЎС“РЎРѓРЎвЂ№)
+    const { slots } = useBookingVisibleSlots({
+        slotsFromHook,
+        staffId,
+        branchId,
+        dayStr,
+        temporaryTransfers,
+        staffForSchedule,
+    });
 
-        let ignore = false;
-        (async () => {
-            try {
-                const scheduleContext = resolveScheduleContext({
-                    staffId,
-                    dayStr,
-                    selectedBranchId: branchId,
-                    temporaryTransfers,
-                    staff: staffForSchedule,
-                });
-                const targetBranchId = scheduleContext.targetBranchId;
-
-                // Запрашиваем все брони для этого мастера и филиала на выбранный день
-                const dayStartUTC = new Date(dayStr + 'T00:00:00Z');
-                const dayEndUTC = new Date(dayStr + 'T23:59:59.999Z');
-                const searchStart = new Date(dayStartUTC.getTime() - 12 * 60 * 60 * 1000);
-                const searchEnd = new Date(dayEndUTC.getTime() + 12 * 60 * 60 * 1000);
-
-                // Запрашиваем все брони для этого мастера и филиала на выбранный день
-                // Включаем все статусы кроме cancelled, чтобы точно исключить занятые слоты
-                const { data: existingBookings, error: bookingsError } = await supabase
-                    .from('bookings')
-                    .select('start_at, end_at, status')
-                    .eq('staff_id', staffId)
-                    .eq('branch_id', targetBranchId)
-                    .not('status', 'eq', 'cancelled')  // Исключаем только отмененные
-                    .gte('start_at', searchStart.toISOString())
-                    .lte('end_at', searchEnd.toISOString());
-
-                if (ignore) return;
-
-                if (bookingsError) {
-                    logWarn('Booking', 'Error loading bookings for filtering', bookingsError);
-                    setSlots(slotsFromHook);
-                    return;
-                }
-
-                if (existingBookings && existingBookings.length > 0) {
-                    logDebug('Booking', 'Filtering slots, found existing bookings', { count: existingBookings.length });
-                    const filtered = slotsFromHook.filter((slot) => {
-                        const slotStart = new Date(slot.start_at);
-                        const slotEnd = new Date(slot.end_at);
-
-                        const overlaps = existingBookings.some((booking) => {
-                            const bookingStart = new Date(booking.start_at);
-                            const bookingEnd = new Date(booking.end_at);
-                            // Проверяем пересечение временных интервалов
-                            const hasOverlap = slotStart < bookingEnd && slotEnd > bookingStart;
-                            if (hasOverlap) {
-                                logDebug('Booking', 'Slot overlaps with booking', {
-                                    slot: { start: slotStart.toISOString(), end: slotEnd.toISOString() },
-                                    booking: { start: bookingStart.toISOString(), end: bookingEnd.toISOString(), status: booking.status },
-                                });
-                            }
-                            return hasOverlap;
-                        });
-
-                        return !overlaps;
-                    });
-                    logDebug('Booking', 'Filtered slots', { filtered: filtered.length, total: slotsFromHook.length });
-                    setSlots(filtered);
-                } else {
-                    logDebug('Booking', 'No existing bookings found, showing all slots');
-                    setSlots(slotsFromHook);
-                }
-            } catch (e) {
-                if (!ignore) {
-                    logWarn('Booking', 'Error filtering slots by bookings', e);
-                    setSlots(slotsFromHook);
-                }
-            }
-        })();
-
-        return () => {
-            ignore = true;
-        };
-    }, [slotsFromHook, staffId, branchId, dayStr, temporaryTransfers, staffForSchedule]);
-
-
-    // Обновляем список слотов при возврате на страницу (например, через кнопку "Назад")
-    // Используем useRef для хранения предыдущих значений, чтобы избежать лишних обновлений
-    useEffect(() => {
-        let lastUpdate = 0;
-        const handleVisibilityChange = () => {
-            // Ограничиваем частоту обновлений (не чаще раза в 2 секунды)
-            const now = Date.now();
-            if (now - lastUpdate < 2000) return;
-            
-            if (document.visibilityState === 'visible' && serviceId && staffId && dayStr) {
-                lastUpdate = now;
-                // Обновляем список слотов при возврате на страницу
-                setSlotsRefreshKey((k) => k + 1);
-            }
-        };
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-        };
-    }, [serviceId, staffId, dayStr]);
-
-    /* ---------- создание бронирования ---------- */
-    // Создаем стабильные ссылки на Set'ы ID для валидации восстановленных значений
-    const branchIds = useMemo(() => new Set(branches.map((b) => b.id)), [branches]);
-    const serviceIds = useMemo(() => new Set(services.map((s) => s.id)), [services]);
-    const staffIdSet = useMemo(() => new Set(staff.map((m) => m.id)), [staff]);
-    
-    // Восстановление состояния после авторизации (localStorage)
-    useEffect(() => {
-        if (restoredFromStorage) return;
-        if (typeof window === 'undefined') return;
-        
-        try {
-            const key = `booking_state_${biz.id}`;
-            const raw = window.localStorage.getItem(key);
-            if (!raw) {
-                setRestoredFromStorage(true);
-                return;
-            }
-            const parsed = JSON.parse(raw) as {
-                branchId?: string;
-                serviceId?: string;
-                staffId?: string;
-                day?: string;
-                step?: number;
-            };
-
-            if (parsed.branchId && branchIds.has(parsed.branchId)) {
-                setBranchId(parsed.branchId);
-            }
-            if (parsed.serviceId && serviceIds.has(parsed.serviceId)) {
-                setServiceId(parsed.serviceId);
-            }
-            // Восстанавливаем мастера только если он валиден (будет проверен в useEffect ниже)
-            if (parsed.staffId && staffIdSet.has(parsed.staffId)) {
-                setStaffId(parsed.staffId);
-            }
-            if (parsed.day) {
-                try {
-                    setDay(dateAtTz(parsed.day, '00:00', businessTz));
-                } catch {
-                    // ignore
-                }
-            }
-            // шаг восстанавливаем через useBookingSteps чуть ниже (через payload в localStorage)
-
-            window.localStorage.removeItem(key);
-        } catch (e) {
-            logError('Booking', 'restore booking state failed', e);
-        } finally {
-            setRestoredFromStorage(true);
-        }
-    }, [biz.id, restoredFromStorage, branchIds, serviceIds, staffIds]);
-
-    const service = useMemo(
-        () => {
-            // Ищем услугу сначала в отфильтрованных услугах (для временно переведенного мастера)
-            // Если не найдена, ищем во всех услугах филиала
-            // Если не найдена, ищем во всех услугах
-            const found = servicesFiltered.find((s) => s.id === serviceId) 
-                ?? servicesByBranch.find((s) => s.id === serviceId)
-                ?? services.find((s) => s.id === serviceId);
-            logDebug('Booking', 'Finding service', { 
-                serviceId, 
-                found: found ? found.name_ru : null, 
-                foundInFiltered: !!servicesFiltered.find((s) => s.id === serviceId),
-                foundInBranch: !!servicesByBranch.find((s) => s.id === serviceId),
-                foundInAll: !!services.find((s) => s.id === serviceId)
-            });
-            return found ?? null;
-        },
-        [servicesFiltered, servicesByBranch, services, serviceId]
-    );
-
-    // Используем хуки для создания бронирования
     const guestBooking = useGuestBooking({
         bizId: biz.id,
+        businessTz,
         service,
         staffId,
         branchId,
         t,
         onBookingCreated: () => {
-            // Обновляем кэш слотов после создания бронирования
-            setSlotsRefreshKey((k) => k + 1);
+            // Р С›Р В±Р Р…Р С•Р Р†Р В»РЎРЏР ВµР С Р С”РЎРЊРЎв‚¬ РЎРѓР В»Р С•РЎвЂљР С•Р Р† Р С—Р С•РЎРѓР В»Р Вµ РЎРѓР С•Р В·Р Т‘Р В°Р Р…Р С‘РЎРЏ Р В±РЎР‚Р С•Р Р…Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ
+            bumpSlotsRefreshKey();
         },
     });
 
-    // Состояние для модального окна выбора (авторизация или запись без регистрации)
+    // Р РЋР С•РЎРѓРЎвЂљР С•РЎРЏР Р…Р С‘Р Вµ Р Т‘Р В»РЎРЏ Р СР С•Р Т‘Р В°Р В»РЎРЉР Р…Р С•Р С–Р С• Р С•Р С”Р Р…Р В° Р Р†РЎвЂ№Р В±Р С•РЎР‚Р В° (Р В°Р Р†РЎвЂљР С•РЎР‚Р С‘Р В·Р В°РЎвЂ Р С‘РЎРЏ Р С‘Р В»Р С‘ Р В·Р В°Р С—Р С‘РЎРѓРЎРЉ Р В±Р ВµР В· РЎР‚Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘Р С‘)
     const [authChoiceModalOpen, setAuthChoiceModalOpen] = useState(false);
     const [selectedSlotTime, setSelectedSlotTime] = useState<Date | null>(null);
     const [selectedSlotStaffId, setSelectedSlotStaffId] = useState<string | null>(null);
 
     const { createBooking, loading: bookingLoading } = useBookingCreation({
         bizId: biz.id,
+        businessTz,
         branchId,
         service,
         staffId,
@@ -560,7 +225,7 @@ export default function BookingForm({ data }: { data: Data }) {
         onAuthChoiceRequest: (slotTime, slotStaffId) => {
             setSelectedSlotTime(slotTime);
             setSelectedSlotStaffId(slotStaffId || null);
-            // Сохраняем staff_id из слота для использования в модальном окне
+            // Р РЋР С•РЎвЂ¦РЎР‚Р В°Р Р…РЎРЏР ВµР С staff_id Р С‘Р В· РЎРѓР В»Р С•РЎвЂљР В° Р Т‘Р В»РЎРЏ Р С‘РЎРѓР С—Р С•Р В»РЎРЉР В·Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ Р Р† Р СР С•Р Т‘Р В°Р В»РЎРЉР Р…Р С•Р С Р С•Р С”Р Р…Р Вµ
             if (slotStaffId && staffId === 'any') {
                 setStaffId(slotStaffId);
             }
@@ -570,31 +235,19 @@ export default function BookingForm({ data }: { data: Data }) {
             setStaffId(newStaffId);
         },
         onBookingCreated: () => {
-            // Обновляем кэш слотов после создания бронирования
-            setSlotsRefreshKey((k) => k + 1);
+            // Р С›Р В±Р Р…Р С•Р Р†Р В»РЎРЏР ВµР С Р С”РЎРЊРЎв‚¬ РЎРѓР В»Р С•РЎвЂљР С•Р Р† Р С—Р С•РЎРѓР В»Р Вµ РЎРѓР С•Р В·Р Т‘Р В°Р Р…Р С‘РЎРЏ Р В±РЎР‚Р С•Р Р…Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ
+            bumpSlotsRefreshKey();
         },
     });
 
-    /* ---------- производные значения для отображения ---------- */
+    /* ---------- Р С—РЎР‚Р С•Р С‘Р В·Р Р†Р С•Р Т‘Р Р…РЎвЂ№Р Вµ Р В·Р Р…Р В°РЎвЂЎР ВµР Р…Р С‘РЎРЏ Р Т‘Р В»РЎРЏ Р С•РЎвЂљР С•Р В±РЎР‚Р В°Р В¶Р ВµР Р…Р С‘РЎРЏ ---------- */
     const branch = branches.find((b) => b.id === branchId) ?? null;
     const staffCurrent = staff.find((m) => m.id === staffId) ?? null;
     const serviceCurrent = service;
 
     function redirectToAuth() {
         if (typeof window === 'undefined') return;
-        try {
-            const key = `booking_state_${biz.id}`;
-            const payload = {
-                branchId,
-                serviceId,
-                staffId,
-                day: dayStr,
-                step,
-            };
-            window.localStorage.setItem(key, JSON.stringify(payload));
-        } catch (e) {
-            logError('Booking', 'save booking state failed', e);
-        }
+        persistSelectionForAuth(step);
         const redirect = encodeURIComponent(window.location.pathname + window.location.search);
         window.location.href = `/auth/sign-in?mode=phone&redirect=${redirect}`;
     }
@@ -605,7 +258,7 @@ export default function BookingForm({ data }: { data: Data }) {
         return `${dateStr} (${weekdayStr})`;
     }, [day, dateLocale]);
 
-    /* ---------- пошаговый визард ---------- */
+    /* ---------- Р С—Р С•РЎв‚¬Р В°Р С–Р С•Р Р†РЎвЂ№Р в„– Р Р†Р С‘Р В·Р В°РЎР‚Р Т‘ ---------- */
     const stepFromUrl = searchParams.get('step');
     const initialStep = useMemo(() => {
         const n = stepFromUrl ? parseInt(stepFromUrl, 10) : NaN;
@@ -622,21 +275,14 @@ export default function BookingForm({ data }: { data: Data }) {
         initialStep,
     });
 
-    // Синхронизация прогресса бронирования с URL (сохранение при обновлении страницы)
     useEffect(() => {
-        const next = new URLSearchParams();
-        next.set('step', String(step));
-        if (branchId) next.set('branch', branchId);
-        if (dayStr) next.set('day', dayStr);
-        if (staffId) next.set('staff', staffId);
-        if (serviceId) next.set('service', serviceId);
-        const q = next.toString();
-        router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
-    }, [step, branchId, dayStr, staffId, serviceId, pathname, router]);
+        syncSelectionToUrl(step);
+    }, [step, syncSelectionToUrl]);
+
 
     const stepIndicatorText = useMemo(
         () =>
-            (t('booking.step.indicator', 'Шаг {current} из {total}') as string)
+            (t('booking.step.indicator', 'Р РЃР В°Р С– {current} Р С‘Р В· {total}') as string)
                 .replace('{current}', String(step))
                 .replace('{total}', String(totalSteps)),
         [t, step, totalSteps]
@@ -652,7 +298,7 @@ export default function BookingForm({ data }: { data: Data }) {
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
                         {t(
                             'booking.needAuth',
-                            'Для бронирования необходимо войти или зарегистрироваться. Нажмите кнопку «Войти» вверху страницы.'
+                            'Р вЂќР В»РЎРЏ Р В±РЎР‚Р С•Р Р…Р С‘РЎР‚Р С•Р Р†Р В°Р Р…Р С‘РЎРЏ Р Р…Р ВµР С•Р В±РЎвЂ¦Р С•Р Т‘Р С‘Р СР С• Р Р†Р С•Р в„–РЎвЂљР С‘ Р С‘Р В»Р С‘ Р В·Р В°РЎР‚Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р С‘РЎР‚Р С•Р Р†Р В°РЎвЂљРЎРЉРЎРѓРЎРЏ. Р СњР В°Р В¶Р СР С‘РЎвЂљР Вµ Р С”Р Р…Р С•Р С—Р С”РЎС“ Р’В«Р вЂ™Р С•Р в„–РЎвЂљР С‘Р’В» Р Р†Р Р†Р ВµРЎР‚РЎвЂ¦РЎС“ РЎРѓРЎвЂљРЎР‚Р В°Р Р…Р С‘РЎвЂ РЎвЂ№.'
                         )}
                     </div>
                 )}
@@ -665,218 +311,76 @@ export default function BookingForm({ data }: { data: Data }) {
 
                 <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
                     <div className="space-y-4">
-                        {/* Шаг 1: филиал */}
-                        {step === 1 && (
-                            <BranchSelector
-                                branches={branches}
-                                selectedBranchId={branchId}
-                                onSelect={(id) => {
-                                    setBranchId(id);
-                                    trackBookingFlowStep({ bizId: biz.id, branchId: id, step: 'branch' });
-                                    trackFunnelEvent({
-                                        event_type: 'branch_select',
-                                        source: 'public',
-                                        biz_id: biz.id,
-                                        branch_id: id,
-                                        session_id: getSessionId(),
-                                    });
-                                }}
-                                formatBranchName={formatBranchName}
-                                t={t}
-                            />
-                        )}
+                        {/* Р РЃР В°Р С– 1: РЎвЂћР С‘Р В»Р С‘Р В°Р В» */}
+                        <BookingStepContent
+                            step={step}
+                            branches={branches}
+                            branchId={branchId}
+                            dayStr={dayStr}
+                            dayLabel={dayLabel}
+                            todayStr={todayStr}
+                            maxStr={maxStr}
+                            staffFiltered={staffFiltered}
+                            staffId={staffId}
+                            servicesFiltered={servicesFiltered}
+                            serviceId={serviceId}
+                            serviceCurrent={serviceCurrent}
+                            slots={slots}
+                            slotsLoading={slotsLoading}
+                            slotsError={slotsError}
+                            staff={staff}
+                            serviceStaff={serviceStaff}
+                            isAuthed={isAuthed}
+                            clientBookingsCount={clientBookingsCount}
+                            clientBookingsLoading={clientBookingsLoading}
+                            bookingLoading={bookingLoading}
+                            t={t}
+                            formatBranchName={formatBranchName}
+                            onBranchSelect={(id) => {
+                                setBranchId(id);
+                                bookingAnalytics.trackBranchSelected(id);
+                            }}
+                            onDaySelect={(value) => {
+                                setDay(dateAtTz(value, '00:00', businessTz));
+                                bookingAnalytics.trackDaySelected(branchId || undefined);
+                            }}
+                            onStaffSelect={(id) => {
+                                setStaffId(id);
+                                bookingAnalytics.trackStaffSelected(id, branchId || undefined);
+                            }}
+                            onServiceSelect={(id) => {
+                                logDebug('Booking', 'Service clicked', {
+                                    serviceId: id,
+                                    currentServiceId: serviceId,
+                                });
+                                setServiceId(id);
+                                bookingAnalytics.trackServiceSelected(id, branchId || undefined, staffId || undefined);
+                            }}
+                            onSlotSelect={(slotTime, slotStaffId) => {
+                                bookingAnalytics.trackSlotSelected({
+                                    slotTime,
+                                    branchId: branchId || undefined,
+                                    serviceId: serviceId || undefined,
+                                    selectedStaffId: staffId || undefined,
+                                    slotStaffId,
+                                });
+                                createBooking(slotTime, slotStaffId);
+                            }}
+                        />
 
-                        {/* Шаг 2: день */}
-                        {step === 2 && (
-                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    {t('booking.step2.title', 'Шаг 2. Выберите день')}
-                                </h2>
-                                <div className="space-y-3">
-                                    <DatePickerPopover
-                                        value={dayStr}
-                                        onChange={(val) => {
-                                            if (val) {
-                                                setDay(dateAtTz(val, '00:00', businessTz));
-                                                trackBookingFlowStep({
-                                                    bizId: biz.id,
-                                                    branchId: branchId || undefined,
-                                                    step: 'date',
-                                                });
-                                            }
-                                        }}
-                                        min={todayStr}
-                                        max={maxStr}
-                                    />
-                                    {dayStr && (
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                                            {t('booking.step2.selectedDate', 'Выбранная дата:')} {dayLabel}
-                                        </div>
-                                    )}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* Шаг 3: мастер */}
-                        {step === 3 && (
-                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    {t('booking.step3.title', 'Шаг 3. Выберите мастера')}
-                                </h2>
-                                <StaffSelector
-                                    staff={staffFiltered}
-                                    selectedStaffId={staffId}
-                                    onSelect={(id) => {
-                                        setStaffId(id);
-                                        trackBookingFlowStep({
-                                            bizId: biz.id,
-                                            branchId: branchId || undefined,
-                                            step: 'staff',
-                                            staffId: id === 'any' ? null : id,
-                                        });
-                                        trackFunnelEvent({
-                                            event_type: 'staff_select',
-                                            source: 'public',
-                                            biz_id: biz.id,
-                                            branch_id: branchId || null,
-                                            staff_id: id === 'any' ? null : id,
-                                            session_id: getSessionId(),
-                                        });
-                                    }}
-                                    dayStr={dayStr}
-                                />
-                            </section>
-                        )}
-
-                        {/* Шаг 4: услуга */}
-                        {step === 4 && (
-                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    {t('booking.step4.title', 'Шаг 4. Выберите услугу')}
-                                </h2>
-                                <ServiceSelector
-                                    services={servicesFiltered}
-                                    selectedServiceId={serviceId}
-                                    onSelect={(id) => {
-                                        logDebug('Booking', 'Service clicked', {
-                                            serviceId: id,
-                                            currentServiceId: serviceId,
-                                        });
-                                        setServiceId(id);
-                                        trackBookingFlowStep({
-                                            bizId: biz.id,
-                                            branchId: branchId || undefined,
-                                            step: 'service',
-                                            serviceId: id,
-                                        });
-                                        trackFunnelEvent({
-                                            event_type: 'service_select',
-                                            source: 'public',
-                                            biz_id: biz.id,
-                                            branch_id: branchId || null,
-                                            service_id: id,
-                                            staff_id: staffId === 'any' ? null : staffId || null,
-                                            session_id: getSessionId(),
-                                        });
-                                    }}
-                                    staffId={staffId}
-                                />
-                                {serviceCurrent && (
-                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        {t('booking.duration.label', 'Продолжительность:')} {serviceCurrent.duration_min} {t('booking.duration.min', 'мин')}.
-                                        {serviceCurrent.price_from && (
-                                            <>
-                                                {' '}
-                                                {t('booking.summary.estimatedPrice', 'Ориентировочная стоимость:')}{' '}
-                                                {serviceCurrent.price_from}
-                                                {serviceCurrent.price_to &&
-                                                serviceCurrent.price_to !== serviceCurrent.price_from
-                                                    ? `–${serviceCurrent.price_to}`
-                                                    : ''}{' '}
-                                                {t('booking.currency', 'сом')}.
-                                            </>
-                                        )}
-                                    </p>
-                                )}
-                            </section>
-                        )}
-
-                        {/* Шаг 5: время */}
-                        {step === 5 && (
-                            <section className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                                <h2 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
-                                    {t('booking.step5.title', 'Шаг 5. Выберите время')}
-                                </h2>
-                                <SlotPicker
-                                    slots={slots}
-                                    selectedSlot={null}
-                                    onSelect={(slotTime, slotStaffId) => {
-                                        trackBookingFlowStep({
-                                            bizId: biz.id,
-                                            branchId: branchId || undefined,
-                                            step: 'slot',
-                                        });
-                                        trackFunnelEvent({
-                                            event_type: 'slot_select',
-                                            source: 'public',
-                                            biz_id: biz.id,
-                                            branch_id: branchId || null,
-                                            service_id: serviceId || null,
-                                            staff_id: slotStaffId || staffId === 'any' ? null : staffId || null,
-                                            slot_start_at: slotTime.toISOString(),
-                                            session_id: getSessionId(),
-                                        });
-                                        createBooking(slotTime, slotStaffId);
-                                    }}
-                                    loading={slotsLoading}
-                                    error={slotsError}
-                                    dayStr={dayStr}
-                                    dayLabel={dayLabel}
-                                    staffId={staffId}
-                                    staff={staff}
-                                    serviceId={serviceId}
-                                    servicesFiltered={servicesFiltered}
-                                    serviceStaff={serviceStaff}
-                                    isAuthed={isAuthed}
-                                    clientBookingsCount={clientBookingsCount}
-                                    clientBookingsLoading={clientBookingsLoading}
-                                    bookingLoading={bookingLoading}
-                                />
-                            </section>
-                        )}
-
-                        {/* Навигация по шагам */}
-                        <div className="flex justify-between pt-1 text-xs">
-                            <button
-                                type="button"
-                                disabled={!canGoPrev}
-                                onClick={goPrev}
-                                className={`inline-flex items-center gap-1 rounded-lg border px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium transition min-h-[44px] sm:min-h-[32px] touch-manipulation ${
-                                    canGoPrev
-                                        ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800'
-                                        : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
-                                }`}
-                            >
-                                {t('booking.nav.back', '← Назад')}
-                            </button>
-                            <button
-                                type="button"
-                                disabled={!canGoNext}
-                                onClick={goNext}
-                                className={`inline-flex items-center gap-1 rounded-lg border px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium transition min-h-[44px] sm:min-h-[32px] touch-manipulation ${
-                                    canGoNext
-                                        ? 'border-indigo-500 bg-indigo-600 text-white hover:bg-indigo-700 dark:border-indigo-400'
-                                        : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600 cursor-not-allowed'
-                                }`}
-                            >
-                                {step === totalSteps
-                                    ? t('booking.nav.selectTime', 'Выбрать время')
-                                    : t('booking.nav.next', 'Далее →')}
-                            </button>
-                        </div>
+                        {/* Р РЃР В°Р С– 2: Р Т‘Р ВµР Р…РЎРЉ */}
+                        <BookingStepNavigation
+                            canGoPrev={canGoPrev}
+                            canGoNext={canGoNext}
+                            goPrev={goPrev}
+                            goNext={goNext}
+                            step={step}
+                            totalSteps={totalSteps}
+                            t={t}
+                        />
                     </div>
 
-                    {/* Корзина / итог */}
+                    {/* Р С™Р С•РЎР‚Р В·Р С‘Р Р…Р В° / Р С‘РЎвЂљР С•Р С– */}
                     <BookingSummary
                         branchName={branch ? formatBranchName(branch.name) : null}
                         dayLabel={dayLabel}

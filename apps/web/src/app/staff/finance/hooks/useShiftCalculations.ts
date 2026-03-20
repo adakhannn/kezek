@@ -9,7 +9,7 @@ import {
     calculateTotalConsumables,
     calculateBaseShares,
     calculateDisplayShares,
-} from '@/lib/financeDomain';
+} from '@core-domain/finance';
 
 export interface ShiftCalculations {
     totalAmount: number;

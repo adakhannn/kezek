@@ -12,7 +12,6 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logWarn } from '@/lib/log';
-import { TZ } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -21,7 +20,7 @@ export async function GET() {
     // Предупреждение о deprecated endpoint
     logWarn('StaffShiftToday', 'Deprecated endpoint used. Please migrate to /api/staff/finance');
     return withErrorHandler('StaffShiftToday', async () => {
-        const { supabase, staffId, bizId } = await getStaffContext();
+        const { supabase, staffId, bizId, businessTz } = await getStaffContext();
 
         // Получаем проценты и ставку за час из настроек сотрудника
         const { data: staffData, error: staffError } = await supabase
@@ -40,7 +39,7 @@ export async function GET() {
 
         // Текущая дата в локальной TZ (без времени)
         const now = new Date();
-        const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const ymd = formatInTimeZone(now, businessTz, 'yyyy-MM-dd');
         const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
 
         // Проверяем, выходной ли сегодня

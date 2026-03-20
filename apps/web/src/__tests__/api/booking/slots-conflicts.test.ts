@@ -28,7 +28,7 @@ jest.mock('next-intl', () => ({
         const t = (key: string, fallback?: string) => fallback ?? key;
         return t;
     },
-}));
+}), { virtual: true });
 
 describe('useSlotsLoader – фильтрация слотов и конфликтные кейсы', () => {
     const supabase = require('@/lib/supabaseClient').supabase as { rpc: jest.Mock };
@@ -152,6 +152,6 @@ describe('useSlotsLoader – фильтрация слотов и конфлик
         expect(result.current.slots).toHaveLength(0);
         expect(result.current.error).toContain('конфликт');
     });
-}
+});
 
 

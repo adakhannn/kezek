@@ -1,427 +1,110 @@
-# 📚 Обзор документации проекта Kezek
+﻿# Обзор документации проекта Kezek
 
-**Дата создания:** 2025-01-27  
-**Цель:** Определить актуальность документов и выделить важные
-
----
-
-## ✅ ВАЖНЫЕ И АКТУАЛЬНЫЕ ДОКУМЕНТЫ
-
-### 🎯 Основная документация (обязательно к прочтению)
-
-#### 1. **PROJECT_DOCUMENTATION.md** ⭐⭐⭐
-- **Статус:** ✅ Актуален
-- **Важность:** КРИТИЧЕСКАЯ
-- **Описание:** Полная техническая документация проекта
-- **Содержит:**
-  - Технологический стек
-  - Структура кода
-  - Схема БД
-  - RLS и роли
-  - UX-потоки
-  - Уведомления
-- **Рекомендация:** Читать первым при онбординге
-
-#### 2. **SYSTEM_FEATURES_DOCUMENTATION.md** ⭐⭐⭐
-- **Статус:** ✅ Актуален
-- **Важность:** КРИТИЧЕСКАЯ
-- **Описание:** Документация всех функций системы
-- **Содержит:**
-  - Управление бизнесом
-  - Финансовая система (с формулами расчета)
-  - Система рейтингов
-  - Бронирования
-  - Промоакции
-  - API и интеграции
-- **Рекомендация:** Справочник по бизнес-логике
-
-#### 3. **PROJECT_REVIEW.md** ⭐⭐⭐
-- **Статус:** ✅ Актуален (частично)
-- **Важность:** ВЫСОКАЯ
-- **Описание:** Обзор проекта с топ-10 проблемными местами
-- **Содержит:**
-  - Архитектура проекта
-  - Топ-10 проблем
-  - Статистика проекта
-  - Положительные моменты
-  - Приоритеты улучшения
-- **Примечание:** Многие проблемы уже исправлены (отмечены ✅), но структура актуальна
-- **Рекомендация:** Использовать для понимания текущего состояния проекта
-
-#### 4. **API_DOCUMENTATION.md** ⭐⭐⭐
-- **Статус:** ✅ Актуален
-- **Важность:** ВЫСОКАЯ
-- **Описание:** Документация всех API endpoints
-- **Содержит:**
-  - Все endpoints с примерами
-  - Rate limiting
-  - Обработка ошибок
-  - Авторизация
-- **Рекомендация:** Справочник для разработчиков API
-
-#### 5. **README.md** (корневой)
-- **Статус:** ⚠️ Требует обновления
-- **Важность:** ВЫСОКАЯ
-- **Проблема:** Содержит только название проекта
-- **Рекомендация:** Добавить описание проекта, быстрый старт, ссылки на основную документацию
+**Последнее обновление:** 2026-03-19  
+**Назначение:** короткая карта документации в её текущем рабочем состоянии.  
+**Источник навигации внутри `docs/`:** [docs/README.md](docs/README.md)
 
 ---
 
-### 🔧 Техническая документация
+## Как читать документацию
 
-#### 6. **MIGRATION_SUMMARY.md** ⭐⭐
-- **Статус:** ✅ Актуален
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Резюме миграции console.log на безопасное логирование
-- **Содержит:** Статистику миграции, примеры замены
-- **Рекомендация:** Полезен при продолжении миграции
+Если вы только входите в проект, идите в таком порядке:
 
-#### 7. **apps/web/src/lib/CONSOLE_LOG_MIGRATION.md** ⭐⭐
-- **Статус:** ✅ Актуален
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Детальная документация по миграции console.log
-- **Рекомендация:** Использовать при замене console.log
-
-#### 8. **apps/web/src/lib/ERROR_HANDLING_GUIDE.md** ⭐⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Руководство по обработке ошибок
-- **Рекомендация:** Справочник для стандартизации обработки ошибок
-
-#### 9. **apps/web/src/lib/SECURITY.md** ⭐⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** ВЫСОКАЯ
-- **Описание:** Документация по безопасности
-- **Рекомендация:** Обязательно к прочтению при работе с безопасностью
-
-#### 10. **RLS_AUDIT_REPORT.md** ⭐⭐
-- **Статус:** ✅ Актуален
-- **Важность:** ВЫСОКАЯ
-- **Описание:** Аудит Row Level Security политик
-- **Рекомендация:** Использовать при проверке безопасности БД
+1. [README.md](README.md) — общее описание проекта и быстрый старт.
+2. [GETTING_STARTED.md](GETTING_STARTED.md) — установка, env, локальный запуск.
+3. [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) — архитектура, домены, роли, БД, основные потоки.
+4. [SYSTEM_FEATURES_DOCUMENTATION.md](SYSTEM_FEATURES_DOCUMENTATION.md) — бизнес-функции системы.
+5. [PROJECT_REVIEW.md](PROJECT_REVIEW.md) — текущее состояние проекта и направления улучшения.
+6. [docs/README.md](docs/README.md) — тематический индекс документов внутри `docs/`.
 
 ---
 
-### 🧪 Тестирование
+## Главные документы
 
-#### 11. **TESTING_GUIDE.md** ⭐⭐
-- **Статус:** ✅ Актуален
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Полное руководство по тестированию системы
-- **Содержит:** Чеклисты для всех ролей, кросс-ролевое тестирование
-- **Рекомендация:** Использовать при QA тестировании
+### Актуальные
 
-#### 12. **API_TESTING.md** ⭐
-- **Статус:** ⚠️ Проверить актуальность
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Проверить соответствие текущему API
+- [README.md](README.md) — корневой вход в проект; содержит описание, быстрый старт и ссылки на основные техдоки.
+- [GETTING_STARTED.md](GETTING_STARTED.md) — основной документ для локального старта.
+- [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) — технический обзор проекта.
+- [SYSTEM_FEATURES_DOCUMENTATION.md](SYSTEM_FEATURES_DOCUMENTATION.md) — карта бизнес-возможностей системы.
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md) — справочник по API.
+- [docs/README.md](docs/README.md) — индекс внутренней документации `docs/`.
 
-#### 13. **E2E_TESTING.md** ⭐
-- **Статус:** ⚠️ Проверить актуальность
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Проверить соответствие текущим тестам
+### Нуждаются в проверке перед крупными изменениями
+
+- [PROJECT_REVIEW.md](PROJECT_REVIEW.md) — полезен как обзор текущего состояния, но часть утверждений нужно сверять с кодом.
+- [DEEP_ANALYSIS_ISSUES.md](DEEP_ANALYSIS_ISSUES.md) — исторически полезный аудит, но требует выборочной перепроверки.
+- [DEEP_CODE_REVIEW_2026-02-26.md](DEEP_CODE_REVIEW_2026-02-26.md) — полезен как снимок состояния на дату ревью, не как абсолютный источник правды.
 
 ---
 
-### ⚙️ Настройка и конфигурация
+## Структура `docs/`
 
-#### 14. **CRON_SETUP.md** ⭐⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Настройка cron jobs
-- **Рекомендация:** Использовать при настройке автоматизации
+### Архитектура
 
-#### 15. **RATE_LIMITING.md** и **RATE_LIMITING_SETUP.md** ⭐⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Настройка rate limiting
-- **Рекомендация:** Справочник при настройке защиты API
+- [docs/architecture/BIZ_CONTEXT_RESOLVER_ADR.md](docs/architecture/BIZ_CONTEXT_RESOLVER_ADR.md)
+- [docs/architecture/USER_CURRENT_BUSINESS_INVARIANTS.md](docs/architecture/USER_CURRENT_BUSINESS_INVARIANTS.md)
+- [docs/architecture/DATE_HANDLING_MODEL.md](docs/architecture/DATE_HANDLING_MODEL.md)
+- [docs/architecture/DATE_HANDLING_RISKS.md](docs/architecture/DATE_HANDLING_RISKS.md)
+- [docs/architecture/TIME_STANDARD.md](docs/architecture/TIME_STANDARD.md)
+- [docs/architecture/TIMEZONE_USAGE_AUDIT.md](docs/architecture/TIMEZONE_USAGE_AUDIT.md)
+- [docs/architecture/TIMEZONE_MIGRATION_PRIORITY.md](docs/architecture/TIMEZONE_MIGRATION_PRIORITY.md)
+- [docs/architecture/LOCAL_BUSINESS_DATE_FLOWS.md](docs/architecture/LOCAL_BUSINESS_DATE_FLOWS.md)
+- [docs/architecture/CORE_DOMAIN_BOUNDARY_AUDIT.md](docs/architecture/CORE_DOMAIN_BOUNDARY_AUDIT.md)
+- [docs/architecture/CORE_DOMAIN_FLOW_REVIEW.md](docs/architecture/CORE_DOMAIN_FLOW_REVIEW.md)
+- [docs/architecture/ROUTE_USECASE_REPOSITORY_AUDIT.md](docs/architecture/ROUTE_USECASE_REPOSITORY_AUDIT.md)
+- [docs/architecture/VALIDATION_BOUNDARY_POLICY.md](docs/architecture/VALIDATION_BOUNDARY_POLICY.md)
+- [docs/architecture/VALIDATION_DUPLICATION_AUDIT.md](docs/architecture/VALIDATION_DUPLICATION_AUDIT.md)
+- [docs/architecture/CLIENT_DATA_FETCHING_STANDARD.md](docs/architecture/CLIENT_DATA_FETCHING_STANDARD.md)
+- [docs/architecture/CLIENT_DATA_FETCHING_AUDIT.md](docs/architecture/CLIENT_DATA_FETCHING_AUDIT.md)
+- [docs/architecture/BOOKING_FLOW_FETCHING_REVIEW.md](docs/architecture/BOOKING_FLOW_FETCHING_REVIEW.md)
+- [docs/architecture/SERVICE_CLIENT_USAGE_GUIDE.md](docs/architecture/SERVICE_CLIENT_USAGE_GUIDE.md)
+- [docs/architecture/SERVICE_CLIENT_AND_BIZ_FILTERS_AUDIT.md](docs/architecture/SERVICE_CLIENT_AND_BIZ_FILTERS_AUDIT.md)
+- [docs/architecture/TELEGRAM_LINKING_ADR.md](docs/architecture/TELEGRAM_LINKING_ADR.md)
 
-#### 16. **SECURITY_HEADERS.md** ⭐⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** ВЫСОКАЯ
-- **Описание:** Настройка security headers
-- **Рекомендация:** Проверить актуальность настроек
+### Features и UX
 
-#### 17. **SWAGGER_SETUP.md** ⭐⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Настройка Swagger UI
-- **Рекомендация:** Использовать при настройке API документации
+- [docs/features/ROLES_AND_BUSINESS_SELECTION_AUDIT.md](docs/features/ROLES_AND_BUSINESS_SELECTION_AUDIT.md)
+- [docs/features/RESOLVE_BIZ_CONTEXT_SCENARIOS_AND_REFACTOR.md](docs/features/RESOLVE_BIZ_CONTEXT_SCENARIOS_AND_REFACTOR.md)
+- [docs/features/MULTI_ROLE_UX_SCENARIOS.md](docs/features/MULTI_ROLE_UX_SCENARIOS.md)
+- [docs/features/FIRST_LOGIN_ROLE_SELECTION_UX.md](docs/features/FIRST_LOGIN_ROLE_SELECTION_UX.md)
+- [docs/features/CABINET_TERMINOLOGY_AUDIT.md](docs/features/CABINET_TERMINOLOGY_AUDIT.md)
+- [docs/features/BOOKING_SCREEN_STATE_DECISION.md](docs/features/BOOKING_SCREEN_STATE_DECISION.md)
 
----
+### Operations
 
-### 📱 Мобильное приложение
+- [docs/operations/PROJECT_EVOLUTION_IMPLEMENTATION_PLAN.md](docs/operations/PROJECT_EVOLUTION_IMPLEMENTATION_PLAN.md)
+- [docs/operations/ARCHIVE_CANDIDATES.md](docs/operations/ARCHIVE_CANDIDATES.md)
+- [docs/operations/CONSOLE_USAGE_AUDIT.md](docs/operations/CONSOLE_USAGE_AUDIT.md)
+- [docs/operations/FORMATTING_AUDIT.md](docs/operations/FORMATTING_AUDIT.md)
+- [docs/operations/TRANSITIONAL_AREAS_AUDIT.md](docs/operations/TRANSITIONAL_AREAS_AUDIT.md)
+- [docs/operations/DECOMPOSITION_CANDIDATES.md](docs/operations/DECOMPOSITION_CANDIDATES.md)
 
-#### 18. **apps/mobile/README.md** ⭐⭐
-- **Статус:** ✅ Актуален
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Документация мобильного приложения
-- **Содержит:** Установка, запуск, структура проекта
-- **Рекомендация:** Использовать при работе с мобильным приложением
+### Testing
 
----
+- [docs/testing/ROLE_SWITCHING_TEST_SCENARIOS.md](docs/testing/ROLE_SWITCHING_TEST_SCENARIOS.md)
 
-## ⚠️ ЧАСТИЧНО АКТУАЛЬНЫЕ ДОКУМЕНТЫ
+### Archive
 
-### 🐛 Документы о проблемах (многое уже исправлено)
-
-#### 19. **ISSUES_STAFF_FINANCE_PAGES.md** ⭐
-- **Статус:** ⚠️ Частично актуален
-- **Важность:** НИЗКАЯ (для истории)
-- **Описание:** Проблемы на страницах финансов сотрудников
-- **Проблема:** Большинство проблем уже исправлено (отмечено ✅)
-- **Рекомендация:** 
-  - Можно архивировать или переместить в `/docs/archive/`
-  - Оставить только для истории изменений
-  - Или обновить, оставив только неисправленные проблемы
-
-#### ~~20. **PROBLEMS_STAFF_FINANCE.md**~~ ❌ УДАЛЕН
-- **Статус:** ❌ Удален (2025-01-27)
-- **Причина:** Все проблемы исправлены, информация дублируется в `ISSUES_STAFF_FINANCE_PAGES.md`
-
-#### 21. **COMPARISON_STAFF_FINANCE_PAGES.md** ⭐
-- **Статус:** ⚠️ Частично актуален
-- **Важность:** НИЗКАЯ (для истории)
-- **Описание:** Сравнение двух страниц финансов
-- **Проблема:** Многие проблемы уже решены
-- **Рекомендация:** 
-  - Архивировать
-  - Или обновить, убрав решенные проблемы
+- [docs/archive/](docs/archive/) — папка создана, но пока ещё не заполнена перенесёнными документами.
 
 ---
 
-## ❌ УСТАРЕВШИЕ ИЛИ ДУБЛИРУЮЩИЕ ДОКУМЕНТЫ
+## Что изменилось в структуре
 
-### 📱 WhatsApp документация (множество файлов)
-
-#### 22. **WHATSAPP_SETUP.md** ⭐
-- **Статус:** ✅ Оставлен (единственный WhatsApp документ)
-- **Важность:** НИЗКАЯ (WhatsApp интеграция временно отключена)
-- **Описание:** Основная настройка WhatsApp Cloud API
-- **Примечание:** Остальные 8 WhatsApp документов удалены (2025-01-27) из-за дублирования
-
-#### ~~23-30. **WHATSAPP_*.md** (8 файлов)~~ ❌ УДАЛЕНЫ
-- **Статус:** ❌ Удалены (2025-01-27)
-- **Удаленные файлы:**
-  - `WHATSAPP_FIX.md`
-  - `WHATSAPP_EXISTING_ACCOUNT.md`
-  - `WHATSAPP_GET_API_KEYS.md`
-  - `WHATSAPP_FIX_APP_ID_ERROR.md`
-  - `WHATSAPP_HOW_TO_CALL_API.md`
-  - `WHATSAPP_FINAL_SETUP.md`
-  - `WHATSAPP_FIX_ACCOUNT_NOT_REGISTERED.md`
-  - `WHATSAPP_USE_TEST_NUMBER.md`
-- **Причина удаления:** 
-  - Много дублирования информации
-  - Конкретные исправления ошибок уже не актуальны
-  - Оставлен только основной `WHATSAPP_SETUP.md`
+- `docs/` теперь разложена по подпапкам:
+  - `docs/architecture/`
+  - `docs/features/`
+  - `docs/operations/`
+  - `docs/testing/`
+  - `docs/archive/`
+- тематические и аудитные документы вынесены из плоского корня `docs/` ближе к своим областям;
+- корень `docs/` оставлен только для индексного [docs/README.md](docs/README.md) и самих тематических папок.
 
 ---
 
-### 🔐 Telegram документация
+## Следующие шаги
 
-#### 31. **TELEGRAM_AUTH_IMPLEMENTATION.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Описание:** Пошаговая инструкция по реализации Telegram авторизации
-- **Рекомендация:** 
-  - Проверить, реализована ли функция
-  - Если реализована - можно архивировать или обновить
-  - Если нет - оставить как инструкцию
-
----
-
-### 📊 Мониторинг и производительность
-
-#### 32. **PERFORMANCE_MONITORING.md** ⭐
-- **Статус:** ⚠️ Проверить актуальность
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Проверить, используется ли система мониторинга
-
-#### 33. **apps/web/PERFORMANCE_DEBUGGING.md** ⭐
-- **Статус:** ⚠️ Проверить актуальность
-- **Важность:** НИЗКАЯ
-- **Рекомендация:** Проверить актуальность
-
-#### 34. **MONITORING_AND_ALERTS.md** ⭐
-- **Статус:** ⚠️ Проверить актуальность
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Проверить, настроена ли система алертов
-
----
-
-### 📝 Дополнительные документы
-
-#### ~~35. **apps/web/src/app/b/[slug]/REFACTORING_PLAN.md**~~ ❌ УДАЛЕН
-- **Статус:** ❌ Удален (2025-01-27)
-- **Причина:** Рефакторинг выполнен - все компоненты, хуки, типы и утилиты созданы
-
-#### 36. **apps/web/src/__tests__/api/TEST_COVERAGE_PLAN.md** ⭐
-- **Статус:** ⚠️ Проверить актуальность
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Проверить, выполнен ли план
-
-#### 37. **apps/web/src/__tests__/api/TESTING_GUIDE.md** ⭐
-- **Статус:** ⚠️ Проверить актуальность
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Проверить актуальность
-
-#### 38. **apps/web/src/lib/API_ERROR_FORMATS.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Справочник по форматам ошибок
-
-#### 39. **apps/web/src/lib/LOGGING_SECURITY.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** ВЫСОКАЯ
-- **Рекомендация:** Справочник по безопасному логированию
-
-#### 40. **apps/web/src/lib/validation/README.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Справочник по валидации
-
-#### 41. **apps/web/src/lib/notifications/README.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Справочник по уведомлениям
-
-#### 42. **apps/web/e2e/README.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Справочник по E2E тестам
-
-#### 43. **supabase/README.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Справочник по работе с Supabase
-
-#### 44. **supabase/APPLY_MIGRATIONS.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** СРЕДНЯЯ
-- **Рекомендация:** Инструкция по применению миграций
-
-#### 45. **supabase/TESTING.md** ⭐
-- **Статус:** ✅ Актуален (предположительно)
-- **Важность:** НИЗКАЯ
-- **Рекомендация:** Справочник по тестированию БД
-
----
-
-## 📋 РЕКОМЕНДАЦИИ ПО ОРГАНИЗАЦИИ
-
-### Структура папок для документации
-
-```
-docs/
-├── README.md                    # Главный индекс документации
-├── getting-started/             # Быстрый старт
-│   ├── installation.md
-│   └── development.md
-├── architecture/                 # Архитектура
-│   ├── overview.md
-│   ├── database.md
-│   └── api.md
-├── features/                    # Функциональность
-│   ├── booking.md
-│   ├── finance.md
-│   └── ratings.md
-├── guides/                      # Руководства
-│   ├── testing.md
-│   ├── security.md
-│   └── deployment.md
-├── api/                         # API документация
-│   └── reference.md
-└── archive/                     # Архив устаревших документов
-    ├── whatsapp/
-    └── old-issues/
-```
-
----
-
-## 🎯 ПРИОРИТЕТЫ ДЕЙСТВИЙ
-
-### Высокий приоритет
-
-1. **Обновить корневой README.md**
-   - Добавить описание проекта
-   - Быстрый старт
-   - Ссылки на основную документацию
-
-2. **Объединить WhatsApp документы**
-   - Создать один `WHATSAPP_INTEGRATION.md`
-   - Архивировать старые файлы
-
-3. **Архивировать решенные проблемы**
-   - Переместить `ISSUES_STAFF_FINANCE_PAGES.md`, `PROBLEMS_STAFF_FINANCE.md`, `COMPARISON_STAFF_FINANCE_PAGES.md` в архив
-   - Или обновить, оставив только нерешенные проблемы
-
-### Средний приоритет
-
-4. **Проверить актуальность документов**
-   - `API_TESTING.md`
-   - `E2E_TESTING.md`
-   - `PERFORMANCE_MONITORING.md`
-   - `MONITORING_AND_ALERTS.md`
-
-5. **Создать главный индекс документации**
-   - `docs/README.md` с навигацией по всем документам
-
-### Низкий приоритет
-
-6. **Организовать структуру папок**
-   - Создать папку `docs/`
-   - Переместить документы по категориям
-
-7. **Обновить устаревшие документы**
-   - Проверить все документы с ⚠️
-   - Обновить или архивировать
-
----
-
-## 📊 СТАТИСТИКА ДОКУМЕНТОВ
-
-- **Всего документов:** ~56
-- **Удалено:** 10 документов (2025-01-27)
-  - `PROBLEMS_STAFF_FINANCE.md`
-  - 8 WhatsApp документов (дублирующие)
-  - `apps/web/src/app/b/[slug]/REFACTORING_PLAN.md`
-- **Осталось документов:** ~46
-- **Актуальных:** ~30
-- **Частично актуальных:** ~5
-- **Требуют проверки:** ~11
-
----
-
-## ✅ ЧЕКЛИСТ ДЛЯ НОВЫХ РАЗРАБОТЧИКОВ
-
-### Обязательно прочитать:
-
-1. ✅ `PROJECT_DOCUMENTATION.md` - техническая документация
-2. ✅ `SYSTEM_FEATURES_DOCUMENTATION.md` - функции системы
-3. ✅ `PROJECT_REVIEW.md` - обзор проекта и проблем
-4. ✅ `API_DOCUMENTATION.md` - API справочник
-5. ✅ `apps/web/README.md` - настройка веб-приложения
-6. ✅ `apps/mobile/README.md` - настройка мобильного приложения (если нужно)
-
-### Справочники (читать по необходимости):
-
-- `apps/web/src/lib/SECURITY.md` - безопасность
-- `apps/web/src/lib/ERROR_HANDLING_GUIDE.md` - обработка ошибок
-- `RLS_AUDIT_REPORT.md` - RLS политики
-- `TESTING_GUIDE.md` - тестирование
-
----
-
-## 🔄 ПЕРИОДИЧЕСКОЕ ОБНОВЛЕНИЕ
-
-Рекомендуется обновлять этот обзор:
-- **Ежемесячно** - проверять актуальность документов
-- **При крупных изменениях** - обновлять соответствующие документы
-- **При закрытии задач** - архивировать документы о проблемах
-
----
-
-**Последнее обновление:** 2025-01-27
-
+- начать первый реальный перенос исторических документов в [docs/archive/](docs/archive/);
+- по мере касания старых документов поправлять в них оставшиеся текстовые ссылки на старые пути;
+- держать [docs/README.md](docs/README.md) как главный актуальный индекс, а этот обзор — как краткую карту на уровне репозитория.

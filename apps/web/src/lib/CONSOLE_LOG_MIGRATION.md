@@ -1,11 +1,21 @@
-# Миграция console.log на безопасное логирование
+# Миграция `console.*` на безопасное логирование
+
+> Статус: исторический guide, использовать вместе с `LOGGING_POLICY.md` и `docs/CONSOLE_USAGE_AUDIT.md`.
 
 ## Проблема
 
-В проекте найдено **339 вхождений** `console.log/warn/error` в **82 файлах**. Это может привести к:
+Исторически в проекте было найдено много прямых `console.*` вызовов в приложенческом коде. Основной риск:
 - Утечке чувствительных данных в логах
 - Проблемам с производительностью в продакшене
 - Неконтролируемому логированию
+
+По состоянию на 2026-03-18 проблема в основном локализована:
+
+- в обычном feature/UI/API-коде прямые `console.*` в основном убраны;
+- оставшиеся вызовы сосредоточены в лог-утилитах, dev-only инструментах и части observability/infrastructure модулей;
+- актуальный список исключений и зон риска см. в:
+  - `apps/web/src/lib/LOGGING_POLICY.md`
+  - `docs/CONSOLE_USAGE_AUDIT.md`
 
 ## Решение
 
@@ -93,7 +103,7 @@ logError('MyScope', 'Error occurred', error);
 
 ## Статус миграции
 
-### ✅ Обновлено:
+### ✅ Что уже сделано
 - `apps/web/src/lib/log.ts` - безопасное логирование
 - `apps/web/src/lib/logSafe.ts` - утилиты маскирования
 - `apps/web/src/app/b/[slug]/view.tsx` - заменены debugLog/debugWarn
@@ -101,11 +111,13 @@ logError('MyScope', 'Error occurred', error);
 - `apps/web/src/middleware.ts` - заменен console.warn
 - `apps/web/src/lib/logger.ts` - обновлен для использования безопасного логирования
 
-### ⏳ Требуют обновления (~75 файлов):
-- API routes
-- Client components
-- Server components
-- Утилиты
+### ⚠️ Что важно понимать сейчас
+
+- Этот документ больше не является точной картой оставшихся `console.*`.
+- Числа и список файлов в старых миграционных заметках устарели.
+- Для текущего состояния нужно опираться на:
+  - `apps/web/src/lib/LOGGING_POLICY.md`
+  - `docs/CONSOLE_USAGE_AUDIT.md`
 
 ## Автоматизация
 
@@ -135,4 +147,6 @@ grep -r "console\.error" apps/web/src
 - `LOGGING_SECURITY.md` - правила безопасного логирования
 - `log.ts` - основной модуль логирования
 - `logSafe.ts` - утилиты маскирования
+- `LOGGING_POLICY.md` - актуальная политика логирования
+- `docs/CONSOLE_USAGE_AUDIT.md` - актуальный аудит исключений и оставшихся зон
 

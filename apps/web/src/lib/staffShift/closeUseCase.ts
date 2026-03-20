@@ -1,4 +1,4 @@
-import { calculateShiftFinancials, type ShiftFinancials } from '@/lib/financeDomain/shift';
+import { calculateShiftFinancials, type ShiftFinancials } from '@core-domain/finance';
 import { logDebug } from '@/lib/log';
 
 type StaffShiftStatus = 'open' | 'closed';

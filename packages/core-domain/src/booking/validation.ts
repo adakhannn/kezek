@@ -1,16 +1,14 @@
-/**
- * Валидация данных для бронирований и промоакций
+﻿/**
+ * Validation for booking domain invariants.
+ *
+ * Payload shape/format is validated on the API boundary via Zod schemas in apps/web.
+ * This module keeps only business-meaningful checks and domain helpers.
  */
 
-import type { CreateBookingParams, CreateGuestBookingParams, PromotionType, PromotionParams } from './types';
+import type { PromotionType, PromotionParams } from './types';
 
-/** Минимальный тип филиала для проверки при бронировании */
 export type BranchForBookingCheck = { id: string; is_active?: boolean } | null;
 
-/**
- * Проверяет, подходит ли филиал для создания/привязки бронирования.
- * Используется для упрощения ветвлений в use-case и API (после получения филиала из репозитория или ответа).
- */
 export function validateBranchForBooking(branch: BranchForBookingCheck): boolean {
     if (branch == null || typeof branch !== 'object') return false;
     if (typeof branch.id !== 'string' || branch.id.trim() === '') return false;
@@ -18,139 +16,6 @@ export function validateBranchForBooking(branch: BranchForBookingCheck): boolean
     return true;
 }
 
-/**
- * Валидирует параметры создания бронирования (biz_id, service_id, staff_id, start_at; branch_id опционален).
- *
- * @param params - Входные данные (обычно тело запроса)
- * @returns { valid: true, data } при успехе или { valid: false, error } при ошибке
- */
-export function validateCreateBookingParams(params: unknown): {
-    valid: boolean;
-    error?: string;
-    data?: CreateBookingParams;
-} {
-    if (!params || typeof params !== 'object') {
-        return { valid: false, error: 'Параметры должны быть объектом' };
-    }
-
-    const p = params as Record<string, unknown>;
-
-    // Проверка обязательных полей
-    if (typeof p.biz_id !== 'string' || !p.biz_id.trim()) {
-        return { valid: false, error: 'biz_id обязателен и должен быть строкой' };
-    }
-
-    if (typeof p.service_id !== 'string' || !p.service_id.trim()) {
-        return { valid: false, error: 'service_id обязателен и должен быть строкой' };
-    }
-
-    if (typeof p.staff_id !== 'string' || !p.staff_id.trim()) {
-        return { valid: false, error: 'staff_id обязателен и должен быть строкой' };
-    }
-
-    if (typeof p.start_at !== 'string' || !p.start_at.trim()) {
-        return { valid: false, error: 'start_at обязателен и должен быть ISO-строкой' };
-    }
-
-    // Валидация ISO-даты
-    const startAtDate = new Date(p.start_at);
-    if (isNaN(startAtDate.getTime())) {
-        return { valid: false, error: 'start_at должен быть валидной ISO-датой' };
-    }
-
-    // branch_id опционален
-    const branch_id = p.branch_id !== undefined && p.branch_id !== null 
-        ? (typeof p.branch_id === 'string' ? p.branch_id : null)
-        : null;
-
-    return {
-        valid: true,
-        data: {
-            biz_id: p.biz_id.trim(),
-            branch_id,
-            service_id: p.service_id.trim(),
-            staff_id: p.staff_id.trim(),
-            start_at: p.start_at.trim(),
-        },
-    };
-}
-
-/**
- * Валидирует параметры создания гостевой брони (включая client_name, client_phone; client_email опционален).
- * Сначала проверяет базовые поля брони через validateCreateBookingParams.
- *
- * @param params - Входные данные (тело запроса)
- * @returns { valid: true, data } или { valid: false, error }
- */
-export function validateCreateGuestBookingParams(params: unknown): {
-    valid: boolean;
-    error?: string;
-    data?: CreateGuestBookingParams;
-} {
-    if (!params || typeof params !== 'object') {
-        return { valid: false, error: 'Параметры должны быть объектом' };
-    }
-
-    const p = params as Record<string, unknown>;
-
-    // Проверка обязательных полей (наследуем от CreateBookingParams)
-    const bookingValidation = validateCreateBookingParams({
-        biz_id: p.biz_id,
-        branch_id: p.branch_id,
-        service_id: p.service_id,
-        staff_id: p.staff_id,
-        start_at: p.start_at,
-    });
-
-    if (!bookingValidation.valid || !bookingValidation.data) {
-        return { valid: false, error: bookingValidation.error };
-    }
-
-    // Дополнительные проверки для гостевой брони
-    if (typeof p.branch_id !== 'string' || !p.branch_id.trim()) {
-        return { valid: false, error: 'branch_id обязателен для гостевой брони' };
-    }
-
-    if (typeof p.client_name !== 'string' || !p.client_name.trim()) {
-        return { valid: false, error: 'client_name обязателен и должен быть строкой' };
-    }
-
-    if (typeof p.client_phone !== 'string' || !p.client_phone.trim()) {
-        return { valid: false, error: 'client_phone обязателен и должен быть строкой' };
-    }
-
-    // Нормализация телефона (убираем пробелы, дефисы)
-    const normalizedPhone = p.client_phone.replace(/\s+/g, '').replace(/[-\s()]/g, '');
-
-    // client_email опционален
-    const client_email = p.client_email !== undefined && p.client_email !== null
-        ? (typeof p.client_email === 'string' ? p.client_email.trim() || null : null)
-        : null;
-
-    // Валидация email, если указан
-    if (client_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client_email)) {
-        return { valid: false, error: 'client_email должен быть валидным email-адресом' };
-    }
-
-    return {
-        valid: true,
-        data: {
-            ...bookingValidation.data,
-            branch_id: p.branch_id.trim(),
-            client_name: p.client_name.trim(),
-            client_phone: normalizedPhone,
-            client_email,
-        },
-    };
-}
-
-/**
- * Валидирует параметры промоакции в зависимости от типа (visit_count, discount_percent и т.д.).
- *
- * @param promotionType - Тип промо (free_after_n_visits, birthday_discount, referral_free и др.)
- * @param params - Объект параметров промоакции
- * @returns { valid: true, data } или { valid: false, error }
- */
 export function validatePromotionParams(
     promotionType: PromotionType,
     params: unknown
@@ -160,7 +25,7 @@ export function validatePromotionParams(
     data?: PromotionParams;
 } {
     if (!params || typeof params !== 'object') {
-        return { valid: false, error: 'Параметры промоакции должны быть объектом' };
+        return { valid: false, error: 'Promotion params must be an object' };
     }
 
     const p = params as Record<string, unknown>;
@@ -168,7 +33,7 @@ export function validatePromotionParams(
     switch (promotionType) {
         case 'free_after_n_visits':
             if (typeof p.visit_count !== 'number' || p.visit_count <= 0) {
-                return { valid: false, error: 'visit_count должен быть положительным числом' };
+                return { valid: false, error: 'visit_count must be a positive number' };
             }
             return { valid: true, data: { visit_count: p.visit_count } };
 
@@ -176,12 +41,11 @@ export function validatePromotionParams(
         case 'first_visit_discount':
         case 'referral_discount_50':
             if (typeof p.discount_percent !== 'number' || p.discount_percent < 0 || p.discount_percent > 100) {
-                return { valid: false, error: 'discount_percent должен быть числом от 0 до 100' };
+                return { valid: false, error: 'discount_percent must be between 0 and 100' };
             }
             return { valid: true, data: { discount_percent: p.discount_percent } };
 
         case 'referral_free':
-            // referral_free может не требовать параметров или иметь свои
             return { valid: true, data: p as PromotionParams };
 
         default:
@@ -189,12 +53,6 @@ export function validatePromotionParams(
     }
 }
 
-/**
- * Извлекает идентификатор бронирования из результата RPC (confirm_booking, quick_book_guest и т.д.).
- *
- * @param rpcResult - Результат RPC: строка (id) или объект с полем booking_id или id
- * @returns UUID бронирования или null, если не найден
- */
 export function extractBookingId(rpcResult: unknown): string | null {
     if (typeof rpcResult === 'string') {
         return rpcResult;
@@ -212,4 +70,3 @@ export function extractBookingId(rpcResult: unknown): string | null {
 
     return null;
 }
-

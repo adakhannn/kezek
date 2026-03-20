@@ -1,5 +1,4 @@
-import {
-    validateCreateBookingParams,
+﻿import {
     createBookingUseCase,
     type BookingNotificationPort,
 } from '@core-domain/booking';
@@ -10,6 +9,7 @@ import {
     createErrorResponse,
     createSuccessResponse,
 } from '@/lib/apiErrorHandler';
+import { createBookingNotificationHttpAdapter } from '@/app/api/_shared/bookingNotificationHttpAdapter';
 import { createSupabaseBookingCommands } from '@/lib/bookingCommandsSupabase';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 import { logDebug, logError } from '@/lib/log';
@@ -23,7 +23,7 @@ import { quickHoldSchema } from '@/lib/validation/bookingSchemas';
  * @swagger
  * /api/quick-hold:
  *   post:
- *     summary: Быстрое создание бронирования (hold) для авторизованных пользователей
+ *     summary: Р‘С‹СЃС‚СЂРѕРµ СЃРѕР·РґР°РЅРёРµ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ (hold) РґР»СЏ Р°РІС‚РѕСЂРёР·РѕРІР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -43,27 +43,27 @@ import { quickHoldSchema } from '@/lib/validation/bookingSchemas';
  *               biz_id:
  *                 type: string
  *                 format: uuid
- *                 description: ID бизнеса
+ *                 description: ID Р±РёР·РЅРµСЃР°
  *               branch_id:
  *                 type: string
  *                 format: uuid
- *                 description: ID филиала (опционально, если не указан - берется первый активный)
+ *                 description: ID С„РёР»РёР°Р»Р° (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, РµСЃР»Рё РЅРµ СѓРєР°Р·Р°РЅ - Р±РµСЂРµС‚СЃСЏ РїРµСЂРІС‹Р№ Р°РєС‚РёРІРЅС‹Р№)
  *               service_id:
  *                 type: string
  *                 format: uuid
- *                 description: ID услуги
+ *                 description: ID СѓСЃР»СѓРіРё
  *               staff_id:
  *                 type: string
  *                 format: uuid
- *                 description: ID мастера
+ *                 description: ID РјР°СЃС‚РµСЂР°
  *               start_at:
  *                 type: string
  *                 format: date-time
- *                 description: Время начала в формате ISO с таймзоной
+ *                 description: Р’СЂРµРјСЏ РЅР°С‡Р°Р»Р° РІ С„РѕСЂРјР°С‚Рµ ISO СЃ С‚Р°Р№РјР·РѕРЅРѕР№
  *                 example: "2024-01-15T10:00:00+06:00"
  *     responses:
  *       '200':
- *         description: Бронирование успешно создано
+ *         description: Р‘СЂРѕРЅРёСЂРѕРІР°РЅРёРµ СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅРѕ
  *         content:
  *           application/json:
  *             schema:
@@ -79,22 +79,22 @@ import { quickHoldSchema } from '@/lib/validation/bookingSchemas';
  *                   type: boolean
  *                   example: true
  *       '400':
- *         description: Неверные параметры или ошибка создания
+ *         description: РќРµРІРµСЂРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РёР»Рё РѕС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       '401':
- *         description: Не авторизован
+ *         description: РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       '429':
- *         description: Превышен лимит запросов
+ *         description: РџСЂРµРІС‹С€РµРЅ Р»РёРјРёС‚ Р·Р°РїСЂРѕСЃРѕРІ
  */
 export async function POST(req: Request) {
-    // Применяем rate limiting для публичного endpoint
+    // РџСЂРёРјРµРЅСЏРµРј rate limiting РґР»СЏ РїСѓР±Р»РёС‡РЅРѕРіРѕ endpoint
     return withRateLimit(
         req,
         RateLimitConfigs.public,
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
             const url = getSupabaseUrl();
             const anon = getSupabaseAnonKey();
             
-            // Проверяем, есть ли Bearer token в заголовках (для мобильного приложения)
+            // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё Bearer token РІ Р·Р°РіРѕР»РѕРІРєР°С… (РґР»СЏ РјРѕР±РёР»СЊРЅРѕРіРѕ РїСЂРёР»РѕР¶РµРЅРёСЏ)
             const authHeader = req.headers.get('Authorization');
             const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
             
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
     let user;
             
             if (bearerToken) {
-        // Для мобильного приложения: создаем клиент с токеном в заголовках
+        // Р”Р»СЏ РјРѕР±РёР»СЊРЅРѕРіРѕ РїСЂРёР»РѕР¶РµРЅРёСЏ: СЃРѕР·РґР°РµРј РєР»РёРµРЅС‚ СЃ С‚РѕРєРµРЅРѕРј РІ Р·Р°РіРѕР»РѕРІРєР°С…
         supabase = createClient(url, anon, {
             global: {
                 headers: {
@@ -123,21 +123,21 @@ export async function POST(req: Request) {
                 autoRefreshToken: false,
             },
         });
-        // Проверяем токен через getUser (он автоматически использует токен из заголовков)
+        // РџСЂРѕРІРµСЂСЏРµРј С‚РѕРєРµРЅ С‡РµСЂРµР· getUser (РѕРЅ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РёСЃРїРѕР»СЊР·СѓРµС‚ С‚РѕРєРµРЅ РёР· Р·Р°РіРѕР»РѕРІРєРѕРІ)
         const {data: {user: userData}, error: userError} = await supabase.auth.getUser();
         if (userError || !userData) {
             logError('QuickHold', 'Bearer token auth failed', {
                 error: userError?.message || 'No user',
                 hasToken: !!bearerToken,
                 tokenLength: bearerToken?.length,
-                // Токен автоматически замаскируется через sanitizeObject
+                // РўРѕРєРµРЅ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё Р·Р°РјР°СЃРєРёСЂСѓРµС‚СЃСЏ С‡РµСЂРµР· sanitizeObject
             });
             return createErrorResponse('auth', 'Not signed in', undefined, 401);
         }
         user = userData;
         logDebug('QuickHold', 'Bearer token auth successful', { userId: user.id });
     } else {
-        // Для веб-версии: используем унифицированную утилиту
+        // Р”Р»СЏ РІРµР±-РІРµСЂСЃРёРё: РёСЃРїРѕР»СЊР·СѓРµРј СѓРЅРёС„РёС†РёСЂРѕРІР°РЅРЅСѓСЋ СѓС‚РёР»РёС‚Сѓ
         supabase = await createSupabaseServerClient();
         const {data: {user: userData}} = await supabase.auth.getUser();
         if (!userData) {
@@ -146,35 +146,22 @@ export async function POST(req: Request) {
         user = userData;
     }
 
-    // Валидация входных данных через Zod схему
+    // Р’Р°Р»РёРґР°С†РёСЏ РІС…РѕРґРЅС‹С… РґР°РЅРЅС‹С… С‡РµСЂРµР· Zod СЃС…РµРјСѓ
     const validationResult = await validateRequest(req, quickHoldSchema);
     if (!validationResult.success) {
         return validationResult.response;
     }
     
-    // Дополнительная доменная валидация (структура/бизнес-инварианты)
-    const domainValidation = validateCreateBookingParams(validationResult.data);
-    if (!domainValidation.valid || !domainValidation.data) {
-        return createErrorResponse(
-            'validation',
-            domainValidation.error || 'Неверные параметры бронирования',
-            undefined,
-            400,
-        );
-    }
+    // Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅР°СЏ РґРѕРјРµРЅРЅР°СЏ РІР°Р»РёРґР°С†РёСЏ (СЃС‚СЂСѓРєС‚СѓСЂР°/Р±РёР·РЅРµСЃ-РёРЅРІР°СЂРёР°РЅС‚С‹)
+    const body = validationResult.data;
 
     const branchRepository = new SupabaseBranchRepository(supabase);
     const commands = createSupabaseBookingCommands(supabase, { userId: user.id });
 
-    const notifications: BookingNotificationPort = {
-        async send(bookingId, type) {
-            await notifyHold(bookingId, req, type);
-            logDebug('QuickHold', 'Notification sent successfully from use-case', {
-                bookingId,
-                type,
-            });
-        },
-    };
+    const notifications: BookingNotificationPort = createBookingNotificationHttpAdapter(
+        req,
+        'QuickHold',
+    );
 
     const result = await createBookingUseCase(
         {
@@ -182,17 +169,17 @@ export async function POST(req: Request) {
             commands,
             notifications,
         },
-        domainValidation.data,
+        body,
     );
 
             if (!result.ok) {
                 const kind = result.error.kind;
                 const baseMessage =
                     kind === 'BRANCH_NOT_FOUND_OR_INACTIVE'
-                        ? 'Филиал не найден или неактивен'
+                        ? 'Р¤РёР»РёР°Р» РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РЅРµР°РєС‚РёРІРµРЅ'
                         : kind === 'NO_ACTIVE_BRANCH_FOR_BIZ'
-                        ? 'Для выбранного бизнеса нет активных филиалов'
-                        : 'Не удалось создать бронирование';
+                        ? 'Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ Р±РёР·РЅРµСЃР° РЅРµС‚ Р°РєС‚РёРІРЅС‹С… С„РёР»РёР°Р»РѕРІ'
+                        : 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ';
 
                 return createErrorResponse(
                     'validation',
@@ -211,27 +198,6 @@ export async function POST(req: Request) {
     );
 }
 
-async function notifyHold(bookingId: string, req: Request, type: 'hold' | 'confirm' | 'cancel' = 'hold') {
-    try {
-        const notifyUrl = new URL('/api/notify', req.url);
-        logDebug('QuickHold', 'Calling notify API', { url: notifyUrl.toString(), type, bookingId });
-        
-        const response = await fetch(notifyUrl, {
-            method: 'POST',
-            headers: {'content-type': 'application/json'},
-            body: JSON.stringify({type, booking_id: bookingId}),
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unknown error');
-            logError('QuickHold', 'Notify API error', { status: response.status, errorText });
-        } else {
-            const result = await response.json().catch(() => ({}));
-            logDebug('QuickHold', 'Notify API success', result);
-        }
-    } catch (error) {
-        logError('QuickHold', 'Notify API exception', error);
-    }
-}
+
 
 

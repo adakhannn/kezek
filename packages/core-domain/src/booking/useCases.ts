@@ -57,7 +57,7 @@ export type CreateBookingResult =
  * 1) holdSlot → 2) confirmBooking → 3) уведомление (confirm).
  *
  * Валидация входных данных (формат, UUID и т.п.) должна выполняться выше
- * через Zod/validateCreateBookingParams — сюда поступают уже нормализованные данные.
+ * через Zod на boundary — сюда поступают уже нормализованные данные.
  */
 export async function createBookingUseCase(
     deps: CreateBookingDeps,

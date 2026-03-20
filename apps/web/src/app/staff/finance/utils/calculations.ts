@@ -22,5 +22,5 @@ export {
     calculateTotalConsumables,
     calculateBaseShares,
     calculateDisplayShares,
-} from '@/lib/financeDomain';
+} from '@core-domain/finance';
 

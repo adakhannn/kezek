@@ -254,7 +254,7 @@ function useDashboardBookingsFilters(initialTotal: number) {
 }
 
 function ListTable({ bizId, initial, branches, timezone }: { bizId: string; initial: BookingItem[]; branches: BranchRow[]; timezone: string }) {
-    const { t, locale } = useLanguage();
+    const { t, locale: _locale } = useLanguage();
     const toast = useToast();
     const [list, setList] = useState<BookingItem[]>(initial);
     const {
@@ -461,6 +461,7 @@ function ListTable({ bizId, initial, branches, timezone }: { bizId: string; init
                 totalCount={totalCount}
                 itemsPerPage={ITEMS_PER_PAGE}
                 onPageChange={setCurrentPage}
+                timezone={timezone}
             />
         </section>
         <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />

@@ -10,6 +10,7 @@
  */
 
 export * from './booking';
+export * from './finance';
 export * from './schedule';
 export * from './ports';
 

@@ -8,9 +8,10 @@
 
 ### ✅ Обязательные правила
 
-1. **НИКОГДА не используйте `console.log`, `console.warn`, `console.info`, `console.debug` напрямую в продакшен-коде**
-   - ESLint правило `no-console` настроено как `error` - любой `console.*` (кроме `console.error` в лог-утилитах) сломает сборку
-   - CI автоматически проверяет это на каждом `push`/PR
+1. **Не используйте `console.log`, `console.warn`, `console.info`, `console.debug` напрямую в обычном приложенческом коде**
+   - По умолчанию любой новый прямой `console.*` в feature/UI/API-коде считается нарушением
+   - ESLint правило `no-console` и CI должны ловить такие случаи
+   - Исключения допускаются только для явно перечисленных технических зон, см. раздел `Разрешенные исключения`
 
 2. **Всегда используйте безопасные утилиты из `@/lib/log`**:
    ```typescript
@@ -72,7 +73,7 @@ try {
 #### ❌ НЕПРАВИЛЬНО: Прямое использование console.*
 
 ```typescript
-// ❌ НЕ ДЕЛАЙТЕ ТАК! Это сломает сборку из-за ESLint правила
+// ❌ НЕ ДЕЛАЙТЕ ТАК в feature/UI/API-коде
 console.log('User action', { userId: '123', token: 'secret' });
 console.warn('Warning message');
 console.error('Error:', error);
@@ -156,24 +157,78 @@ pnpm -C apps/web lint
 
 ### Разрешенные исключения
 
-`console.error` разрешен только в:
-- `apps/web/src/lib/log.ts` - основной модуль логирования
-- `apps/web/src/lib/logSafe.ts` - утилиты маскирования
+Разрешенные исключения должны оставаться редкими и технически обоснованными. Они не означают, что `console.*` можно свободно использовать в новом коде.
 
-Эти файлы используют `eslint-disable-next-line no-console` для обоснованных случаев.
+#### 1. Лог-утилиты и shared logger abstractions
+
+Разрешено:
+
+- `apps/web/src/lib/logSafe.ts`
+- `packages/shared-client/src/log.ts`
+
+Причина:
+
+- это сами реализации логгеров и safe/fallback-оберток;
+- здесь прямой `console.*` является частью инфраструктурного слоя.
+
+#### 2. Dev-only debugging инструменты
+
+Разрешено:
+
+- `apps/web/src/hooks/useWhyDidYouRender.ts`
+- `apps/web/src/hooks/useRenderCount.ts`
+- dev-only ветки в `apps/web/src/lib/apiLogger.ts`
+- dev-only ветки в `apps/web/src/lib/webVitals.ts`
+
+Причина:
+
+- эти модули используются только для локальной отладки и анализа в development.
+
+#### 3. Observability / performance fallback
+
+Временно допустимо:
+
+- `apps/web/src/lib/webVitals.ts`
+- `apps/web/src/lib/apiLogger.ts`
+- `apps/web/src/lib/apiMetrics.ts`
+- `apps/web/src/lib/funnelEvents.ts`
+
+Причина:
+
+- это технические observability-модули, где прямой `console.*` используется как fallback или dev/diagnostic output.
+
+Ограничение:
+
+- при доработке этих файлов нужно по возможности переходить на централизованный logger;
+- не копировать этот паттерн в обычный feature-код.
+
+#### 4. Инфраструктурные интеграции
+
+Временно допустимо:
+
+- `apps/web/src/lib/senders/whatsapp.ts`
+
+Причина:
+
+- сейчас там используется локальная safe-обертка для интеграционного логирования;
+- в будущем файл желательно выровнять под единый logger API/infrastructure уровня.
+
+#### Главное правило
+
+Если файл не входит в список выше, прямой `console.*` в нем считается нарушением и должен быть заменен на `logDebug`, `logWarn`, `logError` или другой одобренный abstraction layer.
 
 ## 📚 Дополнительные ресурсы
 
 - **Основной модуль**: `apps/web/src/lib/log.ts`
 - **Утилиты маскирования**: `apps/web/src/lib/logSafe.ts`
 - **Миграция**: `apps/web/src/lib/CONSOLE_LOG_MIGRATION.md`
-- **Резюме миграции**: `MIGRATION_SUMMARY.md`
+- **Резюме миграции**: `docs/archive/MIGRATION_SUMMARY.md`
 
 ## ✅ Чеклист для разработчиков
 
 Перед коммитом убедитесь:
 
-- [ ] Нет прямых `console.log/warn/info/debug` в коде (кроме разрешенных файлов)
+- [ ] Нет новых прямых `console.log/warn/info/debug` в коде вне разрешенных исключений
 - [ ] Используются `logDebug`, `logWarn`, `logError` из `@/lib/log`
 - [ ] Указан осмысленный `scope` для каждого лога
 - [ ] Чувствительные данные не передаются напрямую (они маскируются автоматически, но лучше не передавать)
@@ -195,5 +250,5 @@ pnpm -C apps/web lint
 
 ---
 
-**Последнее обновление**: 2026-02-18  
+**Последнее обновление**: 2026-03-18  
 **Статус**: ✅ Активно применяется, защищено ESLint и CI

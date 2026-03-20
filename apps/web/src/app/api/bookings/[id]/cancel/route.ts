@@ -8,6 +8,7 @@ import {
     type BookingNotificationPort,
 } from '@core-domain/booking';
 
+import { createBookingNotificationHttpAdapter } from '@/app/api/_shared/bookingNotificationHttpAdapter';
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkBookingBelongsToBusiness } from '@/lib/authCheck';
@@ -104,34 +105,10 @@ export async function POST(req: Request, context: unknown) {
             },
         };
 
-        const notifications: BookingNotificationPort = {
-            async send(id, type) {
-                logDebug('BookingsCancel', 'Triggering notifications', { bookingId: id, type });
-
-                try {
-                    const notifyUrl = new URL('/api/notify', req.url);
-
-                    const response = await fetch(notifyUrl, {
-                        method: 'POST',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({ type, booking_id: id }),
-                    });
-
-                    if (!response.ok) {
-                        const errorText = await response.text().catch(() => 'Unknown error');
-                        logError('BookingsCancel', 'Notify API error', {
-                            status: response.status,
-                            errorText,
-                        });
-                    } else {
-                        const result = await response.json().catch(() => ({}));
-                        logDebug('BookingsCancel', 'Notify API success', result);
-                    }
-                } catch (error) {
-                    logError('BookingsCancel', 'Notify API exception', error);
-                }
-            },
-        };
+        const notifications: BookingNotificationPort = createBookingNotificationHttpAdapter(
+            req,
+            'BookingsCancel',
+        );
 
         await cancelBookingUseCase(
             {

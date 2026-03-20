@@ -7,13 +7,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { logError } from '@/lib/log';
-import { TZ } from '@/lib/time';
+import { getBusinessTimezone } from '@/lib/time';
 
 export interface ShiftDataServiceOptions {
     supabase: SupabaseClient;
     staffId: string;
     bizId: string;
     targetDate: Date;
+    businessTz?: string | null;
     useServiceClient?: boolean; // Для обхода RLS при просмотре менеджером
 }
 
@@ -97,6 +98,7 @@ export async function getShiftData({
     staffId,
     bizId,
     targetDate,
+    businessTz,
     useServiceClient = false
 }: ShiftDataServiceOptions): Promise<ShiftDataServiceResult> {
     // Если нужен service client для обхода RLS, получаем его
@@ -106,10 +108,12 @@ export async function getShiftData({
         client = getServiceClient();
     }
     
+    const effectiveBusinessTz = getBusinessTimezone(businessTz);
+
     // Дата в локальной TZ (без времени)
-    const ymd = formatInTimeZone(targetDate, TZ, 'yyyy-MM-dd');
+    const ymd = formatInTimeZone(targetDate, effectiveBusinessTz, 'yyyy-MM-dd');
     const dow = new Date(ymd + 'T12:00:00').getDay(); // 0-6
-    const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const today = formatInTimeZone(new Date(), effectiveBusinessTz, 'yyyy-MM-dd');
     const dateStart = `${ymd}T00:00:00`;
     const dateEnd = `${ymd}T23:59:59`;
 

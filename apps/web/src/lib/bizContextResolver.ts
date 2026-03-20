@@ -4,6 +4,7 @@ import { MANAGER_ROLE_KEYS } from './authContext';
 import { BizAccessError } from './authDiagnostics';
 import { logDebug, logError, logWarn } from './log';
 import { createSupabaseAdminClient, createSupabaseServerClient } from './supabaseHelpers';
+import { getBusinessTimezone } from './time';
 
 /** Диагностика процесса выбора бизнеса (для логов и NO_BIZ_ACCESS). */
 export interface BizContextDiagnostics {
@@ -386,6 +387,17 @@ export async function resolveBizContextForManagers() {
             ? 'user_roles'
             : 'owner_id',
     });
-    return { supabase, userId, bizId };
+    const { data: business } = await serviceClient
+        .from('businesses')
+        .select('tz')
+        .eq('id', bizId)
+        .maybeSingle<{ tz: string | null }>();
+
+    return {
+        supabase,
+        userId,
+        bizId,
+        businessTz: getBusinessTimezone(business?.tz),
+    };
 }
 

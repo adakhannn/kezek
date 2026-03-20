@@ -209,6 +209,6 @@ apps/web/src/app/
 
 - **SYSTEM_FEATURES_DOCUMENTATION.md** — полная документация всех функций
 - **PROJECT_DOCUMENTATION.md** — техническая документация проекта
-- **ISSUES_STAFF_FINANCE_PAGES.md** — проблемы и оптимизации финансового модуля
+- **docs/archive/ISSUES_STAFF_FINANCE_PAGES.md** — архивный отчёт по проблемам и оптимизации финансового модуля
 - **API_DOCUMENTATION.md** — документация API endpoints
 

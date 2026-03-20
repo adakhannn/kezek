@@ -6,12 +6,12 @@ import { fmtErr, withNetworkRetry } from '../utils';
 
 import { logDebug, logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { TZ } from '@/lib/time';
 import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
 
 
 type UseBookingCreationParams = {
     bizId: string;
+    businessTz: string;
     branchId: string;
     service: Service | null;
     staffId: string;
@@ -23,7 +23,7 @@ type UseBookingCreationParams = {
 };
 
 export function useBookingCreation(params: UseBookingCreationParams) {
-    const { bizId, branchId, service, staffId, isAuthed, t, onAuthChoiceRequest, onStaffIdChange, onBookingCreated } = params;
+    const { bizId, businessTz, branchId, service, staffId, isAuthed, t, onAuthChoiceRequest, onStaffIdChange, onBookingCreated } = params;
     const [loading, setLoading] = useState(false);
 
     async function createBooking(slotTime: Date, slotStaffId?: string) {
@@ -66,7 +66,7 @@ export function useBookingCreation(params: UseBookingCreationParams) {
 
         setLoading(true);
         try {
-            const startISO = formatInTimeZone(slotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+            const startISO = formatInTimeZone(slotTime, businessTz, "yyyy-MM-dd'T'HH:mm:ssXXX");
             
             // Создаем бронирование (пока миграции не применены, функция создает hold)
             const { data: bookingData, error: bookingError } = await supabase.rpc('hold_slot', {

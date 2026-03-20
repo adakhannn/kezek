@@ -53,6 +53,7 @@ export async function GET(req: Request) {
 
         let staffId: string;
         let bizId: string;
+        let businessTz: string | undefined;
         // Используем общий тип SupabaseClient, который совместим с обоими клиентами
         let supabase: SupabaseClient;
         let useServiceClient = false;
@@ -62,6 +63,7 @@ export async function GET(req: Request) {
             const context = await getBizContextForManagers();
             supabase = context.supabase;
             bizId = context.bizId;
+            businessTz = context.businessTz;
 
             // Проверяем, что сотрудник принадлежит этому бизнесу
             const { data: staff, error: staffError } = await supabase
@@ -106,6 +108,7 @@ export async function GET(req: Request) {
             supabase = context.supabase;
             staffId = context.staffId;
             bizId = context.bizId;
+            businessTz = context.businessTz;
             useServiceClient = false; // Сотрудник использует обычный клиент с RLS
             // Получаем user_id из сессии для логирования
             const { data: { user } } = await supabase.auth.getUser();
@@ -118,6 +121,7 @@ export async function GET(req: Request) {
             staffId,
             bizId,
             targetDate,
+            businessTz,
             useServiceClient,
         });
 
@@ -217,4 +221,3 @@ export async function GET(req: Request) {
         );
     }
 }
-

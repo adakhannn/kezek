@@ -3,8 +3,6 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabaseClient';
-import { TZ } from '@/lib/time';
-
 type TemporaryTransfer = {
     staff_id: string;
     branch_id: string;
@@ -23,9 +21,10 @@ type Staff = {
 export function useTemporaryTransfers(params: {
     branchId: string;
     bizId: string;
+    businessTz: string;
     staff: Staff[];
 }) {
-    const { branchId, bizId, staff } = params;
+    const { branchId, bizId, businessTz, staff } = params;
     const [temporaryTransfers, setTemporaryTransfers] = useState<TemporaryTransfer[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -47,8 +46,8 @@ export function useTemporaryTransfers(params: {
                 // Загружаем временные переводы для всех будущих дат (в пределах 60 дней)
                 const now = new Date();
                 const maxDate = addDays(now, 60);
-                const minDateStr = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
-                const maxDateStr = formatInTimeZone(maxDate, TZ, 'yyyy-MM-dd');
+                const minDateStr = formatInTimeZone(now, businessTz, 'yyyy-MM-dd');
+                const maxDateStr = formatInTimeZone(maxDate, businessTz, 'yyyy-MM-dd');
 
                 // Создаем мапку staff_id -> home branch_id для определения временных переводов
                 const staffHomeBranches = new Map<string, string>();
@@ -106,7 +105,7 @@ export function useTemporaryTransfers(params: {
         return () => {
             ignore = true;
         };
-    }, [branchId, bizId, staff]);
+    }, [branchId, bizId, businessTz, staff]);
 
     return { temporaryTransfers, loading, error };
 }

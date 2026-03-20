@@ -11,8 +11,6 @@ import Link from 'next/link';
 import { QuickActions } from './QuickActions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { TZ } from '@/lib/time';
-
 
 type BranchRow = { id: string; name: string };
 
@@ -38,11 +36,12 @@ type BookingsListProps = {
     totalCount: number;
     itemsPerPage?: number;
     onPageChange: (page: number) => void;
+    timezone: string;
 };
 
 export function BookingsList({
     bookings,
-    branches,
+    branches: _branches,
     onConfirm,
     onCancel,
     onMarkAttendance,
@@ -51,6 +50,7 @@ export function BookingsList({
     totalCount,
     itemsPerPage = 30,
     onPageChange,
+    timezone,
 }: BookingsListProps) {
     const { t, locale } = useLanguage();
 
@@ -114,7 +114,7 @@ export function BookingsList({
                                     </td>
                                     <td className="p-3 lg:p-4 text-sm font-medium text-gray-900 dark:text-gray-100">{getServiceName(service)}</td>
                                     <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{master?.full_name}</td>
-                                    <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
+                                    <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), timezone, 'dd.MM.yyyy HH:mm')}</td>
                                     <td className="p-3 lg:p-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
                                             {b.status === 'no_show' ? t('bookings.status.noShowShort', 'не пришел') : b.status === 'paid' && isPast ? t('bookings.status.attended', 'пришел') : t(`bookings.status.${b.status}`, b.status)}
@@ -165,7 +165,7 @@ export function BookingsList({
                                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                <span>{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</span>
+                                <span>{formatInTimeZone(new Date(b.start_at), timezone, 'dd.MM.yyyy HH:mm')}</span>
                             </div>
                             <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                                 <QuickActions

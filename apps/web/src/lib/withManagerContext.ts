@@ -22,6 +22,8 @@ export type ManagerContext = {
     admin: ReturnType<typeof createSupabaseAdminClient>;
     /** Текущий бизнес (из user_current_business / ролей / owner_id). */
     bizId: string;
+    /** Таймзона текущего бизнеса с fallback на системную. */
+    businessTz: string;
     /** ID авторизованного пользователя. */
     userId: string;
 };
@@ -44,12 +46,14 @@ export async function withManagerContext(
     let supabase: ManagerContext['supabase'];
     let userId: string;
     let bizId: string;
+    let businessTz: string;
 
     try {
         const ctx = await getBizContextForManagers();
         supabase = ctx.supabase;
         userId = ctx.userId;
         bizId = ctx.bizId;
+        businessTz = ctx.businessTz;
     } catch (e) {
         if (e instanceof BizAccessError) {
             if (e.code === 'NOT_AUTHENTICATED') {
@@ -61,6 +65,12 @@ export async function withManagerContext(
     }
 
     const admin = createSupabaseAdminClient();
-    const managerCtx: ManagerContext = { supabase, admin, bizId, userId };
+    const managerCtx: ManagerContext = {
+        supabase,
+        admin,
+        bizId,
+        businessTz,
+        userId,
+    };
     return handler(managerCtx);
 }

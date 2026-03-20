@@ -6,7 +6,7 @@ import { logApiMetric, getIpAddress, determineErrorType } from '@/lib/apiMetrics
 import { getStaffContext } from '@/lib/authBiz';
 import { logError, logDebug, logWarn } from '@/lib/log';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
-import { TZ, dateAtTz, todayTz } from '@/lib/time';
+import { dateAtTz, todayTz } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
             try {
                 return await withErrorHandler('StaffShiftOpen', async () => {
                 const context = await getStaffContext();
-                const { supabase, staffId: ctxStaffId, bizId: ctxBizId, branchId } = context;
+                const { supabase, staffId: ctxStaffId, bizId: ctxBizId, branchId, businessTz } = context;
                 staffId = ctxStaffId;
                 bizId = ctxBizId;
                 
@@ -85,10 +85,10 @@ export async function POST(req: Request) {
                 userId = user?.id;
 
         const now = new Date();
-        const ymd = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
+        const ymd = formatInTimeZone(now, businessTz, 'yyyy-MM-dd');
 
         // Проверяем, не выходной ли сегодня
-        const baseDate = todayTz();
+        const baseDate = todayTz(businessTz);
         const dow = baseDate.getDay(); // 0-6
 
         // 1. Проверяем staff_time_off (выходные)
@@ -153,7 +153,7 @@ export async function POST(req: Request) {
                     const sorted = [...intervals].sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''));
                     const first = sorted[0];
                     if (first?.start) {
-                        expectedStart = dateAtTz(ymd, first.start);
+                        expectedStart = dateAtTz(ymd, first.start, businessTz);
                     }
                 }
             } catch (e) {
@@ -182,7 +182,7 @@ export async function POST(req: Request) {
                     const sorted = [...intervals].sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''));
                     const first = sorted[0];
                     if (first?.start) {
-                        expectedStart = dateAtTz(ymd, first.start);
+                        expectedStart = dateAtTz(ymd, first.start, businessTz);
                     }
                 }
             } catch (e) {
@@ -353,5 +353,4 @@ export async function POST(req: Request) {
         }
     );
 }
-
 

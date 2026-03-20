@@ -5,7 +5,6 @@ import type { Service } from '../types';
 import { fmtErr, isNetworkError, withNetworkRetry } from '../utils';
 
 import { logDebug, logError } from '@/lib/log';
-import { TZ } from '@/lib/time';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
 
 
@@ -17,6 +16,7 @@ type GuestBookingForm = {
 
 type UseGuestBookingParams = {
     bizId: string;
+    businessTz: string;
     service: Service | null;
     staffId: string; // Может быть 'any'
     branchId: string;
@@ -25,7 +25,7 @@ type UseGuestBookingParams = {
 };
 
 export function useGuestBooking(params: UseGuestBookingParams) {
-    const { bizId, service, staffId, branchId, t, onBookingCreated } = params;
+    const { bizId, businessTz, service, staffId, branchId, t, onBookingCreated } = params;
     
     const [modalOpen, setModalOpen] = useState(false);
     const [slotTime, setSlotTime] = useState<Date | null>(null);
@@ -128,13 +128,13 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         try {
             // Форматируем дату в ISO 8601 формат с таймзоной
             // Используем формат с двоеточием в оффсете (XXX), который соответствует ISO 8601
-            const startISO = formatInTimeZone(slotTime, TZ, "yyyy-MM-dd'T'HH:mm:ssXXX");
+            const startISO = formatInTimeZone(slotTime, businessTz, "yyyy-MM-dd'T'HH:mm:ssXXX");
             
             // Логируем для отладки
             logDebug('GuestBooking', 'Formatted start_at', { 
                 startISO, 
                 slotTime: slotTime.toISOString(),
-                timezone: TZ 
+                timezone: businessTz,
             });
             
             // Проверяем, что все обязательные поля заполнены и валидны

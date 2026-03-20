@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
-import type { BookingStep } from '../types';
-import type { Service } from '../types';
+
+import { canProceedToNextStep, clampBookingStep } from './bookingStepRules';
+import type { BookingStep, Service } from '../types';
+
 import { logDebug } from '@/lib/log';
 
 type UseBookingStepsParams = {
@@ -17,7 +19,7 @@ type UseBookingStepsParams = {
 export function useBookingSteps(params: UseBookingStepsParams) {
     const { branchId, dayStr, staffId, serviceId, servicesFiltered, t, initialStep, onStepChange } = params;
 
-    const [step, setStep] = useState<BookingStep>((Math.min(5, Math.max(1, initialStep ?? 1)) as BookingStep));
+    const [step, setStep] = useState<BookingStep>(clampBookingStep(initialStep));
     const totalSteps: BookingStep = 5;
 
     const stepsMeta = useMemo(
@@ -32,44 +34,36 @@ export function useBookingSteps(params: UseBookingStepsParams) {
     );
 
     const canGoNext = useMemo(() => {
-        if (step >= totalSteps) return false;
+        const result = canProceedToNextStep({
+            step,
+            branchId,
+            dayStr,
+            staffId,
+            serviceId,
+            servicesFiltered,
+        });
 
-        // Шаг 1 -> 2: должен быть выбран филиал
-        if (step === 1) return !!branchId;
-
-        // Шаг 2 -> 3: должна быть выбрана дата
-        if (step === 2) return !!dayStr;
-
-        // Шаг 3 -> 4: должен быть выбран мастер
-        if (step === 3) return !!staffId;
-
-        // Шаг 4 -> 5: должна быть выбрана услуга И мастер должен делать эту услугу
-        if (step === 4) {
-            if (!serviceId || !staffId) return false;
-
-            const isServiceValid = servicesFiltered.some((s) => s.id === serviceId);
-            if (!isServiceValid) {
+        if (step === 4 && serviceId && staffId) {
+            if (!result) {
                 logDebug('Booking', 'canGoNext: service not in servicesFiltered', {
                     serviceId,
-                    servicesFiltered: servicesFiltered.map((s) => s.id),
-                    servicesFilteredNames: servicesFiltered.map((s) => s.name_ru),
+                    servicesFiltered: servicesFiltered.map((service) => service.id),
+                    servicesFilteredNames: servicesFiltered.map((service) => service.name_ru),
                 });
-                return false;
+            } else {
+                logDebug('Booking', 'canGoNext: service is valid (in servicesFiltered)', { serviceId });
             }
-
-            logDebug('Booking', 'canGoNext: service is valid (in servicesFiltered)', { serviceId });
-            return true;
         }
 
-        return true;
-    }, [step, totalSteps, branchId, dayStr, staffId, serviceId, servicesFiltered]);
+        return result;
+    }, [step, branchId, dayStr, staffId, serviceId, servicesFiltered]);
 
     const canGoPrev = step > 1;
 
     const goPrev = () => {
         if (!canGoPrev) return;
         setStep((prev) => {
-            const next = Math.max(1, prev - 1) as BookingStep;
+            const next = clampBookingStep(prev - 1);
             onStepChange?.(next);
             return next;
         });
@@ -78,7 +72,7 @@ export function useBookingSteps(params: UseBookingStepsParams) {
     const goNext = () => {
         if (!canGoNext) return;
         setStep((prev) => {
-            const next = (prev + 1 > totalSteps ? totalSteps : (prev + 1)) as BookingStep;
+            const next = clampBookingStep(prev + 1);
             onStepChange?.(next);
             return next;
         });
@@ -86,4 +80,3 @@ export function useBookingSteps(params: UseBookingStepsParams) {
 
     return { step, stepsMeta, canGoNext, canGoPrev, goNext, goPrev, totalSteps };
 }
-
