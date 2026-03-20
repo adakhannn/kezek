@@ -1,10 +1,10 @@
 /**
  * Jest setup file for React Native Testing Library
- *
+ * 
  * Configures mocks and global test utilities
  */
 
-require('@testing-library/jest-native/extend-expect');
+import '@testing-library/jest-native/extend-expect';
 
 // Mock Expo modules
 jest.mock('expo-constants', () => ({

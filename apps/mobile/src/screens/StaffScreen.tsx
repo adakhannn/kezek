@@ -1,108 +1,36 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { ScrollView, RefreshControl, Text, View } from 'react-native';
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
 
-import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabase';
-import { MainTabParamList } from '../navigation/types';
-import { formatDate, formatTime } from '../utils/format';
-import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import EmptyState from '../components/ui/EmptyState';
+import Card from '../components/ui/Card';
+import { RootStackParamList } from '../navigation/types';
+import { StaffActionButtons } from './staff/StaffActionButtons';
+import { StaffUpcomingBookingCard } from './staff/StaffUpcomingBookingCard';
+import { styles } from './staff/styles';
+import { useStaffScreenData } from './staff/useStaffScreenData';
 
 type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Shifts'>;
-
-type StaffInfo = {
-    id: string;
-    full_name: string;
-    branch: {
-        id: string;
-        name: string;
-    } | null;
-    business: {
-        id: string;
-        name: string;
-    } | null;
-};
-
-type UpcomingBooking = {
-    id: string;
-    start_at: string;
-    end_at: string;
-    service: {
-        name_ru: string;
-    } | null;
-    client_name: string | null;
-    client_phone: string | null;
-};
 
 export default function StaffScreen() {
     const navigation = useNavigation<StaffScreenNavigationProp>();
     const [refreshing, setRefreshing] = useState(false);
-
-    const { user } = useAuth();
-
-    const { data: staffInfo, isLoading: staffLoading, refetch: refetchStaff } = useQuery({
-        queryKey: ['staff-info', user?.id],
-        queryFn: async () => {
-            if (!user?.id) return null;
-
-            const { data, error } = await supabase
-                .from('staff')
-                .select(`
-                    id,
-                    full_name,
-                    branch:branches(id, name),
-                    business:businesses(id, name)
-                `)
-                .eq('user_id', user.id)
-                .eq('is_active', true)
-                .maybeSingle();
-
-            if (error) throw error;
-            return data as StaffInfo | null;
-        },
-        enabled: !!user?.id,
-    });
-
-    const { data: upcomingBookings, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
-        queryKey: ['staff-bookings', staffInfo?.id],
-        queryFn: async () => {
-            if (!staffInfo?.id) return [];
-
-            const now = new Date().toISOString();
-
-            const { data, error } = await supabase
-                .from('bookings')
-                .select(`
-                    id,
-                    start_at,
-                    end_at,
-                    client_name,
-                    client_phone,
-                    service:services(name_ru)
-                `)
-                .eq('staff_id', staffInfo.id)
-                .in('status', ['hold', 'confirmed', 'paid'])
-                .gte('start_at', now)
-                .order('start_at', { ascending: true })
-                .limit(10);
-
-            if (error) throw error;
-            return (data || []) as UpcomingBooking[];
-        },
-        enabled: !!staffInfo?.id,
-    });
+    const {
+        staffInfo,
+        upcomingBookings,
+        staffLoading,
+        bookingsLoading,
+        refetchStaff,
+        refetchBookings,
+    } = useStaffScreenData();
 
     const onRefresh = async () => {
         setRefreshing(true);
         await Promise.all([refetchStaff(), refetchBookings()]);
         setRefreshing(false);
     };
-
 
     if ((staffLoading || bookingsLoading) && !refreshing) {
         return <LoadingSpinner message="Загрузка..." />;
@@ -150,29 +78,7 @@ export default function StaffScreen() {
                 {upcomingBookings && upcomingBookings.length > 0 ? (
                     <View style={styles.bookingsList}>
                         {upcomingBookings.map((booking) => (
-                            <Card key={booking.id} style={styles.bookingCard}>
-                                <Text style={styles.bookingService}>
-                                    {booking.service?.name_ru || 'Услуга'}
-                                </Text>
-                                {booking.client_name && (
-                                    <Text style={styles.bookingClient}>
-                                        Клиент: {booking.client_name}
-                                    </Text>
-                                )}
-                                {booking.client_phone && (
-                                    <Text style={styles.bookingPhone}>
-                                        {booking.client_phone}
-                                    </Text>
-                                )}
-                                <View style={styles.bookingTime}>
-                                    <Text style={styles.bookingDate}>
-                                        {formatDate(booking.start_at)}
-                                    </Text>
-                                    <Text style={styles.bookingTimeRange}>
-                                        {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
-                                    </Text>
-                                </View>
-                            </Card>
+                            <StaffUpcomingBookingCard key={booking.id} booking={booking} />
                         ))}
                     </View>
                 ) : (
@@ -184,131 +90,10 @@ export default function StaffScreen() {
                 )}
             </View>
 
-            {/* Кнопки для перехода к сменам */}
-            {staffInfo && (
-                <View style={styles.section}>
-                    <TouchableOpacity
-                        style={styles.shiftsButton}
-                        onPress={() => {
-                            navigation.navigate('ShiftQuick');
-                        }}
-                    >
-                        <Text style={styles.shiftsButtonText}>Моя смена</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.shiftsButton, styles.shiftsButtonSecondary]}
-                        onPress={() => {
-                            navigation.navigate('Shifts');
-                        }}
-                    >
-                        <Text style={styles.shiftsButtonTextSecondary}>Статистика</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
+            <StaffActionButtons
+                onShiftQuick={() => navigation.navigate('ShiftQuick')}
+                onShiftsStats={() => navigation.navigate('Shifts')}
+            />
         </ScrollView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f9fafb',
-    },
-    header: {
-        padding: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
-        marginBottom: 4,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#6b7280',
-    },
-    card: {
-        margin: 20,
-        marginBottom: 0,
-    },
-    section: {
-        padding: 20,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#111827',
-        marginBottom: 16,
-    },
-    branchName: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#374151',
-    },
-    businessName: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#374151',
-    },
-    bookingsList: {
-        gap: 12,
-    },
-    bookingCard: {
-        marginBottom: 12,
-    },
-    bookingService: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#111827',
-        marginBottom: 8,
-    },
-    bookingClient: {
-        fontSize: 14,
-        color: '#374151',
-        marginBottom: 4,
-    },
-    bookingPhone: {
-        fontSize: 14,
-        color: '#6366f1',
-        marginBottom: 8,
-    },
-    bookingTime: {
-        marginTop: 8,
-        paddingTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
-    },
-    bookingDate: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#111827',
-        marginBottom: 4,
-    },
-    bookingTimeRange: {
-        fontSize: 14,
-        color: '#6b7280',
-    },
-    shiftsButton: {
-        backgroundColor: '#4f46e5',
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    shiftsButtonSecondary: {
-        backgroundColor: '#f3f4f6',
-    },
-    shiftsButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    shiftsButtonTextSecondary: {
-        color: '#374151',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-});
