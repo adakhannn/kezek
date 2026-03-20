@@ -12,26 +12,8 @@ export type FinanceStatsShiftItem = {
 };
 
 type AdminLikeClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            in: (column: string, values: string[]) => {
-                order: (column: string, options: { ascending: boolean }) => Promise<{
-                    data: Array<{
-                        id: string;
-                        shift_id: string;
-                        client_name: string;
-                        service_name: string;
-                        service_amount: number | null;
-                        consumables_amount: number | null;
-                        note: string | null;
-                        booking_id: string | null;
-                        created_at: string | null;
-                    }> | null;
-                    error: unknown;
-                }>;
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 export async function loadFinanceStatsShiftItems(

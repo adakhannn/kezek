@@ -13,7 +13,7 @@ export async function ensureFinanceAuditLogAccess(
     }
 
     const staffCheck = await checkResourceBelongsToBiz<{ id: string; biz_id: string }>(
-        admin,
+        admin as never,
         'staff',
         staffId,
         bizId,

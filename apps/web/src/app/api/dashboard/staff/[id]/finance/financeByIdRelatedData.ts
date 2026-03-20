@@ -25,43 +25,13 @@ type ServiceJoinValue = {
 };
 
 type BookingsClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                gte: (column: string, value: unknown) => {
-                    lte: (column: string, value: unknown) => {
-                        neq: (column: string, value: unknown) => {
-                            order: (column: string, options: { ascending: boolean }) => Promise<{
-                                data: Array<{
-                                    id: string;
-                                    client_name: string | null;
-                                    client_phone: string | null;
-                                    start_at: string;
-                                    services: ServiceJoinValue | ServiceJoinValue[] | null;
-                                }> | null;
-                                error: unknown;
-                            }>;
-                        };
-                    };
-                };
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 type ServicesClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                eq: (column: string, value: unknown) => {
-                    eq: (column: string, value: unknown) => Promise<{
-                        data: Array<{ services: ServiceJoinValue | ServiceJoinValue[] | null }> | null;
-                        error: unknown;
-                    }>;
-                };
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 type LoadFinanceByIdRelatedDataInput = {
@@ -118,7 +88,13 @@ export async function loadFinanceByIdRelatedData(
         logError('StaffFinance', 'Error loading staff services', servicesResult.error);
     }
 
-    const bookings = (Array.isArray(bookingsResult.data) ? bookingsResult.data : []).map((booking) => ({
+    const bookings = (Array.isArray(bookingsResult.data) ? bookingsResult.data : []).map((booking: {
+        id: string;
+        client_name: string | null;
+        client_phone: string | null;
+        start_at: string;
+        services: ServiceJoinValue | ServiceJoinValue[] | null;
+    }) => ({
         id: booking.id,
         client_name: booking.client_name,
         client_phone: booking.client_phone,
@@ -127,8 +103,8 @@ export async function loadFinanceByIdRelatedData(
     }));
 
     const services = (Array.isArray(servicesResult.data) ? servicesResult.data : [])
-        .map((row) => normalizeService(row.services))
-        .filter((service): service is FinanceByIdService => service !== null);
+        .map((row: { services: ServiceJoinValue | ServiceJoinValue[] | null }) => normalizeService(row.services))
+        .filter((service: FinanceByIdService | null): service is FinanceByIdService => service !== null);
 
     return { bookings, services };
 }

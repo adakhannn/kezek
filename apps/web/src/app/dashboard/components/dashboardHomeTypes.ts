@@ -8,6 +8,7 @@ export type DashboardHomeClientProps = {
     branchesCount: number;
     needOnboarding: boolean;
     ratingScore: number | null;
+    ratingConfigScope?: 'biz' | 'global' | null;
     ratingWeights: {
         reviews: number;
         productivity: number;

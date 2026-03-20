@@ -21,11 +21,25 @@ export function todayDateString(timezone?: string): string {
 }
 
 /**
+ * @deprecated Use todayDateString().
+ */
+export function todayStringInTz(timezone?: string): string {
+    return todayDateString(timezone);
+}
+
+/**
  * Календарная дата (YYYY-MM-DD) для произвольного момента в заданной таймзоне.
  */
 export function toDateString(d: Date, timezone?: string): string {
     const tz = timezone || getTimezone();
     return formatInTimeZone(d, tz, 'yyyy-MM-dd');
+}
+
+/**
+ * @deprecated Use toDateString().
+ */
+export function formatDateInTz(d: Date, timezone?: string): string {
+    return toDateString(d, timezone);
 }
 
 /**

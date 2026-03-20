@@ -12,18 +12,8 @@ export type FinanceByIdShiftItemRow = {
 };
 
 type AdminLikeClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                order: (column: string, options: { ascending: boolean }) => {
-                    order: (column: string, options: { ascending: boolean }) => Promise<{
-                        data: FinanceByIdShiftItemRow[] | null;
-                        error: unknown;
-                    }>;
-                };
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 export async function loadFinanceByIdShiftItems(

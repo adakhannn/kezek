@@ -40,7 +40,7 @@ export function applyAdjustmentsToTotals(
         };
     }
 
-    const deltas = adjustments.reduce(
+    const deltas = adjustments.reduce<{ serviceDelta: number; consumablesDelta: number }>(
         (acc, adj) => {
             const service =
                 typeof adj.serviceDelta === 'number' && !isNaN(adj.serviceDelta)

@@ -8,13 +8,8 @@ type StaffFinanceStatsRow = {
 };
 
 type SupabaseLikeClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                maybeSingle: () => Promise<{ data: StaffFinanceStatsRow | null; error: { message: string } | null }>;
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 export async function loadFinanceStatsStaff(

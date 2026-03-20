@@ -18,16 +18,9 @@ type FinanceAuditLogProfileRow = {
     full_name: string | null;
 };
 
-type QueryBuilder = {
-    select: (columns: string) => QueryBuilder;
-    eq: (column: string, value: unknown) => QueryBuilder;
-    order: (column: string, options: { ascending: boolean }) => QueryBuilder;
-    limit: (count: number) => Promise<{ data: unknown; error?: { message: string } | null }>;
-    in: (column: string, values: string[]) => Promise<{ data: unknown; error?: { message: string } | null }>;
-};
-
 type AdminLikeClient = {
-    from: (table: string) => QueryBuilder;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 export async function loadFinanceAuditLogRows(

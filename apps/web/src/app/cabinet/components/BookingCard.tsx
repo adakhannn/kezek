@@ -51,6 +51,8 @@ export default function BookingCard({
     canCancel: boolean;
     review?: { id: string; rating: number; comment: string | null } | null;
     promotionApplied?: Record<string, unknown> | null;
+    servicesList?: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number }[];
+    subscriptionApplied?: Record<string, unknown> | null;
     businessTz?: string | null;
 }) {
     const { t, locale } = useLanguage();

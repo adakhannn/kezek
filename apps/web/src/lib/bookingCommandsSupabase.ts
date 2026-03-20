@@ -58,51 +58,6 @@ export function createSupabaseBookingCommands(
             return rpcData;
         },
 
-        async holdComplexSlot({ bizId, branchId, staffId, startAt, services }) {
-            logDebug('BookingCommandsSupabase', 'Calling hold_complex_slot RPC', {
-                userId,
-                bizId,
-                branchId,
-                staffId,
-                startAt,
-                servicesCount: services.length,
-            });
-
-            const servicesJson = services.map((s) => ({
-                service_id: s.service_id,
-                duration_min: s.duration_min,
-                order_index: s.order_index,
-            }));
-
-            const { data: rpcData, error } = await supabase.rpc('hold_complex_slot', {
-                p_biz_id: bizId,
-                p_branch_id: branchId,
-                p_staff_id: staffId,
-                p_start: startAt,
-                p_services: servicesJson,
-            });
-
-            if (error) {
-                logError('BookingCommandsSupabase', 'hold_complex_slot RPC error', {
-                    message: error.message,
-                    code: error.code,
-                    details: error.details,
-                    hint: error.hint,
-                });
-                throw new Error(error.message);
-            }
-
-            if (typeof rpcData !== 'string' || !rpcData) {
-                logError('BookingCommandsSupabase', 'Unexpected hold_complex_slot RPC result shape', {
-                    rpcData,
-                });
-                throw new Error('Unexpected RPC result shape');
-            }
-
-            logDebug('BookingCommandsSupabase', 'hold_complex_slot RPC success', { bookingId: rpcData });
-            return rpcData;
-        },
-
         async confirmBooking(bookingId: string) {
             logDebug('BookingCommandsSupabase', 'Attempting to confirm booking', {
                 bookingId,

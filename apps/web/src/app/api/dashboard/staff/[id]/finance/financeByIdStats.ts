@@ -19,13 +19,6 @@ export type FinanceByIdAllShift = {
     late_minutes: number;
 };
 
-type ShiftStatsRow = {
-    total_amount: number | null;
-    master_share: number | null;
-    salon_share: number | null;
-    late_minutes: number | null;
-};
-
 type AllShiftRow = {
     shift_date: string | null;
     status: string | null;
@@ -36,20 +29,8 @@ type AllShiftRow = {
 };
 
 type AdminLikeClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                eq: (column: string, value: unknown) => {
-                    eq: (column: string, value: unknown) => {
-                        gte?: (column: string, value: unknown) => {
-                            order: (column: string, options: { ascending: boolean }) => Promise<{ data: ShiftStatsRow[] | null; error: unknown }>;
-                        };
-                        order: (column: string, options: { ascending: boolean }) => Promise<{ data: AllShiftRow[] | null; error: unknown }>;
-                    };
-                };
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 type ShiftLike = {
@@ -137,7 +118,7 @@ export async function loadFinanceByIdStats(
         stats.shiftsCount += 1;
     }
 
-    const allShifts = (Array.isArray(allShiftsResult.data) ? allShiftsResult.data : []).map((shiftRow) => ({
+    const allShifts = (Array.isArray(allShiftsResult.data) ? allShiftsResult.data : []).map((shiftRow: AllShiftRow) => ({
         shift_date: typeof shiftRow.shift_date === 'string' ? shiftRow.shift_date : '',
         status: typeof shiftRow.status === 'string' ? shiftRow.status : 'closed',
         total_amount: safeNumber(shiftRow.total_amount),

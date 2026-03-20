@@ -154,10 +154,10 @@ export function handleApiError(
  *   });
  * }
  */
-export async function withErrorHandler<T>(
+export async function withErrorHandler<_T = unknown>(
     scope: string,
-    handler: () => Promise<NextResponse<T | ApiErrorResponse>>
-): Promise<NextResponse<T | ApiErrorResponse>> {
+    handler: () => Promise<Response>
+): Promise<Response> {
     try {
         return await handler();
     } catch (error) {

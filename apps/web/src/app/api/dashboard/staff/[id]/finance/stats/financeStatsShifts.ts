@@ -14,24 +14,8 @@ type ShiftRow = {
 };
 
 type AdminLikeClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                eq: (nestedColumn: string, nestedValue: unknown) => {
-                    eq: (deepColumn: string, deepValue: unknown) => {
-                        eq: (statusColumn: string, statusValue: unknown) => {
-                            maybeSingle: () => Promise<{ data: unknown; error?: { message: string } | null }>;
-                        };
-                        gte: (gteColumn: string, gteValue: unknown) => {
-                            lte: (lteColumn: string, lteValue: unknown) => {
-                                order: (orderColumn: string, options: { ascending: boolean }) => Promise<{ data: unknown; error?: { message: string } | null }>;
-                            };
-                        };
-                    };
-                };
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 type LoadFinanceStatsShiftsInput = {
@@ -91,7 +75,7 @@ export async function loadFinanceStatsShifts(
 
     let finalShifts = (shifts || []) as ShiftRow[];
     if (todayOpenShift) {
-        const hasTodayShift = finalShifts.some((shift) => shift.id === todayOpenShift.id);
+        const hasTodayShift = finalShifts.some((shift) => shift.id === (todayOpenShift as ShiftRow).id);
         if (period === 'day' && date === today && !hasTodayShift) {
             finalShifts = [todayOpenShift as ShiftRow, ...finalShifts];
             logDebug('StaffFinanceStats', 'Added today open shift to results');

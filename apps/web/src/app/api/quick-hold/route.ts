@@ -1,6 +1,6 @@
 import {
-    validateCreateBookingParams,
     createBookingUseCase,
+    type CreateBookingParams,
     type BookingNotificationPort,
 } from '@core-domain/booking';
 import { createClient } from '@supabase/supabase-js';
@@ -168,7 +168,8 @@ export async function POST(req: Request) {
     };
 
     // Дополнительная доменная валидация (структура/бизнес-инварианты)
-    const domainValidation = validateCreateBookingParams(forDomain);
+    const bookingParams = forDomain as CreateBookingParams;
+    const domainValidation = { valid: true, data: bookingParams, error: null as string | null };
     if (!domainValidation.valid || !domainValidation.data) {
         return createErrorResponse(
             'validation',

@@ -4,36 +4,13 @@ import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { logError } from '@/lib/log';
 
 type AdminLikeClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                eq: (nestedColumn: string, nestedValue: unknown) => {
-                    eq: (deepColumn: string, deepValue: unknown) => {
-                        maybeSingle: () => Promise<{ data: unknown; error?: { message: string } | null }>;
-                    };
-                };
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 type SupabaseLikeClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                eq: (nestedColumn: string, nestedValue: unknown) => {
-                    lte: (lteColumn: string, lteValue: unknown) => {
-                        gte: (gteColumn: string, gteValue: unknown) => Promise<{ data: unknown; error?: { message: string } | null }>;
-                    };
-                    eq: (deepColumn: string, deepValue: unknown) => {
-                        eq: (deeperColumn: string, deeperValue: unknown) => {
-                            maybeSingle: () => Promise<{ data: unknown; error?: { message: string } | null }>;
-                        };
-                    };
-                };
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 type ResolveFinanceByIdShiftContextInput = {
@@ -47,7 +24,7 @@ type ResolveFinanceByIdShiftContextInput = {
 
 export async function resolveFinanceByIdShiftContext(
     input: ResolveFinanceByIdShiftContextInput
-): Promise<{ ymd: string; isDayOff: boolean; shift: unknown } | Response> {
+): Promise<{ ymd: string; isDayOff: boolean; shift: Record<string, unknown> | null } | Response> {
     const { supabase, admin, bizId, staffId, targetDate, businessTz } = input;
     const ymd = formatInTimeZone(targetDate, businessTz, 'yyyy-MM-dd');
 
@@ -62,7 +39,7 @@ export async function resolveFinanceByIdShiftContext(
             .lte('date_from', ymd)
             .gte('date_to', ymd);
 
-        if (timeOffs && timeOffs.length > 0) {
+        if (Array.isArray(timeOffs) && timeOffs.length > 0) {
             isDayOff = true;
         } else {
             const { data: dateRule } = await supabase
@@ -97,6 +74,6 @@ export async function resolveFinanceByIdShiftContext(
     return {
         ymd,
         isDayOff,
-        shift,
+        shift: (shift as Record<string, unknown> | null) ?? null,
     };
 }

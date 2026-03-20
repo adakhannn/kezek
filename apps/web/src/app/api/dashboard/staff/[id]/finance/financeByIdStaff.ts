@@ -10,13 +10,8 @@ type FinanceByIdStaffRow = {
 };
 
 type SupabaseLikeClient = {
-    from: (table: string) => {
-        select: (columns: string) => {
-            eq: (column: string, value: unknown) => {
-                maybeSingle: () => Promise<{ data: FinanceByIdStaffRow | null; error: { message: string } | null }>;
-            };
-        };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    from: (table: string) => any;
 };
 
 export async function loadFinanceByIdStaff(

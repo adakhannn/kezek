@@ -59,9 +59,25 @@ export async function GET(
                 return shiftContext;
             }
             const { ymd, isDayOff, shift } = shiftContext;
+            const financeShift = shift as {
+                id: string;
+                shift_date: string;
+                status: 'open' | 'closed';
+                opened_at?: string | null;
+                closed_at?: string | null;
+                expected_start?: string | null;
+                late_minutes?: number | null;
+                total_amount?: number | null;
+                consumables_amount?: number | null;
+                master_share?: number | null;
+                salon_share?: number | null;
+                hours_worked?: number | null;
+                guaranteed_amount?: number | null;
+                topup_amount?: number | null;
+            } | null;
 
             const [items, relatedData, statsData] = await Promise.all([
-                loadFinanceByIdShiftItems(admin, shift?.id),
+                loadFinanceByIdShiftItems(admin, financeShift?.id),
                 loadFinanceByIdRelatedData({ supabase, staffId, ymd }),
                 loadFinanceByIdStats({
                     admin,
@@ -69,14 +85,14 @@ export async function GET(
                     staffId,
                     targetDate,
                     businessTz,
-                    shift,
+                    shift: financeShift,
                     hourlyRate,
                 }),
             ]);
 
             return createSuccessResponse(
                 buildFinanceByIdResponse({
-                    shift,
+                    shift: financeShift,
                     items,
                     bookings: relatedData.bookings,
                     services: relatedData.services,
