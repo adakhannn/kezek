@@ -1,7 +1,3 @@
-/**
- * Расчёт сумм по позициям смены и корректировкам.
- */
-
 export interface ShiftItem {
     serviceAmount?: number | null;
     consumablesAmount?: number | null;
@@ -15,7 +11,7 @@ export interface ShiftAdjustment {
 export function calculateTotalServiceAmount(items: ShiftItem[]): number {
     return items.reduce((sum, it) => {
         const amount =
-            typeof it.serviceAmount === 'number' && !Number.isNaN(it.serviceAmount)
+            typeof it.serviceAmount === 'number' && !isNaN(it.serviceAmount)
                 ? it.serviceAmount
                 : 0;
         return sum + (amount >= 0 ? amount : 0);
@@ -25,7 +21,7 @@ export function calculateTotalServiceAmount(items: ShiftItem[]): number {
 export function calculateTotalConsumables(items: ShiftItem[]): number {
     return items.reduce((sum, it) => {
         const amount =
-            typeof it.consumablesAmount === 'number' && !Number.isNaN(it.consumablesAmount)
+            typeof it.consumablesAmount === 'number' && !isNaN(it.consumablesAmount)
                 ? it.consumablesAmount
                 : 0;
         return sum + (amount >= 0 ? amount : 0);
@@ -44,15 +40,14 @@ export function applyAdjustmentsToTotals(
         };
     }
 
-    type Deltas = { serviceDelta: number; consumablesDelta: number };
-    const deltas: Deltas = adjustments.reduce<Deltas>(
+    const deltas = adjustments.reduce(
         (acc, adj) => {
             const service =
-                typeof adj.serviceDelta === 'number' && !Number.isNaN(adj.serviceDelta)
+                typeof adj.serviceDelta === 'number' && !isNaN(adj.serviceDelta)
                     ? adj.serviceDelta
                     : 0;
             const consumables =
-                typeof adj.consumablesDelta === 'number' && !Number.isNaN(adj.consumablesDelta)
+                typeof adj.consumablesDelta === 'number' && !isNaN(adj.consumablesDelta)
                     ? adj.consumablesDelta
                     : 0;
 
@@ -69,4 +64,3 @@ export function applyAdjustmentsToTotals(
 
     return { totalAmount, totalConsumables };
 }
-

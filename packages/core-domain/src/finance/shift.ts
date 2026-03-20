@@ -1,7 +1,3 @@
-/**
- * Полный расчёт финансов смены.
- */
-
 import { calculateGuaranteedAmount, calculateTopupAmount } from './guarantee';
 import type { PaymentMode } from './modes';
 import { calculateBaseShares } from './shares';
@@ -73,7 +69,8 @@ export function calculateShiftFinancials(
     const guaranteedAmount = calculateGuaranteedAmount(hoursWorked, hourlyRate);
     const topupAmount = calculateTopupAmount(guaranteedAmount, baseMasterShare);
 
-    const finalMasterShare = guaranteedAmount > baseMasterShare ? guaranteedAmount : baseMasterShare;
+    const finalMasterShare =
+        guaranteedAmount > baseMasterShare ? guaranteedAmount : baseMasterShare;
     const finalSalonShare = Math.max(0, baseSalonShare - topupAmount);
 
     return {
@@ -89,4 +86,3 @@ export function calculateShiftFinancials(
         normalizedPercentSalon,
     };
 }
-

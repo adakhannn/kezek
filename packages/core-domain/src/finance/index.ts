@@ -1,15 +1,20 @@
-/**
- * Финансовый домен: расчёты смен, процентов и гарантий.
- *
- * Чистый модуль без зависимостей от Next.js и Supabase,
- * может использоваться как в API, так и на фронтенде.
- */
+export type { PaymentMode } from './modes';
+export type { NormalizedPercentages } from './normalize';
+export type { ShiftItem, ShiftAdjustment } from './items';
+export type { DisplayShares } from './display';
+export type { ShiftFinancials, CalculateShiftFinancialsOptions } from './shift';
 
-export * from './modes';
-export * from './normalize';
-export * from './shares';
-export * from './guarantee';
-export * from './items';
-export * from './shift';
-export * from './display';
-
+export { normalizePercentages } from './normalize';
+export {
+    calculateBaseMasterShare,
+    calculateBaseSalonShare,
+    calculateBaseShares,
+} from './shares';
+export { calculateGuaranteedAmount, calculateTopupAmount } from './guarantee';
+export {
+    calculateTotalServiceAmount,
+    calculateTotalConsumables,
+    applyAdjustmentsToTotals,
+} from './items';
+export { calculateDisplayShares } from './display';
+export { calculateShiftFinancials } from './shift';

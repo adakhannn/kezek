@@ -1,7 +1,3 @@
-/**
- * Расчёт базовых долей мастера и салона.
- */
-
 import { normalizePercentages } from './normalize';
 
 export function calculateBaseMasterShare(
@@ -32,7 +28,11 @@ export function calculateBaseShares(
 ): { masterShare: number; salonShare: number } {
     return {
         masterShare: calculateBaseMasterShare(totalAmount, percentMaster, percentSalon),
-        salonShare: calculateBaseSalonShare(totalAmount, totalConsumables, percentMaster, percentSalon),
+        salonShare: calculateBaseSalonShare(
+            totalAmount,
+            totalConsumables,
+            percentMaster,
+            percentSalon,
+        ),
     };
 }
-

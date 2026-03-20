@@ -1,18 +1,9 @@
-/**
- * Нормализация процентов мастера и салона.
- */
-
 export interface NormalizedPercentages {
     master: number;
     salon: number;
     sum: number;
 }
 
-/**
- * Нормализует проценты мастера и салона.
- *
- * Если сумма процентов не равна 100, нормализует их пропорционально.
- */
 export function normalizePercentages(
     percentMaster: number,
     percentSalon: number,
@@ -27,4 +18,3 @@ export function normalizePercentages(
         sum: 100,
     };
 }
-

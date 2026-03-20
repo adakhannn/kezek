@@ -3,7 +3,7 @@
  * Преобразование между структурами БД и доменными объектами
  */
 
-import type { BookingStatus, BookingServiceItem, PromotionType, PromotionApplied, PromotionParams } from './types';
+import type { BookingStatus, PromotionType, PromotionApplied, PromotionParams } from './types';
 
 /**
  * DTO бронирования (упрощённая версия для API ответов)
@@ -13,7 +13,6 @@ export type BookingDto = {
     biz_id: string;
     branch_id: string;
     service_id: string;
-    services?: BookingServiceItem[]; // Для комплексов услуг; для старых записей может быть undefined
     staff_id: string;
     client_id?: string | null;
     client_name?: string | null;
@@ -75,14 +74,12 @@ export function transformBookingToDto(booking: {
     expires_at?: string | null;
     created_at: string;
     promotion_applied?: unknown;
-    services?: BookingServiceItem[] | null;
 }): BookingDto {
     return {
         id: booking.id,
         biz_id: booking.biz_id,
         branch_id: booking.branch_id,
         service_id: booking.service_id,
-        services: booking.services ?? undefined,
         staff_id: booking.staff_id,
         client_id: booking.client_id ?? null,
         client_name: booking.client_name ?? null,
