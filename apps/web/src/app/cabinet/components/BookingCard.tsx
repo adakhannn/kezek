@@ -1,45 +1,46 @@
-// apps/web/src/app/cabinet/components/BookingCard.tsx
 'use client';
 
-import {formatInTimeZone} from 'date-fns-tz';
-import {useState, useEffect, useRef} from 'react';
+import { buildBookingTimeline } from '@core-domain/booking';
 
+import { BookingCardActions } from './BookingCardActions';
+import { BookingCardHeader } from './BookingCardHeader';
+import { BookingCardTimelineSection } from './BookingCardTimelineSection';
 import MapDialog from './MapDialog';
 import ReviewDialog from './ReviewDialog';
+import {
+    getBookingServiceName,
+    getBookingStaffName,
+    getBookingTimelineLabel,
+    getBookingWhen,
+} from './bookingCardHelpers';
+import { useBookingCard } from './useBookingCard';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { getTimezone } from '@/lib/env';
-import {logError} from '@/lib/log';
-import { transliterate } from '@/lib/transliterate';
-
-const TZ = getTimezone();
+import { getBusinessTimezone } from '@/lib/time';
 
 export default function BookingCard({
-                                        bookingId,
-                                        status,
-                                        start_at,
-                                        end_at,
-                                        service,
-                                        servicesList,
-                                        staff,
-                                        branch,
-                                        business,
-                                        serviceId,
-                                        staffId,
-                                        branchId,
-                                        bizId,
-                                        canCancel,
-                                        review: initialReview,
-                                        promotionApplied,
-                                        subscriptionApplied,
-                                    }: {
+    bookingId,
+    status,
+    start_at,
+    end_at,
+    service,
+    staff,
+    branch,
+    business,
+    serviceId,
+    staffId,
+    branchId,
+    bizId,
+    canCancel,
+    review: initialReview,
+    promotionApplied,
+    businessTz,
+}: {
     bookingId: string;
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled';
     start_at: string;
     end_at: string;
     service: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number } | null;
-    /** Полный список услуг визита (если это комплекс); при отсутствии — ведём себя как сейчас (одна услуга) */
-    servicesList?: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number }[];
     staff: { id: string; full_name: string } | null;
     branch: { id: string; name: string; lat: number | null; lon: number | null; address: string | null } | null;
     business: { id: string; name: string; slug: string } | null;
@@ -50,269 +51,73 @@ export default function BookingCard({
     canCancel: boolean;
     review?: { id: string; rating: number; comment: string | null } | null;
     promotionApplied?: Record<string, unknown> | null;
-    subscriptionApplied?: Record<string, unknown> | null;
+    businessTz?: string | null;
 }) {
-    const [showMap, setShowMap] = useState(false);
-    const [openReview, setOpenReview] = useState(false);
-    const [busy, setBusy] = useState(false);
-    // Локальное состояние для отзыва (оптимистичное обновление)
-    const [review, setReview] = useState(initialReview);
-    // Флаг для блокировки повторных кликов
-    const [reviewSubmitting, setReviewSubmitting] = useState(false);
-    // Ref для хранения timeoutId для очистки при размонтировании
-    const reloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const { t, locale } = useLanguage();
-
-    const getServiceName = (svc: typeof service): string => {
-        if (!svc) return t('cabinet.bookings.card.service', 'Услуга');
-        if (locale === 'ky' && svc.name_ky) return svc.name_ky;
-        if (locale === 'en' && svc.name_en) return svc.name_en;
-        return svc.name_ru;
-    };
-
-    const formatStaffName = (name: string | null | undefined): string => {
-        if (!name) return t('cabinet.bookings.card.masterNotSet', 'Мастер не указан');
-        if (locale === 'en') return transliterate(name);
-        return name;
-    };
+    const timezone = getBusinessTimezone(businessTz);
 
     const effectiveServiceId = serviceId ?? service?.id ?? null;
     const effectiveStaffId = staffId ?? staff?.id ?? null;
     const effectiveBranchId = branchId ?? branch?.id ?? null;
     const effectiveBizId = bizId ?? business?.id ?? null;
 
-    function repeatBooking() {
-        if (!business) return;
-        try {
-            if (typeof window !== 'undefined' && effectiveBizId && effectiveBranchId && effectiveServiceId && effectiveStaffId) {
-                const key = `booking_state_${effectiveBizId}`;
-                const dayStr = formatInTimeZone(new Date(start_at), TZ, 'yyyy-MM-dd');
-                const payload = {
-                    branchId: effectiveBranchId,
-                    serviceId: effectiveServiceId,
-                    staffId: effectiveStaffId,
-                    day: dayStr,
-                    step: 4,
-                };
-                window.localStorage.setItem(key, JSON.stringify(payload));
-            }
-        } catch (e) {
-            logError('BookingCard', 'repeatBooking: failed to save state', e);
-        }
-        window.location.href = `/b/${business.slug}`;
-    }
-
-    // Синхронизируем состояние отзыва при изменении пропсов
-    useEffect(() => {
-        setReview(initialReview);
-    }, [initialReview]);
-
-    // Cleanup: очищаем timeout при размонтировании компонента
-    useEffect(() => {
-        return () => {
-            if (reloadTimeoutRef.current) {
-                clearTimeout(reloadTimeoutRef.current);
-            }
-        };
-    }, []);
-
-    async function cancelBooking() {
-        if (!confirm(t('cabinet.bookings.card.cancelConfirm', 'Отменить запись?'))) return;
-        setBusy(true);
-        try {
-            const r = await fetch(`/api/bookings/${bookingId}/cancel`, {method: 'POST'});
-            const j = await r.json();
-            if (!j.ok) return alert(j.error || t('cabinet.bookings.card.cancelError', 'Не удалось отменить'));
-            location.reload();
-        } finally {
-            setBusy(false);
-        }
-    }
-
-    const localeMap: Record<string, string> = {
-        ky: 'ru-KG',
-        ru: 'ru-RU',
-        en: 'en-US',
-    };
-    
-    const dateFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: TZ,
+    const {
+        busy,
+        review,
+        reviewSubmitting,
+        showMap,
+        openReview,
+        setShowMap,
+        setOpenReview,
+        setReviewSubmitting,
+        cancelBooking,
+        repeatBooking,
+        handleReviewCreated,
+    } = useBookingCard({
+        bookingId,
+        businessSlug: business?.slug ?? null,
+        startAt: start_at,
+        timezone,
+        effectiveBizId,
+        effectiveBranchId,
+        effectiveServiceId,
+        effectiveStaffId,
+        initialReview,
+        t,
     });
-    
-    const timeFormatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: TZ,
-    });
-    
-    const startDate = new Date(start_at);
-    const endDate = new Date(end_at);
-    const when = `${dateFormatter.format(startDate)} — ${timeFormatter.format(endDate)}`;
 
-    const totalDurationMin =
-        servicesList && servicesList.length > 0
-            ? servicesList.reduce((sum, s) => sum + (s.duration_min || 0), 0)
-            : service?.duration_min ?? 0;
-    const hasMultipleServices = servicesList && servicesList.length > 1;
-
-    const statusColors = {
-        hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-        confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    };
-
-    const statusLabels = {
-        hold: t('cabinet.bookings.card.status.hold', 'Ожидает подтверждения'),
-        confirmed: t('cabinet.bookings.card.status.confirmed', 'Подтверждена'),
-        paid: t('cabinet.bookings.card.status.paid', 'Оплачена'),
-        cancelled: t('cabinet.bookings.card.status.cancelled', 'Отменена'),
-    };
-
-    const statusOrder: Record<typeof status, number> = {
-        hold: 1,
-        confirmed: 2,
-        paid: 3,
-        cancelled: 3,
-    };
-
-    const timelineSteps: Array<{
-        key: 'created' | 'confirmed' | 'completed' | 'promo';
-        label: string;
-        done: boolean;
-    }> = [
-        {
-            key: 'created',
-            label: t('cabinet.bookings.timeline.created', 'Создано'),
-            done: true,
-        },
-        {
-            key: 'confirmed',
-            label: t('cabinet.bookings.timeline.confirmed', 'Подтверждено'),
-            done: statusOrder[status] >= 2,
-        },
-        {
-            key: 'completed',
-            label:
-                status === 'cancelled'
-                    ? t('cabinet.bookings.timeline.cancelled', 'Отменено')
-                    : t('cabinet.bookings.timeline.completed', 'Завершено'),
-            done: statusOrder[status] >= 3,
-        },
-        {
-            key: 'promo',
-            label: t('cabinet.bookings.timeline.promo', 'Промо применено'),
-            done: !!(promotionApplied && status === 'paid'),
-        },
-    ];
+    const serviceName = getBookingServiceName(service, locale, t);
+    const staffName = getBookingStaffName(staff?.full_name, locale, t);
+    const when = getBookingWhen(start_at, end_at, timezone, locale);
+    const timelineSteps = buildBookingTimeline({
+        status,
+        hasPromotionApplied: !!promotionApplied,
+    }).map((step) => ({
+        ...step,
+        label: getBookingTimelineLabel(step.key, t),
+    }));
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-5 sm:p-6 shadow-md border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all duration-200">
-            {/* Заголовок карточки */}
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}>
-                            <span className={`w-2 h-2 rounded-full ${
-                                status === 'paid' ? 'bg-green-500' :
-                                status === 'confirmed' ? 'bg-blue-500' :
-                                status === 'hold' ? 'bg-yellow-500' :
-                                'bg-red-500'
-                            }`}></span>
-                            {statusLabels[status]}
-                        </div>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                        {getServiceName(service)}
-                    </h3>
-                    {hasMultipleServices && servicesList && (
-                        <div className="mt-1 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-                            <p className="font-medium">
-                                {t('cabinet.bookings.card.servicesList.title', 'Услуги в визите:')}
-                            </p>
-                            <ul className="space-y-0.5">
-                                {servicesList.map((s) => (
-                                    <li key={s.id} className="flex items-baseline justify-between gap-2">
-                                        <span className="font-medium text-gray-800 dark:text-gray-100">
-                                            {getServiceName(s as typeof service)}
-                                        </span>
-                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                                            {s.duration_min}{' '}{t('booking.duration.min', 'мин')}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <p className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-                                {t('cabinet.bookings.card.totalDuration', 'Всего:')}{' '}
-                                {totalDurationMin}{' '}{t('booking.duration.min', 'мин')}
-                            </p>
-                        </div>
-                    )}
-                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            {formatStaffName(staff?.full_name)}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {business?.name} {branch?.name && `• ${branch.name}`}
-                        </span>
-                    </div>
-                </div>
-            </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-md transition-all duration-200 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+            <BookingCardHeader
+                status={status}
+                serviceName={serviceName}
+                staffName={staffName}
+                businessName={business?.name ?? null}
+                branchName={branch?.name ?? null}
+                t={t}
+            />
 
-            {/* Таймлайн статусов */}
-            <div className="flex items-center gap-2 mb-3">
-                {timelineSteps.map((step, index) => (
-                    <div key={step.key} className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
-                        <div
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                                step.done
-                                    ? 'bg-indigo-600 border-indigo-600 text-white'
-                                    : 'border-gray-300 dark:border-gray-600'
-                            }`}
-                        >
-                            {step.done ? (
-                                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 10l3 3 7-7"
-                                    />
-                                </svg>
-                            ) : (
-                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
-                            )}
-                        </div>
-                        <span>{step.label}</span>
-                        {index < timelineSteps.length - 1 && (
-                            <span className="w-6 h-px bg-gray-200 dark:bg-gray-700 mx-1" />
-                        )}
-                    </div>
-                ))}
-            </div>
+            <BookingCardTimelineSection timelineSteps={timelineSteps} />
 
-            {/* Применённая акция */}
             {promotionApplied && typeof promotionApplied === 'object' && 'promotion_type' in promotionApplied && (
                 <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/40">
                     <div className="flex items-start gap-2">
-                        <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="mt-0.5 w-4 flex-shrink-0 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                         </svg>
                         <div className="flex-1">
-                            <p className="text-xs font-medium text-emerald-900 dark:text-emerald-100 mb-1">
+                            <p className="mb-1 text-xs font-medium text-emerald-900 dark:text-emerald-100">
                                 {t('cabinet.bookings.card.promotionApplied', 'Применена акция:')}
                             </p>
                             <p className="text-xs text-emerald-800 dark:text-emerald-200">
@@ -329,56 +134,29 @@ export default function BookingCard({
                 </div>
             )}
 
-            {/* Оплачено пакетом визитов */}
-            {subscriptionApplied && typeof subscriptionApplied === 'object' && ('plan_id' in subscriptionApplied || 'plan_name_ru' in subscriptionApplied || 'promotion_title' in subscriptionApplied) && (() => {
-                const name = String((subscriptionApplied as Record<string, unknown>).plan_name_ru ?? (subscriptionApplied as Record<string, unknown>).promotion_title ?? '');
-                const finalAmount = (subscriptionApplied as Record<string, unknown>).final_amount;
-                return (
-                    <div className="mb-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 dark:border-indigo-800 dark:bg-indigo-950/40">
-                        <div className="flex items-start gap-2">
-                            <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                            <div className="flex-1">
-                                <p className="text-xs font-medium text-indigo-900 dark:text-indigo-100">
-                                    {t('cabinet.bookings.card.paidWithPackage', 'Оплачено пакетом')}: «{name}»
-                                    {finalAmount != null && (
-                                        <span className="ml-2 font-semibold text-indigo-800 dark:text-indigo-200">
-                                            {t('cabinet.bookings.card.finalAmount', 'Итоговая сумма:')} {String(finalAmount)} {t('booking.currency', 'сом')}
-                                        </span>
-                                    )}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })()}
-
-            {/* Время */}
-            <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-4 flex items-center gap-2 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
+                <svg className="h-5 w-5 flex-shrink-0 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <div className="flex-1">
                     <div className="font-medium text-gray-900 dark:text-gray-100">{when}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{TZ}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{timezone}</div>
                 </div>
             </div>
 
-            {/* Отзыв (если есть) */}
             {review && status !== 'cancelled' && (
-                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
                     <div className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                         </svg>
                         <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="mb-1 flex items-center gap-2">
                                 <div className="flex items-center gap-0.5">
-                                    {Array.from({ length: 5 }).map((_, i) => (
+                                    {Array.from({ length: 5 }).map((_, index) => (
                                         <svg
-                                            key={i}
-                                            className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300 dark:text-gray-600'}`}
+                                            key={index}
+                                            className={`h-4 w-4 ${index < review.rating ? 'fill-current text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
                                             fill="currentColor"
                                             viewBox="0 0 20 20"
                                         >
@@ -391,86 +169,33 @@ export default function BookingCard({
                                 </span>
                             </div>
                             {review.comment && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">{review.comment}</p>
+                                <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">{review.comment}</p>
                             )}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Действия */}
-            <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <a
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors text-sm font-medium"
-                    href={`/booking/${bookingId}`}
-                    target="_blank"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    {t('cabinet.bookings.card.actions.open', 'Открыть')}
-                </a>
-                <button
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
-                    onClick={() => setShowMap(true)}
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {t('cabinet.bookings.card.actions.onMap', 'На карте')}
-                </button>
-                {canCancel && (
-                    <button
-                        disabled={busy}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={cancelBooking}
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        {busy ? t('cabinet.bookings.card.actions.cancelling', 'Отмена...') : t('cabinet.bookings.card.actions.cancel', 'Отменить')}
-                    </button>
-                )}
-                {!canCancel && !review && status !== 'cancelled' && (
-                    <button
-                        disabled={reviewSubmitting}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={() => {
-                            setReviewSubmitting(true);
-                            setOpenReview(true);
-                        }}
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                        </svg>
-                        {t('cabinet.bookings.card.actions.review', 'Оставить отзыв')}
-                    </button>
-                )}
-                {!canCancel && review && status !== 'cancelled' && (
-                    <button
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-sm font-medium"
-                        onClick={() => setOpenReview(true)}
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        {t('cabinet.bookings.card.actions.editReview', 'Редактировать отзыв ({rating}★)').replace('{rating}', String(review.rating))}
-                    </button>
-                )}
-                {service && business && (
-                    <button
-                        type="button"
-                        onClick={repeatBooking}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white rounded-lg hover:from-indigo-700 hover:to-pink-700 transition-all text-sm font-medium shadow-sm hover:shadow-md"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        {t('cabinet.bookings.card.actions.repeat', 'Повторить')}
-                    </button>
-                )}
-            </div>
+            <BookingCardActions
+                bookingId={bookingId}
+                canCancel={canCancel}
+                busy={busy}
+                reviewSubmitting={reviewSubmitting}
+                hasReview={!!review}
+                status={status}
+                canRepeat={!!service && !!business}
+                reviewRating={review?.rating}
+                onOpenMap={() => setShowMap(true)}
+                onCancel={cancelBooking}
+                onOpenReview={() => {
+                    if (!review) {
+                        setReviewSubmitting(true);
+                    }
+                    setOpenReview(true);
+                }}
+                onRepeat={repeatBooking}
+                t={t}
+            />
 
             {showMap && (
                 <MapDialog
@@ -491,20 +216,7 @@ export default function BookingCard({
                         setReviewSubmitting(false);
                     }}
                     existingReview={review || null}
-                    onReviewCreated={(newReview) => {
-                        // Оптимистичное обновление: сразу обновляем состояние
-                        setReview(newReview);
-                        setOpenReview(false);
-                        setReviewSubmitting(false);
-                        // Очищаем предыдущий timeout, если он есть
-                        if (reloadTimeoutRef.current) {
-                            clearTimeout(reloadTimeoutRef.current);
-                        }
-                        // Перезагружаем страницу для синхронизации с сервером
-                        reloadTimeoutRef.current = setTimeout(() => {
-                            window.location.reload();
-                        }, 300);
-                    }}
+                    onReviewCreated={handleReviewCreated}
                 />
             )}
         </div>
