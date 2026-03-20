@@ -1,8 +1,4 @@
-# Сравнение страниц `/staff/finance` и `/dashboard/staff/[id]/finance` (архив)
-
-**Архив.** Документ сохранён для истории; многие описанные отличия по-прежнему актуальны, но списки проблем закрыты. См. ISSUES_STAFF_FINANCE_PAGES.md в этой же папке.
-
----
+# Сравнение страниц `/staff/finance` и `/dashboard/staff/[id]/finance`
 
 ## Обзор
 
