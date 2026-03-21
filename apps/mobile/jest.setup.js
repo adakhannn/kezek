@@ -74,6 +74,10 @@ jest.mock('@react-navigation/native', () => {
 // Mock React Query
 jest.mock('@tanstack/react-query', () => {
     const actualQuery = jest.requireActual('@tanstack/react-query');
+    const queryClientMock = {
+        invalidateQueries: jest.fn(),
+        setQueryData: jest.fn(),
+    };
     return {
         ...actualQuery,
         useQuery: jest.fn(() => ({
@@ -88,10 +92,8 @@ jest.mock('@tanstack/react-query', () => {
             isLoading: false,
             error: null,
         })),
-        QueryClient: jest.fn(() => ({
-            invalidateQueries: jest.fn(),
-            setQueryData: jest.fn(),
-        })),
+        useQueryClient: jest.fn(() => queryClientMock),
+        QueryClient: jest.fn(() => queryClientMock),
         QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
     };
 });
