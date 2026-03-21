@@ -21,13 +21,6 @@ export function todayDateString(timezone?: string): string {
 }
 
 /**
- * @deprecated Use todayDateString().
- */
-export function todayStringInTz(timezone?: string): string {
-    return todayDateString(timezone);
-}
-
-/**
  * Календарная дата (YYYY-MM-DD) для произвольного момента в заданной таймзоне.
  */
 export function toDateString(d: Date, timezone?: string): string {
@@ -36,10 +29,19 @@ export function toDateString(d: Date, timezone?: string): string {
 }
 
 /**
- * @deprecated Use toDateString().
+ * Текущая календарная дата (yyyy-MM-dd) в заданной таймзоне.
+ * Алиас для единообразного использования по коду вместо formatInTimeZone(new Date(), tz, 'yyyy-MM-dd').
  */
-export function formatDateInTz(d: Date, timezone?: string): string {
-    return toDateString(d, timezone);
+export function todayStringInTz(tz: string): string {
+    return formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
+}
+
+/**
+ * Календарная дата (yyyy-MM-dd) для произвольного Date в заданной таймзоне.
+ * Алиас для единообразного использования вместо formatInTimeZone(date, tz, 'yyyy-MM-dd').
+ */
+export function formatDateInTz(date: Date, tz: string): string {
+    return formatInTimeZone(date, tz, 'yyyy-MM-dd');
 }
 
 /**

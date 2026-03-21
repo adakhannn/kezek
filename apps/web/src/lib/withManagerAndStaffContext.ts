@@ -1,3 +1,5 @@
+import type { NextResponse } from 'next/server';
+
 import { createErrorResponse } from '@/lib/apiErrorHandler';
 import { logError, logDebug } from '@/lib/log';
 import { getRouteParamUuid } from '@/lib/routeParams';
@@ -36,8 +38,8 @@ export async function withManagerAndStaffContext<TStaff extends StaffBaseRow>(
     req: Request,
     context: unknown,
     opts: Options,
-    handler: (ctx: ManagerAndStaffContext<TStaff>) => Promise<Response>,
-): Promise<Response> {
+    handler: (ctx: ManagerAndStaffContext<TStaff>) => Promise<NextResponse>,
+): Promise<NextResponse> {
     const scope = opts.scope;
     const staffIdParamName = opts.staffIdParamName ?? 'id';
     const staffId = await getRouteParamUuid(context, staffIdParamName);
@@ -50,7 +52,7 @@ export async function withManagerAndStaffContext<TStaff extends StaffBaseRow>(
     const staffSelectRaw = (opts.staffSelect ?? 'id, biz_id').trim();
     const staffSelect = staffSelectRaw.includes('biz_id') ? staffSelectRaw : `${staffSelectRaw}, biz_id`;
 
-    return withManagerContext(req, scope, async ({ supabase, admin, bizId, businessTz, userId }) => {
+    return withManagerContext(req, scope, async ({ supabase, admin, bizId, userId }) => {
         const { data: staff, error: staffError } = await admin
             .from('staff')
             .select(staffSelect)
@@ -84,7 +86,6 @@ export async function withManagerAndStaffContext<TStaff extends StaffBaseRow>(
             supabase,
             admin,
             bizId,
-            businessTz,
             userId,
             staffId,
             staff: staff as unknown as TStaff,

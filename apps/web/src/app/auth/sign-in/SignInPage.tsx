@@ -8,7 +8,8 @@ import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
 import {logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
-import { decidePostSignInRedirect } from './redirect';
+
+type Mode = 'phone' | 'email';
 
 export default function SignInPage() {
     const sp = useSearchParams();
@@ -16,7 +17,11 @@ export default function SignInPage() {
 
     const redirectParam = sp.get('redirect') || '/';
     const {t} = useLanguage();
+    // Временно отключен вход по телефону - используем только email
+    const initialMode: Mode = 'email';
 
+    const [mode] = useState<Mode>(initialMode); // Убрали setMode - режим фиксирован
+    const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -60,55 +65,69 @@ export default function SignInPage() {
 
     const decideRedirect = useCallback(
         async (fallback: string, userId?: string) => {
-            return decidePostSignInRedirect({
-                fallback,
-                userId,
-                fetchIsSuper,
-                fetchOwnsBusiness,
-                fetchMyRoles,
-                fetchCurrentBusiness: async () => {
-                    if (!userId) return null;
+            if (await fetchIsSuper()) return '/admin';
 
+            // Пробуем использовать новый API текущего бизнеса для детерминированного выбора
+            if (userId) {
+                try {
                     const res = await fetch('/api/me/current-business', {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' },
                     });
-
-                    if (!res.ok) return null;
-
-                    return (await res.json()) as {
-                        ok: boolean;
-                        data?: { currentBizId: string | null; businesses: { id: string }[] };
-                    };
-                },
-                persistCurrentBusiness: async (bizId: string) => {
-                    await fetch('/api/me/current-business', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ bizId }),
-                    });
-                },
-                hasActiveStaffRecord: async (candidateUserId?: string) => {
-                    if (!candidateUserId) return false;
-
-                    const { data: staff } = await supabase
-                        .from('staff')
-                        .select('id')
-                        .eq('user_id', candidateUserId)
-                        .eq('is_active', true)
-                        .maybeSingle();
-
-                    return !!staff;
-                },
-                onCurrentBusinessError: (e) => {
+                    if (res.ok) {
+                        const json = (await res.json()) as {
+                            ok: boolean;
+                            data?: { currentBizId: string | null; businesses: { id: string }[] };
+                        };
+                        if (json.ok && json.data) {
+                            const count = json.data.businesses.length;
+                            if (count === 1) {
+                                const only = json.data.businesses[0];
+                                if (only?.id && json.data.currentBizId !== only.id) {
+                                    // Ставим current_biz_id в фоне, ошибки не блокируют переход
+                                    void fetch('/api/me/current-business', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ bizId: only.id }),
+                                    }).catch(() => undefined);
+                                }
+                                return '/dashboard';
+                            }
+                            if (count > 1) {
+                                return '/select-business';
+                            }
+                        }
+                    }
+                } catch (e) {
                     logWarn('SignIn', 'decideRedirect: current-business API failed, fallback to old logic', {
                         error: e instanceof Error ? e.message : String(e),
                     });
-                },
-                onStaffLookupError: (e) => {
-                    logWarn('SignIn', 'decideRedirect: error checking staff', e);
-                },
-            });
+                }
+            }
+
+            if (await fetchOwnsBusiness(userId)) return '/dashboard';
+            
+            // Проверяем наличие записи в staff (источник правды)
+            if (userId) {
+                try {
+                    const { data: staff } = await supabase
+                        .from('staff')
+                        .select('id')
+                        .eq('user_id', userId)
+                        .eq('is_active', true)
+                        .maybeSingle();
+                    
+                    if (staff) return '/staff';
+                } catch (error) {
+                    logWarn('SignIn', 'decideRedirect: error checking staff', error);
+                }
+            }
+            
+            const roles = await fetchMyRoles();
+            if (roles.includes('owner')) return '/dashboard';
+            if (roles.includes('staff')) return '/staff';
+            if (roles.some(r => ['admin', 'manager'].includes(r))) return '/dashboard';
+            return fallback || '/';
         },
         [fetchIsSuper, fetchMyRoles, fetchOwnsBusiness]
     );
@@ -202,27 +221,45 @@ export default function SignInPage() {
         setError(null);
 
         try {
-            const origin =
-                typeof window !== 'undefined'
-                    ? window.location.origin
-                    : (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg');
+            if (mode === 'phone') {
+                // нормализуем телефон (желательно в E.164, если у тебя уже есть хелпер — используй его)
+                const phoneNormalized = phone.trim();
 
-            // сюда Supabase вернёт пользователя ПОСЛЕ клика по magic link
-            const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(redirectParam)}`;
+                const { error } = await supabase.auth.signInWithOtp({
+                    phone: phoneNormalized,
+                    options: { channel: 'sms' }, // optionally: shouldCreateUser: true
+                });
+                if (error) throw error;
 
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                options: {
-                    emailRedirectTo,
-                },
-            });
-            if (error) throw error;
+                // страница ввода кода из SMS
+                router.push(
+                    `/auth/verify-otp?phone=${encodeURIComponent(phoneNormalized)}&redirect=${encodeURIComponent(redirectParam)}`
+                );
+            } else {
+                // e-mail magic link (или код из письма, если используешь verifyOtp на странице)
+                const origin =
+                    typeof window !== 'undefined'
+                        ? window.location.origin
+                        : (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg');
 
-            // страница, где просто показываем "Проверьте почту".
-            // Она может периодически вызывать getUser() и, увидев сессию, редиректить на next.
-            router.push(
-                `/auth/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectParam)}`
-            );
+                // сюда Supabase вернёт пользователя ПОСЛЕ клика по magic link
+                const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(redirectParam)}`;
+
+                const { error } = await supabase.auth.signInWithOtp({
+                    email,
+                    options: {
+                        emailRedirectTo,
+                        // shouldCreateUser: true, // по необходимости
+                    },
+                });
+                if (error) throw error;
+
+                // страница, где просто показываем "Проверьте почту".
+                // Она может периодически вызывать getUser() и, увидев сессию, редиректить на next.
+                router.push(
+                    `/auth/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectParam)}`
+                );
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
         } finally {
@@ -258,6 +295,8 @@ export default function SignInPage() {
                         </p>
                     </div>
 
+                    {/* Переключатель режима временно скрыт - используется только email */}
+
                     {/* Вариант 1. Вход по e‑mail */}
                     <form onSubmit={sendOtp} className="space-y-3.5">
                         <div className="space-y-1">
@@ -272,29 +311,54 @@ export default function SignInPage() {
                                 )}
                             </p>
                         </div>
-                        <div>
-                            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300 sm:text-sm">
-                                {t('auth.email.label', 'E-mail адрес')}
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
+                        {mode === 'phone' ? (
+                            <div>
+                                <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300 sm:text-sm">
+                                    {t('auth.phone.label', 'Номер телефона')}
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        className="w-full pl-11 pr-3 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                        placeholder={t('auth.phone.placeholder', '+996555123456')}
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        required
+                                    />
                                 </div>
-                                <input
-                                    className="w-full pl-11 pr-3 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                                    placeholder={t('auth.email.placeholder', 'you@example.com')}
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
+                                <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    {t('auth.phone.help', 'Мы отправим код подтверждения на этот номер')}
+                                </p>
                             </div>
-                            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                {t('auth.email.help', 'На эту почту придёт одноразовая ссылка или код для входа.')}
-                            </p>
-                        </div>
+                        ) : (
+                            <div>
+                                <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300 sm:text-sm">
+                                    {t('auth.email.label', 'E-mail адрес')}
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        className="w-full pl-11 pr-3 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                                        placeholder={t('auth.email.placeholder', 'you@example.com')}
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    {t('auth.email.help', 'На эту почту придёт одноразовая ссылка или код для входа.')}
+                                </p>
+                            </div>
+                        )}
 
                         {error && (
                             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2.5">
@@ -393,6 +457,19 @@ export default function SignInPage() {
                             size="large"
                         />
                     </div>
+
+                    {/* Вариант 4. Вход через WhatsApp - временно скрыт */}
+                    {/* <button
+                        type="button"
+                        onClick={() => router.push(`/auth/whatsapp?redirect=${encodeURIComponent(redirectParam)}`)}
+                        disabled={sending}
+                        className="w-full px-5 py-3 bg-[#25D366] dark:bg-[#25D366] text-sm text-white font-semibold rounded-lg hover:bg-[#20BA5A] dark:hover:bg-[#20BA5A] shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                    >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                        </svg>
+                        {t('auth.whatsapp', 'Войти через WhatsApp')}
+                    </button> */}
 
                             <div className="space-y-1 text-center text-[11px] text-gray-500 dark:text-gray-400">
                                 <p>{t('auth.firstTime.title')}</p>

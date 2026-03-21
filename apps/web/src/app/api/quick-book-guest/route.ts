@@ -1,4 +1,4 @@
-import { extractBookingId, type CreateGuestBookingParams } from '@core-domain/booking';
+import { validateCreateGuestBookingParams, extractBookingId } from '@core-domain/booking';
 import { createClient } from "@supabase/supabase-js";
 
 import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
@@ -71,14 +71,12 @@ export async function POST(req: Request) {
                 ...raw,
                 service_id: raw.service_id ?? (raw.services?.[0] ? raw.services[0].service_id : undefined),
             };
-            const body = forDomain as CreateGuestBookingParams & {
-                services?: { service_id: string; duration_min: number; order_index?: number }[];
-            };
-            const domainValidation = { valid: true, data: body, error: null as string | null };
+            const domainValidation = validateCreateGuestBookingParams(forDomain);
             if (!domainValidation.valid || !domainValidation.data) {
                 return createErrorResponse('validation', domainValidation.error || 'Неверные параметры гостевой брони', undefined, 400);
             }
 
+            const body = domainValidation.data;
 
             // Проверяем, что переданный филиал существует и активен
             const { data: branch, error: eBranch } = await supabase

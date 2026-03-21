@@ -1,3 +1,7 @@
+/**
+ * Расчёт финальных долей для отображения (с учётом гарантии для открытых смен).
+ */
+
 import { calculateTopupAmount } from './guarantee';
 
 export interface DisplayShares {
@@ -13,8 +17,7 @@ export function calculateDisplayShares(
 ): DisplayShares {
     if (isOpen && guaranteedAmount !== null && guaranteedAmount !== undefined) {
         const topupAmount = calculateTopupAmount(guaranteedAmount, baseMasterShare);
-        const finalMasterShare =
-            guaranteedAmount > baseMasterShare ? guaranteedAmount : baseMasterShare;
+        const finalMasterShare = guaranteedAmount > baseMasterShare ? guaranteedAmount : baseMasterShare;
         const finalSalonShare = Math.max(0, baseSalonShare - topupAmount);
 
         return {
@@ -28,3 +31,4 @@ export function calculateDisplayShares(
         salonShare: Math.round(baseSalonShare * 100) / 100,
     };
 }
+

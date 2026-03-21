@@ -18,7 +18,6 @@ export type {
     ServiceInfo,
 } from './types';
 
-export { filterStaffByBookingAvailability } from './availability';
 export { resolveScheduleContext, filterSlotsByContext, filterServicesForStaff } from './helpers';
 
 

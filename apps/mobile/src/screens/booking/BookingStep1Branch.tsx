@@ -1,15 +1,14 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useEffect } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import type { RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { useBusinessWithBranches } from '../../hooks/useBusinessWithBranches';
-import { colors } from '../../constants/colors';
-import Button from '../../components/ui/Button';
+import { colors } from '../../constants.colors';
+import Button from '../../components/ui.Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { RootStackParamList } from '../../navigation/types';
@@ -20,11 +19,11 @@ type RouteParams = {
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type BranchRouteProp = RouteProp<{ params: RouteParams }, 'params'>;
+type RouteProp = RouteProp<{ params: RouteParams }, 'params'>;
 
 export default function BookingStep1Branch() {
     const navigation = useNavigation<NavigationProp>();
-    const route = useRoute<BranchRouteProp>();
+    const route = useRoute<RouteProp>();
     const { slug } = route.params || {};
     const { bookingData, setBusiness, setBranches, setBranchId } = useBooking();
 

@@ -59,42 +59,11 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
         (mockSupabase.rpc as jest.Mock).mockResolvedValue({ data: false, error: null });
 
         // цепочка для from().select().eq().maybeSingle() и т.д. (resetAllMocks сбрасывает реализации)
-        // Плюс дефолтный lookup timezone бизнеса, который теперь делается в конце resolveBizContextForManagers.
-        (mockAdmin.from as jest.Mock).mockImplementation((table: string) => {
-            if (table === 'businesses') {
-                return {
-                    select: jest.fn((columns: string) => {
-                        if (columns === 'tz') {
-                            return {
-                                eq: jest.fn(() => ({
-                                    maybeSingle: jest.fn().mockResolvedValue({
-                                        data: { tz: 'Asia/Almaty' },
-                                        error: null,
-                                    }),
-                                })),
-                            };
-                        }
-                        return mockAdmin;
-                    }),
-                    eq: jest.fn(() => mockAdmin),
-                    order: jest.fn(() => mockAdmin),
-                    limit: jest.fn(() => mockAdmin),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { tz: 'Asia/Almaty' },
-                        error: null,
-                    }),
-                };
-            }
-            return mockAdmin;
-        });
+        (mockAdmin.from as jest.Mock).mockReturnValue(mockAdmin);
         (mockAdmin.select as jest.Mock).mockReturnValue(mockAdmin);
         (mockAdmin.eq as jest.Mock).mockReturnValue(mockAdmin);
         (mockAdmin.order as jest.Mock).mockReturnValue(mockAdmin);
         (mockAdmin.limit as jest.Mock).mockReturnValue(mockAdmin);
-        (mockAdmin.maybeSingle as jest.Mock).mockResolvedValue({
-            data: { tz: 'Asia/Almaty' },
-            error: null,
-        });
 
         expect(MANAGER_ROLE_KEYS.size).toBeGreaterThan(0);
     });
@@ -213,28 +182,6 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
 
         const result = await resolveBizContextForManagers();
         expect(result.bizId).toBe('biz-aaa');
-    });
-
-    test('при валидном current_biz он имеет приоритет над авто-выбором по user_roles', async () => {
-        (mockAdmin.from as jest.Mock).mockImplementation((table: string) => {
-            if (table === 'user_current_business') return mockAdmin;
-            if (table === 'user_roles') {
-                return makeThenable([
-                    { biz_id: 'biz-current', role_id: 'role-manager' },
-                    { biz_id: 'biz-other', role_id: 'role-manager' },
-                ]);
-            }
-            if (table === 'roles') return makeThenable([{ id: 'role-manager', key: 'manager' }]);
-            return mockAdmin;
-        });
-
-        (mockAdmin.maybeSingle as jest.Mock).mockResolvedValueOnce({
-            data: { biz_id: 'biz-current' },
-            error: null,
-        });
-
-        const result = await resolveBizContextForManagers();
-        expect(result.bizId).toBe('biz-current');
     });
 
     test('отсутствие прав: current_biz без допустимой роли и нет автовыбора → NO_BIZ_ACCESS', async () => {

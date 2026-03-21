@@ -20,26 +20,22 @@ export const linking: LinkingOptions<RootStackParamList> = {
             Main: {
                 screens: {
                     Home: '',
-                    Cabinet: {
-                        screens: {
-                            CabinetMain: 'cabinet',
-                            Profile: 'profile',
-                        },
-                    },
+                    Cabinet: 'cabinet',
                     Dashboard: 'dashboard',
                     Staff: 'staff',
-                },
-            },
-            Booking: {
-                path: 'booking/:slug',
-                parse: {
-                    slug: (slug: string) => slug,
-                },
-            },
-            BookingDetails: {
-                path: 'booking/:id',
-                parse: {
-                    id: (id: string) => id,
+                    Booking: {
+                        path: 'booking/:slug',
+                        parse: {
+                            slug: (slug: string) => slug,
+                        },
+                    },
+                    BookingDetails: {
+                        path: 'booking/:id',
+                        parse: {
+                            id: (id: string) => id,
+                        },
+                    },
+                    Profile: 'profile',
                 },
             },
             // Обработка callback URL для OAuth

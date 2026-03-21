@@ -21,14 +21,6 @@ export type {
     PromotionApplicationResult,
 } from './types';
 
-export type {
-    BookingStatusFilter,
-    BookingListItem,
-    BookingPresetFilters,
-    BookingFilterPreset,
-} from './dashboardFilters';
-export type { BookingTimelineStepKey, BookingTimelineStep } from './clientSemantics';
-
 // DTO
 export type {
     BookingDto,
@@ -44,6 +36,8 @@ export {
 // Валидация
 export type { BranchForBookingCheck } from './validation';
 export {
+    validateCreateBookingParams,
+    validateCreateGuestBookingParams,
     validatePromotionParams,
     validateBranchForBooking,
     extractBookingId,
@@ -58,18 +52,6 @@ export {
     canMarkAttendance,
     canChangeStatus,
 } from './statusTransitions';
-
-export {
-    matchesBookingStatusFilter,
-    matchesBookingSearchQuery,
-    computeBookingPresetFilters,
-} from './dashboardFilters';
-export {
-    isClientActiveBookingStatus,
-    isClientPastBookingStatus,
-    canClientCancelBooking,
-    buildBookingTimeline,
-} from './clientSemantics';
 
 // Application use-cases
 export type {

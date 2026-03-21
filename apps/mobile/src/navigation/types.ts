@@ -12,7 +12,6 @@ export type RootStackParamList = {
     BookingStep5Time: undefined;
     BookingStep6Confirm: undefined;
     Shifts: undefined;
-    ShiftQuick: undefined;
 };
 
 export type MainTabParamList = {

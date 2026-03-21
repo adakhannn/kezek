@@ -1,10 +1,10 @@
 /**
  * Jest setup file for React Native Testing Library
- * 
+ *
  * Configures mocks and global test utilities
  */
 
-import '@testing-library/jest-native/extend-expect';
+require('@testing-library/jest-native/extend-expect');
 
 // Mock Expo modules
 jest.mock('expo-constants', () => ({
@@ -74,10 +74,6 @@ jest.mock('@react-navigation/native', () => {
 // Mock React Query
 jest.mock('@tanstack/react-query', () => {
     const actualQuery = jest.requireActual('@tanstack/react-query');
-    const queryClientMock = {
-        invalidateQueries: jest.fn(),
-        setQueryData: jest.fn(),
-    };
     return {
         ...actualQuery,
         useQuery: jest.fn(() => ({
@@ -92,8 +88,10 @@ jest.mock('@tanstack/react-query', () => {
             isLoading: false,
             error: null,
         })),
-        useQueryClient: jest.fn(() => queryClientMock),
-        QueryClient: jest.fn(() => queryClientMock),
+        QueryClient: jest.fn(() => ({
+            invalidateQueries: jest.fn(),
+            setQueryData: jest.fn(),
+        })),
         QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
     };
 });

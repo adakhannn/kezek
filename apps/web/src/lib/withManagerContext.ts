@@ -7,6 +7,8 @@
  * @see OWNER_CABINET_RISKS_AND_IMPROVEMENTS_TASKS.md (блок 5.2)
  */
 
+import type { NextResponse } from 'next/server';
+
 import { createErrorResponse } from './apiErrorHandler';
 import { getBizContextForManagers } from './authBiz';
 import { BizAccessError } from './authDiagnostics';
@@ -23,8 +25,6 @@ export type ManagerContext = {
     admin: SupabaseClientType;
     /** Текущий бизнес (из user_current_business / ролей / owner_id). */
     bizId: string;
-    /** Timezone текущего бизнеса. */
-    businessTz: string;
     /** ID авторизованного пользователя. */
     userId: string;
 };
@@ -42,19 +42,17 @@ export type ManagerContext = {
 export async function withManagerContext(
     req: Request,
     scope: string,
-    handler: (ctx: ManagerContext) => Promise<Response>
-): Promise<Response> {
+    handler: (ctx: ManagerContext) => Promise<NextResponse>
+): Promise<NextResponse> {
     let supabase: ManagerContext['supabase'];
     let userId: string;
     let bizId: string;
-    let businessTz: string;
 
     try {
         const ctx = await getBizContextForManagers();
         supabase = ctx.supabase;
         userId = ctx.userId;
         bizId = ctx.bizId;
-        businessTz = ctx.businessTz;
     } catch (e) {
         if (e instanceof BizAccessError) {
             if (e.code === 'NOT_AUTHENTICATED') {
@@ -73,6 +71,6 @@ export async function withManagerContext(
             error: e instanceof Error ? e.message : String(e),
         });
     }
-    const managerCtx: ManagerContext = { supabase, admin, bizId, businessTz, userId };
+    const managerCtx: ManagerContext = { supabase, admin, bizId, userId };
     return handler(managerCtx);
 }

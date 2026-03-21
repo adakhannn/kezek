@@ -1,4 +1,8 @@
-# Проблемы на страницах `/staff/finance` и `/dashboard/staff/[id]/finance`
+# Проблемы на страницах `/staff/finance` и `/dashboard/staff/[id]/finance` (архив)
+
+**Архив.** Большинство проблем исправлено; документ сохранён для истории. Актуальное состояние финансового модуля — см. PROJECT_REVIEW.md, SYSTEM_FEATURES_DOCUMENTATION.md.
+
+---
 
 ## Статус документа
 - **Дата создания**: 2025-01-27

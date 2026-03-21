@@ -1,10 +1,12 @@
-# Резюме миграции `console.*` на безопасное логирование
+# Резюме миграции console.log на безопасное логирование (архив)
 
-> Статус: исторический снимок промежуточного этапа миграции. Не использовать как источник текущих цифр без перепроверки.
+**Архив.** Миграция завершена; актуальная политика и правила — [LOGGING_POLICY.md](../../apps/web/src/lib/LOGGING_POLICY.md).
+
+---
 
 ## ✅ Выполнено
 
-1. **Добавлено ESLint правило** - защита от бесконтрольного использования `console.log/warn/info/debug` в обычном приложенческом коде
+1. **Добавлено ESLint правило** - предупреждение при использовании `console.log/warn/info/debug`
 2. **Мигрированы критичные API routes:**
    - ✅ `apps/web/src/app/api/staff/shift/today/route.ts` - 7 замен
    - ✅ `apps/web/src/app/api/auth/yandex/callback/route.ts` - 18 замен
@@ -14,53 +16,10 @@
    - ✅ Скрипт проверки: `scripts/check-console-logs.sh`
    - ✅ Документация прогресса: `apps/web/src/lib/CONSOLE_LOG_MIGRATION_PROGRESS.md`
 
-## 📊 Историческая статистика
+## 📊 Статистика (на момент архивации)
 
 - **Всего заменено:** ~27 использований console.*
 - **Осталось мигрировать:** ~312 использований (по оценке)
-
-Эти числа относятся к промежуточному этапу миграции и уже не отражают текущее состояние репозитория.
-
-Актуальный контекст теперь такой:
-
-- проблема в основном локализована;
-- прямые `console.*` больше не размазаны по большому числу feature/API файлов;
-- оставшиеся вызовы в основном сосредоточены в лог-утилитах, dev-only инструментах, observability и части infra.
-
-См.:
-
-- `apps/web/src/lib/LOGGING_POLICY.md`
-- `docs/CONSOLE_USAGE_AUDIT.md`
-
-## 🔄 Следующие шаги на тот момент
-
-### Приоритет 1: API Routes (осталось ~12 файлов)
-- `apps/web/src/app/api/staff/create/route.ts`
-- `apps/web/src/app/api/staff/create-from-user/route.ts`
-- `apps/web/src/app/api/staff/avatar/upload/route.ts`
-- `apps/web/src/app/api/staff/[id]/update/route.ts`
-- `apps/web/src/app/api/auth/whatsapp/*`
-- `apps/web/src/app/api/whatsapp/*`
-
-### Приоритет 2: Критичные компоненты
-- Client components с логированием
-- Server components с логированием
-
-### Приоритет 3: Утилиты и библиотеки
-- `apps/web/src/lib/*`
-- `apps/web/src/components/*`
-
-## 🛠️ Инструменты
-
-### Проверка прогресса
-```bash
-bash scripts/check-console-logs.sh
-```
-
-### Ручная замена
-1. Найдите `console.log/warn/error`
-2. Замените на `logDebug/logWarn/logError` из `@/lib/log`
-3. Добавьте осмысленный scope
 
 ## 📝 Примеры замены
 
@@ -100,12 +59,3 @@ logError('MyScope', 'Error occurred', error);
 2. ✅ **Контроль уровня логирования** - debug только в dev
 3. ✅ **Единый формат** - структурированные логи
 4. ✅ **Готовность к мониторингу** - легко интегрировать с Sentry/LogRocket
-
----
-
-## Что считать актуальным сейчас
-
-- Политика логирования и список разрешённых исключений: `apps/web/src/lib/LOGGING_POLICY.md`
-- Актуальный аудит прямых `console.*`: `docs/CONSOLE_USAGE_AUDIT.md`
-- Общий обзор проекта: `PROJECT_REVIEW.md`
-

@@ -10,6 +10,10 @@
 
 module.exports = {
     preset: 'jest-expo',
+    transformIgnorePatterns: [
+        // Transform react-native and expo (including inside pnpm store)
+        'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@supabase|@tanstack|.pnpm/[^/]+/node_modules/((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?))',
+    ],
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
     testMatch: [
         '**/__tests__/**/*.test.[jt]s?(x)',
@@ -26,6 +30,7 @@ module.exports = {
         '^@/(.*)$': '<rootDir>/src/$1',
         '^@shared-client/(.*)$': '<rootDir>/../../packages/shared-client/src/$1',
     },
+    testEnvironment: 'node',
     globals: {
         'ts-jest': {
             tsconfig: {

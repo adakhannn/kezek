@@ -1,3 +1,7 @@
+/**
+ * Расчёт гарантированной суммы и доплаты (topup).
+ */
+
 export function calculateGuaranteedAmount(
     hoursWorked: number | null,
     hourlyRate: number | null,
@@ -18,3 +22,4 @@ export function calculateTopupAmount(
     }
     return 0;
 }
+
