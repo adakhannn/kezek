@@ -98,7 +98,7 @@ jest.mock('@react-navigation/native-stack', () => {
 });
 
 describe('RootNavigator', () => {
-    const auth = supabase.auth as {
+    const auth = supabase.auth as unknown as {
         getSession: jest.Mock;
         onAuthStateChange: jest.Mock;
         setSession: jest.Mock;

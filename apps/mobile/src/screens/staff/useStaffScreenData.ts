@@ -4,6 +4,15 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import type { StaffInfo, UpcomingBooking } from './types';
 
+type UpcomingBookingRow = {
+    id: string;
+    start_at: string;
+    end_at: string;
+    client_name: string | null;
+    client_phone: string | null;
+    service: { name_ru: string | null }[] | { name_ru: string | null } | null;
+};
+
 export function useStaffScreenData() {
     const { user } = useAuth();
 
@@ -53,7 +62,22 @@ export function useStaffScreenData() {
                 .limit(10);
 
             if (error) throw error;
-            return (data || []) as UpcomingBooking[];
+            return (Array.isArray(data) ? (data as UpcomingBookingRow[]) : []).map(
+                (booking): UpcomingBooking => ({
+                    id: booking.id,
+                    start_at: booking.start_at,
+                    end_at: booking.end_at,
+                    client_name: booking.client_name ?? null,
+                    client_phone: booking.client_phone ?? null,
+                    service: Array.isArray(booking.service)
+                        ? (booking.service[0]
+                              ? { name_ru: booking.service[0].name_ru ?? '' }
+                              : null)
+                        : booking.service
+                          ? { name_ru: booking.service.name_ru ?? '' }
+                          : null,
+                }),
+            );
         },
         enabled: !!staffQuery.data?.id,
     });

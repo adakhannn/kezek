@@ -1,4 +1,4 @@
-import { buildBookingTimeline, type BookingTimelineStepKey } from '@core-domain/booking';
+import { buildBookingTimeline, type BookingStatus, type BookingTimelineStepKey } from '@core-domain/booking';
 
 export function getTimelineLabel(stepKey: BookingTimelineStepKey): string {
     switch (stepKey) {
@@ -21,7 +21,7 @@ export function getTimelineLabel(stepKey: BookingTimelineStepKey): string {
 
 export function getBookingTimelineSteps(status: string, hasPromotionApplied = false) {
     return buildBookingTimeline({
-        status,
+        status: status as BookingStatus,
         hasPromotionApplied,
     }).map((step) => ({
         ...step,

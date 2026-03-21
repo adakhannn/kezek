@@ -10,12 +10,12 @@ describe('dashboard helpers', () => {
     });
 
     it('returns trimmed primary phone when present', () => {
-        expect(getPrimaryBusinessPhone({ phones: ['  +7 777 000 00 00  ', null] })).toBe(
+        expect(getPrimaryBusinessPhone({ phones: ['  +7 777 000 00 00  ', ''] })).toBe(
             '+7 777 000 00 00'
         );
     });
 
     it('returns null when there is no usable phone', () => {
-        expect(getPrimaryBusinessPhone({ phones: ['   ', null] })).toBeNull();
+        expect(getPrimaryBusinessPhone({ phones: ['   ', ''] })).toBeNull();
     });
 });

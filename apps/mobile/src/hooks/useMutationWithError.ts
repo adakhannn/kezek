@@ -30,18 +30,18 @@ export function useMutationWithError<TData = unknown, TError = Error, TVariables
 
     return useMutation<TData, TError, TVariables, TContext>({
         ...mutationOptions,
-        onError: (error, variables, context) => {
+        onError: (error, variables, onMutateResult, context) => {
             if (showErrorToast) {
                 const message = errorMessage || getErrorMessage(error);
                 showToast(message, 'error');
             }
-            onError?.(error, variables, context);
+            onError?.(error, variables, onMutateResult, context);
         },
-        onSuccess: (data, variables, context) => {
+        onSuccess: (data, variables, onMutateResult, context) => {
             if (showSuccessToast && successMessage) {
                 showToast(successMessage, 'success');
             }
-            onSuccess?.(data, variables, context);
+            onSuccess?.(data, variables, onMutateResult, context);
         },
     });
 }

@@ -1,4 +1,5 @@
 import { Image, View, Text, StyleSheet } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../constants/colors';
@@ -8,7 +9,7 @@ import { logDebug } from '../lib/log';
  * Компонент логотипа Kezek для мобильного приложения
  * Поддерживает как изображение, так и текстовый вариант
  */
-export default function Logo({ style }: { style?: unknown }) {
+export default function Logo({ style }: { style?: StyleProp<ViewStyle> }) {
     const [imageError, setImageError] = useState(false);
 
     const handleImageError = (error: unknown) => {

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,6 +25,7 @@ const TZ = 'Asia/Bishkek';
 
 type TimeSlot = {
     start_at: string;
+    end_at: string;
     staff_id: string;
     branch_id: string;
     [key: string]: unknown;
@@ -47,7 +48,7 @@ export default function BookingStep5Time() {
     const { isOffline } = useNetworkStatus();
     const [hasNetworkError, setHasNetworkError] = useState(false);
 
-    const { data: slotsResult, isLoading, refetch } = useQuery<SlotsResult>({
+    const { data: slotsResult, isLoading, refetch, error } = useQuery<SlotsResult, Error>({
         queryKey: ['slots', bookingData.business?.id, bookingData.serviceId, bookingData.selectedDate, bookingData.staffId, bookingData.branchId],
         queryFn: async () => {
             if (
@@ -125,16 +126,21 @@ export default function BookingStep5Time() {
             !!bookingData.staffId &&
             !!bookingData.branchId &&
             !!bookingData.selectedDate,
-        onError: (error: unknown) => {
+    });
+
+    useEffect(() => {
+        if (error) {
             const message = error instanceof Error ? error.message : String(error);
             if (/network request failed|failed to fetch|network/i.test(message)) {
                 setHasNetworkError(true);
             }
-        },
-        onSuccess: () => {
+            return;
+        }
+
+        if (slotsResult) {
             setHasNetworkError(false);
-        },
-    });
+        }
+    }, [error, slotsResult]);
 
     const slots = slotsResult && slotsResult.ok ? slotsResult.slots : [];
     const domainErrorMessage =

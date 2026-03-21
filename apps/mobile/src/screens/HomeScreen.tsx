@@ -16,7 +16,7 @@ import { HomeSearchSection } from './home/HomeSearchSection';
 import { HomeUpcomingBookingsSection } from './home/HomeUpcomingBookingsSection';
 import { trackMobileEvent } from '../lib/analytics';
 import { getAvailableCategories, getRecentPlaces, getUpcomingBookings } from './home/selectors';
-import type { RecentPlace } from './home/types';
+import type { Business, RecentPlace } from './home/types';
 import { useHomeData } from './home/useHomeData';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<MainTabParamList, 'Home'>;
@@ -45,6 +45,23 @@ export default function HomeScreen() {
     const bookings = bookingsQuery.data;
     const isLoading = businessesQuery.isLoading;
     const refetch = businessesQuery.refetch;
+
+    useEffect(() => {
+        if (businessesQuery.isSuccess) {
+            setHasNetworkError(false);
+            return;
+        }
+
+        if (businessesQuery.error) {
+            const message =
+                businessesQuery.error instanceof Error
+                    ? businessesQuery.error.message
+                    : String(businessesQuery.error);
+            if (/network request failed|failed to fetch|network/i.test(message)) {
+                setHasNetworkError(true);
+            }
+        }
+    }, [businessesQuery.error, businessesQuery.isSuccess]);
 
     const now = useMemo(() => new Date(), []);
 
@@ -149,7 +166,7 @@ export default function HomeScreen() {
                     styles={styles}
                     isLoading={isLoading}
                     refreshing={refreshing}
-                    businesses={businesses}
+                    businesses={businesses as Business[] | undefined}
                     search={search}
                     selectedCategory={selectedCategory}
                     onOpenBusiness={handleBusinessPress}

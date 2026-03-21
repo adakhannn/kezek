@@ -31,7 +31,7 @@ export function useHomeData({
         },
     });
 
-    const businessesQuery = useQuery({
+    const businessesQuery = useQuery<Business[]>({
         queryKey: ['businesses', search, selectedCategory],
         queryFn: async () => {
             const params = new URLSearchParams();
@@ -57,15 +57,6 @@ export function useHomeData({
                     rating_score: business.rating_score,
                 }),
             );
-        },
-        onError: (error: unknown) => {
-            const message = error instanceof Error ? error.message : String(error);
-            if (/network request failed|failed to fetch|network/i.test(message)) {
-                onNetworkError(true);
-            }
-        },
-        onSuccess: () => {
-            onNetworkError(false);
         },
     });
 

@@ -35,12 +35,12 @@ jest.mock('../../screens/profile/useProfileScreen', () => ({
 }));
 
 describe('ProfileScreen', () => {
-    test('renders profile header and loaded user data', async () => {
+    test('renders profile header and loaded user data', () => {
         render(<ProfileScreen />);
 
-        expect(await screen.findByText('РџСЂРѕС„РёР»СЊ')).toBeTruthy();
-        expect(await screen.findByDisplayValue('Алина')).toBeTruthy();
-        expect(await screen.findByDisplayValue('+996500000001')).toBeTruthy();
-        expect(await screen.findByText('user@example.com')).toBeTruthy();
+        expect(screen.getByText('РџСЂРѕС„РёР»СЊ')).toBeTruthy();
+        expect(screen.getByDisplayValue('Алина')).toBeTruthy();
+        expect(screen.getByDisplayValue('+996500000001')).toBeTruthy();
+        expect(screen.getByText('user@example.com')).toBeTruthy();
     });
 });
