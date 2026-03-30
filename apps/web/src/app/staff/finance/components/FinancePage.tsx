@@ -1,39 +1,40 @@
-/**
- * Оптимизированный компонент страницы финансов
- * Использует React Query для кэширования и оптимистичных обновлений
+﻿/**
+ * РћРїС‚РёРјРёР·РёСЂРѕРІР°РЅРЅС‹Р№ РєРѕРјРїРѕРЅРµРЅС‚ СЃС‚СЂР°РЅРёС†С‹ С„РёРЅР°РЅСЃРѕРІ
+ * РСЃРїРѕР»СЊР·СѓРµС‚ React Query РґР»СЏ РєСЌС€РёСЂРѕРІР°РЅРёСЏ Рё РѕРїС‚РёРјРёСЃС‚РёС‡РЅС‹С… РѕР±РЅРѕРІР»РµРЅРёР№
  */
 
 'use client';
 
-import { useMemo, useState, useCallback, memo, useEffect, useRef, lazy, Suspense } from 'react';
+import { useMemo, useState, useCallback, memo, useEffect, useRef, lazy } from 'react';
 
+import { useFinanceClientAutosave } from '../hooks/useFinanceClientAutosave';
 import { useFinanceData } from '../hooks/useFinanceData';
 import { useFinanceMutations } from '../hooks/useFinanceMutations';
+import { useFinancePageViewState } from '../hooks/useFinancePageViewState';
 import { useServiceOptions } from '../hooks/useServiceOptions';
 import { useShiftCalculations } from '../hooks/useShiftCalculations';
 import { useShiftStats } from '../hooks/useShiftStats';
-import type { TabKey, PeriodKey, ShiftItem } from '../types';
+import type { ShiftItem } from '../types';
 import { validateShiftItem } from '../utils/validation';
 
-import { ClientsList } from './ClientsList';
-import { ClientsListHeader } from './ClientsListHeader';
-import { ShiftControls } from './ShiftControls';
-import { ShiftHeader } from './ShiftHeader';
-import { ShiftSummary } from './ShiftSummary';
-import { Tabs } from './Tabs';
+import {
+    FinanceClientsTabSection,
+    FinanceHeaderSection,
+    FinanceShiftTabSection,
+    FinanceStatsTabSection,
+    FinanceTabsSection,
+} from './FinancePageSections';
 
-// Ленивая загрузка компонента статистики - загружается только при переключении на вкладку "Статистика"
+// Р›РµРЅРёРІР°СЏ Р·Р°РіСЂСѓР·РєР° РєРѕРјРїРѕРЅРµРЅС‚Р° СЃС‚Р°С‚РёСЃС‚РёРєРё - Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РїСЂРё РїРµСЂРµРєР»СЋС‡РµРЅРёРё РЅР° РІРєР»Р°РґРєСѓ "РЎС‚Р°С‚РёСЃС‚РёРєР°"
 const StatsView = lazy(() => import('./StatsView').then((module) => ({ default: module.StatsView })));
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { SAVE_DEBOUNCE_MS } from '@/app/staff/finance/constants';
 import { LoadingOverlay } from '@/components/ui/ProgressBar';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
-import { todayTz } from '@/lib/time';
 
 function serializeShiftItems(items: ShiftItem[]): string {
-    // Сериализуем только значимые поля, чтобы отслеживать изменения для автосохранения
+    // РЎРµСЂРёР°Р»РёР·СѓРµРј С‚РѕР»СЊРєРѕ Р·РЅР°С‡РёРјС‹Рµ РїРѕР»СЏ, С‡С‚РѕР±С‹ РѕС‚СЃР»РµР¶РёРІР°С‚СЊ РёР·РјРµРЅРµРЅРёСЏ РґР»СЏ Р°РІС‚РѕСЃРѕС…СЂР°РЅРµРЅРёСЏ
     return JSON.stringify(
         items.map((it) => ({
             id: it.id ?? null,
@@ -50,93 +51,54 @@ function serializeShiftItems(items: ShiftItem[]): string {
 interface FinancePageProps {
     staffId?: string;
     showHeader?: boolean;
-    /** Данные смены с сервера (SSR prefetch) — сразу отображаются без загрузки */
+    /** Р”Р°РЅРЅС‹Рµ СЃРјРµРЅС‹ СЃ СЃРµСЂРІРµСЂР° (SSR prefetch) вЂ” СЃСЂР°Р·Сѓ РѕС‚РѕР±СЂР°Р¶Р°СЋС‚СЃСЏ Р±РµР· Р·Р°РіСЂСѓР·РєРё */
     initialData?: import('@/app/staff/finance/services/shiftDataService').FinanceResponsePayload;
 }
 
 /**
- * Оптимизированный компонент страницы финансов
+ * РћРїС‚РёРјРёР·РёСЂРѕРІР°РЅРЅС‹Р№ РєРѕРјРїРѕРЅРµРЅС‚ СЃС‚СЂР°РЅРёС†С‹ С„РёРЅР°РЅСЃРѕРІ
  */
 export const FinancePage = memo(function FinancePage({ staffId, showHeader = true, initialData }: FinancePageProps) {
     const { t } = useLanguage();
     const toast = useToast();
 
-    // Состояние для вкладок и дат
-    // ВАЖНО: начальное значение activeTab должно быть детерминированным и одинаковым на сервере и клиенте,
-    // чтобы избежать ошибок гидратации. Поэтому при инициализации НЕ читаем sessionStorage.
-    const getInitialTab = useCallback(() => (staffId ? 'clients' : 'shift'), [staffId]);
-    
-    const [activeTab, setActiveTab] = useState<TabKey>(getInitialTab);
-    const activeTabRef = useRef<TabKey>(getInitialTab());
-    const [statsPeriod, setStatsPeriod] = useState<PeriodKey>('all');
-    const [shiftDate, setShiftDate] = useState<Date>(todayTz());
-    const [selectedDate, setSelectedDate] = useState<Date>(todayTz());
-    const [selectedMonth, setSelectedMonth] = useState<Date>(todayTz());
-    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-    const [showShiftDetails, setShowShiftDetails] = useState(false);
-    
-    // После монтирования на клиенте подхватываем сохранённую вкладку из sessionStorage (если есть)
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const key = `finance-active-tab-${staffId || 'current'}`;
-        const savedTab = sessionStorage.getItem(key);
-        if (savedTab === 'shift' || savedTab === 'clients' || savedTab === 'stats') {
-            activeTabRef.current = savedTab as TabKey;
-            setActiveTab((current) => (current !== savedTab ? (savedTab as TabKey) : current));
-        }
-    }, [staffId, getInitialTab]);
+    const {
+        activeTab,
+        activeTabRef,
+        statsPeriod,
+        setStatsPeriod,
+        shiftDate,
+        setShiftDate,
+        selectedDate,
+        setSelectedDate,
+        selectedMonth,
+        setSelectedMonth,
+        selectedYear,
+        setSelectedYear,
+        showShiftDetails,
+        setShowShiftDetails,
+        previousTabRef,
+        handleTabChange,
+    } = useFinancePageViewState({ staffId });
 
-    // Обновляем ref и sessionStorage при изменении activeTab
-    useEffect(() => {
-        activeTabRef.current = activeTab;
-        if (typeof window !== 'undefined') {
-            sessionStorage.setItem(`finance-active-tab-${staffId || 'current'}`, activeTab);
-        }
-    }, [activeTab, staffId]);
-    
-    // Предыдущая вкладка — для flush при уходе с «Клиенты» (инициализируем текущей, чтобы не срабатывать на первый рендер)
-    const previousTabRef = useRef<TabKey | null>(null);
-
-    // Обертка для setActiveTab, которая также обновляет ref и sessionStorage
-    const handleTabChange = useCallback((tab: TabKey) => {
-        activeTabRef.current = tab;
-        setActiveTab(tab);
-        if (typeof window !== 'undefined') {
-            sessionStorage.setItem(`finance-active-tab-${staffId || 'current'}`, tab);
-        }
-    }, [staffId]);
-
-    // Локальное состояние для items (для оптимистичных обновлений)
+    // Р›РѕРєР°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РґР»СЏ items (РґР»СЏ РѕРїС‚РёРјРёСЃС‚РёС‡РЅС‹С… РѕР±РЅРѕРІР»РµРЅРёР№)
     const [localItems, setLocalItems] = useState<ShiftItem[]>([]);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
-    // Отслеживаем, какие элементы были только что сохранены (новые элементы без id)
+    // РћС‚СЃР»РµР¶РёРІР°РµРј, РєР°РєРёРµ СЌР»РµРјРµРЅС‚С‹ Р±С‹Р»Рё С‚РѕР»СЊРєРѕ С‡С‚Рѕ СЃРѕС…СЂР°РЅРµРЅС‹ (РЅРѕРІС‹Рµ СЌР»РµРјРµРЅС‚С‹ Р±РµР· id)
     const savedItemsWithoutIdRef = useRef<Set<number>>(new Set());
-    // Сигнатура последнего успешно сохранённого списка клиентов (для предотвращения повторных сохранений)
-    const lastSavedItemsRef = useRef<string | null>(null);
-    // Текущая сигнатура локального списка (для flush на размонтировании)
-    const currentItemsSignatureRef = useRef<string | null>(null);
-    // Ref с последним значением localItems (для flush на размонтировании)
-    const localItemsRef = useRef<ShiftItem[]>([]);
-    // Таймер для отложенного сохранения
-    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    // Актуальные флаги для проверки внутри колбэка таймера (смена открыта, не readonly)
-    const isOpenRef = useRef(false);
-    const isReadOnlyForOwnerRef = useRef(false);
-    // Флаг для предотвращения синхронизации сразу после добавления нового элемента
+    // Р¤Р»Р°Рі РґР»СЏ РїСЂРµРґРѕС‚РІСЂР°С‰РµРЅРёСЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ РґРѕР±Р°РІР»РµРЅРёСЏ РЅРѕРІРѕРіРѕ СЌР»РµРјРµРЅС‚Р°
     const skipNextSyncRef = useRef(false);
-    // Блокировка повторного добавления клиента (защита от петли при быстрых кликах или двойном срабатывании)
+    // Р‘Р»РѕРєРёСЂРѕРІРєР° РїРѕРІС‚РѕСЂРЅРѕРіРѕ РґРѕР±Р°РІР»РµРЅРёСЏ РєР»РёРµРЅС‚Р° (Р·Р°С‰РёС‚Р° РѕС‚ РїРµС‚Р»Рё РїСЂРё Р±С‹СЃС‚СЂС‹С… РєР»РёРєР°С… РёР»Рё РґРІРѕР№РЅРѕРј СЃСЂР°Р±Р°С‚С‹РІР°РЅРёРё)
     const addClientLockRef = useRef(false);
     const addClientUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // Сигнатура последнего сохранённого состояния (для UI «есть несохранённые изменения»)
-    const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(null);
 
     const isAutoClientName = useCallback(
         (name: string | null | undefined): boolean => {
             if (!name) return false;
             const trimmed = name.trim();
             if (!trimmed) return false;
-            const clientLabel = t('staff.finance.clients.client', 'Клиент');
-            // Простая проверка: начинается с локализованного "Клиент" и заканчивается цифрой
+            const clientLabel = t('staff.finance.clients.client', 'РљР»РёРµРЅС‚');
+            // РџСЂРѕСЃС‚Р°СЏ РїСЂРѕРІРµСЂРєР°: РЅР°С‡РёРЅР°РµС‚СЃСЏ СЃ Р»РѕРєР°Р»РёР·РѕРІР°РЅРЅРѕРіРѕ "РљР»РёРµРЅС‚" Рё Р·Р°РєР°РЅС‡РёРІР°РµС‚СЃСЏ С†РёС„СЂРѕР№
             return trimmed.startsWith(`${clientLabel} `) && /\d+$/.test(trimmed);
         },
         [t],
@@ -159,13 +121,13 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
 
     const prepareItemsForSave = useCallback(
         (items: ShiftItem[]): ShiftItem[] => {
-            // Отбрасываем полностью пустые новые элементы (без id/bookingId и без значимых данных)
+            // РћС‚Р±СЂР°СЃС‹РІР°РµРј РїРѕР»РЅРѕСЃС‚СЊСЋ РїСѓСЃС‚С‹Рµ РЅРѕРІС‹Рµ СЌР»РµРјРµРЅС‚С‹ (Р±РµР· id/bookingId Рё Р±РµР· Р·РЅР°С‡РёРјС‹С… РґР°РЅРЅС‹С…)
             return items.filter((item) => hasMeaningfulData(item));
         },
         [hasMeaningfulData],
     );
 
-    // Загрузка данных через React Query (initialData от SSR убирает первый запрос)
+    // Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… С‡РµСЂРµР· React Query (initialData РѕС‚ SSR СѓР±РёСЂР°РµС‚ РїРµСЂРІС‹Р№ Р·Р°РїСЂРѕСЃ)
     const financeData = useFinanceData({
         staffId,
         date: shiftDate,
@@ -173,20 +135,16 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         initialData,
     });
 
-    // Мутации
+    // РњСѓС‚Р°С†РёРё
     const mutations = useFinanceMutations({ staffId, date: shiftDate });
     const mutationsRef = useRef(mutations);
     mutationsRef.current = mutations;
 
-    // Держим в ref актуальный список клиентов для возможного flush при размонтировании / смене вкладки
-    useEffect(() => {
-        localItemsRef.current = localItems;
-        currentItemsSignatureRef.current = serializeShiftItems(localItems);
-    }, [localItems]);
+    // Р”РµСЂР¶РёРј РІ ref Р°РєС‚СѓР°Р»СЊРЅС‹Р№ СЃРїРёСЃРѕРє РєР»РёРµРЅС‚РѕРІ РґР»СЏ РІРѕР·РјРѕР¶РЅРѕРіРѕ flush РїСЂРё СЂР°Р·РјРѕРЅС‚РёСЂРѕРІР°РЅРёРё / СЃРјРµРЅРµ РІРєР»Р°РґРєРё
 
-    // Синхронизируем локальные items с данными из сервера
+    // РЎРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј Р»РѕРєР°Р»СЊРЅС‹Рµ items СЃ РґР°РЅРЅС‹РјРё РёР· СЃРµСЂРІРµСЂР°
     useEffect(() => {
-        // Пропускаем синхронизацию, если только что добавили новый элемент
+        // РџСЂРѕРїСѓСЃРєР°РµРј СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ, РµСЃР»Рё С‚РѕР»СЊРєРѕ С‡С‚Рѕ РґРѕР±Р°РІРёР»Рё РЅРѕРІС‹Р№ СЌР»РµРјРµРЅС‚
         if (skipNextSyncRef.current) {
             skipNextSyncRef.current = false;
             return;
@@ -194,20 +152,20 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         
         if (financeData.data?.items) {
             const serverItems = financeData.data.items;
-            // Используем функциональное обновление для получения актуального состояния
+            // РСЃРїРѕР»СЊР·СѓРµРј С„СѓРЅРєС†РёРѕРЅР°Р»СЊРЅРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ Р°РєС‚СѓР°Р»СЊРЅРѕРіРѕ СЃРѕСЃС‚РѕСЏРЅРёСЏ
             setLocalItems((currentLocalItems) => {
                 const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
                 const localItemsById = new Map(currentLocalItems.filter((item) => item.id).map((item) => [item.id!, item]));
                 
-                // Объединяем данные: сохраняем только те локальные элементы без id, которых нет на сервере
+                // РћР±СЉРµРґРёРЅСЏРµРј РґР°РЅРЅС‹Рµ: СЃРѕС…СЂР°РЅСЏРµРј С‚РѕР»СЊРєРѕ С‚Рµ Р»РѕРєР°Р»СЊРЅС‹Рµ СЌР»РµРјРµРЅС‚С‹ Р±РµР· id, РєРѕС‚РѕСЂС‹С… РЅРµС‚ РЅР° СЃРµСЂРІРµСЂРµ
                 const mergedItems: ShiftItem[] = [];
                 
-                // Сначала добавляем элементы с сервера
+                // РЎРЅР°С‡Р°Р»Р° РґРѕР±Р°РІР»СЏРµРј СЌР»РµРјРµРЅС‚С‹ СЃ СЃРµСЂРІРµСЂР°
                 for (const serverItem of serverItems) {
                     if (serverItem.id) {
                         const localItem = localItemsById.get(serverItem.id);
                         if (localItem) {
-                            // Объединяем: приоритет локальным данным, если они не пустые
+                            // РћР±СЉРµРґРёРЅСЏРµРј: РїСЂРёРѕСЂРёС‚РµС‚ Р»РѕРєР°Р»СЊРЅС‹Рј РґР°РЅРЅС‹Рј, РµСЃР»Рё РѕРЅРё РЅРµ РїСѓСЃС‚С‹Рµ
                             mergedItems.push({
                                 id: serverItem.id,
                                 clientName: (localItem.clientName && localItem.clientName.trim()) || serverItem.clientName || '',
@@ -218,21 +176,21 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                                 createdAt: localItem.createdAt || serverItem.createdAt || null,
                             });
                         } else {
-                            // Новый элемент с сервера (не был в локальных)
+                            // РќРѕРІС‹Р№ СЌР»РµРјРµРЅС‚ СЃ СЃРµСЂРІРµСЂР° (РЅРµ Р±С‹Р» РІ Р»РѕРєР°Р»СЊРЅС‹С…)
                             mergedItems.push(serverItem);
                         }
                     }
                 }
                 
-                // Затем добавляем локальные элементы без id, которые еще не сохранены на сервере.
-                // Проверяем по содержимому (clientName, serviceAmount и т.п.), НО БЕЗ createdAt:
-                // сервер при вставке проставляет своё created_at, поэтому сравнение по времени
-                // ломает сопоставление и приводит к дублям после первого сохранения/удаления.
+                // Р—Р°С‚РµРј РґРѕР±Р°РІР»СЏРµРј Р»РѕРєР°Р»СЊРЅС‹Рµ СЌР»РµРјРµРЅС‚С‹ Р±РµР· id, РєРѕС‚РѕСЂС‹Рµ РµС‰Рµ РЅРµ СЃРѕС…СЂР°РЅРµРЅС‹ РЅР° СЃРµСЂРІРµСЂРµ.
+                // РџСЂРѕРІРµСЂСЏРµРј РїРѕ СЃРѕРґРµСЂР¶РёРјРѕРјСѓ (clientName, serviceAmount Рё С‚.Рї.), РќРћ Р‘Р•Р— createdAt:
+                // СЃРµСЂРІРµСЂ РїСЂРё РІСЃС‚Р°РІРєРµ РїСЂРѕСЃС‚Р°РІР»СЏРµС‚ СЃРІРѕС‘ created_at, РїРѕСЌС‚РѕРјСѓ СЃСЂР°РІРЅРµРЅРёРµ РїРѕ РІСЂРµРјРµРЅРё
+                // Р»РѕРјР°РµС‚ СЃРѕРїРѕСЃС‚Р°РІР»РµРЅРёРµ Рё РїСЂРёРІРѕРґРёС‚ Рє РґСѓР±Р»СЏРј РїРѕСЃР»Рµ РїРµСЂРІРѕРіРѕ СЃРѕС…СЂР°РЅРµРЅРёСЏ/СѓРґР°Р»РµРЅРёСЏ.
                 for (const localItemWithoutId of localItemsWithoutId) {
-                    // Проверяем, нет ли на сервере элемента с таким же содержимым
+                    // РџСЂРѕРІРµСЂСЏРµРј, РЅРµС‚ Р»Рё РЅР° СЃРµСЂРІРµСЂРµ СЌР»РµРјРµРЅС‚Р° СЃ С‚Р°РєРёРј Р¶Рµ СЃРѕРґРµСЂР¶РёРјС‹Рј
                     const isOnServer = serverItems.some((serverItem) => {
                         if (!serverItem.id) return false;
-                        // Сравниваем по основным полям
+                        // РЎСЂР°РІРЅРёРІР°РµРј РїРѕ РѕСЃРЅРѕРІРЅС‹Рј РїРѕР»СЏРј
                         return (
                             serverItem.clientName === localItemWithoutId.clientName &&
                             serverItem.serviceName === localItemWithoutId.serviceName &&
@@ -242,7 +200,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                         );
                     });
                     
-                    // Добавляем только если элемента нет на сервере
+                    // Р”РѕР±Р°РІР»СЏРµРј С‚РѕР»СЊРєРѕ РµСЃР»Рё СЌР»РµРјРµРЅС‚Р° РЅРµС‚ РЅР° СЃРµСЂРІРµСЂРµ
                     if (!isOnServer) {
                         mergedItems.push(localItemWithoutId);
                     }
@@ -251,16 +209,15 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 return mergedItems;
             });
 
-            lastSavedItemsRef.current = serializeShiftItems(serverItems);
-            setLastSavedSignature(serializeShiftItems(serverItems));
+            markSaved(serializeShiftItems(serverItems));
             
-            // Закрываем все открытые формы после синхронизации с сервером
-            // Это нужно, чтобы пользователь видел окончательный список клиентов
-            // и формы не оставались открытыми с устаревшими данными
-            // Закрываем формы только если были сохранены новые элементы (без id)
-            // или если есть открытые формы (чтобы показать обновленный список)
+            // Р—Р°РєСЂС‹РІР°РµРј РІСЃРµ РѕС‚РєСЂС‹С‚С‹Рµ С„РѕСЂРјС‹ РїРѕСЃР»Рµ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃ СЃРµСЂРІРµСЂРѕРј
+            // Р­С‚Рѕ РЅСѓР¶РЅРѕ, С‡С‚РѕР±С‹ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІРёРґРµР» РѕРєРѕРЅС‡Р°С‚РµР»СЊРЅС‹Р№ СЃРїРёСЃРѕРє РєР»РёРµРЅС‚РѕРІ
+            // Рё С„РѕСЂРјС‹ РЅРµ РѕСЃС‚Р°РІР°Р»РёСЃСЊ РѕС‚РєСЂС‹С‚С‹РјРё СЃ СѓСЃС‚Р°СЂРµРІС€РёРјРё РґР°РЅРЅС‹РјРё
+            // Р—Р°РєСЂС‹РІР°РµРј С„РѕСЂРјС‹ С‚РѕР»СЊРєРѕ РµСЃР»Рё Р±С‹Р»Рё СЃРѕС…СЂР°РЅРµРЅС‹ РЅРѕРІС‹Рµ СЌР»РµРјРµРЅС‚С‹ (Р±РµР· id)
+            // РёР»Рё РµСЃР»Рё РµСЃС‚СЊ РѕС‚РєСЂС‹С‚С‹Рµ С„РѕСЂРјС‹ (С‡С‚РѕР±С‹ РїРѕРєР°Р·Р°С‚СЊ РѕР±РЅРѕРІР»РµРЅРЅС‹Р№ СЃРїРёСЃРѕРє)
             setExpandedItems((prev) => {
-                // Если были сохранены новые элементы или есть открытые формы, закрываем их
+                // Р•СЃР»Рё Р±С‹Р»Рё СЃРѕС…СЂР°РЅРµРЅС‹ РЅРѕРІС‹Рµ СЌР»РµРјРµРЅС‚С‹ РёР»Рё РµСЃС‚СЊ РѕС‚РєСЂС‹С‚С‹Рµ С„РѕСЂРјС‹, Р·Р°РєСЂС‹РІР°РµРј РёС…
                 if (savedItemsWithoutIdRef.current.size > 0 || prev.size > 0) {
                     savedItemsWithoutIdRef.current.clear();
                     return new Set();
@@ -268,10 +225,10 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 return prev;
             });
         } else if (financeData.data && !financeData.isLoading) {
-            // Если данных нет, но загрузка завершена, сохраняем только локальные элементы без id
+            // Р•СЃР»Рё РґР°РЅРЅС‹С… РЅРµС‚, РЅРѕ Р·Р°РіСЂСѓР·РєР° Р·Р°РІРµСЂС€РµРЅР°, СЃРѕС…СЂР°РЅСЏРµРј С‚РѕР»СЊРєРѕ Р»РѕРєР°Р»СЊРЅС‹Рµ СЌР»РµРјРµРЅС‚С‹ Р±РµР· id
             setLocalItems((currentLocalItems) => {
                 const localItemsWithoutId = currentLocalItems.filter((item) => !item.id);
-                // Не закрываем формы, если есть локальные элементы
+                // РќРµ Р·Р°РєСЂС‹РІР°РµРј С„РѕСЂРјС‹, РµСЃР»Рё РµСЃС‚СЊ Р»РѕРєР°Р»СЊРЅС‹Рµ СЌР»РµРјРµРЅС‚С‹
                 if (localItemsWithoutId.length === 0) {
                     setExpandedItems(new Set());
                     savedItemsWithoutIdRef.current.clear();
@@ -281,128 +238,34 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }
     }, [financeData.data?.items, financeData.data, financeData.isLoading]);
 
-    // Вычисляем состояние смены
+    // Р’С‹С‡РёСЃР»СЏРµРј СЃРѕСЃС‚РѕСЏРЅРёРµ СЃРјРµРЅС‹
     const shift = financeData.data?.shift ?? null;
     const todayStatus = financeData.data?.todayStatus ?? 'none';
     const isOpen = todayStatus === 'open';
     const isClosed = todayStatus === 'closed';
 
-    // Для владельца: режим только для чтения, если смена закрыта
+    // Р”Р»СЏ РІР»Р°РґРµР»СЊС†Р°: СЂРµР¶РёРј С‚РѕР»СЊРєРѕ РґР»СЏ С‡С‚РµРЅРёСЏ, РµСЃР»Рё СЃРјРµРЅР° Р·Р°РєСЂС‹С‚Р°
     const isReadOnlyForOwner = !!staffId && isClosed;
 
-    // Держим в ref актуальные флаги для проверки внутри колбэка дебаунса
-    isOpenRef.current = isOpen;
-    isReadOnlyForOwnerRef.current = isReadOnlyForOwner;
+    // Р”РµСЂР¶РёРј РІ ref Р°РєС‚СѓР°Р»СЊРЅС‹Рµ С„Р»Р°РіРё РґР»СЏ РїСЂРѕРІРµСЂРєРё РІРЅСѓС‚СЂРё РєРѕР»Р±СЌРєР° РґРµР±Р°СѓРЅСЃР°
+    const {
+        clearPendingSave,
+        handleSaveNow,
+        lastSavedSignature,
+        localItemsRef,
+        markSaved,
+    } = useFinanceClientAutosave({
+        activeTab,
+        activeTabRef,
+        previousTabRef,
+        localItems,
+        isOpen,
+        isReadOnlyForOwner,
+        prepareItemsForSave,
+        saveItems: mutations.saveItems,
+        serializeItems: serializeShiftItems,
+    });
 
-    // Автосохранение списка клиентов с дебаунсом.
-    // После каждого изменения localItems ждём SAVE_DEBOUNCE_MS и отправляем один запрос,
-    // если смена открыта и есть отличия от последнего успешно сохранённого состояния.
-    useEffect(() => {
-        // Сохраняем только на вкладке \"Клиенты\", при открытой смене и не в режиме readonly
-        if (activeTabRef.current !== 'clients') {
-            return;
-        }
-        if (!isOpen || isReadOnlyForOwner) {
-            return;
-        }
-        if (localItems.length === 0) {
-            return;
-        }
-
-        const itemsSignature = serializeShiftItems(localItems);
-
-        // Если изменений нет относительно последнего успешного сохранения — ничего не делаем
-        if (itemsSignature === lastSavedItemsRef.current) {
-            return;
-        }
-
-        // Сбрасываем предыдущий таймер, если он был
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
-
-        saveTimeoutRef.current = setTimeout(() => {
-            // Повторная проверка условий на момент срабатывания таймера (вкладка/смена могли измениться)
-            if (activeTabRef.current !== 'clients') return;
-            if (!isOpenRef.current || isReadOnlyForOwnerRef.current) return;
-
-            const latestItemsRaw = localItemsRef.current;
-            const latestItems = prepareItemsForSave(latestItemsRaw);
-            const latestSignature = serializeShiftItems(latestItems);
-            if (latestSignature === lastSavedItemsRef.current) return;
-
-            // Вызываем сохранение через ref, чтобы не зависеть от mutations в deps (объект новый каждый рендер — иначе эффект крутится и таймер сбрасывается)
-            void mutationsRef.current
-                .saveItems(latestItems)
-                .then(() => {
-                    lastSavedItemsRef.current = latestSignature;
-                    setLastSavedSignature(latestSignature);
-                })
-                .catch(() => {
-                    // Ошибка уже показана пользователю в мутации
-                });
-        }, SAVE_DEBOUNCE_MS);
-
-        return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-                saveTimeoutRef.current = null;
-            }
-        };
-    }, [localItems, isOpen, isReadOnlyForOwner, prepareItemsForSave]);
-
-    // При переключении с вкладки «Клиенты» на другую — сбрасываем таймер дебаунса и при несохранённых изменениях делаем flush.
-    useEffect(() => {
-        const wasClients = previousTabRef.current === 'clients';
-        previousTabRef.current = activeTab;
-
-            if (wasClients && activeTab !== 'clients') {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-                saveTimeoutRef.current = null;
-            }
-            const latestItemsRaw = localItemsRef.current;
-            const latestItems = prepareItemsForSave(latestItemsRaw);
-            const latestSignature = latestItems.length > 0 ? serializeShiftItems(latestItems) : null;
-            if (
-                latestItems.length > 0 &&
-                latestSignature &&
-                latestSignature !== lastSavedItemsRef.current &&
-                isOpen &&
-                !isReadOnlyForOwner
-            ) {
-                void mutationsRef.current.saveItems(latestItems);
-            }
-        }
-    }, [activeTab, isOpen, isReadOnlyForOwner, prepareItemsForSave]);
-
-    // Очистка таймера разблокировки кнопки «Добавить клиента» при размонтировании
-    useEffect(() => {
-        return () => {
-            if (addClientUnlockTimerRef.current) {
-                clearTimeout(addClientUnlockTimerRef.current);
-                addClientUnlockTimerRef.current = null;
-            }
-        };
-    }, []);
-
-    // При размонтировании FinancePage пробуем дозакинуть несохранённые изменения одним запросом.
-    useEffect(() => {
-        return () => {
-            const latestItemsRaw = localItemsRef.current;
-            const latestItems = prepareItemsForSave(latestItemsRaw);
-            const latestSignature = latestItems.length > 0 ? serializeShiftItems(latestItems) : null;
-
-            if (!latestItems || latestItems.length === 0) return;
-            if (!latestSignature || latestSignature === lastSavedItemsRef.current) return;
-            if (!isOpen || isReadOnlyForOwner) return;
-
-            // Best-effort flush: не ждём завершения, ошибки обработает мутация.
-            void mutationsRef.current.saveItems(latestItems);
-        };
-    }, [isOpen, isReadOnlyForOwner]);
-
-    // Расчеты финансов
     const calculations = useShiftCalculations(
         localItems,
         shift,
@@ -410,10 +273,9 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         financeData.data?.staffPercentMaster ?? 60,
         financeData.data?.staffPercentSalon ?? 40,
         financeData.data?.hourlyRate ?? null,
-        financeData.data?.currentGuaranteedAmount ?? null
+        financeData.data?.currentGuaranteedAmount ?? null,
     );
 
-    // Статистика
     const stats = useShiftStats({
         allShifts: financeData.data?.allShifts ?? [],
         statsPeriod,
@@ -422,70 +284,35 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         selectedYear,
     });
 
-    // Опции услуг
     const serviceOptions = useServiceOptions(
         financeData.data?.services ?? [],
         financeData.data?.bookings ?? [],
-        localItems
+        localItems,
     );
 
-    // Вычисляем общее количество закрытых смен
     const allClosedShiftsCount = useMemo(() => {
         const allShifts = financeData.data?.allShifts ?? [];
         return allShifts.filter((s) => s.status === 'closed').length;
     }, [financeData.data?.allShifts]);
 
-    // Есть несохранённые изменения (для индикатора в шапке списка клиентов)
     const hasUnsavedChanges =
         lastSavedSignature !== null && serializeShiftItems(localItems) !== lastSavedSignature;
 
-    // Обработчики
     const handleOpenShift = useCallback(async () => {
         try {
             await mutations.openShift();
-            // invalidateQueries в мутации автоматически вызовет refetch, дополнительный вызов не нужен
         } catch (error) {
-            // Ошибка уже обработана в мутации
+            // Error is already handled in the mutation layer.
         }
     }, [mutations]);
 
     const handleCloseShift = useCallback(async () => {
         try {
             await mutations.closeShift(localItems);
-            // invalidateQueries в мутации автоматически вызовет refetch, дополнительный вызов не нужен
         } catch (error) {
-            // Ошибка уже обработана в мутации
+            // Error is already handled in the mutation layer.
         }
     }, [mutations, localItems]);
-
-    const handleSaveNow = useCallback(() => {
-        // Принудительное сохранение текущего списка клиентов
-        if (!isOpen || isReadOnlyForOwner) return;
-
-        const latestItemsRaw = localItemsRef.current;
-        const latestItems = prepareItemsForSave(latestItemsRaw);
-        if (!latestItems || latestItems.length === 0) return;
-
-        const latestSignature = serializeShiftItems(latestItems);
-        if (lastSavedSignature !== null && latestSignature === lastSavedSignature) {
-            return;
-        }
-
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-            saveTimeoutRef.current = null;
-        }
-
-        void mutations
-            .saveItems(latestItems)
-            .then(() => {
-                lastSavedItemsRef.current = latestSignature;
-                setLastSavedSignature(latestSignature);
-            })
-            .catch(() => {
-                // Ошибка уже будет показана в мутации
-            });
-    }, [isOpen, isReadOnlyForOwner, lastSavedSignature, mutations, prepareItemsForSave]);
 
     const handleAddClient = useCallback(() => {
         if (addClientLockRef.current) return;
@@ -498,7 +325,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             addClientUnlockTimerRef.current = null;
         }, 500);
 
-        const clientLabel = t('staff.finance.clients.client', 'Клиент');
+        const clientLabel = t('staff.finance.clients.client', 'РљР»РёРµРЅС‚');
 
         setLocalItems((prev) => {
             const usedNames = new Set(prev.map((it) => it.clientName).filter(Boolean) as string[]);
@@ -530,22 +357,22 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         setExpandedItems(new Set([0]));
     }, [t]);
 
-    // Обновление элемента без сохранения на сервер (только локальное состояние)
+    // РћР±РЅРѕРІР»РµРЅРёРµ СЌР»РµРјРµРЅС‚Р° Р±РµР· СЃРѕС…СЂР°РЅРµРЅРёСЏ РЅР° СЃРµСЂРІРµСЂ (С‚РѕР»СЊРєРѕ Р»РѕРєР°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ)
     const handleUpdateItem = useCallback((idx: number, item: ShiftItem) => {
-        // Только локальное обновление - без сохранения на сервер
+        // РўРѕР»СЊРєРѕ Р»РѕРєР°Р»СЊРЅРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ - Р±РµР· СЃРѕС…СЂР°РЅРµРЅРёСЏ РЅР° СЃРµСЂРІРµСЂ
         setLocalItems((prev) => prev.map((it, i) => (i === idx ? item : it)));
     }, []);
 
-    // Явное сохранение элемента на сервер (при клике на кнопку "Сохранить")
+    // РЇРІРЅРѕРµ СЃРѕС…СЂР°РЅРµРЅРёРµ СЌР»РµРјРµРЅС‚Р° РЅР° СЃРµСЂРІРµСЂ (РїСЂРё РєР»РёРєРµ РЅР° РєРЅРѕРїРєСѓ "РЎРѕС…СЂР°РЅРёС‚СЊ")
     const handleSaveItem = useCallback(async (idx: number) => {
         const item = localItems[idx];
         if (!item) return;
 
-        // Валидируем элемент перед сохранением
+        // Р’Р°Р»РёРґРёСЂСѓРµРј СЌР»РµРјРµРЅС‚ РїРµСЂРµРґ СЃРѕС…СЂР°РЅРµРЅРёРµРј
         const validation = validateShiftItem(item);
         
         if (!validation.valid) {
-            // Ошибки валидации — ключи i18n; переводим при показе
+            // РћС€РёР±РєРё РІР°Р»РёРґР°С†РёРё вЂ” РєР»СЋС‡Рё i18n; РїРµСЂРµРІРѕРґРёРј РїСЂРё РїРѕРєР°Р·Рµ
             const errorKeys = Object.values(validation.errors).filter(Boolean);
             if (errorKeys.length > 0) {
                 toast.showError(t(errorKeys[0]));
@@ -555,16 +382,16 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             return;
         }
 
-        // Проверяем, есть ли данные для сохранения
+        // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё РґР°РЅРЅС‹Рµ РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ
         const hasData = item.id || 
             item.bookingId || 
             (item.serviceAmount && item.serviceAmount > 0) || 
             (item.consumablesAmount && item.consumablesAmount > 0) ||
             (item.serviceName && item.serviceName.trim() !== '') ||
-            (item.clientName && item.clientName.trim() !== '' && !item.clientName.match(/^Клиент \d+$/));
+            (item.clientName && item.clientName.trim() !== '' && !item.clientName.match(/^РљР»РёРµРЅС‚ \d+$/));
         
         if (!hasData) {
-            // Если нет данных, просто закрываем форму
+            // Р•СЃР»Рё РЅРµС‚ РґР°РЅРЅС‹С…, РїСЂРѕСЃС‚Рѕ Р·Р°РєСЂС‹РІР°РµРј С„РѕСЂРјСѓ
             setExpandedItems((prev) => {
                 const next = new Set(prev);
                 next.delete(idx);
@@ -574,13 +401,10 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         }
 
         try {
-            // При явном сохранении сбрасываем отложенный таймер, чтобы не делать лишний запрос
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-                saveTimeoutRef.current = null;
-            }
+            // РџСЂРё СЏРІРЅРѕРј СЃРѕС…СЂР°РЅРµРЅРёРё СЃР±СЂР°СЃС‹РІР°РµРј РѕС‚Р»РѕР¶РµРЅРЅС‹Р№ С‚Р°Р№РјРµСЂ, С‡С‚РѕР±С‹ РЅРµ РґРµР»Р°С‚СЊ Р»РёС€РЅРёР№ Р·Р°РїСЂРѕСЃ
+            clearPendingSave();
 
-            // Отмечаем, что этот элемент был сохранен (если он новый, без id)
+            // РћС‚РјРµС‡Р°РµРј, С‡С‚Рѕ СЌС‚РѕС‚ СЌР»РµРјРµРЅС‚ Р±С‹Р» СЃРѕС…СЂР°РЅРµРЅ (РµСЃР»Рё РѕРЅ РЅРѕРІС‹Р№, Р±РµР· id)
             const wasNewItem = !item.id;
             if (wasNewItem) {
                 savedItemsWithoutIdRef.current.add(idx);
@@ -589,29 +413,28 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             const itemsForSave = prepareItemsForSave(localItems);
             await mutations.saveItems(itemsForSave);
 
-            // Обновляем сигнатуру последнего успешно сохранённого состояния
+            // РћР±РЅРѕРІР»СЏРµРј СЃРёРіРЅР°С‚СѓСЂСѓ РїРѕСЃР»РµРґРЅРµРіРѕ СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅС‘РЅРЅРѕРіРѕ СЃРѕСЃС‚РѕСЏРЅРёСЏ
             const sig = serializeShiftItems(itemsForSave);
-            lastSavedItemsRef.current = sig;
-            setLastSavedSignature(sig);
+            markSaved(sig);
             
-            // После успешного сохранения всегда закрываем форму сразу
-            // Это нужно, чтобы пользователь видел обновленный список клиентов
+            // РџРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕРіРѕ СЃРѕС…СЂР°РЅРµРЅРёСЏ РІСЃРµРіРґР° Р·Р°РєСЂС‹РІР°РµРј С„РѕСЂРјСѓ СЃСЂР°Р·Сѓ
+            // Р­С‚Рѕ РЅСѓР¶РЅРѕ, С‡С‚РѕР±С‹ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІРёРґРµР» РѕР±РЅРѕРІР»РµРЅРЅС‹Р№ СЃРїРёСЃРѕРє РєР»РёРµРЅС‚РѕРІ
             setExpandedItems((prev) => {
                 const next = new Set(prev);
                 next.delete(idx);
                 return next;
             });
         } catch (error) {
-            // При ошибке убираем из списка сохраненных
+            // РџСЂРё РѕС€РёР±РєРµ СѓР±РёСЂР°РµРј РёР· СЃРїРёСЃРєР° СЃРѕС…СЂР°РЅРµРЅРЅС‹С…
             savedItemsWithoutIdRef.current.delete(idx);
-            // Ошибка уже обработана в мутации
+            // РћС€РёР±РєР° СѓР¶Рµ РѕР±СЂР°Р±РѕС‚Р°РЅР° РІ РјСѓС‚Р°С†РёРё
         }
     }, [localItems, mutations, toast, t]);
 
     const handleDeleteItem = useCallback(async (idx: number) => {
         const itemToDelete = localItems[idx];
         
-        // Оптимистичное удаление
+        // РћРїС‚РёРјРёСЃС‚РёС‡РЅРѕРµ СѓРґР°Р»РµРЅРёРµ
         setLocalItems((prev) => prev.filter((_, i) => i !== idx));
         setExpandedItems((prev) => {
             const next = new Set(prev);
@@ -619,22 +442,18 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             return new Set(Array.from(next).map((i) => i > idx ? i - 1 : i));
         });
 
-        // Удаляем на сервере
+        // РЈРґР°Р»СЏРµРј РЅР° СЃРµСЂРІРµСЂРµ
         try {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-                saveTimeoutRef.current = null;
-            }
+            clearPendingSave();
 
             const updatedItemsRaw = localItems.filter((_, i) => i !== idx);
             const updatedItems = prepareItemsForSave(updatedItemsRaw);
             await mutations.saveItems(updatedItems);
-            // invalidateQueries в мутации автоматически вызовет refetch
+            // invalidateQueries РІ РјСѓС‚Р°С†РёРё Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РІС‹Р·РѕРІРµС‚ refetch
             const sig = serializeShiftItems(updatedItems);
-            lastSavedItemsRef.current = sig;
-            setLastSavedSignature(sig);
+            markSaved(sig);
         } catch (error) {
-            // Откатываем при ошибке
+            // РћС‚РєР°С‚С‹РІР°РµРј РїСЂРё РѕС€РёР±РєРµ
             setLocalItems((prev) => {
                 const result = [...prev];
                 result.splice(idx, 0, itemToDelete);
@@ -647,7 +466,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         const itemToDuplicate = localItems[idx];
         if (!itemToDuplicate) return;
 
-        // Создаем копию элемента без id (новый элемент)
+        // РЎРѕР·РґР°РµРј РєРѕРїРёСЋ СЌР»РµРјРµРЅС‚Р° Р±РµР· id (РЅРѕРІС‹Р№ СЌР»РµРјРµРЅС‚)
         const now = Date.now();
         const lastItemTime = localItems.length > 0 && localItems[0].createdAt
             ? new Date(localItems[0].createdAt).getTime()
@@ -656,57 +475,57 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         const createdAt = new Date(now + timeOffset).toISOString();
 
         const duplicatedItem: ShiftItem = {
-            // Убираем id, чтобы создать новый элемент
+            // РЈР±РёСЂР°РµРј id, С‡С‚РѕР±С‹ СЃРѕР·РґР°С‚СЊ РЅРѕРІС‹Р№ СЌР»РµРјРµРЅС‚
             // id: undefined,
             clientName: itemToDuplicate.clientName || '',
             serviceName: itemToDuplicate.serviceName || '',
             serviceAmount: itemToDuplicate.serviceAmount ?? 0,
             consumablesAmount: itemToDuplicate.consumablesAmount ?? 0,
-            bookingId: null, // Убираем bookingId, так как это новая запись
+            bookingId: null, // РЈР±РёСЂР°РµРј bookingId, С‚Р°Рє РєР°Рє СЌС‚Рѕ РЅРѕРІР°СЏ Р·Р°РїРёСЃСЊ
             createdAt,
         };
 
-        // Добавляем дубликат сразу после исходного элемента
+        // Р”РѕР±Р°РІР»СЏРµРј РґСѓР±Р»РёРєР°С‚ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ РёСЃС…РѕРґРЅРѕРіРѕ СЌР»РµРјРµРЅС‚Р°
         setLocalItems((prev) => {
             const result = [...prev];
             result.splice(idx + 1, 0, duplicatedItem);
             return result;
         });
 
-        // Открываем форму редактирования для дубликата
+        // РћС‚РєСЂС‹РІР°РµРј С„РѕСЂРјСѓ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РґР»СЏ РґСѓР±Р»РёРєР°С‚Р°
         setExpandedItems((prev) => {
             const next = new Set(prev);
-            // Сдвигаем все индексы после idx на +1
+            // РЎРґРІРёРіР°РµРј РІСЃРµ РёРЅРґРµРєСЃС‹ РїРѕСЃР»Рµ idx РЅР° +1
             const shifted = Array.from(next).map((i) => i > idx ? i + 1 : i);
-            // Добавляем новый индекс для дубликата
+            // Р”РѕР±Р°РІР»СЏРµРј РЅРѕРІС‹Р№ РёРЅРґРµРєСЃ РґР»СЏ РґСѓР±Р»РёРєР°С‚Р°
             shifted.push(idx + 1);
             return new Set(shifted);
         });
 
-        // Пропускаем следующую синхронизацию с сервером
+        // РџСЂРѕРїСѓСЃРєР°РµРј СЃР»РµРґСѓСЋС‰СѓСЋ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ СЃ СЃРµСЂРІРµСЂРѕРј
         skipNextSyncRef.current = true;
     }, [localItems]);
 
-    // Определяем, нужно ли показывать индикатор загрузки.
-    // Показываем только при мутациях (открытие/закрытие смены, сохранение клиента),
-    // а не при первой загрузке данных — за initial loading отвечает skeleton от Next.
+    // РћРїСЂРµРґРµР»СЏРµРј, РЅСѓР¶РЅРѕ Р»Рё РїРѕРєР°Р·С‹РІР°С‚СЊ РёРЅРґРёРєР°С‚РѕСЂ Р·Р°РіСЂСѓР·РєРё.
+    // РџРѕРєР°Р·С‹РІР°РµРј С‚РѕР»СЊРєРѕ РїСЂРё РјСѓС‚Р°С†РёСЏС… (РѕС‚РєСЂС‹С‚РёРµ/Р·Р°РєСЂС‹С‚РёРµ СЃРјРµРЅС‹, СЃРѕС…СЂР°РЅРµРЅРёРµ РєР»РёРµРЅС‚Р°),
+    // Р° РЅРµ РїСЂРё РїРµСЂРІРѕР№ Р·Р°РіСЂСѓР·РєРµ РґР°РЅРЅС‹С… вЂ” Р·Р° initial loading РѕС‚РІРµС‡Р°РµС‚ skeleton РѕС‚ Next.
     const shouldShowLoading =
         mutations.isOpening ||
         mutations.isClosing ||
         mutations.isSaving;
     
-    // Определяем сообщение для лоадера
+    // РћРїСЂРµРґРµР»СЏРµРј СЃРѕРѕР±С‰РµРЅРёРµ РґР»СЏ Р»РѕР°РґРµСЂР°
     const loadingMessage = useMemo(() => {
         if (mutations.isClosing) {
-            return t('staff.finance.shift.closing', 'Закрытие смены...');
+            return t('staff.finance.shift.closing', 'Р—Р°РєСЂС‹С‚РёРµ СЃРјРµРЅС‹...');
         }
         if (mutations.isOpening) {
-            return t('staff.finance.shift.opening', 'Открытие смены...');
+            return t('staff.finance.shift.opening', 'РћС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹...');
         }
         if (mutations.isSaving) {
-            return t('staff.finance.clients.saving', 'Сохранение клиента...');
+            return t('staff.finance.clients.saving', 'РЎРѕС…СЂР°РЅРµРЅРёРµ РєР»РёРµРЅС‚Р°...');
         }
-        return t('staff.finance.loading', 'Загрузка данных смены...');
+        return t('staff.finance.loading', 'Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… СЃРјРµРЅС‹...');
     }, [mutations.isClosing, mutations.isOpening, mutations.isSaving, t]);
 
     return (
@@ -719,212 +538,80 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                 onRemove={toast.removeToast}
             />
             
-            {/* Заголовок */}
-            {showHeader && !staffId && (
-                <div className="mb-6 px-6 pt-6">
-                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                        {t('staff.finance.title', 'Финансы')}
-                    </h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('staff.finance.subtitle', 'Управление сменой, клиентами и тем, сколько получает сотрудник и бизнес')}
-                    </p>
-                </div>
-            )}
+            <FinanceHeaderSection
+                showHeader={showHeader}
+                staffId={staffId}
+                title={t('staff.finance.title', 'Р¤РёРЅР°РЅСЃС‹')}
+                subtitle={t('staff.finance.subtitle', 'РЈРїСЂР°РІР»РµРЅРёРµ СЃРјРµРЅРѕР№, РєР»РёРµРЅС‚Р°РјРё Рё С‚РµРј, СЃРєРѕР»СЊРєРѕ РїРѕР»СѓС‡Р°РµС‚ СЃРѕС‚СЂСѓРґРЅРёРє Рё Р±РёР·РЅРµСЃ')}
+            />
 
-            <div className={`min-w-0 ${staffId ? 'px-3 sm:px-4' : 'px-6'}`}>
-                <Tabs
-                    activeTab={activeTab}
-                    onTabChange={handleTabChange}
-                    itemsCount={localItems.length}
-                    showStats={!!stats && !staffId}
-                />
-            </div>
+            <FinanceTabsSection
+                staffId={staffId}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                itemsCount={localItems.length}
+                showStats={!staffId}
+            />
 
-            {/* Таб: Текущая смена */}
             {activeTab === 'shift' && (
-                <div className={`space-y-4 ${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'}`}>
-                    {financeData.isError && financeData.error && (
-                        <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 px-4 py-3">
-                            <div className="flex items-start gap-3">
-                                <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                                        {t('staff.finance.error.title', 'Ошибка загрузки данных')}
-                                    </p>
-                                    <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                                        {financeData.error.message}
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={() => void financeData.refetch()}
-                                        className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 underline"
-                                    >
-                                        {t('staff.finance.error.retry', 'Попробовать снова')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <ShiftHeader
-                            shiftDate={shiftDate}
-                            onShiftDateChange={setShiftDate}
-                            shift={shift}
-                            status={todayStatus}
-                            staffId={staffId}
-                        />
-                        <ShiftControls
-                            hasShift={!!shift}
-                            isOpen={isOpen ?? false}
-                            isClosed={isClosed ?? false}
-                            isDayOff={financeData.data?.isDayOff ?? false}
-                            loading={financeData.isLoading}
-                            saving={mutations.isOpening || mutations.isClosing}
-                            staffId={staffId}
-                            onOpenShift={handleOpenShift}
-                            onCloseShift={handleCloseShift}
-                            onRefresh={() => financeData.invalidate()}
-                        />
-                    </div>
-
-                    {shift && (
-                        <ShiftSummary
-                            calculations={calculations}
-                            shift={shift}
-                            isOpen={isOpen ?? false}
-                            hourlyRate={financeData.data?.hourlyRate ?? null}
-                            currentHoursWorked={financeData.data?.currentHoursWorked ?? null}
-                            currentGuaranteedAmount={financeData.data?.currentGuaranteedAmount ?? null}
-                            items={localItems}
-                            shiftDate={shiftDate}
-                        />
-                    )}
-
-                    {showShiftDetails && shift && (
-                        <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div className="grid sm:grid-cols-2 gap-6">
-                                <div>
-                                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
-                                        {t('staff.finance.details.composition', 'Состав оборота')}
-                                    </h4>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600 dark:text-gray-400">{t('staff.finance.details.serviceAmount', 'Услуги')}</span>
-                                            <span className="font-semibold">{calculations.totalAmount.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600 dark:text-gray-400">{t('staff.finance.details.consumables', 'Расходники')}</span>
-                                            <span className="font-semibold text-amber-600 dark:text-amber-400">{calculations.totalConsumables.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
-                                        </div>
-                                        <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700 font-medium">
-                                            <span>{t('staff.finance.details.total', 'Итого')}</span>
-                                            <span>{(calculations.totalAmount + calculations.totalConsumables).toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
-                                        {t('staff.finance.details.distribution', 'Распределение')}
-                                    </h4>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600 dark:text-gray-400">
-                                                {t('staff.finance.details.staffShare', 'Сотрудник')} <span className="text-xs">({financeData.data?.staffPercentMaster ?? 60}%)</span>
-                                            </span>
-                                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{calculations.masterShare.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600 dark:text-gray-400">
-                                                {t('staff.finance.details.businessShare', 'Бизнес')} <span className="text-xs">({financeData.data?.staffPercentSalon ?? 40}% + расходники)</span>
-                                            </span>
-                                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">{calculations.salonShare.toLocaleString('ru-RU')} {t('staff.finance.shift.som', 'сом')}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowShiftDetails(false)}
-                                className="mt-4 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
-                            >
-                                {t('staff.finance.shift.hideDetails', 'Скрыть детали')}
-                            </button>
-                        </div>
-                    )}
-                    
-                    {shift && !showShiftDetails && (
-                        <button
-                            type="button"
-                            onClick={() => setShowShiftDetails(true)}
-                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-                        >
-                            {t('staff.finance.shift.showDetails', 'Показать детали расчета')}
-                        </button>
-                    )}
-                </div>
+                <FinanceShiftTabSection
+                    staffId={staffId}
+                    financeData={financeData}
+                    shiftDate={shiftDate}
+                    onShiftDateChange={setShiftDate}
+                    shift={shift}
+                    todayStatus={todayStatus}
+                    isOpen={isOpen ?? false}
+                    isClosed={isClosed ?? false}
+                    calculations={calculations}
+                    localItems={localItems}
+                    showShiftDetails={showShiftDetails}
+                    onShowShiftDetails={setShowShiftDetails}
+                    loadingShiftAction={mutations.isOpening || mutations.isClosing}
+                    onOpenShift={handleOpenShift}
+                    onCloseShift={handleCloseShift}
+                    t={t}
+                />
             )}
 
-            {/* Таб: Клиенты */}
             {activeTab === 'clients' && (
-                <div className={`space-y-4 ${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'}`}>
-                    <ClientsListHeader
-                        shiftDate={shiftDate}
-                        onShiftDateChange={setShiftDate}
-                        isOpen={isOpen ?? false}
-                        isClosed={isClosed ?? false}
-                        isReadOnly={isReadOnlyForOwner}
-                        savingItems={mutations.isSaving}
-                        saving={mutations.isOpening || mutations.isClosing}
-                        staffId={staffId}
-                        onAddClient={handleAddClient}
-                        items={localItems}
-                        shift={shift}
-                        hasUnsavedChanges={hasUnsavedChanges}
-                        onSaveNow={handleSaveNow}
-                    />
-
-                    <ClientsList
-                        items={localItems}
-                        bookings={financeData.data?.bookings ?? []}
-                        serviceOptions={serviceOptions}
-                        shift={shift}
-                        isOpen={isOpen ?? false}
-                        isClosed={isClosed ?? false}
-                        isReadOnly={isReadOnlyForOwner}
-                        isSaving={mutations.isSaving}
-                        staffId={staffId}
-                        expandedItems={expandedItems}
-                        onExpand={(idx) => setExpandedItems((prev) => new Set(prev).add(idx))}
-                        onCollapse={(idx) => {
-                            setExpandedItems((prev) => {
-                                const next = new Set(prev);
-                                next.delete(idx);
-                                return next;
-                            });
-                        }}
-                        onUpdateItem={handleUpdateItem}
-                        onSaveItem={handleSaveItem}
-                        onDeleteItem={handleDeleteItem}
-                        onDuplicateItem={handleDuplicateItem}
-                    />
-                </div>
+                <FinanceClientsTabSection
+                    staffId={staffId}
+                    shiftDate={shiftDate}
+                    onShiftDateChange={setShiftDate}
+                    isOpen={isOpen ?? false}
+                    isClosed={isClosed ?? false}
+                    isReadOnlyForOwner={isReadOnlyForOwner}
+                    isSaving={mutations.isSaving}
+                    isShiftActionPending={mutations.isOpening || mutations.isClosing}
+                    onAddClient={handleAddClient}
+                    localItems={localItems}
+                    shift={shift}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    onSaveNow={handleSaveNow}
+                    bookings={financeData.data?.bookings ?? []}
+                    serviceOptions={serviceOptions}
+                    expandedItems={expandedItems}
+                    onExpand={(idx) => setExpandedItems((prev) => new Set(prev).add(idx))}
+                    onCollapse={(idx) => {
+                        setExpandedItems((prev) => {
+                            const next = new Set(prev);
+                            next.delete(idx);
+                            return next;
+                        });
+                    }}
+                    onUpdateItem={handleUpdateItem}
+                    onSaveItem={handleSaveItem}
+                    onDeleteItem={handleDeleteItem}
+                    onDuplicateItem={handleDuplicateItem}
+                />
             )}
 
-            {/* Таб: Статистика */}
             {activeTab === 'stats' && stats && !staffId && (
-                <div className={`${staffId ? 'p-4 sm:p-6' : 'px-6 pb-6'} min-w-0`}>
-                    <Suspense
-                        fallback={
-                            <div className="flex items-center justify-center py-12">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {t('staff.finance.stats.loading', 'Загрузка статистики...')}
-                                </div>
-                            </div>
-                        }
-                    >
+                <FinanceStatsTabSection
+                    staffId={staffId}
+                    loadingLabel={t('staff.finance.stats.loading', 'Р—Р°РіСЂСѓР·РєР° СЃС‚Р°С‚РёСЃС‚РёРєРё...')}
+                    statsContent={
                         <StatsView
                             stats={stats}
                             allShiftsCount={allClosedShiftsCount}
@@ -937,10 +624,11 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
                             selectedYear={selectedYear}
                             onYearChange={setSelectedYear}
                         />
-                    </Suspense>
-                </div>
+                    }
+                />
             )}
         </>
     );
 });
+
 

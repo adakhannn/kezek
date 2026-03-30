@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import BookingDetailsScreen from '../../screens/BookingDetailsScreen';
+import { apiRequest } from '../../lib/api';
 
 jest.mock('@react-navigation/native', () => ({
     NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
@@ -18,30 +19,12 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 jest.mock('../../lib/api', () => ({
-    apiRequest: jest.fn().mockResolvedValue({
-        id: 'test-booking-id',
-        start_at: '2024-01-01T10:00:00Z',
-        end_at: '2024-01-01T11:00:00Z',
-        status: 'confirmed',
-        service: {
-            name_ru: 'Тестовая услуга',
-        },
-        staff: {
-            full_name: 'Тестовый мастер',
-        },
-        business: {
-            name: 'Тестовый бизнес',
-            slug: 'test-business',
-            phones: ['+996555000111'],
-        },
-        branch: {
-            name: 'Главный филиал',
-            address: 'Some street',
-        },
-    }),
+    apiRequest: jest.fn(),
 }));
 
 describe('BookingDetailsScreen', () => {
+    const mockedApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
+
     const renderWithProviders = (component: React.ReactElement) => {
         const queryClient = new QueryClient({
             defaultOptions: {
@@ -52,15 +35,45 @@ describe('BookingDetailsScreen', () => {
         });
 
         return render(
-            <QueryClientProvider client={queryClient}>
-                {component}
-            </QueryClientProvider>,
+            <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>,
         );
     };
+
+    beforeEach(() => {
+        mockedApiRequest.mockResolvedValue({
+            id: 'test-booking-id',
+            start_at: '2024-01-01T10:00:00Z',
+            end_at: '2024-01-01T11:00:00Z',
+            status: 'confirmed',
+            service: {
+                name_ru: 'Тестовая услуга',
+                duration_min: 60,
+                price_from: 1000,
+                price_to: 1500,
+            },
+            staff: {
+                full_name: 'Тестовый мастер',
+            },
+            business: {
+                name: 'Тестовый бизнес',
+                slug: 'test-business',
+                phones: ['+996555000111'],
+            },
+            branch: {
+                name: 'Главный филиал',
+                address: 'Some street',
+            },
+        } as never);
+    });
+
+    afterEach(() => {
+        mockedApiRequest.mockReset();
+    });
 
     test('renders booking details content', async () => {
         renderWithProviders(<BookingDetailsScreen />);
 
+        expect(await screen.findByTestId('booking-details-screen')).toBeTruthy();
         expect(await screen.findByText('Тестовая услуга')).toBeTruthy();
         expect(await screen.findByText('Тестовый бизнес')).toBeTruthy();
     });

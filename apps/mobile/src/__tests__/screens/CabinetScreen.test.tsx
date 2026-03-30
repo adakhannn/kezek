@@ -1,82 +1,64 @@
-/**
- * Smoke test: CabinetScreen
- * 
- * Проверяет базовый рендеринг экрана кабинета клиента со списком бронирований
- */
-
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import CabinetScreen from '../../screens/CabinetScreen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Mock navigation
-jest.mock('@react-navigation/native', () => {
-    return {
-        NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
-        useNavigation: () => ({
-            navigate: jest.fn(),
-            goBack: jest.fn(),
-        }),
-    };
-});
-
-jest.mock('../../lib/supabase', () => ({
-    supabase: {
-        auth: {
-            getUser: jest.fn().mockResolvedValue({
-                data: {
-                    user: { id: 'test-user-id' },
-                },
-                error: null,
-            }),
-        },
-        from: jest.fn(() => ({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            order: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockResolvedValue({
-                data: [],
-                error: null,
-            }),
-        })),
-    },
-}));
+import CabinetScreen from '../../screens/CabinetScreen';
+import { apiRequest } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 jest.mock('../../lib/api', () => ({
-    apiRequest: jest.fn().mockResolvedValue([]),
+    apiRequest: jest.fn(),
 }));
 
 describe('CabinetScreen', () => {
-    const queryClient = new QueryClient({
-        defaultOptions: {
-            queries: {
-                retry: false,
-            },
-        },
-    });
-
-    const renderWithProviders = (component: React.ReactElement) => {
-        return render(
-            <QueryClientProvider client={queryClient}>
-                {component}
-            </QueryClientProvider>
-        );
+    const mockedApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
+    const mockedSupabase = supabase as unknown as {
+        auth: {
+            getUser: jest.Mock;
+        };
     };
 
-    test('должен отрендериться без ошибок', () => {
-        renderWithProviders(<CabinetScreen />);
-        
-        // Проверяем, что экран загрузился
-        expect(screen.getByTestId('cabinet-screen') || screen.getByText(/кабинет|cabinet/i)).toBeTruthy();
+    const renderWithProviders = (component: React.ReactElement) => {
+        const queryClient = new QueryClient({
+            defaultOptions: {
+                queries: {
+                    retry: false,
+                },
+            },
+        });
+
+        return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
+    };
+
+    beforeEach(() => {
+        mockedSupabase.auth.getUser.mockResolvedValue({
+            data: {
+                user: {
+                    id: 'test-user-id',
+                    email: 'test@example.com',
+                    phone: null,
+                },
+            },
+            error: null,
+        });
+
+        mockedApiRequest.mockResolvedValue([]);
     });
 
-    test('должен показывать состояние загрузки при получении данных', () => {
+    afterEach(() => {
+        mockedApiRequest.mockReset();
+        mockedSupabase.auth.getUser.mockReset();
+    });
+
+    test('renders cabinet screen root', async () => {
         renderWithProviders(<CabinetScreen />);
-        
-        // Проверяем наличие индикатора загрузки или пустого состояния
-        const loadingIndicator = screen.queryByTestId('loading') || screen.queryByText(/загрузка|loading/i);
-        // Может быть видимым или нет, в зависимости от состояния
-        expect(loadingIndicator || screen.getByTestId('cabinet-screen')).toBeTruthy();
+
+        expect(await screen.findByTestId('cabinet-screen')).toBeTruthy();
+    });
+
+    test('renders cabinet screen title', async () => {
+        renderWithProviders(<CabinetScreen />);
+
+        expect(await screen.findByText('Личный кабинет')).toBeTruthy();
     });
 });
-

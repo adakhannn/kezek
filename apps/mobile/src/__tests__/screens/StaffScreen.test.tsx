@@ -40,11 +40,7 @@ describe('StaffScreen', () => {
             },
         });
 
-        return render(
-            <QueryClientProvider client={queryClient}>
-                {component}
-            </QueryClientProvider>,
-        );
+        return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
     };
 
     test('renders empty staff state after loading', async () => {

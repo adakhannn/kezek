@@ -1,43 +1,62 @@
 # Kezek
 
-Платформа онлайн‑записи и управления салонами (барбершопы, салоны красоты и т.п.): бронирования, филиалы, сотрудники, финансы, рейтинги. Монорепозиторий: веб‑приложение (Next.js), мобильное приложение (Expo) и общие пакеты (`apps/web`, `apps/mobile`, `packages/*`).
+Kezek is a salon operations platform for online booking and business management.
 
-Kezek помогает салонам и студиям управлять бизнесом: онлайн‑запись клиентов, расписание мастеров, смены и финансы, рейтинги и промоакции, мульти‑бизнес и мульти‑роль (владелец, сотрудник, клиент) в одном аккаунте.
+The repository contains:
 
-## Быстрый старт
+- `apps/web`: Next.js web app
+- `apps/mobile`: Expo mobile app
+- `packages/*`: shared domain and client packages
+
+## Quick Start
 
 ```bash
 pnpm install
 pnpm -C apps/web dev
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000). Подробнее: **[GETTING_STARTED.md](GETTING_STARTED.md)** — установка, env, команды, ключевые ссылки.
+Open [http://localhost:3000](http://localhost:3000).
 
-Дополнительно:
-- Настройка переменных окружения: `ENV_GUIDE.md` и `GETTING_STARTED.md`.
-- Mobile: `pnpm -C apps/mobile start` (см. `apps/mobile/README.md`).
+For setup details, use:
+[GETTING_STARTED.md](/C:/projects/kezek/GETTING_STARTED.md)
 
-## Стек
+For mobile setup, use:
+[apps/mobile/README.md](/C:/projects/kezek/apps/mobile/README.md)
 
-- TypeScript, React, Next.js (App Router)
-- Supabase (PostgreSQL, RLS, Auth)
-- pnpm, Turborepo‑подобная структура монорепозитория
-- Expo / React Native (mobile)
+## Stack
 
-## Основные части
+- TypeScript
+- React
+- Next.js
+- Expo / React Native
+- Supabase
+- pnpm monorepo
 
-- `apps/web` — Next.js‑приложение (публичное бронирование, кабинеты, админка, API).
-- `apps/mobile` — Expo / React Native приложение для клиентов и сотрудников.
-- `packages/core-domain`, `packages/shared-client` — доменная логика и общие утилиты для web/mobile.
+## Documentation
 
-## Документация
+Start here:
 
-- **[GETTING_STARTED.md](GETTING_STARTED.md)** — с чего начать новому разработчику.
-- **[docs/README.md](docs/README.md)** — основной индекс документации и карта актуальных источников истины.
-- **[DOCUMENTS_OVERVIEW.md](DOCUMENTS_OVERVIEW.md)** — обзор документации, включая исторические и архивные материалы.
-- Архитектура и домены: [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) (в т.ч. раздел «Роли и кабинеты»)
-- Бизнес‑фичи: [SYSTEM_FEATURES_DOCUMENTATION.md](SYSTEM_FEATURES_DOCUMENTATION.md) (в т.ч. таблица «Роль → Доступные кабинеты → Основные функции»)
-- API: [API_DOCUMENTATION.md](API_DOCUMENTATION.md) ([/api-docs](http://localhost:3000/api-docs) для Swagger UI)
-- Состояние проекта и техдолг: [PROJECT_REVIEW.md](PROJECT_REVIEW.md), [EVOLUTION_TECH_PLAN.md](EVOLUTION_TECH_PLAN.md)
-- Бэклог улучшений: [docs/PROJECT_IMPROVEMENT_PLAN.md](docs/PROJECT_IMPROVEMENT_PLAN.md)
-- Последний прогресс по roadmap: [docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)
+- [docs/README.md](/C:/projects/kezek/docs/README.md): main docs index
+- [GETTING_STARTED.md](/C:/projects/kezek/GETTING_STARTED.md): onboarding and local setup
+
+Current primary documents:
+
+- architecture:
+  [PROJECT_DOCUMENTATION.md](/C:/projects/kezek/PROJECT_DOCUMENTATION.md)
+- product behavior:
+  [SYSTEM_FEATURES_DOCUMENTATION.md](/C:/projects/kezek/SYSTEM_FEATURES_DOCUMENTATION.md)
+- engineering process:
+  [CONTRIBUTING.md](/C:/projects/kezek/CONTRIBUTING.md),
+  [TESTING_GUIDE.md](/C:/projects/kezek/TESTING_GUIDE.md)
+- roadmap:
+  [docs/PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md)
+- latest progress snapshot:
+  [docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)
+- current cleanup and next-phase plan:
+  [docs/CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md)
+- next focused implementation plan:
+  [docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md)
+
+Historical overview:
+
+- [DOCUMENTS_OVERVIEW.md](/C:/projects/kezek/DOCUMENTS_OVERVIEW.md)

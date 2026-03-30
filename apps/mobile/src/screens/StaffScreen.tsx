@@ -1,131 +1,21 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
 
-import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabase';
-import { formatDate, formatTime } from '../utils/format';
-import Card from '../components/ui/Card';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import EmptyState from '../components/ui/EmptyState';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { RootStackParamList } from '../navigation/types';
+import { StaffScreenSections } from './staff/StaffScreenSections';
+import { useStaffScreenData } from './staff/useStaffScreenData';
+import { styles } from './staff/staffScreenStyles';
 
 type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Shifts'>;
 
-type StaffInfo = {
-    id: string;
-    full_name: string;
-    branch: {
-        id: string;
-        name: string;
-    } | null;
-    business: {
-        id: string;
-        name: string;
-    } | null;
-};
-
-type UpcomingBooking = {
-    id: string;
-    start_at: string;
-    end_at: string;
-    service: {
-        name_ru: string | null;
-    } | null;
-    client_name: string | null;
-    client_phone: string | null;
-};
-
-type BookingRow = {
-    id: string;
-    start_at: string;
-    end_at: string;
-    client_name: string | null;
-    client_phone: string | null;
-    service: { name_ru: string | null }[] | { name_ru: string | null } | null;
-};
-
 export default function StaffScreen() {
     const navigation = useNavigation<StaffScreenNavigationProp>();
-    const [refreshing, setRefreshing] = useState(false);
+    const { staffInfo, upcomingBookings, isLoading, refreshing, onRefresh } = useStaffScreenData();
 
-    const { user } = useAuth();
-
-    const { data: staffInfo, isLoading: staffLoading, refetch: refetchStaff } = useQuery({
-        queryKey: ['staff-info', user?.id],
-        queryFn: async () => {
-            if (!user?.id) return null;
-
-            const { data, error } = await supabase
-                .from('staff')
-                .select(`
-                    id,
-                    full_name,
-                    branch:branches(id, name),
-                    business:businesses(id, name)
-                `)
-                .eq('user_id', user.id)
-                .eq('is_active', true)
-                .maybeSingle();
-
-            if (error) throw error;
-            return data as StaffInfo | null;
-        },
-        enabled: !!user?.id,
-    });
-
-    const {
-        data: upcomingBookings = [],
-        isLoading: bookingsLoading,
-        refetch: refetchBookings,
-    } = useQuery<UpcomingBooking[]>({
-        queryKey: ['staff-bookings', staffInfo?.id],
-        queryFn: async () => {
-            if (!staffInfo?.id) return [];
-
-            const now = new Date().toISOString();
-
-            const { data, error } = await supabase
-                .from('bookings')
-                .select(`
-                    id,
-                    start_at,
-                    end_at,
-                    client_name,
-                    client_phone,
-                    service:services(name_ru)
-                `)
-                .eq('staff_id', staffInfo.id)
-                .in('status', ['hold', 'confirmed', 'paid'])
-                .gte('start_at', now)
-                .order('start_at', { ascending: true })
-                .limit(10);
-
-            if (error) throw error;
-            return (data as BookingRow[] | null)?.map((booking) => ({
-                id: booking.id,
-                start_at: booking.start_at,
-                end_at: booking.end_at,
-                client_name: booking.client_name,
-                client_phone: booking.client_phone,
-                service: Array.isArray(booking.service)
-                    ? (booking.service[0] ?? null)
-                    : booking.service,
-            })) ?? [];
-        },
-        enabled: !!staffInfo?.id,
-    });
-
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await Promise.all([refetchStaff(), refetchBookings()]);
-        setRefreshing(false);
-    };
-
-
-    if ((staffLoading || bookingsLoading) && !refreshing) {
+    if (isLoading) {
         return <LoadingSpinner message="Загрузка..." />;
     }
 
@@ -142,194 +32,13 @@ export default function StaffScreen() {
     }
 
     return (
-        <ScrollView
-            style={styles.container}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-            <View style={styles.header}>
-                <Text style={styles.title}>Кабинет сотрудника</Text>
-                <Text style={styles.subtitle}>{staffInfo.full_name}</Text>
-            </View>
-
-            {staffInfo.branch && (
-                <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Филиал</Text>
-                    <Text style={styles.branchName}>{staffInfo.branch.name}</Text>
-                </Card>
-            )}
-
-            {staffInfo.business && (
-                <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Бизнес</Text>
-                    <Text style={styles.businessName}>{staffInfo.business.name}</Text>
-                </Card>
-            )}
-
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Предстоящие записи</Text>
-
-                {upcomingBookings.length > 0 ? (
-                    <View style={styles.bookingsList}>
-                        {upcomingBookings.map((booking: UpcomingBooking) => (
-                            <Card key={booking.id} style={styles.bookingCard}>
-                                <Text style={styles.bookingService}>
-                                    {booking.service?.name_ru || 'Услуга'}
-                                </Text>
-                                {booking.client_name && (
-                                    <Text style={styles.bookingClient}>
-                                        Клиент: {booking.client_name}
-                                    </Text>
-                                )}
-                                {booking.client_phone && (
-                                    <Text style={styles.bookingPhone}>
-                                        {booking.client_phone}
-                                    </Text>
-                                )}
-                                <View style={styles.bookingTime}>
-                                    <Text style={styles.bookingDate}>
-                                        {formatDate(booking.start_at)}
-                                    </Text>
-                                    <Text style={styles.bookingTimeRange}>
-                                        {formatTime(booking.start_at)} - {formatTime(booking.end_at)}
-                                    </Text>
-                                </View>
-                            </Card>
-                        ))}
-                    </View>
-                ) : (
-                    <EmptyState
-                        icon="calendar"
-                        title="Нет предстоящих записей"
-                        message="Записи появятся здесь, когда клиенты запишутся к вам"
-                    />
-                )}
-            </View>
-
-            {/* Кнопки для перехода к сменам */}
-            {staffInfo && (
-                <View style={styles.section}>
-                    <TouchableOpacity
-                        style={styles.shiftsButton}
-                        onPress={() => {
-                            navigation.navigate('ShiftQuick');
-                        }}
-                    >
-                        <Text style={styles.shiftsButtonText}>Моя смена</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.shiftsButton, styles.shiftsButtonSecondary]}
-                        onPress={() => {
-                            navigation.navigate('Shifts');
-                        }}
-                    >
-                        <Text style={styles.shiftsButtonTextSecondary}>Статистика</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-        </ScrollView>
+        <StaffScreenSections
+            staffInfo={staffInfo}
+            upcomingBookings={upcomingBookings}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            onOpenShiftQuick={() => navigation.navigate('ShiftQuick')}
+            onOpenShifts={() => navigation.navigate('Shifts')}
+        />
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f9fafb',
-    },
-    header: {
-        padding: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
-        marginBottom: 4,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#6b7280',
-    },
-    card: {
-        margin: 20,
-        marginBottom: 0,
-    },
-    section: {
-        padding: 20,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#111827',
-        marginBottom: 16,
-    },
-    branchName: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#374151',
-    },
-    businessName: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#374151',
-    },
-    bookingsList: {
-        gap: 12,
-    },
-    bookingCard: {
-        marginBottom: 12,
-    },
-    bookingService: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#111827',
-        marginBottom: 8,
-    },
-    bookingClient: {
-        fontSize: 14,
-        color: '#374151',
-        marginBottom: 4,
-    },
-    bookingPhone: {
-        fontSize: 14,
-        color: '#6366f1',
-        marginBottom: 8,
-    },
-    bookingTime: {
-        marginTop: 8,
-        paddingTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
-    },
-    bookingDate: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#111827',
-        marginBottom: 4,
-    },
-    bookingTimeRange: {
-        fontSize: 14,
-        color: '#6b7280',
-    },
-    shiftsButton: {
-        backgroundColor: '#4f46e5',
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    shiftsButtonSecondary: {
-        backgroundColor: '#f3f4f6',
-    },
-    shiftsButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    shiftsButtonTextSecondary: {
-        color: '#374151',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-});
