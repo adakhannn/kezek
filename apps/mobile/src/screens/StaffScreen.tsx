@@ -7,7 +7,6 @@ import { RootStackParamList } from '../navigation/types';
 
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { MainTabParamList } from '../navigation/types';
 import { formatDate, formatTime } from '../utils/format';
 import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -33,10 +32,19 @@ type UpcomingBooking = {
     start_at: string;
     end_at: string;
     service: {
-        name_ru: string;
+        name_ru: string | null;
     } | null;
     client_name: string | null;
     client_phone: string | null;
+};
+
+type BookingRow = {
+    id: string;
+    start_at: string;
+    end_at: string;
+    client_name: string | null;
+    client_phone: string | null;
+    service: { name_ru: string | null }[] | { name_ru: string | null } | null;
 };
 
 export default function StaffScreen() {
@@ -68,7 +76,11 @@ export default function StaffScreen() {
         enabled: !!user?.id,
     });
 
-    const { data: upcomingBookings, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
+    const {
+        data: upcomingBookings = [],
+        isLoading: bookingsLoading,
+        refetch: refetchBookings,
+    } = useQuery<UpcomingBooking[]>({
         queryKey: ['staff-bookings', staffInfo?.id],
         queryFn: async () => {
             if (!staffInfo?.id) return [];
@@ -92,7 +104,16 @@ export default function StaffScreen() {
                 .limit(10);
 
             if (error) throw error;
-            return (data || []) as UpcomingBooking[];
+            return (data as BookingRow[] | null)?.map((booking) => ({
+                id: booking.id,
+                start_at: booking.start_at,
+                end_at: booking.end_at,
+                client_name: booking.client_name,
+                client_phone: booking.client_phone,
+                service: Array.isArray(booking.service)
+                    ? (booking.service[0] ?? null)
+                    : booking.service,
+            })) ?? [];
         },
         enabled: !!staffInfo?.id,
     });
@@ -147,9 +168,9 @@ export default function StaffScreen() {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Предстоящие записи</Text>
 
-                {upcomingBookings && upcomingBookings.length > 0 ? (
+                {upcomingBookings.length > 0 ? (
                     <View style={styles.bookingsList}>
-                        {upcomingBookings.map((booking) => (
+                        {upcomingBookings.map((booking: UpcomingBooking) => (
                             <Card key={booking.id} style={styles.bookingCard}>
                                 <Text style={styles.bookingService}>
                                     {booking.service?.name_ru || 'Услуга'}

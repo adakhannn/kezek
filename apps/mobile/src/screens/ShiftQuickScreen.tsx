@@ -345,7 +345,7 @@ export default function ShiftQuickScreen() {
             };
 
             try {
-                const response = await apiRequest('/api/staff/shift/items', {
+                const response = await apiRequest<{ ok: boolean }>('/api/staff/shift/items', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),

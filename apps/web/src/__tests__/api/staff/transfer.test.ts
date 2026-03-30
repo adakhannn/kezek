@@ -1,10 +1,11 @@
-/**
- * Тесты для /api/staff/[id]/transfer
- * Перевод сотрудника между филиалами
- */
-
 import { POST } from '@/app/api/staff/[id]/transfer/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import {
+    createMockRequest,
+    createMockSupabase,
+    expectErrorResponse,
+    expectSuccessResponse,
+    setupApiTestMocks,
+} from '../testHelpers';
 
 setupApiTestMocks();
 
@@ -13,7 +14,6 @@ import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
-// Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
@@ -40,217 +40,186 @@ describe('/api/staff/[id]/transfer', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        (getBizContextForManagers as jest.Mock).mockResolvedValue({
-            bizId,
-        });
-
+        (getBizContextForManagers as jest.Mock).mockResolvedValue({ bizId });
         (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
-
         (getRouteParamRequired as jest.Mock).mockResolvedValue(staffId);
     });
 
-    describe('Валидация', () => {
-        test('должен вернуть 400 при отсутствии target_branch_id', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+    test('returns 400 when target_branch_id is missing', async () => {
+        (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+            data: {
+                id: staffId,
+                biz_id: bizId,
+                branch_id: currentBranchId,
+            },
+            error: null,
+        });
+
+        const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
+            method: 'POST',
+            body: {},
+        });
+
+        const res = await POST(req, { params: { id: staffId } });
+        await expectErrorResponse(res, 400, 'TARGET_BRANCH_REQUIRED');
+    });
+
+    test('returns 403 when staff does not belong to the business', async () => {
+        (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+            data: null,
+            error: 'Resource not found',
+        });
+
+        const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
+            method: 'POST',
+            body: { target_branch_id: targetBranchId },
+        });
+
+        const res = await POST(req, { params: { id: staffId } });
+        await expectErrorResponse(res, 403, 'STAFF_NOT_IN_THIS_BUSINESS');
+    });
+
+    test('returns 400 when staff is already in the target branch', async () => {
+        (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+            data: {
+                id: staffId,
+                biz_id: bizId,
+                branch_id: targetBranchId,
+            },
+            error: null,
+        });
+
+        const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
+            method: 'POST',
+            body: { target_branch_id: targetBranchId },
+        });
+
+        const res = await POST(req, { params: { id: staffId } });
+        await expectErrorResponse(res, 400, 'ALREADY_IN_TARGET_BRANCH');
+    });
+
+    test('returns 403 when target branch does not belong to the business', async () => {
+        (checkResourceBelongsToBiz as jest.Mock)
+            .mockResolvedValueOnce({
                 data: {
                     id: staffId,
                     biz_id: bizId,
                     branch_id: currentBranchId,
                 },
                 error: null,
-            });
-
-            const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
-                method: 'POST',
-                body: {},
-            });
-
-            const res = await POST(req, { params: { id: staffId } });
-            await expectErrorResponse(res, 400, 'TARGET_BRANCH_REQUIRED');
-        });
-    });
-
-    describe('Проверка прав доступа', () => {
-        test('должен вернуть 403 если сотрудник не принадлежит бизнесу', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+            })
+            .mockResolvedValueOnce({
                 data: null,
                 error: 'Resource not found',
             });
 
-            const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
-                method: 'POST',
-                body: {
-                    target_branch_id: targetBranchId,
-                },
-            });
-
-            const res = await POST(req, { params: { id: staffId } });
-            await expectErrorResponse(res, 403, 'STAFF_NOT_IN_THIS_BUSINESS');
+        const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
+            method: 'POST',
+            body: { target_branch_id: targetBranchId },
         });
 
-        test('должен вернуть 400 если сотрудник уже в целевом филиале', async () => {
-            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+        const res = await POST(req, { params: { id: staffId } });
+        await expectErrorResponse(res, 403, 'BRANCH_NOT_IN_THIS_BUSINESS');
+    });
+
+    test('returns 400 when target branch is inactive', async () => {
+        (checkResourceBelongsToBiz as jest.Mock)
+            .mockResolvedValueOnce({
                 data: {
                     id: staffId,
                     biz_id: bizId,
-                    branch_id: targetBranchId, // Уже в целевом филиале
+                    branch_id: currentBranchId,
+                },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    id: targetBranchId,
+                    biz_id: bizId,
+                    is_active: false,
                 },
                 error: null,
             });
 
-            const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
-                method: 'POST',
-                body: {
-                    target_branch_id: targetBranchId,
-                },
-            });
-
-            const res = await POST(req, { params: { id: staffId } });
-            await expectErrorResponse(res, 400, 'ALREADY_IN_TARGET_BRANCH');
+        const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
+            method: 'POST',
+            body: { target_branch_id: targetBranchId },
         });
 
-        test('должен вернуть 400 если целевой филиал не принадлежит бизнесу', async () => {
-            (checkResourceBelongsToBiz as jest.Mock)
-                .mockResolvedValueOnce({
-                    data: {
-                        id: staffId,
-                        biz_id: bizId,
-                        branch_id: currentBranchId,
-                    },
-                    error: null,
-                })
-                .mockResolvedValueOnce({
-                    data: null,
-                    error: 'Resource not found',
-                });
-
-            const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
-                method: 'POST',
-                body: {
-                    target_branch_id: targetBranchId,
-                },
-            });
-
-            const res = await POST(req, { params: { id: staffId } });
-            await expectErrorResponse(res, 400, 'BRANCH_NOT_IN_THIS_BUSINESS');
-        });
-
-        test('должен вернуть 400 если целевой филиал неактивен', async () => {
-            (checkResourceBelongsToBiz as jest.Mock)
-                .mockResolvedValueOnce({
-                    data: {
-                        id: staffId,
-                        biz_id: bizId,
-                        branch_id: currentBranchId,
-                    },
-                    error: null,
-                })
-                .mockResolvedValueOnce({
-                    data: {
-                        id: targetBranchId,
-                        biz_id: bizId,
-                        is_active: false, // Неактивен
-                    },
-                    error: null,
-                });
-
-            const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
-                method: 'POST',
-                body: {
-                    target_branch_id: targetBranchId,
-                },
-            });
-
-            const res = await POST(req, { params: { id: staffId } });
-            await expectErrorResponse(res, 400, 'TARGET_BRANCH_INACTIVE');
-        });
+        const res = await POST(req, { params: { id: staffId } });
+        await expectErrorResponse(res, 400, 'TARGET_BRANCH_INACTIVE');
     });
 
-    describe('Успешный перевод', () => {
-        test('должен успешно перевести сотрудника в другой филиал', async () => {
-            (checkResourceBelongsToBiz as jest.Mock)
-                .mockResolvedValueOnce({
-                    data: {
-                        id: staffId,
-                        biz_id: bizId,
-                        branch_id: currentBranchId,
-                    },
-                    error: null,
-                })
-                .mockResolvedValueOnce({
-                    data: {
-                        id: targetBranchId,
-                        biz_id: bizId,
-                        is_active: true,
-                    },
-                    error: null,
-                });
+    test('transfers staff to another branch successfully', async () => {
+        (checkResourceBelongsToBiz as jest.Mock)
+            .mockResolvedValueOnce({
+                data: {
+                    id: staffId,
+                    biz_id: bizId,
+                    branch_id: currentBranchId,
+                },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    id: targetBranchId,
+                    biz_id: bizId,
+                    is_active: true,
+                },
+                error: null,
+            });
 
-            // Мокаем проверку текущего назначения
-            mockAdmin.from.mockReturnValueOnce({
+        mockAdmin.from
+            .mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 is: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'assignment-id',
-                        valid_from: '2024-01-01',
-                        branch_id: currentBranchId,
-                    },
-                    error: null,
-                }),
-            });
-
-            // Мокаем проверку будущих назначений
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                gte: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
-            });
-
-            // Мокаем закрытие старого назначения
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
                     data: null,
                     error: null,
                 }),
-            });
-
-            // Мокаем создание нового назначения
-            mockAdmin.from.mockReturnValueOnce({
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                gte: jest.fn().mockReturnThis(),
+                limit: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: null,
+                }),
+            })
+            .mockReturnValueOnce({
                 insert: jest.fn().mockResolvedValue({
                     data: null,
                     error: null,
                 }),
             });
 
-            // Мокаем обновление branch_id в staff
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
+        const staffUpdateQuery: { update: jest.Mock; eq: jest.Mock } = {
+            update: jest.fn(),
+            eq: jest.fn(),
+        };
+        staffUpdateQuery.update.mockReturnValue(staffUpdateQuery);
+        staffUpdateQuery.eq
+            .mockImplementationOnce(() => staffUpdateQuery)
+            .mockResolvedValueOnce({
+                data: null,
+                error: null,
             });
+        mockAdmin.from.mockReturnValueOnce(staffUpdateQuery);
 
-            const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
-                method: 'POST',
-                body: {
-                    target_branch_id: targetBranchId,
-                    copy_schedule: false,
-                },
-            });
-
-            const res = await POST(req, { params: { id: staffId } });
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
+        const req = createMockRequest(`http://localhost/api/staff/${staffId}/transfer`, {
+            method: 'POST',
+            body: {
+                target_branch_id: targetBranchId,
+                copy_schedule: false,
+            },
         });
+
+        const res = await POST(req, { params: { id: staffId } });
+        const data = await expectSuccessResponse(res, 200);
+
+        expect(data).toHaveProperty('ok', true);
     });
 });
-
-

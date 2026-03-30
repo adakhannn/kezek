@@ -26,7 +26,10 @@ jest.mock('@/lib/dbHelpers', () => ({
 }));
 
 jest.mock('@/lib/staffSchedule', () => ({
-    initializeStaffSchedule: jest.fn().mockResolvedValue(undefined),
+    initializeStaffSchedule: jest.fn().mockResolvedValue({
+        success: true,
+        daysCreated: 14,
+    }),
 }));
 
 describe('/api/staff/create-from-user', () => {
@@ -112,7 +115,7 @@ describe('/api/staff/create-from-user', () => {
             });
 
             const res = await POST(req);
-            await expectErrorResponse(res, 400, 'BRANCH_NOT_IN_THIS_BUSINESS');
+            await expectErrorResponse(res, 403, 'BRANCH_NOT_IN_THIS_BUSINESS');
         });
 
         test('должен вернуть 404 если пользователь не найден', async () => {
@@ -201,6 +204,33 @@ describe('/api/staff/create-from-user', () => {
                 }),
             });
 
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: {
+                        id: 'role-staff-id',
+                    },
+                    error: null,
+                }),
+            });
+
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: null,
+                }),
+            });
+
+            mockAdmin.from.mockReturnValueOnce({
+                insert: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: null,
+                }),
+            });
+
             const req = createMockRequest('http://localhost/api/staff/create-from-user', {
                 method: 'POST',
                 body: {
@@ -214,7 +244,9 @@ describe('/api/staff/create-from-user', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('staff_id');
+            expect(data).toHaveProperty('id', 'staff-id');
+            expect(data).toHaveProperty('schedule_initialized', true);
+            expect(data).toHaveProperty('schedule_days_created', 14);
         });
 
         test('должен использовать существующего сотрудника если он уже есть', async () => {
@@ -283,6 +315,33 @@ describe('/api/staff/create-from-user', () => {
                 }),
             });
 
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: {
+                        id: 'role-staff-id',
+                    },
+                    error: null,
+                }),
+            });
+
+            mockAdmin.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: null,
+                }),
+            });
+
+            mockAdmin.from.mockReturnValueOnce({
+                insert: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: null,
+                }),
+            });
+
             const req = createMockRequest('http://localhost/api/staff/create-from-user', {
                 method: 'POST',
                 body: {
@@ -295,7 +354,9 @@ describe('/api/staff/create-from-user', () => {
             const data = await expectSuccessResponse(res, 200);
 
             expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('staff_id', 'existing-staff-id');
+            expect(data).toHaveProperty('id', 'existing-staff-id');
+            expect(data).toHaveProperty('schedule_initialized', true);
+            expect(data).toHaveProperty('schedule_days_created', 14);
         });
     });
 });

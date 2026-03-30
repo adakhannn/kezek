@@ -1,17 +1,16 @@
-/**
- * Тесты для /api/staff/avatar/remove
- * Удаление аватара сотрудника
- */
-
 import { POST } from '@/app/api/staff/avatar/remove/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
+import {
+    createMockRequest,
+    createMockSupabase,
+    expectSuccessResponse,
+    setupApiTestMocks,
+} from '../../testHelpers';
 
 setupApiTestMocks();
 
 import { getStaffContext } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
-// Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
     getStaffContext: jest.fn(),
 }));
@@ -23,135 +22,108 @@ jest.mock('@/lib/supabaseService', () => ({
 describe('/api/staff/avatar/remove', () => {
     const mockAdmin = createMockSupabase();
     const staffId = 'staff-uuid';
+    const bizId = 'biz-uuid';
+
+    function createSelectStaffQuery(avatarUrl: string | null) {
+        const query = {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            single: jest.fn().mockResolvedValue({
+                data: { avatar_url: avatarUrl },
+                error: null,
+            }),
+        };
+
+        return query;
+    }
+
+    function createDoubleEqUpdateQuery() {
+        const query = {
+            update: jest.fn().mockReturnThis(),
+            eq: jest.fn(),
+        };
+
+        let eqCalls = 0;
+        query.eq.mockImplementation(() => {
+            eqCalls += 1;
+            return eqCalls >= 2
+                ? Promise.resolve({ data: null, error: null })
+                : query;
+        });
+
+        return query;
+    }
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        (getStaffContext as jest.Mock).mockResolvedValue({
-            staffId,
-        });
-
+        (getStaffContext as jest.Mock).mockResolvedValue({ staffId, bizId });
         (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
     });
 
-    describe('Успешное удаление', () => {
-        test('должен успешно удалить аватар', async () => {
-            const avatarUrl = 'https://example.com/avatars/staff-avatars/avatar.jpg';
+    test('removes avatar successfully', async () => {
+        const avatarUrl = 'https://example.com/avatars/staff-avatars/avatar.jpg';
+        const mockStorage = {
+            remove: jest.fn().mockResolvedValue({ data: null, error: null }),
+        };
 
-            // Мокаем получение текущего сотрудника (с аватаром)
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: {
-                        avatar_url: avatarUrl,
-                    },
-                    error: null,
-                }),
-            });
+        mockAdmin.storage = {
+            from: jest.fn().mockReturnValue(mockStorage),
+        };
 
-            // Мокаем удаление файла из storage
-            const mockStorage = {
-                remove: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            };
+        mockAdmin.from
+            .mockReturnValueOnce(createSelectStaffQuery(avatarUrl))
+            .mockReturnValueOnce(createDoubleEqUpdateQuery());
 
-            mockAdmin.storage = {
-                from: jest.fn().mockReturnValue(mockStorage),
-            };
-
-            // Мокаем обновление записи в БД
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest('http://localhost/api/staff/avatar/remove', {
-                method: 'POST',
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
-            expect(mockStorage.remove).toHaveBeenCalled();
+        const req = createMockRequest('http://localhost/api/staff/avatar/remove', {
+            method: 'POST',
         });
 
-        test('должен вернуть успех если аватар не найден', async () => {
-            // Мокаем получение текущего сотрудника (без аватара)
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: {
-                        avatar_url: null,
-                    },
-                    error: null,
-                }),
-            });
+        const res = await POST(req);
+        const data = await expectSuccessResponse(res, 200);
 
-            const req = createMockRequest('http://localhost/api/staff/avatar/remove', {
-                method: 'POST',
-            });
+        expect(data).toHaveProperty('ok', true);
+        expect(mockStorage.remove).toHaveBeenCalled();
+    });
 
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
+    test('returns success when avatar is already absent', async () => {
+        mockAdmin.from.mockReturnValueOnce(createSelectStaffQuery(null));
 
-            expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('message');
+        const req = createMockRequest('http://localhost/api/staff/avatar/remove', {
+            method: 'POST',
         });
 
-        test('должен продолжить даже если удаление файла из storage не удалось', async () => {
-            const avatarUrl = 'https://example.com/avatars/staff-avatars/avatar.jpg';
+        const res = await POST(req);
+        const data = await expectSuccessResponse(res, 200);
 
-            // Мокаем получение текущего сотрудника (с аватаром)
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: {
-                        avatar_url: avatarUrl,
-                    },
-                    error: null,
-                }),
-            });
+        expect(data).toHaveProperty('ok', true);
+        expect(data).toHaveProperty('message');
+    });
 
-            // Мокаем ошибку при удалении файла из storage
-            const mockStorage = {
-                remove: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: { message: 'File not found' },
-                }),
-            };
+    test('continues when storage removal fails', async () => {
+        const avatarUrl = 'https://example.com/avatars/staff-avatars/avatar.jpg';
+        const mockStorage = {
+            remove: jest.fn().mockResolvedValue({
+                data: null,
+                error: { message: 'File not found' },
+            }),
+        };
 
-            mockAdmin.storage = {
-                from: jest.fn().mockReturnValue(mockStorage),
-            };
+        mockAdmin.storage = {
+            from: jest.fn().mockReturnValue(mockStorage),
+        };
 
-            // Мокаем обновление записи в БД (должно выполниться даже при ошибке storage)
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
+        mockAdmin.from
+            .mockReturnValueOnce(createSelectStaffQuery(avatarUrl))
+            .mockReturnValueOnce(createDoubleEqUpdateQuery());
 
-            const req = createMockRequest('http://localhost/api/staff/avatar/remove', {
-                method: 'POST',
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
+        const req = createMockRequest('http://localhost/api/staff/avatar/remove', {
+            method: 'POST',
         });
+
+        const res = await POST(req);
+        const data = await expectSuccessResponse(res, 200);
+
+        expect(data).toHaveProperty('ok', true);
     });
 });
-
-

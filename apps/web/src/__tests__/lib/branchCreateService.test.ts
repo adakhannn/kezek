@@ -1,0 +1,74 @@
+import { createBranch, type BranchCreateAdminLike } from '@/lib/branchCreateService';
+
+describe('branchCreateService', () => {
+  function createAdmin() {
+    return {
+      from: jest.fn(),
+    } as unknown as jest.Mocked<BranchCreateAdminLike>;
+  }
+
+  test('rejects missing name', async () => {
+    const admin = createAdmin();
+
+    const result = await createBranch({
+      admin,
+      bizId: 'biz-id',
+      body: {} as never,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: 'validation',
+      message: 'Название филиала обязательно',
+      status: 400,
+    });
+  });
+
+  test('rejects invalid coordinates', async () => {
+    const admin = createAdmin();
+
+    const result = await createBranch({
+      admin,
+      bizId: 'biz-id',
+      body: {
+        name: 'Test Branch',
+        lat: 200,
+        lon: 200,
+      },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: 'validation',
+      message: 'Некорректные координаты',
+      status: 400,
+    });
+  });
+
+  test('creates branch successfully', async () => {
+    const admin = createAdmin();
+    admin.from.mockReturnValueOnce({
+      insert: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: { id: 'branch-id' },
+        error: null,
+      }),
+    });
+
+    const result = await createBranch({
+      admin,
+      bizId: 'biz-id',
+      body: {
+        name: ' Test Branch ',
+        address: 'Address',
+        is_active: true,
+      },
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      data: { id: 'branch-id' },
+    });
+  });
+});

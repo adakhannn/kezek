@@ -1,219 +1,153 @@
-/**
- * Тесты для /api/quick-hold
- * Критичная операция: быстрое создание брони (hold + confirm) для клиента
- */
+import {
+    createMockRequest,
+    createMockSupabase,
+    expectErrorResponse,
+    expectSuccessResponse,
+    setupApiTestMocks,
+} from './testHelpers';
 
-import { POST } from '@/app/api/quick-hold/route';
+setupApiTestMocks();
 
-// Мокируем rate limiting, чтобы не мешал тестам
-jest.mock('@/lib/rateLimit', () => ({
-    withRateLimit: jest.fn((req, config, handler) => handler()),
-    RateLimitConfigs: {},
-}));
-
-// Мокаем next/headers cookies
-jest.mock('next/headers', () => ({
-    cookies: jest.fn(),
-}));
-
-// Мокаем supabase-js и ssr клиенты
-jest.mock('@supabase/supabase-js', () => ({
-    createClient: jest.fn(),
-}));
-
-jest.mock('@supabase/ssr', () => ({
-    createServerClient: jest.fn(),
-}));
-
-import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
-
-type MockSupabaseClient = {
-    auth: {
-        getUser: jest.Mock;
-    };
-    from: jest.Mock<MockSupabaseClient>;
-    select: jest.Mock<MockSupabaseClient>;
-    eq: jest.Mock<MockSupabaseClient>;
-    order: jest.Mock<MockSupabaseClient>;
-    limit: jest.Mock<MockSupabaseClient>;
-    maybeSingle: jest.Mock;
-    single: jest.Mock;
-    rpc: jest.Mock;
-};
+const { createClient } = require('@supabase/supabase-js');
+const { createServerClient } = require('@supabase/ssr');
+const { POST } = require('@/app/api/quick-hold/route');
 
 describe('/api/quick-hold', () => {
-    const mockSupabase: MockSupabaseClient = {
-        auth: {
-            getUser: jest.fn(),
-        },
-        from: jest.fn(() => mockSupabase),
-        select: jest.fn(() => mockSupabase),
-        eq: jest.fn(() => mockSupabase),
-        order: jest.fn(() => mockSupabase),
-        limit: jest.fn(() => mockSupabase),
-        maybeSingle: jest.fn(),
-        single: jest.fn(),
-        rpc: jest.fn(),
+    const mockSupabase = createMockSupabase();
+    const validPayload = {
+        biz_id: '11111111-1111-4111-8111-111111111111',
+        service_id: '33333333-3333-4333-8333-333333333333',
+        staff_id: '44444444-4444-4444-8444-444444444444',
+        start_at: '2026-03-21T10:00:00Z',
     };
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // Для веб-ветки (cookies)
-        (cookies as jest.Mock).mockResolvedValue({
-            get: () => undefined,
-        });
-
         (createServerClient as jest.Mock).mockReturnValue(mockSupabase);
         (createClient as jest.Mock).mockReturnValue(mockSupabase);
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: 'user-id-123' } },
+            error: null,
+        });
 
-        process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost:54321';
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: jest.fn().mockResolvedValue({ ok: true }),
+            text: jest.fn().mockResolvedValue(''),
+        } as unknown as Response);
     });
 
-    describe('Edge cases', () => {
-        test('должен вернуть 401, если пользователь не авторизован (web cookies)', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: { user: null },
-                error: null,
-            });
-
-            const req = new Request('http://localhost/api/quick-hold', {
-                method: 'POST',
-                body: JSON.stringify({
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                }),
-            });
-
-            const res = await POST(req);
-            const data = await res.json();
-
-            expect(res.status).toBe(401);
-            expect(data.ok).toBe(false);
-            expect(data.error).toBe('auth');
+    test('returns 401 when user is not authenticated', async () => {
+        mockSupabase.auth.getUser.mockResolvedValueOnce({
+            data: { user: null },
+            error: null,
         });
 
-        test('успешный hold + confirm брони', async () => {
-            const userId = 'test-user-id';
-
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: { user: { id: userId } },
-                error: null,
-            });
-
-            // Поиск первого активного филиала
-            // branch lookup: эмулируем цепочку from().select().eq().eq().order().limit().maybeSingle()
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: 'branch-id' },
-                    error: null,
-                }),
-            });
-
-            // RPC hold_slot
-            mockSupabase.rpc
-                .mockResolvedValueOnce({
-                    data: 'booking-id-123',
-                    error: null,
-                })
-                // confirm_booking
-                .mockResolvedValueOnce({
-                    data: { ok: true },
-                    error: null,
-                });
-
-            // Проверка статуса брони после confirm_booking
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: { id: 'booking-id-123', status: 'confirmed' },
-                    error: null,
-                }),
-            } as never);
-
-            const req = new Request('http://localhost/api/quick-hold', {
+        const res = await POST(
+            createMockRequest('http://localhost/api/quick-hold', {
                 method: 'POST',
-                body: JSON.stringify({
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                }),
-            });
+                body: validPayload,
+            }),
+        );
 
-            const res = await POST(req);
-            const data = await res.json();
+        await expectErrorResponse(res, 401, 'auth');
+    });
 
-            expect(res.status).toBe(200);
-            expect(data.ok).toBe(true);
-            expect(data.booking_id).toBe('booking-id-123');
-            expect(data.confirmed).toBe(true);
-
-            // Проверяем, что RPC был вызван с ожидаемыми аргументами
-            expect(mockSupabase.rpc).toHaveBeenCalledWith(
-                'hold_slot',
-                expect.objectContaining({
-                    p_biz_id: 'biz-id',
-                    p_service_id: 'service-id',
-                    p_staff_id: 'staff-id',
-                }),
-            );
+    test('creates hold booking successfully', async () => {
+        mockSupabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
+                data: { id: '22222222-2222-4222-8222-222222222222' },
+                error: null,
+            }),
         });
 
-        test('обрабатывает ошибку RPC hold_slot (например, конфликт слота)', async () => {
-            const userId = 'test-user-id';
-
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: { user: { id: userId } },
+        mockSupabase.rpc
+            .mockResolvedValueOnce({
+                data: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: { ok: true },
                 error: null,
             });
 
-            // branch lookup
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: 'branch-id' },
-                    error: null,
+        const data = await expectSuccessResponse(
+            await POST(
+                createMockRequest('http://localhost/api/quick-hold', {
+                    method: 'POST',
+                    body: validPayload,
                 }),
-            });
+            ),
+        );
 
-            // RPC возвращает ошибку (слот занят / конфликт)
-            mockSupabase.rpc.mockResolvedValueOnce({
+        expect(data.data.booking_id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+        expect(data.data.confirmed).toBe(true);
+    });
+
+    test('returns mapped validation error when branch is missing', async () => {
+        mockSupabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
                 data: null,
-                error: { message: 'slot conflict' },
-            });
-
-            const req = new Request('http://localhost/api/quick-hold', {
-                method: 'POST',
-                body: JSON.stringify({
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                }),
-            });
-
-            const res = await POST(req);
-            const data = await res.json();
-
-            expect(res.status).toBe(400);
-            expect(data.ok).toBe(false);
-            expect(data.error).toBe('rpc');
+                error: null,
+            }),
         });
+
+        const data = await expectErrorResponse(
+            await POST(
+                createMockRequest('http://localhost/api/quick-hold', {
+                    method: 'POST',
+                    body: validPayload,
+                }),
+            ),
+            400,
+            'validation',
+        );
+
+        expect(data.details.kind).toBe('NO_ACTIVE_BRANCH_FOR_BIZ');
+    });
+
+    test('supports bearer auth requests', async () => {
+        mockSupabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
+                data: { id: '22222222-2222-4222-8222-222222222222' },
+                error: null,
+            }),
+        });
+
+        mockSupabase.rpc
+            .mockResolvedValueOnce({
+                data: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: { ok: true },
+                error: null,
+            });
+
+        const req = createMockRequest('http://localhost/api/quick-hold', {
+            method: 'POST',
+            body: validPayload,
+            headers: {
+                Authorization: 'Bearer test-token',
+            },
+        });
+
+        const data = await expectSuccessResponse(await POST(req));
+        expect(data.data.booking_id).toBe('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+        expect(createClient).toHaveBeenCalled();
     });
 });
-
-

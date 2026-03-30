@@ -1,27 +1,26 @@
-/**
- * Тесты для /api/staff/create
- * Создание нового сотрудника
- */
-
 import { POST } from '@/app/api/staff/create/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import {
+    createMockRequest,
+    createMockSupabase,
+    expectErrorResponse,
+    expectSuccessResponse,
+    setupApiTestMocks,
+} from '../testHelpers';
 
 setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { initializeStaffSchedule } from '@/lib/staffSchedule';
 import { getServiceClient } from '@/lib/supabaseService';
 
-// Мокаем authBiz
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
 
-// Мокаем supabaseService
 jest.mock('@/lib/supabaseService', () => ({
     getServiceClient: jest.fn(),
 }));
 
-// Мокаем staffSchedule
 jest.mock('@/lib/staffSchedule', () => ({
     initializeStaffSchedule: jest.fn(),
 }));
@@ -32,147 +31,178 @@ describe('/api/staff/create', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
-            userId: 'user-id',
-            bizId: 'biz-id',
+            userId: '11111111-1111-4111-8111-111111111111',
+            bizId: '22222222-2222-4222-8222-222222222222',
         });
-
         (getServiceClient as jest.Mock).mockReturnValue(mockServiceClient);
-    });
-
-    describe('Авторизация', () => {
-        test('должен вернуть 403 если пользователь не имеет прав', async () => {
-            // Пользователь не имеет нужных ролей
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                // Возвращаем пустой массив ролей
-            });
-            (mockSupabase.from().select().eq as jest.Mock).mockResolvedValue({
-                data: [],
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/staff/create', {
-                method: 'POST',
-                body: {
-                    full_name: 'Test Staff',
-                    branch_id: 'branch-id',
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 403, 'FORBIDDEN');
+        (initializeStaffSchedule as jest.Mock).mockResolvedValue({
+            success: true,
+            daysCreated: 14,
         });
     });
 
-    describe('Валидация', () => {
-        test('должен вернуть 400 при отсутствии обязательных полей', async () => {
-            // Пользователь имеет права
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-            });
-            (mockSupabase.from().select().eq as jest.Mock).mockResolvedValue({
-                data: [{ roles: { key: 'owner' } }],
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/staff/create', {
-                method: 'POST',
-                body: {
-                    // Отсутствует full_name или branch_id
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400, 'INVALID_BODY');
+    test('returns 403 when manager has no allowed role', async () => {
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'user_roles') {
+                const query = {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn(),
+                };
+                query.eq
+                    .mockImplementationOnce(() => query)
+                    .mockResolvedValueOnce({
+                        data: [],
+                        error: null,
+                    });
+                return query;
+            }
+            return mockSupabase;
         });
+
+        const req = createMockRequest('http://localhost/api/staff/create', {
+            method: 'POST',
+            body: { full_name: 'Test Staff', branch_id: 'branch-id' },
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 403, 'forbidden');
     });
 
-    describe('Успешное создание', () => {
-        test('должен успешно создать сотрудника', async () => {
-            // Пользователь имеет права
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-            });
-            (mockSupabase.from().select().eq as jest.Mock).mockResolvedValue({
-                data: [{ roles: { key: 'owner' } }],
-                error: null,
-            });
+    test('returns 400 when required fields are missing', async () => {
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'user_roles') {
+                const query = {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn(),
+                };
+                query.eq
+                    .mockImplementationOnce(() => query)
+                    .mockResolvedValueOnce({
+                        data: [{ roles: { key: 'owner' } }],
+                        error: null,
+                    });
+                return query;
+            }
+            return mockSupabase;
+        });
 
-            // Поиск пользователя по email/phone (не найден)
-            mockServiceClient.auth = {
-                admin: {
-                    listUsers: jest.fn().mockResolvedValue({
-                        data: { users: [] },
+        const req = createMockRequest('http://localhost/api/staff/create', {
+            method: 'POST',
+            body: {},
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 400, 'validation');
+    });
+
+    test('creates a new staff member', async () => {
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'user_roles') {
+                const query = {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn(),
+                };
+                query.eq
+                    .mockImplementationOnce(() => query)
+                    .mockResolvedValueOnce({
+                        data: [{ roles: { key: 'owner' } }],
+                        error: null,
+                    });
+                return query;
+            }
+
+            if (table === 'staff') {
+                return {
+                    insert: jest.fn().mockReturnThis(),
+                    select: jest.fn().mockReturnThis(),
+                    single: jest.fn().mockResolvedValue({
+                        data: { id: 'staff-id' },
+                        error: null,
                     }),
-                },
-            };
+                };
+            }
 
-            // Создание сотрудника
-            mockSupabase.insert.mockResolvedValueOnce({
-                data: [{ id: 'staff-id', full_name: 'Test Staff', branch_id: 'branch-id' }],
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/staff/create', {
-                method: 'POST',
-                body: {
-                    full_name: 'Test Staff',
-                    branch_id: 'branch-id',
-                    is_active: true,
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res);
-
-            expect(data).toHaveProperty('id');
-            expect(mockSupabase.insert).toHaveBeenCalled();
+            return mockSupabase;
         });
+        mockServiceClient.auth.admin.listUsers.mockResolvedValue({
+            data: { users: [] },
+            error: null,
+        });
+        mockServiceClient.from.mockImplementation((table: string) => {
+            if (table === 'staff_branch_assignments') {
+                return {
+                    insert: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: null,
+                    }),
+                };
+            }
+            return mockServiceClient;
+        });
+
+        const req = createMockRequest('http://localhost/api/staff/create', {
+            method: 'POST',
+            body: {
+                full_name: 'Test Staff',
+                branch_id: 'branch-id',
+                is_active: true,
+            },
+        });
+
+        const res = await POST(req);
+        const data = await expectSuccessResponse(res, 200);
+
+        expect(data.id).toBe('staff-id');
+        expect(data.user_linked).toBe(false);
+        expect(data.schedule_initialized).toBe(true);
     });
 
-    describe('Обработка ошибок', () => {
-        test('должен обработать ошибку при создании', async () => {
-            // Пользователь имеет права
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-            });
-            (mockSupabase.from().select().eq as jest.Mock).mockResolvedValue({
-                data: [{ roles: { key: 'owner' } }],
-                error: null,
-            });
+    test('returns 400 when staff insert fails', async () => {
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'user_roles') {
+                const query = {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn(),
+                };
+                query.eq
+                    .mockImplementationOnce(() => query)
+                    .mockResolvedValueOnce({
+                        data: [{ roles: { key: 'owner' } }],
+                        error: null,
+                    });
+                return query;
+            }
 
-            mockServiceClient.auth = {
-                admin: {
-                    listUsers: jest.fn().mockResolvedValue({
-                        data: { users: [] },
+            if (table === 'staff') {
+                return {
+                    insert: jest.fn().mockReturnThis(),
+                    select: jest.fn().mockReturnThis(),
+                    single: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: { message: 'Duplicate entry', code: '23505' },
                     }),
-                },
-            };
+                };
+            }
 
-            mockSupabase.insert.mockResolvedValueOnce({
-                data: null,
-                error: { message: 'Duplicate entry', code: '23505' },
-            });
-
-            const req = createMockRequest('http://localhost/api/staff/create', {
-                method: 'POST',
-                body: {
-                    full_name: 'Test Staff',
-                    branch_id: 'branch-id',
-                    is_active: true,
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
+            return mockSupabase;
         });
+        mockServiceClient.auth.admin.listUsers.mockResolvedValue({
+            data: { users: [] },
+            error: null,
+        });
+
+        const req = createMockRequest('http://localhost/api/staff/create', {
+            method: 'POST',
+            body: {
+                full_name: 'Test Staff',
+                branch_id: 'branch-id',
+                is_active: true,
+            },
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 400, 'validation');
     });
 });
-

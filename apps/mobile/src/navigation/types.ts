@@ -12,6 +12,7 @@ export type RootStackParamList = {
     BookingStep5Time: undefined;
     BookingStep6Confirm: undefined;
     Shifts: undefined;
+    ShiftQuick: undefined;
 };
 
 export type MainTabParamList = {
@@ -19,9 +20,6 @@ export type MainTabParamList = {
     Cabinet: NavigatorScreenParams<CabinetStackParamList>;
     Dashboard: undefined;
     Staff: undefined;
-    Shifts: undefined;
-    ShiftDetails: { shiftId: string };
-    ShiftQuick: undefined;
 };
 
 export type CabinetStackParamList = {

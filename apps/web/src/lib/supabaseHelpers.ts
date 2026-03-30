@@ -47,6 +47,22 @@ export function createSupabaseAdminClient() {
 }
 
 /**
+ * Создает публичный/анонимный Supabase клиент без cookies и без session persistence.
+ * Используется для public API routes, где авторизация пользователя не требуется.
+ */
+export function createSupabaseAnonClient() {
+    const url = getSupabaseUrl();
+    const anon = getSupabaseAnonKey();
+
+    return createClient(url, anon, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+        },
+    });
+}
+
+/**
  * Создает оба клиента (server и admin) одновременно
  * Удобно когда нужны оба клиента
  */

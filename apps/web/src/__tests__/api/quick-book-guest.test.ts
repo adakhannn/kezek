@@ -1,249 +1,128 @@
-/**
- * Тесты для /api/quick-book-guest
- * Публичный endpoint для создания гостевых бронирований
- */
-
-import { POST } from '@/app/api/quick-book-guest/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from './testHelpers';
+import {
+    createMockRequest,
+    createMockSupabase,
+    expectErrorResponse,
+    expectSuccessResponse,
+    setupApiTestMocks,
+} from './testHelpers';
 
 setupApiTestMocks();
 
-import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
+const { POST } = require('@/app/api/quick-book-guest/route');
 
 describe('/api/quick-book-guest', () => {
     const mockSupabase = createMockSupabase();
+    const validPayload = {
+        biz_id: '11111111-1111-4111-8111-111111111111',
+        branch_id: '22222222-2222-4222-8222-222222222222',
+        service_id: '33333333-3333-4333-8333-333333333333',
+        staff_id: '44444444-4444-4444-8444-444444444444',
+        start_at: '2026-03-21T10:00:00Z',
+        client_name: 'Test User',
+        client_phone: '+996555123456',
+        client_email: 'test@example.com',
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        (cookies as jest.Mock).mockResolvedValue({
-            get: () => undefined,
-        });
-
         (createClient as jest.Mock).mockReturnValue(mockSupabase);
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: jest.fn().mockResolvedValue({ ok: true }),
+            text: jest.fn().mockResolvedValue(''),
+        } as unknown as Response);
     });
 
-    describe('Валидация входных данных', () => {
-        test('должен вернуть 400 при отсутствии обязательных полей', async () => {
-            const req = createMockRequest('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: {
-                    biz_id: 'biz-id',
-                    // Отсутствуют service_id, staff_id, start_at, client_name, client_phone
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
+    test('returns 400 on invalid request payload', async () => {
+        const req = createMockRequest('http://localhost/api/quick-book-guest', {
+            method: 'POST',
+            body: {
+                biz_id: validPayload.biz_id,
+            },
         });
 
-        test('должен вернуть 400 при невалидном формате телефона', async () => {
-            const req = createMockRequest('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: {
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                    client_name: 'Test User',
-                    client_phone: 'invalid-phone', // Невалидный формат (не E.164)
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
-        });
-
-        test('должен вернуть 400 при невалидном email', async () => {
-            const req = createMockRequest('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: {
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                    client_name: 'Test User',
-                    client_phone: '+996555123456',
-                    client_email: 'invalid-email', // Невалидный email
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
-        });
+        const res = await POST(req);
+        await expectErrorResponse(res, 400, 'validation');
     });
 
-    describe('Успешное создание бронирования', () => {
-        test('должен успешно создать гостевую бронь', async () => {
-            // Поиск филиала
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: 'branch-id' },
-                    error: null,
-                }),
-            });
-
-            // RPC hold_slot_guest
-            mockSupabase.rpc
-                .mockResolvedValueOnce({
-                    data: 'booking-id-123',
-                    error: null,
-                })
-                // confirm_booking
-                .mockResolvedValueOnce({
-                    data: { ok: true },
-                    error: null,
-                });
-
-            // Проверка статуса брони
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: { id: 'booking-id-123', status: 'confirmed' },
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: {
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                    client_name: 'Test User',
-                    client_phone: '+996555123456',
-                    client_email: 'test@example.com',
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res);
-
-            expect(data.booking_id).toBe('booking-id-123');
-            expect(data.confirmed).toBe(true);
+    test('creates a guest booking successfully', async () => {
+        mockSupabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
+                data: { id: validPayload.branch_id },
+                error: null,
+            }),
         });
 
-        test('должен работать без email (опциональное поле)', async () => {
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: 'branch-id' },
-                    error: null,
-                }),
+        mockSupabase.rpc
+            .mockResolvedValueOnce({
+                data: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: { ok: true },
+                error: null,
             });
 
-            mockSupabase.rpc
-                .mockResolvedValueOnce({
-                    data: 'booking-id-123',
-                    error: null,
-                })
-                .mockResolvedValueOnce({
-                    data: { ok: true },
-                    error: null,
-                });
-
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                    data: { id: 'booking-id-123', status: 'confirmed' },
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: {
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                    client_name: 'Test User',
-                    client_phone: '+996555123456',
-                    // client_email отсутствует
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res);
-
-            expect(data.booking_id).toBe('booking-id-123');
+        const req = createMockRequest('http://localhost/api/quick-book-guest', {
+            method: 'POST',
+            body: validPayload,
         });
+
+        const data = await expectSuccessResponse(await POST(req));
+        expect(data.data.booking_id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+        expect(data.data.confirmed).toBe(true);
+        const [notifyUrl, notifyInit] = (global.fetch as jest.Mock).mock.calls[0];
+        expect(String(notifyUrl)).toBe('http://localhost/api/notify');
+        expect(notifyInit.method).toBe('POST');
     });
 
-    describe('Обработка ошибок', () => {
-        test('должен вернуть 400 если филиал не найден', async () => {
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: {
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                    client_name: 'Test User',
-                    client_phone: '+996555123456',
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectErrorResponse(res, 400, 'no_branch');
-            expect(data.message).toContain('No active branch');
-        });
-
-        test('должен обработать ошибку RPC hold_slot_guest', async () => {
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockReturnThis(),
-                limit: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: 'branch-id' },
-                    error: null,
-                }),
-            });
-
-            mockSupabase.rpc.mockResolvedValueOnce({
+    test('returns branch validation error when active branch is missing', async () => {
+        mockSupabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
                 data: null,
-                error: { message: 'Slot conflict' },
-            });
-
-            const req = createMockRequest('http://localhost/api/quick-book-guest', {
-                method: 'POST',
-                body: {
-                    biz_id: 'biz-id',
-                    service_id: 'service-id',
-                    staff_id: 'staff-id',
-                    start_at: new Date().toISOString(),
-                    client_name: 'Test User',
-                    client_phone: '+996555123456',
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectErrorResponse(res, 400, 'rpc');
-            expect(data.message).toContain('Slot conflict');
+                error: null,
+            }),
         });
+
+        const req = createMockRequest('http://localhost/api/quick-book-guest', {
+            method: 'POST',
+            body: validPayload,
+        });
+
+        const data = await expectErrorResponse(await POST(req), 400, 'not_found');
+        expect(data.message).toContain('No active branch');
+        expect(data.details.code).toBe('no_branch');
+    });
+
+    test('returns rpc error when booking hold fails', async () => {
+        mockSupabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
+                data: { id: validPayload.branch_id },
+                error: null,
+            }),
+        });
+
+        mockSupabase.rpc.mockResolvedValueOnce({
+            data: null,
+            error: { message: 'Slot conflict' },
+        });
+
+        const req = createMockRequest('http://localhost/api/quick-book-guest', {
+            method: 'POST',
+            body: validPayload,
+        });
+
+        const data = await expectErrorResponse(await POST(req), 400, 'validation');
+        expect(data.message).toContain('Slot conflict');
+        expect(data.details.code).toBe('rpc');
     });
 });
-

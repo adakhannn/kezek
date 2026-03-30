@@ -9,17 +9,17 @@ import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccess
 setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
-import { getServiceClient } from '@/lib/supabaseService';
 import { getRouteParamUuid } from '@/lib/routeParams';
+import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 // Мокаем authBiz
 jest.mock('@/lib/authBiz', () => ({
     getBizContextForManagers: jest.fn(),
 }));
 
-// Мокаем supabaseService
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+// Мокаем supabaseHelpers
+jest.mock('@/lib/supabaseHelpers', () => ({
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 // Мокаем routeParams
@@ -36,10 +36,12 @@ describe('/api/dashboard/branches/[branchId]/promotions', () => {
         jest.clearAllMocks();
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
+            supabase: mockAdmin,
+            userId: 'manager-user-id',
             bizId,
         });
 
-        (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
 
         (getRouteParamUuid as jest.Mock).mockResolvedValue(branchId);
     });
@@ -147,10 +149,7 @@ describe('/api/dashboard/branches/[branchId]/promotions', () => {
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: branchId,
-                        biz_id: 'other-biz-id',
-                    },
+                    data: null,
                     error: null,
                 }),
             });

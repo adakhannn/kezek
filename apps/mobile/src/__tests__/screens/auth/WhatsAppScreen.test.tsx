@@ -10,9 +10,8 @@ import WhatsAppScreen from '../../../screens/auth/WhatsAppScreen';
 
 // Mock navigation
 jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
     return {
-        ...actualNav,
+        NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
         useNavigation: () => ({
             navigate: jest.fn(),
             goBack: jest.fn(),
@@ -30,9 +29,8 @@ describe('WhatsAppScreen', () => {
 
     test('должен отображать поле ввода телефона на первом шаге', () => {
         render(<WhatsAppScreen />);
-        
-        // Ищем поле ввода телефона
-        const phoneInput = screen.queryByPlaceholderText(/телефон|phone/i);
+
+        const phoneInput = screen.queryByPlaceholderText('+996500574029');
         expect(phoneInput).toBeTruthy();
     });
 

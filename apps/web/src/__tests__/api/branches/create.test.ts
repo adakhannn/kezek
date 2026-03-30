@@ -9,6 +9,7 @@ import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccess
 setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 
 // Мокаем зависимости
@@ -20,12 +21,20 @@ jest.mock('@/lib/supabaseService', () => ({
     getServiceClient: jest.fn(),
 }));
 
+jest.mock('@/lib/rateLimit', () => ({
+    withRateLimit: jest.fn((req, _config, handler) => handler()),
+    RateLimitConfigs: {
+        critical: {},
+    },
+}));
+
 describe('/api/branches/create', () => {
     const mockSupabase = createMockSupabase();
     const mockServiceClient = createMockSupabase();
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (withRateLimit as jest.Mock).mockImplementation((req, _config, handler) => handler());
 
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
@@ -124,7 +133,7 @@ describe('/api/branches/create', () => {
             const data = await expectSuccessResponse(res);
 
             expect(data.ok).toBe(true);
-            expect(data.id).toBe('branch-id');
+            expect(data.data.id).toBe('branch-id');
         });
 
         test('должен успешно создать филиал с координатами', async () => {
@@ -151,7 +160,7 @@ describe('/api/branches/create', () => {
             const data = await expectSuccessResponse(res);
 
             expect(data.ok).toBe(true);
-            expect(data.id).toBe('branch-id');
+            expect(data.data.id).toBe('branch-id');
         });
     });
 

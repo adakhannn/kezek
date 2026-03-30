@@ -11,6 +11,7 @@ setupApiTestMocks();
 import { getBizContextForManagers } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import { withRateLimit } from '@/lib/rateLimit';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateLatLon } from '@/lib/validation';
 
@@ -31,6 +32,13 @@ jest.mock('@/lib/dbHelpers', () => ({
     checkResourceBelongsToBiz: jest.fn(),
 }));
 
+jest.mock('@/lib/rateLimit', () => ({
+    withRateLimit: jest.fn((req, _config, handler) => handler()),
+    RateLimitConfigs: {
+        normal: {},
+    },
+}));
+
 jest.mock('@/lib/validation', () => ({
     validateLatLon: jest.fn(),
     coordsToEWKT: jest.fn((lat, lon) => `POINT(${lon} ${lat})`),
@@ -40,6 +48,21 @@ describe('/api/branches/[id]/update', () => {
     const mockAdmin = createMockSupabase();
     const branchId = 'branch-uuid';
     const bizId = 'biz-uuid';
+
+    function createUpdateQuery(result: { data?: unknown; error: unknown }) {
+        const query = {
+            update: jest.fn().mockReturnThis(),
+            eq: jest.fn(),
+        };
+
+        let eqCalls = 0;
+        query.eq.mockImplementation(() => {
+            eqCalls += 1;
+            return eqCalls >= 2 ? Promise.resolve(result) : query;
+        });
+
+        return query;
+    }
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -51,6 +74,7 @@ describe('/api/branches/[id]/update', () => {
         (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
 
         (getRouteParamRequired as jest.Mock).mockResolvedValue(branchId);
+        (withRateLimit as jest.Mock).mockImplementation((req, _config, handler) => handler());
     });
 
     describe('Валидация', () => {
@@ -157,13 +181,12 @@ describe('/api/branches/[id]/update', () => {
             });
 
             // Мокаем обновление филиала
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
+            mockAdmin.from.mockReturnValueOnce(
+                createUpdateQuery({
                     data: { id: branchId },
                     error: null,
-                }),
-            });
+                })
+            );
 
             const req = createMockRequest(`http://localhost/api/branches/${branchId}/update`, {
                 method: 'POST',
@@ -196,13 +219,12 @@ describe('/api/branches/[id]/update', () => {
             });
 
             // Мокаем обновление филиала
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
+            mockAdmin.from.mockReturnValueOnce(
+                createUpdateQuery({
                     data: { id: branchId },
                     error: null,
-                }),
-            });
+                })
+            );
 
             const req = createMockRequest(`http://localhost/api/branches/${branchId}/update`, {
                 method: 'POST',

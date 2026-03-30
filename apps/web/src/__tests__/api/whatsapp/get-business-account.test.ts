@@ -97,7 +97,7 @@ describe('/api/whatsapp/get-business-account', () => {
             });
 
             const res = await GET(req);
-            await expectErrorResponse(res, 500);
+            await expectErrorResponse(res, 400, 'validation');
         });
     });
 });

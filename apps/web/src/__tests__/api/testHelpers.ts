@@ -61,10 +61,17 @@ type MockSupabaseClient = {
         getUser: jest.Mock;
         signOut: jest.Mock;
         updateUser?: jest.Mock;
+        admin?: {
+            listUsers: jest.Mock;
+            updateUserById: jest.Mock;
+            createUser: jest.Mock;
+            generateLink: jest.Mock;
+        };
     };
     from: jest.Mock<MockSupabaseClient>;
     select: jest.Mock<MockSupabaseClient>;
     insert: jest.Mock<MockSupabaseClient>;
+    upsert?: jest.Mock<MockSupabaseClient>;
     update: jest.Mock<MockSupabaseClient>;
     delete: jest.Mock<MockSupabaseClient>;
     eq: jest.Mock<MockSupabaseClient>;
@@ -93,10 +100,17 @@ export function createMockSupabase(): MockSupabaseClient {
             getUser: jest.fn(),
             signOut: jest.fn(),
             updateUser: jest.fn(),
+            admin: {
+                listUsers: jest.fn(),
+                updateUserById: jest.fn(),
+                createUser: jest.fn(),
+                generateLink: jest.fn(),
+            },
         },
         from: jest.fn(() => mockSupabase),
         select: jest.fn(() => mockSupabase),
         insert: jest.fn(() => mockSupabase),
+        upsert: jest.fn(() => mockSupabase),
         update: jest.fn(() => mockSupabase),
         delete: jest.fn(() => mockSupabase),
         eq: jest.fn(() => mockSupabase),
@@ -158,12 +172,30 @@ export function setupApiTestMocks() {
  */
 const LEGACY_ERROR_CODE_MAP: Record<string, string> = {
     // Старые символические коды → новые краткие значения поля error
+    AUTH: 'auth',
     UNAUTHORIZED: 'auth',
     BAD_REQUEST: 'validation',
     BOOKING_NOT_FOUND: 'not_found',
     FORBIDDEN: 'forbidden',
+    INTERNAL: 'internal',
+    NAME_REQUIRED: 'validation',
+    STAFF_NOT_FOUND: 'not_found',
+    VALIDATION: 'validation',
+    INVALID_BODY: 'validation',
+    MISSING_REQUIRED_FIELDS: 'validation',
+    INVALID_VISIT_COUNT: 'validation',
+    INVALID_DISCOUNT_PERCENT: 'validation',
+    BRANCH_NOT_FOUND_OR_ACCESS_DENIED: 'not_found',
+    PROMOTION_NOT_FOUND_OR_ACCESS_DENIED: 'not_found',
+    USER_NOT_FOUND: 'not_found',
+    TARGET_BRANCH_INACTIVE: 'validation',
+    TARGET_BRANCH_REQUIRED: 'validation',
+    ALREADY_IN_TARGET_BRANCH: 'validation',
+    STAFF_NOT_IN_THIS_BUSINESS: 'forbidden',
+    BRANCH_NOT_IN_THIS_BUSINESS: 'forbidden',
     REVIEW_ALREADY_EXISTS: 'conflict',
     REVIEW_NOT_FOUND: 'not_found',
+    HAS_FUTURE_BOOKINGS: 'conflict',
     // WhatsApp и прочие
     missing_data: 'validation',
     invalid_phone: 'validation',
@@ -206,6 +238,18 @@ export function expectSuccessResponse(
     expect(response.status).toBe(expectedStatus);
     return response.json().then((data) => {
         expect(data).toHaveProperty('ok', true);
+        if (
+            data &&
+            typeof data === 'object' &&
+            data.data &&
+            typeof data.data === 'object' &&
+            !Array.isArray(data.data)
+        ) {
+            return {
+                ...data,
+                ...data.data,
+            };
+        }
         return data;
     });
 }

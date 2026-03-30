@@ -1,0 +1,88 @@
+import { runStaffUpdateByIdHttp } from '@/lib/staffUpdateByIdHttpService';
+
+jest.mock('@/lib/authBiz', () => ({
+    getBizContextForManagers: jest.fn(),
+}));
+
+jest.mock('@/lib/routeParams', () => ({
+    getRouteParamUuid: jest.fn(),
+}));
+
+jest.mock('@/lib/supabaseService', () => ({
+    getServiceClient: jest.fn(),
+}));
+
+jest.mock('@/lib/staffUpdateByIdService', () => ({
+    runStaffUpdateById: jest.fn(),
+}));
+
+jest.mock('@/lib/log', () => ({
+    logError: jest.fn(),
+}));
+
+import { getBizContextForManagers } from '@/lib/authBiz';
+import { getRouteParamUuid } from '@/lib/routeParams';
+import { getServiceClient } from '@/lib/supabaseService';
+import { runStaffUpdateById } from '@/lib/staffUpdateByIdService';
+
+describe('staffUpdateByIdHttpService', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (getRouteParamUuid as jest.Mock).mockResolvedValue('staff-1');
+        (getBizContextForManagers as jest.Mock).mockResolvedValue({
+            bizId: 'biz-1',
+            userId: 'manager-1',
+        });
+        (getServiceClient as jest.Mock).mockReturnValue({ from: jest.fn() });
+    });
+
+    test('parses request and delegates to service', async () => {
+        (runStaffUpdateById as jest.Mock).mockResolvedValue({
+            ok: true,
+            data: { transferred: false },
+        });
+
+        const response = await runStaffUpdateByIdHttp(
+            new Request('http://localhost/api/staff/staff-1/update', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    full_name: 'Test',
+                    branch_id: 'branch-1',
+                    is_active: true,
+                }),
+            }),
+            { params: { id: 'staff-1' } },
+        );
+        const body = await response.json();
+
+        expect(runStaffUpdateById).toHaveBeenCalledWith({
+            admin: { from: expect.any(Function) },
+            staffId: 'staff-1',
+            bizId: 'biz-1',
+            userId: 'manager-1',
+            body: {
+                full_name: 'Test',
+                branch_id: 'branch-1',
+                is_active: true,
+            },
+        });
+        expect(response.status).toBe(200);
+        expect(body.data).toEqual({ transferred: false });
+    });
+
+    test('returns validation error for invalid json', async () => {
+        const response = await runStaffUpdateByIdHttp(
+            new Request('http://localhost/api/staff/staff-1/update', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: '{',
+            }),
+            { params: { id: 'staff-1' } },
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(400);
+        expect(body.error).toBe('validation');
+    });
+});

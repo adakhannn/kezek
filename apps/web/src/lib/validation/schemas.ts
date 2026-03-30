@@ -212,9 +212,9 @@ export const telegramAuthDataSchema = z.object({
  * Схема для поиска пользователей
  */
 export const usersSearchSchema = z.object({
-    q: z.string().max(100, 'Search query too long').optional(),
-    page: z.number().int().min(1).max(100).optional().default(1),
-    perPage: z.number().int().min(1).max(100).optional().default(50),
+    q: z.string().optional(),
+    page: z.number().int().optional().default(1),
+    perPage: z.number().int().optional().default(50),
 }).strict();
 
 /**

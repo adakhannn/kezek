@@ -1,3 +1,9 @@
+import {
+    cancelBookingUseCase,
+    confirmBookingUseCase,
+    type BookingCommandsPort,
+} from '@core-domain/booking';
+
 import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -8,36 +14,78 @@ export type DashboardSlot = {
     end_at: string;
 };
 
+function createDashboardBookingCommands(): BookingCommandsPort {
+    return {
+        async holdSlot() {
+            throw new Error('holdSlot is not supported in booking dashboard actions');
+        },
+
+        async confirmBooking(bookingId: string) {
+            const { error } = await supabase.rpc('confirm_booking', {
+                p_booking_id: bookingId,
+            });
+            if (error) {
+                logError('BookingDashboardService', 'confirm_booking error', {
+                    bookingId,
+                    error,
+                });
+                throw error;
+            }
+        },
+
+        async cancelBooking(bookingId: string) {
+            const { error } = await supabase.rpc('cancel_booking', {
+                p_booking_id: bookingId,
+            });
+            if (error) {
+                const msg = error.message.toLowerCase();
+                if (msg.includes('not assigned to branch') || msg.includes('staff')) {
+                    const { error: updateError } = await supabase
+                        .from('bookings')
+                        .update({ status: 'cancelled' })
+                        .eq('id', bookingId);
+
+                    if (updateError) {
+                        logError(
+                            'BookingDashboardService',
+                            'cancel_booking fallback update error',
+                            {
+                                bookingId,
+                                error: updateError,
+                            },
+                        );
+                        throw updateError;
+                    }
+
+                    return;
+                }
+
+                logError('BookingDashboardService', 'cancel_booking error', {
+                    bookingId,
+                    error,
+                });
+                throw error;
+            }
+        },
+    };
+}
+
 export async function confirmBooking(bookingId: string): Promise<void> {
-    const { error } = await supabase.rpc('confirm_booking', { p_booking_id: bookingId });
-    if (error) {
-        logError('BookingDashboardService', 'confirm_booking error', { bookingId, error });
-        throw error;
-    }
+    await confirmBookingUseCase(
+        {
+            commands: createDashboardBookingCommands(),
+        },
+        bookingId,
+    );
 }
 
 export async function cancelBookingWithFallback(bookingId: string): Promise<void> {
-    const { error } = await supabase.rpc('cancel_booking', { p_booking_id: bookingId });
-    if (error) {
-        const msg = error.message.toLowerCase();
-        if (msg.includes('not assigned to branch') || msg.includes('staff')) {
-            const { error: updateError } = await supabase
-                .from('bookings')
-                .update({ status: 'cancelled' })
-                .eq('id', bookingId);
-
-            if (updateError) {
-                logError('BookingDashboardService', 'cancel_booking fallback update error', {
-                    bookingId,
-                    error: updateError,
-                });
-                throw updateError;
-            }
-        } else {
-            logError('BookingDashboardService', 'cancel_booking error', { bookingId, error });
-            throw error;
-        }
-    }
+    await cancelBookingUseCase(
+        {
+            commands: createDashboardBookingCommands(),
+        },
+        bookingId,
+    );
 }
 
 export type CreateInternalBookingParams = {

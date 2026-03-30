@@ -1,6 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigatorScreenParams } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList, CabinetStackParamList } from './types';
 import { useUserRole } from '../hooks/useUserRole';
@@ -10,7 +9,6 @@ import CabinetScreen from '../screens/CabinetScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import StaffScreen from '../screens/StaffScreen';
-import ShiftsScreen from '../screens/ShiftsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const CabinetStack = createNativeStackNavigator<CabinetStackParamList>();
@@ -21,9 +19,8 @@ function CabinetNavigator() {
             screenOptions={{
                 headerStyle: {
                     backgroundColor: colors.background.secondary,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border.dark,
                 },
+                headerShadowVisible: false,
                 headerTintColor: colors.text.primary,
                 headerTitleStyle: {
                     fontWeight: '600',
@@ -61,9 +58,8 @@ export default function MainNavigator() {
                 },
                 headerStyle: {
                     backgroundColor: colors.background.secondary,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border.dark,
                 },
+                headerShadowVisible: false,
                 headerTintColor: colors.text.primary,
                 headerTitleStyle: {
                     fontWeight: '600',

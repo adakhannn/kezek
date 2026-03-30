@@ -10,9 +10,8 @@ import VerifyScreen from '../../../screens/auth/VerifyScreen';
 
 // Mock navigation
 jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
     return {
-        ...actualNav,
+        NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
         useNavigation: () => ({
             navigate: jest.fn(),
             goBack: jest.fn(),
@@ -28,24 +27,21 @@ jest.mock('@react-navigation/native', () => {
 describe('VerifyScreen', () => {
     test('должен отрендериться без ошибок', () => {
         render(<VerifyScreen />);
-        
-        // Проверяем наличие основных элементов
-        expect(screen.getByText(/подтверждение|verify|код/i)).toBeTruthy();
+
+        expect(screen.getByText('Подтверждение')).toBeTruthy();
     });
 
     test('должен отображать поле ввода кода', () => {
         render(<VerifyScreen />);
-        
-        // Ищем поле ввода кода
-        const codeInput = screen.queryByPlaceholderText(/код|code|otp/i);
+
+        const codeInput = screen.queryByPlaceholderText('000000');
         expect(codeInput).toBeTruthy();
     });
 
     test('должен отображать кнопку подтверждения', () => {
         render(<VerifyScreen />);
-        
-        // Ищем кнопку подтверждения
-        const verifyButton = screen.queryByText(/подтвердить|verify|отправить/i);
+
+        const verifyButton = screen.queryByText('Подтвердить');
         expect(verifyButton).toBeTruthy();
     });
 });

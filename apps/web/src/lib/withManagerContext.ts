@@ -12,8 +12,7 @@ import type { NextResponse } from 'next/server';
 import { createErrorResponse } from './apiErrorHandler';
 import { getBizContextForManagers } from './authBiz';
 import { BizAccessError } from './authDiagnostics';
-import { logWarn } from './log';
-import { createSupabaseAdminClient } from './supabaseHelpers';
+import { createServiceRoleClientWithFallback } from './bizContextRuntimeHelpers';
 
 type SupabaseClientType = Awaited<ReturnType<typeof getBizContextForManagers>>['supabase'];
 
@@ -63,14 +62,11 @@ export async function withManagerContext(
         throw e;
     }
 
-    let admin: SupabaseClientType = supabase;
-    try {
-        admin = createSupabaseAdminClient();
-    } catch (e) {
-        logWarn(scope, 'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS)', {
-            error: e instanceof Error ? e.message : String(e),
-        });
-    }
+    const admin = createServiceRoleClientWithFallback({
+        scope,
+        serverClient: supabase,
+        missingKeyMessage: 'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS)',
+    });
     const managerCtx: ManagerContext = { supabase, admin, bizId, userId };
     return handler(managerCtx);
 }

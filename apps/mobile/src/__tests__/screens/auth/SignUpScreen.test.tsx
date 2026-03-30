@@ -10,9 +10,8 @@ import SignUpScreen from '../../../screens/auth/SignUpScreen';
 
 // Mock navigation
 jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
     return {
-        ...actualNav,
+        NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
         useNavigation: () => ({
             navigate: jest.fn(),
             goBack: jest.fn(),
@@ -30,9 +29,8 @@ describe('SignUpScreen', () => {
 
     test('должен отображать поле ввода email', () => {
         render(<SignUpScreen />);
-        
-        // Ищем поле ввода email
-        const emailInput = screen.queryByPlaceholderText(/email|почта/i);
+
+        const emailInput = screen.queryByPlaceholderText('example@mail.com');
         expect(emailInput).toBeTruthy();
     });
 

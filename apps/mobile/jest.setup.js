@@ -28,6 +28,14 @@ jest.mock('expo-web-browser', () => ({
     openBrowserAsync: jest.fn(),
 }));
 
+jest.mock('expo-network', () => ({
+    useNetworkState: jest.fn(() => ({
+        isConnected: true,
+        isInternetReachable: true,
+        type: 'WIFI',
+    })),
+}));
+
 // Mock Supabase client
 jest.mock('./src/lib/supabase', () => ({
     supabase: {
@@ -49,16 +57,30 @@ jest.mock('./src/lib/supabase', () => ({
             update: jest.fn().mockReturnThis(),
             delete: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
+            in: jest.fn().mockReturnThis(),
+            gte: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockResolvedValue({
+                data: [],
+                error: null,
+            }),
+            maybeSingle: jest.fn().mockResolvedValue({
+                data: null,
+                error: null,
+            }),
             single: jest.fn(),
         })),
+        rpc: jest.fn().mockResolvedValue({
+            data: [],
+            error: null,
+        }),
     },
 }));
 
 // Mock React Navigation
 jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
     return {
-        ...actualNav,
+        NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
         useNavigation: () => ({
             navigate: jest.fn(),
             goBack: jest.fn(),
@@ -68,31 +90,6 @@ jest.mock('@react-navigation/native', () => {
             params: {},
         }),
         useFocusEffect: jest.fn(),
-    };
-});
-
-// Mock React Query
-jest.mock('@tanstack/react-query', () => {
-    const actualQuery = jest.requireActual('@tanstack/react-query');
-    return {
-        ...actualQuery,
-        useQuery: jest.fn(() => ({
-            data: null,
-            isLoading: false,
-            error: null,
-            refetch: jest.fn(),
-        })),
-        useMutation: jest.fn(() => ({
-            mutate: jest.fn(),
-            mutateAsync: jest.fn(),
-            isLoading: false,
-            error: null,
-        })),
-        QueryClient: jest.fn(() => ({
-            invalidateQueries: jest.fn(),
-            setQueryData: jest.fn(),
-        })),
-        QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
     };
 });
 
@@ -108,8 +105,61 @@ jest.mock('./src/contexts/ToastContext', () => ({
 jest.mock('./src/contexts/BookingContext', () => ({
     BookingProvider: ({ children }: { children: React.ReactNode }) => children,
     useBooking: () => ({
-        bookingData: {},
-        updateBookingData: jest.fn(),
+        bookingData: {
+            business: {
+                id: 'test-business-id',
+                name: 'Test Salon',
+                slug: 'test-salon',
+                rating_score: 4.8,
+            },
+            branches: [
+                {
+                    id: 'branch-1',
+                    name: 'Main Branch',
+                    rating_score: 4.7,
+                },
+            ],
+            services: [
+                {
+                    id: 'service-1',
+                    name_ru: 'Тестовая услуга',
+                    duration_min: 60,
+                    price_from: 1000,
+                    price_to: 1500,
+                    branch_id: 'branch-1',
+                },
+            ],
+            staff: [
+                {
+                    id: 'staff-1',
+                    full_name: 'Тестовый мастер',
+                    branch_id: 'branch-1',
+                    rating_score: 4.9,
+                    avatar_url: null,
+                },
+            ],
+            promotions: [],
+            branchId: 'branch-1',
+            serviceId: 'service-1',
+            staffId: 'staff-1',
+            selectedDate: '2026-03-21',
+            selectedSlot: {
+                staff_id: 'staff-1',
+                branch_id: 'branch-1',
+                start_at: '2026-03-21T10:00:00.000Z',
+                end_at: '2026-03-21T11:00:00.000Z',
+            },
+        },
+        setBusiness: jest.fn(),
+        setBranches: jest.fn(),
+        setServices: jest.fn(),
+        setStaff: jest.fn(),
+        setPromotions: jest.fn(),
+        setBranchId: jest.fn(),
+        setServiceId: jest.fn(),
+        setStaffId: jest.fn(),
+        setSelectedDate: jest.fn(),
+        setSelectedSlot: jest.fn(),
         reset: jest.fn(),
     }),
 }));

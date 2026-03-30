@@ -9,6 +9,7 @@ import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccess
 setupApiTestMocks();
 
 import { getBizContextForManagers } from '@/lib/authBiz';
+import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { getRouteParamUuid } from '@/lib/routeParams';
 import { getServiceClient } from '@/lib/supabaseService';
 
@@ -21,6 +22,10 @@ jest.mock('@/lib/routeParams', () => ({
     getRouteParamUuid: jest.fn(),
 }));
 
+jest.mock('@/lib/dbHelpers', () => ({
+    checkResourceBelongsToBiz: jest.fn(),
+}));
+
 jest.mock('@/lib/supabaseService', () => ({
     getServiceClient: jest.fn(),
 }));
@@ -29,6 +34,55 @@ describe('/api/branches/[id]/delete', () => {
     const mockSupabase = createMockSupabase();
     const mockServiceClient = createMockSupabase();
     const branchId = 'branch-id-123';
+
+    function createTripleEqResultQuery<T>(result: T) {
+        const query = {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn(),
+        };
+
+        let eqCalls = 0;
+        query.eq.mockImplementation(() => {
+            eqCalls += 1;
+            return eqCalls >= 3 ? Promise.resolve(result) : query;
+        });
+
+        return query;
+    }
+
+    function createBookingsQuery(result: { data: unknown[]; count: number; error?: unknown }) {
+        return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            neq: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockResolvedValue(result),
+        };
+    }
+
+    function createOtherBranchQuery(result: { data: unknown; error: unknown }) {
+        return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            neq: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue(result),
+        };
+    }
+
+    function createDeleteQuery(result: { data: unknown; error: unknown }) {
+        const query = {
+            delete: jest.fn().mockReturnThis(),
+            eq: jest.fn(),
+        };
+
+        let eqCalls = 0;
+        query.eq.mockImplementation(() => {
+            eqCalls += 1;
+            return eqCalls >= 2 ? Promise.resolve(result) : query;
+        });
+
+        return query;
+    }
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -65,13 +119,9 @@ describe('/api/branches/[id]/delete', () => {
                 error: null,
             });
 
-            mockServiceClient.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: branchId, biz_id: 'other-biz-id' },
-                    error: null,
-                }),
+            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+                data: null,
+                error: 'Филиал не принадлежит этому бизнесу',
             });
 
             const req = createMockRequest(`http://localhost/api/branches/${branchId}/delete`, {
@@ -79,7 +129,7 @@ describe('/api/branches/[id]/delete', () => {
             });
 
             const res = await POST(req, { params: { id: branchId } });
-            await expectErrorResponse(res, 400, 'BRANCH_NOT_IN_THIS_BUSINESS');
+            await expectErrorResponse(res, 400, 'validation');
         });
 
         test('должен вернуть 400 если у филиала есть активные услуги', async () => {
@@ -88,22 +138,16 @@ describe('/api/branches/[id]/delete', () => {
                 error: null,
             });
 
-            mockServiceClient.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: branchId, biz_id: 'biz-id' },
-                    error: null,
-                }),
+            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+                data: { id: branchId, biz_id: 'biz-id' },
+                error: null,
             });
 
-            // Проверка активных услуг
-            mockServiceClient.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                count: 5, // Есть активные услуги
+            mockServiceClient.from.mockImplementation((table: string) => {
+                if (table === 'services') {
+                    return createTripleEqResultQuery({ count: 5, error: null });
+                }
+                throw new Error(`Unexpected table: ${table}`);
             });
 
             const req = createMockRequest(`http://localhost/api/branches/${branchId}/delete`, {
@@ -111,7 +155,7 @@ describe('/api/branches/[id]/delete', () => {
             });
 
             const res = await POST(req, { params: { id: branchId } });
-            await expectErrorResponse(res, 400, 'HAS_SERVICES');
+            await expectErrorResponse(res, 400, 'conflict');
         });
     });
 
@@ -123,32 +167,48 @@ describe('/api/branches/[id]/delete', () => {
             });
 
             // Проверка принадлежности филиала
-            mockServiceClient.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: branchId, biz_id: 'biz-id' },
-                    error: null,
-                }),
+            (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
+                data: { id: branchId, biz_id: 'biz-id' },
+                error: null,
             });
 
-            // Проверка активных услуг (нет активных)
-            mockServiceClient.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                count: 0,
+            mockServiceClient.from.mockImplementation((table: string) => {
+                if (table === 'services') {
+                    if (mockServiceClient.from.mock.calls.filter(([name]) => name === 'services').length === 1) {
+                        return createTripleEqResultQuery({ count: 0, error: null });
+                    }
+                    return createTripleEqResultQuery({ data: [], error: null });
+                }
+
+                if (table === 'staff') {
+                    return createTripleEqResultQuery({ count: 0, error: null });
+                }
+
+                if (table === 'bookings') {
+                    return createBookingsQuery({
+                        data: [],
+                        count: 0,
+                        error: null,
+                    });
+                }
+
+                if (table === 'branches') {
+                    return createOtherBranchQuery({
+                        data: null,
+                        error: null,
+                    });
+                }
+
+                throw new Error(`Unexpected table: ${table}`);
             });
 
-            // Удаление филиала
-            mockServiceClient.from.mockReturnValueOnce({
-                delete: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
+            mockServiceClient.from
+                .mockImplementationOnce(() => createTripleEqResultQuery({ count: 0, error: null }))
+                .mockImplementationOnce(() => createTripleEqResultQuery({ count: 0, error: null }))
+                .mockImplementationOnce(() => createBookingsQuery({ data: [], count: 0, error: null }))
+                .mockImplementationOnce(() => createOtherBranchQuery({ data: null, error: null }))
+                .mockImplementationOnce(() => createTripleEqResultQuery({ data: [], error: null }))
+                .mockImplementationOnce(() => createDeleteQuery({ data: null, error: null }));
 
             const req = createMockRequest(`http://localhost/api/branches/${branchId}/delete`, {
                 method: 'POST',

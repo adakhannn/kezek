@@ -11,9 +11,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock navigation
 jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
     return {
-        ...actualNav,
+        NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
         useNavigation: () => ({
             navigate: jest.fn(),
             goBack: jest.fn(),

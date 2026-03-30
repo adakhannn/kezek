@@ -10,9 +10,8 @@ import SignInScreen from '../../../screens/auth/SignInScreen';
 
 // Mock navigation
 jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
     return {
-        ...actualNav,
+        NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
         useNavigation: () => ({
             navigate: jest.fn(),
             goBack: jest.fn(),
@@ -23,24 +22,21 @@ jest.mock('@react-navigation/native', () => {
 describe('SignInScreen', () => {
     test('должен отрендериться без ошибок', () => {
         render(<SignInScreen />);
-        
-        // Проверяем наличие основных элементов
-        expect(screen.getByText(/вход|sign in/i)).toBeTruthy();
+
+        expect(screen.getByText('Вход в Kezek')).toBeTruthy();
     });
 
     test('должен отображать поле ввода email', () => {
         render(<SignInScreen />);
-        
-        // Ищем поле ввода email
-        const emailInput = screen.queryByPlaceholderText(/email|почта/i);
+
+        const emailInput = screen.queryByPlaceholderText('example@mail.com');
         expect(emailInput).toBeTruthy();
     });
 
     test('должен отображать кнопку входа', () => {
         render(<SignInScreen />);
-        
-        // Ищем кнопку входа
-        const signInButton = screen.queryByText(/войти|sign in|отправить/i);
+
+        const signInButton = screen.queryByText('Отправить код');
         expect(signInButton).toBeTruthy();
     });
 });

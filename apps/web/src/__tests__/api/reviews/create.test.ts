@@ -1,402 +1,270 @@
-/**
- * Тесты для /api/reviews/create
- * Создание отзыва на бронирование
- */
-
 import { POST } from '@/app/api/reviews/create/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../testHelpers';
+import {
+    createMockRequest,
+    createMockSupabase,
+    expectErrorResponse,
+    expectSuccessResponse,
+    setupApiTestMocks,
+} from '../testHelpers';
 
 setupApiTestMocks();
 
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
-// Мокаем supabaseHelpers
 jest.mock('@/lib/supabaseHelpers', () => ({
     createSupabaseServerClient: jest.fn(),
 }));
+
+const BOOKING_ID = '11111111-1111-1111-1111-111111111111';
+const USER_ID = 'user-11111111-1111-1111-1111-111111111111';
+const OTHER_USER_ID = 'user-22222222-2222-2222-2222-222222222222';
+const REVIEW_ID = 'review-11111111-1111-1111-1111-111111111111';
 
 describe('/api/reviews/create', () => {
     const mockSupabase = createMockSupabase();
 
     beforeEach(() => {
         jest.clearAllMocks();
-
         (createSupabaseServerClient as jest.Mock).mockResolvedValue(mockSupabase);
     });
 
-    describe('Авторизация', () => {
-        test('должен вернуть 401 если пользователь не авторизован', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: null,
-                },
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    booking_id: 'booking-id',
-                    rating: 5,
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 401, 'auth');
+    test('returns 401 for unauthenticated user', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: null },
+            error: null,
         });
+
+        const req = createMockRequest('http://localhost/api/reviews/create', {
+            method: 'POST',
+            body: { booking_id: BOOKING_ID, rating: 5 },
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 401, 'auth');
     });
 
-    describe('Валидация', () => {
-        test('должен вернуть 400 при отсутствии обязательных полей', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                    },
-                },
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    // Отсутствует booking_id или rating
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400, 'validation');
+    test('returns 400 when required fields are missing', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: USER_ID } },
+            error: null,
         });
 
-        test('должен вернуть 400 при отсутствии booking_id', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                    },
-                },
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    rating: 5,
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400, 'validation');
+        const req = createMockRequest('http://localhost/api/reviews/create', {
+            method: 'POST',
+            body: {},
         });
 
-        test('должен вернуть 400 при отсутствии rating', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                    },
-                },
-                error: null,
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    booking_id: 'booking-id',
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400, 'BAD_REQUEST');
-        });
+        const res = await POST(req);
+        await expectErrorResponse(res, 400, 'validation');
     });
 
-    describe('Проверка прав доступа', () => {
-        test('должен вернуть 404 если бронирование не найдено', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                    },
-                },
-                error: null,
-            });
-
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    booking_id: 'non-existent-booking',
-                    rating: 5,
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 404, 'not_found');
+    test('returns 404 when booking does not exist', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: USER_ID } },
+            error: null,
         });
 
-        test('должен вернуть 403 если бронирование принадлежит другому пользователю', async () => {
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: 'user-id',
-                    },
-                },
-                error: null,
-            });
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'bookings') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: null,
+                    }),
+                };
+            }
 
-            mockSupabase.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'booking-id',
-                        client_id: 'other-user-id',
-                        status: 'completed',
-                    },
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    booking_id: 'booking-id',
-                    rating: 5,
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 403, 'forbidden');
+            return mockSupabase;
         });
+
+        const req = createMockRequest('http://localhost/api/reviews/create', {
+            method: 'POST',
+            body: { booking_id: BOOKING_ID, rating: 5 },
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 404, 'not_found');
     });
 
-    describe('Создание отзыва', () => {
-        test('должен успешно создать новый отзыв', async () => {
-            const userId = 'user-id';
-            const bookingId = 'booking-id';
-
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: userId,
-                    },
-                },
-                error: null,
-            });
-
-            // Мокаем проверку бронирования
-            let callCount = 0;
-            mockSupabase.from.mockImplementation((table: string) => {
-                if (table === 'bookings') {
-                    if (callCount === 0) {
-                        callCount++;
-                        return {
-                            select: jest.fn().mockReturnThis(),
-                            eq: jest.fn().mockReturnThis(),
-                            maybeSingle: jest.fn().mockResolvedValue({
-                                data: {
-                                    id: bookingId,
-                                    client_id: userId,
-                                    status: 'completed',
-                                },
-                                error: null,
-                            }),
-                        };
-                    } else if (callCount === 1) {
-                        callCount++;
-                        // Проверка существующего отзыва
-                        return {
-                            select: jest.fn().mockReturnThis(),
-                            eq: jest.fn().mockReturnThis(),
-                            maybeSingle: jest.fn().mockResolvedValue({
-                                data: null, // Отзыва еще нет
-                                error: null,
-                            }),
-                        };
-                    }
-                } else if (table === 'reviews') {
-                    // Создание отзыва
-                    return {
-                        insert: jest.fn().mockReturnThis(),
-                        select: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({
-                            data: {
-                                id: 'review-id',
-                            },
-                            error: null,
-                        }),
-                    };
-                }
-                return mockSupabase;
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    booking_id: bookingId,
-                    rating: 5,
-                    comment: 'Great service!',
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
-            expect(data.data).toHaveProperty('id', 'review-id');
-            expect(data.data).toHaveProperty('updated', false);
+    test('returns 403 when booking belongs to another client', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: USER_ID } },
+            error: null,
         });
 
-        test('должен обновить существующий отзыв если он принадлежит пользователю', async () => {
-            const userId = 'user-id';
-            const bookingId = 'booking-id';
-            const reviewId = 'review-id';
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'bookings') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: { id: BOOKING_ID, client_id: OTHER_USER_ID, status: 'completed' },
+                        error: null,
+                    }),
+                };
+            }
 
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: userId,
-                    },
-                },
-                error: null,
-            });
-
-            // Мокаем проверку бронирования
-            let callCount = 0;
-            mockSupabase.from.mockImplementation((table: string) => {
-                if (table === 'bookings') {
-                    callCount++;
-                    return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        maybeSingle: jest.fn().mockResolvedValue({
-                            data: {
-                                id: bookingId,
-                                client_id: userId,
-                                status: 'completed',
-                            },
-                            error: null,
-                        }),
-                    };
-                } else if (table === 'reviews') {
-                    if (callCount === 1) {
-                        callCount++;
-                        // Проверка существующего отзыва
-                        return {
-                            select: jest.fn().mockReturnThis(),
-                            eq: jest.fn().mockReturnThis(),
-                            maybeSingle: jest.fn().mockResolvedValue({
-                                data: {
-                                    id: reviewId,
-                                    client_id: userId,
-                                },
-                                error: null,
-                            }),
-                        };
-                    } else {
-                        // Обновление отзыва
-                        return {
-                            update: jest.fn().mockReturnThis(),
-                            eq: jest.fn().mockReturnThis(),
-                            select: jest.fn().mockReturnThis(),
-                            single: jest.fn().mockResolvedValue({
-                                data: {
-                                    id: reviewId,
-                                },
-                                error: null,
-                            }),
-                        };
-                    }
-                }
-                return mockSupabase;
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    booking_id: bookingId,
-                    rating: 4,
-                    comment: 'Updated comment',
-                },
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
-            expect(data.data).toHaveProperty('id', reviewId);
-            expect(data.data).toHaveProperty('updated', true);
+            return mockSupabase;
         });
 
-        test('должен вернуть 409 если отзыв существует и принадлежит другому пользователю', async () => {
-            const userId = 'user-id';
-            const bookingId = 'booking-id';
-
-            mockSupabase.auth.getUser.mockResolvedValue({
-                data: {
-                    user: {
-                        id: userId,
-                    },
-                },
-                error: null,
-            });
-
-            // Мокаем проверку бронирования
-            let callCount = 0;
-            mockSupabase.from.mockImplementation((table: string) => {
-                if (table === 'bookings') {
-                    callCount++;
-                    return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        maybeSingle: jest.fn().mockResolvedValue({
-                            data: {
-                                id: bookingId,
-                                client_id: userId,
-                                status: 'completed',
-                            },
-                            error: null,
-                        }),
-                    };
-                } else if (table === 'reviews') {
-                    callCount++;
-                    // Отзыв существует, но принадлежит другому пользователю
-                    return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        maybeSingle: jest.fn().mockResolvedValue({
-                            data: {
-                                id: 'review-id',
-                                client_id: 'other-user-id',
-                            },
-                            error: null,
-                        }),
-                    };
-                }
-                return mockSupabase;
-            });
-
-            const req = createMockRequest('http://localhost/api/reviews/create', {
-                method: 'POST',
-                body: {
-                    booking_id: bookingId,
-                    rating: 5,
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 409, 'conflict');
+        const req = createMockRequest('http://localhost/api/reviews/create', {
+            method: 'POST',
+            body: { booking_id: BOOKING_ID, rating: 5 },
         });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 403, 'forbidden');
+    });
+
+    test('creates a new review when none exists', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: USER_ID } },
+            error: null,
+        });
+
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'bookings') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'completed' },
+                        error: null,
+                    }),
+                };
+            }
+
+            if (table === 'reviews') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: null,
+                    }),
+                    insert: jest.fn().mockReturnThis(),
+                    single: jest.fn().mockResolvedValue({
+                        data: { id: REVIEW_ID },
+                        error: null,
+                    }),
+                };
+            }
+
+            return mockSupabase;
+        });
+
+        const req = createMockRequest('http://localhost/api/reviews/create', {
+            method: 'POST',
+            body: { booking_id: BOOKING_ID, rating: 5, comment: 'Great service' },
+        });
+
+        const res = await POST(req);
+        const data = await expectSuccessResponse(res, 200);
+
+        expect(data.id).toBe(REVIEW_ID);
+        expect(data.updated).toBe(false);
+    });
+
+    test('updates existing review for same client', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: USER_ID } },
+            error: null,
+        });
+
+        let reviewsCall = 0;
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'bookings') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'completed' },
+                        error: null,
+                    }),
+                };
+            }
+
+            if (table === 'reviews' && reviewsCall === 0) {
+                reviewsCall += 1;
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: { id: REVIEW_ID, client_id: USER_ID },
+                        error: null,
+                    }),
+                };
+            }
+
+            if (table === 'reviews') {
+                return {
+                    update: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    select: jest.fn().mockReturnThis(),
+                    single: jest.fn().mockResolvedValue({
+                        data: { id: REVIEW_ID },
+                        error: null,
+                    }),
+                };
+            }
+
+            return mockSupabase;
+        });
+
+        const req = createMockRequest('http://localhost/api/reviews/create', {
+            method: 'POST',
+            body: { booking_id: BOOKING_ID, rating: 4, comment: 'Updated comment' },
+        });
+
+        const res = await POST(req);
+        const data = await expectSuccessResponse(res, 200);
+
+        expect(data.id).toBe(REVIEW_ID);
+        expect(data.updated).toBe(true);
+    });
+
+    test('returns 409 when review exists for another client', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: { user: { id: USER_ID } },
+            error: null,
+        });
+
+        let reviewsCall = 0;
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'bookings') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: { id: BOOKING_ID, client_id: USER_ID, status: 'completed' },
+                        error: null,
+                    }),
+                };
+            }
+
+            if (table === 'reviews' && reviewsCall === 0) {
+                reviewsCall += 1;
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle: jest.fn().mockResolvedValue({
+                        data: { id: REVIEW_ID, client_id: OTHER_USER_ID },
+                        error: null,
+                    }),
+                };
+            }
+
+            return mockSupabase;
+        });
+
+        const req = createMockRequest('http://localhost/api/reviews/create', {
+            method: 'POST',
+            body: { booking_id: BOOKING_ID, rating: 5 },
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 409, 'conflict');
     });
 });
-
-

@@ -33,9 +33,11 @@ pnpm -C apps/web dev
 ## Документация
 
 - **[GETTING_STARTED.md](GETTING_STARTED.md)** — с чего начать новому разработчику.
-- **[DOCUMENTS_OVERVIEW.md](DOCUMENTS_OVERVIEW.md)** — карта всех документов (что читать в первую очередь, что считать архивом).
+- **[docs/README.md](docs/README.md)** — основной индекс документации и карта актуальных источников истины.
+- **[DOCUMENTS_OVERVIEW.md](DOCUMENTS_OVERVIEW.md)** — обзор документации, включая исторические и архивные материалы.
 - Архитектура и домены: [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) (в т.ч. раздел «Роли и кабинеты»)
 - Бизнес‑фичи: [SYSTEM_FEATURES_DOCUMENTATION.md](SYSTEM_FEATURES_DOCUMENTATION.md) (в т.ч. таблица «Роль → Доступные кабинеты → Основные функции»)
 - API: [API_DOCUMENTATION.md](API_DOCUMENTATION.md) ([/api-docs](http://localhost:3000/api-docs) для Swagger UI)
 - Состояние проекта и техдолг: [PROJECT_REVIEW.md](PROJECT_REVIEW.md), [EVOLUTION_TECH_PLAN.md](EVOLUTION_TECH_PLAN.md)
-- Бэклог улучшений: [FUTURE_IMPROVEMENTS_TASKS.md](FUTURE_IMPROVEMENTS_TASKS.md)
+- Бэклог улучшений: [docs/PROJECT_IMPROVEMENT_PLAN.md](docs/PROJECT_IMPROVEMENT_PLAN.md)
+- Последний прогресс по roadmap: [docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md)

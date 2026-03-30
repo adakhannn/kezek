@@ -1,136 +1,47 @@
-/**
- * Тесты для /api/cron/close-shifts
- * Критичная операция: автоматическое закрытие просроченных смен
- */
-
 import { GET } from '@/app/api/cron/close-shifts/route';
-// Мокируем зависимости
-jest.mock('@/lib/supabaseService', () => ({
-    getServiceClient: jest.fn(),
+import { expectErrorResponse, expectSuccessResponse } from '../testHelpers';
+
+jest.mock('@/lib/closeShiftsCronHttpService', () => ({
+    runCloseShiftsCronHttp: jest.fn(),
 }));
 
-import { getServiceClient } from '@/lib/supabaseService';
+const { runCloseShiftsCronHttp } = require('@/lib/closeShiftsCronHttpService');
 
 describe('/api/cron/close-shifts', () => {
-    const mockSupabase = {
-        from: jest.fn(() => mockSupabase),
-        select: jest.fn(() => mockSupabase),
-        eq: jest.fn(() => mockSupabase),
-        lte: jest.fn(() => mockSupabase),
-        maybeSingle: jest.fn(),
-        rpc: jest.fn(),
-    };
-
     beforeEach(() => {
         jest.clearAllMocks();
-        (getServiceClient as jest.Mock).mockReturnValue(mockSupabase);
-        process.env.CRON_SECRET = 'test-cron-secret';
     });
 
-    describe('Авторизация', () => {
-        test('должен отклонить запрос без секретного ключа', async () => {
-            const req = new Request('http://localhost/api/cron/close-shifts', {
-                method: 'GET',
-            });
+    test('delegates GET to cron http service', async () => {
+        runCloseShiftsCronHttp.mockResolvedValue(
+            Response.json({
+                ok: true,
+                data: { ok: true, message: 'done', closed: 1, total: 1 },
+            }),
+        );
 
-            const response = await GET(req);
-            const data = await response.json();
+        const res = await GET(
+            new Request('http://localhost/api/cron/close-shifts', {
+                headers: { authorization: 'Bearer secret' },
+            }),
+        );
+        const data = await expectSuccessResponse(res);
 
-            expect(response.status).toBe(401);
-            expect(data.ok).toBe(false);
-            expect(data.error).toBe('auth');
-        });
-
-        test('должен отклонить запрос с неверным секретным ключом', async () => {
-            const req = new Request('http://localhost/api/cron/close-shifts', {
-                method: 'GET',
-                headers: {
-                    authorization: 'Bearer wrong-secret',
-                },
-            });
-
-            const response = await GET(req);
-            const data = await response.json();
-
-            expect(response.status).toBe(401);
-            expect(data.ok).toBe(false);
-        });
-
-        test('должен принять запрос с правильным секретным ключом', async () => {
-            // Мокируем цепочку: from().select().eq('status','open').eq('shift_date', ymd)
-            const mockChain = {
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-            };
-            (mockChain.eq as jest.Mock).mockImplementationOnce(() => mockChain).mockImplementationOnce(() =>
-                Promise.resolve({ data: [], error: null })
-            );
-            mockSupabase.from.mockReturnValueOnce(mockChain);
-
-            const req = new Request('http://localhost/api/cron/close-shifts', {
-                method: 'GET',
-                headers: {
-                    authorization: 'Bearer test-cron-secret',
-                },
-            });
-
-            const response = await GET(req);
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data.ok).toBe(true);
-        });
+        expect(data.data.closed).toBe(1);
     });
 
-    describe('Edge cases', () => {
-        test('должен обработать отсутствие открытых смен', async () => {
-            mockSupabase.select.mockReturnValueOnce({
-                eq: jest.fn().mockReturnThis(),
-                lte: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
+    test('surfaces auth error from cron http service', async () => {
+        runCloseShiftsCronHttp.mockResolvedValue(
+            Response.json({ ok: false, error: 'auth', message: 'Не авторизован' }, { status: 401 }),
+        );
 
-            const req = new Request('http://localhost/api/cron/close-shifts', {
-                method: 'GET',
-                headers: {
-                    authorization: 'Bearer test-cron-secret',
-                },
-            });
+        const res = await GET(
+            new Request('http://localhost/api/cron/close-shifts', {
+                headers: { authorization: 'Bearer wrong' },
+            }),
+        );
+        const data = await expectErrorResponse(res, 401, 'auth');
 
-            const response = await GET(req);
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data.ok).toBe(true);
-        });
-
-        test('должен обработать ошибку базы данных', async () => {
-            // Мокируем цепочку вызовов для поиска открытых смен (с ошибкой)
-            const mockQuery = {
-                eq: jest.fn().mockReturnThis(),
-                select: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: { message: 'Database error' },
-                }),
-            };
-            mockSupabase.from.mockReturnValueOnce(mockQuery);
-
-            const req = new Request('http://localhost/api/cron/close-shifts', {
-                method: 'GET',
-                headers: {
-                    authorization: 'Bearer test-cron-secret',
-                },
-            });
-
-            const response = await GET(req);
-            const data = await response.json();
-
-            expect(response.status).toBe(500);
-            expect(data.ok).toBe(false);
-        });
+        expect(data.message).toBe('Не авторизован');
     });
 });
-

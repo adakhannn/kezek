@@ -1,30 +1,21 @@
-/**
- * Smoke test: BookingDetailsScreen
- * 
- * Проверяет базовый рендеринг экрана деталей бронирования
- */
-
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import BookingDetailsScreen from '../../screens/BookingDetailsScreen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Mock navigation
-jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
-    return {
-        ...actualNav,
-        useNavigation: () => ({
-            navigate: jest.fn(),
-            goBack: jest.fn(),
-        }),
-        useRoute: () => ({
-            params: {
-                id: 'test-booking-id',
-            },
-        }),
-    };
-});
+import BookingDetailsScreen from '../../screens/BookingDetailsScreen';
+
+jest.mock('@react-navigation/native', () => ({
+    NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
+    useNavigation: () => ({
+        navigate: jest.fn(),
+        goBack: jest.fn(),
+    }),
+    useRoute: () => ({
+        params: {
+            id: 'test-booking-id',
+        },
+    }),
+}));
 
 jest.mock('../../lib/api', () => ({
     apiRequest: jest.fn().mockResolvedValue({
@@ -40,41 +31,43 @@ jest.mock('../../lib/api', () => ({
         },
         business: {
             name: 'Тестовый бизнес',
+            slug: 'test-business',
+            phones: ['+996555000111'],
+        },
+        branch: {
+            name: 'Главный филиал',
+            address: 'Some street',
         },
     }),
 }));
 
 describe('BookingDetailsScreen', () => {
-    const queryClient = new QueryClient({
-        defaultOptions: {
-            queries: {
-                retry: false,
-            },
-        },
-    });
-
     const renderWithProviders = (component: React.ReactElement) => {
+        const queryClient = new QueryClient({
+            defaultOptions: {
+                queries: {
+                    retry: false,
+                },
+            },
+        });
+
         return render(
             <QueryClientProvider client={queryClient}>
                 {component}
-            </QueryClientProvider>
+            </QueryClientProvider>,
         );
     };
 
-    test('должен отрендериться без ошибок', () => {
+    test('renders booking details content', async () => {
         renderWithProviders(<BookingDetailsScreen />);
-        
-        // Проверяем, что экран загрузился
-        expect(screen.getByTestId('booking-details') || screen.getByText(/детали|details/i)).toBeTruthy();
+
+        expect(await screen.findByText('Тестовая услуга')).toBeTruthy();
+        expect(await screen.findByText('Тестовый бизнес')).toBeTruthy();
     });
 
-    test('должен показывать состояние загрузки при получении данных', () => {
+    test('renders repeat booking action', async () => {
         renderWithProviders(<BookingDetailsScreen />);
-        
-        // Проверяем наличие индикатора загрузки
-        const loadingIndicator = screen.queryByTestId('loading') || screen.queryByText(/загрузка|loading/i);
-        // Может быть видимым или нет, в зависимости от состояния
-        expect(loadingIndicator || screen.getByTestId('booking-details')).toBeTruthy();
+
+        expect(await screen.findByText('Повторить запись')).toBeTruthy();
     });
 });
-

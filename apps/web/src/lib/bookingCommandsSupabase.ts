@@ -128,11 +128,29 @@ export function createSupabaseBookingCommands(
         },
 
         async cancelBooking(bookingId: string) {
-            logDebug('BookingCommandsSupabase', 'cancelBooking not implemented in this adapter', {
+            logDebug('BookingCommandsSupabase', 'Attempting to cancel booking', {
                 bookingId,
                 userId,
             });
-            // Реализация по необходимости в других use-case'ах
+
+            const { error: cancelError } = await supabase.rpc('cancel_booking', {
+                p_booking_id: bookingId,
+            });
+
+            if (cancelError) {
+                logError('BookingCommandsSupabase', 'Failed to cancel booking', {
+                    bookingId,
+                    error: cancelError.message,
+                    code: cancelError.code,
+                    details: cancelError.details,
+                    hint: cancelError.hint,
+                });
+                throw new Error(cancelError.message);
+            }
+
+            logDebug('BookingCommandsSupabase', 'Booking cancelled successfully', {
+                bookingId,
+            });
         },
     };
 }

@@ -22,9 +22,25 @@ jest.mock('@/lib/supabaseHelpers', () => ({
 
 describe('/api/auth/whatsapp/verify-otp', () => {
     const mockAdmin = createMockSupabase();
+    const mockListUsers = jest.fn();
+    const mockUpdateUserById = jest.fn();
+    const mockCreateUser = jest.fn();
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (mockAdmin as unknown as {
+            auth: {
+                admin: {
+                    listUsers: jest.Mock;
+                    updateUserById: jest.Mock;
+                    createUser: jest.Mock;
+                };
+            };
+        }).auth.admin = {
+            listUsers: mockListUsers,
+            updateUserById: mockUpdateUserById,
+            createUser: mockCreateUser,
+        };
 
         (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
     });
@@ -106,7 +122,7 @@ describe('/api/auth/whatsapp/verify-otp', () => {
             });
 
             // Мокаем список пользователей
-            mockAdmin.auth.admin.listUsers.mockResolvedValue({
+            mockListUsers.mockResolvedValue({
                 data: {
                     users: [
                         {
@@ -115,19 +131,6 @@ describe('/api/auth/whatsapp/verify-otp', () => {
                             user_metadata: {},
                         },
                     ],
-                },
-                error: null,
-            });
-
-            // Мокаем создание сессии
-            mockAdmin.auth.admin.generateLink.mockResolvedValue({
-                data: {
-                    properties: {
-                        hashed_token: 'hashed-token',
-                    },
-                    user: {
-                        id: 'user-id',
-                    },
                 },
                 error: null,
             });
@@ -141,8 +144,9 @@ describe('/api/auth/whatsapp/verify-otp', () => {
             });
 
             const res = await POST(req);
-            // Может вернуть редирект или JSON ответ
-            expect([200, 302]).toContain(res.status);
+            const data = await expectSuccessResponse(res, 200);
+            expect(data).toHaveProperty('data.userId', 'user-id');
+            expect(data).toHaveProperty('data.isNewUser', false);
         });
 
         test('должен вернуть 400 при неверном или истекшем OTP', async () => {
@@ -166,7 +170,7 @@ describe('/api/auth/whatsapp/verify-otp', () => {
             });
 
             // Мокаем список пользователей (пользователь не найден)
-            mockAdmin.auth.admin.listUsers.mockResolvedValue({
+            mockListUsers.mockResolvedValue({
                 data: {
                     users: [],
                 },

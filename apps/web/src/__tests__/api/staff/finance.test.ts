@@ -13,6 +13,38 @@ jest.mock('@/lib/authBiz', () => ({
 
 jest.mock('@/app/staff/finance/services/shiftDataService', () => ({
     getShiftData: jest.fn(),
+    buildFinanceResponsePayload: jest.fn((result) => ({
+        today: {
+            ...result.today,
+            items: (result.today?.items ?? []).map((item: {
+                id: string;
+                client_name: string;
+                service_name: string;
+                service_amount: number;
+                consumables_amount: number;
+                booking_id?: string | null;
+                created_at?: string | null;
+            }) => ({
+                id: item.id,
+                clientName: item.client_name,
+                serviceName: item.service_name,
+                serviceAmount: item.service_amount,
+                consumablesAmount: item.consumables_amount,
+                bookingId: item.booking_id ?? null,
+                createdAt: item.created_at ?? null,
+            })),
+        },
+        bookings: result.bookings,
+        services: result.services,
+        allShifts: result.allShifts,
+        staffPercentMaster: result.staffPercentMaster,
+        staffPercentSalon: result.staffPercentSalon,
+        hourlyRate: result.hourlyRate,
+        currentHoursWorked: result.currentHoursWorked,
+        currentGuaranteedAmount: result.currentGuaranteedAmount,
+        isDayOff: result.isDayOff,
+        stats: result.stats,
+    })),
 }));
 
 jest.mock('@/lib/apiMetrics', () => ({
@@ -26,6 +58,12 @@ import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
 
 describe('/api/staff/finance', () => {
     const mockSupabase = {
+        auth: {
+            getUser: jest.fn().mockResolvedValue({
+                data: { user: { id: 'user-id' } },
+                error: null,
+            }),
+        },
         from: jest.fn(() => mockSupabase),
         select: jest.fn(() => mockSupabase),
         eq: jest.fn(() => mockSupabase),
@@ -80,7 +118,7 @@ describe('/api/staff/finance', () => {
             expect(response.status).toBe(200);
             expect(data.ok).toBe(true);
             expect(data.data).toBeDefined();
-            expect(data.data.shift).toBeDefined();
+            expect(data.data.today.shift).toBeDefined();
             expect(getStaffContext).toHaveBeenCalled();
         });
 
@@ -138,7 +176,7 @@ describe('/api/staff/finance', () => {
 
             expect(response.status).toBe(400);
             expect(data.ok).toBe(false);
-            expect(data.error).toContain('Invalid date format');
+            expect(data.error).toBe('validation');
         });
     });
 
@@ -147,6 +185,17 @@ describe('/api/staff/finance', () => {
             (getBizContextForManagers as jest.Mock).mockResolvedValue({
                 supabase: mockSupabase,
                 bizId: 'test-biz-id',
+            });
+            mockSupabase.from.mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({
+                    data: {
+                        id: '123e4567-e89b-42d3-a456-426614174000',
+                        biz_id: 'test-biz-id',
+                    },
+                    error: null,
+                }),
             });
 
             (getShiftData as jest.Mock).mockResolvedValue({
@@ -175,7 +224,7 @@ describe('/api/staff/finance', () => {
                 allShifts: [],
             });
 
-            const req = new Request('http://localhost/api/staff/finance?staffId=target-staff-id&date=2024-01-26', {
+            const req = new Request('http://localhost/api/staff/finance?staffId=123e4567-e89b-42d3-a456-426614174000&date=2024-01-26', {
                 method: 'GET',
             });
 
@@ -187,7 +236,7 @@ describe('/api/staff/finance', () => {
             expect(getBizContextForManagers).toHaveBeenCalled();
             expect(getShiftData).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    staffId: 'target-staff-id',
+                    staffId: '123e4567-e89b-42d3-a456-426614174000',
                 })
             );
         });
@@ -204,7 +253,7 @@ describe('/api/staff/finance', () => {
             const response = await GET(req);
             const data = await response.json();
 
-            expect(response.status).toBe(500);
+            expect(response.status).toBe(401);
             expect(data.ok).toBe(false);
         });
 

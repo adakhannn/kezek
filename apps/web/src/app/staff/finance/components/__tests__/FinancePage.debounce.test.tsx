@@ -1,19 +1,13 @@
 /**
- * Тесты автосохранения списка клиентов с дебаунсом (задачи 5.2, 5.3):
- * (1) после изменений в списке через N секунд вызывается сохранение один раз;
- * (2) новое изменение сбрасывает таймер;
- * (3) «Сохранить сейчас» отменяет таймер и сохраняет;
- * (4) при удалении клиента — немедленное сохранение (стратегия из 3.1);
- * (5.3) три клиента подряд — один запрос с тремя строками; flush при смене вкладки и при размонтировании.
  * @jest-environment jsdom
  */
 
 import React from 'react';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 
 import { FinancePage } from '../FinancePage';
 
-const DEBOUNCE_MS = 100; // должен совпадать с значением в моке constants
+const DEBOUNCE_MS = 100;
 
 const mockShift = {
     id: 'shift-1',
@@ -31,19 +25,21 @@ const mockShift = {
     percent_salon: 40,
 };
 
+type MockItem = {
+    id?: number | null;
+    clientName?: string | null;
+    serviceName?: string | null;
+    serviceAmount?: number | null;
+    consumablesAmount?: number | null;
+    bookingId?: string | null;
+    createdAt?: string | null;
+};
+
 const mockFinanceData = {
     todayStatus: 'open' as const,
     todayExists: true,
     shift: mockShift,
-    items: [] as Array<{
-        id?: number | null;
-        clientName?: string | null;
-        serviceName?: string | null;
-        serviceAmount?: number | null;
-        consumablesAmount?: number | null;
-        bookingId?: string | null;
-        createdAt?: string | null;
-    }>,
+    items: [] as MockItem[],
     bookings: [],
     services: [],
     allShifts: [],
@@ -87,15 +83,14 @@ jest.mock('../../hooks/useServiceOptions', () => ({
     useServiceOptions: () => [],
 }));
 
-const mockCalculations = {
-    totalAmount: 0,
-    totalConsumables: 0,
-    masterShare: 0,
-    salonShare: 0,
-    displayTotalAmount: 0,
-};
 jest.mock('../../hooks/useShiftCalculations', () => ({
-    useShiftCalculations: () => mockCalculations,
+    useShiftCalculations: () => ({
+        totalAmount: 0,
+        totalConsumables: 0,
+        masterShare: 0,
+        salonShare: 0,
+        displayTotalAmount: 0,
+    }),
 }));
 
 jest.mock('../../hooks/useShiftStats', () => ({
@@ -127,6 +122,51 @@ jest.mock('../StatsView', () => ({
     StatsView: () => <div data-testid="stats-view">Stats</div>,
 }));
 
+function makeSavedItem(id: number, suffix: string): MockItem {
+    return {
+        id,
+        clientName: `Клиент ${suffix}`,
+        serviceName: `Услуга ${suffix}`,
+        serviceAmount: 1000,
+        consumablesAmount: 100,
+        bookingId: null,
+        createdAt: `2025-03-12T0${id}:00:00.000Z`,
+    };
+}
+
+async function flushAsyncWork() {
+    await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+    });
+}
+
+async function advanceDebounce() {
+    await act(async () => {
+        jest.advanceTimersByTime(DEBOUNCE_MS);
+        await Promise.resolve();
+        await Promise.resolve();
+    });
+}
+
+function renderPage() {
+    return render(<FinancePage staffId="staff-1" />);
+}
+
+function clickAddClient() {
+    fireEvent.click(screen.getByRole('button', { name: /добавить клиента/i }));
+}
+
+function updateExpandedClientName(index: number, value: string) {
+    const inputs = screen.getAllByPlaceholderText(/введите имя клиента/i);
+    fireEvent.change(inputs[index], { target: { value } });
+}
+
+function updateExpandedServiceAmount(index: number, value: string) {
+    const inputs = screen.getAllByRole('spinbutton');
+    fireEvent.change(inputs[index * 2], { target: { value } });
+}
+
 describe('FinancePage debounced save', () => {
     beforeEach(() => {
         jest.useFakeTimers();
@@ -141,126 +181,123 @@ describe('FinancePage debounced save', () => {
         jest.useRealTimers();
     });
 
-    test('(1) после изменений в списке через N секунд вызывается сохранение один раз', async () => {
-        render(<FinancePage staffId="staff-1" />);
+    test('does not autosave a newly added empty placeholder client', async () => {
+        renderPage();
 
-        const addButton = screen.getByRole('button', { name: /добавить клиента/i });
-        fireEvent.click(addButton);
+        clickAddClient();
+        await advanceDebounce();
 
         expect(mockSaveItems).not.toHaveBeenCalled();
-        act(() => {
-            jest.advanceTimersByTime(DEBOUNCE_MS);
-        });
+    });
+
+    test('autosaves one meaningful client change after debounce', async () => {
+        renderPage();
+
+        clickAddClient();
+        updateExpandedClientName(0, 'Анна');
+        await advanceDebounce();
+
+        expect(mockSaveItems).toHaveBeenCalledTimes(1);
+        expect(mockSaveItems).toHaveBeenLastCalledWith([
+            expect.objectContaining({
+                clientName: 'Анна',
+            }),
+        ]);
+    });
+
+    test('batches two meaningful edits into one debounced save', async () => {
+        mockFinanceData.items = [makeSavedItem(1, '1'), makeSavedItem(2, '2')];
+
+        renderPage();
+        await flushAsyncWork();
+
+        const editButtons = screen.getAllByTitle(/редактировать/i);
+        fireEvent.click(editButtons[0]);
+        fireEvent.click(editButtons[1]);
+
+        updateExpandedClientName(0, 'Анна');
+        updateExpandedClientName(1, 'Бек');
+
+        await advanceDebounce();
+
         expect(mockSaveItems).toHaveBeenCalledTimes(1);
         expect(mockSaveItems).toHaveBeenLastCalledWith(
             expect.arrayContaining([
-                expect.objectContaining({
-                    clientName: expect.stringMatching(/^Клиент \d+$/),
-                }),
-            ])
+                expect.objectContaining({ clientName: 'Анна' }),
+                expect.objectContaining({ clientName: 'Бек' }),
+            ]),
         );
     });
 
-    test('(2) новое изменение сбрасывает таймер — после паузы сохраняется batch с двумя клиентами', () => {
-        render(<FinancePage staffId="staff-1" />);
+    test('save now cancels debounce and saves meaningful changes immediately', async () => {
+        mockFinanceData.items = [makeSavedItem(1, '1')];
 
-        const addButton = screen.getByRole('button', { name: /добавить клиента/i });
-        fireEvent.click(addButton);
-        fireEvent.click(addButton);
-        act(() => {
-            jest.advanceTimersByTime(DEBOUNCE_MS);
-        });
-        const callsWithTwoItems = mockSaveItems.mock.calls.filter(
-            (call) => Array.isArray(call[0]) && call[0].length === 2
-        );
-        expect(callsWithTwoItems.length).toBeGreaterThanOrEqual(1);
-        expect(callsWithTwoItems[0][0]).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({ clientName: expect.any(String) }),
-                expect.objectContaining({ clientName: expect.any(String) }),
-            ])
-        );
-    });
+        renderPage();
+        await flushAsyncWork();
 
-    test('(3) «Сохранить сейчас» отменяет таймер и сохраняет', async () => {
-        render(<FinancePage staffId="staff-1" />);
+        fireEvent.click(screen.getByTitle(/редактировать/i));
+        updateExpandedClientName(0, 'Сразу сохранить');
 
-        const addButton = screen.getByRole('button', { name: /добавить клиента/i });
-        fireEvent.click(addButton);
-        expect(mockSaveItems).not.toHaveBeenCalled();
-
-        const saveNowButton = screen.getByRole('button', { name: /сохранить сейчас/i });
+        const saveNowButton = await screen.findByRole('button', { name: /сохранить сейчас/i });
         fireEvent.click(saveNowButton);
+        await flushAsyncWork();
+
         expect(mockSaveItems).toHaveBeenCalledTimes(1);
 
-        act(() => {
-            jest.advanceTimersByTime(DEBOUNCE_MS);
-        });
+        await advanceDebounce();
         expect(mockSaveItems).toHaveBeenCalledTimes(1);
     });
 
-    test('(4) при удалении клиента вызывается немедленное сохранение', () => {
+    test('delete still saves immediately', async () => {
         const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
 
-        render(<FinancePage staffId="staff-1" />);
+        renderPage();
 
-        const addButton = screen.getByRole('button', { name: /добавить клиента/i });
-        fireEvent.click(addButton);
-
+        clickAddClient();
         const collapseButton = screen.getByTitle(/свернуть/i);
         fireEvent.click(collapseButton);
 
         const deleteButton = screen.getByTitle(/удалить/i);
         fireEvent.click(deleteButton);
+        await flushAsyncWork();
 
         expect(mockSaveItems).toHaveBeenCalled();
-        const deleteCall = mockSaveItems.mock.calls.find((call) => Array.isArray(call[0]) && call[0].length === 0);
-        expect(deleteCall).toBeDefined();
-        expect(deleteCall![0]).toEqual([]);
+        expect(mockSaveItems.mock.calls.find((call) => Array.isArray(call[0]) && call[0].length === 0)).toBeDefined();
 
         confirmSpy.mockRestore();
     });
 
-    test('(5.3) добавление 3 клиентов подряд — через N секунд один запрос с тремя строками', () => {
-        render(<FinancePage staffId="staff-1" />);
+    test('flushes meaningful unsaved changes when leaving clients tab', async () => {
+        mockFinanceData.items = [makeSavedItem(1, '1')];
 
-        const addButton = screen.getByRole('button', { name: /добавить клиента/i });
-        fireEvent.click(addButton);
-        fireEvent.click(addButton);
-        fireEvent.click(addButton);
+        renderPage();
+        await flushAsyncWork();
 
-        act(() => {
-            jest.advanceTimersByTime(DEBOUNCE_MS);
+        fireEvent.click(screen.getByTitle(/редактировать/i));
+        updateExpandedClientName(0, 'Перед уходом');
+
+        fireEvent.click(screen.getByRole('button', { name: /текущая смена/i }));
+        await waitFor(() => {
+            expect(mockSaveItems).toHaveBeenCalledWith(
+                expect.arrayContaining([expect.objectContaining({ clientName: 'Перед уходом' })]),
+            );
         });
-
-        const callsWithThreeItems = mockSaveItems.mock.calls.filter(
-            (call) => Array.isArray(call[0]) && call[0].length === 3
-        );
-        expect(callsWithThreeItems.length).toBeGreaterThanOrEqual(1);
-        expect(callsWithThreeItems[0][0]).toHaveLength(3);
-        expect(callsWithThreeItems[0][0].every((item: { clientName?: string }) => item.clientName)).toBe(true);
     });
 
-    test('(5.3) при переключении с вкладки «Клиенты» несохранённые данные отправляются (flush)', () => {
-        render(<FinancePage staffId="staff-1" />);
+    test('flushes meaningful unsaved changes on unmount', async () => {
+        mockFinanceData.items = [makeSavedItem(1, '1')];
 
-        const addButton = screen.getByRole('button', { name: /добавить клиента/i });
-        fireEvent.click(addButton);
+        const { unmount } = renderPage();
+        await flushAsyncWork();
 
-        const shiftTabButton = screen.getByRole('button', { name: /текущая смена/i });
-        fireEvent.click(shiftTabButton);
+        fireEvent.click(screen.getByTitle(/редактировать/i));
+        updateExpandedServiceAmount(0, '2500');
 
-        const flushCall = mockSaveItems.mock.calls.find((call) => Array.isArray(call[0]) && call[0].length === 1);
-        expect(flushCall).toBeDefined();
-        expect(flushCall![0][0]).toMatchObject({ clientName: expect.any(String) });
-    });
-
-    test('(5.3) при размонтировании несохранённые данные отправляются (best-effort flush)', () => {
-        const { unmount } = render(<FinancePage staffId="staff-1" />);
-        const addButton = screen.getByRole('button', { name: /добавить клиента/i });
-        fireEvent.click(addButton);
         unmount();
-        const flushCall = mockSaveItems.mock.calls.find((call) => Array.isArray(call[0]) && call[0].length === 1);
-        expect(flushCall).toBeDefined();
+        await waitFor(() => {
+            expect(mockSaveItems).toHaveBeenCalledWith(
+                expect.arrayContaining([expect.objectContaining({ serviceAmount: 2500 })]),
+            );
+        });
     });
 });

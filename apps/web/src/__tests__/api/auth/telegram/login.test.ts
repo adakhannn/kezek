@@ -1,110 +1,77 @@
-/**
- * Тесты для /api/auth/telegram/login
- * Авторизация через Telegram
- */
-
 import { POST } from '@/app/api/auth/telegram/login/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
+import {
+    createMockRequest,
+    expectErrorResponse,
+    expectSuccessResponse,
+    setupApiTestMocks,
+} from '../../testHelpers';
 
 setupApiTestMocks();
 
-import { verifyTelegramAuth, normalizeTelegramData } from '@/lib/telegram/verify';
-
-// Мокаем зависимости
-jest.mock('@/lib/telegram/verify', () => ({
-    verifyTelegramAuth: jest.fn(),
-    normalizeTelegramData: jest.fn(),
+jest.mock('@/lib/telegramLoginHttpService', () => ({
+    runTelegramLoginHttp: jest.fn(),
 }));
 
-jest.mock('@supabase/supabase-js', () => ({
-    createClient: jest.fn(),
+jest.mock('@/lib/rateLimit', () => ({
+    withRateLimit: jest.fn((req, _config, handler) => handler()),
+    RateLimitConfigs: {
+        auth: {},
+    },
 }));
+
+const { runTelegramLoginHttp } = require('@/lib/telegramLoginHttpService');
 
 describe('/api/auth/telegram/login', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    describe('Валидация', () => {
-        test('должен вернуть 400 при отсутствии обязательных полей', async () => {
-            const req = createMockRequest('http://localhost/api/auth/telegram/login', {
-                method: 'POST',
-                body: {},
-            });
+    test('delegates validation error from telegram login http service', async () => {
+        runTelegramLoginHttp.mockResolvedValue(
+            Response.json(
+                { ok: false, error: 'validation', message: 'Недостаточно данных' },
+                { status: 400 },
+            ),
+        );
 
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
+        const req = createMockRequest('http://localhost/api/auth/telegram/login', {
+            method: 'POST',
+            body: {},
         });
 
-        test('должен вернуть 400 при неверной подписи Telegram', async () => {
-            (verifyTelegramAuth as jest.Mock).mockReturnValue(false);
+        const res = await POST(req);
+        const data = await expectErrorResponse(res, 400, 'validation');
 
-            const req = createMockRequest('http://localhost/api/auth/telegram/login', {
-                method: 'POST',
-                body: {
-                    id: 123456789,
-                    hash: 'invalid-hash',
-                    auth_date: Date.now(),
-                },
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
-        });
+        expect(data.message).toBe('Недостаточно данных');
     });
 
-    describe('Успешная авторизация', () => {
-        test('должен успешно авторизовать существующего пользователя', async () => {
-            (verifyTelegramAuth as jest.Mock).mockReturnValue(true);
-            (normalizeTelegramData as jest.Mock).mockReturnValue({
-                telegram_id: 123456789,
-                full_name: 'Test User',
-                telegram_username: 'testuser',
-                telegram_photo_url: null,
-            });
-
-            const mockAdmin = createMockSupabase();
-
-            // Мокаем createClient
-            const { createClient } = require('@supabase/supabase-js');
-            createClient.mockReturnValue(mockAdmin);
-
-            // Мокаем поиск существующего профиля
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'user-id',
-                        telegram_id: 123456789,
-                    },
-                    error: null,
-                }),
-            });
-
-            // Мокаем обновление профиля
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest('http://localhost/api/auth/telegram/login', {
-                method: 'POST',
-                body: {
-                    id: 123456789,
-                    hash: 'valid-hash',
-                    auth_date: Date.now(),
+    test('delegates success response from telegram login http service', async () => {
+        runTelegramLoginHttp.mockResolvedValue(
+            Response.json({
+                ok: true,
+                data: {
+                    userId: 'user-1',
+                    email: 'telegram_1@telegram.local',
+                    password: 'secret',
+                    needsSignIn: true,
+                    redirect: '/',
                 },
-            });
+            }),
+        );
 
-            const res = await POST(req);
-            // Может вернуть 200 или 201 в зависимости от того, новый пользователь или существующий
-            expect([200, 201]).toContain(res.status);
+        const req = createMockRequest('http://localhost/api/auth/telegram/login', {
+            method: 'POST',
+            body: {
+                id: 1,
+                hash: 'hash',
+                auth_date: 123,
+            },
         });
+
+        const res = await POST(req);
+        const data = await expectSuccessResponse(res, 200);
+
+        expect(data.userId).toBe('user-1');
+        expect(runTelegramLoginHttp).toHaveBeenCalledTimes(1);
     });
 });
-
-

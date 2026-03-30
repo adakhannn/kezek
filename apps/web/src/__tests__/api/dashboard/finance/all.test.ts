@@ -52,12 +52,15 @@ describe('/api/dashboard/finance/all', () => {
 
             // Мокируем запрос сотрудников
             const mockStaffQuery = {
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
+                eq: jest.fn(),
+                order: jest.fn(),
+                then: (resolve: (value: unknown) => unknown) => resolve({
                     data: [],
                     error: null,
                 }),
             };
+            mockStaffQuery.eq.mockReturnValue(mockStaffQuery);
+            mockStaffQuery.order.mockReturnValue(mockStaffQuery);
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnValue(mockStaffQuery),
             });
@@ -81,13 +84,17 @@ describe('/api/dashboard/finance/all', () => {
             });
 
             const mockShiftsQuery = {
-                eq: jest.fn().mockReturnThis(),
-                gte: jest.fn().mockReturnThis(),
-                lte: jest.fn().mockResolvedValue({
+                eq: jest.fn(),
+                gte: jest.fn(),
+                lte: jest.fn(),
+                then: (resolve: (value: unknown) => unknown) => resolve({
                     data: [],
                     error: null,
                 }),
             };
+            mockShiftsQuery.eq.mockReturnValue(mockShiftsQuery);
+            mockShiftsQuery.gte.mockReturnValue(mockShiftsQuery);
+            mockShiftsQuery.lte.mockReturnValue(mockShiftsQuery);
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnValue(mockShiftsQuery),
             });
@@ -105,7 +112,7 @@ describe('/api/dashboard/finance/all', () => {
         });
 
         test('должен обработать фильтрацию по филиалу', async () => {
-            const branchId = 'test-branch-id';
+            const branchId = '11111111-1111-4111-8111-111111111111';
 
             // Мокируем запрос филиалов
             const mockBranchesQuery = {
@@ -121,12 +128,15 @@ describe('/api/dashboard/finance/all', () => {
 
             // Мокируем запрос сотрудников
             const mockStaffQuery = {
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
+                eq: jest.fn(),
+                order: jest.fn(),
+                then: (resolve: (value: unknown) => unknown) => resolve({
                     data: [],
                     error: null,
                 }),
             };
+            mockStaffQuery.eq.mockReturnValue(mockStaffQuery);
+            mockStaffQuery.order.mockReturnValue(mockStaffQuery);
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnValue(mockStaffQuery),
             });
@@ -149,13 +159,17 @@ describe('/api/dashboard/finance/all', () => {
             });
 
             const mockShiftsQuery = {
-                eq: jest.fn().mockReturnThis(),
-                gte: jest.fn().mockReturnThis(),
-                lte: jest.fn().mockResolvedValue({
+                eq: jest.fn(),
+                gte: jest.fn(),
+                lte: jest.fn(),
+                then: (resolve: (value: unknown) => unknown) => resolve({
                     data: [],
                     error: null,
                 }),
             };
+            mockShiftsQuery.eq.mockReturnValue(mockShiftsQuery);
+            mockShiftsQuery.gte.mockReturnValue(mockShiftsQuery);
+            mockShiftsQuery.lte.mockReturnValue(mockShiftsQuery);
             mockSupabase.from.mockReturnValueOnce({
                 select: jest.fn().mockReturnValue(mockShiftsQuery),
             });

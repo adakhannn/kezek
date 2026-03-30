@@ -1,34 +1,24 @@
-/**
- * Smoke test: HomeScreen
- *
- * Проверяет базовый рендеринг, список бизнесов, поиск и оффлайн-баннер.
- */
-
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import HomeScreen from '../../screens/HomeScreen';
+import { apiRequest } from '../../lib/api';
 
-// Mock navigation
-jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
-    return {
-        ...actualNav,
-        useNavigation: () => ({
-            navigate: jest.fn(),
-            goBack: jest.fn(),
-        }),
-    };
-});
+jest.mock('@react-navigation/native', () => ({
+    NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
+    useNavigation: () => ({
+        navigate: jest.fn(),
+        goBack: jest.fn(),
+    }),
+}));
 
-// Mock network status (онлайн по умолчанию)
 jest.mock('../../hooks/useNetworkStatus', () => ({
     useNetworkStatus: () => ({
         isOffline: false,
     }),
 }));
 
-// Mock Supabase auth для запроса пользователя
 jest.mock('../../lib/supabase', () => ({
     supabase: {
         auth: {
@@ -42,36 +32,22 @@ jest.mock('../../lib/supabase', () => ({
     },
 }));
 
-// Mock API-клиент
 jest.mock('../../lib/api', () => ({
-    apiRequest: jest
-        .fn()
-        // businesses
-        .mockImplementationOnce(async () => [
-            {
-                id: 'biz-1',
-                name: 'Test Salon',
-                slug: 'test-salon',
-                address: 'Some street',
-                phones: ['+996555000111'],
-                categories: ['hair', 'nails'],
-                rating_score: 4.5,
-            },
-        ])
-        // bookings
-        .mockImplementationOnce(async () => []),
+    apiRequest: jest.fn(),
 }));
 
 describe('HomeScreen', () => {
-    const queryClient = new QueryClient({
-        defaultOptions: {
-            queries: {
-                retry: false,
-            },
-        },
-    });
+    const mockedApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
 
     const renderWithProviders = (component: React.ReactElement) => {
+        const queryClient = new QueryClient({
+            defaultOptions: {
+                queries: {
+                    retry: false,
+                },
+            },
+        });
+
         return render(
             <QueryClientProvider client={queryClient}>
                 {component}
@@ -79,32 +55,52 @@ describe('HomeScreen', () => {
         );
     };
 
-    test('должен отрендериться без ошибок и показать заголовок', async () => {
-        renderWithProviders(<HomeScreen />);
+    beforeEach(() => {
+        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+            if (endpoint.startsWith('/mobile/businesses')) {
+                return [
+                    {
+                        id: 'biz-1',
+                        name: 'Test Salon',
+                        slug: 'test-salon',
+                        address: 'Some street',
+                        phones: ['+996555000111'],
+                        categories: ['hair', 'nails'],
+                        rating_score: 4.5,
+                    },
+                ];
+            }
 
-        expect(
-            await screen.findByText(/Найдите свой сервис/i),
-        ).toBeTruthy();
+            if (endpoint === '/mobile/bookings') {
+                return [];
+            }
+
+            return [];
+        });
     });
 
-    test('должен показывать список бизнесов', async () => {
-        renderWithProviders(<HomeScreen />);
-
-        expect(
-            await screen.findByText('Test Salon'),
-        ).toBeTruthy();
+    afterEach(() => {
+        mockedApiRequest.mockReset();
     });
 
-    test('должен реагировать на ввод в поиск', async () => {
+    test('renders hero title', async () => {
         renderWithProviders(<HomeScreen />);
 
-        const searchInput = await screen.findByPlaceholderText(
-            /поиск по названию или адресу/i,
-        );
+        expect(await screen.findByText(/Найдите свой сервис/i)).toBeTruthy();
+    });
 
+    test('renders loaded business list', async () => {
+        renderWithProviders(<HomeScreen />);
+
+        expect(await screen.findByText('Test Salon')).toBeTruthy();
+    });
+
+    test('updates search input value', async () => {
+        renderWithProviders(<HomeScreen />);
+
+        const searchInput = await screen.findByPlaceholderText(/Поиск по названию или адресу/i);
         fireEvent.changeText(searchInput, 'Salon');
 
         expect(searchInput.props.value).toBe('Salon');
     });
 });
-

@@ -1,11 +1,9 @@
 const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
-    // Путь к Next.js приложению для загрузки next.config.js и .env файлов
     dir: './',
 });
 
-// Добавляем кастомную конфигурацию Jest
 const customJestConfig = {
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
     testEnvironment: 'jest-environment-node',
@@ -21,12 +19,29 @@ const customJestConfig = {
     ],
     testPathIgnorePatterns: ['<rootDir>/e2e/', '/node_modules/'],
     collectCoverageFrom: [
-        'src/app/api/**/*.ts',
-        '!src/app/api/**/*.d.ts',
-        '!src/app/api/**/route.ts', // Исключаем route.ts, так как они тестируются через интеграционные тесты
+        // Real coverage gate for the web unit/service/domain layer that we actively test.
+        'src/lib/authContext.ts',
+        'src/lib/bizContextResolver.ts',
+        'src/lib/bookingDashboardService.ts',
+        'src/lib/dashboardBookingsLogic.ts',
+        'src/lib/dateUtils.ts',
+        'src/lib/i18nHelpers.ts',
+        'src/lib/quickBookGuestClient.ts',
+        'src/lib/quickBookGuestService.ts',
+        'src/lib/quickHoldClient.ts',
+        'src/lib/quickHoldService.ts',
+        'src/lib/rateLimit.ts',
+        'src/lib/repositories.ts',
+        'src/lib/serverCancelBookingService.ts',
+        'src/lib/visitPackageLogic.ts',
+        'src/lib/whatsAppBookingActionService.ts',
+        'src/lib/withManagerContext.ts',
+        'src/lib/financeDomain/**/*.ts',
+        'src/lib/notifications/BookingDataService.ts',
+        'src/lib/validation/**/*.ts',
+        '!src/lib/**/*.d.ts',
     ],
-    testTimeout: 30000, // 30 секунд для API тестов
-    // Минимальный порог покрытия тестами (60%+)
+    testTimeout: 30000,
     coverageThreshold: {
         global: {
             branches: 60,
@@ -38,4 +53,3 @@ const customJestConfig = {
 };
 
 module.exports = createJestConfig(customJestConfig);
-

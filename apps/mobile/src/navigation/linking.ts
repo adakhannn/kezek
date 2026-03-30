@@ -23,21 +23,22 @@ export const linking: LinkingOptions<RootStackParamList> = {
                     Cabinet: 'cabinet',
                     Dashboard: 'dashboard',
                     Staff: 'staff',
-                    Booking: {
-                        path: 'booking/:slug',
-                        parse: {
-                            slug: (slug: string) => slug,
-                        },
-                    },
-                    BookingDetails: {
-                        path: 'booking/:id',
-                        parse: {
-                            id: (id: string) => id,
-                        },
-                    },
-                    Profile: 'profile',
                 },
             },
+            Booking: {
+                path: 'booking/:slug',
+                parse: {
+                    slug: (slug: string) => slug,
+                },
+            },
+            BookingDetails: {
+                path: 'booking-detail/:id',
+                parse: {
+                    id: (id: string) => id,
+                },
+            },
+            ShiftQuick: 'staff/shift-quick',
+            Shifts: 'staff/shifts',
             // Обработка callback URL для OAuth
             // Это позволит обрабатывать https://kezek.kg/auth/callback-mobile как deep link
         },

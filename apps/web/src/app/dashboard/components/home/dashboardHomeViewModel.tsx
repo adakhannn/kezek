@@ -1,0 +1,220 @@
+import type {
+    DashboardHomeClientProps,
+    DashboardMetricCard,
+    DashboardQuickAction,
+    DashboardRatingFactor,
+} from './types';
+
+const localeMap: Record<string, string> = {
+    ky: 'ky-KG',
+    ru: 'ru-RU',
+    en: 'en-US',
+};
+
+type Translate = (key: string, fallback: string) => string;
+
+export function getDashboardHomeViewModel(
+    props: DashboardHomeClientProps,
+    locale: string,
+    t: Translate,
+) {
+    const today = new Date(props.formattedDate);
+    const formatter = new Intl.DateTimeFormat(localeMap[locale] || 'ru-RU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+    });
+
+    const displayBizName = props.bizName || t('dashboard.header.defaultBizName', 'Ваш бизнес в Kezek');
+    const formattedDateLocalized = formatter.format(today);
+
+    const onboardingItems = [
+        props.branchesCount === 0
+            ? t('dashboard.onboarding.noBranches', 'Создайте хотя бы один филиал, чтобы клиенты могли записываться.')
+            : null,
+        props.servicesActive === 0
+            ? t('dashboard.onboarding.noServices', 'Добавьте услуги и укажите продолжительность и цену.')
+            : null,
+        props.staffActive === 0
+            ? t('dashboard.onboarding.noStaff', 'Добавьте сотрудников и укажите, кто оказывает какие услуги.')
+            : null,
+        props.bookingsToday === 0
+            ? t(
+                  'dashboard.onboarding.noBookings',
+                  'Проверьте «Календарь» — первые бронирования появятся здесь автоматически.',
+              )
+            : null,
+    ].filter((item): item is string => Boolean(item));
+
+    const metricCards: DashboardMetricCard[] = [
+        {
+            key: 'bookingsToday',
+            value: props.bookingsToday,
+            title: t('dashboard.kpi.bookingsToday', 'Брони сегодня'),
+            hint: t('dashboard.stats.bookingsTodayHint', 'в календаре записи'),
+            href: '/dashboard/bookings',
+            actionLabel: t('dashboard.kpi.openCalendar', 'Открыть календарь'),
+            borderClassName:
+                'border-indigo-100 hover:border-indigo-200 dark:border-indigo-900/40',
+            iconWrapperClassName: 'bg-indigo-50 text-indigo-500 dark:bg-indigo-950/40',
+            linkClassName:
+                'text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300',
+            icon: (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                </svg>
+            ),
+        },
+        {
+            key: 'activeStaff',
+            value: props.staffActive,
+            title: t('dashboard.kpi.activeStaff', 'Активные сотрудники'),
+            hint: t('dashboard.stats.activeStaffHint', 'готовы принимать клиентов'),
+            href: '/dashboard/staff',
+            actionLabel: t('dashboard.kpi.manageStaff', 'Управлять сотрудниками'),
+            borderClassName:
+                'border-emerald-100 hover:border-emerald-200 dark:border-emerald-900/40',
+            iconWrapperClassName: 'bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40',
+            linkClassName:
+                'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300',
+            icon: (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                </svg>
+            ),
+        },
+        {
+            key: 'activeServices',
+            value: props.servicesActive,
+            title: t('dashboard.kpi.activeServices', 'Активные услуги'),
+            hint: '',
+            href: '/dashboard/services',
+            actionLabel: t('dashboard.kpi.goToServices', 'Перейти к услугам'),
+            borderClassName:
+                'border-sky-100 hover:border-sky-200 dark:border-sky-900/40',
+            iconWrapperClassName: 'bg-sky-50 text-sky-500 dark:bg-sky-950/40',
+            linkClassName:
+                'text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300',
+            icon: (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                </svg>
+            ),
+        },
+        {
+            key: 'branches',
+            value: props.branchesCount,
+            title: t('dashboard.kpi.branches', 'Филиалы'),
+            hint: '',
+            href: '/dashboard/branches',
+            actionLabel: t('dashboard.kpi.branchesList', 'Список филиалов'),
+            borderClassName:
+                'border-purple-100 hover:border-purple-200 dark:border-purple-900/40',
+            iconWrapperClassName: 'bg-purple-50 text-purple-500 dark:bg-purple-950/40',
+            linkClassName:
+                'text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300',
+            icon: (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                </svg>
+            ),
+        },
+    ];
+
+    const quickActions: DashboardQuickAction[] = [
+        {
+            key: 'openCalendar',
+            href: '/dashboard/bookings',
+            title: t('dashboard.quickActions.openCalendar', 'Открыть «Календарь»'),
+            hint: t('dashboard.quickActions.openCalendarHint', 'посмотреть ближайшие записи'),
+            className:
+                'border-indigo-100 bg-indigo-50/60 text-indigo-800 hover:border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-100',
+            hintClassName: 'text-indigo-700/80 dark:text-indigo-200/90',
+        },
+        {
+            key: 'addStaff',
+            href: '/dashboard/staff/new',
+            title: t('dashboard.quickActions.addStaff', 'Добавить сотрудника'),
+            hint: t('dashboard.quickActions.addStaffHint', 'добавить сотрудника в систему'),
+            className:
+                'border-emerald-100 bg-emerald-50/60 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100',
+            hintClassName: 'text-emerald-700/80 dark:text-emerald-200/90',
+        },
+        {
+            key: 'addService',
+            href: '/dashboard/services/new',
+            title: t('dashboard.quickActions.addService', 'Добавить услугу'),
+            hint: t('dashboard.quickActions.addServiceHint', 'указать цену и длительность'),
+            className:
+                'border-sky-100 bg-sky-50/60 text-sky-800 hover:border-sky-200 hover:bg-sky-50 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-100',
+            hintClassName: 'text-sky-700/80 dark:text-sky-200/90',
+        },
+        {
+            key: 'assignServices',
+            href: '/dashboard/staff',
+            title: t('dashboard.quickActions.assignServices', 'Назначить услуги сотруднику'),
+            hint: t('dashboard.quickActions.assignServicesHint', 'распределить услуги по сотрудникам'),
+            className:
+                'border-purple-100 bg-purple-50/60 text-purple-800 hover:border-purple-200 hover:bg-purple-50 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-100',
+            hintClassName: 'text-purple-700/80 dark:text-purple-200/90',
+        },
+    ];
+
+    const ratingFactors: DashboardRatingFactor[] = props.ratingWeights
+        ? [
+              {
+                  key: 'reviews',
+                  label: t('dashboard.rating.factor.reviews', 'Отзывы'),
+                  value: props.ratingWeights.reviews,
+                  dotClassName: 'bg-emerald-500',
+              },
+              {
+                  key: 'productivity',
+                  label: t('dashboard.rating.factor.productivity', 'Количество клиентов'),
+                  value: props.ratingWeights.productivity,
+                  dotClassName: 'bg-indigo-500',
+              },
+              {
+                  key: 'loyalty',
+                  label: t('dashboard.rating.factor.loyalty', 'Возвращаемость клиентов'),
+                  value: props.ratingWeights.loyalty,
+                  dotClassName: 'bg-sky-500',
+              },
+              {
+                  key: 'discipline',
+                  label: t('dashboard.rating.factor.discipline', 'Дисциплина (опоздания)'),
+                  value: props.ratingWeights.discipline,
+                  dotClassName: 'bg-rose-500',
+              },
+          ]
+        : [];
+
+    return {
+        displayBizName,
+        formattedDateLocalized,
+        onboardingItems,
+        metricCards,
+        quickActions,
+        ratingFactors,
+    };
+}

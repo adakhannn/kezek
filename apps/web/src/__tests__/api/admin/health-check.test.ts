@@ -81,6 +81,8 @@ describe('/api/admin/health-check', () => {
 
     describe('Успешная проверка здоровья', () => {
         test('должен успешно вернуть результаты проверки здоровья', async () => {
+            const today = new Date().toISOString();
+
             mockSupabase.auth.getUser.mockResolvedValue({
                 data: {
                     user: {
@@ -122,7 +124,7 @@ describe('/api/admin/health-check', () => {
                 limit: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
                     data: {
-                        metric_date: '2024-01-15',
+                        metric_date: today,
                     },
                     error: null,
                 }),
@@ -134,7 +136,7 @@ describe('/api/admin/health-check', () => {
                 limit: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
                     data: {
-                        metric_date: '2024-01-15',
+                        metric_date: today,
                     },
                     error: null,
                 }),
@@ -146,7 +148,7 @@ describe('/api/admin/health-check', () => {
                 limit: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
                     data: {
-                        metric_date: '2024-01-15',
+                        metric_date: today,
                     },
                     error: null,
                 }),
@@ -159,7 +161,7 @@ describe('/api/admin/health-check', () => {
                 limit: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
                     data: {
-                        applied_at: '2024-01-15',
+                        created_at: today,
                     },
                     error: null,
                 }),

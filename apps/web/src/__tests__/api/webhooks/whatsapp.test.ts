@@ -200,8 +200,7 @@ describe('/api/webhooks/whatsapp', () => {
     describe('POST: привязка к клиентам и бронированиям', () => {
         test('должен привязать сообщение к клиенту по номеру телефона (profiles)', async () => {
             const mockSupabase = createMockSupabase();
-            const { createClient } = require('@supabase/supabase-js');
-            createClient.mockReturnValue(mockSupabase);
+            (getServiceClient as jest.Mock).mockReturnValue(mockSupabase);
 
             const userId = 'user-uuid-1';
             const phone = '+996555111222';
@@ -308,9 +307,8 @@ describe('/api/webhooks/whatsapp', () => {
                     in: jest.fn().mockReturnThis(),
                     gte: jest.fn().mockReturnThis(),
                     order: jest.fn().mockReturnThis(),
-                    limit: jest.fn().mockReturnThis(),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: bookingId, biz_id: bizId, client_phone: phone },
+                    limit: jest.fn().mockResolvedValue({
+                        data: [{ id: bookingId, biz_id: bizId, client_phone: phone }],
                         error: null,
                     }),
                 })
@@ -441,8 +439,7 @@ describe('/api/webhooks/whatsapp', () => {
 
         test('при команде "отмена" с гостевой бронью вызывает cancel_booking и отправляет подтверждение', async () => {
             const mockSupabase = createMockSupabase();
-            const { createClient } = require('@supabase/supabase-js');
-            createClient.mockReturnValue(mockSupabase);
+            (getServiceClient as jest.Mock).mockReturnValue(mockSupabase);
             const sendWhatsApp = require('@/lib/senders/whatsapp').sendWhatsApp;
 
             const bookingId = 'booking-to-cancel';
@@ -465,9 +462,8 @@ describe('/api/webhooks/whatsapp', () => {
                     in: jest.fn().mockReturnThis(),
                     gte: jest.fn().mockReturnThis(),
                     order: jest.fn().mockReturnThis(),
-                    limit: jest.fn().mockReturnThis(),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: bookingId, biz_id: 'biz1', client_phone: phone },
+                    limit: jest.fn().mockResolvedValue({
+                        data: [{ id: bookingId, biz_id: 'biz1', client_phone: phone }],
                         error: null,
                     }),
                 })
@@ -539,8 +535,7 @@ describe('/api/webhooks/whatsapp', () => {
 
         test('при команде "подтвердить" с бронью вызывает confirm_booking и отправляет подтверждение', async () => {
             const mockSupabase = createMockSupabase();
-            const { createClient } = require('@supabase/supabase-js');
-            createClient.mockReturnValue(mockSupabase);
+            (getServiceClient as jest.Mock).mockReturnValue(mockSupabase);
             const sendWhatsApp = require('@/lib/senders/whatsapp').sendWhatsApp;
 
             const userId = 'user-confirm-1';
@@ -564,9 +559,8 @@ describe('/api/webhooks/whatsapp', () => {
                     in: jest.fn().mockReturnThis(),
                     gte: jest.fn().mockReturnThis(),
                     order: jest.fn().mockReturnThis(),
-                    limit: jest.fn().mockReturnThis(),
-                    maybeSingle: jest.fn().mockResolvedValue({
-                        data: { id: bookingId, biz_id: 'biz1' },
+                    limit: jest.fn().mockResolvedValue({
+                        data: [{ id: bookingId, biz_id: 'biz1' }],
                         error: null,
                     }),
                 })

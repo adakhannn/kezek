@@ -174,28 +174,71 @@ describe('/api/admin/promotions/debug', () => {
                 }),
             });
 
-            // Мокаем получение данных клиента
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: clientId,
-                        email: 'client@example.com',
-                        phone: '+996555123456',
-                    },
-                    error: null,
-                }),
-            });
+            mockAdmin.from.mockImplementation((table: string) => {
+                if (table === 'profiles') {
+                    return {
+                        select: jest.fn().mockReturnThis(),
+                        eq: jest.fn().mockReturnThis(),
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: clientId,
+                                email: 'client@example.com',
+                                phone: '+996555123456',
+                                full_name: 'Client Name',
+                            },
+                            error: null,
+                        }),
+                    };
+                }
 
-            // Мокаем получение использования промоакций
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                order: jest.fn().mockResolvedValue({
-                    data: [],
-                    error: null,
-                }),
+                if (table === 'client_promotion_usage') {
+                    return {
+                        select: jest.fn().mockReturnThis(),
+                        eq: jest.fn().mockReturnThis(),
+                        order: jest.fn().mockReturnThis(),
+                        limit: jest.fn().mockResolvedValue({
+                            data: [],
+                            error: null,
+                        }),
+                    };
+                }
+
+                if (table === 'client_referrals') {
+                    return {
+                        select: jest.fn().mockReturnThis(),
+                        or: jest.fn().mockReturnThis(),
+                        order: jest.fn().mockReturnThis(),
+                        limit: jest.fn().mockResolvedValue({
+                            data: [],
+                            error: null,
+                        }),
+                    };
+                }
+
+                if (table === 'bookings') {
+                    return {
+                        select: jest.fn().mockReturnThis(),
+                        eq: jest.fn().mockReturnThis(),
+                        not: jest.fn().mockReturnThis(),
+                        order: jest.fn().mockReturnThis(),
+                        limit: jest.fn().mockResolvedValue({
+                            data: [],
+                            error: null,
+                        }),
+                    };
+                }
+
+                if (table === 'branch_promotions') {
+                    return {
+                        select: jest.fn().mockReturnThis(),
+                        eq: jest.fn().mockReturnThis(),
+                        eq: jest.fn().mockReturnThis(),
+                        data: [],
+                        error: null,
+                    };
+                }
+
+                return mockAdmin;
             });
 
             const req = createMockRequest(`http://localhost/api/admin/promotions/debug?clientId=${clientId}`, {

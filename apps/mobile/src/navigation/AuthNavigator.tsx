@@ -14,9 +14,8 @@ export default function AuthNavigator() {
             screenOptions={{
                 headerStyle: {
                     backgroundColor: colors.background.secondary,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border.dark,
                 },
+                headerShadowVisible: false,
                 headerTintColor: colors.text.primary,
                 headerTitleStyle: {
                     fontWeight: '600',

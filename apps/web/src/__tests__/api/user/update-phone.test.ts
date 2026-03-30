@@ -9,10 +9,18 @@ import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccess
 setupApiTestMocks();
 
 import { createSupabaseClients } from '@/lib/supabaseHelpers';
+import { withRateLimit } from '@/lib/rateLimit';
 
 // Мокаем supabaseHelpers
 jest.mock('@/lib/supabaseHelpers', () => ({
     createSupabaseClients: jest.fn(),
+}));
+
+jest.mock('@/lib/rateLimit', () => ({
+    withRateLimit: jest.fn((req, _config, handler) => handler()),
+    RateLimitConfigs: {
+        auth: {},
+    },
 }));
 
 describe('/api/user/update-phone', () => {
@@ -26,6 +34,7 @@ describe('/api/user/update-phone', () => {
             supabase: mockSupabase,
             admin: mockAdmin,
         });
+        (withRateLimit as jest.Mock).mockImplementation((req, _config, handler) => handler());
     });
 
     describe('Авторизация', () => {

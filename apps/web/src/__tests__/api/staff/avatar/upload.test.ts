@@ -1,17 +1,16 @@
-/**
- * Тесты для /api/staff/avatar/upload
- * Загрузка аватара сотрудника
- */
-
 import { POST } from '@/app/api/staff/avatar/upload/route';
-import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccessResponse, expectErrorResponse } from '../../testHelpers';
+import {
+    createMockSupabase,
+    expectErrorResponse,
+    expectSuccessResponse,
+    setupApiTestMocks,
+} from '../../testHelpers';
 
 setupApiTestMocks();
 
 import { getStaffContext } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
-// Мокаем зависимости
 jest.mock('@/lib/authBiz', () => ({
     getStaffContext: jest.fn(),
 }));
@@ -21,71 +20,69 @@ jest.mock('@/lib/supabaseService', () => ({
 }));
 
 describe('/api/staff/avatar/upload', () => {
-    const mockAdmin = createMockSupabase();
-    const staffId = 'staff-uuid';
+    const mockAdmin = createMockSupabase() as ReturnType<typeof createMockSupabase> & {
+        storage?: {
+            from: jest.Mock;
+        };
+    };
+    const staffId = '11111111-2222-3333-4444-555555555555';
+    const bizId = 'biz-uuid';
 
     beforeEach(() => {
         jest.clearAllMocks();
 
         (getStaffContext as jest.Mock).mockResolvedValue({
             staffId,
+            bizId,
         });
 
         (getServiceClient as jest.Mock).mockReturnValue(mockAdmin);
     });
 
-    describe('Валидация', () => {
-        test('должен вернуть 400 если файл не предоставлен', async () => {
-            const formData = new FormData();
-
-            const req = createMockRequest('http://localhost/api/staff/avatar/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
+    test('returns 400 when file is missing', async () => {
+        const formData = new FormData();
+        const req = new Request('http://localhost/api/staff/avatar/upload', {
+            method: 'POST',
+            body: formData,
         });
 
-        test('должен вернуть 400 если файл не является изображением', async () => {
-            const formData = new FormData();
-            const file = new File(['content'], 'test.txt', { type: 'text/plain' });
-            formData.append('file', file);
-
-            const req = createMockRequest('http://localhost/api/staff/avatar/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
-        });
-
-        test('должен вернуть 400 если размер файла превышает 5MB', async () => {
-            const formData = new FormData();
-            // Создаем файл размером больше 5MB
-            const largeContent = new Array(6 * 1024 * 1024).fill('a').join('');
-            const file = new File([largeContent], 'large.jpg', { type: 'image/jpeg' });
-            formData.append('file', file);
-
-            const req = createMockRequest('http://localhost/api/staff/avatar/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const res = await POST(req);
-            await expectErrorResponse(res, 400);
-        });
+        const res = await POST(req);
+        await expectErrorResponse(res, 400);
     });
 
-    describe('Успешная загрузка', () => {
-        test('должен успешно загрузить аватар', async () => {
-            const formData = new FormData();
-            const file = new File(['image content'], 'avatar.jpg', { type: 'image/jpeg' });
-            formData.append('file', file);
+    test('returns 400 when file is not an image', async () => {
+        const formData = new FormData();
+        formData.append('file', new File(['content'], 'test.txt', { type: 'text/plain' }));
 
-            // Мокаем получение текущего сотрудника (без аватара)
-            mockAdmin.from.mockReturnValueOnce({
+        const req = new Request('http://localhost/api/staff/avatar/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 400);
+    });
+
+    test('returns 400 when file exceeds 5MB', async () => {
+        const formData = new FormData();
+        const largeContent = 'a'.repeat(6 * 1024 * 1024);
+        formData.append('file', new File([largeContent], 'large.jpg', { type: 'image/jpeg' }));
+
+        const req = new Request('http://localhost/api/staff/avatar/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const res = await POST(req);
+        await expectErrorResponse(res, 400);
+    });
+
+    test('uploads avatar successfully', async () => {
+        const formData = new FormData();
+        formData.append('file', new File(['image content'], 'avatar.jpg', { type: 'image/jpeg' }));
+
+        mockAdmin.from
+            .mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 single: jest.fn().mockResolvedValue({
@@ -94,114 +91,118 @@ describe('/api/staff/avatar/upload', () => {
                     },
                     error: null,
                 }),
-            });
-
-            // Мокаем загрузку файла в storage
-            mockAdmin.storage = {
-                from: jest.fn().mockReturnValue({
-                    upload: jest.fn().mockResolvedValue({
-                        data: {
-                            path: 'staff-avatars/staff-uuid-1234567890.jpg',
-                        },
-                        error: null,
-                    }),
-                    getPublicUrl: jest.fn().mockReturnValue({
-                        data: {
-                            publicUrl: 'https://example.com/avatars/staff-avatars/staff-uuid-1234567890.jpg',
-                        },
-                    }),
-                    remove: jest.fn().mockResolvedValue({
+            })
+            .mockReturnValueOnce((() => {
+                const updateQuery = {
+                    update: jest.fn(),
+                    eq: jest.fn(),
+                };
+                updateQuery.update.mockReturnValue(updateQuery);
+                updateQuery.eq
+                    .mockImplementationOnce(() => updateQuery)
+                    .mockResolvedValueOnce({
                         data: null,
                         error: null,
-                    }),
-                }),
-            };
+                    });
+                return updateQuery;
+            })());
 
-            // Мокаем обновление записи в БД
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
+        const storageApi = {
+            upload: jest.fn().mockResolvedValue({
+                data: {
+                    path: 'staff-avatars/uploaded-avatar.jpg',
+                },
+                error: null,
+            }),
+            getPublicUrl: jest.fn().mockReturnValue({
+                data: {
+                    publicUrl: 'https://example.com/avatars/staff-avatars/uploaded-avatar.jpg',
+                },
+            }),
+            remove: jest.fn().mockResolvedValue({
+                data: null,
+                error: null,
+            }),
+        };
 
-            const req = createMockRequest('http://localhost/api/staff/avatar/upload', {
-                method: 'POST',
-                body: formData,
-            });
+        mockAdmin.storage = {
+            from: jest.fn().mockReturnValue(storageApi),
+        };
 
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
-            expect(data).toHaveProperty('url');
+        const req = new Request('http://localhost/api/staff/avatar/upload', {
+            method: 'POST',
+            body: formData,
         });
 
-        test('должен удалить старый аватар перед загрузкой нового', async () => {
-            const formData = new FormData();
-            const file = new File(['image content'], 'avatar.jpg', { type: 'image/jpeg' });
-            formData.append('file', file);
+        const res = await POST(req);
+        const data = await expectSuccessResponse(res, 200);
 
-            const oldAvatarUrl = 'https://example.com/avatars/staff-avatars/old-avatar.jpg';
+        expect(data.data).toHaveProperty(
+            'url',
+            'https://example.com/avatars/staff-avatars/uploaded-avatar.jpg',
+        );
+    });
 
-            // Мокаем получение текущего сотрудника (с аватаром)
-            mockAdmin.from.mockReturnValueOnce({
+    test('removes old avatar before uploading a new one', async () => {
+        const formData = new FormData();
+        formData.append('file', new File(['image content'], 'avatar.jpg', { type: 'image/jpeg' }));
+
+        mockAdmin.from
+            .mockReturnValueOnce({
                 select: jest.fn().mockReturnThis(),
                 eq: jest.fn().mockReturnThis(),
                 single: jest.fn().mockResolvedValue({
                     data: {
-                        avatar_url: oldAvatarUrl,
+                        avatar_url: 'https://example.com/storage/v1/object/public/avatars/staff-avatars/old-avatar.jpg',
                     },
                     error: null,
                 }),
-            });
+            })
+            .mockReturnValueOnce((() => {
+                const updateQuery = {
+                    update: jest.fn(),
+                    eq: jest.fn(),
+                };
+                updateQuery.update.mockReturnValue(updateQuery);
+                updateQuery.eq
+                    .mockImplementationOnce(() => updateQuery)
+                    .mockResolvedValueOnce({
+                        data: null,
+                        error: null,
+                    });
+                return updateQuery;
+            })());
 
-            // Мокаем удаление старого файла
-            const mockStorage = {
-                upload: jest.fn().mockResolvedValue({
-                    data: {
-                        path: 'staff-avatars/staff-uuid-1234567890.jpg',
-                    },
-                    error: null,
-                }),
-                getPublicUrl: jest.fn().mockReturnValue({
-                    data: {
-                        publicUrl: 'https://example.com/avatars/staff-avatars/staff-uuid-1234567890.jpg',
-                    },
-                }),
-                remove: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            };
+        const storageApi = {
+            upload: jest.fn().mockResolvedValue({
+                data: {
+                    path: 'staff-avatars/uploaded-avatar.jpg',
+                },
+                error: null,
+            }),
+            getPublicUrl: jest.fn().mockReturnValue({
+                data: {
+                    publicUrl: 'https://example.com/avatars/staff-avatars/uploaded-avatar.jpg',
+                },
+            }),
+            remove: jest.fn().mockResolvedValue({
+                data: null,
+                error: null,
+            }),
+        };
 
-            mockAdmin.storage = {
-                from: jest.fn().mockReturnValue(mockStorage),
-            };
+        mockAdmin.storage = {
+            from: jest.fn().mockReturnValue(storageApi),
+        };
 
-            // Мокаем обновление записи в БД
-            mockAdmin.from.mockReturnValueOnce({
-                update: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({
-                    data: null,
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest('http://localhost/api/staff/avatar/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const res = await POST(req);
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data).toHaveProperty('ok', true);
-            // Проверяем, что был вызван remove для старого файла
-            expect(mockStorage.remove).toHaveBeenCalled();
+        const req = new Request('http://localhost/api/staff/avatar/upload', {
+            method: 'POST',
+            body: formData,
         });
+
+        const res = await POST(req);
+        await expectSuccessResponse(res, 200);
+
+        expect(storageApi.remove).toHaveBeenCalledWith(['staff-avatars/old-avatar.jpg']);
     });
 });
-
-

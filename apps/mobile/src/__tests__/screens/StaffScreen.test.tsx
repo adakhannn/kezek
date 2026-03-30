@@ -1,15 +1,9 @@
-/**
- * Smoke test: StaffScreen
- * 
- * Проверяет базовый рендеринг экрана списка смен сотрудника
- */
-
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import StaffScreen from '../../screens/StaffScreen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Mock hooks
+import StaffScreen from '../../screens/StaffScreen';
+
 jest.mock('../../hooks/useAuth', () => ({
     useAuth: () => ({
         user: { id: 'test-user-id' },
@@ -21,9 +15,15 @@ jest.mock('../../lib/supabase', () => ({
         from: jest.fn(() => ({
             select: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
+            in: jest.fn().mockReturnThis(),
+            gte: jest.fn().mockReturnThis(),
             order: jest.fn().mockReturnThis(),
             limit: jest.fn().mockResolvedValue({
                 data: [],
+                error: null,
+            }),
+            maybeSingle: jest.fn().mockResolvedValue({
+                data: null,
                 error: null,
             }),
         })),
@@ -31,36 +31,35 @@ jest.mock('../../lib/supabase', () => ({
 }));
 
 describe('StaffScreen', () => {
-    const queryClient = new QueryClient({
-        defaultOptions: {
-            queries: {
-                retry: false,
-            },
-        },
-    });
-
     const renderWithProviders = (component: React.ReactElement) => {
+        const queryClient = new QueryClient({
+            defaultOptions: {
+                queries: {
+                    retry: false,
+                },
+            },
+        });
+
         return render(
             <QueryClientProvider client={queryClient}>
                 {component}
-            </QueryClientProvider>
+            </QueryClientProvider>,
         );
     };
 
-    test('должен отрендериться без ошибок', () => {
+    test('renders empty staff state after loading', async () => {
         renderWithProviders(<StaffScreen />);
-        
-        // Проверяем, что экран загрузился
-        expect(screen.getByTestId('staff-screen') || screen.getByText(/смены|shifts/i)).toBeTruthy();
+
+        expect(await screen.findByText('Вы не являетесь сотрудником')).toBeTruthy();
     });
 
-    test('должен показывать состояние загрузки при получении данных', () => {
+    test('shows initial loading or empty state safely', async () => {
         renderWithProviders(<StaffScreen />);
-        
-        // Проверяем наличие индикатора загрузки или пустого состояния
-        const loadingIndicator = screen.queryByTestId('loading') || screen.queryByText(/загрузка|loading/i);
-        // Может быть видимым или нет, в зависимости от состояния
-        expect(loadingIndicator || screen.getByTestId('staff-screen')).toBeTruthy();
+
+        const state =
+            screen.queryByText(/Загрузка|loading/i) ||
+            (await screen.findByText('Вы не являетесь сотрудником'));
+
+        expect(state).toBeTruthy();
     });
 });
-

@@ -1,128 +1,14 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { withErrorHandler, createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
-import {getBizContextForManagers} from '@/lib/authBiz';
-import { logWarn } from '@/lib/log';
+import { withErrorHandler } from '@/lib/apiErrorHandler';
 import { RateLimitConfigs, withRateLimit } from '@/lib/rateLimit';
-import { getRouteParamUuid } from '@/lib/routeParams';
-import {getServiceClient} from '@/lib/supabaseService';
-
-/**
- * Добавляет роль staff пользователю в бизнесе (idempotent)
- */
-async function addStaffRole(admin: ReturnType<typeof getServiceClient>, userId: string, bizId: string): Promise<void> {
-    const { data: roleStaff } = await admin
-        .from('roles')
-        .select('id')
-        .eq('key', 'staff')
-        .maybeSingle();
-    
-    if (!roleStaff?.id) {
-        logWarn('StaffUpdate', 'Staff role not found in roles table');
-        return;
-    }
-
-    // Проверяем, нет ли уже такой роли
-    const { data: existsRole } = await admin
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('role_id', roleStaff.id)
-        .eq('biz_id', bizId)
-        .maybeSingle();
-
-    if (!existsRole) {
-        const { error: eRole } = await admin
-            .from('user_roles')
-            .insert({
-                user_id: userId,
-                biz_id: bizId,
-                role_id: roleStaff.id,
-                biz_key: bizId,
-            });
-        if (eRole) {
-            logWarn('StaffUpdate', 'Failed to add staff role', eRole);
-        }
-    }
-}
-
-type Body = {
-    full_name: string;
-    email?: string | null;
-    phone?: string | null;
-    branch_id: string;
-    is_active: boolean;
-};
+import { runStaffUpdateHttp } from '@/lib/staffUpdateHttpService';
 
 export async function POST(req: Request, context: unknown) {
-    // Применяем rate limiting для обновления данных сотрудника
-    return withRateLimit(
-        req,
-        RateLimitConfigs.normal,
-        () => withErrorHandler('StaffUpdate', async () => {
-        // Валидация UUID для предотвращения потенциальных проблем безопасности
-        const staffId = await getRouteParamUuid(context, 'id');
-        const {supabase, userId, bizId} = await getBizContextForManagers();
-
-        const {data: roles} = await supabase
-            .from('user_roles')
-            .select('roles!inner(key)')
-            .eq('user_id', userId)
-            .eq('biz_id', bizId);
-
-        const ok = (roles ?? []).some(r => {
-            if (!r || typeof r !== 'object' || !('roles' in r)) return false;
-            const roleObj = (r as { roles?: { key?: unknown } | null }).roles;
-            if (!roleObj || typeof roleObj !== 'object' || !('key' in roleObj)) return false;
-            const key = roleObj.key;
-            return typeof key === 'string' && ['owner', 'admin', 'manager'].includes(key);
-        });
-        if (!ok) return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
-
-        const body = (await req.json()) as Body;
-        if (!body.full_name || !body.branch_id) {
-            return createErrorResponse('validation', 'Необходимо указать имя и филиал', undefined, 400);
-        }
-
-        // Используем service client для поиска пользователя и добавления роли
-        const admin = getServiceClient();
-        let linkedUserId: string | null = null;
-
-        // Пытаемся найти существующего пользователя по email или phone
-        if (body.email || body.phone) {
-            const { data: userList } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-            const foundUser = userList?.users?.find(u => {
-                if (body.email && u.email === body.email) return true;
-                if (body.phone && u.phone === body.phone) return true;
-                return false;
-            });
-            if (foundUser) {
-                linkedUserId = foundUser.id;
-            }
-        }
-
-        const {error} = await supabase
-            .from('staff')
-            .update({
-                full_name: body.full_name,
-                email: body.email ?? null,
-                phone: body.phone ?? null,
-                branch_id: body.branch_id,
-                is_active: body.is_active,
-                user_id: linkedUserId,
-            })
-            .eq('id', staffId)
-            .eq('biz_id', bizId);
-
-        if (error) return createErrorResponse('internal', error.message, undefined, 400);
-
-        // Если нашли пользователя и привязали, добавляем роль staff
-        if (linkedUserId) {
-            await addStaffRole(admin, linkedUserId, bizId);
-        }
-
-        return createSuccessResponse({ user_linked: !!linkedUserId });
-        })
-    );
+  return withRateLimit(
+    req,
+    RateLimitConfigs.normal,
+    () => withErrorHandler('StaffUpdate', () => runStaffUpdateHttp(req, context)),
+  );
 }

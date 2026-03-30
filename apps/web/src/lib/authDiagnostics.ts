@@ -1,5 +1,5 @@
 /**
- * Типизированные коды ошибок доступа/авторизации
+ * Typed auth/access error codes shared across manager and staff flows.
  */
 export type AuthErrorCode =
     | 'NOT_AUTHENTICATED'
@@ -9,28 +9,32 @@ export type AuthErrorCode =
     | 'STAFF_ROLE_MISMATCH';
 
 /**
- * Кастомный класс ошибки доступа к бизнесу с диагностикой
+ * Stable diagnostics payload attached to NO_BIZ_ACCESS errors.
+ */
+export interface BizAccessDiagnostics {
+    checkedSuperAdmin?: boolean;
+    checkedUserRoles?: boolean;
+    checkedOwnerId?: boolean;
+    currentBizId?: string | null;
+    hasCurrentBizRecord?: boolean;
+    currentBizHasAllowedRole?: boolean;
+    userRolesFound?: number;
+    eligibleRolesFound?: number;
+    ownedBusinessesFound?: number;
+    errorsCount?: number;
+}
+
+/**
+ * Access error with typed code and optional diagnostics.
  */
 export class BizAccessError extends Error {
     public readonly code: AuthErrorCode;
-    public readonly diagnostics?: {
-        checkedSuperAdmin?: boolean;
-        checkedUserRoles?: boolean;
-        checkedOwnerId?: boolean;
-        currentBizId?: string | null;
-        hasCurrentBizRecord?: boolean;
-        currentBizHasAllowedRole?: boolean;
-        userRolesFound?: number;
-        eligibleRolesFound?: number;
-        ownedBusinessesFound?: number;
-        errorsCount?: number;
-    };
+    public readonly diagnostics?: BizAccessDiagnostics;
 
-    constructor(code: AuthErrorCode, message?: string, diagnostics?: BizAccessError['diagnostics']) {
+    constructor(code: AuthErrorCode, message?: string, diagnostics?: BizAccessDiagnostics) {
         super(message ?? code);
         this.name = 'BizAccessError';
         this.code = code;
         this.diagnostics = diagnostics;
     }
 }
-

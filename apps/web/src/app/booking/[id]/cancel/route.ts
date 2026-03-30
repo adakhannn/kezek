@@ -3,6 +3,7 @@ import {cookies} from 'next/headers';
 import {NextResponse} from 'next/server';
 
 import {logError} from '@/lib/log';
+import { runServerCancelBooking } from '@/lib/serverCancelBookingService';
 
 export async function POST(
     req: Request,
@@ -37,41 +38,30 @@ export async function POST(
         return NextResponse.redirect(new URL(`/booking/${id}`, req.url));
     }
 
-    // Пытаемся отменить через RPC
-    const {error} = await supabase.rpc('cancel_booking', {p_booking_id: id});
-    
-    // Если ошибка связана с назначением сотрудника, обновляем статус напрямую
-    if (error) {
-        const errorMsg = error.message.toLowerCase();
-        if (errorMsg.includes('not assigned to branch') || errorMsg.includes('staff')) {
-            // Получаем текущего пользователя
-            const {data: {user}} = await supabase.auth.getUser();
-            if (!user || !booking || booking.client_id !== user.id) {
-                return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
-            }
-            
-            // Обновляем статус напрямую, минуя проверку назначения
-            const {error: updateError} = await supabase
-                .from('bookings')
-                .update({status: 'cancelled'})
-                .eq('id', id)
-                .eq('client_id', user.id);
-            
-            if (updateError) {
-                logError('BookingCancel', 'Failed to update booking status', updateError);
-                return NextResponse.json({ok: false, error: updateError.message}, {status: 400});
-            }
-        } else {
-            logError('BookingCancel', 'Failed to fetch booking', error);
-            return NextResponse.json({ok: false, error: error.message}, {status: 400});
+    try {
+        const {data: {user}} = await supabase.auth.getUser();
+        if (!user || !booking || booking.client_id !== user.id) {
+            return NextResponse.json({ok: false, error: 'FORBIDDEN'}, {status: 403});
         }
-    }
 
-    await fetch(new URL('/api/notify', req.url), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ type: 'cancel', booking_id: id }),
-    });
+        await runServerCancelBooking(
+            {
+                supabase,
+                clientId: user.id,
+                notify: async ({ bookingId, type }) => {
+                    await fetch(new URL('/api/notify', req.url), {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ type, booking_id: bookingId }),
+                    });
+                },
+            },
+            id,
+        );
+    } catch (error) {
+        logError('BookingCancel', 'Failed to cancel booking', error);
+        return NextResponse.json({ok: false, error: error instanceof Error ? error.message : String(error)}, {status: 400});
+    }
 
     // вернём редирект обратно на карточку брони
     return NextResponse.redirect(new URL(`/booking/${id}`, req.url));

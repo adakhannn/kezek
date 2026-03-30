@@ -1,402 +1,485 @@
-/**
- * Тесты для POST /api/dashboard/staff/[id]/shift/close
- * Закрытие смены сотрудника от имени владельца/менеджера (сценарий «владелец на странице финансов сотрудника»).
- */
-
 import { POST } from '@/app/api/dashboard/staff/[id]/shift/close/route';
 import {
-    setupApiTestMocks,
     createMockRequest,
-    createMockSupabase,
-    expectSuccessResponse,
     expectErrorResponse,
+    expectSuccessResponse,
+    setupApiTestMocks,
 } from '../../testHelpers';
 
 setupApiTestMocks();
 
-jest.mock('@/lib/authBiz', () => ({
-    getBizContextForManagers: jest.fn(),
+jest.mock('@/lib/withManagerContext', () => ({
+    withManagerContext: jest.fn(),
 }));
 
 jest.mock('@/lib/routeParams', () => ({
     getRouteParamUuid: jest.fn(),
 }));
 
-jest.mock('@/lib/supabaseHelpers', () => ({
-    createSupabaseAdminClient: jest.fn(),
-}));
-
 jest.mock('@/lib/rateLimit', () => ({
     withRateLimit: jest.fn((_req, _config, handler) => handler()),
-    RateLimitConfigs: {},
+    RateLimitConfigs: {
+        critical: {},
+    },
 }));
 
 jest.mock('@/lib/performance', () => ({
-    measurePerformance: jest.fn((_name, fn) => fn()),
+    measurePerformance: jest.fn((_operation, fn) => fn()),
 }));
 
 jest.mock('@/lib/notifications/shiftNotifications', () => ({
     sendShiftCloseNotification: jest.fn(() => Promise.resolve()),
 }));
 
-import { getBizContextForManagers } from '@/lib/authBiz';
+jest.mock('@/lib/time', () => ({
+    TZ: 'Asia/Bishkek',
+    formatDateInTz: jest.fn(() => '2024-01-15'),
+    dateAtTz: jest.fn((date: string, time: string) => new Date(`${date}T${time}:00Z`)),
+}));
+
 import { getRouteParamUuid } from '@/lib/routeParams';
-import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
+import { withManagerContext } from '@/lib/withManagerContext';
+
+function createAdminQueryResult({
+    maybeSingleData = null,
+    listData = [],
+}: {
+    maybeSingleData?: unknown;
+    listData?: unknown[];
+} = {}) {
+    const query = {
+        select: jest.fn(),
+        eq: jest.fn(),
+        gte: jest.fn(),
+        lte: jest.fn(),
+        neq: jest.fn(),
+        in: jest.fn(),
+        maybeSingle: jest.fn(),
+        order: jest.fn(),
+        not: jest.fn(),
+        delete: jest.fn(),
+        insert: jest.fn(),
+        update: jest.fn(),
+    };
+
+    query.select.mockReturnValue(query);
+    query.eq.mockReturnValue(query);
+    query.gte.mockReturnValue(query);
+    query.lte.mockReturnValue(query);
+    query.delete.mockReturnValue(query);
+    query.update.mockReturnValue(query);
+    query.maybeSingle.mockResolvedValue({
+        data: maybeSingleData,
+        error: null,
+    });
+    query.in.mockResolvedValue({
+        data: listData,
+        error: null,
+    });
+    query.order.mockResolvedValue({
+        data: listData,
+        error: null,
+    });
+    query.not.mockResolvedValue({
+        data: listData,
+        error: null,
+    });
+    query.neq.mockResolvedValue({
+        data: listData,
+        error: null,
+    });
+    query.insert.mockResolvedValue({
+        data: null,
+        error: null,
+    });
+
+    return query;
+}
 
 describe('/api/dashboard/staff/[id]/shift/close', () => {
     const staffId = '11111111-2222-3333-4444-555555555555';
-    const bizId = 'biz-uuid-1111-2222-3333-444444444444';
-    const shiftDate = '2024-01-15';
-
-    const mockAdmin = createMockSupabase();
+    const bizId = 'biz-uuid-1111-2222-3333-4444-555555555555';
+    const admin = {
+        from: jest.fn(),
+        rpc: jest.fn(),
+        auth: {
+            admin: {
+                getUserById: jest.fn(),
+            },
+        },
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
-        (getBizContextForManagers as jest.Mock).mockResolvedValue({
-            supabase: mockAdmin,
-            userId: 'owner-user-id',
-            bizId,
-        });
+        admin.from.mockReset();
+        admin.rpc.mockReset();
+        admin.auth.admin.getUserById.mockReset();
+
         (getRouteParamUuid as jest.Mock).mockResolvedValue(staffId);
-        (createSupabaseAdminClient as jest.Mock).mockReturnValue(mockAdmin);
-    });
-
-    describe('Валидация', () => {
-        test('должен вернуть 400 при невалидном формате даты в query', async () => {
-            const req = createMockRequest(
-                `http://localhost/api/dashboard/staff/${staffId}/shift/close?date=invalid`,
-                {
-                    method: 'POST',
-                    body: { totalAmount: 0, items: [] },
-                }
-            );
-
-            const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-            await expectErrorResponse(res, 400);
-        });
-
-        test('должен вернуть 400 при отрицательной totalAmount', async () => {
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: staffId, biz_id: bizId, full_name: 'Staff', percent_master: 60, percent_salon: 40, hourly_rate: 100, user_id: 'u1' },
-                    error: null,
+        (withManagerContext as jest.Mock).mockImplementation(
+            async (_req: Request, _scope: string, callback: (args: { admin: typeof admin; bizId: string }) => Promise<Response>) =>
+                callback({
+                    admin,
+                    bizId,
                 }),
-            });
+        );
 
-            const req = createMockRequest(
-                `http://localhost/api/dashboard/staff/${staffId}/shift/close?date=${shiftDate}`,
-                {
-                    method: 'POST',
-                    body: { totalAmount: -100, items: [] },
-                }
-            );
+        admin.from.mockImplementation((table: string) => {
+            if (table === 'businesses') {
+                return createAdminQueryResult({
+                    maybeSingleData: null,
+                });
+            }
 
-            const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-            await expectErrorResponse(res, 400);
-        });
-    });
+            if (table === 'bookings') {
+                return createAdminQueryResult({
+                    listData: [],
+                });
+            }
 
-    describe('Права доступа и принадлежность сотрудника', () => {
-        test('должен вернуть 404 если сотрудник не найден', async () => {
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-            });
+            if (table === 'staff_shift_items') {
+                return createAdminQueryResult({
+                    listData: [],
+                });
+            }
 
-            const req = createMockRequest(
-                `http://localhost/api/dashboard/staff/${staffId}/shift/close?date=${shiftDate}`,
-                {
-                    method: 'POST',
-                    body: { totalAmount: 0, items: [] },
-                }
-            );
-
-            const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-            await expectErrorResponse(res, 404);
+            return createAdminQueryResult();
         });
 
-        test('должен вернуть 403 если сотрудник принадлежит другому бизнесу', async () => {
-            const otherBizId = 'other-biz-id';
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: staffId, biz_id: otherBizId, full_name: 'Staff', percent_master: 60, percent_salon: 40, hourly_rate: 100, user_id: 'u1' },
-                    error: null,
-                }),
-            });
-
-            const req = createMockRequest(
-                `http://localhost/api/dashboard/staff/${staffId}/shift/close?date=${shiftDate}`,
-                {
-                    method: 'POST',
-                    body: { totalAmount: 0, items: [] },
-                }
-            );
-
-            const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-            await expectErrorResponse(res, 403);
+        admin.rpc.mockResolvedValue({
+            error: null,
+        });
+        admin.auth.admin.getUserById.mockResolvedValue({
+            data: {
+                user: {
+                    email: null,
+                },
+            },
         });
     });
 
-    describe('Бизнес-логика смены', () => {
-        test('должен вернуть 400 если смена на выбранную дату не открыта', async () => {
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: staffId, biz_id: bizId, full_name: 'Staff', percent_master: 60, percent_salon: 40, hourly_rate: 100, user_id: 'u1' },
-                    error: null,
-                }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-            });
+    test('returns 400 for invalid date query', async () => {
+        admin.from.mockReturnValueOnce(
+            createAdminQueryResult({
+                maybeSingleData: {
+                    id: staffId,
+                    biz_id: bizId,
+                    full_name: 'Staff',
+                    percent_master: 60,
+                    percent_salon: 40,
+                    hourly_rate: 100,
+                    user_id: null,
+                },
+            }),
+        );
 
-            const req = createMockRequest(
-                `http://localhost/api/dashboard/staff/${staffId}/shift/close?date=${shiftDate}`,
-                {
-                    method: 'POST',
-                    body: { totalAmount: 1000, items: [] },
-                }
-            );
-
-            const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-            await expectErrorResponse(res, 400);
+        const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=invalid`, {
+            method: 'POST',
+            body: { totalAmount: 0, items: [] },
         });
 
-        test('должен вернуть 400 если смена уже закрыта', async () => {
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: staffId, biz_id: bizId, full_name: 'Staff', percent_master: 60, percent_salon: 40, hourly_rate: 100, user_id: 'u1' },
-                    error: null,
+        const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
+        await expectErrorResponse(res, 400, 'validation');
+    });
+
+    test('returns 404 when staff is not found', async () => {
+        admin.from.mockReturnValueOnce(
+            createAdminQueryResult({
+                maybeSingleData: null,
+            }),
+        );
+
+        const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
+            method: 'POST',
+            body: { totalAmount: 0, items: [] },
+        });
+
+        const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
+        await expectErrorResponse(res, 404, 'not_found');
+    });
+
+    test('returns 403 when staff belongs to another business', async () => {
+        admin.from.mockReturnValueOnce(
+            createAdminQueryResult({
+                maybeSingleData: {
+                    id: staffId,
+                    biz_id: 'other-biz-id',
+                    full_name: 'Staff',
+                    percent_master: 60,
+                    percent_salon: 40,
+                    hourly_rate: 100,
+                    user_id: null,
+                },
+            }),
+        );
+
+        const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
+            method: 'POST',
+            body: { totalAmount: 0, items: [] },
+        });
+
+        const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
+        await expectErrorResponse(res, 403, 'forbidden');
+    });
+
+    test('returns 400 for negative total amount', async () => {
+        admin.from.mockReturnValueOnce(
+            createAdminQueryResult({
+                maybeSingleData: {
+                    id: staffId,
+                    biz_id: bizId,
+                    full_name: 'Staff',
+                    percent_master: 60,
+                    percent_salon: 40,
+                    hourly_rate: 100,
+                    user_id: null,
+                },
+            }),
+        );
+
+        const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
+            method: 'POST',
+            body: { totalAmount: -100, items: [] },
+        });
+
+        const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
+        await expectErrorResponse(res, 400, 'validation');
+    });
+
+    test('returns 400 when no shift is open for the selected date', async () => {
+        admin.from
+            .mockReturnValueOnce(
+                createAdminQueryResult({
+                    maybeSingleData: {
+                        id: staffId,
+                        biz_id: bizId,
+                        full_name: 'Staff',
+                        percent_master: 60,
+                        percent_salon: 40,
+                        hourly_rate: 100,
+                        user_id: null,
+                    },
                 }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'shift-1',
+            )
+            .mockReturnValueOnce(
+                createAdminQueryResult({
+                    maybeSingleData: null,
+                }),
+            );
+
+        const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
+            method: 'POST',
+            body: { totalAmount: 1000, items: [] },
+        });
+
+        const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
+        await expectErrorResponse(res, 400, 'validation');
+    });
+
+    test('returns 400 when shift is already closed', async () => {
+        admin.from
+            .mockReturnValueOnce(
+                createAdminQueryResult({
+                    maybeSingleData: {
+                        id: staffId,
+                        biz_id: bizId,
+                        full_name: 'Staff',
+                        percent_master: 60,
+                        percent_salon: 40,
+                        hourly_rate: 100,
+                        user_id: null,
+                    },
+                }),
+            )
+            .mockReturnValueOnce(
+                createAdminQueryResult({
+                    maybeSingleData: {
+                        id: 'shift-id',
                         staff_id: staffId,
                         biz_id: bizId,
-                        shift_date: shiftDate,
+                        shift_date: '2024-01-15',
                         status: 'closed',
                         opened_at: '2024-01-15T09:00:00Z',
                         closed_at: '2024-01-15T18:00:00Z',
                     },
-                    error: null,
                 }),
-            });
-
-            const req = createMockRequest(
-                `http://localhost/api/dashboard/staff/${staffId}/shift/close?date=${shiftDate}`,
-                {
-                    method: 'POST',
-                    body: { totalAmount: 1000, items: [] },
-                }
             );
 
-            const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-            await expectErrorResponse(res, 400);
+        const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
+            method: 'POST',
+            body: { totalAmount: 1000, items: [] },
         });
+
+        const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
+        await expectErrorResponse(res, 400, 'validation');
     });
 
-    describe('Успешное закрытие смены', () => {
-        test('должен успешно закрыть смену сотрудника от имени владельца (totalAmount, без items)', async () => {
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: staffId, biz_id: bizId, full_name: 'Staff', percent_master: 60, percent_salon: 40, hourly_rate: 100, user_id: 'u1' },
-                    error: null,
+    test('closes dashboard shift with totalAmount payload', async () => {
+        admin.from
+            .mockReturnValueOnce(
+                createAdminQueryResult({
+                    maybeSingleData: {
+                        id: staffId,
+                        biz_id: bizId,
+                        full_name: 'Staff',
+                        percent_master: 60,
+                        percent_salon: 40,
+                        hourly_rate: 100,
+                        user_id: null,
+                    },
                 }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'shift-1',
+            )
+            .mockReturnValueOnce(
+                createAdminQueryResult({
+                    maybeSingleData: {
+                        id: 'shift-id',
                         staff_id: staffId,
                         biz_id: bizId,
-                        shift_date: shiftDate,
+                        shift_date: '2024-01-15',
                         status: 'open',
                         opened_at: '2024-01-15T09:00:00Z',
                         closed_at: null,
-                        total_amount: null,
-                        consumables_amount: null,
-                        percent_master: 60,
-                        percent_salon: 40,
-                        master_share: null,
-                        salon_share: null,
-                        hours_worked: null,
-                        hourly_rate: 100,
-                        guaranteed_amount: null,
-                        topup_amount: null,
-                    },
-                    error: null,
-                }),
-            });
-
-            mockAdmin.rpc.mockResolvedValue({
-                data: {
-                    ok: true,
-                    shift: {
-                        id: 'shift-1',
-                        staff_id: staffId,
-                        biz_id: bizId,
-                        shift_date: shiftDate,
-                        status: 'closed',
-                        opened_at: '2024-01-15T09:00:00Z',
-                        closed_at: '2024-01-16T00:00:00Z',
-                        total_amount: 1000,
+                        total_amount: 0,
                         consumables_amount: 0,
-                        master_share: 600,
-                        salon_share: 400,
+                        percent_master: 60,
+                        percent_salon: 40,
+                        master_share: 0,
+                        salon_share: 0,
+                        hours_worked: null,
+                        hourly_rate: 100,
+                        guaranteed_amount: 0,
+                        topup_amount: 0,
                     },
+                }),
+            );
+
+        admin.rpc.mockResolvedValue({
+            data: {
+                ok: true,
+                shift: {
+                    id: 'shift-id',
+                    staff_id: staffId,
+                    biz_id: bizId,
+                    shift_date: '2024-01-15',
+                    status: 'closed',
+                    opened_at: '2024-01-15T09:00:00Z',
+                    closed_at: '2024-01-16T00:00:00Z',
+                    total_amount: 1000,
+                    consumables_amount: 0,
+                    percent_master: 60,
+                    percent_salon: 40,
+                    master_share: 600,
+                    salon_share: 400,
+                    hours_worked: 8,
+                    hourly_rate: 100,
+                    guaranteed_amount: 0,
+                    topup_amount: 0,
                 },
-                error: null,
-            });
-
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                not: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                delete: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({ data: null, error: null }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                in: jest.fn().mockResolvedValue({ data: [], error: null }),
-            });
-
-            const req = createMockRequest(
-                `http://localhost/api/dashboard/staff/${staffId}/shift/close?date=${shiftDate}`,
-                {
-                    method: 'POST',
-                    body: { totalAmount: 1000, consumablesAmount: 0, items: [] },
-                }
-            );
-
-            const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data.ok).toBe(true);
-            expect(data.data).toHaveProperty('shift');
-            expect(data.data.shift.status).toBe('closed');
-            expect(mockAdmin.rpc).toHaveBeenCalledWith(
-                'close_staff_shift_safe',
-                expect.objectContaining({
-                    p_shift_id: 'shift-1',
-                    p_total_amount: 1000,
-                })
-            );
+            },
+            error: null,
         });
 
-        test('должен успешно закрыть смену с переданными items', async () => {
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: { id: staffId, biz_id: bizId, full_name: 'Staff', percent_master: 60, percent_salon: 40, hourly_rate: 100, user_id: 'u1' },
-                    error: null,
+        const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
+            method: 'POST',
+            body: { totalAmount: 1000, consumablesAmount: 0, items: [] },
+        });
+
+        const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
+        const data = await expectSuccessResponse(res, 200);
+
+        expect(data.data.shift.status).toBe('closed');
+        expect(admin.rpc).toHaveBeenCalledWith(
+            'close_staff_shift_safe',
+            expect.objectContaining({
+                p_shift_id: 'shift-id',
+                p_total_amount: 1000,
+            }),
+        );
+    });
+
+    test('closes dashboard shift with items payload', async () => {
+        admin.from
+            .mockReturnValueOnce(
+                createAdminQueryResult({
+                    maybeSingleData: {
+                        id: staffId,
+                        biz_id: bizId,
+                        full_name: 'Staff',
+                        percent_master: 60,
+                        percent_salon: 40,
+                        hourly_rate: 100,
+                        user_id: null,
+                    },
                 }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({
-                    data: {
-                        id: 'shift-1',
+            )
+            .mockReturnValueOnce(
+                createAdminQueryResult({
+                    maybeSingleData: {
+                        id: 'shift-id',
                         staff_id: staffId,
                         biz_id: bizId,
-                        shift_date: shiftDate,
+                        shift_date: '2024-01-15',
                         status: 'open',
                         opened_at: '2024-01-15T09:00:00Z',
                         closed_at: null,
-                        total_amount: null,
-                        consumables_amount: null,
+                        total_amount: 0,
+                        consumables_amount: 0,
                         percent_master: 60,
                         percent_salon: 40,
-                        master_share: null,
-                        salon_share: null,
+                        master_share: 0,
+                        salon_share: 0,
                         hours_worked: null,
                         hourly_rate: 100,
-                        guaranteed_amount: null,
-                        topup_amount: null,
+                        guaranteed_amount: 0,
+                        topup_amount: 0,
                     },
-                    error: null,
                 }),
-            });
-
-            mockAdmin.rpc.mockResolvedValue({
-                data: {
-                    ok: true,
-                    shift: {
-                        id: 'shift-1',
-                        status: 'closed',
-                        total_amount: 1500,
-                        master_share: 900,
-                        salon_share: 600,
-                    },
-                },
-                error: null,
-            });
-
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                not: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockResolvedValue({ data: [], error: null }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                delete: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockResolvedValue({ data: null, error: null }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                insert: jest.fn().mockResolvedValue({ data: null, error: null }),
-            });
-            mockAdmin.from.mockReturnValueOnce({
-                select: jest.fn().mockReturnThis(),
-                in: jest.fn().mockResolvedValue({ data: [], error: null }),
-            });
-
-            const req = createMockRequest(
-                `http://localhost/api/dashboard/staff/${staffId}/shift/close?date=${shiftDate}`,
-                {
-                    method: 'POST',
-                    body: {
-                        items: [
-                            { clientName: 'Client 1', serviceName: 'Haircut', serviceAmount: 1000, consumablesAmount: 100, bookingId: null },
-                        ],
-                    },
-                }
             );
 
-            const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
-            const data = await expectSuccessResponse(res, 200);
-
-            expect(data.ok).toBe(true);
-            expect(data.data.shift.status).toBe('closed');
+        admin.rpc.mockResolvedValue({
+            data: {
+                ok: true,
+                shift: {
+                    id: 'shift-id',
+                    staff_id: staffId,
+                    biz_id: bizId,
+                    shift_date: '2024-01-15',
+                    status: 'closed',
+                    opened_at: '2024-01-15T09:00:00Z',
+                    closed_at: '2024-01-16T00:00:00Z',
+                    total_amount: 1000,
+                    consumables_amount: 100,
+                    percent_master: 60,
+                    percent_salon: 40,
+                    master_share: 540,
+                    salon_share: 360,
+                    hours_worked: 8,
+                    hourly_rate: 100,
+                    guaranteed_amount: 0,
+                    topup_amount: 0,
+                },
+            },
+            error: null,
         });
+
+        const req = createMockRequest(`http://localhost/api/dashboard/staff/${staffId}/shift/close?date=2024-01-15`, {
+            method: 'POST',
+            body: {
+                items: [
+                    {
+                        clientName: 'Client 1',
+                        serviceName: 'Haircut',
+                        serviceAmount: 1000,
+                        consumablesAmount: 100,
+                        bookingId: null,
+                    },
+                ],
+            },
+        });
+
+        const res = await POST(req, { params: Promise.resolve({ id: staffId }) });
+        const data = await expectSuccessResponse(res, 200);
+
+        expect(data.data.shift.status).toBe('closed');
     });
 });

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,16 +18,16 @@ import OfflineBanner from '../../components/ui/OfflineBanner';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import type { Slot } from '@shared-client/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const TZ = 'Asia/Bishkek';
 
-type TimeSlot = {
+type TimeSlot = Slot & {
     start_at: string;
     staff_id: string;
     branch_id: string;
-    [key: string]: unknown;
 };
 
 type SlotsErrorKind =
@@ -47,7 +47,12 @@ export default function BookingStep5Time() {
     const { isOffline } = useNetworkStatus();
     const [hasNetworkError, setHasNetworkError] = useState(false);
 
-    const { data: slotsResult, isLoading, refetch } = useQuery<SlotsResult>({
+    const {
+        data: slotsResult,
+        isLoading,
+        refetch,
+        error: slotsError,
+    } = useQuery<SlotsResult>({
         queryKey: ['slots', bookingData.business?.id, bookingData.serviceId, bookingData.selectedDate, bookingData.staffId, bookingData.branchId],
         queryFn: async () => {
             if (
@@ -125,16 +130,19 @@ export default function BookingStep5Time() {
             !!bookingData.staffId &&
             !!bookingData.branchId &&
             !!bookingData.selectedDate,
-        onError: (error: unknown) => {
-            const message = error instanceof Error ? error.message : String(error);
-            if (/network request failed|failed to fetch|network/i.test(message)) {
-                setHasNetworkError(true);
-            }
-        },
-        onSuccess: () => {
-            setHasNetworkError(false);
-        },
     });
+
+    useEffect(() => {
+        if (!slotsError) {
+            setHasNetworkError(false);
+            return;
+        }
+
+        const message = slotsError instanceof Error ? slotsError.message : String(slotsError);
+        if (/network request failed|failed to fetch|network/i.test(message)) {
+            setHasNetworkError(true);
+        }
+    }, [slotsError]);
 
     const slots = slotsResult && slotsResult.ok ? slotsResult.slots : [];
     const domainErrorMessage =
@@ -186,7 +194,7 @@ export default function BookingStep5Time() {
                     </View>
                 ) : slots && slots.length > 0 ? (
                     <View style={styles.slotsGrid}>
-                        {slots.map((slot, index) => (
+                        {slots.map((slot, index: number) => (
                             <TouchableOpacity
                                 key={index}
                                 style={[
