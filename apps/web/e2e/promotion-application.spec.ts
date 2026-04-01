@@ -4,6 +4,9 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
+skipIfMissingE2EEnv('promotion-application.spec.ts', ['E2E_TEST_BUSINESS_SLUG', 'E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_BRANCH_ID']);
 
 // Фиксированные даты для E2E, чтобы не зависеть от локальной TZ машины.
 // Можно переопределить через E2E_TEST_TODAY=YYYY-MM-DD.
@@ -32,7 +35,7 @@ function getTomorrowDateString(): string {
 
 test.describe('Применение промо при бронировании', () => {
     test.beforeEach(async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await page.goto(`/b/${businessSlug}`);
         await page.waitForLoadState('networkidle');
     });
@@ -253,7 +256,7 @@ test.describe('Применение промо при бронировании',
 
     test('должен проверить статистику по промоакциям', async ({ page }) => {
         // Авторизуемся как менеджер/владелец
-        const managerEmail = process.env.E2E_TEST_MANAGER_EMAIL || 'manager@test.com';
+        const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
         await page.goto('/auth/sign-in');
         await page.waitForLoadState('networkidle');
         
@@ -271,7 +274,7 @@ test.describe('Применение промо при бронировании',
         await test.step('Переход на страницу управления промоакциями', async () => {
             // Переходим на страницу филиала с промоакциями
             // В реальных тестах нужно использовать конкретный ID филиала
-            const branchId = process.env.E2E_TEST_BRANCH_ID || 'test-branch-id';
+            const branchId = readRequiredEnv('E2E_TEST_BRANCH_ID');
             await page.goto(`/dashboard/branches/${branchId}`);
             await page.waitForLoadState('networkidle');
         });
@@ -315,7 +318,7 @@ test.describe('Применение промо при бронировании',
 
     // Happy-path: Применение промо с несколькими типами скидок
     test('должен применить промо с процентной скидкой', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await page.goto(`/b/${businessSlug}`);
         await page.waitForLoadState('networkidle');
 
@@ -337,7 +340,7 @@ test.describe('Применение промо при бронировании',
 
     // Happy-path: Применение промо "бесплатно" (free service)
     test('должен применить промо типа "бесплатно"', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await page.goto(`/b/${businessSlug}`);
         await page.waitForLoadState('networkidle');
 
@@ -361,7 +364,7 @@ test.describe('Применение промо при бронировании',
 
     // Edge-case: Промо с истекшим сроком действия
     test('должен не показывать промо с истекшим сроком', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await page.goto(`/b/${businessSlug}`);
         await page.waitForLoadState('networkidle');
 
@@ -378,7 +381,7 @@ test.describe('Применение промо при бронировании',
 
     // Edge-case: Промо с ограниченным количеством использований
     test('должен проверить ограничение количества использований промо', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await page.goto(`/b/${businessSlug}`);
         await page.waitForLoadState('networkidle');
 
@@ -397,7 +400,7 @@ test.describe('Применение промо при бронировании',
 
     // Edge-case: Применение нескольких промо одновременно (если поддерживается)
     test('должен проверить возможность применения нескольких промо', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await page.goto(`/b/${businessSlug}`);
         await page.waitForLoadState('networkidle');
 
@@ -433,7 +436,7 @@ test.describe('Применение промо при бронировании',
 
     // Edge-case: Промо с условием минимальной суммы заказа
     test('должен проверить применение промо с минимальной суммой', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await page.goto(`/b/${businessSlug}`);
         await page.waitForLoadState('networkidle');
 

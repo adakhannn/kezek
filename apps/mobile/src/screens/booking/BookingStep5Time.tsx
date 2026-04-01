@@ -1,24 +1,20 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { addMinutes } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
 
 import { formatTimeSlot } from '@shared-client/formatters';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
-import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { colors } from '../../constants/colors';
-import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
 import OfflineBanner from '../../components/ui/OfflineBanner';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import type { Slot } from '@shared-client/types';
+import { useBookingStep5Slots } from './useBookingStep5Slots';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -30,123 +26,11 @@ type TimeSlot = Slot & {
     branch_id: string;
 };
 
-type SlotsErrorKind =
-    | 'MASTER_NOT_ASSIGNED'
-    | 'NO_SCHEDULE'
-    | 'SCHEDULE_CONFLICT'
-    | 'TECHNICAL'
-    | 'UNKNOWN';
-
-type SlotsResult =
-    | { ok: true; slots: TimeSlot[] }
-    | { ok: false; error: { kind: SlotsErrorKind; message: string } };
-
 export default function BookingStep5Time() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedSlot } = useBooking();
-    const { isOffline } = useNetworkStatus();
-    const [hasNetworkError, setHasNetworkError] = useState(false);
-
-    const {
-        data: slotsResult,
-        isLoading,
-        refetch,
-        error: slotsError,
-    } = useQuery<SlotsResult>({
-        queryKey: ['slots', bookingData.business?.id, bookingData.serviceId, bookingData.selectedDate, bookingData.staffId, bookingData.branchId],
-        queryFn: async () => {
-            if (
-                !bookingData.business?.id ||
-                !bookingData.serviceId ||
-                !bookingData.selectedDate ||
-                !bookingData.staffId ||
-                !bookingData.branchId
-            ) {
-                return { ok: true, slots: [] };
-            }
-
-            try {
-                const { data, error } = await supabase.rpc('get_free_slots_service_day_v2', {
-                    p_biz_id: bookingData.business.id,
-                    p_service_id: bookingData.serviceId,
-                    p_day: bookingData.selectedDate,
-                    p_per_staff: 400,
-                    p_step_min: 15,
-                });
-
-                if (error) {
-                    throw error;
-                }
-
-                const all = (data || []) as TimeSlot[];
-                const now = new Date();
-                const minTime = addMinutes(now, 30);
-
-                const filtered = all.filter(
-                    (s) =>
-                        s.staff_id === bookingData.staffId &&
-                        s.branch_id === bookingData.branchId &&
-                        new Date(s.start_at) > minTime,
-                );
-
-                return { ok: true, slots: filtered };
-            } catch (error: unknown) {
-                const message = error instanceof Error ? error.message : String(error);
-                // Пусть сетевые ошибки обрабатываются React Query (offline banner)
-                if (/network request failed|failed to fetch|network/i.test(message)) {
-                    throw error;
-                }
-
-                const err = error as { message?: string; code?: string };
-                const raw = err.message || '';
-
-                let kind: SlotsErrorKind = 'UNKNOWN';
-                let userMessage = 'Не удалось загрузить свободные слоты. Попробуйте выбрать другой день или мастера.';
-
-                if (raw.includes('not assigned') || raw.includes('не прикреплён')) {
-                    kind = 'MASTER_NOT_ASSIGNED';
-                    userMessage =
-                        'На выбранную дату мастер не прикреплён к этому филиалу. Попробуйте выбрать другой день или мастера.';
-                } else if (raw.includes('schedule') || raw.includes('расписание')) {
-                    kind = 'NO_SCHEDULE';
-                    userMessage =
-                        'У выбранного мастера нет расписания на выбранный день. Выберите другой день.';
-                } else if (raw.includes('conflict') || raw.includes('конфликт')) {
-                    kind = 'SCHEDULE_CONFLICT';
-                    userMessage =
-                        'Есть конфликт в расписании мастера на выбранный день. Выберите другой день или мастера.';
-                } else if (err.code === 'PGRST301' || err.code === 'PGRST116') {
-                    kind = 'TECHNICAL';
-                    userMessage =
-                        'Произошла техническая ошибка. Пожалуйста, обновите экран или попробуйте позже.';
-                }
-
-                return { ok: false, error: { kind, message: userMessage } };
-            }
-        },
-        enabled:
-            !!bookingData.business?.id &&
-            !!bookingData.serviceId &&
-            !!bookingData.staffId &&
-            !!bookingData.branchId &&
-            !!bookingData.selectedDate,
-    });
-
-    useEffect(() => {
-        if (!slotsError) {
-            setHasNetworkError(false);
-            return;
-        }
-
-        const message = slotsError instanceof Error ? slotsError.message : String(slotsError);
-        if (/network request failed|failed to fetch|network/i.test(message)) {
-            setHasNetworkError(true);
-        }
-    }, [slotsError]);
-
-    const slots = slotsResult && slotsResult.ok ? slotsResult.slots : [];
-    const domainErrorMessage =
-        slotsResult && !slotsResult.ok ? slotsResult.error.message : null;
+    const { slots, domainErrorMessage, isLoading, refetch, showOfflineBanner } =
+        useBookingStep5Slots(bookingData);
 
     const handleSelectSlot = (slot: TimeSlot) => {
         setSelectedSlot(slot);
@@ -167,8 +51,6 @@ export default function BookingStep5Time() {
         }
     };
 
-    const showOfflineBanner = isOffline || hasNetworkError;
-
     return (
         <LinearGradient
             colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
@@ -187,7 +69,7 @@ export default function BookingStep5Time() {
                     <OfflineBanner onRetry={() => refetch()} />
                 )}
 
-                {isLoading && !slotsResult ? (
+                {isLoading ? (
                     <View style={styles.slotsLoadingContainer}>
                         <ActivityIndicator size="small" color="#6366f1" />
                         <Text style={styles.slotsLoadingText}>Загрузка доступного времени...</Text>

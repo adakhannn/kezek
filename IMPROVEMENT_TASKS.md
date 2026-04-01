@@ -1,5 +1,6 @@
-# Дорожная карта улучшений (архив)
+# Archived Improvement Tasks
 
-Этот документ архивирован. Полная версия: **[docs/archive/IMPROVEMENT_TASKS.md](docs/archive/IMPROVEMENT_TASKS.md)**.
+This document is archived. Full historical version: [docs/archive/IMPROVEMENT_TASKS.md](docs/archive/IMPROVEMENT_TASKS.md).
 
-Актуальный бэклог задач: **[FUTURE_IMPROVEMENTS_TASKS.md](FUTURE_IMPROVEMENTS_TASKS.md)**.
+Current execution backlog: [docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md).
+Historical backlog snapshot: [FUTURE_IMPROVEMENTS_TASKS.md](FUTURE_IMPROVEMENTS_TASKS.md).

@@ -36,6 +36,12 @@ jobs:
       - name: ESLint
         run: pnpm lint
 
+      - name: Check active docs links
+        run: pnpm check:docs-links
+
+      - name: Check hotspot size guardrails
+        run: pnpm check:hotspots
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -70,10 +76,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder' }}
         run: pnpm build
 
-  api_tests:
+  web_core_tests:
     runs-on: ubuntu-latest
     # Временно: часть тестов требует донастройки моков под текущий API
-    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -96,8 +101,8 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: apps/web
 
-      - name: Run API tests with coverage
-        run: pnpm test:coverage
+      - name: Run core web coverage gate
+        run: pnpm test:ci:core
         working-directory: apps/web
 
       - name: Check coverage threshold
@@ -106,6 +111,78 @@ jobs:
           echo "Текущий минимальный порог: 60% (statements/branches/functions/lines)"
           echo "Источник истины для порога: apps/web/jest.config.js"
         working-directory: apps/web
+
+  api_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install deps (root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Install deps (apps/web)
+        run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+
+      - name: Run extended API and lib sweep
+        run: pnpm test:ci:extended
+        working-directory: apps/web
+
+  e2e_smoke_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install deps (root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Install deps (apps/web)
+        run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Run E2E smoke tests
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.E2E_TEST_BASE_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder' }}
+        run: pnpm test:e2e:smoke
+        working-directory: apps/web
+
+      - name: Upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          path: apps/web/playwright-report/
+          retention-days: 30
 
   e2e_tests:
     runs-on: ubuntu-latest
@@ -133,7 +210,7 @@ jobs:
         working-directory: apps/web
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install --with-deps chromium
         working-directory: apps/web
 
       - name: Run E2E tests
@@ -142,7 +219,7 @@ jobs:
           E2E_TEST_BUSINESS_SLUG: ${{ secrets.E2E_TEST_BUSINESS_SLUG }}
           E2E_TEST_STAFF_EMAIL: ${{ secrets.E2E_TEST_STAFF_EMAIL }}
           E2E_TEST_STAFF_PASSWORD: ${{ secrets.E2E_TEST_STAFF_PASSWORD }}
-        run: pnpm test:e2e
+        run: pnpm test:e2e:full-seeded
         working-directory: apps/web
 
       - name: Upload test results
@@ -155,7 +232,6 @@ jobs:
 
   mobile_tests:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -179,7 +255,7 @@ jobs:
         working-directory: apps/mobile
 
       - name: Run mobile smoke tests
-        run: pnpm test
+        run: pnpm test -- --runInBand --watchAll=false
         working-directory: apps/mobile
 
       - name: Check smoke tests status

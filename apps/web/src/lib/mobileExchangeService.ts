@@ -51,6 +51,7 @@ function startCleanupInterval() {
     }
 
     cleanupInterval = setInterval(cleanupExpiredTokens, 5 * 60 * 1000);
+    cleanupInterval.unref?.();
 }
 
 startCleanupInterval();

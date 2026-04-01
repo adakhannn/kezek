@@ -1,9 +1,10 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import ProfileScreen from '../../screens/ProfileScreen';
 import { supabase } from '../../lib/supabase';
+import { createTestQueryClient } from '../testQueryClient';
 
 describe('ProfileScreen', () => {
     const mockedSupabase = supabase as unknown as {
@@ -14,13 +15,7 @@ describe('ProfileScreen', () => {
     };
 
     const renderWithProviders = (component: React.ReactElement) => {
-        const queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {
-                    retry: false,
-                },
-            },
-        });
+        const queryClient = createTestQueryClient();
 
         return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
     };

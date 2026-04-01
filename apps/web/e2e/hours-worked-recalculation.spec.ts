@@ -8,48 +8,27 @@
  * - Проверка topup_amount (доплата, если guaranteed_amount > master_share)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type StorageState } from '@playwright/test';
+import { applyStorageStateCookies, createStorageStateForEmailSeed } from './authHelpers';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
+skipIfMissingE2EEnv('hours-worked-recalculation.spec.ts', ['E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_STAFF_ID']);
 
 test.describe('Корректировка hours_worked и перерасчёт гарантий/долей', () => {
-    let managerAuthState: any;
+    let managerAuthState: StorageState | null = null;
     let testShiftId: string | null = null;
 
     test.beforeAll(async ({ browser }) => {
-        // Авторизуемся как менеджер/владелец бизнеса
-        const context = await browser.newContext();
-        const page = await context.newPage();
-        
-        const managerEmail = process.env.E2E_TEST_MANAGER_EMAIL || 'manager@test.com';
-        
-        await page.goto('/auth/sign-in');
-        await page.waitForLoadState('networkidle');
-        
-        // Заполняем форму входа
-        const emailInput = page.locator('input[type="email"], input[name="email"]').first();
-        if (await emailInput.isVisible({ timeout: 3000 })) {
-            await emailInput.fill(managerEmail);
-            
-            const submitButton = page.locator('button:has-text("Отправить"), button[type="submit"]').first();
-            if (await submitButton.isVisible({ timeout: 2000 })) {
-                await submitButton.click();
-                await page.waitForTimeout(2000);
-            }
-        }
-        
-        // Сохраняем состояние авторизации
-        managerAuthState = await context.storageState();
-        await context.close();
+        const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
+        managerAuthState = await createStorageStateForEmailSeed(browser, managerEmail);
     });
 
     test.beforeEach(async ({ page }) => {
-        // Используем сохраненное состояние авторизации
-        if (managerAuthState) {
-            await page.context().addCookies(managerAuthState.cookies);
-        }
+        await applyStorageStateCookies(page, managerAuthState);
     });
 
     test('должен обновить hours_worked и пересчитать guaranteed_amount', async ({ page }) => {
-        const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
         
         await test.step('Переход на страницу финансов сотрудника', async () => {
             await page.goto(`/dashboard/staff/${staffId}/finance`);
@@ -178,7 +157,7 @@ test.describe('Корректировка hours_worked и перерасчёт �
     });
 
     test('должен проверить валидацию hours_worked (отрицательное значение)', async ({ page }) => {
-        const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
         
         await page.goto(`/dashboard/staff/${staffId}/finance`);
         await page.waitForLoadState('networkidle');
@@ -211,7 +190,7 @@ test.describe('Корректировка hours_worked и перерасчёт �
     });
 
     test('должен проверить валидацию hours_worked (слишком большое значение)', async ({ page }) => {
-        const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
         
         await page.goto(`/dashboard/staff/${staffId}/finance`);
         await page.waitForLoadState('networkidle');
@@ -244,7 +223,7 @@ test.describe('Корректировка hours_worked и перерасчёт �
     });
 
     test('должен проверить, что нельзя изменить hours_worked для открытой смены', async ({ page }) => {
-        const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
         
         await page.goto(`/dashboard/staff/${staffId}/finance`);
         await page.waitForLoadState('networkidle');

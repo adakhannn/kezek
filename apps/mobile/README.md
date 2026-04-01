@@ -1,180 +1,83 @@
 # Kezek Mobile App
 
-Мобильное приложение для бронирования услуг в Оше.
+The mobile app is the Expo / React Native client for:
 
-## Технологии
+- sign-in and session recovery
+- public booking flows
+- customer cabinet
+- staff flows
+- business-facing mobile scenarios where supported
 
-- **Expo** - фреймворк для разработки React Native приложений
-- **React Native** - кроссплатформенная разработка
-- **TypeScript** - типизация
-- **React Navigation** - навигация
-- **React Query** - управление состоянием и кэширование
-- **Supabase** - бэкенд и аутентификация
+## Stack
 
-## Требования
+- Expo 54
+- React Native 0.81
+- React 19
+- TypeScript
+- React Navigation
+- React Query
+- Supabase
 
-- Node.js 18+
-- pnpm (или npm/yarn)
-- Expo CLI (устанавливается автоматически)
-- Для iOS: Xcode и CocoaPods
-- Для Android: Android Studio и Android SDK
+## Setup
 
-## Установка
-
-1. Установите зависимости:
 ```bash
-cd apps/mobile
 pnpm install
+pnpm -C apps/mobile start
 ```
 
-2. Создайте файл `.env.local` в корне проекта (`apps/mobile/.env.local`):
+Create `apps/mobile/.env.local` with:
+
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 EXPO_PUBLIC_API_URL=https://kezek.kg
 ```
 
-3. Запустите приложение:
-```bash
-pnpm start
-```
-
-Или:
-```bash
-npx expo start
-```
-
-## Запуск на устройстве
-
-### iOS (требуется Mac)
-
-1. Установите Expo Go из App Store на iPhone
-2. Запустите `pnpm start`
-3. Отсканируйте QR-код камерой iPhone или в приложении Expo Go
-
-### Android
-
-1. Установите Expo Go из Google Play на Android устройство
-2. Запустите `pnpm start`
-3. Отсканируйте QR-код в приложении Expo Go
-
-### Эмуляторы
-
-**iOS Simulator (только на Mac):**
-```bash
-pnpm ios
-```
-
-**Android Emulator:**
-```bash
-pnpm android
-```
-
-## Структура проекта
-
-```
-apps/mobile/
-├── src/
-│   ├── components/     # Переиспользуемые компоненты
-│   ├── screens/        # Экраны приложения
-│   ├── navigation/     # Настройка навигации
-│   ├── lib/            # Утилиты и конфигурация
-│   ├── hooks/          # Кастомные хуки
-│   ├── contexts/       # React контексты
-│   └── utils/          # Вспомогательные функции
-├── App.tsx             # Точка входа
-├── app.json            # Конфигурация Expo
-└── package.json        # Зависимости
-```
-
-## Основные функции
-
-- ✅ Авторизация (Email/Phone OTP, Google OAuth)
-- ✅ Поиск и просмотр бизнесов
-- ✅ Создание бронирований
-- ✅ Личный кабинет с бронированиями (Мои записи)
-- ✅ Профиль пользователя
-- ✅ Кабинет владельца бизнеса (Кабинет бизнеса)
-- ✅ Кабинет сотрудника
-- ✅ Уведомления (Toast)
-- ✅ Pull-to-refresh
-- ✅ Глубокие ссылки
-
-Соответствие ролей и кабинетов (веб и мобиль): см. в корне репо `SYSTEM_FEATURES_DOCUMENTATION.md` (раздел «Роли и кабинеты») и `PROJECT_DOCUMENTATION.md` (раздел «Роли и кабинеты»).
-
-## Разработка
-
-### TypeScript проверка
-```bash
-pnpm typecheck
-```
-
-### Минимальный smoke-check после изменений
-```bash
-pnpm typecheck
-pnpm test
-```
-
-`pnpm typecheck` является обязательной быстрой проверкой compile health для mobile. Если меняется навигация, auth-flow, booking-flow или крупные экраны, сначала нужно убедиться, что эта команда проходит без ошибок.
-
-### Тестирование
-
-Запуск smoke-тестов для проверки базового рендеринга ключевых экранов:
+## Main Commands
 
 ```bash
-# Запустить все тесты
-pnpm test
-
-# Запустить тесты в watch режиме
-pnpm test:watch
-
-# Запустить тесты с покрытием
-pnpm test:coverage
+pnpm -C apps/mobile start
+pnpm -C apps/mobile android
+pnpm -C apps/mobile ios
+pnpm -C apps/mobile web
+pnpm -C apps/mobile typecheck
+pnpm -C apps/mobile test
+pnpm -C apps/mobile test:coverage
 ```
 
-**Базовый набор smoke-тестов:**
-- Auth экраны (SignIn, SignUp, Verify, WhatsApp)
-- Основные экраны (StaffScreen, CabinetScreen, BookingDetailsScreen)
-- Навигация между шагами бронирования
+## Quality Baseline
 
-Подробнее см. `TESTING.md` и `SMOKE_TESTS.md`.
+Minimum local health check after mobile changes:
 
-### Сборка для продакшена
-
-**Android:**
 ```bash
-eas build --platform android
+pnpm -C apps/mobile typecheck
+pnpm -C apps/mobile test
 ```
 
-**iOS:**
-```bash
-eas build --platform ios
-```
+Use `typecheck` as the first compile-health gate.
+Use `test` as the smoke suite for key screens and navigation flows.
 
-## Переменные окружения
+## Structure
 
-Все переменные окружения должны начинаться с `EXPO_PUBLIC_` для доступа в клиентском коде.
+- `src/components`: shared UI pieces
+- `src/screens`: screen-level UI and flow composition
+- `src/navigation`: navigation and session wiring
+- `src/hooks`: reusable hooks
+- `src/lib`: client infrastructure and helpers
+- `src/contexts`: React contexts
+- `src/utils`: utility functions
+- `src/__tests__`: mobile tests
 
-## Troubleshooting
+## Notes
 
-### Ошибка "Unable to resolve module"
-```bash
-rm -rf node_modules
-pnpm install
-```
+- client-exposed environment variables must use the `EXPO_PUBLIC_` prefix
+- auth callback and session restoration logic lives in navigation/session infrastructure
+- mobile architecture cleanup is tracked separately from the older stabilization wave
 
-### Ошибка Metro bundler
-```bash
-npx expo start --clear
-```
+## Related Documentation
 
-### Проблемы с кэшем
-```bash
-npx expo start -c
-```
-
-## Дополнительная информация
-
-- [Expo Documentation](https://docs.expo.dev/)
-- [React Navigation](https://reactnavigation.org/)
-- [React Query](https://tanstack.com/query/latest)
+- [README.md](/C:/projects/kezek/README.md): repo overview
+- [docs/README.md](/C:/projects/kezek/docs/README.md): docs index
+- [GETTING_STARTED.md](/C:/projects/kezek/GETTING_STARTED.md): onboarding and setup
+- [docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md): focused mobile architecture plan
+- [docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md): current review-driven improvement backlog

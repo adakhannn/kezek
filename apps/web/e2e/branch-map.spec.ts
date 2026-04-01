@@ -16,11 +16,13 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { getBaseUrl, readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+const BASE_URL = getBaseUrl();
+skipIfMissingE2EEnv('branch-map.spec.ts', ['E2E_TEST_SUPERADMIN_EMAIL', 'E2E_TEST_BUSINESS_ID']);
 
 async function signInSuperAdmin(page: any) {
-    const email = process.env.E2E_TEST_SUPERADMIN_EMAIL || 'superadmin@test.com';
+    const email = readRequiredEnv('E2E_TEST_SUPERADMIN_EMAIL');
 
     await page.goto(`${BASE_URL}/auth/sign-in`);
     await page.waitForLoadState('networkidle');
@@ -44,7 +46,7 @@ test.describe('Админка: филиал с картой', () => {
     test('создание и редактирование филиала с координатами', async ({ page }) => {
         await signInSuperAdmin(page);
 
-        const bizId = process.env.E2E_TEST_BUSINESS_ID || 'test-biz-id';
+        const bizId = readRequiredEnv('E2E_TEST_BUSINESS_ID');
 
         await test.step('Открыть страницу создания филиала', async () => {
             await page.goto(`${BASE_URL}/admin/businesses/${bizId}/branches/new`);

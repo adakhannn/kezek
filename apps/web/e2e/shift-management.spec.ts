@@ -4,23 +4,16 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { signInWithPassword } from './authHelpers';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
+skipIfMissingE2EEnv('shift-management.spec.ts', ['E2E_TEST_STAFF_EMAIL', 'E2E_TEST_STAFF_PASSWORD']);
 
 test.describe('Управление сменой сотрудника', () => {
     test.beforeEach(async ({ page }) => {
-        // Авторизуемся как сотрудник
-        // В реальных тестах нужно использовать тестовые учетные данные
-        const staffEmail = process.env.E2E_TEST_STAFF_EMAIL || 'staff@test.com';
-        const staffPassword = process.env.E2E_TEST_STAFF_PASSWORD || 'test-password';
-
-        await page.goto('/auth/sign-in');
-        
-        // Заполняем форму входа
-        await page.fill('input[type="email"]', staffEmail);
-        await page.fill('input[type="password"]', staffPassword);
-        await page.click('button[type="submit"]');
-
-        // Ждем редиректа в кабинет сотрудника
-        await page.waitForURL(/staff|dashboard/, { timeout: 10000 });
+        const staffEmail = readRequiredEnv('E2E_TEST_STAFF_EMAIL');
+        const staffPassword = readRequiredEnv('E2E_TEST_STAFF_PASSWORD');
+        await signInWithPassword(page, staffEmail, staffPassword);
     });
 
     test('должен открыть смену, добавить клиентов и закрыть смену', async ({ page }) => {

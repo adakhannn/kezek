@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import DashboardScreen from '../../screens/DashboardScreen';
+import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../hooks/useAuth', () => ({
     useAuth: () => ({
@@ -36,13 +37,7 @@ jest.mock('../../lib/supabase', () => ({
 
 describe('DashboardScreen', () => {
     const renderWithProviders = (component: React.ReactElement) => {
-        const queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {
-                    retry: false,
-                },
-            },
-        });
+        const queryClient = createTestQueryClient();
 
         return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
     };

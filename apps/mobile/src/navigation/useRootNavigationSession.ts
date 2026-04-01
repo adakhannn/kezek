@@ -19,7 +19,7 @@ function getMobileApiUrl() {
     );
 }
 
-function isAuthCallbackUrl(url: string) {
+export function isAuthCallbackUrl(url: string) {
     return AUTH_CALLBACK_RE.test(url);
 }
 
@@ -34,7 +34,7 @@ async function setSessionFromTokens(accessToken: string, refreshToken: string) {
     }
 }
 
-function extractHashTokens(url: string) {
+export function extractHashTokens(url: string) {
     const match = url.match(/#access_token=([^&]+)&refresh_token=([^&]+)/);
 
     if (!match) {
@@ -47,7 +47,7 @@ function extractHashTokens(url: string) {
     };
 }
 
-async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string) {
+export async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string) {
     const response = await fetch(
         `${apiUrl}/api/auth/mobile-exchange?code=${encodeURIComponent(exchangeCode)}`,
     );
@@ -61,7 +61,7 @@ async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string) {
     await setSessionFromTokens(accessToken, refreshToken);
 }
 
-async function handleDeepLinkAuth(url: string, apiUrl: string) {
+export async function handleDeepLinkAuth(url: string, apiUrl: string) {
     if (!url || !isAuthCallbackUrl(url)) {
         return false;
     }
@@ -121,7 +121,7 @@ async function handleDeepLinkAuth(url: string, apiUrl: string) {
     }
 }
 
-async function tryRestorePendingSession(apiUrl: string) {
+export async function tryRestorePendingSession(apiUrl: string) {
     const response = await fetch(`${apiUrl}/api/auth/mobile-exchange?check=true`);
 
     if (!response.ok) {

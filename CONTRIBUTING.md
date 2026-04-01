@@ -1,211 +1,133 @@
-# Contributing to Kezek
+# Contributing To Kezek
 
-Спасибо, что хотите помочь развивать Kezek 🙌  
-Ниже — краткий гайд, как работать с проектом и что важно проверять перед любым PR.
+This document describes the default contribution workflow for the repository.
 
----
+## Repository Shape
 
-## 1. Стэк и запуск
+The repo is a `pnpm` monorepo with:
 
-### 1.1. Репозиторий и пакеты
+- `apps/web`: Next.js application and API layer
+- `apps/mobile`: Expo / React Native application
+- `packages/core-domain`: shared domain logic
+- `packages/shared-client`: shared client-safe helpers, DTOs, and formatters
 
-- Monorepo на `pnpm`:
-  - `apps/web` — Next.js (App Router), основной дашборд/публичная часть.
-  - `apps/mobile` — React Native / Expo, мобильное приложение.
-  - `packages/*` — общие модули и доменная логика.
+## Default Expectations
 
-### 1.2. Запуск web
+Before opening a PR:
 
-```bash
-pnpm install
-pnpm -C apps/web dev
-```
+- keep changes scoped
+- avoid unrelated refactors
+- update documentation when behavior or workflow changes
+- prefer small testable extractions over large rewrites
 
-См. также `apps/web/README.md` для деталей.
+## Required Checks
 
-### 1.3. Запуск mobile
+### If you changed `apps/web`
 
-```bash
-pnpm install
-pnpm -C apps/mobile start
-```
-
-См. `apps/mobile/README.md` и единый гайд по env в корне: [ENV_GUIDE.md](ENV_GUIDE.md).
-
----
-
-## 2. Тесты и качество кода
-
-### 2.1. Перед любым PR по web
-
-- Запустить линтер и typecheck:
+Run:
 
 ```bash
 pnpm -C apps/web lint
 pnpm -C apps/web typecheck
+pnpm -C apps/web test
 ```
 
-- Запустить unit/integration‑тесты с проверкой покрытия:
+Run `test:coverage` when you changed:
+
+- service logic
+- route-layer behavior
+- validation
+- repositories
+- domain-adjacent logic
 
 ```bash
 pnpm -C apps/web test:coverage
 ```
 
-  - ⚠️ **Важно**: Минимальный порог покрытия — **60%** (statements/branches/functions/lines)
-  - Источник истины для порога — `apps/web/jest.config.js`
-  - Если покрытие ниже порога, тесты упадут — нужно добавить тесты. В первую очередь добавляйте тесты для новых и изменяемых API и для `financeDomain`.
+Coverage source of truth:
 
-- **E2E для критичных флоу**: при добавлении или изменении важных пользовательских сценариев (бронь, смены, финансы, промо, QuickDesk и т.п.) — добавлять или обновлять соответствующие E2E в `apps/web/e2e/`. Существующие сценарии: бронирование (в т.ч. с гостем), QuickDesk (смена статусов), смены/финансы сотрудника, промо, споры по финансам, перерасчёт часов. См. `apps/web/e2e/README.md`.
+- `apps/web/jest.config.js`
+- current threshold: `60%` for statements, branches, functions, and lines
+
+Run E2E when you changed critical user flows such as:
+
+- booking
+- auth
+- finance workspace
+- shift flows
+- admin flows
 
 ```bash
 pnpm -C apps/web test:e2e
 ```
 
-### 2.2. Перед PR по mobile
+### If you changed `apps/mobile`
 
-- Запустить smoke-тесты:
+Run:
 
 ```bash
+pnpm -C apps/mobile typecheck
 pnpm -C apps/mobile test
 ```
 
-  - ⚠️ **Важно**: Все smoke-тесты должны проходить перед PR
-  - Тесты проверяют базовый рендеринг ключевых экранов (auth, список смен, детали бронирования)
-  - Тесты проверяют навигацию между шагами бронирования
-  - **При добавлении нового экрана** в `apps/mobile` обязательно добавьте соответствующий smoke-тест (по аналогии с `SignInScreen.test.tsx`, `WhatsAppScreen.test.tsx`). См. `apps/mobile/SMOKE_TESTS.md` и шаблон в `apps/mobile/TESTING.md`.
+Use mobile tests as the baseline smoke suite for:
 
-### 2.3. Перед PR по mobile (дополнительно)
+- auth screens
+- navigation
+- booking steps
+- cabinet and staff screens
 
-- Минимум — собрать приложение локально и пройти основные флоу:
-  - вход/регистрация,
-  - открытие/закрытие смены,
-  - просмотр/добавление клиентов.
-- По возможности — запуск unit‑/component‑тестов (если добавлены для экрана/модуля).
+### If you changed shared packages
 
----
+Run the relevant consumer checks too.
 
-## 3. I18n, UX и операторы
+At minimum:
 
-Kezek активно используется операторами/менеджерами на трёх языках (KY/RU/EN).  
-Любое изменение UI должно учитывать это.
+- `pnpm -C apps/web typecheck`
+- `pnpm -C apps/mobile typecheck`
 
-### 3.1. Локализация
+And add or update tests for the shared module when appropriate.
 
-1. **Не оставлять захардкоженный текст в JSX/TSX**.  
-2. Использовать `t('key', 'Русский текст по умолчанию')` и добавлять ключ во все три словаря:
-   - KY, RU, EN (см. структуру в `apps/web/src/app/_components/i18n/dictionaries/`).
-3. Для новых доменов/разделов — следовать паттерну доменных словарей (см. `dictionaries/README.md`).
+## Architecture Rules
 
-### 3.2. UX для операторов и менеджеров
+Prefer these boundaries:
 
-При изменении дашборда, QuickDesk или staff‑страниц:
+- business rules -> `packages/core-domain`
+- cross-client DTOs, formatters, and safe helpers -> `packages/shared-client`
+- transport, auth wiring, request parsing, persistence adapters, UI composition -> app code
 
-- Проверить мобильную версию (ширина ~360–414px):
-  - нет горизонтального скролла,
-  - основные действия доступны в 1–2 тапа,
-  - кнопки и кликабельные зоны достаточно крупные.
-- Вместо `alert(...)` использовать локализованные тосты/ошибки (см. `useToast()` и существующие примеры).
-- Сохранять визуальные паттерны:
-  - статусы, цветовые схемы, типографика списков/карт.
+In `apps/web`, routes should stay thin:
 
-Подробный план по i18n/UX: `EVOLUTION_I18N_UX_PLAN.md`.  
-Технические эволюционные задачи: `EVOLUTION_TECH_PLAN.md`.
+- transport
+- auth/context
+- validation
+- delegation to lower services or domain logic
 
----
+Do not grow route handlers into large orchestration files.
 
-## 4. Архитектура и домены
+## Documentation Rules
 
-### 4.1. Где искать контекст
+Update docs when you change:
 
-- Общий обзор и архитектура: `PROJECT_DOCUMENTATION.md`, `SYSTEM_FEATURES_DOCUMENTATION.md`.
-- Аудит доступности (a11y): при изменении ключевых страниц (бронирование, дашборд, кабинет) — выборочная проверка по чеклисту в `A11Y_AUDIT.md` (роли, ARIA, контраст, фокус).
-- Технические проблемы и их статус: `PROJECT_REVIEW.md`, `DEEP_ANALYSIS_ISSUES.md`.
-- Эволюционные планы:
-  - `EVOLUTION_I18N_UX_PLAN.md` — языки, UX, таймзоны, SEO.
-  - `EVOLUTION_TECH_PLAN.md` — архитектура доменов, DX, мониторинг, mobile, процессы.
-- **Точка входа при планировании спринта**: `FEATURE_MATRIX.md` — таблица модулей (бронирование, QuickDesk, финансы, промо, рейтинги, WhatsApp/Telegram, mobile) со статусом, рисками и следующими задачами.
+- architecture or module boundaries
+- product behavior
+- testing workflow
+- roadmap or current operational plan
 
-Перед изменением в сложной области (бронь, промо, финансы, рейтинги, WhatsApp/Telegram) — сначала найти связанный раздел в этих документах.
+Main active documents:
 
-### 4.2. Принципы
+- [README.md](/C:/projects/kezek/README.md)
+- [docs/README.md](/C:/projects/kezek/docs/README.md)
+- [PROJECT_DOCUMENTATION.md](/C:/projects/kezek/PROJECT_DOCUMENTATION.md)
+- [TESTING_GUIDE.md](/C:/projects/kezek/TESTING_GUIDE.md)
+- [docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md)
 
-- **Бизнес‑логика** по возможности в доменных модулях (`packages/**`), а не внутри React‑компонентов и route‑обработчиков.
-- **Безопасность и валидация**:
-  - API endpoints через `withErrorHandler`, `validateRequest` / `validateQuery`, `withRateLimit`.
-  - Не использовать `process.env` напрямую, кроме `env`‑утилит.
-- **Типизация**:
-  - избегать `any`, использовать точные типы или `unknown` с последующей нормализацией,
-  - не добавлять `@ts-ignore`, если только это не обосновано и задокументировано.
-  - для часто изменяемых модулей (домен бронирований `packages/core-domain`, API-хелперы `lib/apiErrorHandler.ts`, `lib/validation/apiValidation.ts`) дополнять JSDoc для публичных функций: описание, `@param`, `@returns`.
+## Review Checklist
 
----
+Before sending a PR, ask:
 
-## 5. Обновление документации
-
-Если вы:
-
-- меняете бизнес‑логику (бронь, финансы, рейтинги, промо, смены);
-- добавляете новые фичи или меняете поведение существующих;
-- правите операторский UX или i18n;
-
-то **обязательно**:
-
-1. Найдите соответствующий документ (при изменении функциональности — в первую очередь):
-   - `SYSTEM_FEATURES_DOCUMENTATION.md` — описание возможностей системы,
-   - `EVOLUTION_I18N_UX_PLAN.md` — языки, UX, таймзоны,
-   - `EVOLUTION_TECH_PLAN.md` — технические и эволюционные задачи,
-   - `MONITORING_AND_ANALYTICS.md` — метрики и логи,
-   - `A11Y_AUDIT.md` — чеклист доступности для ключевых страниц (бронирование, дашборд, кабинет),
-   - профильный README (например, financeDomain).
-2. Обновите или дополните раздел коротким описанием изменений и датой.
-3. При необходимости — добавьте/обновите задачи в эволюционных планах (ссылка на PR/коммит).
-4. **При добавлении новых типов выплат или формул расчёта** — зафиксировать в `SYSTEM_FEATURES_DOCUMENTATION.md` (раздел 1.5, см. подраздел 1.5.6) и в `apps/web/src/lib/financeDomain/` (код + README + unit-тесты).
-
----
-
-## 6. Чеклист перед PR (явный)
-
-Перед созданием Pull Request выполните шаги ниже. Команды можно копировать и выполнять по порядку.
-
-### 6.1. Если меняли **web** (Next.js)
-
-| # | Проверка | Команда | Когда обязательно |
-|---|----------|---------|-------------------|
-| 1 | Линтер | `pnpm -C apps/web lint` | Всегда |
-| 2 | Проверка типов | `pnpm -C apps/web typecheck` | Всегда |
-| 3 | Unit/integration‑тесты | `pnpm -C apps/web test` или `pnpm -C apps/web test:coverage` | Всегда; **test:coverage** — если добавляли/меняли API или доменную логику (порог покрытия 60%, источник истины — `apps/web/jest.config.js`) |
-| 4 | E2E | `pnpm -C apps/web test:e2e` | **При изменении критичных флоу**: бронирование (публичное и QuickDesk), смены, финансы, промо. Обновить или добавить сценарий при необходимости. |
-
-### 6.2. Если меняли **mobile** (Expo)
-
-| # | Проверка | Команда | Когда обязательно |
-|---|----------|---------|-------------------|
-| 1 | Smoke‑тесты | `pnpm -C apps/mobile test` | Всегда перед PR |
-| 2 | Сборка | Локальная сборка приложения (например `npx expo prebuild` и сборка под платформу или `eas build` в dry-run) | Рекомендуется перед PR; при изменении нативного кода или зависимостей — обязательно. |
-| 3 | Регрессия на устройствах | Ручная проверка ключевых сценариев на реальных iOS/Android | **Перед крупным релизом** (выход в сторе, мажор/минор). Чеклист: `apps/mobile/SMOKE_TESTS.md` → «Регрессия на реальных устройствах». |
-
-### 6.3. Общие пункты (web и/или mobile)
-
-- [ ] Нет «голых» `console.*` в продакшен‑коде (в dev допустимо через `logDebug` и т.п.).
-- [ ] Все новые/изменённые тексты UI локализованы на KY/RU/EN.
-- [ ] UX для операторов/менеджеров проверен на мобильной ширине (если трогали дашборд/QuickDesk/staff).
-- [ ] Актуализированы связанные MD‑документы (см. раздел 5).
-
-Если что‑то из этого не получается сделать — опишите причину в PR, чтобы ревьюеру было проще принять решение.
-
----
-
-## 7. Чеклист для ревью PR
-
-При ревью Pull Request проверьте (краткий список вопросов):
-
-| Вопрос | Где смотреть |
-|--------|----------------|
-| Не поломаны ли **публичные и операторские флоу**? | Публичное бронирование (`/b/[slug]`), QuickDesk, дашборд (брони, сотрудники, финансы, смены). При необходимости — ручная проверка или прогон E2E. |
-| Есть ли **локализации на трёх языках** (KY, RU, EN)? | Все новые/изменённые строки в UI через `t(...)`; ключи добавлены в соответствующие словари в `apps/web/src/app/_components/i18n/dictionaries/`. |
-| Покрыт ли **новый/изменённый код тестом** (unit или E2E)? | Web: `pnpm -C apps/web test:coverage` (порог 60%, источник истины — `apps/web/jest.config.js`); при изменении критичных флоу — E2E. При добавлении тестов — в первую очередь новые/изменяемые API и financeDomain. Mobile: `pnpm -C apps/mobile test` (smoke). |
-| **Обновлена ли документация**? | При изменении функциональности — правки в `SYSTEM_FEATURES_DOCUMENTATION.md`, `EVOLUTION_I18N_UX_PLAN.md`, `EVOLUTION_TECH_PLAN.md` или профильных README (см. раздел 5). |
-
-Автор PR может использовать этот же список для самопроверки перед отправкой на ревью.
-
-
+- is the change in the right layer?
+- did file size or responsibility get worse?
+- are the risky paths tested?
+- do docs still match reality?
+- did I leave the repo easier to understand than before?

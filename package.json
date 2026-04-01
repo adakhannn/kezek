@@ -34,6 +34,8 @@
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "check:docs-links": "node scripts/check-doc-links.mjs",
+    "check:hotspots": "node scripts/check-hotspot-sizes.mjs",
     "typecheck": "pnpm -C apps/web typecheck",
     "prepare": "husky install",
     "supabase": "supabase",

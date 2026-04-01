@@ -5,7 +5,11 @@
  * - /dashboard/staff/[id]/finance (страница для менеджера/владельца)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type StorageState } from '@playwright/test';
+import { applyStorageStateCookies, createStorageStateForEmailSeed } from './authHelpers';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
+skipIfMissingE2EEnv('staff-finance-pages.spec.ts', ['E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_STAFF_ID']);
 
 // Фиксированные даты для E2E, чтобы не зависеть от локальной TZ машины.
 // Можно переопределить через E2E_TEST_TODAY=YYYY-MM-DD.
@@ -33,30 +37,13 @@ function getYesterdayDateString(): string {
 }
 
 test.describe('Страницы финансов сотрудника', () => {
-    let managerAuthState: any;
+    let managerAuthState: StorageState | null = null;
 
     test.beforeAll(async ({ browser }) => {
-        // Авторизуемся как менеджер/владелец бизнеса (для /dashboard/* сценариев).
-        // Важно: проект использует OTP/магическую ссылку; для E2E предполагаем seed/cookie.
-        const context = await browser.newContext();
-        const page = await context.newPage();
-
-        const managerEmail = process.env.E2E_TEST_MANAGER_EMAIL || 'manager@test.com';
-        await page.goto('/auth/sign-in');
-        await page.waitForLoadState('networkidle');
-
-        const emailInput = page.locator('input[type="email"], input[name="email"]').first();
-        if (await emailInput.isVisible({ timeout: 3000 })) {
-            await emailInput.fill(managerEmail);
-            const submitButton = page.locator('button:has-text("Отправить"), button[type="submit"]').first();
-            if (await submitButton.isVisible({ timeout: 2000 })) {
-                await submitButton.click();
-                await page.waitForTimeout(1500);
-            }
-        }
-
-        managerAuthState = await context.storageState();
-        await context.close();
+        const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
+        managerAuthState = await createStorageStateForEmailSeed(browser, managerEmail, {
+            waitAfterSubmitMs: 1500,
+        });
     });
 
     test.describe('Публичная страница /staff/finance', () => {
@@ -119,14 +106,12 @@ test.describe('Страницы финансов сотрудника', () => {
 
     test.describe('Страница менеджера /dashboard/staff/[id]/finance', () => {
         test.beforeEach(async ({ page }) => {
-            if (managerAuthState?.cookies) {
-                await page.context().addCookies(managerAuthState.cookies);
-            }
+            await applyStorageStateCookies(page, managerAuthState);
         });
 
         test('должна загружаться для менеджера', async ({ page }) => {
             // Нужен реальный ID сотрудника для теста
-            const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
             
             await page.goto(`/dashboard/staff/${staffId}/finance`);
             await page.waitForLoadState('networkidle');
@@ -137,7 +122,7 @@ test.describe('Страницы финансов сотрудника', () => {
         });
 
         test('должна показывать понятное сообщение при ошибке "Бизнес не найден"', async ({ page }) => {
-            const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
             
             await page.goto(`/dashboard/staff/${staffId}/finance`);
             await page.waitForLoadState('networkidle');
@@ -155,7 +140,7 @@ test.describe('Страницы финансов сотрудника', () => {
         });
 
         test('владелец: открыть смену сотруднику и добавить клиента (если разрешено)', async ({ page }) => {
-            const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
             await page.goto(`/dashboard/staff/${staffId}/finance`, { waitUntil: 'domcontentloaded' });
             await page.waitForLoadState('networkidle');
 
@@ -531,13 +516,11 @@ test.describe('Страницы финансов сотрудника', () => {
 
     test.describe('Страница статистики сотрудника /dashboard/staff/[id]/finance/stats', () => {
         test.beforeEach(async ({ page }) => {
-            if (managerAuthState?.cookies) {
-                await page.context().addCookies(managerAuthState.cookies);
-            }
+            await applyStorageStateCookies(page, managerAuthState);
         });
 
         test('владелец: выбор периода, обновление, исправление часов (если есть закрытые смены)', async ({ page }) => {
-            const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
             await page.goto(`/dashboard/staff/${staffId}/finance/stats`, { waitUntil: 'domcontentloaded' });
             await page.waitForLoadState('networkidle');
 

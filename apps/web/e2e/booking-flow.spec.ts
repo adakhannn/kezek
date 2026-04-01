@@ -4,6 +4,9 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
+skipIfMissingE2EEnv('booking-flow.spec.ts', ['E2E_TEST_BUSINESS_SLUG']);
 
 // Фиксированная дата для E2E, чтобы не зависеть от локальной TZ машины.
 // Можно переопределить через E2E_TEST_TODAY=YYYY-MM-DD.
@@ -36,7 +39,7 @@ test.describe('Полный цикл бронирования', () => {
     test.beforeEach(async ({ page }) => {
         // Переходим на страницу бизнеса (используем тестовый slug)
         // В реальных тестах нужно использовать тестовый бизнес из test database
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         await page.goto(`/b/${businessSlug}`);
     });
 
@@ -210,7 +213,7 @@ test.describe('Полный цикл бронирования', () => {
     test('комплекс услуг: выбор нескольких услуг → слот → гостевой визит → успех', async ({
         page,
     }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         const tomorrowStr = getTomorrowDateString();
 
         await page.goto(`/b/${businessSlug}/booking`);
@@ -320,7 +323,7 @@ test.describe('Полный цикл бронирования', () => {
             return;
         }
 
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
         const tomorrowStr = getTomorrowDateString();
 
         await test.step('Вход в кабинет клиента', async () => {

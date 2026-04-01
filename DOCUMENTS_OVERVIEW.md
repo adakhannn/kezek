@@ -23,7 +23,8 @@ If you need the current source of truth, prefer these:
   [docs/PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md),
   [docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md),
   [docs/CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md),
-  [docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md)
+  [docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md),
+  [docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md)
 
 ## Document Roles
 
@@ -32,13 +33,14 @@ If you need the current source of truth, prefer these:
 - [docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PROGRESS_2026-03-30.md): latest delivered progress snapshot
 - [docs/CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md): current operational plan
 - [docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md): next focused implementation plan
+- [docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md): current execution backlog
 
 ## Historical Documents
 
 These remain useful as background, but should not override current primary docs:
 
 - [PROJECT_REVIEW.md](/C:/projects/kezek/PROJECT_REVIEW.md)
-- [FUTURE_IMPROVEMENTS_TASKS.md](/C:/projects/kezek/FUTURE_IMPROVEMENTS_TASKS.md)
+- [FUTURE_IMPROVEMENTS_TASKS.md](/C:/projects/kezek/FUTURE_IMPROVEMENTS_TASKS.md): historical consolidated backlog before the latest review-driven plan
 - [EVOLUTION_TECH_PLAN.md](/C:/projects/kezek/EVOLUTION_TECH_PLAN.md)
 - documents in [docs/archive](/C:/projects/kezek/docs/archive)
 

@@ -9,6 +9,9 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
+skipIfMissingE2EEnv('finance-disputes-verification.spec.ts', ['E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_STAFF_EMAIL', 'E2E_TEST_STAFF_ID']);
 
 test.describe('Проверка совпадения сумм между UI и staff_finance_operation_logs', () => {
     let managerAuthState: any;
@@ -19,7 +22,7 @@ test.describe('Проверка совпадения сумм между UI и s
         const managerContext = await browser.newContext();
         const managerPage = await managerContext.newPage();
         
-        const managerEmail = process.env.E2E_TEST_MANAGER_EMAIL || 'manager@test.com';
+        const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
         await managerPage.goto('/auth/sign-in');
         await managerPage.waitForLoadState('networkidle');
         
@@ -40,7 +43,7 @@ test.describe('Проверка совпадения сумм между UI и s
         const staffContext = await browser.newContext();
         const staffPage = await staffContext.newPage();
         
-        const staffEmail = process.env.E2E_TEST_STAFF_EMAIL || 'staff@test.com';
+        const staffEmail = readRequiredEnv('E2E_TEST_STAFF_EMAIL');
         await staffPage.goto('/auth/sign-in');
         await staffPage.waitForLoadState('networkidle');
         
@@ -207,7 +210,7 @@ test.describe('Проверка совпадения сумм между UI и s
                 await page.context().addCookies(managerAuthState.cookies);
             }
             
-            const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
             await page.goto(`/dashboard/staff/${staffId}/finance`);
             await page.waitForLoadState('networkidle');
             
@@ -262,7 +265,7 @@ test.describe('Проверка совпадения сумм между UI и s
             await page.context().addCookies(managerAuthState.cookies);
         }
 
-        const staffId = process.env.E2E_TEST_STAFF_ID || 'test-staff-id';
+            const staffId = readRequiredEnv('E2E_TEST_STAFF_ID');
         
         await test.step('Переход на страницу финансов и поиск закрытой смены', async () => {
             await page.goto(`/dashboard/staff/${staffId}/finance`);

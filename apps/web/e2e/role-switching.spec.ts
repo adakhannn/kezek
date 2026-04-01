@@ -11,8 +11,11 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { signInWithEmailSeed } from './authHelpers';
+import { getBaseUrl, readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+const BASE_URL = getBaseUrl();
+skipIfMissingE2EEnv('role-switching.spec.ts', ['E2E_TEST_MULTI_ROLE_EMAIL']);
 
 /**
  * ВНИМАНИЕ: этот тест полагается на заранее подготовленные данные:
@@ -23,25 +26,8 @@ const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000'
  */
 
 async function signInMultiRoleUser(page: any) {
-    const email = process.env.E2E_TEST_MULTI_ROLE_EMAIL || 'multi-role@test.com';
-
-    await page.goto(`${BASE_URL}/auth/sign-in`);
-    await page.waitForLoadState('networkidle');
-
-    const emailInput = page.locator('input[type="email"], input[name="email"]').first();
-    await expect(emailInput).toBeVisible({ timeout: 5000 });
-    await emailInput.fill(email);
-
-    const submit = page
-        .locator('button:has-text("Отправить"), button:has-text("Продолжить"), button[type="submit"]')
-        .first();
-    if (await submit.isVisible({ timeout: 3000 })) {
-        await submit.click();
-    }
-
-    // В реальном окружении здесь должна быть обработка OTP/магической ссылки.
-    // Для E2E предположим, что тестовый пользователь уже авторизован через seed/cookie.
-    await page.waitForTimeout(1000);
+    const email = readRequiredEnv('E2E_TEST_MULTI_ROLE_EMAIL');
+    await signInWithEmailSeed(page, email, { waitAfterSubmitMs: 1000 });
 }
 
 test.describe('Переключение ролей и бизнеса', () => {

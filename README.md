@@ -56,6 +56,10 @@ Current primary documents:
   [docs/CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md)
 - next focused implementation plan:
   [docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md)
+- review-driven action backlog:
+  [docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md)
+- domain expansion plan:
+  [docs/DOMAIN_EXPANSION_PLAN.md](/C:/projects/kezek/docs/DOMAIN_EXPANSION_PLAN.md)
 
 Historical overview:
 

@@ -1,9 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { formatInTimeZone } from 'date-fns-tz';
-import { addDays } from 'date-fns';
 import { useNavigation } from '@react-navigation/native';
-
-import { formatDateLabel as formatDateLabelShared } from '@shared-client/formatters';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,31 +10,14 @@ import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import { useBookingStep4Dates } from './useBookingStep4Dates';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const TZ = 'Asia/Bishkek';
 
 export default function BookingStep4Date() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setSelectedDate } = useBooking();
-
-    const formatDateLabel = (dateString: string) => {
-        const { day, month } = formatDateLabelShared(dateString, 'ru-RU');
-        const date = new Date(dateString + 'T12:00:00');
-        const weekday = date.toLocaleDateString('ru-RU', { weekday: 'short' });
-        return { day, month, weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1) };
-    };
-
-    const getAvailableDates = () => {
-        const dates: string[] = [];
-        const today = new Date();
-        for (let i = 0; i < 30; i++) {
-            const date = addDays(today, i);
-            dates.push(formatInTimeZone(date, TZ, 'yyyy-MM-dd'));
-        }
-        return dates;
-    };
+    const { dates, todayInTz, formatDateLabel } = useBookingStep4Dates();
 
     const handleSelectDate = (date: string) => {
         setSelectedDate(date);
@@ -58,8 +37,6 @@ export default function BookingStep4Date() {
         }
     };
 
-    const dates = getAvailableDates();
-
     return (
         <LinearGradient
             colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
@@ -73,74 +50,77 @@ export default function BookingStep4Date() {
                     <Text style={styles.title}>{bookingData.business?.name}</Text>
                 </View>
 
-            <View style={styles.section}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                    {dates.map((date) => {
-                        const dateLabel = formatDateLabel(date);
-                        const isToday = date === formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
-                        return (
-                            <TouchableOpacity
-                                key={date}
-                                style={[
-                                    styles.dateCard,
-                                    bookingData.selectedDate === date && styles.dateCardSelected,
-                                    isToday && styles.dateCardToday,
-                                ]}
-                                onPress={() => handleSelectDate(date)}
-                            >
-                                {isToday && (
-                                    <Text style={[
-                                        styles.todayLabel,
-                                        bookingData.selectedDate === date && styles.todayLabelSelected
-                                    ]}>
-                                        Сегодня
-                                    </Text>
-                                )}
-                                <Text
-                                    style={[
-                                        styles.dateDay,
-                                        bookingData.selectedDate === date && styles.dateDaySelected,
-                                    ]}
-                                >
-                                    {dateLabel.day}
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.dateMonth,
-                                        bookingData.selectedDate === date && styles.dateMonthSelected,
-                                    ]}
-                                >
-                                    {dateLabel.month}
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.dateWeekday,
-                                        bookingData.selectedDate === date && styles.dateWeekdaySelected,
-                                    ]}
-                                >
-                                    {dateLabel.weekday}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </ScrollView>
+                <View style={styles.section}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+                        {dates.map((date) => {
+                            const dateLabel = formatDateLabel(date);
+                            const isToday = date === todayInTz;
 
-                <View style={styles.buttonContainer}>
-                    <Button
-                        title="Назад"
-                        onPress={() => navigation.goBack()}
-                        variant="outline"
-                        style={styles.backButton}
-                    />
-                    <Button
-                        title="Дальше"
-                        onPress={handleNext}
-                        disabled={!bookingData.selectedDate}
-                        variant="primary"
-                        style={styles.nextButton}
-                    />
+                            return (
+                                <TouchableOpacity
+                                    key={date}
+                                    style={[
+                                        styles.dateCard,
+                                        bookingData.selectedDate === date && styles.dateCardSelected,
+                                        isToday && styles.dateCardToday,
+                                    ]}
+                                    onPress={() => handleSelectDate(date)}
+                                >
+                                    {isToday && (
+                                        <Text
+                                            style={[
+                                                styles.todayLabel,
+                                                bookingData.selectedDate === date && styles.todayLabelSelected,
+                                            ]}
+                                        >
+                                            Сегодня
+                                        </Text>
+                                    )}
+                                    <Text
+                                        style={[
+                                            styles.dateDay,
+                                            bookingData.selectedDate === date && styles.dateDaySelected,
+                                        ]}
+                                    >
+                                        {dateLabel.day}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.dateMonth,
+                                            bookingData.selectedDate === date && styles.dateMonthSelected,
+                                        ]}
+                                    >
+                                        {dateLabel.month}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.dateWeekday,
+                                            bookingData.selectedDate === date && styles.dateWeekdaySelected,
+                                        ]}
+                                    >
+                                        {dateLabel.weekday}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+
+                    <View style={styles.buttonContainer}>
+                        <Button
+                            title="Назад"
+                            onPress={() => navigation.goBack()}
+                            variant="outline"
+                            style={styles.backButton}
+                        />
+                        <Button
+                            title="Дальше"
+                            onPress={handleNext}
+                            disabled={!bookingData.selectedDate}
+                            variant="primary"
+                            style={styles.nextButton}
+                        />
+                    </View>
                 </View>
-            </View>
             </ScrollView>
         </LinearGradient>
     );
@@ -242,4 +222,3 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
-

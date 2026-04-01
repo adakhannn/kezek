@@ -27,6 +27,10 @@ export interface ApiMetricOptions {
  * Выполняется асинхронно, не блокирует ответ
  */
 export async function logApiMetric(options: ApiMetricOptions): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+        return;
+    }
+
     try {
         const supabase = getServiceClient();
         

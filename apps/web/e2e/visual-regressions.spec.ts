@@ -9,12 +9,14 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { getBaseUrl, readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+const BASE_URL = getBaseUrl();
+skipIfMissingE2EEnv('visual-regressions.spec.ts', ['E2E_TEST_BUSINESS_SLUG']);
 
 test.describe('Визуальные регрессии ключевых страниц', () => {
     test('публичная страница бизнеса стабильна визуально', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
 
         await page.goto(`${BASE_URL}/b/${businessSlug}`, { waitUntil: 'networkidle' });
         await page.setViewportSize({ width: 1280, height: 720 });
@@ -29,7 +31,7 @@ test.describe('Визуальные регрессии ключевых стра
     });
 
     test('страница шага бронирования стабильна визуально', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
 
         await page.goto(`${BASE_URL}/b/${businessSlug}`, { waitUntil: 'networkidle' });
         await page.setViewportSize({ width: 1280, height: 720 });

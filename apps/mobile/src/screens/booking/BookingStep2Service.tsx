@@ -1,53 +1,28 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { formatServicePrice } from '@shared-client/formatters';
-import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import { useBookingStep2Services } from './useBookingStep2Services';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function BookingStep2Service() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setServices, setServiceId } = useBooking();
-
-    const { data: servicesData, isLoading } = useQuery({
-        queryKey: ['services', bookingData.business?.id, bookingData.branchId],
-        queryFn: async () => {
-            if (!bookingData.business?.id || !bookingData.branchId) return [];
-
-            const { data, error } = await supabase
-                .from('services')
-                .select('id, name_ru, duration_min, price_from, price_to, branch_id')
-                .eq('biz_id', bookingData.business.id)
-                .eq('branch_id', bookingData.branchId)
-                .eq('active', true)
-                .order('name_ru');
-
-            if (error) throw error;
-            return data || [];
-        },
-        enabled: !!bookingData.business?.id && !!bookingData.branchId,
+    const { servicesData, isLoading } = useBookingStep2Services({
+        bookingData,
+        setServices,
+        setServiceId,
     });
-
-    useEffect(() => {
-        if (servicesData) {
-            setServices(servicesData);
-            if (servicesData.length === 1) {
-                setServiceId(servicesData[0].id);
-            }
-        }
-    }, [servicesData, setServices, setServiceId]);
 
     const handleSelectService = (serviceId: string) => {
         setServiceId(serviceId);

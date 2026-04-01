@@ -1,18 +1,17 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useEffect } from 'react';
 import { useNavigation, useRoute, type RouteProp as NavigationRouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
-import { useBusinessWithBranches } from '../../hooks/useBusinessWithBranches';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import { useBookingStep1Business } from './useBookingStep1Business';
 
 type RouteParams = {
     slug: string;
@@ -26,19 +25,12 @@ export default function BookingStep1Branch() {
     const route = useRoute<BookingStep1RouteProp>();
     const { slug } = route.params || {};
     const { bookingData, setBusiness, setBranches, setBranchId } = useBooking();
-
-    const { data: businessData, isLoading } = useBusinessWithBranches(slug);
-
-    useEffect(() => {
-        if (businessData) {
-            setBusiness(businessData.business);
-            setBranches(businessData.branches);
-            if (businessData.branches.length === 1) {
-                // Если филиал один, автоматически выбираем его
-                setBranchId(businessData.branches[0].id);
-            }
-        }
-    }, [businessData, setBusiness, setBranches, setBranchId]);
+    const { businessData, isLoading } = useBookingStep1Business({
+        slug,
+        setBusiness,
+        setBranches,
+        setBranchId,
+    });
 
     const handleSelectBranch = (branchId: string) => {
         setBranchId(branchId);

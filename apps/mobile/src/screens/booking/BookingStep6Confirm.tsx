@@ -1,19 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import {
-    formatTimeSlot,
-    formatDateLabel,
-    formatServicePrice,
-} from '@shared-client/formatters';
-import { useBooking } from '../../contexts/BookingContext';
-import { useToast } from '../../contexts/ToastContext';
-import { useConfirmBooking } from '../../hooks/useConfirmBooking';
-import { useNetworkStatus } from '../../hooks/useNetworkStatus';
-import { logError } from '../../lib/log';
+import { formatTimeSlot } from '@shared-client/formatters';
 import { colors } from '../../constants/colors';
 import Card from '../../components/ui/Card';
 import OfflineBanner from '../../components/ui/OfflineBanner';
@@ -21,6 +12,7 @@ import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { RootStackParamList } from '../../navigation/types';
+import { useBookingStep6Confirm } from './useBookingStep6Confirm';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -28,69 +20,16 @@ const TZ = 'Asia/Bishkek';
 
 export default function BookingStep6Confirm() {
     const navigation = useNavigation<NavigationProp>();
-    const { bookingData, reset } = useBooking();
-    const { showToast } = useToast();
-    const { isOffline } = useNetworkStatus();
-
-    const selectedService = bookingData.services.find((s) => s.id === bookingData.serviceId);
-    const selectedStaff = bookingData.staff.find((s) => s.id === bookingData.staffId);
-
-    const { createBooking, isPending } = useConfirmBooking({
-        onSuccess: (bookingId) => {
-            showToast('Запись создана!', 'success');
-            reset();
-            setTimeout(() => {
-                navigation.navigate('BookingDetails', { id: bookingId });
-            }, 500);
-        },
-        onError: (error: Error) => {
-            const isNetworkError = isOffline || /network request failed|failed to fetch|network/i.test(error.message);
-            logError('BookingStep6Confirm', 'Create booking failed', {
-                message: error.message,
-                isNetworkError,
-            });
-
-            if (isNetworkError) {
-                showToast(
-                    'Нет сети или ошибка сервера. Запись не создана, попробуйте ещё раз, когда соединение восстановится.',
-                    'error',
-                );
-            } else {
-                showToast(error.message || 'Не удалось создать запись', 'error');
-            }
-        },
-    });
-
-    const handleCreateBooking = () => {
-        if (!bookingData.selectedSlot) {
-            showToast('Выберите время', 'error');
-            return;
-        }
-        if (!bookingData.business) {
-            showToast('Данные бронирования неполные', 'error');
-            return;
-        }
-
-        Alert.alert('Подтверждение', 'Создать запись?', [
-            { text: 'Отмена', style: 'cancel' },
-            {
-                text: 'Создать',
-                onPress: () =>
-                    createBooking({
-                        biz_id: bookingData.business!.id,
-                        branch_id: bookingData.branchId,
-                        service_id: bookingData.serviceId,
-                        staff_id: bookingData.staffId,
-                        start_at: bookingData.selectedSlot!.start_at,
-                    }),
-            },
-        ]);
-    };
-
-    const dateLabel = bookingData.selectedDate
-        ? formatDateLabel(bookingData.selectedDate, 'ru-RU')
-        : null;
-    const priceLabel = formatServicePrice(selectedService, 'сом');
+    const {
+        bookingData,
+        selectedService,
+        selectedStaff,
+        dateLabel,
+        priceLabel,
+        handleCreateBooking,
+        isOffline,
+        isPending,
+    } = useBookingStep6Confirm(navigation);
 
     return (
         <LinearGradient
@@ -108,78 +47,74 @@ export default function BookingStep6Confirm() {
                     </View>
                 </View>
 
-            <View style={styles.section}>
-                {isOffline && (
-                    <OfflineBanner
-                        message="Создание записи недоступно без сети. Дождитесь восстановления соединения."
-                    />
-                )}
-                <Card style={styles.summaryCard}>
-                    <View style={styles.summaryRow}>
-                        <Ionicons name="business-outline" size={24} color="#6366f1" />
-                        <View style={styles.summaryContent}>
-                            <Text style={styles.summaryLabel}>Бизнес</Text>
-                            <Text style={styles.summaryValue}>{bookingData.business?.name}</Text>
+                <View style={styles.section}>
+                    {isOffline && (
+                        <OfflineBanner message="Создание записи недоступно без сети. Дождитесь восстановления соединения." />
+                    )}
+                    <Card style={styles.summaryCard}>
+                        <View style={styles.summaryRow}>
+                            <Ionicons name="business-outline" size={24} color="#6366f1" />
+                            <View style={styles.summaryContent}>
+                                <Text style={styles.summaryLabel}>Бизнес</Text>
+                                <Text style={styles.summaryValue}>{bookingData.business?.name}</Text>
+                            </View>
                         </View>
-                    </View>
-                    <View style={styles.summaryDivider} />
-                    <View style={styles.summaryRow}>
-                        <Ionicons name="cut-outline" size={24} color="#6366f1" />
-                        <View style={styles.summaryContent}>
-                            <Text style={styles.summaryLabel}>Услуга</Text>
-                            <Text style={styles.summaryValue}>{selectedService?.name_ru}</Text>
-                            {selectedService?.duration_min && (
-                                <Text style={styles.summaryHint}>{selectedService.duration_min} минут</Text>
-                            )}
-                            {priceLabel && (
-                                <Text style={styles.summaryPrice}>{priceLabel}</Text>
-                            )}
+                        <View style={styles.summaryDivider} />
+                        <View style={styles.summaryRow}>
+                            <Ionicons name="cut-outline" size={24} color="#6366f1" />
+                            <View style={styles.summaryContent}>
+                                <Text style={styles.summaryLabel}>Услуга</Text>
+                                <Text style={styles.summaryValue}>{selectedService?.name_ru}</Text>
+                                {selectedService?.duration_min && (
+                                    <Text style={styles.summaryHint}>{selectedService.duration_min} минут</Text>
+                                )}
+                                {priceLabel && <Text style={styles.summaryPrice}>{priceLabel}</Text>}
+                            </View>
                         </View>
-                    </View>
-                    <View style={styles.summaryDivider} />
-                    <View style={styles.summaryRow}>
-                        <Ionicons name="person-outline" size={24} color="#6366f1" />
-                        <View style={styles.summaryContent}>
-                            <Text style={styles.summaryLabel}>Мастер</Text>
-                            <Text style={styles.summaryValue}>{selectedStaff?.full_name}</Text>
+                        <View style={styles.summaryDivider} />
+                        <View style={styles.summaryRow}>
+                            <Ionicons name="person-outline" size={24} color="#6366f1" />
+                            <View style={styles.summaryContent}>
+                                <Text style={styles.summaryLabel}>Мастер</Text>
+                                <Text style={styles.summaryValue}>{selectedStaff?.full_name}</Text>
+                            </View>
                         </View>
-                    </View>
-                    <View style={styles.summaryDivider} />
-                    <View style={styles.summaryRow}>
-                        <Ionicons name="calendar-outline" size={24} color="#6366f1" />
-                        <View style={styles.summaryContent}>
-                            <Text style={styles.summaryLabel}>Дата и время</Text>
-                            {dateLabel && (
-                                <Text style={styles.summaryValue}>
-                                    {dateLabel.day} {dateLabel.month}
-                                </Text>
-                            )}
-                            {bookingData.selectedSlot && (
-                                <Text style={styles.summaryHint}>
-                                    {formatTimeSlot(bookingData.selectedSlot.start_at, TZ)}
-                                </Text>
-                            )}
+                        <View style={styles.summaryDivider} />
+                        <View style={styles.summaryRow}>
+                            <Ionicons name="calendar-outline" size={24} color="#6366f1" />
+                            <View style={styles.summaryContent}>
+                                <Text style={styles.summaryLabel}>Дата и время</Text>
+                                {dateLabel && (
+                                    <Text style={styles.summaryValue}>
+                                        {dateLabel.day} {dateLabel.month}
+                                    </Text>
+                                )}
+                                {bookingData.selectedSlot && (
+                                    <Text style={styles.summaryHint}>
+                                        {formatTimeSlot(bookingData.selectedSlot.start_at, TZ)}
+                                    </Text>
+                                )}
+                            </View>
                         </View>
-                    </View>
-                </Card>
+                    </Card>
 
-                <View style={styles.buttonContainer}>
-                    <Button
-                        title="Назад"
-                        onPress={() => navigation.goBack()}
-                        variant="outline"
-                        style={styles.backButton}
-                    />
-                    <Button
-                        title="Записаться"
-                        onPress={handleCreateBooking}
-                        loading={isPending}
-                        disabled={isPending || !bookingData.selectedSlot || isOffline}
-                        variant="primary"
-                        style={styles.nextButton}
-                    />
+                    <View style={styles.buttonContainer}>
+                        <Button
+                            title="Назад"
+                            onPress={() => navigation.goBack()}
+                            variant="outline"
+                            style={styles.backButton}
+                        />
+                        <Button
+                            title="Записаться"
+                            onPress={handleCreateBooking}
+                            loading={isPending}
+                            disabled={isPending || !bookingData.selectedSlot || isOffline}
+                            variant="primary"
+                            style={styles.nextButton}
+                        />
+                    </View>
                 </View>
-            </View>
             </ScrollView>
         </LinearGradient>
     );
@@ -271,4 +206,3 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
-

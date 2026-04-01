@@ -411,3 +411,97 @@ Result on 2026-03-30:
 - The remaining mobile files are no longer dominated by the same monolithic screen pattern that justified this wave.
 - The current wave is therefore closed, and the next package moves back to web presentation cleanup.
 - The next focused plan is [WEB_PRESENTATION_HARDENING_PLAN.md](/C:/projects/kezek/docs/WEB_PRESENTATION_HARDENING_PLAN.md).
+
+### M.15 Post-wave home presentation split
+
+- Priority: `low`
+- Status: `done`
+
+Tasks:
+
+- reduce the remaining large presentational-only home module without reopening the whole mobile architecture wave
+- keep `HomeScreen.tsx` and `useHomeScreenData.ts` untouched unless the split reveals a new orchestration problem
+- refresh smoke coverage with more stable selectors if needed
+
+Done when:
+
+- the home screen sections no longer live in one large presentation file
+- the home screen smoke test still passes after the split
+
+Result on 2026-04-01:
+
+- [HomeScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/HomeScreenSections.tsx) now acts as a thin export layer.
+- Presentation was split into [HomeScreenHeader.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/HomeScreenHeader.tsx), [SearchSection.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/SearchSection.tsx), [BookingActivitySections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/BookingActivitySections.tsx), and [DiscoverySections.tsx](/C:/projects/kezek/apps/mobile/src/screens/home/DiscoverySections.tsx).
+- Stable test selectors were added for the hero title and search input in the home screen presentation layer.
+- Smoke coverage was refreshed in [HomeScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/HomeScreen.test.tsx).
+- Verified with `pnpm -C apps/mobile typecheck` and `pnpm -C apps/mobile test -- --runInBand --watchAll=false src/__tests__/screens/HomeScreen.test.tsx`.
+
+### M.16 Booking slot orchestration extraction
+
+- Priority: `low`
+- Status: `done`
+
+Tasks:
+
+- extract slot loading, network-error handling, and domain-error mapping from the booking time step into a focused hook
+- keep the screen focused on slot selection, progress UI, and navigation
+- avoid reopening unrelated booking-step screens in the same pass
+
+Done when:
+
+- `BookingStep5Time.tsx` no longer owns the whole RPC/error-classification flow inline
+- the booking time step remains type-safe after the split
+
+Result on 2026-04-01:
+
+- Slot loading and error classification moved into [useBookingStep5Slots.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep5Slots.ts).
+- [BookingStep5Time.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep5Time.tsx) now acts more like a rendering and navigation screen for the time-step flow.
+- The screen size dropped from `313` to `211` lines.
+- Verified with `pnpm -C apps/mobile typecheck`.
+
+### M.17 Booking flow early-step extraction pass
+
+- Priority: `low`
+- Status: `done`
+
+Tasks:
+
+- bring the first booking steps closer to the same hook-driven pattern already used in later mobile cleanup work
+- extract business/bootstrap, services loading, and staff loading from the screen bodies
+- keep the screens focused on selection, progress UI, and navigation
+
+Done when:
+
+- the first booking steps no longer mix query/bootstrap logic inline with the full render tree
+- the mobile package still typechecks after the pass
+
+Result on 2026-04-01:
+
+- Business/bootstrap hydration moved from [BookingStep1Branch.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep1Branch.tsx) into [useBookingStep1Business.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep1Business.ts).
+- Services loading moved from [BookingStep2Service.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep2Service.tsx) into [useBookingStep2Services.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep2Services.ts).
+- Staff loading moved from [BookingStep3Staff.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep3Staff.tsx) into [useBookingStep3Staff.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep3Staff.ts).
+- [BookingStep3Staff.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep3Staff.tsx) now measures `223` lines after extraction.
+- Verified with `pnpm -C apps/mobile typecheck`.
+
+### M.18 Booking flow final-step extraction pass
+
+- Priority: `low`
+- Status: `done`
+
+Tasks:
+
+- finish the remaining booking-step cleanup so date generation and booking confirmation no longer live inline in screen bodies
+- keep the last screens focused on selection, summary rendering, and navigation
+- avoid reopening unrelated mobile modules while closing the booking-flow follow-up
+
+Done when:
+
+- `BookingStep4Date.tsx` and `BookingStep6Confirm.tsx` follow the same hook-driven structure as the rest of the booking flow
+- the mobile package still typechecks after the final pass
+
+Result on 2026-04-01:
+
+- Date-list generation and date-label formatting moved from [BookingStep4Date.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep4Date.tsx) into [useBookingStep4Dates.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep4Dates.ts).
+- Booking confirmation derivation, validation, and submit orchestration moved from [BookingStep6Confirm.tsx](/C:/projects/kezek/apps/mobile/src/screens/booking/BookingStep6Confirm.tsx) into [useBookingStep6Confirm.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep6Confirm.ts).
+- The full booking step flow now follows a more uniform hook-plus-screen composition pattern.
+- Verified with `pnpm -C apps/mobile typecheck`.

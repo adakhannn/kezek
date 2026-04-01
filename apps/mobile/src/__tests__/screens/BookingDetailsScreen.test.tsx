@@ -1,9 +1,10 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import BookingDetailsScreen from '../../screens/BookingDetailsScreen';
 import { apiRequest } from '../../lib/api';
+import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('@react-navigation/native', () => ({
     NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
@@ -26,13 +27,7 @@ describe('BookingDetailsScreen', () => {
     const mockedApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
 
     const renderWithProviders = (component: React.ReactElement) => {
-        const queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {
-                    retry: false,
-                },
-            },
-        });
+        const queryClient = createTestQueryClient();
 
         return render(
             <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>,

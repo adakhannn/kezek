@@ -1,12 +1,9 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { supabase } from '../../lib/supabase';
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
@@ -14,41 +11,18 @@ import BookingProgressIndicator from '../../components/BookingProgressIndicator'
 import RatingBadge from '../../components/ui/RatingBadge';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
+import { useBookingStep3Staff } from './useBookingStep3Staff';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function BookingStep3Staff() {
     const navigation = useNavigation<NavigationProp>();
     const { bookingData, setStaff, setStaffId } = useBooking();
-
-    const { data: staffData, isLoading } = useQuery({
-        queryKey: ['staff', bookingData.business?.id, bookingData.branchId],
-        queryFn: async () => {
-            if (!bookingData.business?.id || !bookingData.branchId) return [];
-
-            const { data, error } = await supabase
-                .from('staff')
-                .select('id, full_name, branch_id, rating_score, avatar_url')
-                .eq('biz_id', bookingData.business.id)
-                .eq('branch_id', bookingData.branchId)
-                .eq('is_active', true)
-                .order('rating_score', { ascending: false, nullsFirst: false })
-                .order('full_name');
-
-            if (error) throw error;
-            return data || [];
-        },
-        enabled: !!bookingData.business?.id && !!bookingData.branchId,
+    const { staffData, isLoading } = useBookingStep3Staff({
+        bookingData,
+        setStaff,
+        setStaffId,
     });
-
-    useEffect(() => {
-        if (staffData) {
-            setStaff(staffData);
-            if (staffData.length === 1) {
-                setStaffId(staffData[0].id);
-            }
-        }
-    }, [staffData, setStaff, setStaffId]);
 
     const handleSelectStaff = (staffId: string) => {
         setStaffId(staffId);

@@ -8,8 +8,10 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { getBaseUrl, readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
 
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+const BASE_URL = getBaseUrl();
+skipIfMissingE2EEnv('error-recovery.spec.ts', ['E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_BUSINESS_SLUG']);
 
 test.describe('Восстановление после ошибок', () => {
     test('страница /staff/finance восстанавливается после сетевой ошибки', async ({ page }) => {
@@ -53,7 +55,7 @@ test.describe('Восстановление после ошибок', () => {
         let delayedOnce = false;
 
         await test.step('Авторизация менеджера и переход в QuickDesk', async () => {
-            const managerEmail = process.env.E2E_TEST_MANAGER_EMAIL || 'manager@test.com';
+            const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
             await page.goto(`${BASE_URL}/auth/sign-in`);
             await page.waitForLoadState('networkidle');
 
@@ -142,7 +144,7 @@ test.describe('Восстановление после ошибок', () => {
     });
 
     test('публичное бронирование показывает ошибку и позволяет повторить после неудачи', async ({ page }) => {
-        const businessSlug = process.env.E2E_TEST_BUSINESS_SLUG || 'test-business';
+        const businessSlug = readRequiredEnv('E2E_TEST_BUSINESS_SLUG');
 
         await test.step('Переход на публичную страницу бизнеса', async () => {
             await page.goto(`${BASE_URL}/b/${businessSlug}`);

@@ -6,7 +6,7 @@ type Branch = {
     rating_score: number | null;
 };
 
-type Service = {
+export type Service = {
     id: string;
     name_ru: string;
     duration_min: number;

@@ -1,9 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import HomeScreen from '../../screens/HomeScreen';
 import { apiRequest } from '../../lib/api';
+import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('@react-navigation/native', () => ({
     NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
@@ -40,13 +41,7 @@ describe('HomeScreen', () => {
     const mockedApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
 
     const renderWithProviders = (component: React.ReactElement) => {
-        const queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {
-                    retry: false,
-                },
-            },
-        });
+        const queryClient = createTestQueryClient();
 
         return render(
             <QueryClientProvider client={queryClient}>
@@ -86,7 +81,7 @@ describe('HomeScreen', () => {
     test('renders hero title', async () => {
         renderWithProviders(<HomeScreen />);
 
-        expect(await screen.findByText(/Найдите свой сервис/i)).toBeTruthy();
+        expect(await screen.findByTestId('home-hero-title')).toBeTruthy();
     });
 
     test('renders loaded business list', async () => {
@@ -98,7 +93,7 @@ describe('HomeScreen', () => {
     test('updates search input value', async () => {
         renderWithProviders(<HomeScreen />);
 
-        const searchInput = await screen.findByPlaceholderText(/Поиск по названию или адресу/i);
+        const searchInput = await screen.findByTestId('home-search-input');
         fireEvent.changeText(searchInput, 'Salon');
 
         expect(searchInput.props.value).toBe('Salon');

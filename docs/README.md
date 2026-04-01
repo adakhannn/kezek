@@ -25,6 +25,7 @@ Use one primary document per topic:
    - [TESTING_GUIDE.md](/C:/projects/kezek/TESTING_GUIDE.md)
    - [API_TESTING.md](/C:/projects/kezek/API_TESTING.md)
    - [E2E_TESTING.md](/C:/projects/kezek/E2E_TESTING.md)
+   - repo maintenance checks in [package.json](/C:/projects/kezek/package.json), including `check:docs-links` and `check:hotspots`
 
 5. Improvement planning
    - [PROJECT_IMPROVEMENT_PLAN.md](/C:/projects/kezek/docs/PROJECT_IMPROVEMENT_PLAN.md)
@@ -32,6 +33,8 @@ Use one primary document per topic:
    - [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md)
    - [MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md)
    - [WEB_PRESENTATION_HARDENING_PLAN.md](/C:/projects/kezek/docs/WEB_PRESENTATION_HARDENING_PLAN.md)
+   - [PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md)
+   - [DOMAIN_EXPANSION_PLAN.md](/C:/projects/kezek/docs/DOMAIN_EXPANSION_PLAN.md)
 
 ## Quick Navigation
 
@@ -67,6 +70,8 @@ Use one primary document per topic:
 - [CLEANUP_AND_NEXT_PHASE_PLAN.md](/C:/projects/kezek/docs/CLEANUP_AND_NEXT_PHASE_PLAN.md): current working cleanup and next-phase plan
 - [MOBILE_ARCHITECTURE_HARDENING_PLAN.md](/C:/projects/kezek/docs/MOBILE_ARCHITECTURE_HARDENING_PLAN.md): completed mobile hardening wave
 - [WEB_PRESENTATION_HARDENING_PLAN.md](/C:/projects/kezek/docs/WEB_PRESENTATION_HARDENING_PLAN.md): next focused implementation plan
+- [PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md](/C:/projects/kezek/docs/PROJECT_REVIEW_ACTION_TASKS_2026-03-30.md): review-driven execution backlog
+- [DOMAIN_EXPANSION_PLAN.md](/C:/projects/kezek/docs/DOMAIN_EXPANSION_PLAN.md): next domain extraction roadmap
 
 ## Archive And Historical Context
 
@@ -74,6 +79,6 @@ These documents are useful as history, not as the primary source of truth:
 
 - [DOCUMENTS_OVERVIEW.md](/C:/projects/kezek/DOCUMENTS_OVERVIEW.md)
 - [PROJECT_REVIEW.md](/C:/projects/kezek/PROJECT_REVIEW.md)
-- [FUTURE_IMPROVEMENTS_TASKS.md](/C:/projects/kezek/FUTURE_IMPROVEMENTS_TASKS.md)
+- [FUTURE_IMPROVEMENTS_TASKS.md](/C:/projects/kezek/FUTURE_IMPROVEMENTS_TASKS.md): historical consolidated backlog before the current review-driven backlog
 - [EVOLUTION_TECH_PLAN.md](/C:/projects/kezek/EVOLUTION_TECH_PLAN.md)
 - archive docs under [docs/archive](/C:/projects/kezek/docs/archive)

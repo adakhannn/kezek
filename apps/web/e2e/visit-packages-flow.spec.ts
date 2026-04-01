@@ -9,7 +9,11 @@
  * Запуск: pnpm test:e2e e2e/visit-packages-flow.spec.ts
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type StorageState } from '@playwright/test';
+import { applyStorageStateCookies, createStorageStateForEmailSeed } from './authHelpers';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
+skipIfMissingE2EEnv('visit-packages-flow.spec.ts', ['E2E_TEST_MANAGER_EMAIL', 'E2E_TEST_CLIENT_SEARCH']);
 
 function getTodayDateString(): string {
     const fromEnv = process.env.E2E_TEST_TODAY;
@@ -30,37 +34,22 @@ function getTomorrowDateString(): string {
 }
 
 test.describe('Пакеты визитов: план → продажа → бронь → посещение → остаток', () => {
-    let managerStorageState: { cookies: unknown[]; origins: unknown[] } | undefined;
+    let managerStorageState: StorageState | null = null;
 
     test.beforeAll(async ({ browser }) => {
-        const context = await browser.newContext();
-        const page = await context.newPage();
-        const managerEmail = process.env.E2E_TEST_MANAGER_EMAIL || 'manager@test.com';
-        await page.goto('/auth/sign-in');
-        await page.waitForLoadState('networkidle');
-
-        const emailInput = page.locator('input[type="email"], input[name="email"]').first();
-        if (await emailInput.isVisible({ timeout: 5000 })) {
-            await emailInput.fill(managerEmail);
-            const submitBtn = page.locator('button:has-text("Отправить"), button[type="submit"]').first();
-            if (await submitBtn.isVisible({ timeout: 3000 })) {
-                await submitBtn.click();
-                await page.waitForTimeout(3000);
-            }
-        }
-        managerStorageState = await context.storageState();
-        await context.close();
+        const managerEmail = readRequiredEnv('E2E_TEST_MANAGER_EMAIL');
+        managerStorageState = await createStorageStateForEmailSeed(browser, managerEmail, {
+            waitAfterSubmitMs: 3000,
+        });
     });
 
     test.beforeEach(async ({ page }) => {
-        if (managerStorageState) {
-            await page.context().addCookies(managerStorageState.cookies);
-        }
+        await applyStorageStateCookies(page, managerStorageState);
     });
 
     test('полный сценарий: создание плана, продажа пакета, бронь, отметка посещения, проверка остатка', async ({ page }) => {
         const planName = `E2E Пакет ${Date.now()}`;
-        const clientSearch = process.env.E2E_TEST_CLIENT_SEARCH || 'Тест';
+        const clientSearch = readRequiredEnv('E2E_TEST_CLIENT_SEARCH');
 
         await test.step('1. Создать тип пакета', async () => {
             await page.goto('/dashboard/visit-packages');

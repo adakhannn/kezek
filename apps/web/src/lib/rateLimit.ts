@@ -51,7 +51,7 @@ const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 // Очистка устаревших записей каждые 5 минут (только для in-memory)
 if (typeof setInterval !== 'undefined' && typeof window === 'undefined') {
-    setInterval(() => {
+    const cleanupInterval = setInterval(() => {
         const now = Date.now();
         for (const [key, value] of rateLimitStore.entries()) {
             if (value.resetAt < now) {
@@ -59,6 +59,7 @@ if (typeof setInterval !== 'undefined' && typeof window === 'undefined') {
             }
         }
     }, 5 * 60 * 1000);
+    cleanupInterval.unref?.();
 }
 
 /**

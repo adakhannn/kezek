@@ -24,9 +24,50 @@ E2E_TEST_STAFF_EMAIL=staff@test.com
 E2E_TEST_STAFF_PASSWORD=test-password
 ```
 
+Важно:
+- grouped E2E сценарии больше не используют fallback-значения вроде `manager@test.com` или `test-business`
+- если обязательные env vars не заданы, соответствующий spec теперь должен считаться неподготовленным к запуску в данной среде
+- для grouped `auth-required` и `seed-required` specs missing env теперь приводят к явному suite-level `skip`, а не к позднему падению внутри шага
+- повторяющийся sign-in/bootstrap код теперь нужно выносить в `authHelpers.ts`, а env preflight и base-url helpers держать в `testEnv.ts`
+
+### Env contract по группам
+
+`smoke`
+- не требует seeded данных или тестовых учёток
+
+`http`
+- не требует seeded browser state
+
+`auth-required`
+- `E2E_TEST_MANAGER_EMAIL`
+- `E2E_TEST_SUPER_ADMIN_EMAIL`
+- `E2E_TEST_MULTI_ROLE_EMAIL`
+- `E2E_TEST_STAFF_EMAIL`
+- `E2E_TEST_STAFF_PASSWORD`
+
+`seed-required`
+- `E2E_TEST_BUSINESS_SLUG`
+- `E2E_TEST_BUSINESS_ID`
+- `E2E_TEST_BRANCH_ID`
+- `E2E_TEST_STAFF_ID`
+- `E2E_TEST_CLIENT_SEARCH`
+- плюс нужные auth env vars для сценариев, где есть вход под менеджером или сотрудником
+
 ## Запуск тестов
 
 ```bash
+# Запустить стабильный smoke-набор без seeded данных
+pnpm test:e2e:smoke
+
+# Запустить HTTP-only webhook e2e
+pnpm test:e2e:http
+
+# Запустить auth/role сценарии
+pnpm test:e2e:auth-required
+
+# Запустить сценарии, которым нужны seeded данные бизнеса
+pnpm test:e2e:seed-required
+
 # Запустить все E2E тесты
 pnpm test:e2e
 
@@ -41,6 +82,43 @@ pnpm test:e2e e2e/booking-flow.spec.ts
 ```
 
 ## Тестовые сценарии
+
+### Smoke browser gate (`smoke-public.spec.ts`)
+
+Минимальный стабильный набор для CI без seeded данных и тестовых учёток:
+- страница входа `/auth/sign-in`
+- страница условий `/terms`
+- страница конфиденциальности `/privacy`
+
+Для стабильности smoke-набор запускается с `--workers=1`.
+
+### Auth-required flows
+
+Сценарии, которым нужны тестовые учётки и роли:
+- `quickdesk.spec.ts`
+- `ratings-admin-flow.spec.ts`
+- `role-switching.spec.ts`
+- `shift-management.spec.ts`
+
+### Seed-required flows
+
+Сценарии, которым нужны подготовленные бизнес-данные, branch/staff ids или стабильный seeded slug:
+- `booking-flow.spec.ts`
+- `branch-map.spec.ts`
+- `error-recovery.spec.ts`
+- `finance-disputes-verification.spec.ts`
+- `hours-worked-recalculation.spec.ts`
+- `promotion-application.spec.ts`
+- `staff-finance-pages.spec.ts`
+- `visit-packages-flow.spec.ts`
+- `visual-regressions.spec.ts`
+
+### HTTP-only E2E
+
+Минимальный request-level сценарий без браузерной UI-навигации:
+- `whatsapp-webhook.spec.ts`
+
+Этот сценарий тоже запускается с `--workers=1`, чтобы не плодить лишнюю параллельность вокруг локального dev server.
 
 ### 1. Полный цикл бронирования (`booking-flow.spec.ts`)
 

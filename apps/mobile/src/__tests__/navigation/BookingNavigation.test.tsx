@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
+import { createTestQueryClient } from '../testQueryClient';
 import BookingStep1Branch from '../../screens/booking/BookingStep1Branch';
 import BookingStep2Service from '../../screens/booking/BookingStep2Service';
 import BookingStep3Staff from '../../screens/booking/BookingStep3Staff';
@@ -53,13 +54,7 @@ jest.mock('../../hooks/useConfirmBooking', () => ({
 
 describe('Booking Navigation', () => {
     const renderWithProviders = (component: React.ReactElement) => {
-        const queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {
-                    retry: false,
-                },
-            },
-        });
+        const queryClient = createTestQueryClient();
 
         return render(
             <QueryClientProvider client={queryClient}>

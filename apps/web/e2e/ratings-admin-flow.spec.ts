@@ -11,39 +11,22 @@
  *  - переход на /admin/ratings-debug и проверка отсутствия критичных ошибок.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type StorageState } from '@playwright/test';
+import { applyStorageStateCookies, createStorageStateForEmailSeed } from './authHelpers';
+import { readRequiredEnv, skipIfMissingE2EEnv } from './testEnv';
+
+skipIfMissingE2EEnv('ratings-admin-flow.spec.ts', ['E2E_TEST_SUPER_ADMIN_EMAIL']);
 
 test.describe('Админский флоу рейтинговой системы', () => {
-    let superAdminAuthState: any;
+    let superAdminAuthState: StorageState | null = null;
 
     test.beforeAll(async ({ browser }) => {
-        const context = await browser.newContext();
-        const page = await context.newPage();
-
-        const superAdminEmail = process.env.E2E_TEST_SUPER_ADMIN_EMAIL || 'superadmin@test.com';
-
-        await page.goto('/auth/sign-in');
-        await page.waitForLoadState('networkidle');
-
-        const emailInput = page.locator('input[type="email"], input[name="email"]').first();
-        if (await emailInput.isVisible({ timeout: 3000 })) {
-            await emailInput.fill(superAdminEmail);
-
-            const submitButton = page.locator('button:has-text("Отправить"), button[type="submit"]').first();
-            if (await submitButton.isVisible({ timeout: 2000 })) {
-                await submitButton.click();
-                await page.waitForTimeout(2000);
-            }
-        }
-
-        superAdminAuthState = await context.storageState();
-        await context.close();
+        const superAdminEmail = readRequiredEnv('E2E_TEST_SUPER_ADMIN_EMAIL');
+        superAdminAuthState = await createStorageStateForEmailSeed(browser, superAdminEmail);
     });
 
     test.beforeEach(async ({ page }) => {
-        if (superAdminAuthState) {
-            await page.context().addCookies(superAdminAuthState.cookies);
-        }
+        await applyStorageStateCookies(page, superAdminAuthState);
     });
 
     test('полный админский флоу рейтингов (status -> config -> recalc -> status -> debug)', async ({ page }) => {

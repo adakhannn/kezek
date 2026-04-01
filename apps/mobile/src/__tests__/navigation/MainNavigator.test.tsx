@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import MainNavigator from '../../navigation/MainNavigator';
+import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../hooks/useUserRole', () => ({
     useUserRole: () => ({
@@ -38,13 +39,7 @@ jest.mock('@react-navigation/native-stack', () => ({
 
 describe('MainNavigator', () => {
     const renderWithProviders = (component: React.ReactElement) => {
-        const queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {
-                    retry: false,
-                },
-            },
-        });
+        const queryClient = createTestQueryClient();
 
         return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
     };

@@ -1,88 +1,122 @@
-## Границы модулей: core-domain, shared-client, apps
+# Module Boundaries
 
-Этот документ фиксирует, **где должна жить доменная логика и переиспользуемый код**, а также правила добавления новых сущностей.
+**Purpose:** define where logic should live across `packages/core-domain`, `packages/shared-client`, `apps/web`, and `apps/mobile`.
 
----
+## Core Rule
 
-### 1. `packages/core-domain` — чистый доменный слой
+Place code by responsibility, not by convenience.
 
-- **Что хранится:**
-  - Чистая бизнес-логика без зависимостей от Next.js, React, Supabase и окружения.
-  - Use-case’ы и функции, которые можно вызывать как из API, так и из фоновых задач:
-    - `booking` — бронирования и промо (use-case создания/отмены/подтверждения, решение по mark attendance и т.п.).
-    - `schedule` — слоты, расписания, временные переводы.
-    - `finance` — расчёт смен (доли, гарантия, доплаты, отображение, режимы оплаты).
-  - Типы и интерфейсы портов (`ports`) для репозиториев и внешних сервисов.
+- business rules belong in shared domain modules
+- cross-client helpers and DTOs belong in shared client modules
+- app-specific orchestration belongs in app code
+- platform and transport details stay at the edge
 
-- **Чего здесь нет:**
-  - HTTP‑деталей (`Request`, `Response`), Next.js‑специфики (`cookies`, `headers`).
-  - Прямых вызовов Supabase клиента, `fetch`, `console.log` и т.п.
+## `packages/core-domain`
 
-- **Когда добавлять сюда:**
-  - Когда логика нужна одновременно в нескольких слоях (`apps/web`, потенциально других приложениях).
-  - Когда логика — именно **бизнес‑правило**, а не UI/инфраструктура (например, формулы смен, решение по статусам бронирования, правила валидации доменных сущностей).
+Use `core-domain` for:
 
----
+- pure business rules
+- use-cases
+- state transition logic
+- calculation rules
+- domain validation that does not depend on HTTP, React, or Supabase
+- repository and service ports
 
-### 2. `packages/shared-client` — общие клиентские утилиты
+Do not put these here:
 
-- **Что хранится:**
-  - Код, который нужен **и web, и mobile**, но зависит от клиентского окружения:
-    - Валидация полей формы (email/телефон/имя/проценты/диапазоны цен).
-    - Общие DTO/типы (`BookingDto`, `Slot`, `StaffInfo` и т.д.).
-    - I18n‑утилиты для отображения названий и статусов (`getServiceName`, `formatStaffName`, `getStatusText`, цвета статусов).
-    - Безопасное логирование (`createLogger`, маскирование токенов/URL).
-    - Лёгкий API‑клиент для фронтов.
+- `fetch`
+- Supabase client calls
+- `Request` / `Response`
+- React hooks
+- Next.js or Expo dependencies
 
-- **Чего здесь нет:**
-  - Привязки к Next.js, React Native или конкретной реализации UI.
-  - Прямых импортов из `apps/web` или `apps/mobile`.
+Good candidates:
 
-- **Когда добавлять сюда:**
-  - Появился новый форматтер/валидатор/тип, который нужен **и в web, и в mobile**.
-  - Нужен общий helper, который логически относится к клиентскому слою (UI‑валидация, отображение статусов, клиентские DTO).
+- booking rules
+- shift and finance calculations
+- role/business invariants when they are not transport-specific
 
----
+## `packages/shared-client`
 
-### 3. `apps/web` — web-приложение и инфраструктура
+Use `shared-client` for:
 
-- **Что хранится:**
-  - UI (страницы, компоненты, хуки).
-  - Next.js API routes, интеграции с Supabase, cron‑маршруты.
-  - Обвязка вокруг доменных функций:
-    - адаптация входящих HTTP‑запросов к домену (`validateRequest`, маппинг body → use-case),
-    - разбор `cookies`, auth‑контекста и ролей,
-    - логирование, метрики, rate‑limit.
-  - Временная glue‑логика, специфичная только для web.
+- DTOs shared by web and mobile
+- formatters
+- client-safe validation helpers
+- i18n helpers
+- safe logging helpers
+- lightweight API helpers that are not tied to a single app shell
 
-- **Чего здесь нет (по возможности):**
-  - Дублирующих формул/бизнес‑правил, уже вынесенных в `core-domain` или `shared-client`.
-  - Новых «умных» утилит, которые потенциально пригодятся mobile — их лучше сразу класть в `shared-client`.
+Do not put these here:
 
----
+- app routing
+- Next.js server code
+- React Native-only UI code
+- business rules better suited for `core-domain`
 
-### 4. Правила добавления новых сущностей
+## `apps/web`
 
-1. **Новая бизнес‑логика / формула / use-case:**
-   - Сначала — в `packages/core-domain` (подмодуль `booking` / `schedule` / `finance` или новый).
-   - Затем — тонкие адаптеры в `apps/web` (API, хуки), которые вызывают доменную функцию.
+Use `apps/web` for:
 
-2. **Новый валидатор / форматтер / тип DTO для клиентского кода:**
-   - Добавить в `packages/shared-client` (`validation`, `i18n`, `types` или новый модуль).
-   - В web/mobile использовать через `@shared-client/...` или небольшие адаптеры.
+- Next.js pages, layouts, route handlers, and server wiring
+- auth and request context integration
+- repository implementations
+- HTTP parsing and response mapping
+- feature composition for web UI
 
-3. **Специфичная только для web инфраструктура (middleware, Supabase wiring, Next.js layout):**
-   - Держать в `apps/web` (`lib/`, `app/`, API routes).
+Keep web files focused:
 
-4. **Если код сложно классифицировать:**
-   - Если есть хотя бы один хард‑зависимый импорт (Next.js, Supabase client, React‑hooks) — это **не** `core-domain`.
-   - Если зависит от платформы UI (web vs mobile), но при этом чисто клиентский — кандидат в `shared-client`.
+- routes should stay thin
+- services should coordinate, not become giant logic containers
+- pages should render and compose, not own deep orchestration
 
----
+## `apps/mobile`
 
-### 5. Быстрый чек‑лист перед добавлением кода
+Use `apps/mobile` for:
 
-- Можно ли вызвать функцию **в node‑скрипте без Next.js и Supabase**? → `core-domain`.
-- Нужна ли она и web, и mobile? → `shared-client`.
-- Она рендерит UI / читает `cookies` / дергает Supabase? → `apps/web`.
+- React Native screens and navigation
+- session and deep-link wiring
+- mobile-only UI and interaction logic
+- mobile composition around shared DTOs and services
 
+Keep mobile files focused:
+
+- screens should mostly compose sections and hooks
+- session/auth recovery logic should live in dedicated infrastructure modules
+- shared business decisions should not be duplicated locally when they can be extracted
+
+## Placement Heuristics
+
+Ask these questions before adding code:
+
+1. Can this run without React, Next.js, Expo, or Supabase?
+   If yes, it is a candidate for `core-domain`.
+
+2. Is this needed by both web and mobile, but still client-facing?
+   If yes, it is a candidate for `shared-client`.
+
+3. Does this depend on request objects, cookies, database clients, or app routing?
+   If yes, it belongs in app-layer infrastructure.
+
+4. Is this mainly rendering logic?
+   If yes, it belongs in the app UI layer.
+
+## Large File Rules
+
+Any file should be reviewed for decomposition when it shows several of these signs:
+
+- owns rendering and data fetching
+- owns rendering and navigation
+- owns orchestration and persistence
+- owns orchestration and business decisions
+- mixes platform wiring with reusable logic
+- becomes hard to test without mounting the full feature
+
+## First Focus Areas
+
+Apply these rules first to:
+
+- finance flows
+- auth and redirect flows
+- messaging and webhook flows
+- role and current-business selection logic
