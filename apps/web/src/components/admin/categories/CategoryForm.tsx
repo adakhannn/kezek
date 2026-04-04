@@ -251,7 +251,7 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
             )}
 
             {/* Ошибка */}
-            {error ? <AlertBanner variant="danger" title="������" message={error} /> : null}
+            {error ? <AlertBanner variant="danger" title="Ошибка" message={error} /> : null}
 
             {/* Кнопки */}
             <div className="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -289,5 +289,3 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
         </form>
     );
 }
-
-
