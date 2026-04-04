@@ -1,14 +1,15 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { useState } from 'react';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StyleSheet, Text, View } from 'react-native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { supabase } from '../../lib/supabase';
-import { AuthStackParamList } from '../../navigation/types';
-import { useToast } from '../../contexts/ToastContext';
-import { getValidationError } from '../../utils/validation';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { colors } from '../../constants/colors';
+import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
+import { AuthStackParamList } from '../../navigation/types';
+import { getValidationError } from '../../utils/validation';
 
 type VerifyScreenRouteProp = RouteProp<AuthStackParamList, 'Verify'>;
 type VerifyScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Verify'>;
@@ -49,12 +50,11 @@ export default function VerifyScreen() {
                 });
                 if (error) throw error;
             } else {
-                throw new Error('Не указан email или телефон');
+                throw new Error('РќРµ СѓРєР°Р·Р°РЅ email РёР»Рё С‚РµР»РµС„РѕРЅ');
             }
-            showToast('Вход выполнен успешно', 'success');
-            // Навигация произойдет автоматически через RootNavigator при изменении сессии
+            showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Неверный код';
+            const errorMessage = error instanceof Error ? error.message : 'РќРµРІРµСЂРЅС‹Р№ РєРѕРґ';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -81,9 +81,9 @@ export default function VerifyScreen() {
                 });
                 if (error) throw error;
             }
-            showToast('Код отправлен повторно', 'success');
+            showToast('РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РїРѕРІС‚РѕСЂРЅРѕ', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
+            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -92,34 +92,45 @@ export default function VerifyScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Подтверждение</Text>
-            <Text style={styles.subtitle}>
-                Введите код, отправленный на {email || phone}
-            </Text>
+            <Text style={styles.title}>РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ</Text>
+            <Text style={styles.subtitle}>Р’РІРµРґРёС‚Рµ РєРѕРґ, РѕС‚РїСЂР°РІР»РµРЅРЅС‹Р№ РЅР° {email || phone}</Text>
 
             <Input
-                label="Код подтверждения"
+                label="РљРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ"
                 placeholder="000000"
                 value={code}
                 onChangeText={(text) => setCode(text.replace(/\D/g, '').slice(0, 6))}
                 keyboardType="number-pad"
                 maxLength={6}
+                error={codeError ?? undefined}
+                containerStyle={styles.field}
                 style={styles.codeInput}
+                inputContainerStyle={styles.codeInputContainer}
             />
 
             <Button
-                title="Подтвердить"
+                title="РџРѕРґС‚РІРµСЂРґРёС‚СЊ"
                 onPress={handleVerify}
                 loading={loading}
                 disabled={loading || code.length !== 6}
+                fullWidth
             />
 
             <Button
-                title="Отправить код снова"
+                title="РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ СЃРЅРѕРІР°"
                 onPress={handleResend}
-                variant="outline"
+                variant="ghost"
                 style={styles.resendButton}
                 disabled={loading}
+                fullWidth
+            />
+
+            <Button
+                title="РќР°Р·Р°Рґ"
+                onPress={() => navigation.goBack()}
+                variant="secondary"
+                style={styles.backButton}
+                fullWidth
             />
         </View>
     );
@@ -128,27 +139,35 @@ export default function VerifyScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#fff',
+        padding: colors.layout.space5,
+        backgroundColor: colors.surface.page,
     },
     title: {
         fontSize: 28,
-        fontWeight: 'bold',
+        fontWeight: '700',
         marginBottom: 8,
-        color: '#111827',
+        color: colors.text.primary,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
-        marginBottom: 24,
+        color: colors.text.secondary,
+        marginBottom: colors.layout.space5,
+    },
+    field: {
+        marginBottom: colors.layout.space5,
+    },
+    codeInputContainer: {
+        justifyContent: 'center',
     },
     codeInput: {
         fontSize: 24,
         letterSpacing: 8,
         textAlign: 'center',
-        marginBottom: 24,
     },
     resendButton: {
-        marginTop: 12,
+        marginTop: colors.layout.space3,
+    },
+    backButton: {
+        marginTop: colors.layout.space2,
     },
 });

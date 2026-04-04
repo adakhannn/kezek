@@ -1,8 +1,9 @@
 import React from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import Card from '../../components/ui/Card';
+import MotionPressable from '../../components/ui/MotionPressable';
 import { colors } from '../../constants/colors';
 import { formatDate, formatTime } from '../../utils/format';
 
@@ -22,18 +23,18 @@ type RecentPlacesSectionProps = {
 
 function getBookingStatusLabel(status: string) {
     if (status === 'confirmed') {
-        return 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРѕ';
+        return 'Р СџР С•Р Т‘РЎвЂљР Р†Р ВµРЎР‚Р В¶Р Т‘Р ВµР Р…Р С•';
     }
 
     if (status === 'hold') {
-        return 'РћР¶РёРґР°РµС‚';
+        return 'Р С›Р В¶Р С‘Р Т‘Р В°Р ВµРЎвЂљ';
     }
 
     if (status === 'paid') {
-        return 'РћРїР»Р°С‡РµРЅРѕ';
+        return 'Р С›Р С—Р В»Р В°РЎвЂЎР ВµР Р…Р С•';
     }
 
-    return 'Р—Р°РїРёСЃСЊ';
+    return 'Р вЂ”Р В°Р С—Р С‘РЎРѓРЎРЉ';
 }
 
 export function UpcomingBookingsSection({
@@ -48,22 +49,23 @@ export function UpcomingBookingsSection({
     return (
         <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>Р‘Р»РёР¶Р°Р№С€РёРµ Р·Р°РїРёСЃРё</Text>
-                <TouchableOpacity onPress={onOpenAll}>
-                    <Text style={styles.sectionLink}>РћС‚РєСЂС‹С‚СЊ РІСЃРµ</Text>
-                </TouchableOpacity>
+                <Text style={styles.sectionTitle}>Р вЂР В»Р С‘Р В¶Р В°Р в„–РЎв‚¬Р С‘Р Вµ Р В·Р В°Р С—Р С‘РЎРѓР С‘</Text>
+                <MotionPressable onPress={onOpenAll} style={styles.sectionLinkPressable}>
+                    <Text style={styles.sectionLink}>Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ Р Р†РЎРѓР Вµ</Text>
+                </MotionPressable>
             </View>
 
             {bookings.map((booking) => (
                 <Card key={booking.id} style={styles.bookingCard}>
-                    <TouchableOpacity
-                        activeOpacity={0.8}
+                    <MotionPressable
+                        style={styles.bookingCardPressable}
+                        scale="firm"
                         onPress={() => onOpenBooking(booking.id)}
                     >
                         <View style={styles.bookingRow}>
                             <View style={styles.bookingMain}>
                                 <Text style={styles.bookingBusiness}>
-                                    {booking.business?.name || 'Р—Р°РїРёСЃСЊ'}
+                                    {booking.business?.name || 'Р вЂ”Р В°Р С—Р С‘РЎРѓРЎРЉ'}
                                 </Text>
                                 {booking.branch?.name ? (
                                     <Text style={styles.bookingBranch}>
@@ -79,7 +81,7 @@ export function UpcomingBookingsSection({
 
                             <View style={styles.bookingMeta}>
                                 <Text style={styles.bookingDate}>
-                                    {formatDate(booking.start_at)} вЂў {formatTime(booking.start_at)}
+                                    {formatDate(booking.start_at)} РІР‚Сћ {formatTime(booking.start_at)}
                                 </Text>
                                 <View style={styles.bookingStatusPill}>
                                     <Text style={styles.bookingStatusText}>
@@ -88,7 +90,7 @@ export function UpcomingBookingsSection({
                                 </View>
                             </View>
                         </View>
-                    </TouchableOpacity>
+                    </MotionPressable>
                 </Card>
             ))}
         </View>
@@ -105,17 +107,16 @@ export function RecentPlacesSection({
 
     return (
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>РќРµРґР°РІРЅРёРµ РјРµСЃС‚Р°</Text>
+            <Text style={styles.sectionTitle}>Р СњР ВµР Т‘Р В°Р Р†Р Р…Р С‘Р Вµ Р СР ВµРЎРѓРЎвЂљР В°</Text>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.recentPlacesRow}
             >
                 {places.map((place) => (
-                    <TouchableOpacity
+                    <MotionPressable
                         key={place.slug}
                         style={styles.recentPlaceChip}
-                        activeOpacity={0.7}
                         onPress={() => onOpenPlace(place.slug)}
                     >
                         <Ionicons
@@ -125,7 +126,7 @@ export function RecentPlacesSection({
                             style={{ marginRight: 6 }}
                         />
                         <Text style={styles.recentPlaceText}>{place.name}</Text>
-                    </TouchableOpacity>
+                    </MotionPressable>
                 ))}
             </ScrollView>
         </View>

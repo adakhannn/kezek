@@ -9,42 +9,42 @@ export function Footer() {
     const year = new Date().getFullYear();
 
     return (
-        <footer className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 mt-auto">
-            <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
-                <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-3 sm:gap-4">
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center md:text-left" suppressHydrationWarning>
-                        © {year} Kezek. {t('footer.rights', 'Все права защищены.')}
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-2">
-                        <Link
-                            href="/map"
-                            className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        >
-                            {t('footer.map', 'Карта филиалов')}
-                        </Link>
-                        <Link
-                            href="/privacy"
-                            className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        >
-                            {t('footer.privacy', 'Политика конфиденциальности')}
-                        </Link>
-                        <Link
-                            href="/terms"
-                            className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        >
-                            {t('footer.terms', 'Пользовательское соглашение')}
-                        </Link>
-                        <Link
-                            href="/data-deletion"
-                            className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        >
-                            {t('footer.dataDeletion', 'Удаление данных')}
-                        </Link>
+        <footer className="mt-auto px-3 pb-3 pt-6 sm:px-4 sm:pb-4 lg:px-6">
+            <div className="mx-auto max-w-7xl">
+                <div className="rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_86%,transparent)] px-4 py-4 shadow-[var(--shadow-md)] backdrop-blur-xl sm:px-5 sm:py-5">
+                    <div className="flex flex-col items-center justify-between gap-3 sm:gap-4 md:flex-row md:items-center">
+                        <p className="text-center text-xs text-[var(--text-muted)] sm:text-sm md:text-left" suppressHydrationWarning>
+                            В© {year} Kezek. {t('footer.rights', 'Р’СЃРµ РїСЂР°РІР° Р·Р°С‰РёС‰РµРЅС‹.')}
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
+                            <Link
+                                href="/map"
+                                className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
+                            >
+                                {t('footer.map', 'РљР°СЂС‚Р° С„РёР»РёР°Р»РѕРІ')}
+                            </Link>
+                            <Link
+                                href="/privacy"
+                                className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
+                            >
+                                {t('footer.privacy', 'РџРѕР»РёС‚РёРєР° РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё')}
+                            </Link>
+                            <Link
+                                href="/terms"
+                                className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
+                            >
+                                {t('footer.terms', 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ')}
+                            </Link>
+                            <Link
+                                href="/data-deletion"
+                                className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
+                            >
+                                {t('footer.dataDeletion', 'РЈРґР°Р»РµРЅРёРµ РґР°РЅРЅС‹С…')}
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
         </footer>
     );
 }
-
-

@@ -1,6 +1,7 @@
 'use client';
 
 import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 
 type Mode = 'phone' | 'email';
 
@@ -169,11 +170,7 @@ export function SignInPageView({
                                     </div>
                                 )}
 
-                                {error && (
-                                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2.5 text-xs text-red-600 dark:text-red-400 sm:text-sm">
-                                        {error}
-                                    </div>
-                                )}
+                                {error ? <AlertBanner variant="danger" message={error} compact /> : null}
 
                                 <button
                                     className="w-full px-5 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white text-sm font-bold rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"

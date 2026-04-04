@@ -1,13 +1,13 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import MotionPressable from '../../components/ui/MotionPressable';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { useBookingStep4Dates } from './useBookingStep4Dates';
@@ -57,7 +57,7 @@ export default function BookingStep4Date() {
                             const isToday = date === todayInTz;
 
                             return (
-                                <TouchableOpacity
+                                <MotionPressable
                                     key={date}
                                     style={[
                                         styles.dateCard,
@@ -66,16 +66,16 @@ export default function BookingStep4Date() {
                                     ]}
                                     onPress={() => handleSelectDate(date)}
                                 >
-                                    {isToday && (
+                                    {isToday ? (
                                         <Text
                                             style={[
                                                 styles.todayLabel,
                                                 bookingData.selectedDate === date && styles.todayLabelSelected,
                                             ]}
                                         >
-                                            Сегодня
+                                            РЎРµРіРѕРґРЅСЏ
                                         </Text>
-                                    )}
+                                    ) : null}
                                     <Text
                                         style={[
                                             styles.dateDay,
@@ -100,20 +100,20 @@ export default function BookingStep4Date() {
                                     >
                                         {dateLabel.weekday}
                                     </Text>
-                                </TouchableOpacity>
+                                </MotionPressable>
                             );
                         })}
                     </ScrollView>
 
                     <View style={styles.buttonContainer}>
                         <Button
-                            title="Назад"
+                            title="РќР°Р·Р°Рґ"
                             onPress={() => navigation.goBack()}
                             variant="outline"
                             style={styles.backButton}
                         />
                         <Button
-                            title="Дальше"
+                            title="Р”Р°Р»СЊС€Рµ"
                             onPress={handleNext}
                             disabled={!bookingData.selectedDate}
                             variant="primary"
@@ -146,10 +146,6 @@ const styles = StyleSheet.create({
         color: colors.text.primary,
         marginBottom: 4,
     },
-    subtitle: {
-        fontSize: 16,
-        color: colors.text.secondary,
-    },
     section: {
         padding: 20,
     },
@@ -172,12 +168,12 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background.secondary,
     },
     dateCardToday: {
-        borderColor: '#10b981',
+        borderColor: colors.status.success,
     },
     todayLabel: {
         fontSize: 10,
         fontWeight: '600',
-        color: '#10b981',
+        color: colors.status.success,
         marginBottom: 4,
         textTransform: 'uppercase',
     },

@@ -1,13 +1,15 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import EmptyState from '../../components/ui/EmptyState';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import MotionPressable from '../../components/ui/MotionPressable';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
@@ -45,7 +47,7 @@ export default function BookingStep3Staff() {
     if (isLoading) {
         return (
             <View style={styles.container}>
-                <Text style={styles.loadingText}>Загрузка мастеров...</Text>
+                <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР° РјР°СЃС‚РµСЂРѕРІ..." />
             </View>
         );
     }
@@ -63,10 +65,13 @@ export default function BookingStep3Staff() {
                     <View style={styles.header}>
                         <Text style={styles.title}>{bookingData.business?.name}</Text>
                     </View>
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="person-outline" size={48} color={colors.text.tertiary} />
-                        <Text style={styles.emptyText}>Нет доступных мастеров</Text>
-                    </View>
+                    <EmptyState
+                        icon="person-outline"
+                        title="РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РјР°СЃС‚РµСЂРѕРІ"
+                        message="Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕР№ СѓСЃР»СѓРіРё РїРѕРєР° РЅРµС‚ Р°РєС‚РёРІРЅС‹С… СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ."
+                        compact
+                        style={styles.emptyContainer}
+                    />
                 </View>
             </LinearGradient>
         );
@@ -90,11 +95,10 @@ export default function BookingStep3Staff() {
                         {staffData.map((staff) => {
                             const isSelected = bookingData.staffId === staff.id;
                             return (
-                                <TouchableOpacity
+                                <MotionPressable
                                     key={staff.id}
                                     style={styles.chipContainer}
                                     onPress={() => handleSelectStaff(staff.id)}
-                                    activeOpacity={0.7}
                                 >
                                     {isSelected ? (
                                         <LinearGradient
@@ -116,28 +120,26 @@ export default function BookingStep3Staff() {
                                             </View>
                                         </View>
                                     )}
-                                </TouchableOpacity>
+                                </MotionPressable>
                             );
                         })}
                     </View>
 
-                    {staffData.length > 0 && (
-                        <View style={styles.buttonContainer}>
-                            <Button
-                                title="Назад"
-                                onPress={() => navigation.goBack()}
-                                variant="outline"
-                                style={styles.backButton}
-                            />
-                            <Button
-                                title="Дальше"
-                                onPress={handleNext}
-                                disabled={!bookingData.staffId}
-                                variant="primary"
-                                style={styles.nextButton}
-                            />
-                        </View>
-                    )}
+                    <View style={styles.buttonContainer}>
+                        <Button
+                            title="РќР°Р·Р°Рґ"
+                            onPress={() => navigation.goBack()}
+                            variant="outline"
+                            style={styles.backButton}
+                        />
+                        <Button
+                            title="Р”Р°Р»СЊС€Рµ"
+                            onPress={handleNext}
+                            disabled={!bookingData.staffId}
+                            variant="primary"
+                            style={styles.nextButton}
+                        />
+                    </View>
                 </View>
             </ScrollView>
         </LinearGradient>
@@ -163,11 +165,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.text.primary,
         marginBottom: 4,
-    },
-    loadingText: {
-        textAlign: 'center',
-        padding: 40,
-        color: colors.text.secondary,
     },
     section: {
         padding: 20,
@@ -211,13 +208,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     emptyContainer: {
-        padding: 40,
-        alignItems: 'center',
-        gap: 12,
-    },
-    emptyText: {
-        fontSize: 16,
-        color: colors.text.secondary,
+        paddingHorizontal: 0,
     },
     buttonContainer: {
         marginTop: 24,

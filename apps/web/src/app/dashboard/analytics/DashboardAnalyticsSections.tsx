@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import type {
     BranchOption,
@@ -8,6 +8,9 @@ import type {
     OverviewSummary,
     PeriodPreset,
 } from './types';
+
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
 
 function formatNumber(value: number) {
     return value.toLocaleString('ru-RU');
@@ -50,16 +53,18 @@ export function DashboardAnalyticsError({
 }) {
     return (
         <div className="px-4 py-10">
-            <div className="max-w-xl mx-auto bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl p-6 shadow-sm">
-                <h1 className="text-xl font-semibold text-red-900 dark:text-red-50 mb-2">Ошибка загрузки аналитики</h1>
-                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-                <button
-                    type="button"
-                    onClick={onRetry}
-                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
-                >
-                    <span>Попробовать снова</span>
-                </button>
+            <div className="mx-auto max-w-xl">
+                <AlertBanner
+                    variant="danger"
+                    title="Ошибка загрузки аналитики"
+                    message={error}
+                    action={
+                        <Button type="button" variant="danger" size="sm" onClick={onRetry}>
+                            Попробовать снова
+                        </Button>
+                    }
+                    className="rounded-2xl p-6 shadow-sm"
+                />
             </div>
         </div>
     );
@@ -349,3 +354,4 @@ export function DashboardAnalyticsLoadSection({
         </section>
     );
 }
+

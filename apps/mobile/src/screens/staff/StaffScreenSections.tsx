@@ -1,5 +1,6 @@
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import { formatDate, formatTime } from '../../utils/format';
@@ -30,36 +31,36 @@ export function StaffScreenSections({
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>Кабинет сотрудника</Text>
+                <Text style={styles.title}>РљР°Р±РёРЅРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєР°</Text>
                 <Text style={styles.subtitle}>{staffInfo.full_name}</Text>
             </View>
 
             {staffInfo.branch && (
                 <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Филиал</Text>
+                    <Text style={styles.sectionTitle}>Р¤РёР»РёР°Р»</Text>
                     <Text style={styles.branchName}>{staffInfo.branch.name}</Text>
                 </Card>
             )}
 
             {staffInfo.business && (
                 <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Бизнес</Text>
+                    <Text style={styles.sectionTitle}>Р‘РёР·РЅРµСЃ</Text>
                     <Text style={styles.businessName}>{staffInfo.business.name}</Text>
                 </Card>
             )}
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Предстоящие записи</Text>
+                <Text style={styles.sectionTitle}>РџСЂРµРґСЃС‚РѕСЏС‰РёРµ Р·Р°РїРёСЃРё</Text>
 
                 {upcomingBookings.length > 0 ? (
                     <View style={styles.bookingsList}>
                         {upcomingBookings.map((booking) => (
                             <Card key={booking.id} style={styles.bookingCard}>
                                 <Text style={styles.bookingService}>
-                                    {booking.service?.name_ru || 'Услуга'}
+                                    {booking.service?.name_ru || 'РЈСЃР»СѓРіР°'}
                                 </Text>
                                 {booking.client_name && (
-                                    <Text style={styles.bookingClient}>Клиент: {booking.client_name}</Text>
+                                    <Text style={styles.bookingClient}>РљР»РёРµРЅС‚: {booking.client_name}</Text>
                                 )}
                                 {booking.client_phone && (
                                     <Text style={styles.bookingPhone}>{booking.client_phone}</Text>
@@ -76,22 +77,21 @@ export function StaffScreenSections({
                 ) : (
                     <EmptyState
                         icon="calendar"
-                        title="Нет предстоящих записей"
-                        message="Записи появятся здесь, когда клиенты запишутся к вам"
+                        title="РќРµС‚ РїСЂРµРґСЃС‚РѕСЏС‰РёС… Р·Р°РїРёСЃРµР№"
+                        message="Р—Р°РїРёСЃРё РїРѕСЏРІСЏС‚СЃСЏ Р·РґРµСЃСЊ, РєРѕРіРґР° РєР»РёРµРЅС‚С‹ Р·Р°РїРёС€СѓС‚СЃСЏ Рє РІР°Рј"
                     />
                 )}
             </View>
 
             <View style={styles.section}>
-                <TouchableOpacity style={styles.shiftsButton} onPress={onOpenShiftQuick}>
-                    <Text style={styles.shiftsButtonText}>Моя смена</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.shiftsButton, styles.shiftsButtonSecondary]}
+                <Button title="РњРѕСЏ СЃРјРµРЅР°" onPress={onOpenShiftQuick} fullWidth />
+                <Button
+                    title="РЎС‚Р°С‚РёСЃС‚РёРєР°"
                     onPress={onOpenShifts}
-                >
-                    <Text style={styles.shiftsButtonTextSecondary}>Статистика</Text>
-                </TouchableOpacity>
+                    variant="outline"
+                    fullWidth
+                    style={styles.secondaryAction}
+                />
             </View>
         </ScrollView>
     );

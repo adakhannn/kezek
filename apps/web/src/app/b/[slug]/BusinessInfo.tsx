@@ -5,6 +5,11 @@ import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
+import { Badge } from '@/components/ui/Badge';
+import { buttonStyles } from '@/components/ui/Button';
+import { Card, cardStyles } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 import { formatStaffName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -32,12 +37,10 @@ export default function BusinessInfo({ data }: { data: Data }) {
     const { t, locale } = useLanguage();
     const queryClient = useQueryClient();
 
-    // Prefetch данных для бронирования при наведении на кнопку "Записаться"
     const handlePrefetchBookingData = () => {
-        const branchIds = branches.map((b) => b.id);
-        const staffIds = staff.map((s) => s.id);
+        const branchIds = branches.map((branch) => branch.id);
+        const staffIds = staff.map((person) => person.id);
 
-        // Prefetch промоакций для всех филиалов
         branchIds.forEach((branchId) => {
             queryClient.prefetchQuery({
                 queryKey: ['branch-promotions', branchId],
@@ -61,7 +64,6 @@ export default function BusinessInfo({ data }: { data: Data }) {
             });
         });
 
-        // Prefetch связей услуга-мастер
         if (staffIds.length > 0) {
             queryClient.prefetchQuery({
                 queryKey: ['service-staff', biz.id, staffIds.sort().join(',')],
@@ -81,150 +83,403 @@ export default function BusinessInfo({ data }: { data: Data }) {
     };
 
     const formatName = (name: string): string => formatStaffName(name, locale);
+    const ratedBranches = branches.filter((branch) => typeof branch.rating_score === 'number').length;
+    const ratedStaff = staff.filter((person) => typeof person.rating_score === 'number').length;
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-            <div className="mx-auto max-w-5xl px-4 py-6 space-y-5">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100">
-                            {biz.name}
-                        </h1>
-                        <RatingDisplay score={biz.rating_score} t={t} variant="badge" className="px-3 py-1" />
-                    </div>
-                    {biz.address && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{biz.address}</p>
-                    )}
-                    {biz.phones?.length ? (
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                            {t('booking.phoneLabel', 'Телефон:')} {biz.phones.join(', ')}
-                        </p>
-                    ) : null}
-                </div>
-
-                {/* Информационная секция о бизнесе */}
-                <div className="rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 space-y-6">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        {t('business.info.title', 'О бизнесе')}
-                    </h2>
-
-                    {/* Филиалы */}
-                    {branches.length > 0 && (
-                        <div>
-                            <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                                {t('business.info.branches', 'Филиалы')} ({branches.length})
-                            </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {branches.map((b) => (
-                                    <div key={b.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                                        <span className="text-sm text-gray-700 dark:text-gray-300">{formatName(b.name)}</span>
-                                        <RatingDisplay score={b.rating_score} t={t} variant="badge" className="px-1.5 py-0.5 [&_svg]:w-3 [&_svg]:h-3" />
+        <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_26%),radial-gradient(circle_at_top_right,rgba(244,114,182,0.07),transparent_24%),linear-gradient(180deg,var(--surface-canvas),color-mix(in_srgb,var(--surface-muted)_72%,var(--surface-canvas)))]">
+            <div className="mx-auto flex w-full max-w-[var(--container-xl)] flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+                <section className="overflow-hidden rounded-[32px] border border-[var(--border-subtle)] bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_26%),linear-gradient(180deg,color-mix(in_srgb,var(--surface-card)_96%,transparent),color-mix(in_srgb,var(--surface-elevated)_98%,transparent))] p-6 shadow-[var(--shadow-lg)] sm:p-8">
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+                        <div className="space-y-5">
+                            <PageHeader
+                                eyebrow={
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Badge variant="accent">
+                                            {t('business.hero.badge', 'Проверенный бизнес')}
+                                        </Badge>
+                                        {promotions.length > 0 ? (
+                                            <Badge variant="success">
+                                                {promotions.length} {t('business.hero.promotions', 'акции')}
+                                            </Badge>
+                                        ) : null}
+                                        <Badge variant="info">
+                                            {t('business.hero.bookable', 'Онлайн-запись доступна')}
+                                        </Badge>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Сотрудники */}
-                    {staff.length > 0 && (
-                        <div>
-                            <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                                {t('business.info.staff', 'Сотрудники')} ({staff.length})
-                            </h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {staff.slice(0, 9).map((s) => (
-                                    <div key={s.id} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                                        {s.avatar_url ? (
-                                            <img src={s.avatar_url} alt={formatName(s.full_name)} className="w-8 h-8 rounded-full object-cover" />
-                                        ) : (
-                                            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-gray-400">
-                                                {formatName(s.full_name).charAt(0).toUpperCase()}
-                                            </div>
-                                        )}
-                                        <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{formatName(s.full_name)}</span>
-                                    </div>
-                                ))}
-                                {staff.length > 9 && (
-                                    <div className="flex items-center justify-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-                                        +{staff.length - 9} {t('business.info.more', 'ещё')}
-                                    </div>
+                                }
+                                title={biz.name}
+                                description={t(
+                                    'business.hero.description',
+                                    'Страница заранее показывает филиалы, команду и предложения, чтобы пользователь понимал, что именно он бронирует и почему стоит идти дальше.',
                                 )}
+                                meta={
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <RatingDisplay score={biz.rating_score} t={t} variant="badge" className="px-3 py-1" />
+                                        {biz.address ? (
+                                            <span className="type-caption rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-[var(--text-secondary)]">
+                                                {biz.address}
+                                            </span>
+                                        ) : null}
+                                        {biz.phones?.length ? (
+                                            <span className="type-caption rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-[var(--text-secondary)]">
+                                                {biz.phones.join(', ')}
+                                            </span>
+                                        ) : null}
+                                    </div>
+                                }
+                                actions={
+                                    <div className="flex flex-col gap-2 sm:items-end">
+                                        <Link
+                                            href={`/b/${biz.slug}/booking`}
+                                            onMouseEnter={handlePrefetchBookingData}
+                                            onFocus={handlePrefetchBookingData}
+                                            className={buttonStyles({
+                                                variant: 'primary',
+                                                size: 'lg',
+                                                className: 'min-w-[15rem] shadow-[var(--shadow-md)]',
+                                            })}
+                                        >
+                                            {t('business.info.bookButton', 'Записаться')}
+                                        </Link>
+                                        <Link
+                                            href={promotions.length > 0 ? `/b/${biz.slug}/promotions` : `/b/${biz.slug}/booking`}
+                                            className={buttonStyles({
+                                                variant: 'outline',
+                                                size: 'md',
+                                                className: 'min-w-[15rem]',
+                                            })}
+                                        >
+                                            {promotions.length > 0
+                                                ? t('business.hero.secondaryCta', 'Смотреть акции')
+                                                : t('business.hero.secondaryFallback', 'Выбрать филиал')}
+                                        </Link>
+                                    </div>
+                                }
+                            />
+
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                <BusinessMetric
+                                    value={branches.length}
+                                    label={t('business.metrics.branches', 'активных филиалов')}
+                                />
+                                <BusinessMetric
+                                    value={staff.length}
+                                    label={t('business.metrics.staff', 'сотрудников в записи')}
+                                />
+                                <BusinessMetric
+                                    value={promotions.length}
+                                    label={t('business.metrics.promotions', 'акций и офферов')}
+                                />
                             </div>
                         </div>
-                    )}
 
-                    {/* Акции */}
-                    {promotions.length > 0 && (
-                        <div data-testid="promotions-section">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                    {t('business.info.promotions', 'Акции')} ({promotions.length})
-                                </h3>
+                        <Card variant="elevated" padding="lg" className="self-start">
+                            <SectionHeader
+                                title={t('business.trust.title', 'Почему можно идти дальше к записи')}
+                                description={t(
+                                    'business.trust.description',
+                                    'Пользователь уже до booking flow видит структуру бизнеса, команду и основные сигналы доверия.',
+                                )}
+                            />
+                            <div className="mt-4 grid gap-3">
+                                <TrustPoint
+                                    title={t('business.trust.point1Title', 'Филиалы видны заранее')}
+                                    body={t(
+                                        'business.trust.point1Body',
+                                        'Можно понять географию бизнеса и не идти в booking flow вслепую.',
+                                    )}
+                                />
+                                <TrustPoint
+                                    title={t('business.trust.point2Title', 'Команда не скрыта')}
+                                    body={t(
+                                        'business.trust.point2Body',
+                                        'Даже до выбора слота понятно, что в бизнесе есть реальные специалисты.',
+                                    )}
+                                />
+                                <TrustPoint
+                                    title={t('business.trust.point3Title', 'Акции и выгода прозрачны')}
+                                    body={t(
+                                        'business.trust.point3Body',
+                                        'Если есть специальные предложения, они видны ещё до записи.',
+                                    )}
+                                />
+                            </div>
+                        </Card>
+                    </div>
+                </section>
+
+                <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+                    <div className="space-y-6">
+                        {branches.length > 0 ? (
+                            <Card variant="elevated" padding="lg">
+                                <SectionHeader
+                                    title={t('business.info.branches', 'Филиалы')}
+                                    description={t(
+                                        'business.info.branchesDescription',
+                                        'Здесь видно, где именно доступен бизнес и какие филиалы уже имеют рейтинг.',
+                                    )}
+                                    action={
+                                        <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
+                                            {branches.length} {t('business.info.branchesCount', 'локаций')}
+                                        </span>
+                                    }
+                                />
+                                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                    {branches.map((branch) => (
+                                        <div
+                                            key={branch.id}
+                                            className={cardStyles({
+                                                variant: 'default',
+                                                padding: 'md',
+                                                className:
+                                                    'rounded-[24px] border-[var(--border-subtle)] bg-[var(--surface-base)] shadow-[var(--shadow-xs)]',
+                                            })}
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <h3 className="type-label text-[var(--text-primary)]">{formatName(branch.name)}</h3>
+                                                    {branch.address ? (
+                                                        <p className="type-caption mt-2 text-[var(--text-secondary)]">{branch.address}</p>
+                                                    ) : null}
+                                                </div>
+                                                <RatingDisplay
+                                                    score={branch.rating_score}
+                                                    t={t}
+                                                    variant="badge"
+                                                    className="px-2 py-0.5"
+                                                />
+                                            </div>
+                                            <p className="type-caption mt-4 text-[var(--text-muted)]">
+                                                {t(
+                                                    'business.info.branchHint',
+                                                    'Филиал будет доступен в потоке записи при выборе удобной локации.',
+                                                )}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                        ) : null}
+
+                        {staff.length > 0 ? (
+                            <Card variant="elevated" padding="lg">
+                                <SectionHeader
+                                    title={t('business.info.staff', 'Команда')}
+                                    description={t(
+                                        'business.info.staffDescription',
+                                        'Показываем сотрудников заранее, чтобы пользователь понимал, кого он сможет выбрать дальше.',
+                                    )}
+                                    action={
+                                        <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
+                                            {staff.length} {t('business.info.staffCount', 'специалистов')}
+                                        </span>
+                                    }
+                                />
+                                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                    {staff.slice(0, 9).map((person) => {
+                                        const branch = branches.find((branchItem) => branchItem.id === person.branch_id);
+
+                                        return (
+                                            <div
+                                                key={person.id}
+                                                className={cardStyles({
+                                                    variant: 'default',
+                                                    padding: 'md',
+                                                    className: 'rounded-[24px] border-[var(--border-subtle)] bg-[var(--surface-base)] shadow-[var(--shadow-xs)]',
+                                                })}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    {person.avatar_url ? (
+                                                        <img
+                                                            src={person.avatar_url}
+                                                            alt={formatName(person.full_name)}
+                                                            className="h-12 w-12 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="type-label flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-emphasis)] text-[var(--text-muted)]">
+                                                            {formatName(person.full_name).charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                    <div className="min-w-0">
+                                                        <div className="type-label truncate text-[var(--text-primary)]">
+                                                            {formatName(person.full_name)}
+                                                        </div>
+                                                        {branch ? (
+                                                            <p className="type-caption truncate text-[var(--text-secondary)]">
+                                                                {formatName(branch.name)}
+                                                            </p>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 flex items-center justify-between gap-2">
+                                                    <span className="type-caption text-[var(--text-muted)]">
+                                                        {t('business.info.staffAvailable', 'Будет доступен в выборе специалиста')}
+                                                    </span>
+                                                    <RatingDisplay score={person.rating_score} t={t} variant="badge" className="px-1.5 py-0.5" />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {staff.length > 9 ? (
+                                        <div
+                                            className={cardStyles({
+                                                variant: 'outlined',
+                                                padding: 'md',
+                                                className:
+                                                    'flex min-h-[9rem] items-center justify-center rounded-[24px] border-dashed text-center text-[var(--text-muted)]',
+                                            })}
+                                        >
+                                            <span className="type-caption">
+                                                +{staff.length - 9} {t('business.info.more', 'ещё')}
+                                            </span>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            </Card>
+                        ) : null}
+
+                        {promotions.length > 0 ? (
+                            <Card variant="elevated" padding="lg" data-testid="promotions-section">
+                                <SectionHeader
+                                    title={t('business.info.promotions', 'Акции')}
+                                    description={t(
+                                        'business.info.promotionsDescription',
+                                        'Спецпредложения видны до записи, поэтому пользователь понимает выгоду заранее.',
+                                    )}
+                                    action={
+                                        <Link
+                                            href={`/b/${biz.slug}/promotions`}
+                                            className={buttonStyles({ variant: 'outline', size: 'sm' })}
+                                        >
+                                            {t('business.info.viewAllPromotions', 'Все акции')}
+                                        </Link>
+                                    }
+                                />
+                                <div className="mt-5 grid gap-3">
+                                    {promotions.slice(0, 4).map((promotion) => {
+                                        const branch = branches.find((branchItem) => branchItem.id === promotion.branch_id);
+                                        const description = getPromotionDescription(promotion, t);
+
+                                        return (
+                                            <div
+                                                key={promotion.id}
+                                                className={cardStyles({
+                                                    variant: 'glass',
+                                                    padding: 'md',
+                                                    className:
+                                                        'rounded-[24px] border-[color:color-mix(in_srgb,var(--status-success)_24%,transparent)] bg-[color:color-mix(in_srgb,var(--status-success)_8%,transparent)]',
+                                                })}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--status-success-soft)] text-[var(--status-success)]">
+                                                        %
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="type-body font-semibold text-[var(--text-primary)]">{description}</p>
+                                                        {branch ? (
+                                                            <p className="type-caption mt-2 text-[var(--text-secondary)]">
+                                                                {formatName(branch.name)}
+                                                            </p>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </Card>
+                        ) : null}
+                    </div>
+
+                    <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
+                        <Card variant="elevated" padding="lg">
+                            <SectionHeader
+                                title={t('business.cta.title', 'Готовы перейти к записи')}
+                                description={t(
+                                    'business.cta.description',
+                                    'Следующий шаг уже в booking flow: там выбираются филиал, услуга, сотрудник, дата и время.',
+                                )}
+                            />
+                            <div className="mt-4 grid gap-3">
+                                <BusinessMetric
+                                    value={ratedBranches}
+                                    label={t('business.metrics.ratedBranches', 'филиалов с рейтингом')}
+                                />
+                                <BusinessMetric
+                                    value={ratedStaff}
+                                    label={t('business.metrics.ratedStaff', 'сотрудников с рейтингом')}
+                                />
+                            </div>
+                            <div className="mt-5 flex flex-col gap-2">
                                 <Link
-                                    href={`/b/${biz.slug}/promotions`}
-                                    className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1"
+                                    href={`/b/${biz.slug}/booking`}
+                                    onMouseEnter={handlePrefetchBookingData}
+                                    onFocus={handlePrefetchBookingData}
+                                    className={buttonStyles({
+                                        variant: 'primary',
+                                        size: 'lg',
+                                        fullWidth: true,
+                                    })}
                                 >
-                                    {t('business.info.viewAllPromotions', 'Все акции')}
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
+                                    {t('business.info.bookButton', 'Записаться')}
+                                </Link>
+                                <Link
+                                    href="/"
+                                    className={buttonStyles({
+                                        variant: 'ghost',
+                                        size: 'md',
+                                        fullWidth: true,
+                                    })}
+                                >
+                                    {t('business.cta.backToCatalog', 'Вернуться в каталог')}
                                 </Link>
                             </div>
-                            <div className="space-y-2">
-                                {promotions.slice(0, 3).map((promotion) => {
-                                    const branch = branches.find(b => b.id === promotion.branch_id);
-                                    const params = promotion.params || {};
-                                    let description = promotion.title_ru || '';
-
-                                    if (promotion.promotion_type === 'free_after_n_visits' && params.visit_count) {
-                                        description = t('booking.promotions.freeAfterN', 'Каждая {n}-я услуга бесплатно').replace('{n}', String(params.visit_count));
-                                    } else if ((promotion.promotion_type === 'birthday_discount' || promotion.promotion_type === 'first_visit_discount' || promotion.promotion_type === 'referral_discount_50') && params.discount_percent) {
-                                        description = t('booking.promotions.discountPercent', 'Скидка {percent}%').replace('{percent}', String(params.discount_percent));
-                                    }
-
-                                    return (
-                                        <div key={promotion.id} className="flex items-start gap-2 p-3 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200 dark:border-emerald-800 hover:shadow-md transition-shadow">
-                                            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                            </svg>
-                                            <div className="flex-1">
-                                                <p className="text-sm text-emerald-900 dark:text-emerald-100 font-semibold">{description}</p>
-                                                {branch && (
-                                                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">{formatName(branch.name)}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                {promotions.length > 3 && (
-                                    <Link
-                                        href={`/b/${biz.slug}/promotions`}
-                                        className="block text-center py-2 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-lg border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
-                                    >
-                                        {t('business.info.morePromotions', '+{count} ещё акций').replace('{count}', String(promotions.length - 3))}
-                                    </Link>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Кнопка для перехода к бронированию */}
-                <div className="flex justify-center">
-                    <Link
-                        href={`/b/${biz.slug}/booking`}
-                        onMouseEnter={handlePrefetchBookingData}
-                        onFocus={handlePrefetchBookingData}
-                        className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                        {t('business.info.bookButton', 'Записаться')}
-                        <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                    </Link>
-                </div>
+                        </Card>
+                    </aside>
+                </section>
             </div>
         </main>
     );
 }
 
+function BusinessMetric({ value, label }: { value: number; label: string }) {
+    return (
+        <div className="rounded-[22px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_88%,transparent)] p-4 shadow-[var(--shadow-xs)]">
+            <div className="type-metric text-[var(--text-primary)]">{value}</div>
+            <p className="type-caption mt-2 text-[var(--text-muted)]">{label}</p>
+        </div>
+    );
+}
+
+function TrustPoint({ title, body }: { title: string; body: string }) {
+    return (
+        <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
+            <h3 className="type-label text-[var(--text-primary)]">{title}</h3>
+            <p className="type-caption mt-2 text-[var(--text-secondary)]">{body}</p>
+        </div>
+    );
+}
+
+function getPromotionDescription(
+    promotion: Promotion,
+    t: (key: string, fallback?: string) => string,
+) {
+    const params = promotion.params || {};
+
+    if (promotion.promotion_type === 'free_after_n_visits' && params.visit_count) {
+        return t('booking.promotions.freeAfterN', 'Каждая {n}-я услуга бесплатно').replace('{n}', String(params.visit_count));
+    }
+
+    if (
+        (promotion.promotion_type === 'birthday_discount' ||
+            promotion.promotion_type === 'first_visit_discount' ||
+            promotion.promotion_type === 'referral_discount_50') &&
+        params.discount_percent
+    ) {
+        return t('booking.promotions.discountPercent', 'Скидка {percent}%').replace('{percent}', String(params.discount_percent));
+    }
+
+    return promotion.title_ru || t('business.info.promotionFallback', 'Доступно специальное предложение');
+}

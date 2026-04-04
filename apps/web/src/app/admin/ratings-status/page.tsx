@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getT } from '@/app/_components/i18n/server';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { formatDateTime } from '@/lib/dateFormat';
 
 export const dynamic = 'force-dynamic';
@@ -50,6 +51,20 @@ function isStale(dateStr: string | null, maxDaysWithoutMetrics = 2): boolean {
     return diffDays > maxDaysWithoutMetrics;
 }
 
+function RatingsStatusErrorState({
+    title,
+    message,
+}: {
+    title: string;
+    message: string;
+}) {
+    return (
+        <main className="max-w-3xl mx-auto">
+            <AlertBanner variant="danger" title={title} message={message} />
+        </main>
+    );
+}
+
 export default async function RatingsStatusPage() {
     // Вызов уже существующего API, который сам проверяет супер‑админа.
     // Используем относительные URL, чтобы в проде не было сетевых ошибок из-за baseUrl.
@@ -67,19 +82,13 @@ export default async function RatingsStatusPage() {
     } catch {
         const t = await getT('ru');
         return (
-            <main className="max-w-3xl mx-auto">
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-                    <h1 className="text-lg font-semibold mb-2">
-                        {t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
-                    </h1>
-                    <p>
-                        {t(
-                            'admin.ratingsStatus.error.description',
-                            'Не удалось получить состояние рейтинговой системы.',
-                        )}
-                    </p>
-                </div>
-            </main>
+            <RatingsStatusErrorState
+                title={t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
+                message={t(
+                    'admin.ratingsStatus.error.description',
+                    'Не удалось получить состояние рейтинговой системы.',
+                )}
+            />
         );
     }
 
@@ -92,19 +101,13 @@ export default async function RatingsStatusPage() {
 
     if (!statusRes.ok) {
         return (
-            <main className="max-w-3xl mx-auto">
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-                    <h1 className="text-lg font-semibold mb-2">
-                        {t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
-                    </h1>
-                    <p>
-                        {t(
-                            'admin.ratingsStatus.error.description',
-                            'Не удалось получить состояние рейтинговой системы.',
-                        )}
-                    </p>
-                </div>
-            </main>
+            <RatingsStatusErrorState
+                title={t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
+                message={t(
+                    'admin.ratingsStatus.error.description',
+                    'Не удалось получить состояние рейтинговой системы.',
+                )}
+            />
         );
     }
 
@@ -113,19 +116,13 @@ export default async function RatingsStatusPage() {
         data = (await statusRes.json()) as RatingsStatusResponse;
     } catch {
         return (
-            <main className="max-w-3xl mx-auto">
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-                    <h1 className="text-lg font-semibold mb-2">
-                        {t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
-                    </h1>
-                    <p>
-                        {t(
-                            'admin.ratingsStatus.error.description',
-                            'Не удалось получить состояние рейтинговой системы.',
-                        )}
-                    </p>
-                </div>
-            </main>
+            <RatingsStatusErrorState
+                title={t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
+                message={t(
+                    'admin.ratingsStatus.error.description',
+                    'Не удалось получить состояние рейтинговой системы.',
+                )}
+            />
         );
     }
 
@@ -135,12 +132,16 @@ export default async function RatingsStatusPage() {
 
     if (!data.ok) {
         return (
-            <main className="max-w-3xl mx-auto">
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-                    <h1 className="text-lg font-semibold mb-2">{t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}</h1>
-                    <p>{data.error || t('admin.ratingsStatus.error.description', 'Не удалось получить состояние рейтинговой системы.')}</p>
-                </div>
-            </main>
+            <RatingsStatusErrorState
+                title={t('admin.ratingsStatus.error.title', 'Ошибка статуса рейтингов')}
+                message={
+                    data.error ||
+                    t(
+                        'admin.ratingsStatus.error.description',
+                        'Не удалось получить состояние рейтинговой системы.',
+                    )
+                }
+            />
         );
     }
 
@@ -389,5 +390,8 @@ export default async function RatingsStatusPage() {
         </main>
     );
 }
+
+
+
 
 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 
 type RatingConfig = {
     id: string;
@@ -205,29 +206,16 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                     </div>
 
                     {/* Итоговая сумма */}
-                    <div className={`p-4 rounded-lg border ${
-                        Math.abs(totalWeight - 100) < 0.01
-                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                    }`}>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Сумма весов:
-                            </span>
-                            <span className={`text-lg font-bold ${
-                                Math.abs(totalWeight - 100) < 0.01
-                                    ? 'text-green-700 dark:text-green-300'
-                                    : 'text-red-700 dark:text-red-300'
-                            }`}>
-                                {totalWeight.toFixed(2)}%
-                            </span>
-                        </div>
-                        {Math.abs(totalWeight - 100) >= 0.01 && (
-                            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                                Сумма должна равняться 100%
-                            </p>
-                        )}
-                    </div>
+                    <AlertBanner
+                        variant={Math.abs(totalWeight - 100) < 0.01 ? 'success' : 'danger'}
+                        title={`Сумма весов: ${totalWeight.toFixed(2)}%`}
+                        message={
+                            Math.abs(totalWeight - 100) < 0.01
+                                ? 'Веса собраны корректно.'
+                                : 'Сумма должна равняться 100%.'
+                        }
+                        compact
+                    />
                 </div>
 
                 {/* Период расчета */}
@@ -254,21 +242,18 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                 </div>
 
                 {/* Сообщения об ошибках и успехе */}
-                {error && (
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                        <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-                    </div>
-                )}
+                {error ? <AlertBanner variant="danger" message={error} /> : null}
 
-                {success && (
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                        <p className="text-sm text-green-700 dark:text-green-300">
-                            {showRecalcPrompt
+                                {success ? (
+                    <AlertBanner
+                        variant="success"
+                        message={
+                            showRecalcPrompt
                                 ? t('admin.ratingConfig.saved', 'Настройки успешно сохранены.')
-                                : t('admin.ratingConfig.savedReload', 'Настройки успешно сохранены! Страница обновится через несколько секунд...')}
-                        </p>
-                    </div>
-                )}
+                                : t('admin.ratingConfig.savedReload', 'Настройки успешно сохранены! Страница обновится через несколько секунд...')
+                        }
+                    />
+                ) : null}
 
                 {success && showRecalcPrompt && (
                     <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
@@ -310,9 +295,7 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
                                 {t('admin.ratingConfig.skipRecalc', 'Пропустить')}
                             </button>
                         </div>
-                        {recalcError && (
-                            <p className="mt-2 text-sm text-red-600 dark:text-red-400">{recalcError}</p>
-                        )}
+                        {recalcError ? <AlertBanner variant="danger" message={recalcError} compact className="mt-2" /> : null}
                     </div>
                 )}
 
@@ -350,4 +333,8 @@ export function RatingConfigClient({ initialConfig }: RatingConfigClientProps) {
         </section>
     );
 }
+
+
+
+
 

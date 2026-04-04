@@ -1,19 +1,20 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Constants from 'expo-constants';
 
-import { AuthStackParamList } from '../../navigation/types';
-import { useToast } from '../../contexts/ToastContext';
-import { normalizePhone, getValidationError } from '../../utils/validation';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { colors } from '../../constants/colors';
+import { useToast } from '../../contexts/ToastContext';
 import { apiRequest } from '../../lib/api';
-import Constants from 'expo-constants';
-import { logError, logDebug } from '../../lib/log';
+import { logDebug, logError } from '../../lib/log';
+import { AuthStackParamList } from '../../navigation/types';
+import { getValidationError, normalizePhone } from '../../utils/validation';
 
-const API_URL = 
-    process.env.EXPO_PUBLIC_API_URL || 
+const API_URL =
+    process.env.EXPO_PUBLIC_API_URL ||
     Constants.expoConfig?.extra?.apiUrl ||
     Constants.manifest?.extra?.apiUrl ||
     'https://kezek.kg';
@@ -30,7 +31,6 @@ export default function WhatsAppScreen() {
     const [verifying, setVerifying] = useState(false);
     const [countdown, setCountdown] = useState(0);
 
-    // Таймер для повторной отправки
     useEffect(() => {
         if (countdown > 0) {
             const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -56,14 +56,14 @@ export default function WhatsAppScreen() {
             const data = await response.json();
 
             if (!data.ok) {
-                throw new Error(data.message || 'Не удалось отправить код');
+                throw new Error(data.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ');
             }
 
             setStep('otp');
             setCountdown(60);
-            showToast('Код отправлен на WhatsApp', 'success');
+            showToast('РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РЅР° WhatsApp', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
+            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
             showToast(errorMessage, 'error');
         } finally {
             setSending(false);
@@ -72,7 +72,7 @@ export default function WhatsAppScreen() {
 
     const handleVerifyOtp = async () => {
         if (otp.length !== 6) {
-            showToast('Введите 6-значный код', 'error');
+            showToast('Р’РІРµРґРёС‚Рµ 6-Р·РЅР°С‡РЅС‹Р№ РєРѕРґ', 'error');
             return;
         }
 
@@ -80,7 +80,7 @@ export default function WhatsAppScreen() {
         try {
             const normalizedPhone = normalizePhone(phone);
             logDebug('WhatsAppScreen', 'Verifying OTP', { phone: normalizedPhone });
-            
+
             const response = await fetch(`${API_URL}/api/auth/whatsapp/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -91,65 +91,57 @@ export default function WhatsAppScreen() {
             logDebug('WhatsAppScreen', 'Verify OTP response', { ok: data.ok, userId: data.userId });
 
             if (!data.ok) {
-                throw new Error(data.message || 'Неверный код');
+                throw new Error(data.message || 'РќРµРІРµСЂРЅС‹Р№ РєРѕРґ');
             }
 
-            // Создаем сессию через API
             logDebug('WhatsAppScreen', 'Creating session', { userId: data.userId });
             const sessionResponse = await fetch(`${API_URL}/api/auth/whatsapp/create-session`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     phone: normalizedPhone,
                     userId: data.userId,
                 }),
             });
             const sessionData = await sessionResponse.json();
 
-            logDebug('WhatsAppScreen', 'Create session response', { 
-                ok: sessionData.ok, 
-                hasEmail: !!sessionData.email, 
+            logDebug('WhatsAppScreen', 'Create session response', {
+                ok: sessionData.ok,
+                hasEmail: !!sessionData.email,
                 hasPassword: !!sessionData.password,
                 hasSession: !!sessionData.session,
-                hasMagicLink: !!sessionData.magicLink 
+                hasMagicLink: !!sessionData.magicLink,
             });
 
             if (!sessionData.ok) {
-                throw new Error(sessionData.message || 'Не удалось создать сессию');
+                throw new Error(sessionData.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ СЃРµСЃСЃРёСЋ');
             }
 
-            // API возвращает email и password для входа
             if (sessionData.email && sessionData.password && sessionData.needsSignIn) {
                 const { supabase } = await import('../../lib/supabase');
-                
-                // Входим с временным паролем
-                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+
+                const { error: signInError } = await supabase.auth.signInWithPassword({
                     email: sessionData.email,
                     password: sessionData.password,
                 });
 
                 if (signInError) {
                     logError('WhatsAppScreen', 'Sign in error', signInError);
-                    throw new Error('Не удалось войти: ' + signInError.message);
+                    throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕР№С‚Рё: ' + signInError.message);
                 }
 
-                // Проверяем, что сессия создана
-                const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+                const {
+                    data: { user: currentUser },
+                    error: userError,
+                } = await supabase.auth.getUser();
                 if (userError || !currentUser) {
                     logError('WhatsAppScreen', 'User not found after sign in', userError);
-                    throw new Error('Вход выполнен, но сессия не была создана');
+                    throw new Error('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ, РЅРѕ СЃРµСЃСЃРёСЏ РЅРµ Р±С‹Р»Р° СЃРѕР·РґР°РЅР°');
                 }
 
                 logDebug('WhatsAppScreen', 'Sign in successful', { userId: currentUser.id });
-                showToast('Вход выполнен успешно', 'success');
-                
-                // Навигация произойдет автоматически через RootNavigator при изменении auth state
-                // Даем небольшую задержку для обновления состояния
-                setTimeout(() => {
-                    // RootNavigator автоматически переключится на Main navigator при изменении session
-                }, 500);
+                showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
             } else if (sessionData.session) {
-                // Если есть готовые токены (старый формат)
                 const { supabase } = await import('../../lib/supabase');
                 const { error } = await supabase.auth.setSession({
                     access_token: sessionData.session.access_token,
@@ -158,15 +150,14 @@ export default function WhatsAppScreen() {
 
                 if (error) throw error;
 
-                showToast('Вход выполнен успешно', 'success');
+                showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
             } else if (sessionData.magicLink) {
-                // Если есть magic link, открываем его
-                showToast('Проверьте email для завершения входа', 'info');
+                showToast('РџСЂРѕРІРµСЂСЊС‚Рµ email РґР»СЏ Р·Р°РІРµСЂС€РµРЅРёСЏ РІС…РѕРґР°', 'info');
             } else {
-                throw new Error('Неожиданный формат ответа от сервера');
+                throw new Error('РќРµРѕР¶РёРґР°РЅРЅС‹Р№ С„РѕСЂРјР°С‚ РѕС‚РІРµС‚Р° РѕС‚ СЃРµСЂРІРµСЂР°');
             }
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Не удалось войти';
+            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕР№С‚Рё';
             showToast(errorMessage, 'error');
         } finally {
             setVerifying(false);
@@ -175,75 +166,88 @@ export default function WhatsAppScreen() {
 
     const handleResendOtp = () => {
         if (countdown > 0) return;
-        handleSendOtp();
+        void handleSendOtp();
     };
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Вход через WhatsApp</Text>
+            <Text style={styles.title}>Р’С…РѕРґ С‡РµСЂРµР· WhatsApp</Text>
             <Text style={styles.subtitle}>
                 {step === 'phone'
-                    ? 'Введите номер телефона для получения кода'
-                    : 'Введите код, отправленный на WhatsApp'}
+                    ? 'Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РєРѕРґР°'
+                    : 'Р’РІРµРґРёС‚Рµ РєРѕРґ, РѕС‚РїСЂР°РІР»РµРЅРЅС‹Р№ РЅР° WhatsApp'}
             </Text>
 
             {step === 'phone' ? (
                 <>
                     <Input
-                        label="Номер телефона"
+                        label="РќРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°"
                         placeholder="+996500574029"
                         value={phone}
                         onChangeText={setPhone}
                         keyboardType="phone-pad"
+                        containerStyle={styles.field}
                     />
                     <Button
-                        title={sending ? 'Отправка...' : 'Отправить код'}
-                        onPress={handleSendOtp}
+                        title={sending ? 'РћС‚РїСЂР°РІРєР°...' : 'РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ'}
+                        onPress={() => void handleSendOtp()}
                         loading={sending}
                         disabled={sending}
+                        fullWidth
                     />
                 </>
             ) : (
                 <>
                     <View style={styles.otpContainer}>
-                        <TextInput
-                            style={styles.otpInput}
+                        <Input
+                            placeholder="000000"
                             value={otp}
                             onChangeText={(text) => setOtp(text.replace(/\D/g, '').slice(0, 6))}
-                            placeholder="000000"
                             keyboardType="number-pad"
                             maxLength={6}
                             autoFocus
+                            containerStyle={styles.field}
+                            style={styles.otpInput}
+                            inputContainerStyle={styles.otpInputContainer}
                         />
-                        <Text style={styles.otpHint}>Код отправлен на {phone}</Text>
+                        <Text style={styles.otpHint}>РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РЅР° {phone}</Text>
                     </View>
 
                     <View style={styles.otpActions}>
-                        <TouchableOpacity onPress={() => setStep('phone')}>
-                            <Text style={styles.linkText}>Изменить номер</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleResendOtp} disabled={countdown > 0}>
-                            <Text style={[styles.linkText, countdown > 0 && styles.linkTextDisabled]}>
-                                {countdown > 0 ? `Отправить снова (${countdown}с)` : 'Отправить код снова'}
-                            </Text>
-                        </TouchableOpacity>
+                        <Button
+                            title="РР·РјРµРЅРёС‚СЊ РЅРѕРјРµСЂ"
+                            onPress={() => setStep('phone')}
+                            variant="ghost"
+                            size="sm"
+                            style={styles.otpActionButton}
+                        />
+                        <Button
+                            title={countdown > 0 ? `РћС‚РїСЂР°РІРёС‚СЊ СЃРЅРѕРІР° (${countdown}СЃ)` : 'РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ СЃРЅРѕРІР°'}
+                            onPress={handleResendOtp}
+                            disabled={countdown > 0}
+                            variant="ghost"
+                            size="sm"
+                            style={styles.otpActionButton}
+                        />
                     </View>
 
                     <Button
-                        title={verifying ? 'Проверка...' : 'Войти'}
-                        onPress={handleVerifyOtp}
+                        title={verifying ? 'РџСЂРѕРІРµСЂРєР°...' : 'Р’РѕР№С‚Рё'}
+                        onPress={() => void handleVerifyOtp()}
                         loading={verifying}
                         disabled={verifying || otp.length !== 6}
+                        fullWidth
                     />
                 </>
             )}
 
-            <TouchableOpacity 
-                style={styles.backButton}
+            <Button
+                title="Р’РµСЂРЅСѓС‚СЊСЃСЏ Рє РґСЂСѓРіРёРј СЃРїРѕСЃРѕР±Р°Рј РІС…РѕРґР°"
                 onPress={() => navigation.goBack()}
-            >
-                <Text style={styles.backButtonText}>Вернуться к другим способам входа</Text>
-            </TouchableOpacity>
+                variant="ghost"
+                style={styles.backButton}
+                fullWidth
+            />
         </ScrollView>
     );
 }
@@ -251,60 +255,51 @@ export default function WhatsAppScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface.page,
     },
     content: {
-        padding: 20,
+        padding: colors.layout.space5,
     },
     title: {
         fontSize: 28,
-        fontWeight: 'bold',
+        fontWeight: '700',
         marginBottom: 8,
-        color: '#111827',
+        color: colors.text.primary,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
-        marginBottom: 24,
+        color: colors.text.secondary,
+        marginBottom: colors.layout.space6,
+    },
+    field: {
+        marginBottom: colors.layout.space5,
     },
     otpContainer: {
-        marginBottom: 24,
+        marginBottom: colors.layout.space6,
+    },
+    otpInputContainer: {
+        justifyContent: 'center',
     },
     otpInput: {
         fontSize: 32,
         letterSpacing: 8,
         textAlign: 'center',
-        borderWidth: 1,
-        borderColor: '#d1d5db',
-        borderRadius: 8,
-        paddingVertical: 16,
-        marginBottom: 8,
-        backgroundColor: '#f9fafb',
     },
     otpHint: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.text.secondary,
         textAlign: 'center',
     },
     otpActions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 24,
+        gap: colors.layout.space3,
+        marginBottom: colors.layout.space6,
     },
-    linkText: {
-        color: '#6366f1',
-        fontSize: 14,
-    },
-    linkTextDisabled: {
-        opacity: 0.5,
+    otpActionButton: {
+        flex: 1,
     },
     backButton: {
-        marginTop: 24,
-        alignItems: 'center',
-    },
-    backButtonText: {
-        color: '#6b7280',
-        fontSize: 14,
+        marginTop: colors.layout.space5,
     },
 });
-

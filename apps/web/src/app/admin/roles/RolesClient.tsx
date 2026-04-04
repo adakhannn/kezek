@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import React, {useEffect, useMemo, useState} from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import {Button} from '@/components/ui/Button';
 import {Card} from '@/components/ui/Card';
+import {ConfirmDialog} from '@/components/ui/ConfirmDialog';
 
 type Role = {
     id: string;
@@ -31,6 +33,7 @@ export default function RolesClient({baseURL}: { baseURL?: string }) {
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [confirmRole, setConfirmRole] = useState<Role | null>(null);
 
     async function load() {
         try {
@@ -58,7 +61,6 @@ export default function RolesClient({baseURL}: { baseURL?: string }) {
             setErr('Это системная роль — удаление запрещено.');
             return;
         }
-        if (!confirm(`Удалить роль «${r.name}»?`)) return;
 
         try {
             setErr(null);
@@ -68,6 +70,7 @@ export default function RolesClient({baseURL}: { baseURL?: string }) {
             if (!res.ok || !json.ok) {
                 throw new Error(('error' in json && json.error) || `HTTP ${res.status}`);
             }
+            setConfirmRole(null);
             await load();
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : String(e));
@@ -198,7 +201,7 @@ export default function RolesClient({baseURL}: { baseURL?: string }) {
                                 <Button
                                     variant="danger"
                                     size="sm"
-                                    onClick={() => onDelete(r)}
+                                    onClick={() => setConfirmRole(r)}
                                     disabled={!!r.is_system || deletingId === r.id}
                                     isLoading={deletingId === r.id}
                                     title={r.is_system ? 'Системную роль удалить нельзя' : 'Удалить'}
@@ -216,12 +219,21 @@ export default function RolesClient({baseURL}: { baseURL?: string }) {
                     ))}
                 </div>
             )}
-
-            {err && (
-                <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
-                    <p className="text-sm text-red-800 dark:text-red-300">{err}</p>
-                </Card>
-            )}
+            {err ? <AlertBanner variant="danger" message={err} compact /> : null}
+            <ConfirmDialog
+                open={confirmRole !== null}
+                onClose={() => setConfirmRole(null)}
+                onConfirm={() => confirmRole && onDelete(confirmRole)}
+                title="Удалить роль"
+                message={confirmRole ? `Удалить роль «${confirmRole.name}»?` : ''}
+                confirmLabel="Удалить"
+                cancelLabel="Отмена"
+                confirmVariant="danger"
+                isLoading={deletingId === confirmRole?.id}
+            />
         </div>
     );
 }
+
+
+

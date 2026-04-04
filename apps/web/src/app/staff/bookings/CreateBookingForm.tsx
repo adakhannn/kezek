@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { addMinutes } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Card } from '@/components/ui/Card';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 import { getFreeSlotsForServiceDay, getFreeSlotsForComplexDay, createInternalBooking, createInternalComplexBooking } from '@/lib/bookingDashboardService';
 import { getSessionId, trackFunnelEvent } from '@/lib/funnelEvents';
 import { TZ, todayStringInTz } from '@/lib/time';
@@ -40,6 +42,7 @@ type Props = {
 
 export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, branches }: Props) {
     const { t, locale } = useLanguage();
+    const toast = useToast();
 
     const [branchId, setBranchId] = useState<string>(defaultBranchId || '');
     const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
@@ -165,27 +168,30 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
     async function createBooking() {
         const selectedServices = servicesByBranch.filter((s) => selectedServiceIds.includes(s.id));
         if (selectedServices.length === 0) {
-            return alert(
+            toast.showError(
                 t(
                     'staff.cabinet.bookings.create.errors.selectService',
                     'Выберите хотя бы одну услугу',
                 ),
             );
+            return;
         }
-        if (!slotStartISO)
-            return alert(
+        if (!slotStartISO) {
+            toast.showError(
                 t(
                     'staff.cabinet.bookings.create.errors.noSlots',
                     'Нет свободных слотов',
                 ),
             );
+            return;
+        }
 
         const name = newClientName.trim();
         const phone = newClientPhone.trim();
 
         const nameValidation = validateName(name, true);
         if (!nameValidation.valid) {
-            alert(
+            toast.showError(
                 nameValidation.error ||
                     t(
                         'staff.cabinet.bookings.create.errors.nameRequired',
@@ -197,7 +203,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
 
         const phoneValidation = validatePhone(phone, true);
         if (!phoneValidation.valid) {
-            alert(
+            toast.showError(
                 phoneValidation.error ||
                     t(
                         'staff.cabinet.bookings.create.errors.phoneRequired',
@@ -265,7 +271,7 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                 const { logError } = require('@/lib/log');
                 logError('StaffBookings', 'Failed to track booking_success funnel event', e);
             }
-            alert(
+            toast.showSuccess(
                 t(
                     'staff.cabinet.bookings.create.success',
                     `Создана запись #${bookingId.slice(0, 8)}`,
@@ -278,6 +284,12 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
             setNewClientName('');
             setNewClientPhone('');
             window.location.reload();
+        } catch (error) {
+            toast.showError(
+                error instanceof Error
+                    ? error.message
+                    : t('staff.cabinet.bookings.create.errors.generic', 'Не удалось создать запись'),
+            );
         } finally {
             setCreating(false);
         }
@@ -512,7 +524,11 @@ export function CreateBookingForm({ bizId, staffId, defaultBranchId, services, b
                     )}
                 </button>
             </div>
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </Card>
     );
 }
+
+
+
 

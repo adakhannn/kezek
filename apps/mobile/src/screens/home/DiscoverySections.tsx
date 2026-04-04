@@ -1,11 +1,13 @@
 import React from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import MotionPressable from '../../components/ui/MotionPressable';
 import RatingBadge from '../../components/ui/RatingBadge';
 import { colors } from '../../constants/colors';
 import { formatPhone } from '../../utils/format';
@@ -39,14 +41,14 @@ export function CategoriesSection({
 
     return (
         <View style={styles.categoriesContainer}>
-            <Text style={styles.categoriesLabel}>РџРѕРїСѓР»СЏСЂРЅС‹Рµ РєР°С‚РµРіРѕСЂРёРё:</Text>
+            <Text style={styles.categoriesLabel}>Р СџР С•Р С—РЎС“Р В»РЎРЏРЎР‚Р Р…РЎвЂ№Р Вµ Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘Р С‘:</Text>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 style={styles.categoriesScroll}
             >
                 <CategoryChip
-                    label="Р’СЃРµ"
+                    label="Р вЂ™РЎРѓР Вµ"
                     isActive={!selectedCategory}
                     onPress={() => onSelectCategory(null)}
                 />
@@ -73,7 +75,7 @@ function CategoryChip({
     onPress: () => void;
 }) {
     return (
-        <TouchableOpacity
+        <MotionPressable
             style={[styles.categoryChip, isActive && styles.categoryChipActive]}
             onPress={onPress}
         >
@@ -89,7 +91,7 @@ function CategoryChip({
             ) : (
                 <Text style={styles.categoryChipText}>{label}</Text>
             )}
-        </TouchableOpacity>
+        </MotionPressable>
     );
 }
 
@@ -102,7 +104,7 @@ export function BusinessListSection({
     onOpenBusiness,
 }: BusinessListSectionProps) {
     if (isLoading && !isRefreshing) {
-        return <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР°..." />;
+        return <LoadingSpinner message="Р вЂ”Р В°Р С–РЎР‚РЎС“Р В·Р С”Р В°..." />;
     }
 
     if (businesses.length === 0) {
@@ -111,13 +113,13 @@ export function BusinessListSection({
                 icon="search"
                 title={
                     search || selectedCategory
-                        ? 'РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ'
-                        : 'РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… Р±РёР·РЅРµСЃРѕРІ'
+                        ? 'Р СњР С‘РЎвЂЎР ВµР С–Р С• Р Р…Р Вµ Р Р…Р В°Р в„–Р Т‘Р ВµР Р…Р С•'
+                        : 'Р СњР ВµРЎвЂљ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…РЎвЂ№РЎвЂ¦ Р В±Р С‘Р В·Р Р…Р ВµРЎРѓР С•Р Р†'
                 }
                 message={
                     search || selectedCategory
-                        ? 'РџРѕРїСЂРѕР±СѓР№С‚Рµ РґСЂСѓРіРѕР№ Р·Р°РїСЂРѕСЃ'
-                        : 'Р‘РёР·РЅРµСЃС‹ РїРѕСЏРІСЏС‚СЃСЏ Р·РґРµСЃСЊ РїРѕСЃР»Рµ СЂРµРіРёСЃС‚СЂР°С†РёРё'
+                        ? 'Р СџР С•Р С—РЎР‚Р С•Р В±РЎС“Р в„–РЎвЂљР Вµ Р Т‘РЎР‚РЎС“Р С–Р С•Р в„– Р В·Р В°Р С—РЎР‚Р С•РЎРѓ'
+                        : 'Р вЂР С‘Р В·Р Р…Р ВµРЎРѓРЎвЂ№ Р С—Р С•РЎРЏР Р†РЎРЏРЎвЂљРЎРѓРЎРЏ Р В·Р Т‘Р ВµРЎРѓРЎРЉ Р С—Р С•РЎРѓР В»Р Вµ РЎР‚Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘Р С‘'
                 }
             />
         );
@@ -126,19 +128,16 @@ export function BusinessListSection({
     return (
         <View style={styles.businessList}>
             {businesses.map((business) => (
-                <TouchableOpacity
+                <MotionPressable
                     key={business.id}
                     onPress={() => onOpenBusiness(business.slug)}
-                    activeOpacity={0.7}
+                    scale="firm"
                 >
                     <Card style={styles.businessCard}>
                         <View style={styles.businessHeader}>
                             <View style={styles.businessNameRow}>
                                 <Text style={styles.businessName}>{business.name}</Text>
-                                <RatingBadge
-                                    rating={business.rating_score ?? null}
-                                    size="small"
-                                />
+                                <RatingBadge rating={business.rating_score ?? null} size="small" />
                             </View>
                         </View>
 
@@ -181,18 +180,15 @@ export function BusinessListSection({
                         ) : null}
 
                         <View style={styles.businessFooter}>
-                            <LinearGradient
-                                colors={[colors.primary.from, colors.primary.to]}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={styles.bookButton}
-                            >
-                                <Text style={styles.bookButtonText}>Р—Р°РїРёСЃР°С‚СЊСЃСЏ</Text>
-                                <Ionicons name="arrow-forward" size={16} color="#fff" />
-                            </LinearGradient>
+                            <Button
+                                title="Р вЂ”Р В°Р С—Р С‘РЎРѓР В°РЎвЂљРЎРЉРЎРѓРЎРЏ"
+                                onPress={() => onOpenBusiness(business.slug)}
+                                trailingIcon={<Ionicons name="arrow-forward" size={16} color={colors.text.light} />}
+                                fullWidth
+                            />
                         </View>
                     </Card>
-                </TouchableOpacity>
+                </MotionPressable>
             ))}
         </View>
     );

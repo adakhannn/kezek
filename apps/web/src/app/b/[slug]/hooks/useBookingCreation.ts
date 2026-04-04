@@ -5,14 +5,18 @@ import type { Service } from '../types';
 import { fmtErr, withNetworkRetry } from '../utils';
 
 import { trackFunnelEvent, getSessionId } from '@/lib/funnelEvents';
-import { createQuickHoldBooking } from '@/lib/quickHoldClient';
 import { logDebug, logError } from '@/lib/log';
+import { createQuickHoldBooking } from '@/lib/quickHoldClient';
 import { TZ } from '@/lib/time';
+
+type BookingFeedbackApi = {
+    showError: (message: string, duration?: number) => string;
+};
 
 type UseBookingCreationParams = {
     bizId: string;
     branchId: string;
-    /** Одна или несколько услуг (комплекс); при одной вызывается hold_slot, при нескольких - hold_complex_slot */
+    /** РћРґРЅР° РёР»Рё РЅРµСЃРєРѕР»СЊРєРѕ СѓСЃР»СѓРі (РєРѕРјРїР»РµРєСЃ); РїСЂРё РѕРґРЅРѕР№ РІС‹Р·С‹РІР°РµС‚СЃСЏ hold_slot, РїСЂРё РЅРµСЃРєРѕР»СЊРєРёС… - hold_complex_slot */
     services: Service[];
     staffId: string;
     isAuthed: boolean;
@@ -20,6 +24,7 @@ type UseBookingCreationParams = {
     onAuthChoiceRequest: (slotTime: Date, slotStaffId?: string) => void;
     onStaffIdChange?: (staffId: string) => void;
     onBookingCreated?: () => void;
+    feedback: BookingFeedbackApi;
 };
 
 export function useBookingCreation(params: UseBookingCreationParams) {
@@ -33,15 +38,16 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         onAuthChoiceRequest,
         onStaffIdChange,
         onBookingCreated,
+        feedback,
     } = params;
     const [loading, setLoading] = useState(false);
 
     async function createBooking(slotTime: Date, slotStaffId?: string) {
         if (!services.length) {
-            alert(
+            feedback.showError(
                 t(
                     'booking.selectService',
-                    'Пожалуйста, выберите услугу перед продолжением.',
+                    'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ СѓСЃР»СѓРіСѓ РїРµСЂРµРґ РїСЂРѕРґРѕР»Р¶РµРЅРёРµРј.',
                 ),
             );
             return;
@@ -50,10 +56,10 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         let actualStaffId: string;
         if (staffId === 'any') {
             if (!slotStaffId) {
-                alert(
+                feedback.showError(
                     t(
                         'booking.selectMaster',
-                        'Не удалось определить мастера для выбранного времени. Пожалуйста, выберите время еще раз.',
+                        'РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСЂРµРґРµР»РёС‚СЊ РјР°СЃС‚РµСЂР° РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РІСЂРµРјРµРЅРё. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РІСЂРµРјСЏ РµС‰Рµ СЂР°Р·.',
                     ),
                 );
                 return;
@@ -64,20 +70,20 @@ export function useBookingCreation(params: UseBookingCreationParams) {
         }
 
         if (!actualStaffId) {
-            alert(
+            feedback.showError(
                 t(
                     'booking.selectMaster',
-                    'Пожалуйста, выберите мастера перед продолжением.',
+                    'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РјР°СЃС‚РµСЂР° РїРµСЂРµРґ РїСЂРѕРґРѕР»Р¶РµРЅРёРµРј.',
                 ),
             );
             return;
         }
 
         if (!branchId) {
-            alert(
+            feedback.showError(
                 t(
                     'booking.selectBranch',
-                    'Пожалуйста, выберите филиал перед продолжением.',
+                    'РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р» РїРµСЂРµРґ РїСЂРѕРґРѕР»Р¶РµРЅРёРµРј.',
                 ),
             );
             return;
@@ -162,9 +168,9 @@ export function useBookingCreation(params: UseBookingCreationParams) {
                 fmtErr(e, t) ||
                 t(
                     'booking.error.technical',
-                    'Произошла техническая ошибка при создании бронирования. Пожалуйста, проверьте подключение к интернету и попробуйте еще раз.',
+                    'РџСЂРѕРёР·РѕС€Р»Р° С‚РµС…РЅРёС‡РµСЃРєР°СЏ РѕС€РёР±РєР° РїСЂРё СЃРѕР·РґР°РЅРёРё Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.',
                 );
-            alert(message);
+            feedback.showError(message);
         } finally {
             setLoading(false);
         }

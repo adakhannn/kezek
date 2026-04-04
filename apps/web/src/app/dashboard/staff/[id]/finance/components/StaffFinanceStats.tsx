@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import {
     StaffFinanceStatsFilters,
@@ -9,6 +9,9 @@ import {
 import { useStaffFinanceStatsData } from './useStaffFinanceStatsData';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { formatDateBrowser, formatMonthYear } from '@/lib/dateFormat';
@@ -49,14 +52,32 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
 
     if (error) {
         return (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
-                <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
-            </div>
+            <AlertBanner
+                variant="danger"
+                title={t('finance.error.title', 'Ошибка загрузки статистики')}
+                message={error}
+                action={
+                    <Button type="button" variant="danger" size="sm" onClick={() => void loadStats()}>
+                        {t('finance.retry', 'Попробовать снова')}
+                    </Button>
+                }
+            />
         );
     }
 
     if (!stats) {
-        return null;
+        return (
+            <EmptyState
+                title={t('finance.empty.title', 'Пока нет данных')}
+                description={t('finance.empty.description', 'Статистика появится после первых смен и начислений.')}
+                action={
+                    <Button type="button" variant="secondary" size="sm" onClick={() => void loadStats()}>
+                        {t('finance.refresh', 'Обновить')}
+                    </Button>
+                }
+                compact
+            />
+        );
     }
 
     return (

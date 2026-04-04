@@ -1,38 +1,39 @@
 import { StyleSheet } from 'react-native';
 
+import { colors } from '../../constants/colors';
+import { typography } from '../../constants/typography';
+
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background.primary,
     },
     header: {
         padding: 24,
-        backgroundColor: '#fff',
+        backgroundColor: colors.background.secondary,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border.light,
     },
     title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#111827',
+        ...typography.pageTitle,
+        color: colors.text.primary,
         marginBottom: 8,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#6b7280',
+        ...typography.body,
+        color: colors.text.secondary,
     },
     section: {
         padding: 24,
     },
     sectionTitle: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#111827',
+        ...typography.sectionTitle,
+        color: colors.text.primary,
         marginBottom: 20,
     },
     tabsContainer: {
         flexDirection: 'row',
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.background.tertiary,
         borderRadius: 999,
         padding: 4,
         marginBottom: 12,
@@ -45,38 +46,38 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     tabButtonActive: {
-        backgroundColor: '#ffffff',
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 1,
+        backgroundColor: colors.background.secondary,
+        ...colors.shadow.sm,
     },
     tabButtonText: {
-        fontSize: 14,
-        color: '#6b7280',
+        ...typography.caption,
         fontWeight: '500',
+        color: colors.text.secondary,
     },
     tabButtonTextActive: {
-        color: '#4f46e5',
+        color: colors.accent.primary,
         fontWeight: '600',
     },
     offlineBanner: {
         marginBottom: 16,
         padding: 12,
-        borderRadius: 8,
-        backgroundColor: '#FEF3C7',
+        borderRadius: 12,
+        backgroundColor: colors.feedback.warningSurface,
         borderWidth: 1,
-        borderColor: '#FBBF24',
+        borderColor: colors.status.warning,
     },
     offlineBannerText: {
-        fontSize: 14,
-        color: '#92400E',
+        ...typography.caption,
+        color: colors.status.warning,
     },
     bookingsList: {
         gap: 16,
     },
     bookingCard: {
         marginBottom: 0,
+    },
+    bookingPressable: {
+        borderRadius: colors.layout.radiusLg,
     },
     bookingHeader: {
         flexDirection: 'row',
@@ -85,9 +86,8 @@ export const styles = StyleSheet.create({
         marginBottom: 12,
     },
     bookingService: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#111827',
+        ...typography.sectionTitle,
+        color: colors.text.primary,
         flex: 1,
         marginRight: 12,
     },
@@ -97,60 +97,59 @@ export const styles = StyleSheet.create({
         borderRadius: 16,
     },
     statusText: {
-        fontSize: 12,
+        ...typography.label,
         fontWeight: '600',
-        color: '#fff',
+        color: colors.text.inverse,
     },
     bookingBusiness: {
-        fontSize: 16,
+        ...typography.body,
         fontWeight: '500',
-        color: '#374151',
+        color: colors.text.secondary,
         marginBottom: 6,
     },
     bookingStaff: {
-        fontSize: 14,
-        color: '#6b7280',
+        ...typography.caption,
+        color: colors.text.secondary,
         marginBottom: 6,
     },
     bookingBranch: {
-        fontSize: 14,
-        color: '#6b7280',
+        ...typography.caption,
+        color: colors.text.secondary,
         marginBottom: 12,
     },
     bookingTime: {
         marginTop: 12,
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: colors.border.light,
     },
     bookingDate: {
-        fontSize: 14,
+        ...typography.caption,
         fontWeight: '500',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     bookingTimeRange: {
-        fontSize: 14,
-        color: '#6b7280',
+        ...typography.caption,
+        color: colors.text.secondary,
     },
     loading: {
         textAlign: 'center',
         padding: 40,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     empty: {
         padding: 40,
         alignItems: 'center',
     },
     emptyText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#374151',
+        ...typography.sectionTitle,
+        color: colors.text.secondary,
         marginBottom: 8,
     },
     emptyHint: {
-        fontSize: 14,
-        color: '#6b7280',
+        ...typography.caption,
+        color: colors.text.secondary,
     },
     footer: {
         padding: 24,

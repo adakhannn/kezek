@@ -3,6 +3,8 @@
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
+
 export default function FlashBanner({
                                         showInitially,
                                         text,
@@ -32,9 +34,5 @@ export default function FlashBanner({
     }, [showInitially, clearQueryKey, ms, pathname, r]);
 
     if (!show) return null;
-    return (
-        <div className="border rounded p-3 text-sm bg-green-50 border-green-300 text-green-900">
-            {text}
-        </div>
-    );
+    return <AlertBanner variant="success" message={text} compact />;
 }

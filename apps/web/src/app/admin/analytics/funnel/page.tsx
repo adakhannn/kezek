@@ -1,9 +1,12 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 
 import { loadPersistedAnalyticsFilters, persistAnalyticsFilters } from '../filterPersistence';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { addDaysToDateString, todayDateString } from '@/lib/time';
 
 type FunnelStep = {
@@ -27,7 +30,7 @@ type PeriodPreset = '7' | '30' | '90' | 'custom';
 type SourceFilter = 'all' | 'web' | 'mobile';
 
 function formatPercent(value: number | null | undefined) {
-  if (value == null) return '—';
+  if (value == null) return 'вЂ”';
   return `${value.toFixed(2)}%`;
 }
 
@@ -76,7 +79,7 @@ export default function AdminAnalyticsFunnelPage() {
         }
         const json: FunnelResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'Не удалось загрузить аналитику воронки');
+          throw new Error(json.error || 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р°РЅР°Р»РёС‚РёРєСѓ РІРѕСЂРѕРЅРєРё');
         }
         if (!ignore) {
           setData(json.data);
@@ -128,7 +131,7 @@ export default function AdminAnalyticsFunnelPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем аналитику воронки...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Р—Р°РіСЂСѓР¶Р°РµРј Р°РЅР°Р»РёС‚РёРєСѓ РІРѕСЂРѕРЅРєРё...</span>
           </div>
         </div>
       </div>
@@ -138,20 +141,26 @@ export default function AdminAnalyticsFunnelPage() {
   if (error) {
     return (
       <div className="px-4 py-10">
-        <div className="max-w-xl mx-auto bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl p-6 shadow-sm">
-          <h1 className="text-xl font-semibold text-red-900 dark:text-red-50 mb-2">Ошибка загрузки воронки</h1>
-          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setLoading(true);
-              setStartDate((s) => s);
-            }}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
-          >
-            <span>Попробовать снова</span>
-          </button>
+        <div className="mx-auto max-w-xl">
+          <AlertBanner
+            variant="danger"
+            title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РІРѕСЂРѕРЅРєРё"
+            message={error}
+            action={
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  setStartDate((s) => s);
+                }}
+              >
+                РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°
+              </Button>
+            }
+          />
         </div>
       </div>
     );
@@ -163,25 +172,25 @@ export default function AdminAnalyticsFunnelPage() {
 
   return (
     <div className="space-y-6 py-6">
-      {/* Фильтры */}
+      {/* Р¤РёР»СЊС‚СЂС‹ */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Р¤РёР»СЊС‚СЂС‹</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Период и канал задают срез для событий воронки.
+              РџРµСЂРёРѕРґ Рё РєР°РЅР°Р» Р·Р°РґР°СЋС‚ СЃСЂРµР· РґР»СЏ СЃРѕР±С‹С‚РёР№ РІРѕСЂРѕРЅРєРё.
             </p>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            Период данных: {data.period.startDate} — {data.period.endDate}
+            РџРµСЂРёРѕРґ РґР°РЅРЅС‹С…: {data.period.startDate} вЂ” {data.period.endDate}
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {/* Период */}
+          {/* РџРµСЂРёРѕРґ */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Период
+              РџРµСЂРёРѕРґ
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
@@ -195,19 +204,19 @@ export default function AdminAnalyticsFunnelPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' && '7 дней'}
-                  {p === '30' && '30 дней'}
-                  {p === '90' && '90 дней'}
-                  {p === 'custom' && 'Кастомный'}
+                  {p === '7' && '7 РґРЅРµР№'}
+                  {p === '30' && '30 РґРЅРµР№'}
+                  {p === '90' && '90 РґРЅРµР№'}
+                  {p === 'custom' && 'РљР°СЃС‚РѕРјРЅС‹Р№'}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Даты */}
+          {/* Р”Р°С‚С‹ */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата начала
+              Р”Р°С‚Р° РЅР°С‡Р°Р»Р°
             </label>
             <input
               type="date"
@@ -222,7 +231,7 @@ export default function AdminAnalyticsFunnelPage() {
 
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Дата окончания
+              Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ
             </label>
             <input
               type="date"
@@ -235,17 +244,17 @@ export default function AdminAnalyticsFunnelPage() {
             />
           </div>
 
-          {/* Канал */}
+          {/* РљР°РЅР°Р» */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Канал
+              РљР°РЅР°Р»
             </label>
             <select
               value={source}
               onChange={(e) => setSource(e.target.value as SourceFilter)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Все (web + mobile)</option>
+              <option value="all">Р’СЃРµ (web + mobile)</option>
               <option value="web">Web</option>
               <option value="mobile">Mobile</option>
             </select>
@@ -253,95 +262,104 @@ export default function AdminAnalyticsFunnelPage() {
         </div>
       </section>
 
-      {/* Сводка по воронке */}
+      {/* РЎРІРѕРґРєР° РїРѕ РІРѕСЂРѕРЅРєРµ */}
       <section className="grid gap-4 md:grid-cols-3">
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Общая конверсия воронки
+            РћР±С‰Р°СЏ РєРѕРЅРІРµСЂСЃРёСЏ РІРѕСЂРѕРЅРєРё
           </p>
           <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
             {formatPercent(data.overallConversion)}
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            От первого шага (просмотры главной) до успешной брони.
+            РћС‚ РїРµСЂРІРѕРіРѕ С€Р°РіР° (РїСЂРѕСЃРјРѕС‚СЂС‹ РіР»Р°РІРЅРѕР№) РґРѕ СѓСЃРїРµС€РЅРѕР№ Р±СЂРѕРЅРё.
           </p>
         </div>
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm col-span-2">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Шаги воронки
+            РЁР°РіРё РІРѕСЂРѕРЅРєРё
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Для каждого шага показано количество сессий и конверсия относительно предыдущего шага.
+            Р”Р»СЏ РєР°Р¶РґРѕРіРѕ С€Р°РіР° РїРѕРєР°Р·Р°РЅРѕ РєРѕР»РёС‡РµСЃС‚РІРѕ СЃРµСЃСЃРёР№ Рё РєРѕРЅРІРµСЂСЃРёСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РїСЂРµРґС‹РґСѓС‰РµРіРѕ С€Р°РіР°.
           </p>
         </div>
       </section>
 
-      {/* Визуализация воронки */}
+      {/* Р’РёР·СѓР°Р»РёР·Р°С†РёСЏ РІРѕСЂРѕРЅРєРё */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Воронка шагов бронирования
+          Р’РѕСЂРѕРЅРєР° С€Р°РіРѕРІ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ
         </h3>
-        <div className="space-y-4">
-          {data.steps.map((step, index) => {
-            const widthPercent = maxSessions > 0 ? Math.max((step.sessions / maxSessions) * 100, 5) : 0;
-            const tooltip = [
-              `${step.label}`,
-              `Сессий на шаге: ${step.sessions}`,
-              index === 0
-                ? `Конверсия от начала воронки: ${formatPercent(data.overallConversion)}`
-                : `Конверсия от предыдущего шага: ${formatPercent(step.conversionFromPrev)}`,
-            ].join(' • ');
+        {data.steps.length === 0 ? (
+          <EmptyState
+            compact
+            title="РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РІРѕСЂРѕРЅРєРµ"
+            description="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ Рё СЃСЂРµР· РЅРµС‚ СЃРѕР±С‹С‚РёР№, РєРѕС‚РѕСЂС‹Рµ РјРѕР¶РЅРѕ РїРѕРєР°Р·Р°С‚СЊ РІ РѕС‚С‡РµС‚Рµ."
+          />
+        ) : (
+          <div className="space-y-4">
+            {data.steps.map((step, index) => {
+              const widthPercent = maxSessions > 0 ? Math.max((step.sessions / maxSessions) * 100, 5) : 0;
+              const tooltip = [
+                `${step.label}`,
+                `РЎРµСЃСЃРёР№ РЅР° С€Р°РіРµ: ${step.sessions}`,
+                index === 0
+                  ? `РљРѕРЅРІРµСЂСЃРёСЏ РѕС‚ РЅР°С‡Р°Р»Р° РІРѕСЂРѕРЅРєРё: ${formatPercent(data.overallConversion)}`
+                  : `РљРѕРЅРІРµСЂСЃРёСЏ РѕС‚ РїСЂРµРґС‹РґСѓС‰РµРіРѕ С€Р°РіР°: ${formatPercent(step.conversionFromPrev)}`,
+              ].join(' вЂў ');
 
-            return (
-              <div
-                key={step.id}
-                className="group relative rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 p-4"
-                title={tooltip}
-              >
-                <div className="flex items-center justify-between mb-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{step.label}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Сессий: <span className="font-semibold">{step.sessions}</span>
-                      </p>
+              return (
+                <div
+                  key={step.id}
+                  className="group relative rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40 p-4"
+                  title={tooltip}
+                >
+                  <div className="flex items-center justify-between mb-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{step.label}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          РЎРµСЃСЃРёР№: <span className="font-semibold">{step.sessions}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-xs text-gray-500 dark:text-gray-400">
+                      {index === 0 ? (
+                        <>
+                          <p>РЎС‚Р°СЂС‚ РІРѕСЂРѕРЅРєРё</p>
+                          <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            {formatPercent(data.overallConversion)}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p>РљРѕРЅРІРµСЂСЃРёСЏ РѕС‚ РїСЂРѕС€Р». С€Р°РіР°</p>
+                          <p className="font-semibold text-indigo-600 dark:text-indigo-400">
+                            {formatPercent(step.conversionFromPrev)}
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right text-xs text-gray-500 dark:text-gray-400">
-                    {index === 0 ? (
-                      <>
-                        <p>Старт воронки</p>
-                        <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          {formatPercent(data.overallConversion)}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p>Конверсия от прошл. шага</p>
-                        <p className="font-semibold text-indigo-600 dark:text-indigo-400">
-                          {formatPercent(step.conversionFromPrev)}
-                        </p>
-                      </>
-                    )}
+                  <div className="h-3 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all duration-500"
+                      style={{ width: `${widthPercent}%` }}
+                    />
+                  </div>
+                  <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                    РќР°РІРµРґРёС‚Рµ РєСѓСЂСЃРѕСЂ, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РїРѕРґСЂРѕР±РЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ.
                   </div>
                 </div>
-                <div className="h-3 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all duration-500"
-                    style={{ width: `${widthPercent}%` }}
-                  />
-                </div>
-                <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                  Наведите курсор, чтобы увидеть подробные значения.
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );
 }
+

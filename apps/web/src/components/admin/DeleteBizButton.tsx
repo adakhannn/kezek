@@ -1,16 +1,23 @@
 'use client';
 
-import {useRouter} from 'next/navigation';
-import {useState} from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 
 type ApiOk = { ok: true };
 type ApiErr = { ok: false; error?: string };
 type DeleteResp = ApiOk | ApiErr;
 
-export function DeleteBizButton({bizId, bizName}: { bizId: string; bizName: string }) {
+export function DeleteBizButton({ bizId, bizName }: { bizId: string; bizName: string }) {
     const router = useRouter();
+    const toast = useToast();
     const [err, setErr] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     function extractError(e: unknown): string {
         return e instanceof Error ? e.message : String(e);
@@ -18,7 +25,6 @@ export function DeleteBizButton({bizId, bizName}: { bizId: string; bizName: stri
 
     async function onDelete() {
         setErr(null);
-        if (!confirm(`Удалить бизнес «${bizName}» вместе со всеми данными? Это действие необратимо.`)) return;
         setLoading(true);
         try {
             const resp = await fetch(`/admin/api/businesses/${bizId}/delete`, {
@@ -34,7 +40,7 @@ export function DeleteBizButton({bizId, bizName}: { bizId: string; bizName: stri
             } else {
                 const text = await resp.text();
                 if (!resp.ok) throw new Error(text.slice(0, 2000));
-                data = {ok: true};
+                data = { ok: true };
             }
 
             if (!resp.ok || !('ok' in data) || !data.ok) {
@@ -42,10 +48,14 @@ export function DeleteBizButton({bizId, bizName}: { bizId: string; bizName: stri
                 throw new Error(apiErr);
             }
 
+            toast.showSuccess('Бизнес удален.');
+            setConfirmOpen(false);
             router.push('/admin/businesses');
             router.refresh();
         } catch (e: unknown) {
-            setErr(extractError(e));
+            const message = extractError(e);
+            setErr(message);
+            toast.showError(message);
         } finally {
             setLoading(false);
         }
@@ -53,17 +63,29 @@ export function DeleteBizButton({bizId, bizName}: { bizId: string; bizName: stri
 
     return (
         <div className="space-y-2">
-            <button
+            <Button
                 type="button"
-                className="border border-red-600 text-red-600 rounded px-3 py-2 hover:bg-red-50 disabled:opacity-60"
-                onClick={onDelete}
+                variant="danger"
+                size="sm"
+                onClick={() => setConfirmOpen(true)}
                 disabled={loading}
-                aria-busy={loading}
+                isLoading={loading}
             >
                 {loading ? 'Удаляю…' : 'Удалить бизнес'}
-            </button>
+            </Button>
             {err && <div className="text-sm text-red-600">{err}</div>}
+            <ConfirmDialog
+                open={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={onDelete}
+                title="Удалить бизнес"
+                message={`Удалить бизнес «${bizName}» вместе со всеми данными? Это действие необратимо.`}
+                confirmLabel="Удалить"
+                cancelLabel="Отмена"
+                confirmVariant="danger"
+                isLoading={loading}
+            />
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }
-

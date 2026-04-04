@@ -1,8 +1,10 @@
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
+import MotionPressable from '../../components/ui/MotionPressable';
+import OfflineBanner from '../../components/ui/OfflineBanner';
 import { formatDate, formatTime } from '../../utils/format';
 import { getStatusColor, getStatusText } from '../../utils/i18n';
 import { styles } from './cabinetScreenStyles';
@@ -45,77 +47,69 @@ export function CabinetScreenSections({
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>Личный кабинет</Text>
+                <Text style={styles.title}>Р›РёС‡РЅС‹Р№ РєР°Р±РёРЅРµС‚</Text>
                 <Text style={styles.subtitle}>{userLabel}</Text>
             </View>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Мои записи</Text>
+                <Text style={styles.sectionTitle}>РњРѕРё Р·Р°РїРёСЃРё</Text>
 
                 <View style={styles.tabsContainer}>
-                    <TouchableOpacity
+                    <MotionPressable
                         style={[styles.tabButton, activeTab === 'upcoming' && styles.tabButtonActive]}
                         onPress={() => onTabChange('upcoming')}
                     >
-                        <Text
-                            style={[
-                                styles.tabButtonText,
-                                activeTab === 'upcoming' && styles.tabButtonTextActive,
-                            ]}
-                        >
-                            Предстоящие
+                        <Text style={[styles.tabButtonText, activeTab === 'upcoming' && styles.tabButtonTextActive]}>
+                            РџСЂРµРґСЃС‚РѕСЏС‰РёРµ
                         </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </MotionPressable>
+                    <MotionPressable
                         style={[styles.tabButton, activeTab === 'history' && styles.tabButtonActive]}
                         onPress={() => onTabChange('history')}
                     >
-                        <Text
-                            style={[
-                                styles.tabButtonText,
-                                activeTab === 'history' && styles.tabButtonTextActive,
-                            ]}
-                        >
-                            История
+                        <Text style={[styles.tabButtonText, activeTab === 'history' && styles.tabButtonTextActive]}>
+                            РСЃС‚РѕСЂРёСЏ
                         </Text>
-                    </TouchableOpacity>
+                    </MotionPressable>
                 </View>
 
-                {isOfflineData && (
-                    <View style={styles.offlineBanner}>
-                        <Text style={styles.offlineBannerText}>
-                            Нет подключения к интернету — показаны сохранённые данные
-                            {lastSyncAt
-                                ? ` (последняя синхронизация: ${formatDate(lastSyncAt)} ${formatTime(lastSyncAt)})`
-                                : ''}
-                        </Text>
-                    </View>
-                )}
+                {isOfflineData ? (
+                    <OfflineBanner
+                        message={`РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ вЂ” РїРѕРєР°Р·Р°РЅС‹ СЃРѕС…СЂР°РЅС‘РЅРЅС‹Рµ РґР°РЅРЅС‹Рµ${
+                            lastSyncAt ? ` (РїРѕСЃР»РµРґРЅСЏСЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ: ${formatDate(lastSyncAt)} ${formatTime(lastSyncAt)})` : ''
+                        }`}
+                    />
+                ) : null}
 
                 {visibleBookings.length > 0 ? (
                     <View style={styles.bookingsList}>
                         {visibleBookings.map((booking) => (
-                            <TouchableOpacity key={booking.id} onPress={() => onBookingPress(booking.id)}>
+                            <MotionPressable
+                                key={booking.id}
+                                onPress={() => onBookingPress(booking.id)}
+                                style={styles.bookingPressable}
+                                scale="firm"
+                            >
                                 <BookingCard booking={booking} />
-                            </TouchableOpacity>
+                            </MotionPressable>
                         ))}
                     </View>
                 ) : (
-                    <View style={styles.empty}>
-                        <Text style={styles.emptyText}>
-                            {isHistory ? 'У вас пока нет прошедших записей' : 'У вас пока нет записей'}
-                        </Text>
-                        <Text style={styles.emptyHint}>
-                            {isHistory
-                                ? 'Здесь появятся завершённые записи после первой синхронизации'
-                                : 'Запишитесь на услугу, чтобы увидеть её здесь'}
-                        </Text>
-                    </View>
+                    <EmptyState
+                        compact
+                        title={isHistory ? 'РЈ РІР°СЃ РїРѕРєР° РЅРµС‚ РїСЂРѕС€РµРґС€РёС… Р·Р°РїРёСЃРµР№' : 'РЈ РІР°СЃ РїРѕРєР° РЅРµС‚ Р·Р°РїРёСЃРµР№'}
+                        message={
+                            isHistory
+                                ? 'Р—РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ Р·Р°РІРµСЂС€С‘РЅРЅС‹Рµ Р·Р°РїРёСЃРё РїРѕСЃР»Рµ РїРµСЂРІРѕР№ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё'
+                                : 'Р—Р°РїРёС€РёС‚РµСЃСЊ РЅР° СѓСЃР»СѓРіСѓ, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РµС‘ Р·РґРµСЃСЊ'
+                        }
+                        style={styles.empty}
+                    />
                 )}
             </View>
 
             <View style={styles.footer}>
-                <Button title="Профиль" onPress={onProfilePress} variant="outline" />
+                <Button title="РџСЂРѕС„РёР»СЊ" onPress={onProfilePress} variant="outline" fullWidth />
             </View>
         </ScrollView>
     );
@@ -125,20 +119,20 @@ function BookingCard({ booking }: { booking: Booking }) {
     return (
         <Card style={styles.bookingCard}>
             <View style={styles.bookingHeader}>
-                <Text style={styles.bookingService}>{booking.service?.name_ru || 'Услуга'}</Text>
+                <Text style={styles.bookingService}>{booking.service?.name_ru || 'РЈСЃР»СѓРіР°'}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(booking.status) }]}>
                     <Text style={styles.statusText}>{getStatusText(booking.status)}</Text>
                 </View>
             </View>
 
-            {booking.business && <Text style={styles.bookingBusiness}>{booking.business.name}</Text>}
-            {booking.staff && <Text style={styles.bookingStaff}>Мастер: {booking.staff.full_name}</Text>}
-            {booking.branch && (
+            {booking.business ? <Text style={styles.bookingBusiness}>{booking.business.name}</Text> : null}
+            {booking.staff ? <Text style={styles.bookingStaff}>РњР°СЃС‚РµСЂ: {booking.staff.full_name}</Text> : null}
+            {booking.branch ? (
                 <Text style={styles.bookingBranch}>
                     {booking.branch.name}
-                    {booking.branch.address && ` • ${booking.branch.address}`}
+                    {booking.branch.address ? ` вЂў ${booking.branch.address}` : ''}
                 </Text>
-            )}
+            ) : null}
 
             <View style={styles.bookingTime}>
                 <Text style={styles.bookingDate}>{formatDate(booking.start_at)}</Text>

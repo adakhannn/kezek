@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { getT } from '@/app/_components/i18n/server';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { formatDateTime } from '@/lib/dateFormat';
 
 export const dynamic = 'force-dynamic';
@@ -57,10 +58,11 @@ export default async function HealthCheckPage() {
     if (!data.ok && data.error) {
         return (
             <main className="max-w-4xl mx-auto p-6">
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-                    <h1 className="text-lg font-semibold mb-2">{t('admin.healthCheck.error.title', 'Ошибка health check')}</h1>
-                    <p>{data.error}</p>
-                </div>
+                <AlertBanner
+                    variant="danger"
+                    title={t('admin.healthCheck.error.title', 'Ошибка health check')}
+                    message={data.error}
+                />
             </main>
         );
     }
@@ -88,29 +90,23 @@ export default async function HealthCheckPage() {
             </section>
 
             {data.alerts.length > 0 && (
-                <section className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm dark:border-red-800 dark:bg-red-950/30">
-                    <h2 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-4">{t('admin.healthCheck.alerts.title', 'Алерты')}</h2>
+                <section className="space-y-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-sm)]">
+                    <h2 className="type-section-title text-[var(--text-primary)]">
+                        {t('admin.healthCheck.alerts.title', 'Алерты')}
+                    </h2>
                     <div className="space-y-3">
                         {data.alerts.map((alert, idx) => (
-                            <div
-                                key={idx}
-                                className={`rounded-lg border p-4 ${
-                                    alert.type === 'error'
-                                        ? 'border-red-300 bg-red-100 dark:border-red-700 dark:bg-red-900/40'
-                                        : 'border-amber-300 bg-amber-100 dark:border-amber-700 dark:bg-amber-900/40'
-                                }`}
-                            >
-                                <div className="flex items-start gap-2">
-                                    <span className="text-lg">{alert.type === 'error' ? '❌' : '⚠️'}</span>
-                                    <div className="flex-1">
-                                        <p className="font-medium text-gray-900 dark:text-gray-100">{alert.message}</p>
-                                        {alert.details && (
-                                            <pre className="mt-2 text-xs text-gray-600 dark:text-gray-400 overflow-auto">
-                                                {JSON.stringify(alert.details, null, 2)}
-                                            </pre>
-                                        )}
-                                    </div>
-                                </div>
+                            <div key={idx} className="space-y-2">
+                                <AlertBanner
+                                    variant={alert.type === 'error' ? 'danger' : 'warning'}
+                                    title={alert.type === 'error' ? t('common.error', 'Ошибка') : t('common.warning', 'Предупреждение')}
+                                    message={alert.message}
+                                />
+                                {alert.details && (
+                                    <pre className="overflow-auto rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-3 text-xs text-[var(--text-secondary)]">
+                                        {JSON.stringify(alert.details, null, 2)}
+                                    </pre>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -229,4 +225,6 @@ export default async function HealthCheckPage() {
         </main>
     );
 }
+
+
 

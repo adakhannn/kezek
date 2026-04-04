@@ -1,7 +1,7 @@
 'use client';
 
+import { clsx } from 'clsx';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from './i18n/LanguageProvider';
@@ -21,12 +21,20 @@ type SwitcherState =
     | { status: 'ready'; roles: RoleSummary }
     | { status: 'error' };
 
-export function RoleAndBusinessSwitcher() {
+type RoleAndBusinessSwitcherProps = {
+    mode?: 'desktop' | 'mobile';
+    onNavigate?: () => void;
+};
+
+export function RoleAndBusinessSwitcher({
+    mode = 'desktop',
+    onNavigate,
+}: RoleAndBusinessSwitcherProps = {}) {
     const { t } = useLanguage();
-    const router = useRouter();
     const [state, setState] = useState<SwitcherState>({ status: 'loading' });
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const isMobile = mode === 'mobile';
 
     useEffect(() => {
         let cancelled = false;
@@ -70,7 +78,7 @@ export function RoleAndBusinessSwitcher() {
         return () => {
             cancelled = true;
         };
-    }, [t]);
+    }, []);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -94,9 +102,14 @@ export function RoleAndBusinessSwitcher() {
 
     if (state.status === 'loading') {
         return (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">
-                <div className="h-3 w-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                <span>{t('header.roleBusiness.loading', 'Загружаем доступные кабинеты...')}</span>
+            <div
+                className={clsx(
+                    isMobile ? 'flex w-full' : 'hidden md:flex',
+                    'items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-2 text-xs text-[var(--text-muted)] shadow-[var(--shadow-xs)]',
+                )}
+            >
+                <div className="h-3 w-3 rounded-full border-2 border-[var(--accent-primary)] border-t-transparent animate-spin" />
+                <span>{t('header.roleBusiness.loading', 'Р—Р°РіСЂСѓР¶Р°РµРј РґРѕСЃС‚СѓРїРЅС‹Рµ РєР°Р±РёРЅРµС‚С‹...')}</span>
             </div>
         );
     }
@@ -107,27 +120,45 @@ export function RoleAndBusinessSwitcher() {
 
     const { roles } = state;
 
-    let roleLabel = t('header.roleBusiness.client', 'Клиент');
+    let roleLabel = t('header.roleBusiness.client', 'РљР»РёРµРЅС‚');
     if (roles.hasAdmin) {
-        roleLabel = t('header.roleBusiness.admin', 'Админ');
+        roleLabel = t('header.roleBusiness.admin', 'РђРґРјРёРЅ');
     } else if (roles.hasDashboard) {
-        roleLabel = t('header.roleBusiness.owner', 'Владелец / менеджер');
+        roleLabel = t('header.roleBusiness.owner', 'Р’Р»Р°РґРµР»РµС† / РјРµРЅРµРґР¶РµСЂ');
     } else if (roles.hasStaff) {
-        roleLabel = t('header.roleBusiness.staff', 'Сотрудник');
+        roleLabel = t('header.roleBusiness.staff', 'РЎРѕС‚СЂСѓРґРЅРёРє');
     }
 
+    const handleNavigate = () => {
+        setIsOpen(false);
+        onNavigate?.();
+    };
+
+    const controlClassName = clsx(
+        'inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] text-sm font-medium text-[var(--text-secondary)] shadow-[var(--shadow-xs)] transition-all duration-200 hover:border-[var(--border-default)] hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]',
+        isMobile ? 'w-full justify-between px-3.5 py-3' : 'px-3.5 py-2',
+    );
+
+    const menuClassName = clsx(
+        'z-[120] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)] shadow-[var(--shadow-lg)] backdrop-blur-xl',
+        isMobile ? 'mt-2 w-full' : 'absolute right-0 mt-3 w-72',
+    );
+
     return (
-        <div className="hidden md:block" ref={containerRef}>
+        <div className={clsx(isMobile ? 'w-full' : 'hidden md:block')} ref={containerRef}>
             <div className="relative">
                 <button
                     type="button"
                     onClick={() => setIsOpen((prev) => !prev)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition hover:border-indigo-300 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-indigo-500 dark:hover:text-indigo-300"
+                    className={controlClassName}
+                    aria-expanded={isOpen}
                 >
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    <span className="truncate max-w-[160px]">{roleLabel}</span>
+                    <span className="inline-flex items-center gap-2 truncate">
+                        <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="truncate">{roleLabel}</span>
+                    </span>
                     <svg
-                        className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        className={clsx('h-4 w-4 shrink-0 transition-transform', isOpen ? 'rotate-180' : '')}
                         viewBox="0 0 20 20"
                         fill="none"
                         stroke="currentColor"
@@ -136,57 +167,58 @@ export function RoleAndBusinessSwitcher() {
                     </svg>
                 </button>
 
-                {isOpen && (
-                    <div className="absolute right-0 mt-2 w-64 rounded-lg border border-gray-200 bg-white py-2 text-xs shadow-lg dark:border-gray-700 dark:bg-gray-900 z-[120]">
-                        <div className="px-3 pb-2 text-[11px] text-gray-500 dark:text-gray-400">
-                            {t('header.roleBusiness.captionRoles', 'Выберите кабинет (роль)')}
+                {isOpen ? (
+                    <div className={menuClassName}>
+                        <div className="border-b border-[var(--border-subtle)] px-4 py-3">
+                            <p className="type-label text-[var(--text-primary)]">
+                                {t('header.roleBusiness.captionRoles', 'Р’С‹Р±РµСЂРёС‚Рµ РєР°Р±РёРЅРµС‚ (СЂРѕР»СЊ)')}
+                            </p>
+                            <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                {t('header.roleBusiness.sections.cabinets', 'РљР°Р±РёРЅРµС‚С‹')}
+                            </p>
                         </div>
 
-                        <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                            {t('header.roleBusiness.sections.cabinets', 'Кабинеты')}
-                        </div>
-                        <div className="px-1 pb-2 space-y-1">
-                            {roles.hasDashboard && (
+                        <div className="space-y-1 p-2">
+                            {roles.hasDashboard ? (
                                 <Link
                                     href="/dashboard"
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
+                                    onClick={handleNavigate}
+                                    className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                 >
-                                    <span>{t('header.businessCabinet', 'Кабинет бизнеса')}</span>
+                                    <span>{t('header.businessCabinet', 'РљР°Р±РёРЅРµС‚ Р±РёР·РЅРµСЃР°')}</span>
                                 </Link>
-                            )}
-                            {roles.hasStaff && (
+                            ) : null}
+                            {roles.hasStaff ? (
                                 <Link
                                     href="/staff"
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
+                                    onClick={handleNavigate}
+                                    className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                 >
-                                    <span>{t('header.staffCabinet', 'Кабинет сотрудника')}</span>
+                                    <span>{t('header.staffCabinet', 'РљР°Р±РёРЅРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєР°')}</span>
                                 </Link>
-                            )}
-                            {roles.hasCabinet && (
+                            ) : null}
+                            {roles.hasCabinet ? (
                                 <Link
                                     href="/cabinet"
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
+                                    onClick={handleNavigate}
+                                    className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                 >
-                                    <span>{t('header.myBookings', 'Мои записи')}</span>
+                                    <span>{t('header.myBookings', 'РњРѕРё Р·Р°РїРёСЃРё')}</span>
                                 </Link>
-                            )}
-                            {roles.hasAdmin && (
+                            ) : null}
+                            {roles.hasAdmin ? (
                                 <Link
                                     href="/admin"
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-gray-700 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
+                                    onClick={handleNavigate}
+                                    className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                 >
-                                    <span>{t('header.adminPanel', 'Админ-панель')}</span>
+                                    <span>{t('header.adminPanel', 'РђРґРјРёРЅ-РїР°РЅРµР»СЊ')}</span>
                                 </Link>
-                            )}
+                            ) : null}
                         </div>
                     </div>
-                )}
+                ) : null}
             </div>
         </div>
     );
 }
-

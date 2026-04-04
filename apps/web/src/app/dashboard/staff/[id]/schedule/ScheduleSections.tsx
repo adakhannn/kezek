@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import type { Branch, TimeRange } from './scheduleTypes';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { Tabs } from '@/components/ui/Tabs';
 import { TZ } from '@/lib/time';
 
 function SingleTimeRange({
@@ -61,7 +62,7 @@ function SingleTimeRange({
                 onChange={handleStartChange}
                 disabled={disabled}
             />
-            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">—</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">вЂ”</span>
             <input
                 type="time"
                 className="flex-1 min-w-0 rounded-md sm:rounded-lg border border-gray-300 bg-white px-1.5 sm:px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -98,13 +99,13 @@ function DayRow({
     const isPastDate = dateStr < todayStr;
 
     const dayNames = [
-        t('staff.schedule.dayOfWeek.sunday', 'Вс'),
-        t('staff.schedule.dayOfWeek.monday', 'Пн'),
-        t('staff.schedule.dayOfWeek.tuesday', 'Вт'),
-        t('staff.schedule.dayOfWeek.wednesday', 'Ср'),
-        t('staff.schedule.dayOfWeek.thursday', 'Чт'),
-        t('staff.schedule.dayOfWeek.friday', 'Пт'),
-        t('staff.schedule.dayOfWeek.saturday', 'Сб'),
+        t('staff.schedule.dayOfWeek.sunday', 'Р’СЃ'),
+        t('staff.schedule.dayOfWeek.monday', 'РџРЅ'),
+        t('staff.schedule.dayOfWeek.tuesday', 'Р’С‚'),
+        t('staff.schedule.dayOfWeek.wednesday', 'РЎСЂ'),
+        t('staff.schedule.dayOfWeek.thursday', 'Р§С‚'),
+        t('staff.schedule.dayOfWeek.friday', 'РџС‚'),
+        t('staff.schedule.dayOfWeek.saturday', 'РЎР±'),
     ];
 
     const isDayOffFromDb = intervals !== null && intervals !== undefined && Array.isArray(intervals) && intervals.length === 0;
@@ -149,7 +150,7 @@ function DayRow({
                         {isToday && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">
                                 <span className="inline-flex h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-indigo-500" />
-                                {t('staff.schedule.today', 'Сегодня')}
+                                {t('staff.schedule.today', 'РЎРµРіРѕРґРЅСЏ')}
                             </span>
                         )}
                     </div>
@@ -168,14 +169,14 @@ function DayRow({
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
-                            <span className="hidden sm:inline">{t('staff.schedule.saving', 'Сохранение...')}</span>
+                            <span className="hidden sm:inline">{t('staff.schedule.saving', 'РЎРѕС…СЂР°РЅРµРЅРёРµ...')}</span>
                         </>
                     ) : (
                         <>
                             <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            <span className="hidden sm:inline">{t('staff.schedule.save', 'Сохранить')}</span>
+                            <span className="hidden sm:inline">{t('staff.schedule.save', 'РЎРѕС…СЂР°РЅРёС‚СЊ')}</span>
                         </>
                     )}
                 </button>
@@ -191,11 +192,11 @@ function DayRow({
                         className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 flex-shrink-0"
                     />
                     <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0">
-                        {t('staff.schedule.dayOff', 'Выходной день')}
+                        {t('staff.schedule.dayOff', 'Р’С‹С…РѕРґРЅРѕР№ РґРµРЅСЊ')}
                     </span>
                     {isPastDate && (
                         <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap hidden sm:inline">
-                            ({t('staff.schedule.pastDateUnavailable', 'недоступно для прошедших дат')})
+                            ({t('staff.schedule.pastDateUnavailable', 'РЅРµРґРѕСЃС‚СѓРїРЅРѕ РґР»СЏ РїСЂРѕС€РµРґС€РёС… РґР°С‚')})
                         </span>
                     )}
                 </label>
@@ -203,7 +204,7 @@ function DayRow({
                 {!isDayOff && (
                     <div className="min-w-0">
                         <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2">
-                            {t('staff.schedule.workingHours', 'Рабочее время')}
+                            {t('staff.schedule.workingHours', 'Р Р°Р±РѕС‡РµРµ РІСЂРµРјСЏ')}
                         </div>
                         <SingleTimeRange
                             value={interval}
@@ -225,14 +226,14 @@ function DayRow({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             <span className="text-[10px] sm:text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                {t('staff.schedule.temporaryTransfer', 'Временный перевод в филиал')}
+                                {t('staff.schedule.temporaryTransfer', 'Р’СЂРµРјРµРЅРЅС‹Р№ РїРµСЂРµРІРѕРґ РІ С„РёР»РёР°Р»')}
                             </span>
                             {selectedBranchId !== homeBranchId && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 animate-pulse">
                                     <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                     </svg>
-                                    {t('staff.schedule.active', 'Активен')}
+                                    {t('staff.schedule.active', 'РђРєС‚РёРІРµРЅ')}
                                 </span>
                             )}
                         </div>
@@ -248,27 +249,27 @@ function DayRow({
                         >
                             {branches.map((branch) => (
                                 <option key={branch.id} value={branch.id}>
-                                    {branch.name} {branch.id === homeBranchId ? `(${t('staff.schedule.homeBranch', 'основной')})` : ''}
+                                    {branch.name} {branch.id === homeBranchId ? `(${t('staff.schedule.homeBranch', 'РѕСЃРЅРѕРІРЅРѕР№')})` : ''}
                                 </option>
                             ))}
                         </select>
                         {selectedBranchId !== homeBranchId && !isPastDate && (
                             <div className="mt-1.5 p-2 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
                                 <p className="text-[10px] text-indigo-700 dark:text-indigo-300 font-medium">
-                                    ✓ {t('staff.schedule.transferHint', 'Сотрудник будет временно переведен в филиал "{branch}" на этот день').replace('{branch}', branches.find((branch) => branch.id === selectedBranchId)?.name || '')}
+                                    вњ“ {t('staff.schedule.transferHint', 'РЎРѕС‚СЂСѓРґРЅРёРє Р±СѓРґРµС‚ РІСЂРµРјРµРЅРЅРѕ РїРµСЂРµРІРµРґРµРЅ РІ С„РёР»РёР°Р» "{branch}" РЅР° СЌС‚РѕС‚ РґРµРЅСЊ').replace('{branch}', branches.find((branch) => branch.id === selectedBranchId)?.name || '')}
                                 </p>
                             </div>
                         )}
                         {selectedBranchId === homeBranchId && !isPastDate && (
                             <p className="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400">
-                                {t('staff.schedule.selectBranchForTransfer', 'Выберите другой филиал для временного перевода на этот день')}
+                                {t('staff.schedule.selectBranchForTransfer', 'Р’С‹Р±РµСЂРёС‚Рµ РґСЂСѓРіРѕР№ С„РёР»РёР°Р» РґР»СЏ РІСЂРµРјРµРЅРЅРѕРіРѕ РїРµСЂРµРІРѕРґР° РЅР° СЌС‚РѕС‚ РґРµРЅСЊ')}
                             </p>
                         )}
                     </div>
                 ) : (
                     <div className="min-w-0 border-t border-gray-200 dark:border-gray-700 pt-2 sm:pt-3 mt-2 sm:mt-3">
                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                            {t('staff.schedule.noBranchesForTransfer', 'Для временного перевода нужно добавить хотя бы один дополнительный филиал в настройках бизнеса')}
+                            {t('staff.schedule.noBranchesForTransfer', 'Р”Р»СЏ РІСЂРµРјРµРЅРЅРѕРіРѕ РїРµСЂРµРІРѕРґР° РЅСѓР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ С„РёР»РёР°Р» РІ РЅР°СЃС‚СЂРѕР№РєР°С… Р±РёР·РЅРµСЃР°')}
                         </p>
                     </div>
                 )}
@@ -287,31 +288,17 @@ export function ScheduleTabs({
     t: (key: string, fallback: string) => string;
 }) {
     return (
-        <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs">
-                <button
-                    onClick={() => onTabChange('schedule')}
-                    className={`whitespace-nowrap border-b-2 py-2 sm:py-4 px-1 text-sm sm:text-base font-medium transition-colors ${
-                        activeTab === 'schedule'
-                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                    }`}
-                >
-                    {t('staff.schedule.tab.schedule', 'Расписание')}
-                </button>
-                <button
-                    onClick={() => onTabChange('transfers')}
-                    className={`whitespace-nowrap border-b-2 py-2 sm:py-4 px-1 text-sm sm:text-base font-medium transition-colors ${
-                        activeTab === 'transfers'
-                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                    }`}
-                >
-                    {t('staff.schedule.tab.transfers', 'Временные переводы')}
-                </button>
-            </nav>
-        </div>
+        <Tabs
+            value={activeTab}
+            onValueChange={(value) => onTabChange(value as 'schedule' | 'transfers')}
+            className="w-full sm:w-auto"
+            items={[
+                { key: 'schedule', label: t('staff.schedule.tab.schedule', 'Р Р°СЃРїРёСЃР°РЅРёРµ') },
+                { key: 'transfers', label: t('staff.schedule.tab.transfers', 'Р’СЂРµРјРµРЅРЅС‹Рµ РїРµСЂРµРІРѕРґС‹') },
+            ]}
+        />
     );
+
 }
 
 export function ScheduleWeekSection({
@@ -364,14 +351,14 @@ export function ScheduleWeekSection({
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    <span className="hidden sm:inline">Применение...</span>
+                                    <span className="hidden sm:inline">РџСЂРёРјРµРЅРµРЅРёРµ...</span>
                                 </>
                             ) : (
                                 <>
                                     <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
-                                    <span>Применить расписание филиала</span>
+                                    <span>РџСЂРёРјРµРЅРёС‚СЊ СЂР°СЃРїРёСЃР°РЅРёРµ С„РёР»РёР°Р»Р°</span>
                                 </>
                             )}
                         </button>
@@ -433,17 +420,17 @@ export function ScheduleInstructions({ t }: { t: (key: string, fallback: string)
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <p className="font-medium">{t('staff.schedule.instructions.title', 'Как работает расписание')}</p>
+                    <p className="font-medium">{t('staff.schedule.instructions.title', 'РљР°Рє СЂР°Р±РѕС‚Р°РµС‚ СЂР°СЃРїРёСЃР°РЅРёРµ')}</p>
                     <ul className="list-disc list-inside space-y-0.5 text-xs text-blue-700 dark:text-blue-300">
-                        <li>{t('staff.schedule.instructions.default', 'По умолчанию все дни рабочие (09:00-21:00)')}</li>
-                        <li>{t('staff.schedule.instructions.dayOff', 'Отметьте чекбокс "Выходной день", чтобы сделать день нерабочим')}</li>
+                        <li>{t('staff.schedule.instructions.default', 'РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РІСЃРµ РґРЅРё СЂР°Р±РѕС‡РёРµ (09:00-21:00)')}</li>
+                        <li>{t('staff.schedule.instructions.dayOff', 'РћС‚РјРµС‚СЊС‚Рµ С‡РµРєР±РѕРєСЃ "Р’С‹С…РѕРґРЅРѕР№ РґРµРЅСЊ", С‡С‚РѕР±С‹ СЃРґРµР»Р°С‚СЊ РґРµРЅСЊ РЅРµСЂР°Р±РѕС‡РёРј')}</li>
                         <li>
-                            <strong>{t('staff.schedule.instructions.transfer.prefix', 'Временный перевод:')}</strong>{' '}
-                            {t('staff.schedule.instructions.transfer.suffix', 'Выберите филиал в выпадающем списке "Филиал" для любого дня, чтобы временно перевести сотрудника в другой филиал. Основной филиал отмечен как "(основной)".')}
+                            <strong>{t('staff.schedule.instructions.transfer.prefix', 'Р’СЂРµРјРµРЅРЅС‹Р№ РїРµСЂРµРІРѕРґ:')}</strong>{' '}
+                            {t('staff.schedule.instructions.transfer.suffix', 'Р’С‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р» РІ РІС‹РїР°РґР°СЋС‰РµРј СЃРїРёСЃРєРµ "Р¤РёР»РёР°Р»" РґР»СЏ Р»СЋР±РѕРіРѕ РґРЅСЏ, С‡С‚РѕР±С‹ РІСЂРµРјРµРЅРЅРѕ РїРµСЂРµРІРµСЃС‚Рё СЃРѕС‚СЂСѓРґРЅРёРєР° РІ РґСЂСѓРіРѕР№ С„РёР»РёР°Р». РћСЃРЅРѕРІРЅРѕР№ С„РёР»РёР°Р» РѕС‚РјРµС‡РµРЅ РєР°Рє "(РѕСЃРЅРѕРІРЅРѕР№)".')}
                         </li>
-                        <li>{t('staff.schedule.instructions.weeks', 'Можно управлять расписанием только на текущую и следующую неделю')}</li>
-                        <li>{t('staff.schedule.instructions.past', 'Прошедшие даты недоступны для редактирования')}</li>
-                        <li>{t('staff.schedule.instructions.transfersTab', 'Все временные переводы отображаются во вкладке "Временные переводы"')}</li>
+                        <li>{t('staff.schedule.instructions.weeks', 'РњРѕР¶РЅРѕ СѓРїСЂР°РІР»СЏС‚СЊ СЂР°СЃРїРёСЃР°РЅРёРµРј С‚РѕР»СЊРєРѕ РЅР° С‚РµРєСѓС‰СѓСЋ Рё СЃР»РµРґСѓСЋС‰СѓСЋ РЅРµРґРµР»СЋ')}</li>
+                        <li>{t('staff.schedule.instructions.past', 'РџСЂРѕС€РµРґС€РёРµ РґР°С‚С‹ РЅРµРґРѕСЃС‚СѓРїРЅС‹ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ')}</li>
+                        <li>{t('staff.schedule.instructions.transfersTab', 'Р’СЃРµ РІСЂРµРјРµРЅРЅС‹Рµ РїРµСЂРµРІРѕРґС‹ РѕС‚РѕР±СЂР°Р¶Р°СЋС‚СЃСЏ РІРѕ РІРєР»Р°РґРєРµ "Р’СЂРµРјРµРЅРЅС‹Рµ РїРµСЂРµРІРѕРґС‹"')}</li>
                     </ul>
                 </div>
             </div>

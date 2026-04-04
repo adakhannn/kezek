@@ -4,6 +4,8 @@ import React, {useEffect, useRef, useState} from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import {Button} from '@/components/ui/Button';
+import {ToastContainer} from '@/components/ui/Toast';
+import {useToast} from '@/hooks/useToast';
 import {logError} from '@/lib/log';
 
 async function createImage(src: string): Promise<HTMLImageElement> {
@@ -67,6 +69,7 @@ export default function StaffAvatarUpload({
     onUploaded?: (url: string) => void;
 }) {
     const { t } = useLanguage();
+    const toast = useToast();
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(currentAvatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,12 +85,12 @@ export default function StaffAvatarUpload({
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            alert(t('staff.avatar.error.selectImage', 'Please select an image'));
+            toast.showError(t('staff.avatar.error.selectImage', 'Please select an image'));
             return;
         }
 
         if (file.size > 5 * 1024 * 1024) {
-            alert(t('staff.avatar.error.fileSize', 'File size must not exceed 5MB'));
+            toast.showError(t('staff.avatar.error.fileSize', 'File size must not exceed 5MB'));
             return;
         }
 
@@ -99,7 +102,7 @@ export default function StaffAvatarUpload({
             })
             .catch((error) => {
                 logError('StaffAvatarUpload', 'Crop error', error);
-                alert(t('staff.avatar.error.process', 'Failed to process image. Try another photo.'));
+                toast.showError(t('staff.avatar.error.process', 'Failed to process image. Try another photo.'));
             });
     };
 
@@ -129,10 +132,11 @@ export default function StaffAvatarUpload({
                 fileInputRef.current.value = '';
             }
             onUploaded?.(result.url);
+            toast.showSuccess(t('staff.avatar.success.uploaded', 'Avatar updated'));
         } catch (error) {
             logError('StaffAvatarUpload', 'Error uploading avatar', error);
             const errorMessage = error instanceof Error ? error.message : t('staff.avatar.error.unknown', 'Unknown error');
-            alert(t('staff.avatar.error.uploadFailed', 'Error uploading avatar: {error}').replace('{error}', errorMessage));
+            toast.showError(t('staff.avatar.error.uploadFailed', 'Error uploading avatar: {error}').replace('{error}', errorMessage));
         } finally {
             setUploading(false);
         }
@@ -159,9 +163,10 @@ export default function StaffAvatarUpload({
                 fileInputRef.current.value = '';
             }
             onUploaded?.('');
+            toast.showSuccess(t('staff.avatar.success.removed', 'Avatar removed'));
         } catch (error) {
             logError('StaffAvatarUpload', 'Error removing avatar', error);
-            alert(t('staff.avatar.error.removeFailed', 'Error removing avatar. Please try again.'));
+            toast.showError(t('staff.avatar.error.removeFailed', 'Error removing avatar. Please try again.'));
         } finally {
             setUploading(false);
         }
@@ -253,6 +258,7 @@ export default function StaffAvatarUpload({
             <p className="text-xs text-gray-500 dark:text-gray-400">
                 {t('staff.avatar.hint', 'Recommended size: square image (e.g., 200x200px). Maximum file size: 5MB')}
             </p>
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }

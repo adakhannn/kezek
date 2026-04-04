@@ -4,20 +4,29 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import {logDebug, logWarn} from '@/lib/log';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
+import { logDebug, logWarn } from '@/lib/log';
 
 type Branch = { id: string; name: string };
-type FoundUser = { id: string; email: string | null; phone: string | null; full_name: string };
+type FoundUser = {
+    id: string;
+    email: string | null;
+    phone: string | null;
+    full_name: string;
+};
 
 export default function NewFromUser({ branches }: { branches: Branch[] }) {
     const { t } = useLanguage();
     const r = useRouter();
+    const toast = useToast();
 
     const [q, setQ] = useState('');
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<FoundUser[]>([]);
-    const [selectedUserId, setSelectedUserId] = useState<string>('');
-    const [branchId, setBranchId] = useState<string>(branches[0]?.id ?? '');
+    const [selectedUserId, setSelectedUserId] = useState('');
+    const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
     const [isActive, setIsActive] = useState(true);
     const [err, setErr] = useState<string | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
@@ -47,20 +56,32 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
     }
 
     async function createStaff() {
-        if (!selectedUserId) return alert(t('staff.new.errors.selectUser', 'Выберите пользователя'));
-        if (!branchId) return alert(t('staff.new.errors.selectBranch', 'Выберите филиал'));
+        if (!selectedUserId) {
+            toast.showError(t('staff.new.errors.selectUser', 'Р’С‹Р±РµСЂРёС‚Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ'));
+            return;
+        }
+        if (!branchId) {
+            toast.showError(t('staff.new.errors.selectBranch', 'Р’С‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р»'));
+            return;
+        }
 
         const res = await fetch('/api/staff/create-from-user', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ user_id: selectedUserId, branch_id: branchId, is_active: isActive }),
+            body: JSON.stringify({
+                user_id: selectedUserId,
+                branch_id: branchId,
+                is_active: isActive,
+            }),
         });
         const j = await res.json();
         if (!j.ok) {
-            return alert(j.error ?? t('staff.new.errors.createFailed', 'Не удалось создать сотрудника'));
+            toast.showError(
+                j.error ?? t('staff.new.errors.createFailed', 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР°'),
+            );
+            return;
         }
-        
-        // Логируем результат инициализации расписания
+
         if (j.schedule_initialized !== undefined) {
             logDebug('StaffCreation', 'Schedule initialization result', {
                 success: j.schedule_initialized,
@@ -68,40 +89,46 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                 error: j.schedule_error,
             });
             if (!j.schedule_initialized) {
-                logWarn('StaffCreation', 'Schedule was NOT initialized', { error: j.schedule_error });
+                logWarn('StaffCreation', 'Schedule was NOT initialized', {
+                    error: j.schedule_error,
+                });
             }
         } else {
             logWarn('StaffCreation', 'No schedule initialization info in response');
         }
-        
+
         r.push('/dashboard/staff');
     }
 
     return (
         <div className="space-y-6">
-            {err && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-                    {err}
-                </div>
-            )}
+            {err ? <AlertBanner variant="danger" message={err} /> : null}
 
             <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t('staff.new.search.label', 'Поиск пользователя')} <span className="text-gray-500 text-xs">({t('staff.new.search.hint', 'email / телефон / ФИО')})</span>
+                    {t('staff.new.search.label', 'РџРѕРёСЃРє РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ')}{' '}
+                    <span className="text-xs text-gray-500">
+                        ({t('staff.new.search.hint', 'email / С‚РµР»РµС„РѕРЅ / Р¤РРћ')})
+                    </span>
                 </label>
                 <div className="flex flex-col gap-2 sm:flex-row">
                     <input
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
-                        placeholder={t('staff.new.search.placeholder', 'Например: +996..., example@mail.com, Иван')}
+                        placeholder={t(
+                            'staff.new.search.placeholder',
+                            'РќР°РїСЂРёРјРµСЂ: +996..., example@mail.com, РРІР°РЅ',
+                        )}
                     />
                     <button
                         onClick={() => doSearch(q)}
-                        className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                         disabled={loading}
                     >
-                        {loading ? t('staff.new.search.searching', 'Ищем…') : t('staff.new.search.button', 'Найти')}
+                        {loading
+                            ? t('staff.new.search.searching', 'РС‰РµРјвЂ¦')
+                            : t('staff.new.search.button', 'РќР°Р№С‚Рё')}
                     </button>
                 </div>
 
@@ -109,27 +136,48 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                     <table className="min-w-full text-sm">
                         <thead className="bg-gray-100 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                             <tr>
-                                <th className="px-3 py-2 w-10">{t('staff.new.table.number', '#')}</th>
-                                <th className="px-3 py-2">{t('staff.new.table.name', 'Имя')}</th>
-                                <th className="px-3 py-2">{t('staff.new.table.email', 'Email')}</th>
-                                <th className="px-3 py-2">{t('staff.new.table.phone', 'Телефон')}</th>
-                                <th className="px-3 py-2 w-24 text-center">{t('staff.new.table.select', 'Выбрать')}</th>
+                                <th className="w-10 px-3 py-2">
+                                    {t('staff.new.table.number', '#')}
+                                </th>
+                                <th className="px-3 py-2">
+                                    {t('staff.new.table.name', 'РРјСЏ')}
+                                </th>
+                                <th className="px-3 py-2">
+                                    {t('staff.new.table.email', 'Email')}
+                                </th>
+                                <th className="px-3 py-2">
+                                    {t('staff.new.table.phone', 'РўРµР»РµС„РѕРЅ')}
+                                </th>
+                                <th className="w-24 px-3 py-2 text-center">
+                                    {t('staff.new.table.select', 'Р’С‹Р±СЂР°С‚СЊ')}
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {results.map((u, i) => (
-                                <tr key={u.id} className="border-t border-gray-200 bg-white last:border-b dark:border-gray-800 dark:bg-gray-900">
-                                    <td className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">{i + 1}</td>
-                                    <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{u.full_name}</td>
-                                    <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">{u.email ?? '—'}</td>
-                                    <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">{u.phone ?? '—'}</td>
+                                <tr
+                                    key={u.id}
+                                    className="border-t border-gray-200 bg-white last:border-b dark:border-gray-800 dark:bg-gray-900"
+                                >
+                                    <td className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                        {i + 1}
+                                    </td>
+                                    <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">
+                                        {u.full_name}
+                                    </td>
+                                    <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">
+                                        {u.email ?? 'вЂ”'}
+                                    </td>
+                                    <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">
+                                        {u.phone ?? 'вЂ”'}
+                                    </td>
                                     <td className="px-3 py-2 text-center">
                                         <input
                                             type="radio"
                                             name="pick"
                                             checked={selectedUserId === u.id}
                                             onChange={() => setSelectedUserId(u.id)}
-                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600"
+                                            className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600"
                                         />
                                     </td>
                                 </tr>
@@ -141,8 +189,14 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                                         colSpan={5}
                                     >
                                         {hasSearched
-                                            ? t('staff.new.table.empty.noResults', 'Ничего не найдено. Попробуйте изменить запрос.')
-                                            : t('staff.new.table.empty.enterQuery', 'Введите запрос и нажмите «Найти», чтобы увидеть пользователей.')}
+                                            ? t(
+                                                  'staff.new.table.empty.noResults',
+                                                  'РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РёР·РјРµРЅРёС‚СЊ Р·Р°РїСЂРѕСЃ.',
+                                              )
+                                            : t(
+                                                  'staff.new.table.empty.enterQuery',
+                                                  'Р’РІРµРґРёС‚Рµ Р·Р°РїСЂРѕСЃ Рё РЅР°Р¶РјРёС‚Рµ В«РќР°Р№С‚РёВ», С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№.',
+                                              )}
                                     </td>
                                 </tr>
                             )}
@@ -153,7 +207,9 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
 
             <div className="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 sm:grid-cols-3 dark:border-gray-800 dark:bg-gray-900">
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('staff.new.branch.label', 'Филиал')}</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {t('staff.new.branch.label', 'Р¤РёР»РёР°Р»')}
+                    </label>
                     <select
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         value={branchId}
@@ -174,17 +230,22 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                         onChange={(e) => setIsActive(e.target.checked)}
                         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600"
                     />
-                    <span>{t('staff.new.active.label', 'Активен (доступен для записи)')}</span>
+                    <span>
+                        {t('staff.new.active.label', 'РђРєС‚РёРІРµРЅ (РґРѕСЃС‚СѓРїРµРЅ РґР»СЏ Р·Р°РїРёСЃРё)')}
+                    </span>
                 </label>
                 <div className="flex items-end">
                     <button
                         onClick={createStaff}
-                        className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {t('staff.new.create.button', 'Добавить сотрудника')}
+                        {t('staff.new.create.button', 'Р”РѕР±Р°РІРёС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР°')}
                     </button>
                 </div>
             </div>
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }
+
+

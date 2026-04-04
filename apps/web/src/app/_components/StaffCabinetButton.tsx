@@ -1,20 +1,29 @@
 'use client';
 
+import { clsx } from 'clsx';
 import Link from 'next/link';
 
 import { useLanguage } from './i18n/LanguageProvider';
 
-export function StaffCabinetButton({ onClick }: { onClick?: () => void }) {
+export function StaffCabinetButton({
+    onClick,
+    className,
+}: {
+    onClick?: () => void;
+    className?: string;
+}) {
     const { t } = useLanguage();
 
     return (
-        <Link 
-            href="/staff" 
+        <Link
+            href="/staff"
             onClick={onClick}
-            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"
+            className={clsx(
+                'inline-flex items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-2 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]',
+                className,
+            )}
         >
-            {t('header.staffCabinet', 'Кабинет сотрудника')}
+            {t('header.staffCabinet', 'РљР°Р±РёРЅРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєР°')}
         </Link>
     );
 }
-

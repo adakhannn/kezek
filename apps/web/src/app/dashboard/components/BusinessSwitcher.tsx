@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+
 
 type Business = {
     id: string;
@@ -116,9 +118,12 @@ export function BusinessSwitcher({ serverCurrentBizId }: { serverCurrentBizId?: 
 
     if (state.status === 'error') {
         return (
-            <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
-                {t('dashboard.businessSwitcher.errorShort', 'Ошибка загрузки бизнесов')}
-            </div>
+                        <AlertBanner
+                variant="danger"
+                message={t('dashboard.businessSwitcher.errorShort', 'Ошибка загрузки бизнесов')}
+                compact
+                className="mt-2"
+            />
         );
     }
 
@@ -217,4 +222,6 @@ export function BusinessSwitcher({ serverCurrentBizId }: { serverCurrentBizId?: 
         </div>
     );
 }
+
+
 

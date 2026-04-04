@@ -1,11 +1,15 @@
 'use client';
 
+import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
+
 type AuthChoiceModalProps = {
     isOpen: boolean;
     onClose: () => void;
     onAuth: () => void;
     onGuestBooking: () => void;
     t: (key: string, fallback?: string) => string;
+    slotTimeLabel?: string | null;
 };
 
 export function AuthChoiceModal({
@@ -14,56 +18,82 @@ export function AuthChoiceModal({
     onAuth,
     onGuestBooking,
     t,
+    slotTimeLabel,
 }: AuthChoiceModalProps) {
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-            <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900" onClick={(e) => e.stopPropagation()}>
-                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        {t('booking.authChoice.title', 'Выберите способ бронирования')}
-                    </h3>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        {t('booking.authChoice.subtitle', 'Вы можете авторизоваться или забронировать без регистрации')}
-                    </p>
+        <Dialog
+            open={isOpen}
+            onClose={onClose}
+            title={t('booking.authChoice.title', 'Как продолжить запись')}
+            description={t(
+                'booking.authChoice.subtitle',
+                'Вы уже выбрали слот. Теперь можно войти в аккаунт или продолжить как гость.',
+            )}
+            size="lg"
+            footer={
+                <div className="flex items-center justify-end">
+                    <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                        {t('booking.authChoice.cancel', 'Отмена')}
+                    </Button>
                 </div>
-                
-                <div className="px-4 py-4 space-y-3">
+            }
+        >
+            <div className="space-y-4">
+                {slotTimeLabel ? (
+                    <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3">
+                        <div className="type-caption text-[var(--text-secondary)]">
+                            {t('booking.authChoice.selectedSlot', 'Выбранный слот')}
+                        </div>
+                        <div className="type-label mt-1 text-[var(--text-primary)]">{slotTimeLabel}</div>
+                    </div>
+                ) : null}
+
+                <div className="grid gap-3 sm:grid-cols-2">
                     <button
                         type="button"
                         onClick={() => {
                             onClose();
                             onAuth();
                         }}
-                        className="w-full rounded-lg border border-indigo-600 bg-indigo-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-indigo-700 dark:border-indigo-400 min-h-[44px] sm:min-h-[40px] touch-manipulation"
+                        className="rounded-[22px] border border-[var(--accent-primary)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] p-4 text-left transition-all hover:shadow-[var(--shadow-sm)]"
                     >
-                        {t('booking.authChoice.authButton', 'Войти или зарегистрироваться')}
+                        <div className="type-label text-[var(--accent-primary)]">
+                            {t('booking.authChoice.authBadge', 'Через аккаунт')}
+                        </div>
+                        <div className="type-section-title mt-2 text-[var(--text-primary)]">
+                            {t('booking.authChoice.authButton', 'Войти и завершить')}
+                        </div>
+                        <p className="type-caption mt-2 text-[var(--text-secondary)]">
+                            {t('booking.authChoice.authHint', 'Подойдёт, если вы хотите управлять записью в кабинете и видеть историю визитов.')}
+                        </p>
                     </button>
-                    
+
                     <button
                         type="button"
                         onClick={() => {
                             onClose();
                             onGuestBooking();
                         }}
-                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800 min-h-[44px] sm:min-h-[40px] touch-manipulation"
+                        className="rounded-[22px] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 text-left transition-all hover:border-[var(--accent-primary)] hover:shadow-[var(--shadow-sm)]"
                     >
-                        {t('booking.authChoice.guestButton', 'Запись без регистрации')}
+                        <div className="type-label text-[var(--text-secondary)]">
+                            {t('booking.authChoice.guestBadge', 'Как гость')}
+                        </div>
+                        <div className="type-section-title mt-2 text-[var(--text-primary)]">
+                            {t('booking.authChoice.guestButton', 'Продолжить без аккаунта')}
+                        </div>
+                        <p className="type-caption mt-2 text-[var(--text-secondary)]">
+                            {t('booking.authChoice.guestHint', 'Понадобятся только имя и телефон, чтобы быстро подтвердить бронь.')}
+                        </p>
                     </button>
                 </div>
-                
-                <div className="flex items-center justify-end px-4 py-3 border-t border-gray-200 dark:border-gray-800">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800 min-h-[44px] sm:min-h-[32px] touch-manipulation"
-                    >
-                        {t('booking.authChoice.cancel', 'Отмена')}
-                    </button>
+
+                <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3">
+                    <p className="type-caption text-[var(--text-secondary)]">
+                        {t('booking.authChoice.footerHint', 'Оба сценария приведут к одной и той же записи. Разница только в способе подтверждения и дальнейшем управлении.')}
+                    </p>
                 </div>
             </div>
-        </div>
+        </Dialog>
     );
 }
-

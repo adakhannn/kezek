@@ -1,15 +1,32 @@
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+
 import { colors } from '../../constants/colors';
 
 type CardProps = {
     children: React.ReactNode;
-    style?: ViewStyle;
-    hover?: boolean;
+    style?: StyleProp<ViewStyle>;
+    variant?: 'elevated' | 'muted' | 'outlined';
+    padding?: 'none' | 'sm' | 'md' | 'lg';
 };
 
-export default function Card({ children, style, hover }: CardProps) {
+export default function Card({
+    children,
+    style,
+    variant = 'elevated',
+    padding = 'lg',
+}: CardProps) {
     return (
-        <View style={[styles.card, hover && styles.hover, style]}>
+        <View
+            style={[
+                styles.card,
+                variant === 'muted' && styles.cardMuted,
+                variant === 'outlined' && styles.cardOutlined,
+                padding === 'none' && styles.paddingNone,
+                padding === 'sm' && styles.paddingSm,
+                padding === 'md' && styles.paddingMd,
+                style,
+            ]}
+        >
             {children}
         </View>
     );
@@ -17,16 +34,30 @@ export default function Card({ children, style, hover }: CardProps) {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: colors.background.secondary,
-        borderRadius: 16, // rounded-2xl в веб-версии
-        padding: 24, // p-6 в веб-версии
+        backgroundColor: colors.surface.card,
+        borderRadius: colors.layout.radiusLg,
+        padding: colors.layout.space6,
         borderWidth: 1,
-        borderColor: colors.border.dark,
+        borderColor: colors.border.subtle,
         ...colors.shadow.lg,
     },
-    hover: {
-        // Для будущего использования с анимацией
-        opacity: 0.95,
+    cardMuted: {
+        backgroundColor: colors.surface.elevated,
+        borderColor: colors.border.light,
+        ...colors.shadow.sm,
+    },
+    cardOutlined: {
+        backgroundColor: 'transparent',
+        borderColor: colors.border.light,
+        ...colors.shadow.sm,
+    },
+    paddingNone: {
+        padding: 0,
+    },
+    paddingSm: {
+        padding: colors.layout.space4,
+    },
+    paddingMd: {
+        padding: colors.layout.space5,
     },
 });
-

@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 
 type ReviewDialogProps = {
     bookingId: string;
@@ -123,11 +124,7 @@ export default function ReviewDialog({
                     </button>
                 </div>
 
-                {err && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
-                        {err}
-                    </div>
-                )}
+                {err ? <AlertBanner variant="danger" message={err} compact /> : null}
 
                 {/* Оценка */}
                 <div className="space-y-1">
@@ -191,3 +188,5 @@ export default function ReviewDialog({
         </div>
     );
 }
+
+

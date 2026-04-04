@@ -1,53 +1,55 @@
 import { StyleSheet } from 'react-native';
 
+import { colors } from '../../constants/colors';
+
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background.primary,
     },
     header: {
-        padding: 20,
-        backgroundColor: '#fff',
+        padding: colors.layout.space5,
+        backgroundColor: colors.surface.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border.subtle,
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     businessList: {
-        padding: 20,
+        padding: colors.layout.space5,
         gap: 12,
     },
-    businessCard: {
+    businessPressable: {
         marginBottom: 12,
+    },
+    businessCard: {
+        marginBottom: 0,
     },
     businessName: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 8,
     },
     businessAddress: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginBottom: 4,
     },
     businessPhone: {
         fontSize: 14,
-        color: '#6366f1',
+        color: colors.accent.indigo,
         marginBottom: 12,
     },
     businessActions: {
         marginTop: 8,
-    },
-    actionButton: {
-        marginTop: 0,
     },
 });

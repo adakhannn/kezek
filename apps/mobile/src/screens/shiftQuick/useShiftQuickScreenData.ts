@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../hooks/useAuth';
 import { apiRequest } from '../../lib/api';
 import { logDebug, logError } from '../../lib/log';
 import { supabase } from '../../lib/supabase';
-import { addToOfflineQueue, clearOfflineQueue, getOfflineQueue, getShiftCache, saveShiftCache } from './offlineStorage';
+import {
+    addToOfflineQueue,
+    clearOfflineQueue,
+    getOfflineQueue,
+    getShiftCache,
+    saveShiftCache,
+} from './offlineStorage';
 import type { FinanceData, ShiftItem, ShiftQuickMetrics } from './types';
 
 type StaffInfo = {
@@ -14,10 +20,15 @@ type StaffInfo = {
     full_name: string;
 };
 
+type MutationResult = {
+    queued: boolean;
+};
+
 export function useShiftQuickScreenData() {
     const [refreshing, setRefreshing] = useState(false);
     const [isProcessingQueue, setIsProcessingQueue] = useState(false);
     const { user } = useAuth();
+    const { showToast } = useToast();
     const queryClient = useQueryClient();
 
     const { data: staffInfo } = useQuery({
@@ -115,7 +126,7 @@ export function useShiftQuickScreenData() {
     }, [processOfflineQueue]);
 
     const openShiftMutation = useMutation({
-        mutationFn: async () => {
+        mutationFn: async (): Promise<MutationResult> => {
             try {
                 const response = await apiRequest<{ ok: boolean; shift: unknown }>('/api/staff/shift/open', {
                     method: 'POST',
@@ -123,28 +134,33 @@ export function useShiftQuickScreenData() {
                 if (!response.ok) {
                     throw new Error('Failed to open shift');
                 }
-                return response;
+                return { queued: false };
             } catch (error) {
                 await addToOfflineQueue({
                     type: 'open',
                     data: {},
                     timestamp: new Date().toISOString(),
                 });
-                throw error;
+                return { queued: true };
             }
         },
-        onSuccess: () => {
+        onSuccess: (result) => {
             queryClient.invalidateQueries({ queryKey: ['staff-finance'] });
-            Alert.alert('Успешно', 'Смена открыта');
+            showToast(
+                result.queued
+                    ? 'РћС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹ СЃРѕС…СЂР°РЅРµРЅРѕ РІ РѕС‡РµСЂРµРґСЊ Рё Р±СѓРґРµС‚ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РїРѕСЃР»Рµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРІСЏР·Рё.'
+                    : 'РЎРјРµРЅР° РѕС‚РєСЂС‹С‚Р°.',
+                result.queued ? 'warning' : 'success',
+            );
         },
         onError: (error) => {
-            const message = error instanceof Error ? error.message : 'Не удалось открыть смену';
-            Alert.alert('Ошибка', message);
+            const message = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ СЃРјРµРЅСѓ';
+            showToast(message, 'error');
         },
     });
 
     const closeShiftMutation = useMutation({
-        mutationFn: async () => {
+        mutationFn: async (): Promise<MutationResult> => {
             const items = financeQuery.data?.today.items || [];
             const totalAmount = items.reduce((sum, item) => sum + (item.serviceAmount || 0), 0);
             const consumablesAmount = items.reduce((sum, item) => sum + (item.consumablesAmount || 0), 0);
@@ -171,28 +187,33 @@ export function useShiftQuickScreenData() {
                 if (!response.ok) {
                     throw new Error('Failed to close shift');
                 }
-                return response;
+                return { queued: false };
             } catch (error) {
                 await addToOfflineQueue({
                     type: 'close',
                     data: payload,
                     timestamp: new Date().toISOString(),
                 });
-                throw error;
+                return { queued: true };
             }
         },
-        onSuccess: () => {
+        onSuccess: (result) => {
             queryClient.invalidateQueries({ queryKey: ['staff-finance'] });
-            Alert.alert('Успешно', 'Смена закрыта');
+            showToast(
+                result.queued
+                    ? 'Р—Р°РєСЂС‹С‚РёРµ СЃРјРµРЅС‹ СЃРѕС…СЂР°РЅРµРЅРѕ РІ РѕС‡РµСЂРµРґСЊ Рё Р±СѓРґРµС‚ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РїРѕСЃР»Рµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРІСЏР·Рё.'
+                    : 'РЎРјРµРЅР° Р·Р°РєСЂС‹С‚Р°.',
+                result.queued ? 'warning' : 'success',
+            );
         },
         onError: (error) => {
-            const message = error instanceof Error ? error.message : 'Не удалось закрыть смену';
-            Alert.alert('Ошибка', message);
+            const message = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РєСЂС‹С‚СЊ СЃРјРµРЅСѓ';
+            showToast(message, 'error');
         },
     });
 
     const addClientMutation = useMutation({
-        mutationFn: async (newItem: Omit<ShiftItem, 'id' | 'createdAt'>) => {
+        mutationFn: async (newItem: Omit<ShiftItem, 'id' | 'createdAt'>): Promise<MutationResult> => {
             const currentItems = financeQuery.data?.today.items || [];
             const updatedItems = [...currentItems, { ...newItem, id: undefined }];
 
@@ -216,14 +237,14 @@ export function useShiftQuickScreenData() {
                 if (!response.ok) {
                     throw new Error('Failed to add client');
                 }
-                return response;
+                return { queued: false };
             } catch (error) {
                 await addToOfflineQueue({
                     type: 'addItem',
                     data: payload,
                     timestamp: new Date().toISOString(),
                 });
-                throw error;
+                return { queued: true };
             }
         },
     });

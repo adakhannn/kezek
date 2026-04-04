@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { View, Text, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { colors } from '../constants/colors';
 import { useBooking } from '../contexts/BookingContext';
 import { RootStackParamList } from '../navigation/types';
+import MotionPressable from './ui/MotionPressable';
 
 type StepInfo = {
     number: number;
@@ -12,12 +14,12 @@ type StepInfo = {
 };
 
 const STEPS: StepInfo[] = [
-    { number: 1, title: 'Филиал', screenName: 'BookingStep1Branch' },
-    { number: 2, title: 'Услуга', screenName: 'BookingStep2Service' },
-    { number: 3, title: 'Мастер', screenName: 'BookingStep3Staff' },
-    { number: 4, title: 'Дата', screenName: 'BookingStep4Date' },
-    { number: 5, title: 'Время', screenName: 'BookingStep5Time' },
-    { number: 6, title: 'Подтверждение', screenName: 'BookingStep6Confirm' },
+    { number: 1, title: 'Р¤РёР»РёР°Р»', screenName: 'BookingStep1Branch' },
+    { number: 2, title: 'РЈСЃР»СѓРіР°', screenName: 'BookingStep2Service' },
+    { number: 3, title: 'РњР°СЃС‚РµСЂ', screenName: 'BookingStep3Staff' },
+    { number: 4, title: 'Р”Р°С‚Р°', screenName: 'BookingStep4Date' },
+    { number: 5, title: 'Р’СЂРµРјСЏ', screenName: 'BookingStep5Time' },
+    { number: 6, title: 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ', screenName: 'BookingStep6Confirm' },
 ];
 
 type BookingProgressIndicatorProps = {
@@ -26,56 +28,62 @@ type BookingProgressIndicatorProps = {
 
 export default function BookingProgressIndicator({ currentStep }: BookingProgressIndicatorProps) {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const route = useRoute();
     const { bookingData } = useBooking();
     const totalSteps = STEPS.length;
     const progress = (currentStep / totalSteps) * 100;
 
     const handleStepPress = (step: StepInfo) => {
-        // Можно переходить только на завершенные шаги или текущий
         if (step.number <= currentStep && step.number < currentStep) {
-            // Для первого шага нужен slug
             if (step.number === 1 && bookingData.business?.slug) {
-                // Навигация в BookingStep1Branch находится в RootStack
-                (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate(step.screenName as keyof RootStackParamList, { slug: bookingData.business.slug });
+                (
+                    navigation as unknown as {
+                        navigate: (
+                            screen: keyof RootStackParamList,
+                            params?: RootStackParamList[keyof RootStackParamList]
+                        ) => void;
+                    }
+                ).navigate(step.screenName as keyof RootStackParamList, { slug: bookingData.business.slug });
             } else if (step.number > 1) {
-                // Для остальных шагов параметры не нужны
-                (navigation as unknown as { navigate: (screen: keyof RootStackParamList, params?: RootStackParamList[keyof RootStackParamList]) => void }).navigate(step.screenName as keyof RootStackParamList);
+                (
+                    navigation as unknown as {
+                        navigate: (
+                            screen: keyof RootStackParamList,
+                            params?: RootStackParamList[keyof RootStackParamList]
+                        ) => void;
+                    }
+                ).navigate(step.screenName as keyof RootStackParamList);
             }
         }
     };
 
     return (
         <View style={styles.container}>
-            {/* Текст с текущим шагом */}
             <View style={styles.header}>
                 <Text style={styles.stepText}>
-                    Шаг {currentStep} из {totalSteps}
+                    РЁР°Рі {currentStep} РёР· {totalSteps}
                 </Text>
                 <Text style={styles.stepTitle}>{STEPS[currentStep - 1]?.title}</Text>
             </View>
 
-            {/* Полоса прогресса */}
             <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBackground}>
                     <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
                 </View>
             </View>
 
-            {/* Точки для каждого шага */}
             <View style={styles.stepsContainer}>
                 {STEPS.map((step, index) => {
                     const isCompleted = step.number < currentStep;
                     const isCurrent = step.number === currentStep;
                     const isUpcoming = step.number > currentStep;
-                    const isClickable = step.number <= currentStep;
+                    const isClickable = step.number < currentStep;
 
                     return (
                         <View key={step.number} style={styles.stepItem}>
-                            <TouchableOpacity
+                            <MotionPressable
                                 onPress={() => handleStepPress(step)}
                                 disabled={!isClickable}
-                                activeOpacity={isClickable ? 0.7 : 1}
+                                style={styles.stepPressable}
                             >
                                 <View
                                     style={[
@@ -86,15 +94,10 @@ export default function BookingProgressIndicator({ currentStep }: BookingProgres
                                         isClickable && styles.stepDotClickable,
                                     ]}
                                 />
-                            </TouchableOpacity>
-                            {index < STEPS.length - 1 && (
-                                <View
-                                    style={[
-                                        styles.stepLine,
-                                        isCompleted && styles.stepLineCompleted,
-                                    ]}
-                                />
-                            )}
+                            </MotionPressable>
+                            {index < STEPS.length - 1 ? (
+                                <View style={[styles.stepLine, isCompleted && styles.stepLineCompleted]} />
+                            ) : null}
                         </View>
                     );
                 })}
@@ -150,6 +153,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1,
     },
+    stepPressable: {
+        padding: 2,
+    },
     stepDot: {
         width: 12,
         height: 12,
@@ -174,9 +180,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background.secondary,
         borderColor: colors.border.light,
     },
-    stepDotClickable: {
-        // Добавляем визуальную подсказку, что можно кликнуть
-    },
+    stepDotClickable: {},
     stepLine: {
         flex: 1,
         height: 2,
@@ -187,4 +191,3 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary.from,
     },
 });
-

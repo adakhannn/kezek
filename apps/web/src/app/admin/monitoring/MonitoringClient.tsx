@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Skeleton, SkeletonText } from '@/components/ui/Skeleton';
+import { StatusChip } from '@/components/ui/StatusChip';
+import { Tabs } from '@/components/ui/Tabs';
+
 type ApiMetric = {
     id: string;
     endpoint: string;
@@ -83,7 +93,6 @@ export default function MonitoringClient() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Фильтры для метрик
     const [metricsFilters, setMetricsFilters] = useState({
         endpoint: '',
         method: '',
@@ -92,7 +101,6 @@ export default function MonitoringClient() {
         minDuration: '',
     });
 
-    // Фильтры для логов
     const [logsFilters, setLogsFilters] = useState({
         operationType: '',
         logLevel: '',
@@ -189,25 +197,6 @@ export default function MonitoringClient() {
         }
     }, [activeTab]);
 
-    const getStatusColor = (statusCode: number) => {
-        if (statusCode >= 500) return 'text-red-600 dark:text-red-400';
-        if (statusCode >= 400) return 'text-amber-600 dark:text-amber-400';
-        return 'text-green-600 dark:text-green-400';
-    };
-
-    const getLogLevelColor = (level: string) => {
-        switch (level) {
-            case 'error':
-                return 'text-red-600 dark:text-red-400';
-            case 'warn':
-                return 'text-amber-600 dark:text-amber-400';
-            case 'info':
-                return 'text-blue-600 dark:text-blue-400';
-            default:
-                return 'text-gray-600 dark:text-gray-400';
-        }
-    };
-
     const formatDuration = (ms: number) => {
         if (ms < 1000) return `${ms}ms`;
         return `${(ms / 1000).toFixed(2)}s`;
@@ -215,319 +204,311 @@ export default function MonitoringClient() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6">Мониторинг и аналитика</h1>
+            <PageHeader
+                title="РњРѕРЅРёС‚РѕСЂРёРЅРі Рё Р°РЅР°Р»РёС‚РёРєР°"
+                description="РњРµС‚СЂРёРєРё API, РѕРїРµСЂР°С†РёРѕРЅРЅС‹Рµ Р»РѕРіРё Рё СЃРІРѕРґРєР° РїРѕ РїСЂРѕРёР·РІРѕРґРёС‚РµР»СЊРЅРѕСЃС‚Рё РєСЂРёС‚РёС‡РµСЃРєРёС… СЌРЅРґРїРѕРёРЅС‚РѕРІ."
+                className="mb-6"
+            />
 
-            {/* Табы */}
-            <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
-                <button
-                    onClick={() => setActiveTab('stats')}
-                    className={`px-4 py-2 font-medium ${
-                        activeTab === 'stats'
-                            ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-                    }`}
-                >
-                    Статистика
-                </button>
-                <button
-                    onClick={() => setActiveTab('metrics')}
-                    className={`px-4 py-2 font-medium ${
-                        activeTab === 'metrics'
-                            ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-                    }`}
-                >
-                    Метрики API
-                </button>
-                <button
-                    onClick={() => setActiveTab('logs')}
-                    className={`px-4 py-2 font-medium ${
-                        activeTab === 'logs'
-                            ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-                    }`}
-                >
-                    Логи операций
-                </button>
-            </div>
+            <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as Tab)}
+                items={[
+                    { key: 'stats', label: 'РЎС‚Р°С‚РёСЃС‚РёРєР°' },
+                    { key: 'metrics', label: 'РњРµС‚СЂРёРєРё API' },
+                    { key: 'logs', label: 'Р›РѕРіРё РѕРїРµСЂР°С†РёР№' },
+                ]}
+                className="mb-6 w-full max-w-2xl"
+                stretch
+            />
 
-            {error && (
-                <div className="bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-700 rounded-lg p-4 mb-6">
-                    <p className="text-red-700 dark:text-red-200">Ошибка: {error}</p>
-                </div>
-            )}
+            {error ? <AlertBanner variant="danger" title="РћС€РёР±РєР°" message={error} className="mb-6" /> : null}
 
-            {/* Статистика */}
-            {activeTab === 'stats' && (
+            {activeTab === 'stats' ? (
                 <div className="space-y-6">
+                    <SectionHeader
+                        title="РЎРІРѕРґРєР° РїРѕ СЌРЅРґРїРѕРёРЅС‚Сѓ"
+                        description="РћР±РЅРѕРІР»СЏРµРјР°СЏ РєР°СЂС‚РёРЅР° РїРѕ СЃРєРѕСЂРѕСЃС‚Рё, СѓСЃРїРµС€РЅРѕСЃС‚Рё Рё СЂРёСЃРєР°Рј Р·Р° РїРѕСЃР»РµРґРЅРёР№ С‡Р°СЃ."
+                        action={
+                            <Button onClick={loadStats} disabled={loading} size="sm">
+                                {loading ? 'Р—Р°РіСЂСѓР·РєР°...' : 'РћР±РЅРѕРІРёС‚СЊ'}
+                            </Button>
+                        }
+                    />
+
                     {loading && !stats ? (
-                        <div className="text-center py-8">Загрузка статистики...</div>
+                        <StatsSkeleton />
                     ) : stats ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Всего запросов</p>
-                                <p className="text-2xl font-bold">{stats.total_requests}</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Успешных</p>
-                                <p className="text-2xl font-bold text-green-600">{stats.success_count}</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Ошибок</p>
-                                <p className="text-2xl font-bold text-red-600">
-                                    {stats.client_error_count + stats.server_error_count}
-                                </p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Среднее время</p>
-                                <p className="text-2xl font-bold">{formatDuration(stats.avg_duration_ms)}</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">P95</p>
-                                <p className="text-2xl font-bold">{formatDuration(stats.p95_duration_ms)}</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">P99</p>
-                                <p className="text-2xl font-bold">{formatDuration(stats.p99_duration_ms)}</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Процент ошибок</p>
-                                <p className="text-2xl font-bold">{stats.error_rate.toFixed(2)}%</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Эндпоинт</p>
-                                <p className="text-lg font-medium truncate">{stats.endpoint}</p>
-                            </div>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                            <StatCard title="Р’СЃРµРіРѕ Р·Р°РїСЂРѕСЃРѕРІ" value={stats.total_requests} />
+                            <StatCard title="РЈСЃРїРµС€РЅС‹С…" value={stats.success_count} valueClassName="text-green-600 dark:text-green-400" />
+                            <StatCard title="РћС€РёР±РѕРє" value={stats.client_error_count + stats.server_error_count} valueClassName="text-red-600 dark:text-red-400" />
+                            <StatCard title="РЎСЂРµРґРЅРµРµ РІСЂРµРјСЏ" value={formatDuration(stats.avg_duration_ms)} />
+                            <StatCard title="P95" value={formatDuration(stats.p95_duration_ms)} />
+                            <StatCard title="P99" value={formatDuration(stats.p99_duration_ms)} />
+                            <StatCard title="РџСЂРѕС†РµРЅС‚ РѕС€РёР±РѕРє" value={`${stats.error_rate.toFixed(2)}%`} />
+                            <StatCard title="Р­РЅРґРїРѕРёРЅС‚" value={stats.endpoint} />
                         </div>
                     ) : (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                            Нет данных для отображения
-                        </div>
+                        <EmptyState compact title="РќРµС‚ РґР°РЅРЅС‹С…" description="Р”Р»СЏ СЌС‚РѕРіРѕ СЌРЅРґРїРѕРёРЅС‚Р° РїРѕРєР° РЅРµС‚ СЃРІРѕРґРЅРѕР№ СЃС‚Р°С‚РёСЃС‚РёРєРё." />
                     )}
-                    <button
-                        onClick={loadStats}
-                        disabled={loading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                    >
-                        {loading ? 'Загрузка...' : 'Обновить'}
-                    </button>
                 </div>
-            )}
+            ) : null}
 
-            {/* Метрики API */}
-            {activeTab === 'metrics' && (
+            {activeTab === 'metrics' ? (
                 <div className="space-y-6">
-                    {/* Фильтры */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                        <h2 className="text-lg font-semibold mb-4">Фильтры</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Эндпоинт</label>
+                    <Card variant="elevated" padding="lg">
+                        <SectionHeader title="Р¤РёР»СЊС‚СЂС‹ РјРµС‚СЂРёРє" description="РћС‚СЃРµР№С‚Рµ РЅСѓР¶РЅС‹Рµ СЌРЅРґРїРѕРёРЅС‚С‹, РјРµС‚РѕРґС‹, РѕС€РёР±РєРё Рё РјРµРґР»РµРЅРЅС‹Рµ Р·Р°РїСЂРѕСЃС‹." className="mb-4" />
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <FilterField label="Р­РЅРґРїРѕРёРЅС‚">
                                 <input
                                     type="text"
                                     value={metricsFilters.endpoint}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, endpoint: e.target.value })}
                                     placeholder="/api/staff/finance"
-                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Метод</label>
+                            </FilterField>
+                            <FilterField label="РњРµС‚РѕРґ">
                                 <select
                                     value={metricsFilters.method}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, method: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Все</option>
+                                    <option value="">Р’СЃРµ</option>
                                     <option value="GET">GET</option>
                                     <option value="POST">POST</option>
                                     <option value="PUT">PUT</option>
                                     <option value="DELETE">DELETE</option>
                                 </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Статус код</label>
+                            </FilterField>
+                            <FilterField label="РЎС‚Р°С‚СѓСЃ РєРѕРґ">
                                 <input
                                     type="number"
                                     value={metricsFilters.statusCode}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, statusCode: e.target.value })}
                                     placeholder="200, 400, 500..."
-                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Тип ошибки</label>
+                            </FilterField>
+                            <FilterField label="РўРёРї РѕС€РёР±РєРё">
                                 <select
                                     value={metricsFilters.errorType}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, errorType: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Все</option>
+                                    <option value="">Р’СЃРµ</option>
                                     <option value="validation">Validation</option>
                                     <option value="database">Database</option>
                                     <option value="auth">Auth</option>
                                     <option value="server">Server</option>
                                     <option value="network">Network</option>
                                 </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Мин. время (мс)</label>
+                            </FilterField>
+                            <FilterField label="РњРёРЅ. РІСЂРµРјСЏ (РјСЃ)">
                                 <input
                                     type="number"
                                     value={metricsFilters.minDuration}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, minDuration: e.target.value })}
                                     placeholder="1000"
-                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
-                            </div>
+                            </FilterField>
                         </div>
-                        <button
-                            onClick={loadMetrics}
-                            disabled={loading}
-                            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            {loading ? 'Загрузка...' : 'Применить фильтры'}
-                        </button>
-                    </div>
+                        <div className="mt-4">
+                            <Button onClick={loadMetrics} disabled={loading}>
+                                {loading ? 'Р—Р°РіСЂСѓР·РєР°...' : 'РџСЂРёРјРµРЅРёС‚СЊ С„РёР»СЊС‚СЂС‹'}
+                            </Button>
+                        </div>
+                    </Card>
 
-                    {/* Таблица метрик */}
                     {loading && metrics.length === 0 ? (
-                        <div className="text-center py-8">Загрузка метрик...</div>
+                        <TableSkeleton />
                     ) : metrics.length > 0 ? (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+                        <Card variant="elevated" padding="none" className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="px-4 py-2 text-left">Время</th>
-                                        <th className="px-4 py-2 text-left">Эндпоинт</th>
-                                        <th className="px-4 py-2 text-left">Метод</th>
-                                        <th className="px-4 py-2 text-left">Статус</th>
-                                        <th className="px-4 py-2 text-left">Время</th>
-                                        <th className="px-4 py-2 text-left">Ошибка</th>
+                                        <TableHead>Р’СЂРµРјСЏ</TableHead>
+                                        <TableHead>Р­РЅРґРїРѕРёРЅС‚</TableHead>
+                                        <TableHead>РњРµС‚РѕРґ</TableHead>
+                                        <TableHead>РЎС‚Р°С‚СѓСЃ</TableHead>
+                                        <TableHead>Р’СЂРµРјСЏ</TableHead>
+                                        <TableHead>РћС€РёР±РєР°</TableHead>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {metrics.map((metric) => (
                                         <tr key={metric.id} className="border-t border-gray-200 dark:border-gray-700">
-                                            <td className="px-4 py-2">
-                                                {new Date(metric.created_at).toLocaleString('ru-RU')}
-                                            </td>
-                                            <td className="px-4 py-2 font-mono text-sm">{metric.endpoint}</td>
-                                            <td className="px-4 py-2">{metric.method}</td>
-                                            <td className={`px-4 py-2 font-semibold ${getStatusColor(metric.status_code)}`}>
-                                                {metric.status_code}
-                                            </td>
-                                            <td className="px-4 py-2">{formatDuration(metric.duration_ms)}</td>
-                                            <td className="px-4 py-2 text-sm text-red-600 dark:text-red-400">
-                                                {metric.error_message || metric.error_type || '-'}
-                                            </td>
+                                            <TableCell>{new Date(metric.created_at).toLocaleString('ru-RU')}</TableCell>
+                                            <TableCell className="font-mono text-sm">{metric.endpoint}</TableCell>
+                                            <TableCell>{metric.method}</TableCell>
+                                            <TableCell>
+                                                <StatusChip
+                                                    status={
+                                                        metric.status_code >= 500
+                                                            ? 'error'
+                                                            : metric.status_code >= 400
+                                                              ? 'warning'
+                                                              : 'success'
+                                                    }
+                                                    label={String(metric.status_code)}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{formatDuration(metric.duration_ms)}</TableCell>
+                                            <TableCell className="text-sm text-red-600 dark:text-red-400">{metric.error_message || metric.error_type || '-'}</TableCell>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
+                        </Card>
                     ) : (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                            Нет метрик для отображения
-                        </div>
+                        <EmptyState compact title="РќРµС‚ РјРµС‚СЂРёРє" description="Р¤РёР»СЊС‚СЂС‹ РЅРµ РІРµСЂРЅСѓР»Рё РґР°РЅРЅС‹С…. РџРѕРїСЂРѕР±СѓР№С‚Рµ РёР·РјРµРЅРёС‚СЊ СѓСЃР»РѕРІРёСЏ РІС‹Р±РѕСЂРєРё." />
                     )}
                 </div>
-            )}
+            ) : null}
 
-            {/* Логи операций */}
-            {activeTab === 'logs' && (
+            {activeTab === 'logs' ? (
                 <div className="space-y-6">
-                    {/* Фильтры */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                        <h2 className="text-lg font-semibold mb-4">Фильтры</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Тип операции</label>
+                    <Card variant="elevated" padding="lg">
+                        <SectionHeader title="Р¤РёР»СЊС‚СЂС‹ Р»РѕРіРѕРІ" description="РћСЃС‚Р°РІСЊС‚Рµ РЅСѓР¶РЅС‹Р№ С‚РёРї РѕРїРµСЂР°С†РёРё Рё СѓСЂРѕРІРµРЅСЊ Р¶СѓСЂРЅР°Р»Р°." className="mb-4" />
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <FilterField label="РўРёРї РѕРїРµСЂР°С†РёРё">
                                 <select
                                     value={logsFilters.operationType}
                                     onChange={(e) => setLogsFilters({ ...logsFilters, operationType: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Все</option>
-                                    <option value="shift_open">Открытие смены</option>
-                                    <option value="shift_close">Закрытие смены</option>
-                                    <option value="item_create">Создание клиента</option>
-                                    <option value="item_update">Обновление клиента</option>
-                                    <option value="item_delete">Удаление клиента</option>
-                                    <option value="items_save">Сохранение списка</option>
-                                    <option value="error">Ошибка</option>
+                                    <option value="">Р’СЃРµ</option>
+                                    <option value="shift_open">РћС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹</option>
+                                    <option value="shift_close">Р—Р°РєСЂС‹С‚РёРµ СЃРјРµРЅС‹</option>
+                                    <option value="item_create">РЎРѕР·РґР°РЅРёРµ РєР»РёРµРЅС‚Р°</option>
+                                    <option value="item_update">РћР±РЅРѕРІР»РµРЅРёРµ РєР»РёРµРЅС‚Р°</option>
+                                    <option value="item_delete">РЈРґР°Р»РµРЅРёРµ РєР»РёРµРЅС‚Р°</option>
+                                    <option value="items_save">РЎРѕС…СЂР°РЅРµРЅРёРµ СЃРїРёСЃРєР°</option>
+                                    <option value="error">РћС€РёР±РєР°</option>
                                 </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Уровень</label>
+                            </FilterField>
+                            <FilterField label="РЈСЂРѕРІРµРЅСЊ">
                                 <select
                                     value={logsFilters.logLevel}
                                     onChange={(e) => setLogsFilters({ ...logsFilters, logLevel: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                    className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Все</option>
+                                    <option value="">Р’СЃРµ</option>
                                     <option value="debug">Debug</option>
                                     <option value="info">Info</option>
                                     <option value="warn">Warn</option>
                                     <option value="error">Error</option>
                                 </select>
-                            </div>
+                            </FilterField>
                         </div>
-                        <button
-                            onClick={loadLogs}
-                            disabled={loading}
-                            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            {loading ? 'Загрузка...' : 'Применить фильтры'}
-                        </button>
-                    </div>
+                        <div className="mt-4">
+                            <Button onClick={loadLogs} disabled={loading}>
+                                {loading ? 'Р—Р°РіСЂСѓР·РєР°...' : 'РџСЂРёРјРµРЅРёС‚СЊ С„РёР»СЊС‚СЂС‹'}
+                            </Button>
+                        </div>
+                    </Card>
 
-                    {/* Таблица логов */}
                     {loading && logs.length === 0 ? (
-                        <div className="text-center py-8">Загрузка логов...</div>
+                        <TableSkeleton />
                     ) : logs.length > 0 ? (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+                        <Card variant="elevated" padding="none" className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="px-4 py-2 text-left">Время</th>
-                                        <th className="px-4 py-2 text-left">Тип</th>
-                                        <th className="px-4 py-2 text-left">Уровень</th>
-                                        <th className="px-4 py-2 text-left">Сотрудник</th>
-                                        <th className="px-4 py-2 text-left">Сообщение</th>
-                                        <th className="px-4 py-2 text-left">Ошибка</th>
+                                        <TableHead>Р’СЂРµРјСЏ</TableHead>
+                                        <TableHead>РўРёРї</TableHead>
+                                        <TableHead>РЈСЂРѕРІРµРЅСЊ</TableHead>
+                                        <TableHead>РЎРѕС‚СЂСѓРґРЅРёРє</TableHead>
+                                        <TableHead>РЎРѕРѕР±С‰РµРЅРёРµ</TableHead>
+                                        <TableHead>РћС€РёР±РєР°</TableHead>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {logs.map((log) => (
                                         <tr key={log.id} className="border-t border-gray-200 dark:border-gray-700">
-                                            <td className="px-4 py-2">
-                                                {new Date(log.created_at).toLocaleString('ru-RU')}
-                                            </td>
-                                            <td className="px-4 py-2">{log.operation_type}</td>
-                                            <td className={`px-4 py-2 font-semibold ${getLogLevelColor(log.log_level)}`}>
-                                                {log.log_level}
-                                            </td>
-                                            <td className="px-4 py-2">
-                                                {log.staff?.full_name || '-'}
-                                            </td>
-                                            <td className="px-4 py-2 text-sm">{log.message}</td>
-                                            <td className="px-4 py-2 text-sm text-red-600 dark:text-red-400">
-                                                {log.error_message || '-'}
-                                            </td>
+                                            <TableCell>{new Date(log.created_at).toLocaleString('ru-RU')}</TableCell>
+                                            <TableCell>{log.operation_type}</TableCell>
+                                            <TableCell>
+                                                <StatusChip
+                                                    status={log.log_level === 'error' ? 'error' : log.log_level === 'warn' ? 'warning' : log.log_level}
+                                                    label={log.log_level}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{log.staff?.full_name || '-'}</TableCell>
+                                            <TableCell className="text-sm">{log.message}</TableCell>
+                                            <TableCell className="text-sm text-red-600 dark:text-red-400">{log.error_message || '-'}</TableCell>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
+                        </Card>
                     ) : (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                            Нет логов для отображения
-                        </div>
+                        <EmptyState compact title="РќРµС‚ Р»РѕРіРѕРІ" description="РџРѕ С‚РµРєСѓС‰РµР№ РІС‹Р±РѕСЂРєРµ РѕРїРµСЂР°С†РёРѕРЅРЅС‹Р№ Р¶СѓСЂРЅР°Р» РїСѓСЃС‚." />
                     )}
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }
 
+function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--text-secondary)]">{label}</label>
+            {children}
+        </div>
+    );
+}
+
+function TableHead({ children }: { children: React.ReactNode }) {
+    return <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">{children}</th>;
+}
+
+function TableCell({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+    return <td className={`px-4 py-2 text-sm text-gray-900 dark:text-gray-100 ${className}`}>{children}</td>;
+}
+
+function StatCard({
+    title,
+    value,
+    valueClassName = '',
+}: {
+    title: string;
+    value: string | number;
+    valueClassName?: string;
+}) {
+    return (
+        <Card variant="elevated" padding="md">
+            <p className="text-sm text-gray-600 dark:text-gray-400">{title}</p>
+            <p className={`mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100 ${valueClassName}`}>{value}</p>
+        </Card>
+    );
+}
+
+function StatsSkeleton() {
+    return (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+                <Card key={index} variant="elevated" padding="md">
+                    <Skeleton className="mb-3 h-4 w-24" />
+                    <SkeletonText lines={2} />
+                </Card>
+            ))}
+        </div>
+    );
+}
+
+function TableSkeleton() {
+    return (
+        <Card variant="elevated" padding="lg">
+            <Skeleton className="mb-4 h-5 w-40" />
+            <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                    <Skeleton key={index} className="h-10 w-full" />
+                ))}
+            </div>
+        </Card>
+    );
+}

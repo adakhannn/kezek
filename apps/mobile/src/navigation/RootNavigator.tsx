@@ -1,8 +1,9 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { colors } from '../constants/colors';
 import { BookingProvider } from '../contexts/BookingContext';
 import { linking } from './linking';
@@ -22,8 +23,7 @@ export default function RootNavigator() {
     if (loading) {
         return (
             <View style={styles.loading}>
-                <ActivityIndicator size="large" color="#6366f1" />
-                <Text style={styles.loadingText}>Загрузка...</Text>
+                <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР°..." />
             </View>
         );
     }
@@ -42,13 +42,6 @@ export default function RootNavigator() {
 const styles = StyleSheet.create({
     loading: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
         backgroundColor: colors.background.primary,
-    },
-    loadingText: {
-        marginTop: 12,
-        fontSize: 16,
-        color: '#6b7280',
     },
 });

@@ -1,7 +1,6 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { formatServicePrice } from '@shared-client/formatters';
@@ -9,6 +8,9 @@ import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import EmptyState from '../../components/ui/EmptyState';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import MotionPressable from '../../components/ui/MotionPressable';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { useBookingStep2Services } from './useBookingStep2Services';
@@ -45,7 +47,7 @@ export default function BookingStep2Service() {
     if (isLoading) {
         return (
             <View style={styles.container}>
-                <Text style={styles.loadingText}>Загрузка услуг...</Text>
+                <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР° СѓСЃР»СѓРі..." />
             </View>
         );
     }
@@ -57,115 +59,110 @@ export default function BookingStep2Service() {
                 <View style={styles.header}>
                     <Text style={styles.title}>{bookingData.business?.name}</Text>
                 </View>
-                <View style={styles.emptyContainer}>
-                    <Ionicons name="cut-outline" size={48} color="#9ca3af" />
-                    <Text style={styles.emptyText}>Нет доступных услуг</Text>
-                </View>
+                <EmptyState
+                    icon="cut-outline"
+                    title="РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… СѓСЃР»СѓРі"
+                    message="Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ С„РёР»РёР°Р»Р° РїРѕРєР° РЅРµС‚ Р°РєС‚РёРІРЅС‹С… СѓСЃР»СѓРі."
+                    compact
+                    style={styles.emptyContainer}
+                />
             </View>
         );
     }
 
-        return (
-            <LinearGradient
-                colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradientContainer}
-            >
-                <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-                    <BookingProgressIndicator currentStep={2} />
-                    <View style={styles.header}>
-                        <Text style={styles.title}>{bookingData.business?.name}</Text>
-                    </View>
+    return (
+        <LinearGradient
+            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientContainer}
+        >
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+                <BookingProgressIndicator currentStep={2} />
+                <View style={styles.header}>
+                    <Text style={styles.title}>{bookingData.business?.name}</Text>
+                </View>
 
-                    <View style={styles.section}>
-                        <View style={styles.optionsList}>
-                            {servicesData.map((service) => {
-                                const price = formatServicePrice(service, 'сом');
-                                const isSelected = bookingData.serviceId === service.id;
-                                return (
-                                    <TouchableOpacity
-                                        key={service.id}
-                                        style={[
-                                            styles.serviceCard,
-                                            isSelected && styles.serviceCardSelected,
-                                        ]}
-                                        onPress={() => handleSelectService(service.id)}
-                                        activeOpacity={0.7}
-                                    >
-                                        {isSelected ? (
-                                            <LinearGradient
-                                                colors={['rgba(79, 70, 229, 0.1)', 'rgba(79, 70, 229, 0.15)']}
-                                                start={{ x: 0, y: 0 }}
-                                                end={{ x: 1, y: 0 }}
-                                                style={styles.serviceCardGradient}
-                                            >
-                                                <View style={styles.serviceHeader}>
-                                                    <View style={styles.serviceInfo}>
-                                                        <Text style={styles.serviceNameSelected}>
-                                                            {service.name_ru}
+                <View style={styles.section}>
+                    <View style={styles.optionsList}>
+                        {servicesData.map((service) => {
+                            const price = formatServicePrice(service, 'СЃРѕРј');
+                            const isSelected = bookingData.serviceId === service.id;
+                            return (
+                                <MotionPressable
+                                    key={service.id}
+                                    style={[styles.serviceCard, isSelected && styles.serviceCardSelected]}
+                                    onPress={() => handleSelectService(service.id)}
+                                >
+                                    {isSelected ? (
+                                        <LinearGradient
+                                            colors={['rgba(79, 70, 229, 0.1)', 'rgba(79, 70, 229, 0.15)']}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 0 }}
+                                            style={styles.serviceCardGradient}
+                                        >
+                                            <View style={styles.serviceHeader}>
+                                                <View style={styles.serviceInfo}>
+                                                    <Text style={styles.serviceNameSelected}>
+                                                        {service.name_ru}
+                                                    </Text>
+                                                    {service.duration_min ? (
+                                                        <Text style={styles.serviceDurationSelected}>
+                                                            {service.duration_min} РјРёРЅ
                                                         </Text>
-                                                        {service.duration_min && (
-                                                            <Text style={styles.serviceDurationSelected}>
-                                                                {service.duration_min} мин
-                                                            </Text>
-                                                        )}
-                                                    </View>
-                                                    {price && (
-                                                        <Text style={styles.priceTextSelected}>
-                                                            {price.replace(' - ', '–').replace('от ', '')}
-                                                        </Text>
-                                                    )}
+                                                    ) : null}
                                                 </View>
-                                            </LinearGradient>
-                                        ) : (
-                                            <View style={styles.serviceCardContent}>
-                                                <View style={styles.serviceHeader}>
-                                                    <View style={styles.serviceInfo}>
-                                                        <Text style={styles.serviceName}>
-                                                            {service.name_ru}
-                                                        </Text>
-                                                        {service.duration_min && (
-                                                            <Text style={styles.serviceDuration}>
-                                                                {service.duration_min} мин
-                                                            </Text>
-                                                        )}
-                                                    </View>
-                                                    {price && (
-                                                        <Text style={styles.priceText}>
-                                                            {price.replace(' - ', '–').replace('от ', '')}
-                                                        </Text>
-                                                    )}
-                                                </View>
+                                                {price ? (
+                                                    <Text style={styles.priceTextSelected}>
+                                                        {price.replace(' - ', 'вЂ“').replace('РѕС‚ ', '')}
+                                                    </Text>
+                                                ) : null}
                                             </View>
-                                        )}
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-
-                        {servicesData.length > 0 && (
-                            <View style={styles.buttonContainer}>
-                                <Button
-                                    title="Назад"
-                                    onPress={() => navigation.goBack()}
-                                    variant="outline"
-                                    style={styles.backButton}
-                                />
-                                <Button
-                                    title="Дальше"
-                                    onPress={handleNext}
-                                    disabled={!bookingData.serviceId}
-                                    variant="primary"
-                                    style={styles.nextButton}
-                                />
-                            </View>
-                        )}
+                                        </LinearGradient>
+                                    ) : (
+                                        <View style={styles.serviceCardContent}>
+                                            <View style={styles.serviceHeader}>
+                                                <View style={styles.serviceInfo}>
+                                                    <Text style={styles.serviceName}>{service.name_ru}</Text>
+                                                    {service.duration_min ? (
+                                                        <Text style={styles.serviceDuration}>
+                                                            {service.duration_min} РјРёРЅ
+                                                        </Text>
+                                                    ) : null}
+                                                </View>
+                                                {price ? (
+                                                    <Text style={styles.priceText}>
+                                                        {price.replace(' - ', 'вЂ“').replace('РѕС‚ ', '')}
+                                                    </Text>
+                                                ) : null}
+                                            </View>
+                                        </View>
+                                    )}
+                                </MotionPressable>
+                            );
+                        })}
                     </View>
-                </ScrollView>
-            </LinearGradient>
-        );
-    }
+
+                    <View style={styles.buttonContainer}>
+                        <Button
+                            title="РќР°Р·Р°Рґ"
+                            onPress={() => navigation.goBack()}
+                            variant="outline"
+                            style={styles.backButton}
+                        />
+                        <Button
+                            title="Р”Р°Р»СЊС€Рµ"
+                            onPress={handleNext}
+                            disabled={!bookingData.serviceId}
+                            variant="primary"
+                            style={styles.nextButton}
+                        />
+                    </View>
+                </View>
+            </ScrollView>
+        </LinearGradient>
+    );
+}
 
 const styles = StyleSheet.create({
     gradientContainer: {
@@ -186,15 +183,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.text.primary,
         marginBottom: 4,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: colors.text.secondary,
-    },
-    loadingText: {
-        textAlign: 'center',
-        padding: 40,
-        color: colors.text.secondary,
     },
     section: {
         padding: 20,
@@ -249,23 +237,17 @@ const styles = StyleSheet.create({
     priceText: {
         fontSize: 11,
         fontWeight: '600',
-        color: '#10b981', // emerald-500
+        color: colors.status.success,
         textAlign: 'right',
     },
     priceTextSelected: {
         fontSize: 11,
         fontWeight: '600',
-        color: '#10b981', // emerald-500
+        color: colors.status.success,
         textAlign: 'right',
     },
     emptyContainer: {
-        padding: 40,
-        alignItems: 'center',
-        gap: 12,
-    },
-    emptyText: {
-        fontSize: 16,
-        color: colors.text.secondary,
+        paddingHorizontal: 0,
     },
     buttonContainer: {
         marginTop: 24,
@@ -280,4 +262,3 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
-

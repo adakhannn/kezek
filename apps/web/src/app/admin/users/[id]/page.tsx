@@ -9,6 +9,7 @@ import { getT } from '@/app/_components/i18n/server';
 import { UserBasicForm } from '@/components/admin/users/UserBasicForm';           // client-компонент (как было)
 import { UserPageRedirect } from '@/components/admin/users/UserPageRedirect'; // клиентский компонент для редиректа
 import { UserSecurityActions } from '@/components/admin/users/UserSecurityActions'; // client-компонент (как было)
+import { AlertBanner } from '@/components/ui/AlertBanner';
 
 export const dynamic = 'force-dynamic';
 
@@ -197,29 +198,18 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
                         </div>
                     </section>
 
-                    {/* Предупреждение о блокировке */}
-                    {isBlocked && suspensionData && (
-                        <section className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-                            <div className="flex items-start gap-3">
-                                <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                                <div className="flex-1">
-                                    <h3 className="font-semibold text-red-900 dark:text-red-300 mb-1">{t('admin.users.blocked.title', 'Пользователь заблокирован')}</h3>
-                                    {suspensionData.reason && (
-                                        <p className="text-sm text-red-800 dark:text-red-400 mb-1">
-                                            <span className="font-medium">{t('admin.users.blocked.reason', 'Причина')}:</span> {suspensionData.reason}
-                                        </p>
-                                    )}
-                                    {suspensionData.created_at && (
-                                        <p className="text-xs text-red-700 dark:text-red-500">
-                                            {t('admin.users.blocked.date', 'Заблокирован')}: {new Date(suspensionData.created_at).toLocaleString('ru-RU')}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </section>
-                    )}
+                    {isBlocked && suspensionData ? (
+                        <AlertBanner
+                            variant="danger"
+                            title={t('admin.users.blocked.title')}
+                            message={[
+                                suspensionData.reason ? t('admin.users.blocked.reason') + ': ' + suspensionData.reason : null,
+                                suspensionData.created_at
+                                    ? t('admin.users.blocked.date') + ': ' + new Date(suspensionData.created_at).toLocaleString('ru-RU')
+                                    : null,
+                            ].filter(Boolean).join(' � ')}
+                        />
+                    ) : null}
 
                     <section className="grid gap-6 lg:grid-cols-3">
                         <div className="lg:col-span-2 space-y-6">
@@ -303,3 +293,4 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
         </>
     );
 }
+

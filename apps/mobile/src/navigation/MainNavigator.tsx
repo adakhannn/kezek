@@ -5,7 +5,11 @@ import DashboardScreen from '../screens/DashboardScreen';
 import HomeScreen from '../screens/HomeScreen';
 import StaffScreen from '../screens/StaffScreen';
 import { CabinetNavigator } from './CabinetNavigator';
-import { mainTabScreenOptions, renderTabIcon } from './mainNavigatorConfig';
+import {
+    createNavigationHeaderTitle,
+    mainTabScreenOptions,
+    renderTabIcon,
+} from './mainNavigatorConfig';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -19,8 +23,9 @@ export default function MainNavigator() {
                 name="Home"
                 component={HomeScreen}
                 options={{
-                    title: 'Главная',
-                    tabBarLabel: 'Главная',
+                    title: 'Р“Р»Р°РІРЅР°СЏ',
+                    headerTitle: createNavigationHeaderTitle('Р“Р»Р°РІРЅР°СЏ'),
+                    tabBarLabel: 'Р“Р»Р°РІРЅР°СЏ',
                     tabBarIcon: renderTabIcon('home'),
                 }}
             />
@@ -29,32 +34,34 @@ export default function MainNavigator() {
                 component={CabinetNavigator}
                 options={{
                     headerShown: false,
-                    tabBarLabel: 'Кабинет',
+                    tabBarLabel: 'РљР°Р±РёРЅРµС‚',
                     tabBarIcon: renderTabIcon('person'),
                 }}
             />
-            {isOwner && (
+            {isOwner ? (
                 <Tab.Screen
                     name="Dashboard"
                     component={DashboardScreen}
                     options={{
-                        title: 'Кабинет бизнеса',
-                        tabBarLabel: 'Бизнес',
+                        title: 'РњРѕР№ Р±РёР·РЅРµСЃ',
+                        headerTitle: createNavigationHeaderTitle('РњРѕР№ Р±РёР·РЅРµСЃ'),
+                        tabBarLabel: 'Р‘РёР·РЅРµСЃ',
                         tabBarIcon: renderTabIcon('business'),
                     }}
                 />
-            )}
-            {isStaff && (
+            ) : null}
+            {isStaff ? (
                 <Tab.Screen
                     name="Staff"
                     component={StaffScreen}
                     options={{
-                        title: 'Кабинет сотрудника',
-                        tabBarLabel: 'Сотрудник',
+                        title: 'Р Р°Р±РѕС‡Р°СЏ Р·РѕРЅР°',
+                        headerTitle: createNavigationHeaderTitle('Р Р°Р±РѕС‡Р°СЏ Р·РѕРЅР°'),
+                        tabBarLabel: 'Р Р°Р±РѕС‚Р°',
                         tabBarIcon: renderTabIcon('briefcase'),
                     }}
                 />
-            )}
+            ) : null}
         </Tab.Navigator>
     );
 }

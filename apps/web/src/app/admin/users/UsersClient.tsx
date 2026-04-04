@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -239,13 +240,15 @@ export default function UsersClient({
                                     </div>
                                 </div>
 
-                                {user.is_blocked && user.block_reason && (
-                                    <div className="mb-4 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                                        <p className="text-xs text-red-800 dark:text-red-300">
-                                            <span className="font-medium">Причина блокировки:</span> {user.block_reason}
-                                        </p>
-                                    </div>
-                                )}
+                                {user.is_blocked && user.block_reason ? (
+                                    <AlertBanner
+                                        variant="danger"
+                                        compact
+                                        title="Причина блокировки"
+                                        message={user.block_reason}
+                                        className="mb-4"
+                                    />
+                                ) : null}
 
                                 <div className="space-y-2 mb-4 text-sm">
                                     {user.email && (
@@ -337,4 +340,5 @@ export default function UsersClient({
         </div>
     );
 }
+
 

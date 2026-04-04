@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import {logError} from '@/lib/log';
@@ -268,16 +269,8 @@ export function OwnerForm({
                 </div>
             </div>
 
-            {err && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                    <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
-                </div>
-            )}
-            {ok && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
-                    <p className="text-green-600 dark:text-green-400 text-sm font-medium">{ok}</p>
-                </div>
-            )}
+            {err ? <AlertBanner variant="danger" message={err} compact /> : null}
+            {ok ? <AlertBanner variant="success" message={ok} compact /> : null}
             <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                 Используйте поиск для нахождения пользователя. Введите email, телефон или имя. Заблокированные пользователи не могут быть владельцами.
             </div>

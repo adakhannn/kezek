@@ -4,6 +4,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useCallback, useEffect } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import {logWarn} from '@/lib/log';
@@ -240,11 +241,7 @@ export default function VerifyPage() {
                             className="text-center text-2xl tracking-widest"
                             maxLength={6}
                         />
-                        {!!error && (
-                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-                            </div>
-                        )}
+                        {error ? <AlertBanner variant="danger" message={error} compact /> : null}
                         <Button
                             type="submit"
                             disabled={verifying || !code.trim()}

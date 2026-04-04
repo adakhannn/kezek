@@ -1,10 +1,7 @@
-// kezek/apps/web/src/app/_components/AuthStatusServer.tsx
-// Серверный статус авторизации с роутингом по ролям
 import { createServerClient } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { unstable_noStore as noStore } from 'next/cache';
 import { cookies } from 'next/headers';
-
 
 import { PersonalCabinetButton } from './PersonalCabinetButton';
 import { SignInButton } from './SignInButton';
@@ -25,7 +22,6 @@ export async function AuthStatusServer() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                // ❗️В RSC только чтение: без set/remove
                 get(name: string) {
                     return cookieStore.get(name)?.value;
                 },
@@ -39,7 +35,7 @@ export async function AuthStatusServer() {
     if (!user) {
         return (
             <div className="hidden md:flex items-center gap-3">
-                <SignInButton />
+                <SignInButton className="inline-flex items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-2 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]" />
             </div>
         );
     }
@@ -47,7 +43,6 @@ export async function AuthStatusServer() {
     const profile = await getUserRoleProfile(supabase as SupabaseClient);
     const t = await getT();
 
-    // Имя/аккаунт в шапке
     const accountLabel =
         (await (async () => {
             const { data: profileRow } = await supabase
@@ -59,7 +54,7 @@ export async function AuthStatusServer() {
         })()) ||
         user.email ||
         (user.phone as string | undefined) ||
-        t('header.account', 'аккаунт');
+        t('header.account', 'Р°РєРєР°СѓРЅС‚');
 
     resolveDefaultDashboard(profile);
 
@@ -67,16 +62,15 @@ export async function AuthStatusServer() {
 
     return (
         <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-700 dark:text-gray-300">
-                    <span className="font-medium">{accountLabel}</span>
+            <div className="inline-flex max-w-[16rem] items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-emphasis)_82%,transparent)] px-3.5 py-2 text-sm shadow-[var(--shadow-xs)]">
+                <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="truncate text-[var(--text-secondary)]">
+                    <span className="font-medium text-[var(--text-primary)]">{accountLabel}</span>
                 </span>
             </div>
-            {isStaff && <StaffCabinetButton />}
-            {/* Кнопка личного кабинета/дефолтного кабинета */}
-            <PersonalCabinetButton />
-            <SignOutButton />
+            {isStaff ? <StaffCabinetButton className="px-3.5" /> : null}
+            <PersonalCabinetButton className="px-3.5" />
+            <SignOutButton className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3.5 py-2 text-sm font-medium text-[var(--text-secondary)] shadow-[var(--shadow-xs)] transition-all duration-200 hover:border-[var(--border-default)] hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)] hover:shadow-[var(--shadow-sm)]" />
         </div>
     );
 }

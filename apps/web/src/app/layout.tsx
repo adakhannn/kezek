@@ -2,15 +2,11 @@ import type {Metadata} from 'next';
 import {Geist, Geist_Mono} from 'next/font/google';
 
 import './globals.css';
-import {AuthStatusServer} from './_components/AuthStatusServer';
+import {AppShellHeader} from './_components/AppShellHeader';
 import {AuthStatusUpdater} from './_components/AuthStatusWrapper';
 import {Footer} from './_components/Footer';
-import {Logo} from './_components/Logo';
-import {MobileHeaderMenu} from './_components/MobileHeaderMenu';
 import {ReminderBanners} from './_components/ReminderBanners';
-import { RoleAndBusinessSwitcher } from './_components/RoleAndBusinessSwitcher';
 import {LanguageProvider} from './_components/i18n/LanguageProvider';
-import {LanguageSwitcher} from './_components/i18n/LanguageSwitcher';
 import {getServerLocale} from './_components/i18n/server';
 
 import {ErrorBoundary} from '@/components/ErrorBoundary';
@@ -28,8 +24,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'Kezek — бронирование в Оше',
-    description: 'Быстрая запись в сервисы города Ош',
+    title: 'Kezek вЂ” Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ РІ РћС€Рµ',
+    description: 'Р‘С‹СЃС‚СЂР°СЏ Р·Р°РїРёСЃСЊ РІ СЃРµСЂРІРёСЃС‹ РіРѕСЂРѕРґР° РћС€',
     manifest: '/manifest.webmanifest',
     icons: [
         {rel: 'icon', url: '/icon-192.png'},
@@ -41,55 +37,35 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({
-                                       children,
-                                   }: Readonly<{
+    children,
+}: Readonly<{
     children: React.ReactNode;
 }>) {
-    // Получаем локаль из cookie для установки lang в <html>
     const locale = await getServerLocale();
-    
+
     return (
         <html lang={locale}>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ErrorBoundary>
-        <PerformanceTracking />
-        <ReactQueryProvider>
-        <LanguageProvider>
-            <div className="flex flex-col min-h-screen">
-                <header className="sticky top-0 z-[100] border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
-                    <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8">
-                        <div className="flex h-14 sm:h-16 items-center gap-2 sm:gap-4">
-                            {/* Логотип - с ограничением ширины на мобильных, центрируется */}
-                            <div className="flex-1 md:flex-none min-w-0 flex justify-center md:justify-start">
-                                <Logo />
-                            </div>
-                            {/* Десктопная версия - показываем на md и выше */}
-                            <div className="hidden md:flex items-center gap-3 flex-shrink-0 ml-auto">
-                                <LanguageSwitcher />
-                                <RoleAndBusinessSwitcher />
-                                <AuthStatusServer/>
-                            </div>
-                            {/* Мобильная версия - показываем только на md и ниже */}
-                            <div className="md:hidden relative flex-shrink-0">
-                                <MobileHeaderMenu />
-                            </div>
-                            <AuthStatusUpdater/>
-                        </div>
-                    </div>
-                </header>
+            <body className={`${geistSans.variable} ${geistMono.variable} bg-[var(--surface-base)] text-[var(--text-primary)] antialiased`}>
+                <ErrorBoundary>
+                    <PerformanceTracking />
+                    <ReactQueryProvider>
+                        <LanguageProvider>
+                            <div className="relative flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.1),transparent_30%),linear-gradient(180deg,color-mix(in_srgb,var(--surface-base)_92%,white)_0%,var(--surface-base)_42%,var(--surface-base)_100%)]">
+                                <AppShellHeader />
+                                <AuthStatusUpdater />
 
-                <ReminderBanners />
+                                <ReminderBanners />
 
-                <main className="flex-1">
-                    {children}
-                </main>
+                                <main className="relative flex-1">
+                                    {children}
+                                </main>
 
-                <Footer />
-            </div>
-        </LanguageProvider>
-        </ReactQueryProvider>
-        </ErrorBoundary>
-        </body>
+                                <Footer />
+                            </div>
+                        </LanguageProvider>
+                    </ReactQueryProvider>
+                </ErrorBoundary>
+            </body>
         </html>
     );
 }

@@ -53,16 +53,16 @@ export function DashboardRatingCard({
                         </svg>
                     </div>
                     <div>
-                        <p className="text-xs font-semibold text-amber-900 dark:text-amber-100">{title}</p>
-                        <p className="mt-0.5 text-[11px] text-amber-800/80 dark:text-amber-200/90">
+                        <p className="type-label text-amber-900 dark:text-amber-100">{title}</p>
+                        <p className="type-caption mt-0.5 text-amber-800/80 dark:text-amber-200/90">
                             {subtitleTemplate.replace('{days}', String(ratingWeights.windowDays))}
                         </p>
                         {ratingConfigScope ? (
-                            <p className="mt-1 text-[11px] text-amber-800/80 dark:text-amber-200/90">
+                            <p className="type-caption mt-1 text-amber-800/80 dark:text-amber-200/90">
                                 {ratingConfigScope === 'biz' ? bizScopeLabel : globalScopeLabel}
                             </p>
                         ) : null}
-                        <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-amber-900/90 dark:text-amber-100">
+                        <div className="type-label mt-2 flex flex-wrap gap-2 text-amber-900/90 dark:text-amber-100">
                             {ratingFactors.map((factor) => (
                                 <span
                                     key={factor.key}
@@ -78,7 +78,7 @@ export function DashboardRatingCard({
                                 href="/docs/RATINGS_HOW_IT_WORKS"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[11px] text-amber-800 underline hover:no-underline dark:text-amber-200"
+                                className="type-caption text-amber-800 underline hover:no-underline dark:text-amber-200"
                             >
                                 {moreInfoLabel}
                             </a>
@@ -89,20 +89,24 @@ export function DashboardRatingCard({
                     {ratingScore !== null && ratingScore !== undefined ? (
                         <div className="inline-flex flex-col items-end gap-0.5">
                             <div className="inline-flex items-baseline gap-1 rounded-xl bg-white/80 px-3 py-2 text-amber-900 shadow-sm dark:bg-amber-900/50 dark:text-amber-50">
-                                <span className="text-xs font-medium uppercase tracking-wide">{scoreLabel}</span>
-                                <span className="text-xl font-semibold">{ratingScore.toFixed(1)}</span>
-                                <span className="text-[10px] opacity-70">/ 100</span>
+                                <span className="type-label uppercase tracking-[0.08em]">{scoreLabel}</span>
+                                <span className="type-metric text-[1.75rem]">{ratingScore.toFixed(1)}</span>
+                                <span className="type-caption opacity-70">/ 100</span>
                             </div>
                             {ratingScore <= 10 ? (
-                                <span className="text-[10px] text-amber-700 dark:text-amber-300">{lowRatingHint}</span>
+                                <span className="type-caption text-amber-700 dark:text-amber-300">
+                                    {lowRatingHint}
+                                </span>
                             ) : null}
                         </div>
                     ) : (
                         <div className="inline-flex items-baseline gap-1 rounded-xl bg-white/60 px-3 py-2 text-amber-900 shadow-sm dark:bg-amber-900/40 dark:text-amber-50">
-                            <span className="text-xs font-medium uppercase tracking-wide">{noRatingLabel}</span>
+                            <span className="type-label uppercase tracking-[0.08em]">{noRatingLabel}</span>
                         </div>
                     )}
-                    <p className="max-w-[180px] text-[11px] text-amber-800/80 dark:text-amber-200/80">{overallHint}</p>
+                    <p className="type-caption max-w-[180px] text-amber-800/80 dark:text-amber-200/80">
+                        {overallHint}
+                    </p>
                 </div>
             </div>
         </section>

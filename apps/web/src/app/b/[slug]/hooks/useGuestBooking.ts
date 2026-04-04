@@ -4,10 +4,14 @@ import { useState } from 'react';
 import type { Service } from '../types';
 import { fmtErr, isNetworkError, withNetworkRetry } from '../utils';
 
-import { createGuestBookingRequest } from '@/lib/quickBookGuestClient';
 import { logDebug, logError } from '@/lib/log';
+import { createGuestBookingRequest } from '@/lib/quickBookGuestClient';
 import { TZ } from '@/lib/time';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
+
+type BookingFeedbackApi = {
+    showError: (message: string, duration?: number) => string;
+};
 
 type GuestBookingForm = {
     client_name: string;
@@ -22,10 +26,11 @@ type UseGuestBookingParams = {
     branchId: string;
     t: (key: string, fallback?: string) => string;
     onBookingCreated?: () => void;
+    feedback: BookingFeedbackApi;
 };
 
 export function useGuestBooking(params: UseGuestBookingParams) {
-    const { bizId, services, staffId, branchId, t, onBookingCreated } = params;
+    const { bizId, services, staffId, branchId, t, onBookingCreated, feedback } = params;
 
     const [modalOpen, setModalOpen] = useState(false);
     const [slotTime, setSlotTime] = useState<Date | null>(null);
@@ -71,10 +76,10 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                     staffId,
                     slotStaffId,
                 });
-                alert(
+                feedback.showError(
                     t(
                         'booking.guest.missingStaffId',
-                        'Не удалось определить мастера для выбранного времени. Пожалуйста, выберите время еще раз.',
+                        'РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСЂРµРґРµР»РёС‚СЊ РјР°СЃС‚РµСЂР° РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РІСЂРµРјРµРЅРё. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ РІСЂРµРјСЏ РµС‰Рµ СЂР°Р·.',
                     ),
                 );
                 return;
@@ -92,25 +97,25 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         if (!services.length || !actualStaffId || !branchId || !slotTime) {
             const missingFields = [];
             if (!services.length) {
-                missingFields.push(t('booking.selectService', 'услуга'));
+                missingFields.push(t('booking.selectService', 'СѓСЃР»СѓРіР°'));
             }
             if (!actualStaffId) {
-                missingFields.push(t('booking.selectMaster', 'мастер'));
+                missingFields.push(t('booking.selectMaster', 'РјР°СЃС‚РµСЂ'));
             }
             if (!branchId) {
-                missingFields.push(t('booking.selectBranch', 'филиал'));
+                missingFields.push(t('booking.selectBranch', 'С„РёР»РёР°Р»'));
             }
             if (!slotTime) {
-                missingFields.push(t('booking.selectTime', 'время'));
+                missingFields.push(t('booking.selectTime', 'РІСЂРµРјСЏ'));
             }
 
-            alert(
+            feedback.showError(
                 t(
                     'booking.guest.missingData',
-                    'Данные для бронирования неполные. Пожалуйста, выберите филиал, мастера, услугу и время.',
+                    'Р”Р°РЅРЅС‹Рµ РґР»СЏ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ РЅРµРїРѕР»РЅС‹Рµ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р», РјР°СЃС‚РµСЂР°, СѓСЃР»СѓРіСѓ Рё РІСЂРµРјСЏ.',
                 ) +
                     (missingFields.length > 0
-                        ? `\nОтсутствуют: ${missingFields.join(', ')}`
+                        ? `\nРћС‚СЃСѓС‚СЃС‚РІСѓСЋС‚: ${missingFields.join(', ')}`
                         : ''),
             );
             return;
@@ -122,20 +127,20 @@ export function useGuestBooking(params: UseGuestBookingParams) {
 
         const nameValidation = validateName(name, true);
         if (!nameValidation.valid) {
-            alert(
+            feedback.showError(
                 nameValidation.error ||
-                    t('booking.guest.nameRequired', 'Введите ваше имя.'),
+                    t('booking.guest.nameRequired', 'Р’РІРµРґРёС‚Рµ РІР°С€Рµ РёРјСЏ.'),
             );
             return;
         }
 
         const phoneValidation = validatePhone(phone, true);
         if (!phoneValidation.valid) {
-            alert(
+            feedback.showError(
                 phoneValidation.error ||
                     t(
                         'booking.guest.phoneRequired',
-                        'Введите корректный номер телефона.',
+                        'Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°.',
                     ),
             );
             return;
@@ -144,11 +149,11 @@ export function useGuestBooking(params: UseGuestBookingParams) {
         if (email) {
             const emailValidation = validateEmail(email);
             if (!emailValidation.valid) {
-                alert(
+                feedback.showError(
                     emailValidation.error ||
                         t(
                             'booking.guest.emailInvalid',
-                            'Неверный формат email.',
+                            'РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ email.',
                         ),
                 );
                 return;
@@ -186,11 +191,11 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                     branchId,
                     staffId: actualStaffId,
                 });
-                alert(
+                feedback.showError(
                     t(
                         'booking.guest.missingData',
-                        'Данные для бронирования неполные. Пожалуйста, выберите филиал, мастера, услугу и время.',
-                    ) + `\nОтсутствуют: ${missing.join(', ')}`,
+                        'Р”Р°РЅРЅС‹Рµ РґР»СЏ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ РЅРµРїРѕР»РЅС‹Рµ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІС‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р», РјР°СЃС‚РµСЂР°, СѓСЃР»СѓРіСѓ Рё РІСЂРµРјСЏ.',
+                    ) + `\nРћС‚СЃСѓС‚СЃС‚РІСѓСЋС‚: ${missing.join(', ')}`,
                 );
                 return;
             }
@@ -252,17 +257,17 @@ export function useGuestBooking(params: UseGuestBookingParams) {
                 fmtErr(e, t) ||
                 t(
                     'booking.guest.error.technical',
-                    'Произошла техническая ошибка при создании бронирования. Пожалуйста, проверьте подключение к интернету и попробуйте еще раз.',
+                    'РџСЂРѕРёР·РѕС€Р»Р° С‚РµС…РЅРёС‡РµСЃРєР°СЏ РѕС€РёР±РєР° РїСЂРё СЃРѕР·РґР°РЅРёРё Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.',
                 );
 
             if (isNetworkError(e)) {
                 message = t(
                     'booking.guest.error.network',
-                    'Не удалось связаться с сервером. Проверьте подключение к интернету и попробуйте еще раз.',
+                    'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРІСЏР·Р°С‚СЊСЃСЏ СЃ СЃРµСЂРІРµСЂРѕРј. РџСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.',
                 );
             }
 
-            alert(message);
+            feedback.showError(message);
         } finally {
             setLoading(false);
         }

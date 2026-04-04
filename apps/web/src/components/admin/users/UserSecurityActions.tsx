@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+
 type OkResp = { ok: true };
 type ErrResp = { ok: false; error?: string; message?: string; code?: string; businesses?: { id: string; name: string | null; slug: string | null }[] };
 type ToggleSuperResp = OkResp | ErrResp;
@@ -17,6 +20,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
     const [superVal, setSuperVal] = useState(isSuper);
     const [blocked, setBlocked] = useState(isBlocked);
     const [magic, setMagic] = useState<string | null>(null);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const router = useRouter();
 
     const extractError = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -81,7 +85,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
     }
 
     async function deleteUser() {
-        if (!confirm('Удалить пользователя? Это действие необратимо.')) return;
+        setConfirmDeleteOpen(false);
         setLoading(true);
         setErr(null);
         setMsg(null);
@@ -224,16 +228,8 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                     </div>
                 </div>
 
-                {msg && (
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <p className="text-sm text-green-800 dark:text-green-300">{msg}</p>
-                    </div>
-                )}
-                {err && (
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                        <p className="text-sm text-red-800 dark:text-red-300">{err}</p>
-                    </div>
-                )}
+                {msg ? <AlertBanner variant="success" message={msg} compact /> : null}
+                {err ? <AlertBanner variant="danger" message={err} compact /> : null}
             </div>
 
             <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-800 rounded-xl p-6">
@@ -251,7 +247,7 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                 <button
                     className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={loading}
-                    onClick={deleteUser}
+                    onClick={() => setConfirmDeleteOpen(true)}
                     type="button"
                 >
                     {loading ? (
@@ -271,7 +267,22 @@ export function UserSecurityActions({ userId, isSuper, isBlocked }: { userId: st
                         </>
                     )}
                 </button>
+                <ConfirmDialog
+                    open={confirmDeleteOpen}
+                    onClose={() => setConfirmDeleteOpen(false)}
+                    onConfirm={deleteUser}
+                    title="Удалить пользователя"
+                    message="Удалить пользователя? Это действие необратимо."
+                    confirmLabel="Удалить"
+                    cancelLabel="Отмена"
+                    confirmVariant="danger"
+                    isLoading={loading}
+                />
             </div>
         </div>
     );
 }
+
+
+
+

@@ -1,13 +1,14 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { supabase } from '../../lib/supabase';
-import { AuthStackParamList } from '../../navigation/types';
-import { useToast } from '../../contexts/ToastContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { colors } from '../../constants/colors';
+import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
+import { AuthStackParamList } from '../../navigation/types';
 
 type SignUpScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignUp'>;
 
@@ -19,7 +20,7 @@ export default function SignUpScreen() {
 
     const handleSignUp = async () => {
         if (!email) {
-            showToast('Введите email', 'error');
+            showToast('Р’РІРµРґРёС‚Рµ email', 'error');
             return;
         }
 
@@ -33,10 +34,10 @@ export default function SignUpScreen() {
                 },
             });
             if (error) throw error;
-            showToast('Код отправлен на email', 'success');
+            showToast('РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РЅР° email', 'success');
             navigation.navigate('Verify', { email });
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
+            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -45,8 +46,8 @@ export default function SignUpScreen() {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Регистрация</Text>
-            <Text style={styles.subtitle}>Создайте аккаунт в Kezek</Text>
+            <Text style={styles.title}>Р РµРіРёСЃС‚СЂР°С†РёСЏ</Text>
+            <Text style={styles.subtitle}>РЎРѕР·РґР°Р№С‚Рµ Р°РєРєР°СѓРЅС‚ РІ Kezek</Text>
 
             <Input
                 label="Email"
@@ -55,20 +56,24 @@ export default function SignUpScreen() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                containerStyle={styles.field}
             />
 
             <Button
-                title="Зарегистрироваться"
+                title="Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ"
                 onPress={handleSignUp}
                 loading={loading}
                 disabled={loading}
+                fullWidth
             />
 
             <Button
-                title="Уже есть аккаунт? Войти"
+                title="РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚? Р’РѕР№С‚Рё"
                 onPress={() => navigation.navigate('SignIn')}
-                variant="outline"
+                variant="ghost"
                 style={styles.secondaryButton}
+                fullWidth
             />
         </ScrollView>
     );
@@ -77,23 +82,26 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface.page,
     },
     content: {
-        padding: 20,
+        padding: colors.layout.space5,
     },
     title: {
         fontSize: 28,
-        fontWeight: 'bold',
+        fontWeight: '700',
         marginBottom: 8,
-        color: '#111827',
+        color: colors.text.primary,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
-        marginBottom: 24,
+        color: colors.text.secondary,
+        marginBottom: colors.layout.space5,
+    },
+    field: {
+        marginBottom: colors.layout.space5,
     },
     secondaryButton: {
-        marginTop: 12,
+        marginTop: colors.layout.space3,
     },
 });

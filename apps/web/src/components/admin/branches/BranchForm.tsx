@@ -5,6 +5,7 @@ import React, { useMemo, useState } from 'react';
 
 import BranchMapPickerYandex from './BranchMapPickerYandex';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -160,11 +161,7 @@ export function BranchForm({ mode, bizId, branchId, initial }: Props) {
                 </p>
             </div>
 
-            {err && (
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <p className="text-sm text-red-800 dark:text-red-300">{err}</p>
-                </div>
-            )}
+            {err ? <AlertBanner variant="danger" message={err} /> : null}
 
             <div className="flex items-center gap-3 pt-4">
                 <Button
@@ -182,3 +179,5 @@ export function BranchForm({ mode, bizId, branchId, initial }: Props) {
         </form>
     );
 }
+
+

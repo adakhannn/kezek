@@ -3,7 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 
 type UserMini = {
@@ -137,17 +139,9 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
                 </div>
             </div>
 
-            {err && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-sm text-red-800 dark:text-red-300 font-medium">{err}</p>
-                </div>
-            )}
+            {err ? <AlertBanner variant="danger" message={err} /> : null}
 
-            {success && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <p className="text-sm text-green-800 dark:text-green-300 font-medium">{success}</p>
-                </div>
-            )}
+            {success ? <AlertBanner variant="success" message={success} /> : null}
 
             {loading && list.length === 0 ? (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 shadow-lg text-center">
@@ -155,15 +149,15 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
                     <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">Поиск пользователей...</p>
                 </div>
             ) : list.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 shadow-lg text-center">
-                    <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Ничего не найдено</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {q.trim() ? 'Попробуйте изменить запрос поиска' : 'Начните вводить для поиска пользователя'}
-                    </p>
-                </div>
+                <EmptyState
+                    icon={(
+                        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    )}
+                    title="Ничего не найдено"
+                    description={q.trim() ? 'Попробуйте изменить запрос поиска' : 'Начните вводить для поиска пользователя'}
+                />
             ) : (
                 <div className="grid gap-4">
                     {list.map((u) => {

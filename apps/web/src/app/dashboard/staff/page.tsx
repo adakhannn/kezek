@@ -1,5 +1,6 @@
 import StaffPageClient from './StaffPageClient';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { getBizContextForManagers } from '@/lib/authBiz';
 
 
@@ -45,9 +46,7 @@ export default async function Page({
     if (error) {
         return (
             <main className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
-                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-                    {error.message}
-                </div>
+                <AlertBanner variant="danger" message={error.message} />
             </main>
         );
     }
@@ -64,3 +63,5 @@ export default async function Page({
         />
     );
 }
+
+

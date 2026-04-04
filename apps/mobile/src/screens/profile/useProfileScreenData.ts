@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { apiRequest } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
@@ -10,6 +10,7 @@ import type { Profile } from './types';
 export function useProfileScreenData() {
     const queryClient = useQueryClient();
     const { showToast } = useToast();
+    const { confirm } = useConfirm();
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
     const [notifyEmail, setNotifyEmail] = useState(true);
@@ -67,32 +68,35 @@ export function useProfileScreenData() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['profile', userQuery.data?.id] });
-            showToast('Профиль обновлен', 'success');
+            showToast('РџСЂРѕС„РёР»СЊ РѕР±РЅРѕРІР»РµРЅ', 'success');
         },
         onError: (error: Error) => {
-            showToast(error.message || 'Не удалось обновить профиль', 'error');
+            showToast(error.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ РїСЂРѕС„РёР»СЊ', 'error');
         },
     });
 
     const saveProfile = () => {
         if (!fullName.trim()) {
-            showToast('Введите имя', 'error');
+            showToast('Р’РІРµРґРёС‚Рµ РёРјСЏ', 'error');
             return;
         }
         updateProfileMutation.mutate();
     };
 
-    const confirmSignOut = () => {
-        Alert.alert('Выход', 'Вы уверены, что хотите выйти?', [
-            { text: 'Отмена', style: 'cancel' },
-            {
-                text: 'Выйти',
-                style: 'destructive',
-                onPress: async () => {
-                    await supabase.auth.signOut();
-                },
-            },
-        ]);
+    const confirmSignOut = async () => {
+        const shouldSignOut = await confirm({
+            title: 'Р’С‹С…РѕРґ',
+            message: 'Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ РІС‹Р№С‚Рё?',
+            confirmLabel: 'Р’С‹Р№С‚Рё',
+            cancelLabel: 'РћС‚РјРµРЅР°',
+            variant: 'danger',
+        });
+
+        if (!shouldSignOut) {
+            return;
+        }
+
+        await supabase.auth.signOut();
     };
 
     return {

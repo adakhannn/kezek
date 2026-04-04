@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../../constants/colors';
+import { typography } from '../../constants/typography';
 
 export const styles = StyleSheet.create({
     gradientContainer: {
@@ -28,17 +29,14 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     heroTitle: {
-        fontSize: 32,
-        fontWeight: 'bold',
+        ...typography.display,
         color: colors.text.primary,
         marginBottom: 12,
         textAlign: 'center',
     },
     heroSubtitle: {
-        fontSize: 16,
         color: colors.text.secondary,
         textAlign: 'center',
-        lineHeight: 24,
         maxWidth: 320,
     },
     offlineBannerWrapper: {
@@ -76,8 +74,7 @@ export const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     categoriesLabel: {
-        fontSize: 12,
-        fontWeight: '600',
+        ...typography.label,
         color: colors.text.secondary,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -125,10 +122,15 @@ export const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 8,
     },
+    sectionLinkPressable: {
+        borderRadius: colors.layout.radiusSm,
+    },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: '600',
+        ...typography.sectionTitle,
         color: colors.text.primary,
+    },
+    bookingCardPressable: {
+        borderRadius: colors.layout.radiusLg,
     },
     sectionLink: {
         fontSize: 13,
@@ -147,7 +149,7 @@ export const styles = StyleSheet.create({
         flex: 1,
     },
     bookingBusiness: {
-        fontSize: 16,
+        fontSize: typography.body.fontSize,
         fontWeight: '600',
         color: colors.text.primary,
         marginBottom: 2,
@@ -167,7 +169,7 @@ export const styles = StyleSheet.create({
         gap: 4,
     },
     bookingDate: {
-        fontSize: 12,
+        fontSize: typography.label.fontSize,
         color: colors.text.secondary,
     },
     bookingStatusPill: {
@@ -220,8 +222,7 @@ export const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     businessName: {
-        fontSize: 20,
-        fontWeight: '600',
+        ...typography.sectionTitle,
         color: colors.text.primary,
         flex: 1,
     },

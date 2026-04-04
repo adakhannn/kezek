@@ -1,7 +1,14 @@
 'use client';
 
-// apps/web/src/app/admin/performance/PerformanceClient.tsx
 import { useEffect, useState } from 'react';
+
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Skeleton, SkeletonText } from '@/components/ui/Skeleton';
+import { StatusChip } from '@/components/ui/StatusChip';
 
 type PerformanceStat = {
     operation: string;
@@ -50,7 +57,6 @@ export default function PerformanceClient() {
 
     useEffect(() => {
         loadStats();
-        // Обновляем статистику каждые 30 секунд
         const interval = setInterval(loadStats, 30000);
         return () => clearInterval(interval);
     }, []);
@@ -60,116 +66,117 @@ export default function PerformanceClient() {
         return `${(ms / 1000).toFixed(2)}s`;
     };
 
-    const getStatusColor = (operation: string, duration: number) => {
+    const getStatus = (operation: string, duration: number) => {
         const thresholds: Record<string, { warn: number; error: number }> = {
-            'get_free_slots_service_day_v2': { warn: 2000, error: 5000 },
-            'shift_close': { warn: 3000, error: 10000 },
-            'apply_promotion': { warn: 1000, error: 3000 },
-            'recalculate_ratings': { warn: 30000, error: 60000 },
+            get_free_slots_service_day_v2: { warn: 2000, error: 5000 },
+            shift_close: { warn: 3000, error: 10000 },
+            apply_promotion: { warn: 1000, error: 3000 },
+            recalculate_ratings: { warn: 30000, error: 60000 },
         };
 
         const threshold = thresholds[operation];
-        if (!threshold) return 'text-gray-600 dark:text-gray-400';
-
-        if (duration >= threshold.error) return 'text-red-600 dark:text-red-400';
-        if (duration >= threshold.warn) return 'text-amber-600 dark:text-amber-400';
-        return 'text-green-600 dark:text-green-400';
+        if (!threshold) return 'neutral';
+        if (duration >= threshold.error) return 'error';
+        if (duration >= threshold.warn) return 'warning';
+        return 'success';
     };
 
     if (loading && stats.length === 0) {
-        return <div className="text-center py-8">Загрузка метрик...</div>;
+        return (
+            <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, index) => (
+                    <Card key={index} variant="elevated" padding="lg">
+                        <Skeleton className="mb-3 h-5 w-48" />
+                        <SkeletonText lines={4} />
+                    </Card>
+                ))}
+            </div>
+        );
     }
 
     if (error) {
         return (
-            <div className="bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-700 rounded-lg p-4">
-                <p className="text-red-700 dark:text-red-200">Ошибка: {error}</p>
-                <button
-                    onClick={loadStats}
-                    className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                >
-                    Повторить
-                </button>
-            </div>
+            <AlertBanner
+                variant="danger"
+                title="РћС€РёР±РєР°"
+                message={error}
+                action={
+                    <Button onClick={loadStats} variant="danger" size="sm">
+                        РџРѕРІС‚РѕСЂРёС‚СЊ
+                    </Button>
+                }
+            />
         );
     }
 
     if (stats.length === 0) {
-        return (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                Нет данных о производительности
-            </div>
-        );
+        return <EmptyState compact title="РќРµС‚ РґР°РЅРЅС‹С…" description="РџРѕРєР° РЅРµС‚ РјРµС‚СЂРёРє Рѕ РїСЂРѕРёР·РІРѕРґРёС‚РµР»СЊРЅРѕСЃС‚Рё." />;
     }
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {lastUpdate && `Последнее обновление: ${lastUpdate.toLocaleTimeString()}`}
-                </p>
-                <button
-                    onClick={loadStats}
-                    disabled={loading}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
-                >
-                    {loading ? 'Обновление...' : 'Обновить'}
-                </button>
-            </div>
+            <SectionHeader
+                title="РџСЂРѕРёР·РІРѕРґРёС‚РµР»СЊРЅРѕСЃС‚СЊ"
+                description={lastUpdate ? `РџРѕСЃР»РµРґРЅРµРµ РѕР±РЅРѕРІР»РµРЅРёРµ: ${lastUpdate.toLocaleTimeString()}` : undefined}
+                action={
+                    <Button onClick={loadStats} disabled={loading} size="sm">
+                        {loading ? 'РћР±РЅРѕРІР»РµРЅРёРµ...' : 'РћР±РЅРѕРІРёС‚СЊ'}
+                    </Button>
+                }
+            />
 
             <div className="grid gap-4">
                 {stats.map((stat) => (
-                    <div
-                        key={stat.operation}
-                        className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
-                    >
-                        <h3 className="text-lg font-semibold mb-3">{stat.operation}</h3>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <Card key={stat.operation} variant="elevated" padding="lg">
+                        <div className="mb-4 flex items-start justify-between gap-3">
                             <div>
-                                <p className="text-gray-500 dark:text-gray-400">Запросов</p>
-                                <p className="text-lg font-medium">{stat.count}</p>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{stat.operation}</h3>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">РћРїРµСЂР°С†РёРѕРЅРЅР°СЏ РјРµС‚СЂРёРєР° Р·Р° Р°РєС‚СѓР°Р»СЊРЅРѕРµ РѕРєРЅРѕ РЅР°Р±Р»СЋРґРµРЅРёСЏ</p>
                             </div>
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400">Среднее</p>
-                                <p className={`text-lg font-medium ${getStatusColor(stat.operation, stat.avgDuration)}`}>
-                                    {formatDuration(stat.avgDuration)}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400">P95</p>
-                                <p className={`text-lg font-medium ${getStatusColor(stat.operation, stat.p95Duration)}`}>
-                                    {formatDuration(stat.p95Duration)}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400">P99</p>
-                                <p className={`text-lg font-medium ${getStatusColor(stat.operation, stat.p99Duration)}`}>
-                                    {formatDuration(stat.p99Duration)}
-                                </p>
-                            </div>
+                            <StatusChip status={getStatus(stat.operation, stat.p95Duration)} label={`P95 ${formatDuration(stat.p95Duration)}`} />
                         </div>
 
-                        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400">Мин</p>
-                                <p className="font-medium">{formatDuration(stat.minDuration)}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400">Макс</p>
-                                <p className="font-medium">{formatDuration(stat.maxDuration)}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400">Ошибок</p>
-                                <p className={`font-medium ${stat.errorRate > 0.1 ? 'text-red-600' : 'text-gray-600'}`}>
-                                    {(stat.errorRate * 100).toFixed(1)}%
-                                </p>
-                            </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+                            <MetricBlock label="Р—Р°РїСЂРѕСЃРѕРІ" value={stat.count} />
+                            <MetricBlock label="РЎСЂРµРґРЅРµРµ" value={formatDuration(stat.avgDuration)} status={getStatus(stat.operation, stat.avgDuration)} />
+                            <MetricBlock label="P95" value={formatDuration(stat.p95Duration)} status={getStatus(stat.operation, stat.p95Duration)} />
+                            <MetricBlock label="P99" value={formatDuration(stat.p99Duration)} status={getStatus(stat.operation, stat.p99Duration)} />
                         </div>
-                    </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
+                            <MetricBlock label="РњРёРЅ" value={formatDuration(stat.minDuration)} />
+                            <MetricBlock label="РњР°РєСЃ" value={formatDuration(stat.maxDuration)} />
+                            <MetricBlock label="РћС€РёР±РѕРє" value={`${(stat.errorRate * 100).toFixed(1)}%`} status={stat.errorRate > 0.1 ? 'error' : 'neutral'} />
+                        </div>
+                    </Card>
                 ))}
             </div>
         </div>
     );
 }
 
+function MetricBlock({
+    label,
+    value,
+    status = 'neutral',
+}: {
+    label: string;
+    value: string | number;
+    status?: 'neutral' | 'success' | 'warning' | 'error';
+}) {
+    const colorClass =
+        status === 'success'
+            ? 'text-green-600 dark:text-green-400'
+            : status === 'warning'
+              ? 'text-amber-600 dark:text-amber-400'
+              : status === 'error'
+                ? 'text-red-600 dark:text-red-400'
+                : 'text-gray-900 dark:text-gray-100';
+
+    return (
+        <div>
+            <p className="text-gray-500 dark:text-gray-400">{label}</p>
+            <p className={`mt-1 text-lg font-medium ${colorClass}`}>{value}</p>
+        </div>
+    );
+}

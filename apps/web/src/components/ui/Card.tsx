@@ -4,32 +4,59 @@ import { clsx } from 'clsx';
 import { HTMLAttributes, forwardRef } from 'react';
 import type React from 'react';
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
-    variant?: 'default' | 'elevated' | 'outlined' | 'glass';
+type CardVariant = 'default' | 'elevated' | 'outlined' | 'glass';
+type CardPadding = 'none' | 'sm' | 'md' | 'lg';
+
+interface CardStyleOptions {
+    variant?: CardVariant;
     hover?: boolean;
+    padding?: CardPadding;
+    className?: string;
+}
+
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+    variant?: CardVariant;
+    hover?: boolean;
+    padding?: CardPadding;
+}
+
+const baseStyles = 'motion-interactive rounded-[var(--radius-lg)]';
+
+const variants: Record<CardVariant, string> = {
+    default: 'border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-sm)]',
+    elevated: 'border border-[var(--border-subtle)] bg-[var(--surface-elevated)] shadow-[var(--shadow-md)]',
+    outlined: 'border border-[var(--border-default)] bg-transparent',
+    glass: 'border border-[var(--border-subtle)] bg-[var(--surface-overlay)] backdrop-blur-md shadow-[var(--shadow-md)]',
+};
+
+const paddings: Record<CardPadding, string> = {
+    none: '',
+    sm: 'p-4',
+    md: 'p-5',
+    lg: 'p-6',
+};
+
+export function cardStyles({
+    variant = 'default',
+    hover = false,
+    padding = 'none',
+    className,
+}: CardStyleOptions = {}) {
+    return clsx(
+        baseStyles,
+        variants[variant],
+        paddings[padding],
+        hover && 'motion-lift cursor-pointer hover:border-[var(--border-default)] hover:shadow-[var(--shadow-lg)]',
+        className,
+    );
 }
 
 const CardComponent = (
-    { className, variant = 'default', hover = false, children, ...props }: CardProps,
-    ref: React.ForwardedRef<HTMLDivElement>
+    { className, variant = 'default', hover = false, padding = 'none', children, ...props }: CardProps,
+    ref: React.ForwardedRef<HTMLDivElement>,
 ) => {
-    const baseStyles = 'rounded-xl transition-all duration-300';
-    
-    const variants: Record<'default' | 'elevated' | 'outlined' | 'glass', string> = {
-        default: 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800',
-        elevated: 'bg-white dark:bg-gray-900 shadow-lg hover:shadow-xl',
-        outlined: 'bg-transparent border-2 border-gray-300 dark:border-gray-700',
-        glass: 'glass backdrop-blur-md',
-    };
-    
-    const hoverStyles = hover ? 'hover:scale-[1.02] hover:shadow-xl cursor-pointer' : '';
-    
     return (
-        <div
-            ref={ref}
-            className={clsx(baseStyles, variants[variant], hoverStyles, className)}
-            {...props}
-        >
+        <div ref={ref} className={cardStyles({ variant, hover, padding, className })} {...props}>
             {children}
         </div>
     );
@@ -38,5 +65,3 @@ const CardComponent = (
 export const Card = forwardRef<HTMLDivElement, CardProps>(CardComponent);
 
 Card.displayName = 'Card';
-
-

@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 type MemberRow = {
     user_id: string;
@@ -56,6 +59,7 @@ export default function MembersClient({
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [confirmDemoteUserId, setConfirmDemoteUserId] = useState<string | null>(null);
 
     async function load() {
         try {
@@ -88,6 +92,7 @@ export default function MembersClient({
             });
             const j = (await res.json()) as MutResp;
             if (!res.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${res.status}`);
+            setConfirmDemoteUserId(null);
             await load();
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : String(e));
@@ -108,6 +113,7 @@ export default function MembersClient({
             });
             const j = (await res.json()) as MutResp;
             if (!res.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${res.status}`);
+            setConfirmDemoteUserId(null);
             await load();
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : String(e));
@@ -118,7 +124,6 @@ export default function MembersClient({
 
     async function demote(user_id: string) {
         if (!canManage) return;
-        if (!confirm('Убрать участника до «client»? Все другие роли будут сняты.')) return;
         setActionLoading(`${user_id}-demote`);
         setErr(null);
         try {
@@ -129,6 +134,7 @@ export default function MembersClient({
             });
             const j = (await res.json()) as MutResp;
             if (!res.ok || !('ok' in j) || !j.ok) throw new Error(('error' in j && j.error) || `HTTP ${res.status}`);
+            setConfirmDemoteUserId(null);
             await load();
         } catch (e: unknown) {
             setErr(e instanceof Error ? e.message : String(e));
@@ -148,23 +154,21 @@ export default function MembersClient({
 
     if (err) {
         return (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-sm text-red-800 dark:text-red-300 font-medium">Ошибка: {err}</p>
-            </div>
+            <AlertBanner variant="danger" title="Ошибка" message={err} />
         );
     }
 
     if (items.length === 0) {
         return (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 shadow-lg text-center">
-                <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Участников пока нет</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Добавьте первого участника, чтобы начать работу с бизнесом
-                </p>
-            </div>
+            <EmptyState
+                icon={(
+                    <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                )}
+                title="Участников пока нет"
+                description="Добавьте первого участника, чтобы начать работу с бизнесом"
+            />
         );
     }
 
@@ -287,7 +291,7 @@ export default function MembersClient({
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => demote(m.user_id)}
+                                                onClick={() => setConfirmDemoteUserId(m.user_id)}
                                                 disabled={isLoading}
                                                 className="w-full"
                                             >
@@ -311,6 +315,18 @@ export default function MembersClient({
                     </div>
                 );
             })}
+            <ConfirmDialog
+                open={confirmDemoteUserId !== null}
+                onClose={() => setConfirmDemoteUserId(null)}
+                onConfirm={() => confirmDemoteUserId && demote(confirmDemoteUserId)}
+                title="Понизить участника"
+                message="Убрать участника до «client»? Все другие роли будут сняты."
+                confirmLabel="Понизить"
+                cancelLabel="Отмена"
+                confirmVariant="danger"
+                isLoading={actionLoading === `${confirmDemoteUserId}-demote`}
+            />
         </div>
     );
 }
+

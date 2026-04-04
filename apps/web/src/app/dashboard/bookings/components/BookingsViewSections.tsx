@@ -7,6 +7,7 @@ import type { BookingItem as BookingViewItem, BranchRow as BookingViewBranchRow,
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { BookingCard } from '@/components/dashboard';
+import { Tabs } from '@/components/ui/Tabs';
 import { logError } from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 import { todayStringInTz } from '@/lib/time';
@@ -21,26 +22,18 @@ export function BookingsViewTabs({
 }) {
     const { t } = useLanguage();
 
-    const renderButton = (key: BookingViewTabKey, labelKey: string) => (
-        <button
-            key={key}
-            onClick={() => onChange(key)}
-            className={`flex-1 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg font-medium transition-all duration-200 whitespace-nowrap ${
-                value === key
-                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-            }`}
-        >
-            {t(labelKey, '')}
-        </button>
-    );
-
     return (
-        <div className="flex gap-1 sm:gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-            {renderButton('calendar', 'bookings.tabs.calendar')}
-            {renderButton('list', 'bookings.tabs.list')}
-            {renderButton('desk', 'bookings.tabs.desk')}
-        </div>
+        <Tabs
+            value={value}
+            onValueChange={(nextValue) => onChange(nextValue as BookingViewTabKey)}
+            stretch
+            className="w-full"
+            items={[
+                { key: 'calendar', label: t('bookings.tabs.calendar', 'Календарь') },
+                { key: 'list', label: t('bookings.tabs.list', 'Список') },
+                { key: 'desk', label: t('bookings.tabs.desk', 'QuickDesk') },
+            ]}
+        />
     );
 }
 

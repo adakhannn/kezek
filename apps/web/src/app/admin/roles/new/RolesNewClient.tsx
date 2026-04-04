@@ -3,6 +3,7 @@
 import {useRouter} from 'next/navigation';
 import {useState} from 'react';
 
+import {AlertBanner} from '@/components/ui/AlertBanner';
 import {Button} from '@/components/ui/Button';
 import {Card} from '@/components/ui/Card';
 import {Input} from '@/components/ui/Input';
@@ -54,11 +55,7 @@ export default function RolesNewClient({baseURL}: Props) {
     return (
         <Card className="p-6">
             <form onSubmit={submit} className="space-y-6">
-                {err && (
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                        <p className="text-sm text-red-800 dark:text-red-300">{err}</p>
-                    </div>
-                )}
+                {err ? <AlertBanner variant="danger" message={err} compact /> : null}
 
                 <Input
                     label="Название *"

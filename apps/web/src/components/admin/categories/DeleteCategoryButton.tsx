@@ -1,19 +1,25 @@
 'use client';
 
-import {useRouter} from 'next/navigation';
-import {useState} from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 
 type ApiOk = { ok: true };
 type ApiErr = { ok: false; error?: string };
 type DeleteResp = ApiOk | ApiErr;
 
-export function DeleteCategoryButton({id, slug}: { id: string; slug: string }) {
+export function DeleteCategoryButton({ id, slug }: { id: string; slug: string }) {
     const router = useRouter();
+    const toast = useToast();
     const [force, setForce] = useState(false);
     const [err, setErr] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     function extractError(e: unknown) {
         return e instanceof Error ? e.message : String(e);
@@ -21,14 +27,13 @@ export function DeleteCategoryButton({id, slug}: { id: string; slug: string }) {
 
     async function onDelete() {
         setErr(null);
-        if (!confirm(`Удалить категорию «${slug}»?`)) return;
         setLoading(true);
         try {
             const resp = await fetch(`/admin/api/categories/${id}/delete`, {
                 method: 'POST',
-                headers: {'content-type': 'application/json'},
+                headers: { 'content-type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({force}),
+                body: JSON.stringify({ force }),
             });
 
             const ct = resp.headers.get('content-type') ?? '';
@@ -39,17 +44,20 @@ export function DeleteCategoryButton({id, slug}: { id: string; slug: string }) {
             } else {
                 const text = await resp.text();
                 if (!resp.ok) throw new Error(text.slice(0, 1500));
-                // если всё ок и не JSON — считаем успешным
-                data = {ok: true};
+                data = { ok: true };
             }
 
             if (!resp.ok || !('ok' in data) || !data.ok) {
                 throw new Error(('error' in (data ?? {}) && (data as ApiErr).error) || `HTTP ${resp.status}`);
             }
 
+            toast.showSuccess('Категория удалена.');
+            setConfirmOpen(false);
             router.refresh();
         } catch (e: unknown) {
-            setErr(extractError(e));
+            const message = extractError(e);
+            setErr(message);
+            toast.showError(message);
         } finally {
             setLoading(false);
         }
@@ -71,18 +79,28 @@ export function DeleteCategoryButton({id, slug}: { id: string; slug: string }) {
                 type="button"
                 variant="danger"
                 size="sm"
-                onClick={onDelete}
+                onClick={() => setConfirmOpen(true)}
                 disabled={loading}
                 isLoading={loading}
             >
                 Удалить
             </Button>
 
-            {err && (
-                <div className="text-xs text-red-600 dark:text-red-400 max-w-[28rem] bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2">
-                    {err}
-                </div>
-            )}
+            {err ? <AlertBanner variant="danger" message={err} compact /> : null}
+            <ConfirmDialog
+                open={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={onDelete}
+                title="Удалить категорию"
+                message={`Удалить категорию «${slug}»?`}
+                confirmLabel="Удалить"
+                cancelLabel="Отмена"
+                confirmVariant="danger"
+                isLoading={loading}
+            />
+            <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }
+
+

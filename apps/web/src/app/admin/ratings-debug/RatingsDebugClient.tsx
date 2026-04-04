@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { formatDateTime } from '@/lib/dateFormat';
 
 type DebugEntity = {
@@ -203,11 +204,7 @@ export function RatingsDebugClient() {
                 </div>
             )}
 
-            {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-                    {error}
-                </div>
-            )}
+            {error && <AlertBanner variant="danger" message={error} />}
 
             {!loading && !error && data && (
                 <>

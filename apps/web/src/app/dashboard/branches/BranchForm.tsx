@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import BranchMapPickerYandex from '@/components/admin/branches/BranchMapPickerYandex';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -67,9 +68,7 @@ export default function BranchForm({
     return (
         <form onSubmit={onSubmit} className="space-y-6">
             {err && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-red-600 dark:text-red-400 text-sm font-medium">{err}</p>
-                </div>
+                <AlertBanner variant="danger" message={err} compact />
             )}
 
             <Input

@@ -1,19 +1,13 @@
-/**
- * Компонент для выбора временного слота
- * Вынесен из view.tsx для улучшения поддерживаемости
- */
-
 'use client';
 
 import { BookingEmptyState } from '../BookingEmptyState';
 import type { Slot, Staff } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { formatStaffName } from '@/lib/i18nHelpers';
 import { toLabel } from '@/lib/time';
 
-
-/** Форматирует длительность в минутах в строку вида «1 ч 15 мин» или «45 мин». */
 function formatVisitDuration(totalMin: number, t: (key: string, fallback?: string) => string): string {
     if (totalMin <= 0) return '';
     const hours = Math.floor(totalMin / 60);
@@ -40,12 +34,12 @@ type SlotPickerProps = {
     serviceId: string | null;
     servicesFiltered: Array<{ id: string }>;
     serviceStaff: Array<{ service_id: string; staff_id: string; is_active: boolean }> | null;
-    /** Суммарная длительность визита в минутах (при нескольких услугах); при задании показывается в слоте */
     totalDurationMin?: number;
     isAuthed: boolean;
     clientBookingsCount: number | null;
     clientBookingsLoading: boolean;
     bookingLoading: boolean;
+    onRetry?: () => void;
 };
 
 export function SlotPicker({
@@ -66,107 +60,150 @@ export function SlotPicker({
     clientBookingsCount,
     clientBookingsLoading,
     bookingLoading,
+    onRetry,
 }: SlotPickerProps) {
     const { t, locale } = useLanguage();
-
     const formatName = (name: string) => formatStaffName(name, locale);
 
-    // Проверка: есть ли у выбранного сотрудника услуги для выбранной услуги
-    const isServiceValid = serviceId && servicesFiltered.some((s) => s.id === serviceId);
-    const showServiceError = serviceId && staffId && !loading && slots.length === 0 && 
-        serviceStaff !== null && !isServiceValid && !error;
+    const isServiceValid = serviceId && servicesFiltered.some((service) => service.id === serviceId);
+    const showServiceError =
+        serviceId && staffId && !loading && slots.length === 0 && serviceStaff !== null && !isServiceValid && !error;
 
     return (
-        <>
-            {dayStr && (
-                <div className="mb-3 text-xs text-gray-600 dark:text-gray-400">
-                    {t('booking.step5.selectedDate', 'Выбранная дата:')} {dayLabel}
+        <div className="space-y-4">
+            {dayStr ? (
+                <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3">
+                    <div className="type-label text-[var(--text-primary)]">
+                        {t('booking.step5.selectedDate', 'Выбранная дата')}: {dayLabel}
+                    </div>
+                    <div className="type-caption mt-1 text-[var(--text-secondary)]">
+                        {t('booking.step5.description', 'Остаётся выбрать удобное время. После этого поток продолжит подтверждение записи.')}
+                    </div>
                 </div>
-            )}
+            ) : null}
 
-            {/* Ошибка: мастер не выполняет услугу */}
-            {showServiceError && (
-                <div className="mb-3">
-                    <BookingEmptyState
-                        type="warning"
-                        message={t('booking.step5.masterNoService', 'Выбранный мастер не выполняет эту услугу')}
-                        hint={t('booking.step5.masterNoServiceHint', 'Пожалуйста, вернитесь к шагу 4 и выберите другого мастера или выберите другую услугу.')}
-                    />
-                </div>
-            )}
+            {showServiceError ? (
+                <BookingEmptyState
+                    type="warning"
+                    title={t('booking.step5.masterNoService', 'Выбранный мастер не выполняет эту услугу')}
+                    message={t('booking.step5.masterNoServiceHint', 'Вернитесь к предыдущему шагу и выберите другого мастера или другую услугу.')}
+                />
+            ) : null}
 
-            {/* Уведомление, если у клиента уже есть запись в этом бизнесе на выбранный день */}
-            {isAuthed && !clientBookingsLoading && clientBookingsCount && clientBookingsCount > 0 && (
-                <div className="mb-3">
-                    <BookingEmptyState
-                        type="warning"
-                        message={
-                            clientBookingsCount === 1
-                                ? t('booking.existingBookings.warning.one', 'У вас уже есть одна активная запись в этом заведении на выбранный день.')
-                                : t('booking.existingBookings.warning.many', `У вас уже есть ${clientBookingsCount} активных записей в этом заведении на выбранный день.`)
-                        }
-                        hint={t('booking.existingBookings.hint', 'Вы всё равно можете оформить ещё одну запись, если это необходимо.')}
-                    />
-                </div>
-            )}
+            {isAuthed && !clientBookingsLoading && clientBookingsCount && clientBookingsCount > 0 ? (
+                <AlertBanner
+                    variant="warning"
+                    title={t('booking.existingBookings.title', 'У вас уже есть запись на этот день')}
+                    message={
+                        clientBookingsCount === 1
+                            ? t('booking.existingBookings.warning.one', 'У вас уже есть одна активная запись в этом заведении на выбранный день.')
+                            : t('booking.existingBookings.warning.many', `У вас уже есть ${clientBookingsCount} активных записей в этом заведении на выбранный день.`)
+                    }
+                />
+            ) : null}
 
-            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                {t('booking.freeSlots', 'Свободные слоты')}
-            </h3>
+            <div>
+                <h3 className="type-label text-[var(--text-primary)]">
+                    {t('booking.freeSlots', 'Свободные слоты')}
+                </h3>
+                <p className="type-caption mt-1 text-[var(--text-secondary)]">
+                    {t('booking.step5.slotHint', 'Клик по времени сразу продолжит запись с выбранным слотом.')}
+                </p>
+            </div>
 
-            {loading && (
-                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                    {t('booking.loadingSlots', 'Загружаем свободные слоты...')}
-                </div>
-            )}
+            {loading ? (
+                <BookingEmptyState
+                    type="loading"
+                    title={t('booking.loadingSlots', 'Загружаем свободные слоты')}
+                    message={t('booking.loadingSlots', 'Загружаем свободные слоты')}
+                    hint={t('booking.loadingSlotsHint', 'Проверяем доступность выбранного дня, специалиста и услуг.')}
+                />
+            ) : null}
 
-            {!loading && error && (
+            {!loading && error ? (
                 <BookingEmptyState
                     type="error"
+                    title={t('booking.error.slotsTitle', 'Не удалось получить свободные слоты')}
                     message={error}
+                    action={
+                        onRetry ? (
+                            <button
+                                type="button"
+                                onClick={onRetry}
+                                className="inline-flex min-h-[36px] items-center justify-center rounded-[var(--radius-sm)] border border-current px-3 py-1.5 text-xs font-medium transition-all hover:bg-white/20"
+                            >
+                                {t('booking.retry', 'Повторить')}
+                            </button>
+                        ) : undefined
+                    }
                 />
-            )}
+            ) : null}
 
-            {!loading && !error && slots.length === 0 && (
+            {!loading && !error && slots.length === 0 ? (
                 <BookingEmptyState
                     type="empty"
+                    title={t('booking.empty.noSlotsTitle', 'Свободных слотов пока нет')}
                     message={t('booking.empty.noSlots', 'На выбранный день нет свободных слотов. Выберите другой день или мастера.')}
+                    action={
+                        onRetry ? (
+                            <button
+                                type="button"
+                                onClick={onRetry}
+                                className="inline-flex min-h-[36px] items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border-default)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition-all hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
+                            >
+                                {t('booking.retry', 'Обновить')}
+                            </button>
+                        ) : undefined
+                    }
                 />
-            )}
+            ) : null}
 
-            {!loading && !error && slots.length > 0 && (
-                <div className="mt-1 flex flex-wrap gap-2">
-                    {slots.map((s) => {
-                        const d = new Date(s.start_at);
-                        const slotStaff = staff.find((m) => m.id === s.staff_id);
+            {!loading && !error && slots.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {slots.map((slot) => {
+                        const date = new Date(slot.start_at);
+                        const slotStaff = staff.find((person) => person.id === slot.staff_id);
                         const showStaffName = staffId === 'any' && slotStaff;
+                        const isSelected = selectedSlot ? selectedSlot.getTime() === date.getTime() : false;
+
                         return (
                             <button
-                                key={`${s.start_at}-${s.staff_id}`}
+                                key={`${slot.start_at}-${slot.staff_id}`}
+                                type="button"
                                 disabled={bookingLoading}
                                 data-testid="time-slot"
-                                className="rounded-full border border-gray-300 bg-white px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-medium text-gray-800 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40 min-h-[44px] sm:min-h-[32px] touch-manipulation"
-                                onClick={() => onSelect(d, s.staff_id)}
+                                onClick={() => onSelect(date, slot.staff_id)}
+                                className={[
+                                    'rounded-[22px] border px-4 py-4 text-left transition-all',
+                                    isSelected
+                                        ? 'border-[var(--accent-primary)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] shadow-[var(--shadow-sm)]'
+                                        : 'border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--accent-primary)] hover:bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)]',
+                                    bookingLoading ? 'cursor-not-allowed opacity-60' : '',
+                                ].join(' ')}
                             >
-                                <div className="flex flex-col items-center">
-                                    <span>{toLabel(d)}</span>
-                                    {totalDurationMin != null && totalDurationMin > 0 && (
-                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                                            {formatVisitDuration(totalDurationMin, t)}
-                                        </span>
-                                    )}
-                                    {showStaffName && slotStaff && (
-                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                                            {formatName(slotStaff.full_name)}
-                                        </span>
-                                    )}
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div className="type-section-title text-[var(--text-primary)]">{toLabel(date)}</div>
+                                        {totalDurationMin != null && totalDurationMin > 0 ? (
+                                            <div className="type-caption mt-1 text-[var(--text-secondary)]">
+                                                {formatVisitDuration(totalDurationMin, t)}
+                                            </div>
+                                        ) : null}
+                                        {showStaffName && slotStaff ? (
+                                            <div className="type-caption mt-1 text-[var(--text-secondary)]">
+                                                {formatName(slotStaff.full_name)}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                    <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                                        {bookingLoading ? t('booking.loading', 'Подождите') : t('booking.step5.choose', 'Выбрать')}
+                                    </span>
                                 </div>
                             </button>
                         );
                     })}
                 </div>
-            )}
-        </>
+            ) : null}
+        </div>
     );
 }
-

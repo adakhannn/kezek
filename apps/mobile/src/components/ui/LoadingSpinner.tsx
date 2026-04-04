@@ -9,8 +9,10 @@ type LoadingSpinnerProps = {
 export default function LoadingSpinner({ message, size = 'large' }: LoadingSpinnerProps) {
     return (
         <View style={styles.container}>
-            <ActivityIndicator size={size} color={colors.primary.from} />
-            {message && <Text style={styles.message}>{message}</Text>}
+            <View style={styles.indicatorWrap}>
+                <ActivityIndicator size={size} color={colors.accent.primary} />
+            </View>
+            {message ? <Text style={styles.message}>{message}</Text> : null}
         </View>
     );
 }
@@ -20,12 +22,23 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 40,
+        padding: colors.layout.space8,
+    },
+    indicatorWrap: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surface.card,
+        borderWidth: 1,
+        borderColor: colors.border.subtle,
+        ...colors.shadow.md,
     },
     message: {
-        marginTop: 12,
-        fontSize: 16,
+        marginTop: colors.layout.space4,
+        fontSize: 15,
         color: colors.text.secondary,
+        textAlign: 'center',
     },
 });
-

@@ -1,13 +1,20 @@
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+
 import { colors } from '../../constants/colors';
+import MotionPressable from './MotionPressable';
 
 type ButtonProps = {
     title: string;
     onPress: () => void;
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+    size?: 'sm' | 'md' | 'lg';
     loading?: boolean;
     disabled?: boolean;
+    fullWidth?: boolean;
+    leadingIcon?: ReactNode;
+    trailingIcon?: ReactNode;
     style?: ViewStyle;
     textStyle?: TextStyle;
 };
@@ -16,18 +23,22 @@ export default function Button({
     title,
     onPress,
     variant = 'primary',
+    size = 'md',
     loading = false,
     disabled = false,
+    fullWidth = false,
+    leadingIcon,
+    trailingIcon,
     style,
     textStyle,
 }: ButtonProps) {
-    const baseStyle = [
-        styles.button,
-        (disabled || loading) && styles.disabled,
-    ];
+    const isDisabled = disabled || loading;
+    const sizeStyle = size === 'sm' ? styles.buttonSm : size === 'lg' ? styles.buttonLg : styles.buttonMd;
+    const textSizeStyle = size === 'sm' ? styles.textSm : size === 'lg' ? styles.textLg : styles.textMd;
 
     const textStyles = [
         styles.text,
+        textSizeStyle,
         variant === 'primary' && styles.primaryText,
         variant === 'secondary' && styles.secondaryText,
         variant === 'outline' && styles.outlineText,
@@ -36,110 +47,138 @@ export default function Button({
         textStyle,
     ];
 
-    // Для primary используем градиент
-    if (variant === 'primary' && !disabled && !loading) {
+    const content = (
+        <View style={styles.content}>
+            {loading ? (
+                <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? colors.text.light : colors.accent.primary} />
+            ) : leadingIcon ? (
+                <View style={styles.iconWrap}>{leadingIcon}</View>
+            ) : null}
+            <Text style={textStyles}>{title}</Text>
+            {!loading && trailingIcon ? <View style={styles.iconWrap}>{trailingIcon}</View> : null}
+        </View>
+    );
+
+    if (variant === 'primary') {
         return (
-            <TouchableOpacity
+            <MotionPressable
                 onPress={onPress}
-                disabled={disabled || loading}
-                activeOpacity={0.8}
-                style={[styles.primaryContainer, (disabled || loading) && styles.disabled, style]}
+                disabled={isDisabled}
+                style={[
+                    styles.primaryContainer,
+                    sizeStyle,
+                    fullWidth && styles.fullWidth,
+                    isDisabled && styles.disabled,
+                    style,
+                ]}
             >
                 <LinearGradient
-                    colors={[colors.primary.from, colors.primary.to]}
+                    colors={[colors.brand.primaryFrom, colors.brand.primaryTo]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={styles.gradient}
+                    style={[styles.gradient, sizeStyle]}
                 >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={textStyles}>{title}</Text>
-                    )}
+                    {content}
                 </LinearGradient>
-            </TouchableOpacity>
+            </MotionPressable>
         );
     }
 
     const buttonStyle = [
-        baseStyle,
-        variant === 'primary' && styles.primary,
+        styles.button,
+        sizeStyle,
+        fullWidth && styles.fullWidth,
         variant === 'secondary' && styles.secondary,
         variant === 'outline' && styles.outline,
         variant === 'ghost' && styles.ghost,
         variant === 'danger' && styles.danger,
+        isDisabled && styles.disabled,
         style,
     ];
 
     return (
-        <TouchableOpacity
-            style={buttonStyle}
-            onPress={onPress}
-            disabled={disabled || loading}
-            activeOpacity={0.7}
-        >
-            {loading ? (
-                <ActivityIndicator color={variant === 'outline' || variant === 'ghost' ? colors.primary.from : '#fff'} />
-            ) : (
-                <Text style={textStyles}>{title}</Text>
-            )}
-        </TouchableOpacity>
+        <MotionPressable style={buttonStyle} onPress={onPress} disabled={isDisabled}>
+            {content}
+        </MotionPressable>
     );
 }
 
 const styles = StyleSheet.create({
     button: {
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 10,
+        borderRadius: colors.layout.radiusMd,
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 50,
+        paddingHorizontal: colors.layout.space6,
+    },
+    buttonSm: {
+        minHeight: 40,
+        paddingVertical: 10,
+    },
+    buttonMd: {
+        minHeight: 48,
+        paddingVertical: 14,
+    },
+    buttonLg: {
+        minHeight: 54,
+        paddingVertical: 16,
+    },
+    fullWidth: {
+        width: '100%',
     },
     primaryContainer: {
-        borderRadius: 10,
+        borderRadius: colors.layout.radiusMd,
         overflow: 'hidden',
-        minHeight: 50,
-        borderWidth: 0,
-        padding: 0,
-        margin: 0,
         ...colors.shadow.md,
     },
     gradient: {
-        paddingVertical: 14,
-        paddingHorizontal: 24,
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 50,
-    },
-    primary: {
-        backgroundColor: colors.primary.from,
-        ...colors.shadow.md,
+        paddingHorizontal: colors.layout.space6,
     },
     secondary: {
-        backgroundColor: colors.background.secondary,
+        backgroundColor: colors.surface.emphasis,
+        borderWidth: 1,
+        borderColor: colors.border.subtle,
     },
     outline: {
         backgroundColor: 'transparent',
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: colors.border.light,
     },
     ghost: {
         backgroundColor: 'transparent',
     },
     danger: {
-        backgroundColor: colors.status.cancelled,
-        ...colors.shadow.md,
+        backgroundColor: colors.status.danger,
+        ...colors.shadow.sm,
     },
     disabled: {
-        opacity: 0.5,
+        opacity: colors.interactive.disabledOpacity,
+    },
+    content: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: colors.layout.space2,
+    },
+    iconWrap: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     text: {
-        fontSize: 16,
         fontWeight: '600',
     },
+    textSm: {
+        fontSize: 14,
+    },
+    textMd: {
+        fontSize: 16,
+    },
+    textLg: {
+        fontSize: 17,
+    },
     primaryText: {
-        color: '#fff',
+        color: colors.text.light,
     },
     secondaryText: {
         color: colors.text.primary,
@@ -148,10 +187,9 @@ const styles = StyleSheet.create({
         color: colors.text.primary,
     },
     ghostText: {
-        color: colors.text.primary,
+        color: colors.text.secondary,
     },
     dangerText: {
-        color: '#fff',
+        color: colors.text.light,
     },
 });
-

@@ -1,17 +1,18 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 
-import { supabase } from '../../lib/supabase';
-import { AuthStackParamList } from '../../navigation/types';
-import { useToast } from '../../contexts/ToastContext';
-import { validateEmail, getValidationError } from '../../utils/validation';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import { logError, logDebug, logWarn } from '../../lib/log';
+import { colors } from '../../constants/colors';
+import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
+import { logDebug, logError, logWarn } from '../../lib/log';
+import { AuthStackParamList } from '../../navigation/types';
+import { getValidationError } from '../../utils/validation';
 
 type SignInScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
 
@@ -24,7 +25,6 @@ export default function SignInScreen() {
     const [errors, setErrors] = useState<{ email?: string }>({});
 
     const handleSignIn = async () => {
-        // Валидация
         const emailError = getValidationError('email', email);
         if (emailError) {
             setErrors({ email: emailError });
@@ -35,10 +35,8 @@ export default function SignInScreen() {
         setErrors({});
         setLoading(true);
         try {
-            // Используем промежуточную страницу на веб-сайте, которая редиректит на deep link
-            // Это позволяет работать и с веб-версией, и с мобильным приложением
             const redirectTo = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
-            
+
             const { error } = await supabase.auth.signInWithOtp({
                 email: email.trim(),
                 options: {
@@ -46,10 +44,9 @@ export default function SignInScreen() {
                 },
             });
             if (error) throw error;
-            showToast('Проверьте email и перейдите по ссылке', 'success');
-            // Не переходим на Verify, так как пользователь должен перейти по ссылке из email
+            showToast('РџСЂРѕРІРµСЂСЊС‚Рµ email Рё РїРµСЂРµР№РґРёС‚Рµ РїРѕ СЃСЃС‹Р»РєРµ', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
+            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -59,100 +56,83 @@ export default function SignInScreen() {
     const handleGoogleSignIn = async () => {
         setGoogleLoading(true);
         try {
-            // Используем Universal Link (https://kezek.kg) вместо custom scheme
-            // Это более надежно работает в мобильных браузерах
             const redirectTo = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
-            
+
             logDebug('SignInScreen', 'Starting Google OAuth', { redirectTo });
-            
-            // Получаем OAuth URL от Supabase
+
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                     redirectTo,
-                    skipBrowserRedirect: true, // Не открываем браузер автоматически
+                    skipBrowserRedirect: true,
                 },
             });
-            
+
             if (error) {
                 logError('SignInScreen', 'OAuth error', error);
                 throw error;
             }
-            
+
             if (!data?.url) {
-                throw new Error('Не удалось получить OAuth URL');
+                throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ OAuth URL');
             }
-            
+
             logDebug('SignInScreen', 'OAuth URL received, opening browser', { url: data.url, redirectTo });
-            
-            // Открываем браузер и ждем результат
-            const result = await WebBrowser.openAuthSessionAsync(
-                data.url,
-                redirectTo
-            );
-            
+
+            const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+
             logDebug('SignInScreen', 'WebBrowser result', result);
-            
-            // Завершаем сессию браузера
             WebBrowser.maybeCompleteAuthSession();
-            
-            // Если результат success и есть URL, обрабатываем его
+
             if (result.type === 'success' && result.url) {
                 logDebug('SignInScreen', 'OAuth completed successfully', { url: result.url });
-                // Deep link будет обработан RootNavigator
-                // Проверяем сессию через некоторое время
                 setTimeout(async () => {
-                    const { data: { session } } = await supabase.auth.getSession();
+                    const {
+                        data: { session },
+                    } = await supabase.auth.getSession();
                     if (session) {
                         logDebug('SignInScreen', 'Session confirmed after OAuth');
-                        showToast('Вход выполнен успешно', 'success');
+                        showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
                     }
                 }, 1000);
             } else if (result.type === 'dismiss') {
-                // Браузер был закрыт, но пользователь мог авторизоваться на веб-сайте
-                // Проверяем сессию - возможно она уже установлена через deep link
                 logDebug('SignInScreen', 'Browser dismissed, checking if user authorized on web');
-                
-                // Даем время на то, чтобы deep link обработался (если он пришел)
+
                 setTimeout(async () => {
-                    // Проверяем, есть ли сессия (может быть установлена через deep link, который пришел позже)
-                    const { data: { session }, error } = await supabase.auth.getSession();
+                    const {
+                        data: { session },
+                    } = await supabase.auth.getSession();
                     if (session) {
                         logDebug('SignInScreen', 'Session found after dismiss');
-                        showToast('Вход выполнен успешно', 'success');
+                        showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
                     } else {
                         logDebug('SignInScreen', 'No session after dismiss');
-                        // Показываем инструкцию пользователю
-                        showToast('Авторизация завершена на веб-сайте. Вернитесь в приложение или перезапустите его.', 'info');
+                        showToast('РђРІС‚РѕСЂРёР·Р°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР° РЅР° РІРµР±-СЃР°Р№С‚Рµ. Р’РµСЂРЅРёС‚РµСЃСЊ РІ РїСЂРёР»РѕР¶РµРЅРёРµ РёР»Рё РїРµСЂРµР·Р°РїСѓСЃС‚РёС‚Рµ РµРіРѕ.', 'info');
                     }
-                }, 3000); // Увеличиваем время ожидания для обработки deep link
+                }, 3000);
             } else if (result.type === 'cancel') {
                 logDebug('SignInScreen', 'OAuth cancelled by user');
-                showToast('Вход отменен', 'info');
+                showToast('Р’С…РѕРґ РѕС‚РјРµРЅРµРЅ', 'info');
             } else if (result.type === 'locked') {
                 logDebug('SignInScreen', 'OAuth locked (browser already open)');
-                showToast('Браузер уже открыт. Закройте его и попробуйте снова.', 'info');
+                showToast('Р‘СЂР°СѓР·РµСЂ СѓР¶Рµ РѕС‚РєСЂС‹С‚. Р—Р°РєСЂРѕР№С‚Рµ РµРіРѕ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.', 'info');
             } else {
                 logWarn('SignInScreen', 'OAuth result type', { type: result.type });
-                showToast('Не удалось завершить авторизацию. Попробуйте снова.', 'error');
+                showToast('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РІРµСЂС€РёС‚СЊ Р°РІС‚РѕСЂРёР·Р°С†РёСЋ. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.', 'error');
             }
         } catch (error: unknown) {
             logError('SignInScreen', 'Google sign in error', error);
-            const errorMessage = error instanceof Error ? error.message : 'Не удалось войти через Google';
+            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕР№С‚Рё С‡РµСЂРµР· Google';
             showToast(errorMessage, 'error');
         } finally {
             setGoogleLoading(false);
         }
     };
 
-    const handleWhatsAppSignIn = () => {
-        navigation.navigate('WhatsApp');
-    };
-
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Вход в Kezek</Text>
-            <Text style={styles.subtitle}>Выберите способ входа</Text>
+            <Text style={styles.title}>Р’С…РѕРґ РІ Kezek</Text>
+            <Text style={styles.subtitle}>Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± РІС…РѕРґР°</Text>
 
             <Input
                 label="Email"
@@ -161,50 +141,50 @@ export default function SignInScreen() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
                 error={errors.email}
+                containerStyle={styles.field}
             />
 
             <Button
-                title="Отправить код"
+                title="РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ"
                 onPress={handleSignIn}
                 loading={loading}
                 disabled={loading || googleLoading}
+                fullWidth
             />
 
-            {/* Разделитель */}
             <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>или</Text>
+                <Text style={styles.dividerText}>РёР»Рё</Text>
                 <View style={styles.dividerLine} />
             </View>
 
-            {/* Кнопка Google */}
-            <TouchableOpacity
-                style={[styles.socialButton, googleLoading && styles.socialButtonDisabled]}
+            <Button
+                title={googleLoading ? 'Р’С…РѕРґ...' : 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ СЃ Google'}
                 onPress={handleGoogleSignIn}
                 disabled={loading || googleLoading}
-            >
-                <Text style={styles.socialButtonText}>
-                    {googleLoading ? 'Вход...' : 'Продолжить с Google'}
-                </Text>
-            </TouchableOpacity>
-
-            {/* Кнопка WhatsApp */}
-            <TouchableOpacity
-                style={[styles.socialButton, styles.whatsappButton, (loading || googleLoading) && styles.socialButtonDisabled]}
-                onPress={handleWhatsAppSignIn}
-                disabled={loading || googleLoading}
-            >
-                <Text style={[styles.socialButtonText, styles.whatsappButtonText]}>
-                    Войти через WhatsApp
-                </Text>
-            </TouchableOpacity>
+                variant="outline"
+                style={styles.socialButton}
+                fullWidth
+            />
 
             <Button
-                title="Регистрация"
+                title="Р’РѕР№С‚Рё С‡РµСЂРµР· WhatsApp"
+                onPress={() => navigation.navigate('WhatsApp')}
+                disabled={loading || googleLoading}
+                variant="secondary"
+                style={styles.whatsAppButton}
+                textStyle={styles.whatsAppButtonText}
+                fullWidth
+            />
+
+            <Button
+                title="Р РµРіРёСЃС‚СЂР°С†РёСЏ"
                 onPress={() => navigation.navigate('SignUp')}
-                variant="outline"
+                variant="ghost"
                 style={styles.secondaryButton}
+                fullWidth
             />
         </ScrollView>
     );
@@ -213,63 +193,52 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface.page,
     },
     content: {
-        padding: 20,
+        padding: colors.layout.space5,
     },
     title: {
         fontSize: 32,
-        fontWeight: 'bold',
+        fontWeight: '700',
         marginBottom: 8,
-        color: '#111827',
+        color: colors.text.primary,
     },
     subtitle: {
         fontSize: 18,
-        color: '#6b7280',
-        marginBottom: 32,
+        color: colors.text.secondary,
+        marginBottom: colors.layout.space6,
     },
-    secondaryButton: {
-        marginTop: 12,
+    field: {
+        marginBottom: colors.layout.space5,
     },
     divider: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 20,
+        marginVertical: colors.layout.space5,
     },
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.border.subtle,
     },
     dividerText: {
-        marginHorizontal: 16,
-        color: '#6b7280',
+        marginHorizontal: colors.layout.space4,
+        color: colors.text.secondary,
         fontSize: 14,
     },
     socialButton: {
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#d1d5db',
-        borderRadius: 8,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        marginBottom: 12,
-        alignItems: 'center',
+        marginBottom: colors.layout.space3,
     },
-    socialButtonDisabled: {
-        opacity: 0.5,
-    },
-    socialButtonText: {
-        color: '#374151',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    whatsappButton: {
+    whatsAppButton: {
+        marginBottom: colors.layout.space3,
         backgroundColor: '#25D366',
         borderColor: '#25D366',
     },
-    whatsappButtonText: {
-        color: '#fff',
+    whatsAppButtonText: {
+        color: colors.text.light,
+    },
+    secondaryButton: {
+        marginTop: colors.layout.space2,
     },
 });

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/Input';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
@@ -44,6 +45,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     const [formData, setFormData] = useState<{
         promotion_type: PromotionType;
@@ -149,6 +151,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
 
             const data = await res.json();
             if (data.ok) {
+                setConfirmDeleteId(null);
                 toast.showSuccess(editingId ? t('branches.promotions.save.success', 'Акция обновлена') : t('branches.promotions.create.success', 'Акция создана'));
                 loadPromotions();
                 cancelForm();
@@ -162,8 +165,6 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
     }
 
     async function deletePromotion(id: string) {
-        if (!confirm(t('branches.promotions.delete.confirm', 'Удалить акцию?'))) return;
-
         try {
             const res = await fetch(`/api/dashboard/branches/${branchId}/promotions/${id}`, {
                 method: 'DELETE',
@@ -171,6 +172,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
 
             const data = await res.json();
             if (data.ok) {
+                setConfirmDeleteId(null);
                 toast.showSuccess(t('branches.promotions.delete.success', 'Акция удалена'));
                 loadPromotions();
             } else {
@@ -440,7 +442,7 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                                             {t('branches.promotions.edit', 'Редакт.')}
                                         </button>
                                         <button
-                                            onClick={() => deletePromotion(promotion.id)}
+                                            onClick={() => setConfirmDeleteId(promotion.id)}
                                             className="flex-1 sm:flex-none px-3 py-2 text-xs font-medium bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 active:bg-red-200 dark:active:bg-red-900/40 transition-all shadow-sm"
                                         >
                                             {t('branches.promotions.delete', 'Удалить')}
@@ -452,8 +454,19 @@ export default function BranchPromotionsPanel({ branchId, bizSlug }: { branchId:
                     })}
                 </div>
             )}
+            <ConfirmDialog
+                open={confirmDeleteId !== null}
+                onClose={() => setConfirmDeleteId(null)}
+                onConfirm={() => confirmDeleteId && deletePromotion(confirmDeleteId)}
+                title={t('branches.promotions.delete.title', 'Delete promotion')}
+                message={t('branches.promotions.delete.confirm', 'Delete promotion?')}
+                confirmLabel={t('branches.promotions.delete.action', 'Delete')}
+                cancelLabel={t('common.cancel', 'Cancel')}
+                confirmVariant="danger"
+            />
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }
+
 

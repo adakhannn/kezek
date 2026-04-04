@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/hooks/useToast';
 
 type Plan = {
@@ -46,31 +50,30 @@ export function SellVisitPackageModal({
             const json = await res.json();
             if (!json?.ok || !Array.isArray(json?.data?.plans)) {
                 setPlans([]);
-                setError(t('dashboard.visitPackages.loadError', 'Не удалось загрузить список пакетов'));
+                setError(t('dashboard.visitPackages.loadError', 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРїРёСЃРѕРє РїР°РєРµС‚РѕРІ'));
                 return;
             }
-            const active = (json.data.plans as Plan[]).filter((p) => p.is_active);
-            setPlans(active);
-            setSelectedPlanId(active[0]?.id ?? '');
+            const activePlans = (json.data.plans as Plan[]).filter((plan) => plan.is_active);
+            setPlans(activePlans);
+            setSelectedPlanId(activePlans[0]?.id ?? '');
         } catch {
             setPlans([]);
-            setError(t('dashboard.visitPackages.loadError', 'Не удалось загрузить список пакетов'));
+            setError(t('dashboard.visitPackages.loadError', 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРїРёСЃРѕРє РїР°РєРµС‚РѕРІ'));
         } finally {
             setLoading(false);
         }
     }, [t]);
 
     useEffect(() => {
-        if (isOpen) {
-            fetchPlans();
-            setSelling(false);
-            setError(null);
-        }
+        if (!isOpen) return;
+        fetchPlans();
+        setSelling(false);
+        setError(null);
     }, [isOpen, fetchPlans]);
 
     const handleSubmit = async () => {
         if (!selectedPlanId) {
-            toast.showError(t('dashboard.visitPackages.sell.selectPlan', 'Выберите пакет'));
+            toast.showError(t('dashboard.visitPackages.sell.selectPlan', 'Р’С‹Р±РµСЂРёС‚Рµ РїР°РєРµС‚'));
             return;
         }
         setSelling(true);
@@ -83,123 +86,93 @@ export function SellVisitPackageModal({
             });
             const json = await res.json();
             if (!res.ok || !json?.ok) {
-                const msg = (json?.message ?? json?.error ?? `HTTP ${res.status}`) as string;
-                setError(msg);
+                const message = (json?.message ?? json?.error ?? `HTTP ${res.status}`) as string;
+                setError(message);
                 setSelling(false);
                 return;
             }
-            toast.showSuccess(t('dashboard.visitPackages.sell.success', 'Пакет успешно продан'));
+            toast.showSuccess(t('dashboard.visitPackages.sell.success', 'РџР°РєРµС‚ СѓСЃРїРµС€РЅРѕ РїСЂРѕРґР°РЅ'));
             onSuccess?.();
             onClose();
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Ошибка');
+            setError(e instanceof Error ? e.message : 'РћС€РёР±РєР°');
             setSelling(false);
         }
     };
 
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [isOpen]);
-
-    if (!isOpen) return null;
-
-    const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+    const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
     const discountLabel =
         selectedPlan?.discount_type === 'percent'
-            ? `${selectedPlan?.discount_value}%`
-            : `${selectedPlan?.discount_value}`;
+            ? `${selectedPlan.discount_value}%`
+            : `${selectedPlan?.discount_value ?? ''}`;
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-            onClick={onClose}
-        >
-            <div
-                className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        {t('dashboard.visitPackages.sell.title', 'Продать пакет визитов')}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        {t('dashboard.visitPackages.sell.clientLabel', 'Клиент')}: {clientName}
-                    </p>
-                </div>
-
-                <div className="p-4 sm:p-6 overflow-y-auto flex-1">
-                    {loading && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {t('dashboard.integrations.loading', 'Загрузка...')}
-                        </p>
-                    )}
-                    {error && !loading && (
-                        <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>
-                    )}
-                    {!loading && plans.length === 0 && !error && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {t('dashboard.visitPackages.sell.noPlans', 'Нет активных типов пакетов. Создайте пакет в разделе «Пакеты визитов».')}
-                        </p>
-                    )}
-                    {!loading && plans.length > 0 && (
-                        <div className="space-y-3">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {t('dashboard.visitPackages.sell.choosePlan', 'Выберите тип пакета')}
-                            </label>
-                            <select
-                                value={selectedPlanId}
-                                onChange={(e) => setSelectedPlanId(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
-                            >
-                                {plans.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                        {p.name_ru} — {p.visit_count} визитов, {p.validity_days} дн.
-                                        {p.discount_type === 'percent' ? `, −${p.discount_value}%` : `, ${p.discount_value} за визит`}
-                                    </option>
-                                ))}
-                            </select>
-                            {selectedPlan && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {selectedPlan.name_ru}: {selectedPlan.visit_count} визитов, срок {selectedPlan.validity_days} дн., скидка {discountLabel}
-                                </p>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-end gap-2">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                    >
-                        {t('dashboard.visitPackages.sell.cancel', 'Отмена')}
-                    </button>
-                    <button
+        <Dialog
+            open={isOpen}
+            onClose={onClose}
+            title={t('dashboard.visitPackages.sell.title', 'РџСЂРѕРґР°С‚СЊ РїР°РєРµС‚ РІРёР·РёС‚РѕРІ')}
+            description={`${t('dashboard.visitPackages.sell.clientLabel', 'РљР»РёРµРЅС‚')}: ${clientName}`}
+            size="sm"
+            footer={
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button type="button" variant="secondary" onClick={onClose}>
+                        {t('dashboard.visitPackages.sell.cancel', 'РћС‚РјРµРЅР°')}
+                    </Button>
+                    <Button
                         type="button"
                         onClick={handleSubmit}
                         disabled={loading || selling || plans.length === 0}
-                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                        isLoading={selling}
                     >
-                        {selling && (
-                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
-                        )}
                         {selling
-                            ? t('dashboard.visitPackages.sell.selling', 'Оформление...')
-                            : t('dashboard.visitPackages.sell.confirm', 'Продать пакет')}
-                    </button>
+                            ? t('dashboard.visitPackages.sell.selling', 'РћС„РѕСЂРјР»РµРЅРёРµ...')
+                            : t('dashboard.visitPackages.sell.confirm', 'РџСЂРѕРґР°С‚СЊ РїР°РєРµС‚')}
+                    </Button>
                 </div>
+            }
+        >
+            <div className="space-y-4">
+                {loading ? (
+                    <p className="type-body text-[var(--text-secondary)]">
+                        {t('dashboard.integrations.loading', 'Р—Р°РіСЂСѓР·РєР°...')}
+                    </p>
+                ) : null}
+
+                {error && !loading ? <AlertBanner variant="danger" message={error} /> : null}
+
+                {!loading && plans.length === 0 && !error ? (
+                    <EmptyState
+                        compact
+                        title={t('dashboard.visitPackages.sell.noPlansTitle', 'РќРµС‚ Р°РєС‚РёРІРЅС‹С… РїР°РєРµС‚РѕРІ')}
+                        description={t('dashboard.visitPackages.sell.noPlans', 'РќРµС‚ Р°РєС‚РёРІРЅС‹С… С‚РёРїРѕРІ РїР°РєРµС‚РѕРІ. РЎРѕР·РґР°Р№С‚Рµ РїР°РєРµС‚ РІ СЂР°Р·РґРµР»Рµ В«РџР°РєРµС‚С‹ РІРёР·РёС‚РѕРІВ».')}
+                    />
+                ) : null}
+
+                {!loading && plans.length > 0 ? (
+                    <div className="space-y-3">
+                        <label className="type-label block text-[var(--text-primary)]">
+                            {t('dashboard.visitPackages.sell.choosePlan', 'Р’С‹Р±РµСЂРёС‚Рµ С‚РёРї РїР°РєРµС‚Р°')}
+                        </label>
+                        <select
+                            value={selectedPlanId}
+                            onChange={(e) => setSelectedPlanId(e.target.value)}
+                            className="min-h-[44px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-3 text-sm text-[var(--text-primary)]"
+                        >
+                            {plans.map((plan) => (
+                                <option key={plan.id} value={plan.id}>
+                                    {plan.name_ru} вЂ” {plan.visit_count} РІРёР·РёС‚РѕРІ, {plan.validity_days} РґРЅ.
+                                    {plan.discount_type === 'percent' ? `, в€’${plan.discount_value}%` : `, ${plan.discount_value} Р·Р° РІРёР·РёС‚`}
+                                </option>
+                            ))}
+                        </select>
+                        {selectedPlan ? (
+                            <p className="type-caption text-[var(--text-muted)]">
+                                {selectedPlan.name_ru}: {selectedPlan.visit_count} РІРёР·РёС‚РѕРІ, СЃСЂРѕРє {selectedPlan.validity_days} РґРЅ., СЃРєРёРґРєР° {discountLabel}
+                            </p>
+                        ) : null}
+                    </div>
+                ) : null}
             </div>
-        </div>
+        </Dialog>
     );
 }

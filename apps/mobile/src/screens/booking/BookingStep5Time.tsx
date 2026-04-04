@@ -1,19 +1,21 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { formatTimeSlot } from '@shared-client/formatters';
-import { LinearGradient } from 'expo-linear-gradient';
+import type { Slot } from '@shared-client/types';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
 import Button from '../../components/ui/Button';
+import EmptyState from '../../components/ui/EmptyState';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import MotionPressable from '../../components/ui/MotionPressable';
 import OfflineBanner from '../../components/ui/OfflineBanner';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
-import type { Slot } from '@shared-client/types';
 import { useBookingStep5Slots } from './useBookingStep5Slots';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -64,69 +66,71 @@ export default function BookingStep5Time() {
                     <Text style={styles.title}>{bookingData.business?.name}</Text>
                 </View>
 
-            <View style={styles.section}>
-                {showOfflineBanner && (
-                    <OfflineBanner onRetry={() => refetch()} />
-                )}
+                <View style={styles.section}>
+                    {showOfflineBanner ? <OfflineBanner onRetry={() => refetch()} /> : null}
 
-                {isLoading ? (
-                    <View style={styles.slotsLoadingContainer}>
-                        <ActivityIndicator size="small" color="#6366f1" />
-                        <Text style={styles.slotsLoadingText}>Загрузка доступного времени...</Text>
-                    </View>
-                ) : slots && slots.length > 0 ? (
-                    <View style={styles.slotsGrid}>
-                        {slots.map((slot, index: number) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={[
-                                    styles.slotButton,
-                                    bookingData.selectedSlot?.start_at === slot.start_at && styles.slotButtonSelected,
-                                ]}
-                                onPress={() => handleSelectSlot(slot)}
-                            >
-                                <Text
+                    {isLoading ? (
+                        <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР° РґРѕСЃС‚СѓРїРЅРѕРіРѕ РІСЂРµРјРµРЅРё..." size="small" />
+                    ) : slots && slots.length > 0 ? (
+                        <View style={styles.slotsGrid}>
+                            {slots.map((slot, index: number) => (
+                                <MotionPressable
+                                    key={index}
                                     style={[
-                                        styles.slotText,
-                                        bookingData.selectedSlot?.start_at === slot.start_at && styles.slotTextSelected,
+                                        styles.slotButton,
+                                        bookingData.selectedSlot?.start_at === slot.start_at &&
+                                            styles.slotButtonSelected,
                                     ]}
+                                    onPress={() => handleSelectSlot(slot)}
                                 >
-                                    {formatTimeSlot(slot.start_at, TZ)}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                ) : !showOfflineBanner && domainErrorMessage ? (
-                    <View style={styles.noSlotsContainer}>
-                        <Ionicons name="alert-circle-outline" size={48} color="#f97316" />
-                        <Text style={styles.noSlotsText}>{domainErrorMessage}</Text>
-                    </View>
-                ) : !showOfflineBanner ? (
-                    <View style={styles.noSlotsContainer}>
-                        <Ionicons name="time-outline" size={48} color="#9ca3af" />
-                        <Text style={styles.noSlotsText}>Нет доступного времени</Text>
-                        <Text style={styles.noSlotsHint}>Попробуйте выбрать другую дату</Text>
-                    </View>
-                ) : null}
+                                    <Text
+                                        style={[
+                                            styles.slotText,
+                                            bookingData.selectedSlot?.start_at === slot.start_at &&
+                                                styles.slotTextSelected,
+                                        ]}
+                                    >
+                                        {formatTimeSlot(slot.start_at, TZ)}
+                                    </Text>
+                                </MotionPressable>
+                            ))}
+                        </View>
+                    ) : !showOfflineBanner && domainErrorMessage ? (
+                        <EmptyState
+                            icon="alert-circle-outline"
+                            title={domainErrorMessage}
+                            message="РџРѕРїСЂРѕР±СѓР№С‚Рµ РІС‹Р±СЂР°С‚СЊ РґСЂСѓРіСѓСЋ РґР°С‚Сѓ РёР»Рё РѕР±РЅРѕРІРёС‚СЊ СЃРїРёСЃРѕРє."
+                            compact
+                            style={styles.noSlotsContainer}
+                        />
+                    ) : !showOfflineBanner ? (
+                        <EmptyState
+                            icon="time-outline"
+                            title="РќРµС‚ РґРѕСЃС‚СѓРїРЅРѕРіРѕ РІСЂРµРјРµРЅРё"
+                            message="РџРѕРїСЂРѕР±СѓР№С‚Рµ РІС‹Р±СЂР°С‚СЊ РґСЂСѓРіСѓСЋ РґР°С‚Сѓ."
+                            compact
+                            style={styles.noSlotsContainer}
+                        />
+                    ) : null}
 
-                {slots && slots.length > 0 && (
-                    <View style={styles.buttonContainer}>
-                        <Button
-                            title="Назад"
-                            onPress={() => navigation.goBack()}
-                            variant="outline"
-                            style={styles.backButton}
-                        />
-                        <Button
-                            title="Дальше"
-                            onPress={handleNext}
-                            disabled={!bookingData.selectedSlot}
-                            variant="primary"
-                            style={styles.nextButton}
-                        />
-                    </View>
-                )}
-            </View>
+                    {slots && slots.length > 0 ? (
+                        <View style={styles.buttonContainer}>
+                            <Button
+                                title="РќР°Р·Р°Рґ"
+                                onPress={() => navigation.goBack()}
+                                variant="outline"
+                                style={styles.backButton}
+                            />
+                            <Button
+                                title="Р”Р°Р»СЊС€Рµ"
+                                onPress={handleNext}
+                                disabled={!bookingData.selectedSlot}
+                                variant="primary"
+                                style={styles.nextButton}
+                            />
+                        </View>
+                    ) : null}
+                </View>
             </ScrollView>
         </LinearGradient>
     );
@@ -152,21 +156,8 @@ const styles = StyleSheet.create({
         color: colors.text.primary,
         marginBottom: 4,
     },
-    subtitle: {
-        fontSize: 16,
-        color: colors.text.secondary,
-    },
     section: {
         padding: 20,
-    },
-    slotsLoadingContainer: {
-        padding: 40,
-        alignItems: 'center',
-        gap: 12,
-    },
-    slotsLoadingText: {
-        fontSize: 14,
-        color: colors.text.secondary,
     },
     slotsGrid: {
         flexDirection: 'row',
@@ -195,19 +186,7 @@ const styles = StyleSheet.create({
         color: colors.primary.from,
     },
     noSlotsContainer: {
-        padding: 40,
-        alignItems: 'center',
-        gap: 12,
-    },
-    noSlotsText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: colors.text.secondary,
-    },
-    noSlotsHint: {
-        fontSize: 14,
-        color: colors.text.tertiary,
-        textAlign: 'center',
+        paddingHorizontal: 0,
     },
     buttonContainer: {
         marginTop: 24,
@@ -222,4 +201,3 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
-

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import {logDebug, logError} from '@/lib/log';
 
 function WhatsAppAuthContent() {
@@ -199,15 +200,7 @@ function WhatsAppAuthContent() {
                     </p>
                 </div>
 
-                {error && (
-                    <div
-                        className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded"
-                        role="alert"
-                        aria-live="polite"
-                    >
-                        {error}
-                    </div>
-                )}
+                {error ? <AlertBanner variant="danger" message={error} compact /> : null}
 
                 {step === 'phone' ? (
                     <form onSubmit={handleSendOtp} className="mt-8 space-y-6">
@@ -318,4 +311,5 @@ export default function WhatsAppAuthPage() {
         </ErrorBoundary>
     );
 }
+
 

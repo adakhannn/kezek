@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -150,19 +151,14 @@ export function BranchScheduleEditor({ bizId, branchId, initialSchedule = [], ap
                 </div>
             </Card>
 
-            {error && (
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
-                </div>
-            )}
+            {error ? <AlertBanner variant="danger" message={error} /> : null}
 
-            {success && (
-                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <p className="text-sm text-green-800 dark:text-green-300">
-                        {t('branches.schedule.success', 'Расписание успешно сохранено')}
-                    </p>
-                </div>
-            )}
+            {success ? (
+                <AlertBanner
+                    variant="success"
+                    message={t('branches.schedule.success', 'Расписание успешно сохранено')}
+                />
+            ) : null}
 
             <div className="flex items-center gap-3 pt-4">
                 <Button onClick={handleSave} disabled={saving} isLoading={saving} className="min-w-[160px]">

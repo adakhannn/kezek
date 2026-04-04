@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import {logDebug} from '@/lib/log';
 import { validateEmail, validateName, validatePercent, validatePercentSum, validatePhone, validatePositiveNumber } from '@/lib/validation';
 
@@ -142,11 +143,7 @@ export default function StaffForm({
 
     return (
         <form onSubmit={onSubmit} className="space-y-6">
-            {err && (
-                <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 px-4 py-3">
-                    <p className="text-sm text-red-600 dark:text-red-400">{err}</p>
-                </div>
-            )}
+            {err ? <AlertBanner variant="danger" message={err} /> : null}
 
             <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -321,3 +318,5 @@ export default function StaffForm({
         </form>
     );
 }
+
+

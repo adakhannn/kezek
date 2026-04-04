@@ -1,62 +1,123 @@
-import { TextInput, Text, View, StyleSheet, TextInputProps } from 'react-native';
+import type { ReactNode } from 'react';
+import {
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+    type StyleProp,
+    type TextInputProps,
+    type TextStyle,
+    type ViewStyle,
+} from 'react-native';
+
 import { colors } from '../../constants/colors';
 
 type InputProps = TextInputProps & {
     label?: string;
     error?: string;
     helperText?: string;
+    size?: 'sm' | 'md' | 'lg';
+    containerStyle?: StyleProp<ViewStyle>;
+    inputContainerStyle?: StyleProp<ViewStyle>;
+    style?: StyleProp<TextStyle>;
+    leadingIcon?: ReactNode;
+    trailingIcon?: ReactNode;
 };
 
-export default function Input({ label, error, helperText, style, ...props }: InputProps) {
+export default function Input({
+    label,
+    error,
+    helperText,
+    size = 'md',
+    containerStyle,
+    inputContainerStyle,
+    leadingIcon,
+    trailingIcon,
+    style,
+    ...props
+}: InputProps) {
+    const sizeStyle = size === 'sm' ? styles.inputSm : size === 'lg' ? styles.inputLg : styles.inputMd;
+    const editable = props.editable !== false;
+
     return (
-        <View style={styles.container}>
-            {label && <Text style={styles.label}>{label}</Text>}
-            <TextInput
+        <View style={[styles.container, containerStyle]}>
+            {label ? <Text style={styles.label}>{label}</Text> : null}
+            <View
                 style={[
-                    styles.input,
-                    error && styles.inputError,
-                    !error && props.editable === false && styles.inputReadOnly,
-                    style,
+                    styles.inputContainer,
+                    sizeStyle,
+                    error && styles.inputContainerError,
+                    !editable && styles.inputContainerReadOnly,
+                    inputContainerStyle,
                 ]}
-                placeholderTextColor={colors.text.tertiary}
-                {...props}
-            />
-            {error && <Text style={styles.error}>{error}</Text>}
-            {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
+            >
+                {leadingIcon ? <View style={styles.iconWrap}>{leadingIcon}</View> : null}
+                <TextInput
+                    style={[styles.input, style]}
+                    placeholderTextColor={colors.text.tertiary}
+                    selectionColor={colors.interactive.focusRing}
+                    {...props}
+                />
+                {trailingIcon ? <View style={styles.iconWrap}>{trailingIcon}</View> : null}
+            </View>
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {helperText && !error ? <Text style={styles.helperText}>{helperText}</Text> : null}
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: 16,
+        marginBottom: colors.layout.space4,
         width: '100%',
     },
     label: {
         fontSize: 14,
         fontWeight: '500',
-        color: colors.text.primary,
+        color: colors.text.secondary,
         marginBottom: 6,
     },
-    input: {
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         borderWidth: 1,
         borderColor: colors.border.light,
-        borderRadius: 8,
+        borderRadius: colors.layout.radiusMd,
+        backgroundColor: colors.surface.card,
+        paddingHorizontal: colors.layout.space4,
+        gap: colors.layout.space2,
+    },
+    inputSm: {
+        minHeight: 42,
+        paddingVertical: 8,
+    },
+    inputMd: {
+        minHeight: 48,
         paddingVertical: 10,
-        paddingHorizontal: 16,
+    },
+    inputLg: {
+        minHeight: 54,
+        paddingVertical: 12,
+    },
+    inputContainerError: {
+        borderColor: colors.status.danger,
+    },
+    inputContainerReadOnly: {
+        backgroundColor: colors.surface.elevated,
+    },
+    iconWrap: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    input: {
+        flex: 1,
         fontSize: 16,
-        backgroundColor: colors.background.secondary,
         color: colors.text.primary,
-    },
-    inputError: {
-        borderColor: colors.status.cancelled,
-    },
-    inputReadOnly: {
-        backgroundColor: colors.background.secondary,
+        paddingVertical: 0,
     },
     error: {
         fontSize: 12,
-        color: colors.status.cancelled,
+        color: colors.status.danger,
         marginTop: 6,
     },
     helperText: {
@@ -65,4 +126,3 @@ const styles = StyleSheet.create({
         marginTop: 6,
     },
 });
-

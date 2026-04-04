@@ -1,8 +1,3 @@
-/**
- * Компонент для выбора мастера
- * Вынесен из view.tsx для улучшения поддерживаемости
- */
-
 'use client';
 
 import { BookingEmptyState } from '../BookingEmptyState';
@@ -10,8 +5,8 @@ import type { Staff } from '../types';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
+import { Badge } from '@/components/ui/Badge';
 import { formatStaffName } from '@/lib/i18nHelpers';
-
 
 type StaffSelectorProps = {
     staff: Staff[];
@@ -29,7 +24,8 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: Staf
         return (
             <BookingEmptyState
                 type="info"
-                message={t('booking.empty.selectDayFirst', 'Сначала выберите день.')}
+                title={t('booking.empty.selectDayFirstTitle', 'Сначала нужен день')}
+                message={t('booking.empty.selectDayFirst', 'Сначала выберите день, чтобы увидеть реально доступных специалистов.')}
             />
         );
     }
@@ -38,89 +34,97 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: Staf
         return (
             <BookingEmptyState
                 type="empty"
+                title={t('booking.empty.noStaffTitle', 'На эту дату нет доступных специалистов')}
                 message={t('booking.empty.noStaff', 'На выбранную дату в этом филиале нет доступных мастеров. Выберите другой день.')}
             />
         );
     }
 
     return (
-        <>
-            <button
-                type="button"
-                data-testid="master-select"
-                className="mb-3 inline-flex items-center rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-indigo-400 hover:text-indigo-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-400 dark:hover:text-indigo-200"
-            >
-                {t('booking.testIds.masterSelect', 'Выбрать мастера')}
-            </button>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Опция "Любой мастер" */}
+        <div className="space-y-4">
+            <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3">
+                <p className="type-caption text-[var(--text-secondary)]">
+                    {t('booking.step3.description', 'Сначала можно выбрать конкретного специалиста или доверить системе ближайший свободный слот у любого мастера.')}
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
                     type="button"
                     data-testid="master-card-any"
                     onClick={() => onSelect('any')}
-                    className={`flex items-center gap-3 rounded-lg border p-3 text-sm font-medium transition ${
+                    className={[
+                        'flex items-center gap-3 rounded-[22px] border p-4 text-sm font-medium transition-all',
                         selectedStaffId === 'any'
-                            ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
-                            : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                    }`}
+                            ? 'border-[var(--accent-primary)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] text-[var(--accent-primary)] shadow-[var(--shadow-sm)]'
+                            : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)]',
+                    ].join(' ')}
                 >
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700 flex items-center justify-center text-base font-semibold text-white flex-shrink-0">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-base font-semibold text-[var(--text-inverse)]">
+                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                     </div>
-                    <div className="flex-1 text-left">
-                        <span data-testid="master-option-any">
+                    <div className="min-w-0 flex-1 text-left">
+                        <span className="type-label block text-[var(--text-primary)]" data-testid="master-option-any">
                             {t('booking.step3.anyMaster', 'Любой мастер')}
                         </span>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {t('booking.step3.anyMasterHint', 'Ближайший свободный слот')}
+                        <div className="type-caption mt-1 text-[var(--text-secondary)]">
+                            {t('booking.step3.anyMasterHint', 'Покажем ближайший доступный слот без лишнего ручного выбора')}
                         </div>
                     </div>
                 </button>
 
-                {staff.map((m) => {
-                    const active = m.id === selectedStaffId;
+                {staff.map((person) => {
+                    const active = person.id === selectedStaffId;
+
                     return (
                         <button
-                            key={m.id}
+                            key={person.id}
                             type="button"
                             data-testid="master-card"
-                            onClick={() => onSelect(m.id)}
-                            className={`flex items-center gap-3 rounded-lg border p-3 text-sm font-medium transition ${
+                            onClick={() => onSelect(person.id)}
+                            className={[
+                                'flex items-center gap-3 rounded-[22px] border p-4 text-sm font-medium transition-all',
                                 active
-                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-100'
-                                    : 'border-gray-300 bg-white text-gray-800 hover:border-indigo-500 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/40'
-                            }`}
+                                    ? 'border-[var(--accent-primary)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] text-[var(--accent-primary)] shadow-[var(--shadow-sm)]'
+                                    : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)]',
+                            ].join(' ')}
                         >
-                            {m.avatar_url ? (
+                            {person.avatar_url ? (
                                 <img
-                                    src={m.avatar_url}
-                                    alt={formatName(m.full_name)}
-                                    className="h-12 w-12 rounded-full object-cover flex-shrink-0"
-                                    onError={(e) => {
-                                        e.currentTarget.style.display = 'none';
+                                    src={person.avatar_url}
+                                    alt={formatName(person.full_name)}
+                                    className="h-12 w-12 shrink-0 rounded-full object-cover"
+                                    onError={(event) => {
+                                        event.currentTarget.style.display = 'none';
                                     }}
                                 />
                             ) : (
-                                <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-base font-semibold text-gray-500 dark:text-gray-400 flex-shrink-0">
-                                    {formatName(m.full_name).charAt(0).toUpperCase()}
+                                <div className="type-label flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--surface-emphasis)] text-[var(--text-muted)]">
+                                    {formatName(person.full_name).charAt(0).toUpperCase()}
                                 </div>
                             )}
-                            <div className="flex-1 flex items-center justify-between">
-                                <span
-                                    className="text-left"
-                                    data-testid="master-option"
-                                >
-                                    {formatName(m.full_name)}
-                                </span>
-                                <RatingDisplay score={m.rating_score} t={t} variant="badge" className="ml-2 px-2 py-0.5 [&_svg]:w-3 [&_svg]:h-3" />
+
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="type-label truncate text-[var(--text-primary)]" data-testid="master-option">
+                                        {formatName(person.full_name)}
+                                    </span>
+                                    <RatingDisplay score={person.rating_score} t={t} variant="badge" className="ml-2 px-2 py-0.5 [&_svg]:w-3 [&_svg]:h-3" />
+                                </div>
+                                <div className="mt-2">
+                                    <Badge variant={active ? 'accent' : 'neutral'}>
+                                        {active
+                                            ? t('booking.step3.selectedMaster', 'Выбран для визита')
+                                            : t('booking.step3.availableMaster', 'Можно выбрать')}
+                                    </Badge>
+                                </div>
                             </div>
                         </button>
                     );
                 })}
             </div>
-        </>
+        </div>
     );
 }
-

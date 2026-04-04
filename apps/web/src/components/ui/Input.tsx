@@ -8,10 +8,27 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
     error?: string;
     helperText?: string;
+    fieldSize?: 'sm' | 'md';
+    containerClassName?: string;
+    labelClassName?: string;
+    helperClassName?: string;
+    errorClassName?: string;
 }
 
 const InputComponent = (
-    { className, label, error, helperText, id, ...props }: InputProps,
+    {
+        className,
+        label,
+        error,
+        helperText,
+        id,
+        fieldSize = 'md',
+        containerClassName,
+        labelClassName,
+        helperClassName,
+        errorClassName,
+        ...props
+    }: InputProps,
     ref: React.ForwardedRef<HTMLInputElement>
 ) => {
     const generatedId = useId();
@@ -19,11 +36,14 @@ const InputComponent = (
     const errorId = error ? `${inputId}-error` : undefined;
     const helperId = helperText && !error ? `${inputId}-helper` : undefined;
     const describedBy = [errorId, helperId].filter(Boolean).join(' ') || undefined;
-    
+
     return (
-        <div className="w-full">
+        <div className={clsx('w-full', containerClassName)}>
             {label && (
-                <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label
+                    htmlFor={inputId}
+                    className={clsx('type-caption mb-1.5 block font-medium text-[var(--text-secondary)]', labelClassName)}
+                >
                     {label}
                 </label>
             )}
@@ -31,19 +51,14 @@ const InputComponent = (
                 ref={ref}
                 id={inputId}
                 className={clsx(
-                    'w-full px-4 py-3 rounded-lg border transition-all duration-200',
-                    'min-h-[44px] sm:min-h-[40px]',
-                    'text-base sm:text-sm',
-                    'bg-white dark:bg-gray-900',
-                    'border-gray-300 dark:border-gray-700',
-                    'text-gray-900 dark:text-gray-100',
-                    'placeholder:text-gray-400 dark:placeholder:text-gray-500',
-                    'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
-                    'disabled:opacity-50 disabled:cursor-not-allowed',
-                    'read-only:bg-gray-50 read-only:dark:bg-gray-800 read-only:cursor-not-allowed',
-                    // Улучшение для мобильных: предотвращаем зум при фокусе
-                    'text-[16px] sm:text-sm',
-                    error && 'border-red-500 focus:ring-red-500',
+                    'motion-interactive w-full min-h-[44px] rounded-[var(--radius-md)] border px-4 py-3 text-[16px] sm:min-h-[40px] sm:text-sm',
+                    'border-[var(--border-default)] bg-[var(--surface-card)] text-[var(--text-primary)]',
+                    'placeholder:text-[var(--text-muted)] hover:border-[var(--border-strong)]',
+                    'focus:border-[var(--focus-ring)] focus:outline-none focus:ring-0',
+                    'disabled:cursor-not-allowed disabled:opacity-50',
+                    'read-only:cursor-not-allowed read-only:bg-[color:color-mix(in_srgb,var(--surface-card)_78%,var(--surface-canvas))]',
+                    fieldSize === 'sm' && 'min-h-[40px] px-3 py-2 text-sm',
+                    error && 'border-[var(--status-danger)] focus:border-[var(--status-danger)]',
                     className
                 )}
                 aria-invalid={error ? 'true' : undefined}
@@ -51,12 +66,16 @@ const InputComponent = (
                 {...props}
             />
             {error && (
-                <p id={errorId} role="alert" className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+                <p
+                    id={errorId}
+                    role="alert"
+                    className={clsx('type-caption mt-1.5 text-[var(--status-danger)]', errorClassName)}
+                >
                     {error}
                 </p>
             )}
             {helperText && !error && (
-                <p id={helperId} className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+                <p id={helperId} className={clsx('type-caption mt-1.5 text-[var(--text-muted)]', helperClassName)}>
                     {helperText}
                 </p>
             )}
@@ -67,5 +86,3 @@ const InputComponent = (
 export const Input = forwardRef<HTMLInputElement, InputProps>(InputComponent);
 
 Input.displayName = 'Input';
-
-

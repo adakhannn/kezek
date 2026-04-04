@@ -2,6 +2,8 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
 import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -182,25 +184,19 @@ export default function PostSignup() {
                             placeholder="Ваше имя"
                         />
                     </div>
-                    {message && (
-                        <div className="rounded bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-800 dark:bg-green-950/40 dark:border-green-900/60 dark:text-green-100">
-                            {message}
-                        </div>
-                    )}
-                    {error && (
-                        <div className="rounded bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800 dark:bg-red-950/40 dark:border-red-900/60 dark:text-red-100">
-                            {error}
-                        </div>
-                    )}
-                    <button
+                    {message ? <AlertBanner variant="success" message={message} compact /> : null}
+                    {error ? <AlertBanner variant="danger" message={error} compact /> : null}
+                    <Button
                         type="submit"
                         disabled={saving || !fullName.trim()}
-                        className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                        isLoading={saving}
+                        className="w-full"
                     >
                         {saving ? 'Сохранение...' : 'Завершить регистрацию'}
-                    </button>
+                    </Button>
                 </form>
             </div>
         </main>
     );
 }
+

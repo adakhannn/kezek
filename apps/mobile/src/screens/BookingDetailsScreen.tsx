@@ -1,8 +1,8 @@
-import { Alert } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import EmptyState from '../components/ui/EmptyState';
+import { useConfirm } from '../contexts/ConfirmContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useToast } from '../contexts/ToastContext';
 import { RootStackParamList } from '../navigation/types';
@@ -20,6 +20,7 @@ export default function BookingDetailsScreen() {
     const route = useRoute<BookingDetailsScreenRouteProp>();
     const navigation = useNavigation<BookingDetailsScreenNavigationProp>();
     const { showToast } = useToast();
+    const { confirm } = useConfirm();
     const bookingId = route.params?.id;
     const {
         booking,
@@ -41,34 +42,35 @@ export default function BookingDetailsScreen() {
     const handleRepeat = () => {
         const slug = booking?.business?.slug;
         if (!slug) {
-            showToast('Не удалось открыть запись, бизнес не найден', 'error');
+            showToast('РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ Р·Р°РїРёСЃСЊ, Р±РёР·РЅРµСЃ РЅРµ РЅР°Р№РґРµРЅ', 'error');
             return;
         }
 
         navigation.navigate('Booking', { slug });
     };
 
-    const handleCancel = () => {
-        Alert.alert(
-            'Отменить бронирование?',
-            'Вы уверены, что хотите отменить эту запись?',
-            [
-                { text: 'Нет', style: 'cancel' },
-                {
-                    text: 'Да, отменить',
-                    style: 'destructive',
-                    onPress: cancelBooking,
-                },
-            ],
-        );
+    const handleCancel = async () => {
+        const shouldCancel = await confirm({
+            title: 'РћС‚РјРµРЅРёС‚СЊ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ?',
+            message: 'Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ РѕС‚РјРµРЅРёС‚СЊ СЌС‚Сѓ Р·Р°РїРёСЃСЊ?',
+            confirmLabel: 'Р”Р°, РѕС‚РјРµРЅРёС‚СЊ',
+            cancelLabel: 'РќРµС‚',
+            variant: 'danger',
+        });
+
+        if (!shouldCancel) {
+            return;
+        }
+
+        cancelBooking();
     };
 
     if (isLoading) {
-        return <LoadingSpinner message="Загрузка бронирования..." />;
+        return <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР° Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ..." />;
     }
 
     if (!booking) {
-        return <EmptyState title="Бронирование не найдено" />;
+        return <EmptyState title="Р‘СЂРѕРЅРёСЂРѕРІР°РЅРёРµ РЅРµ РЅР°Р№РґРµРЅРѕ" />;
     }
 
     return (

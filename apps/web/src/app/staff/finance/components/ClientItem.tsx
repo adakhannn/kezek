@@ -1,12 +1,13 @@
 // apps/web/src/app/staff/finance/components/ClientItem.tsx
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 
 import type { ShiftItem } from '../types';
 import { deduplicateServiceNameString, formatTime } from '../utils';
 import { checkPermissions, getPermissionMessage, type PermissionContext } from '../utils/permissions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface ClientItemProps {
     item: ShiftItem;
@@ -22,6 +23,7 @@ interface ClientItemProps {
 
 function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, staffId, onEdit, onDelete, onDuplicate }: ClientItemProps) {
     const { t, locale } = useLanguage();
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const hasBooking = !!item.bookingId;
     // Элемент считается новым (не сохранен), если у него нет id
     // Но не показываем индикатор сохранения, так как есть полноэкранный лоадер
@@ -183,9 +185,7 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                             className="p-2.5 sm:p-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 active:bg-red-200 dark:active:bg-red-900/70 rounded-lg transition-all shadow-sm hover:shadow touch-manipulation"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (confirm(t('staff.finance.clients.confirmDelete', 'Удалить этого клиента?'))) {
-                                    onDelete();
-                                }
+                                setConfirmDeleteOpen(true);
                             }}
                             title={t('staff.finance.clients.delete', 'Удалить')}
                         >
@@ -207,6 +207,19 @@ function ClientItemComponent({ item, idx: _idx, isOpen, isClosed, isReadOnly, st
                     ) : null}
                 </div>
             )}
+            <ConfirmDialog
+                open={confirmDeleteOpen}
+                onClose={() => setConfirmDeleteOpen(false)}
+                onConfirm={() => {
+                    setConfirmDeleteOpen(false);
+                    onDelete();
+                }}
+                title={t('staff.finance.clients.delete', 'Удалить')}
+                message={t('staff.finance.clients.confirmDelete', 'Удалить этого клиента?')}
+                confirmLabel={t('staff.finance.clients.delete', 'Удалить')}
+                cancelLabel={t('common.cancel', 'Отмена')}
+                confirmVariant="danger"
+            />
         </div>
     );
 }
@@ -233,4 +246,5 @@ export const ClientItem = memo(ClientItemComponent, (prevProps, nextProps) => {
         // onEdit, onDelete и onDuplicate должны быть стабильными функциями из useCallback
     );
 });
+
 

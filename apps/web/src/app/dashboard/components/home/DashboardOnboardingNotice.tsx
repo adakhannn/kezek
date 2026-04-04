@@ -25,8 +25,8 @@ export function DashboardOnboardingNotice({
                     </svg>
                 </div>
                 <div className="space-y-1">
-                    <p className="font-medium">{title}</p>
-                    <ul className="list-inside list-disc space-y-0.5 text-xs">
+                    <p className="type-label">{title}</p>
+                    <ul className="type-caption list-inside list-disc space-y-0.5">
                         {items.map((item) => (
                             <li key={item}>{item}</li>
                         ))}

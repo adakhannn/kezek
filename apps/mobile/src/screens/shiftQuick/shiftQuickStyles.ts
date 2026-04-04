@@ -1,29 +1,34 @@
 import { StyleSheet } from 'react-native';
 
+import { colors } from '../../constants/colors';
+
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.surface.page,
     },
     header: {
-        padding: 20,
-        backgroundColor: '#fff',
+        padding: colors.layout.space5,
+        backgroundColor: colors.surface.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border.subtle,
+    },
+    bannerWrap: {
+        paddingHorizontal: colors.layout.space4,
+        paddingTop: colors.layout.space4,
     },
     title: {
         fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
+        fontWeight: '700',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     statusCard: {
-        margin: 16,
-        padding: 16,
+        margin: colors.layout.space4,
     },
     statusRow: {
         flexDirection: 'row',
@@ -37,157 +42,99 @@ export const styles = StyleSheet.create({
         marginRight: 8,
     },
     statusOpen: {
-        backgroundColor: '#10b981',
+        backgroundColor: colors.status.success,
     },
     statusClosed: {
-        backgroundColor: '#6b7280',
+        backgroundColor: colors.text.tertiary,
     },
     statusText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
     },
     statusTime: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginTop: 4,
     },
     actionsRow: {
-        marginTop: 16,
-    },
-    actionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        borderRadius: 12,
-        gap: 8,
-    },
-    openButton: {
-        backgroundColor: '#10b981',
-    },
-    closeButton: {
-        backgroundColor: '#ef4444',
-    },
-    actionButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
+        marginTop: colors.layout.space4,
     },
     statsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        padding: 16,
-        gap: 12,
+        paddingHorizontal: colors.layout.space4,
+        gap: colors.layout.space3,
     },
     statCard: {
         flex: 1,
         minWidth: '45%',
-        padding: 16,
     },
     statLabel: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#6b7280',
+        color: colors.text.secondary,
         textTransform: 'uppercase',
         marginBottom: 8,
     },
     statValue: {
         fontSize: 24,
-        fontWeight: 'bold',
-        color: '#111827',
+        fontWeight: '700',
+        color: colors.text.primary,
     },
     statValueEmployee: {
-        color: '#059669',
+        color: colors.status.success,
     },
     statHint: {
         fontSize: 10,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginTop: 4,
     },
     addClientCard: {
-        margin: 16,
-        padding: 16,
+        margin: colors.layout.space4,
     },
     addClientButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#4f46e5',
         borderStyle: 'dashed',
-        gap: 8,
+        borderColor: colors.accent.primary,
     },
     addClientButtonText: {
-        color: '#4f46e5',
-        fontSize: 16,
-        fontWeight: '600',
+        color: colors.accent.primary,
     },
     addClientForm: {
-        gap: 12,
+        gap: colors.layout.space3,
     },
     addClientFormTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
-        marginBottom: 8,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        backgroundColor: '#fff',
+        color: colors.text.primary,
+        marginBottom: 4,
     },
     amountRow: {
         flexDirection: 'row',
-        gap: 12,
+        gap: colors.layout.space3,
     },
-    amountInput: {
+    amountInputContainer: {
         flex: 1,
     },
     addClientActions: {
         flexDirection: 'row',
-        gap: 12,
-        marginTop: 8,
+        gap: colors.layout.space3,
+        marginTop: 4,
     },
     addClientActionButton: {
         flex: 1,
-        padding: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    cancelButton: {
-        backgroundColor: '#f3f4f6',
-    },
-    cancelButtonText: {
-        color: '#374151',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    saveButton: {
-        backgroundColor: '#4f46e5',
-    },
-    saveButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
     },
     clientsSection: {
-        padding: 16,
+        padding: colors.layout.space4,
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 12,
     },
     clientCard: {
-        marginBottom: 12,
-        padding: 16,
+        marginBottom: colors.layout.space3,
     },
     clientHeader: {
         flexDirection: 'row',
@@ -197,7 +144,7 @@ export const styles = StyleSheet.create({
     clientName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
         flex: 1,
     },
     bookingBadge: {
@@ -205,7 +152,7 @@ export const styles = StyleSheet.create({
     },
     clientService: {
         fontSize: 14,
-        color: '#374151',
+        color: colors.text.secondary,
         marginBottom: 8,
     },
     clientAmounts: {
@@ -215,36 +162,18 @@ export const styles = StyleSheet.create({
     },
     clientAmount: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#111827',
+        fontWeight: '700',
+        color: colors.text.primary,
     },
     clientConsumables: {
         fontSize: 12,
-        color: '#d97706',
+        color: colors.status.warning,
     },
     emptyCard: {
-        margin: 16,
-        padding: 32,
-        alignItems: 'center',
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#6b7280',
-        marginBottom: 8,
-    },
-    emptyHint: {
-        fontSize: 12,
-        color: '#9ca3af',
+        margin: colors.layout.space4,
     },
     offlineIndicator: {
-        padding: 12,
-        backgroundColor: '#fef3c7',
-        borderTopWidth: 1,
-        borderTopColor: '#fbbf24',
-    },
-    offlineText: {
-        fontSize: 12,
-        color: '#92400e',
-        textAlign: 'center',
+        paddingHorizontal: colors.layout.space4,
+        paddingBottom: colors.layout.space4,
     },
 });

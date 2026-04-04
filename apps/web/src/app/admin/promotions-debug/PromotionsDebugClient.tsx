@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { EmptyState } from '@/components/ui/EmptyState';
+
 type DebugData = {
     client?: {
         id: string;
@@ -174,11 +177,7 @@ export function PromotionsDebugClient() {
                 </button>
             </div>
 
-            {error && (
-                <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-700 dark:bg-red-950/40 dark:text-red-200">
-                    {error}
-                </div>
-            )}
+            {error && <AlertBanner className="mb-6" variant="danger" message={error} />}
 
             {data && (
                 <div className="space-y-6">
@@ -209,26 +208,20 @@ export function PromotionsDebugClient() {
 
                     {/* Аномалии */}
                     {data.anomalies.length > 0 && (
-                        <div className="rounded-lg border border-red-300 bg-red-50 p-4 shadow-sm dark:border-red-700 dark:bg-red-950/40">
-                            <h2 className="mb-3 text-lg font-semibold text-red-900 dark:text-red-100">
+                        <div className="space-y-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 shadow-sm">
+                            <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 Обнаружены аномалии ({data.anomalies.length})
                             </h2>
                             <div className="space-y-2">
                                 {data.anomalies.map((anomaly, idx) => (
-                                    <div
-                                        key={idx}
-                                        className={`rounded border p-2 text-sm ${
-                                            anomaly.severity === 'error'
-                                                ? 'border-red-500 bg-red-100 text-red-800 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200'
-                                                : 'border-amber-500 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200'
-                                        }`}
-                                    >
-                                        <div className="font-medium">
-                                            [{anomaly.severity === 'error' ? 'ОШИБКА' : 'ПРЕДУПРЕЖДЕНИЕ'}] {anomaly.type}
-                                        </div>
-                                        <div className="mt-1">{anomaly.message}</div>
+                                    <div key={idx} className="space-y-2">
+                                        <AlertBanner
+                                            variant={anomaly.severity === 'error' ? 'danger' : 'warning'}
+                                            title={`[${anomaly.severity === 'error' ? 'ОШИБКА' : 'ПРЕДУПРЕЖДЕНИЕ'}] ${anomaly.type}`}
+                                            message={anomaly.message}
+                                        />
                                         {anomaly.data != null && (
-                                            <pre className="mt-2 overflow-auto text-xs">
+                                            <pre className="overflow-auto rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-3 text-xs text-[var(--text-secondary)]">
                                                 {JSON.stringify(anomaly.data as Record<string, unknown>, null, 2)}
                                             </pre>
                                         )}
@@ -429,13 +422,17 @@ export function PromotionsDebugClient() {
                         data.referrals.length === 0 &&
                         data.bookings.length === 0 &&
                         data.activePromotions.length === 0 && (
-                            <div className="rounded-lg border border-gray-200 bg-white p-4 text-center text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
-                                Данные не найдены
-                            </div>
+                            <EmptyState
+                                compact
+                                title="Данные не найдены"
+                                description="По указанным параметрам нет подходящих debug-данных."
+                            />
                         )}
                 </div>
             )}
         </div>
     );
 }
+
+
 

@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+
 type Props = {
     bizId: string;
     initial: {
@@ -91,43 +94,25 @@ export function BusinessCardEdit({ bizId, initial }: Props) {
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Основная информация</h2>
                 </div>
                 {!editing ? (
-                    <button
-                        type="button"
-                        onClick={() => setEditing(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
-                    >
+                    <Button type="button" variant="outline" onClick={() => setEditing(true)}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                         Редактировать
-                    </button>
+                    </Button>
                 ) : (
                     <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={handleCancel}
-                            disabled={saving}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
-                        >
+                        <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving}>
                             Отмена
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => void handleSave()}
-                            disabled={saving}
-                            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50"
-                        >
-                            {saving ? 'Сохранение…' : 'Сохранить'}
-                        </button>
+                        </Button>
+                        <Button type="button" onClick={() => void handleSave()} disabled={saving} isLoading={saving}>
+                            Сохранить
+                        </Button>
                     </div>
                 )}
             </div>
 
-            {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">
-                    {error}
-                </div>
-            )}
+            {error ? <AlertBanner variant="danger" message={error} className="mb-4" compact /> : null}
 
             {editing ? (
                 <div className="space-y-4">
