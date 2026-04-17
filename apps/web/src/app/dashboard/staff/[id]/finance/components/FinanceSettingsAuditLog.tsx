@@ -4,7 +4,12 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { useEffect, useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 import { logError } from '@/lib/log';
+import { TZ } from '@/lib/time';
 
 type FieldChange = { field: string; old_value: number | null; new_value: number | null };
 type AuditLogEntry = {
@@ -15,9 +20,6 @@ type AuditLogEntry = {
     field_changes: FieldChange[];
     message: string | null;
 };
-import { ru, enUS } from 'date-fns/locale';
-
-import { TZ } from '@/lib/time';
 
 const FIELD_LABELS: Record<string, string> = {
     percent_master: 'finance.auditLog.field.percentMaster',
@@ -50,8 +52,8 @@ export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }
                 if (cancelled || !data?.ok) return;
                 setEntries(data.data?.entries ?? []);
             })
-            .catch((e) => {
-                const message = e instanceof Error ? e.message : String(e);
+            .catch((value) => {
+                const message = value instanceof Error ? value.message : String(value);
                 logError('FinanceSettingsAuditLog', 'Failed to load audit log', {
                     staffId,
                     url,
@@ -67,61 +69,63 @@ export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }
         };
     }, [staffId]);
 
-    const locale = t('common.locale', 'ru') === 'ky' ? ru : t('common.locale', 'ru') === 'en' ? enUS : ru;
-    const dateFmt = 'dd.MM.yyyy HH:mm';
-
     return (
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                {t('finance.auditLog.title', 'Журнал изменений финансовых настроек')}
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                {t('finance.auditLog.subtitle', 'Кто и когда менял проценты и ставку за час')}
-            </p>
-            {loading && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">{t('finance.loading', 'Загрузка...')}</p>
-            )}
-            {error && (
-                <p className="text-sm text-red-600 dark:text-red-400">
-                    {t('finance.auditLog.loadError', 'Не удалось загрузить журнал')}
+        <Card variant="default" padding="lg" className="mt-6">
+            <SectionHeader
+                title={t('finance.auditLog.title', 'Finance settings audit')}
+                description={t(
+                    'finance.auditLog.subtitle',
+                    'Track who changed percentages and hourly guarantees, and when each change happened.',
+                )}
+                badge={<Badge variant="neutral">{entries.length}</Badge>}
+            />
+
+            {loading ? (
+                <p className="type-caption mt-4 text-[var(--text-muted)]">{t('finance.loading', 'Loading...')}</p>
+            ) : null}
+
+            {error ? (
+                <div className="mt-4">
+                    <AlertBanner
+                        variant="danger"
+                        title={t('finance.auditLog.loadErrorTitle', 'Failed to load audit log')}
+                        message={error}
+                    />
+                </div>
+            ) : null}
+
+            {!loading && !error && entries.length === 0 ? (
+                <p className="type-caption mt-4 text-[var(--text-muted)]">
+                    {t('finance.auditLog.empty', 'No finance setting changes yet')}
                 </p>
-            )}
-            {!loading && !error && entries.length === 0 && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {t('finance.auditLog.empty', 'Изменений пока не было')}
-                </p>
-            )}
-            {!loading && !error && entries.length > 0 && (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                        <thead>
-                            <tr className="bg-gray-50 dark:bg-gray-800">
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                    {t('finance.auditLog.when', 'Когда')}
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                    {t('finance.auditLog.who', 'Кто')}
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                    {t('finance.auditLog.changes', 'Изменения')}
-                                </th>
+            ) : null}
+
+            {!loading && !error && entries.length > 0 ? (
+                <div className="mt-4 overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border-subtle)]">
+                    <table className="min-w-full text-sm">
+                        <thead className="bg-[var(--surface-elevated)]">
+                            <tr className="text-left text-xs uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                                <th className="px-3 py-2">{t('finance.auditLog.when', 'When')}</th>
+                                <th className="px-3 py-2">{t('finance.auditLog.who', 'Who')}</th>
+                                <th className="px-3 py-2">{t('finance.auditLog.changes', 'Changes')}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-[var(--border-subtle)] bg-[var(--surface-card)]">
                             {entries.map((entry) => (
-                                <tr key={entry.id} className="border-t border-gray-200 dark:border-gray-700">
-                                    <td className="px-3 py-2 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                        {formatInTimeZone(new Date(entry.changed_at), TZ, dateFmt, { locale })}
+                                <tr key={entry.id}>
+                                    <td className="px-3 py-3 whitespace-nowrap text-[var(--text-secondary)]">
+                                        {formatInTimeZone(new Date(entry.changed_at), TZ, 'dd.MM.yyyy HH:mm')}
                                     </td>
-                                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">
-                                        {entry.changed_by_name || t('finance.auditLog.unknownUser', 'Пользователь')}
+                                    <td className="px-3 py-3 text-[var(--text-primary)]">
+                                        {entry.changed_by_name || t('finance.auditLog.unknownUser', 'Unknown user')}
                                     </td>
-                                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">
+                                    <td className="px-3 py-3 text-[var(--text-secondary)]">
                                         {entry.field_changes.length > 0 ? (
-                                            <ul className="list-none space-y-0.5">
-                                                {entry.field_changes.map((c, i) => (
-                                                    <li key={i}>
-                                                        {t(FIELD_LABELS[c.field] ?? c.field)}: {formatValue(c.old_value)} → {formatValue(c.new_value)}
+                                            <ul className="space-y-1">
+                                                {entry.field_changes.map((change, index) => (
+                                                    <li key={`${entry.id}-${index}`} className="type-caption">
+                                                        {t(FIELD_LABELS[change.field] ?? change.field, change.field)}: {formatValue(change.old_value)} →{' '}
+                                                        {formatValue(change.new_value)}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -134,7 +138,7 @@ export default function FinanceSettingsAuditLog({ staffId }: { staffId: string }
                         </tbody>
                     </table>
                 </div>
-            )}
-        </div>
+            ) : null}
+        </Card>
     );
 }

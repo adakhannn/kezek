@@ -25,6 +25,10 @@ export default function MotionPressable({
     ...props
 }: MotionPressableProps) {
     const animatedScale = useRef(new Animated.Value(1)).current;
+    const accessibilityState = {
+        ...props.accessibilityState,
+        disabled: disabled ?? props.accessibilityState?.disabled,
+    };
 
     const runScale = (toValue: number) => {
         Animated.spring(animatedScale, {
@@ -39,6 +43,8 @@ export default function MotionPressable({
     return (
         <Pressable
             disabled={disabled}
+            accessibilityRole={props.accessibilityRole ?? 'button'}
+            accessibilityState={accessibilityState}
             onPressIn={(event) => {
                 if (!disabled) {
                     runScale(motion.pressScale[scale]);

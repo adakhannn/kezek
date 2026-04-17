@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ToastContainer } from '@/components/ui/Toast';
@@ -15,46 +16,46 @@ type DeleteResp = ApiOk | ApiErr;
 export function DeleteBizButton({ bizId, bizName }: { bizId: string; bizName: string }) {
     const router = useRouter();
     const toast = useToast();
-    const [err, setErr] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
 
-    function extractError(e: unknown): string {
-        return e instanceof Error ? e.message : String(e);
+    function extractError(value: unknown): string {
+        return value instanceof Error ? value.message : String(value);
     }
 
     async function onDelete() {
-        setErr(null);
+        setError(null);
         setLoading(true);
         try {
-            const resp = await fetch(`/admin/api/businesses/${bizId}/delete`, {
+            const response = await fetch(`/admin/api/businesses/${bizId}/delete`, {
                 method: 'POST',
                 credentials: 'include',
             });
 
-            const ct = resp.headers.get('content-type') ?? '';
+            const contentType = response.headers.get('content-type') ?? '';
             let data: DeleteResp | null = null;
 
-            if (ct.includes('application/json')) {
-                data = (await resp.json()) as DeleteResp;
+            if (contentType.includes('application/json')) {
+                data = (await response.json()) as DeleteResp;
             } else {
-                const text = await resp.text();
-                if (!resp.ok) throw new Error(text.slice(0, 2000));
+                const text = await response.text();
+                if (!response.ok) throw new Error(text.slice(0, 2000));
                 data = { ok: true };
             }
 
-            if (!resp.ok || !('ok' in data) || !data.ok) {
-                const apiErr = (data && 'error' in data ? (data as ApiErr).error : undefined) ?? `HTTP ${resp.status}`;
-                throw new Error(apiErr);
+            if (!response.ok || !data?.ok) {
+                const apiError = data && 'error' in data ? data.error : `HTTP ${response.status}`;
+                throw new Error(apiError || `HTTP ${response.status}`);
             }
 
             toast.showSuccess('Бизнес удален.');
             setConfirmOpen(false);
             router.push('/admin/businesses');
             router.refresh();
-        } catch (e: unknown) {
-            const message = extractError(e);
-            setErr(message);
+        } catch (deleteError) {
+            const message = extractError(deleteError);
+            setError(message);
             toast.showError(message);
         } finally {
             setLoading(false);
@@ -71,9 +72,9 @@ export function DeleteBizButton({ bizId, bizName }: { bizId: string; bizName: st
                 disabled={loading}
                 isLoading={loading}
             >
-                {loading ? 'Удаляю…' : 'Удалить бизнес'}
+                {loading ? 'Удаляем…' : 'Удалить бизнес'}
             </Button>
-            {err && <div className="text-sm text-red-600">{err}</div>}
+            {error ? <AlertBanner variant="danger" message={error} compact /> : null}
             <ConfirmDialog
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
@@ -89,3 +90,4 @@ export function DeleteBizButton({ bizId, bizName }: { bizId: string; bizName: st
         </div>
     );
 }
+

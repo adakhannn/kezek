@@ -36,6 +36,7 @@ export type DashboardQuickAction = {
     href: string;
     title: string;
     hint: string;
+    emphasis: string;
     className: string;
     hintClassName: string;
 };
@@ -45,4 +46,12 @@ export type DashboardRatingFactor = {
     label: string;
     value: number;
     dotClassName: string;
+};
+
+export type DashboardHomeFocus = {
+    title: string;
+    description: string;
+    ctaLabel: string;
+    href: string;
+    tone: 'warning' | 'info' | 'success';
 };

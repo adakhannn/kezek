@@ -17,48 +17,52 @@ export function DeleteBranchButton({
     bizId,
     branchId,
     name,
-}: { bizId: string; branchId: string; name: string }) {
+}: {
+    bizId: string;
+    branchId: string;
+    name: string;
+}) {
     const router = useRouter();
     const toast = useToast();
-    const [err, setErr] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
 
-    function extractError(e: unknown): string {
-        return e instanceof Error ? e.message : String(e);
+    function extractError(value: unknown): string {
+        return value instanceof Error ? value.message : String(value);
     }
 
     async function onDelete() {
-        setErr(null);
+        setError(null);
         setLoading(true);
         try {
-            const resp = await fetch(
-                `/admin/api/businesses/${bizId}/branches/${branchId}/delete`,
-                { method: 'POST', credentials: 'include' }
-            );
+            const response = await fetch(`/admin/api/businesses/${bizId}/branches/${branchId}/delete`, {
+                method: 'POST',
+                credentials: 'include',
+            });
 
-            const ct = resp.headers.get('content-type') ?? '';
+            const contentType = response.headers.get('content-type') ?? '';
             let data: DeleteResp | null = null;
 
-            if (ct.includes('application/json')) {
-                data = (await resp.json()) as DeleteResp;
+            if (contentType.includes('application/json')) {
+                data = (await response.json()) as DeleteResp;
             } else {
-                const text = await resp.text();
-                if (!resp.ok) throw new Error(text.slice(0, 2000));
+                const text = await response.text();
+                if (!response.ok) throw new Error(text.slice(0, 2000));
                 data = { ok: true };
             }
 
-            if (!resp.ok || !('ok' in data) || !data.ok) {
-                const apiErr = (data && 'error' in data ? (data as ApiErr).error : undefined) ?? `HTTP ${resp.status}`;
-                throw new Error(apiErr);
+            if (!response.ok || !data?.ok) {
+                const apiError = data && 'error' in data ? data.error : `HTTP ${response.status}`;
+                throw new Error(apiError || `HTTP ${response.status}`);
             }
 
             toast.showSuccess('Филиал удален.');
             setConfirmOpen(false);
             router.refresh();
-        } catch (e: unknown) {
-            const message = extractError(e);
-            setErr(message);
+        } catch (deleteError) {
+            const message = extractError(deleteError);
+            setError(message);
             toast.showError(message);
         } finally {
             setLoading(false);
@@ -75,9 +79,9 @@ export function DeleteBranchButton({
                 disabled={loading}
                 isLoading={loading}
             >
-                {loading ? 'Удаляю…' : 'Удалить'}
+                {loading ? 'Удаляем…' : 'Удалить'}
             </Button>
-            {err ? <AlertBanner variant="danger" message={err} compact /> : null}
+            {error ? <AlertBanner variant="danger" message={error} compact /> : null}
             <ConfirmDialog
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
@@ -93,5 +97,4 @@ export function DeleteBranchButton({
         </div>
     );
 }
-
 

@@ -1,5 +1,6 @@
 import type {
     DashboardHomeClientProps,
+    DashboardHomeFocus,
     DashboardMetricCard,
     DashboardQuickAction,
     DashboardRatingFactor,
@@ -33,7 +34,7 @@ export function getDashboardHomeViewModel(
             ? t('dashboard.onboarding.noBranches', 'Создайте хотя бы один филиал, чтобы клиенты могли записываться.')
             : null,
         props.servicesActive === 0
-            ? t('dashboard.onboarding.noServices', 'Добавьте услуги и укажите продолжительность и цену.')
+            ? t('dashboard.onboarding.noServices', 'Добавьте услуги и укажите длительность и цену.')
             : null,
         props.staffActive === 0
             ? t('dashboard.onboarding.noStaff', 'Добавьте сотрудников и укажите, кто оказывает какие услуги.')
@@ -41,10 +42,52 @@ export function getDashboardHomeViewModel(
         props.bookingsToday === 0
             ? t(
                   'dashboard.onboarding.noBookings',
-                  'Проверьте «Календарь» — первые бронирования появятся здесь автоматически.',
+                  'Проверьте календарь и доступность команды. Первые записи появятся здесь автоматически.',
               )
             : null,
     ].filter((item): item is string => Boolean(item));
+
+    const primaryFocus: DashboardHomeFocus = props.needOnboarding
+        ? {
+              title: t('dashboard.commandCenter.focus.setupTitle', 'Сначала доведите кабинет до рабочего состояния'),
+              description:
+                  onboardingItems[0] ??
+                  t(
+                      'dashboard.commandCenter.focus.setupDesc',
+                      'Добавьте базовые сущности и проверьте настройки, чтобы команда и клиенты могли работать без блокеров.',
+                  ),
+              ctaLabel: t('dashboard.commandCenter.focus.setupCta', 'Завершить настройку'),
+              href:
+                  props.branchesCount === 0
+                      ? '/dashboard/branches'
+                      : props.servicesActive === 0
+                        ? '/dashboard/services'
+                        : props.staffActive === 0
+                          ? '/dashboard/staff'
+                          : '/dashboard/bookings',
+              tone: 'warning',
+          }
+        : props.bookingsToday > 0
+          ? {
+                title: t('dashboard.commandCenter.focus.todayTitle', 'Сегодня кабинет уже в рабочем режиме'),
+                description: t(
+                    'dashboard.commandCenter.focus.todayDesc',
+                    'Проверьте календарь, загрузку команды и будьте готовы к ближайшим клиентам.',
+                ),
+                ctaLabel: t('dashboard.commandCenter.focus.todayCta', 'Открыть календарь'),
+                href: '/dashboard/bookings',
+                tone: 'info',
+            }
+          : {
+                title: t('dashboard.commandCenter.focus.growthTitle', 'Сегодня можно заняться ростом кабинета'),
+                description: t(
+                    'dashboard.commandCenter.focus.growthDesc',
+                    'Записей на сегодня нет, поэтому это хорошее время обновить услуги, график и доступность команды.',
+                ),
+                ctaLabel: t('dashboard.commandCenter.focus.growthCta', 'Проверить услуги'),
+                href: '/dashboard/services',
+                tone: 'success',
+            };
 
     const metricCards: DashboardMetricCard[] = [
         {
@@ -54,11 +97,9 @@ export function getDashboardHomeViewModel(
             hint: t('dashboard.stats.bookingsTodayHint', 'в календаре записи'),
             href: '/dashboard/bookings',
             actionLabel: t('dashboard.kpi.openCalendar', 'Открыть календарь'),
-            borderClassName:
-                'border-indigo-100 hover:border-indigo-200 dark:border-indigo-900/40',
+            borderClassName: 'border-indigo-100 hover:border-indigo-200 dark:border-indigo-900/40',
             iconWrapperClassName: 'bg-indigo-50 text-indigo-500 dark:bg-indigo-950/40',
-            linkClassName:
-                'text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300',
+            linkClassName: 'text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300',
             icon: (
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path
@@ -77,11 +118,9 @@ export function getDashboardHomeViewModel(
             hint: t('dashboard.stats.activeStaffHint', 'готовы принимать клиентов'),
             href: '/dashboard/staff',
             actionLabel: t('dashboard.kpi.manageStaff', 'Управлять сотрудниками'),
-            borderClassName:
-                'border-emerald-100 hover:border-emerald-200 dark:border-emerald-900/40',
+            borderClassName: 'border-emerald-100 hover:border-emerald-200 dark:border-emerald-900/40',
             iconWrapperClassName: 'bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40',
-            linkClassName:
-                'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300',
+            linkClassName: 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300',
             icon: (
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path
@@ -97,14 +136,12 @@ export function getDashboardHomeViewModel(
             key: 'activeServices',
             value: props.servicesActive,
             title: t('dashboard.kpi.activeServices', 'Активные услуги'),
-            hint: '',
+            hint: t('dashboard.kpi.activeServicesHint', 'доступны для записи'),
             href: '/dashboard/services',
             actionLabel: t('dashboard.kpi.goToServices', 'Перейти к услугам'),
-            borderClassName:
-                'border-sky-100 hover:border-sky-200 dark:border-sky-900/40',
+            borderClassName: 'border-sky-100 hover:border-sky-200 dark:border-sky-900/40',
             iconWrapperClassName: 'bg-sky-50 text-sky-500 dark:bg-sky-950/40',
-            linkClassName:
-                'text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300',
+            linkClassName: 'text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300',
             icon: (
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path
@@ -120,14 +157,12 @@ export function getDashboardHomeViewModel(
             key: 'branches',
             value: props.branchesCount,
             title: t('dashboard.kpi.branches', 'Филиалы'),
-            hint: '',
+            hint: t('dashboard.kpi.branchesHint', 'рабочие точки бизнеса'),
             href: '/dashboard/branches',
             actionLabel: t('dashboard.kpi.branchesList', 'Список филиалов'),
-            borderClassName:
-                'border-purple-100 hover:border-purple-200 dark:border-purple-900/40',
+            borderClassName: 'border-purple-100 hover:border-purple-200 dark:border-purple-900/40',
             iconWrapperClassName: 'bg-purple-50 text-purple-500 dark:bg-purple-950/40',
-            linkClassName:
-                'text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300',
+            linkClassName: 'text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300',
             icon: (
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path
@@ -145,8 +180,9 @@ export function getDashboardHomeViewModel(
         {
             key: 'openCalendar',
             href: '/dashboard/bookings',
-            title: t('dashboard.quickActions.openCalendar', 'Открыть «Календарь»'),
+            title: t('dashboard.quickActions.openCalendar', 'Открыть календарь'),
             hint: t('dashboard.quickActions.openCalendarHint', 'посмотреть ближайшие записи'),
+            emphasis: t('dashboard.quickActions.openCalendarEmphasis', 'Контроль дня'),
             className:
                 'border-indigo-100 bg-indigo-50/60 text-indigo-800 hover:border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-100',
             hintClassName: 'text-indigo-700/80 dark:text-indigo-200/90',
@@ -155,7 +191,8 @@ export function getDashboardHomeViewModel(
             key: 'addStaff',
             href: '/dashboard/staff/new',
             title: t('dashboard.quickActions.addStaff', 'Добавить сотрудника'),
-            hint: t('dashboard.quickActions.addStaffHint', 'добавить сотрудника в систему'),
+            hint: t('dashboard.quickActions.addStaffHint', 'усилить команду или открыть новую смену'),
+            emphasis: t('dashboard.quickActions.addStaffEmphasis', 'Рост команды'),
             className:
                 'border-emerald-100 bg-emerald-50/60 text-emerald-800 hover:border-emerald-200 hover:bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100',
             hintClassName: 'text-emerald-700/80 dark:text-emerald-200/90',
@@ -164,7 +201,8 @@ export function getDashboardHomeViewModel(
             key: 'addService',
             href: '/dashboard/services/new',
             title: t('dashboard.quickActions.addService', 'Добавить услугу'),
-            hint: t('dashboard.quickActions.addServiceHint', 'указать цену и длительность'),
+            hint: t('dashboard.quickActions.addServiceHint', 'обновить каталог, цену и длительность'),
+            emphasis: t('dashboard.quickActions.addServiceEmphasis', 'Каталог услуг'),
             className:
                 'border-sky-100 bg-sky-50/60 text-sky-800 hover:border-sky-200 hover:bg-sky-50 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-100',
             hintClassName: 'text-sky-700/80 dark:text-sky-200/90',
@@ -173,7 +211,8 @@ export function getDashboardHomeViewModel(
             key: 'assignServices',
             href: '/dashboard/staff',
             title: t('dashboard.quickActions.assignServices', 'Назначить услуги сотруднику'),
-            hint: t('dashboard.quickActions.assignServicesHint', 'распределить услуги по сотрудникам'),
+            hint: t('dashboard.quickActions.assignServicesHint', 'проверить связки между командой и услугами'),
+            emphasis: t('dashboard.quickActions.assignServicesEmphasis', 'Операционная точность'),
             className:
                 'border-purple-100 bg-purple-50/60 text-purple-800 hover:border-purple-200 hover:bg-purple-50 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-100',
             hintClassName: 'text-purple-700/80 dark:text-purple-200/90',
@@ -202,7 +241,7 @@ export function getDashboardHomeViewModel(
               },
               {
                   key: 'discipline',
-                  label: t('dashboard.rating.factor.discipline', 'Дисциплина (опоздания)'),
+                  label: t('dashboard.rating.factor.discipline', 'Дисциплина'),
                   value: props.ratingWeights.discipline,
                   dotClassName: 'bg-rose-500',
               },
@@ -213,6 +252,7 @@ export function getDashboardHomeViewModel(
         displayBizName,
         formattedDateLocalized,
         onboardingItems,
+        primaryFocus,
         metricCards,
         quickActions,
         ratingFactors,

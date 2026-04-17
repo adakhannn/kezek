@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { TelegramLinkWidget } from './TelegramLinkWidget';
 
@@ -38,6 +38,15 @@ export default function ProfileForm() {
         notify_telegram: true,
         telegram_connected: false,
     });
+    const [initialProfile, setInitialProfile] = useState<Profile>({
+        full_name: null,
+        phone: null,
+        notify_email: true,
+        notify_whatsapp: true,
+        whatsapp_verified: false,
+        notify_telegram: true,
+        telegram_connected: false,
+    });
     const [otpCode, setOtpCode] = useState('');
     const [otpSending, setOtpSending] = useState(false);
     const [otpVerifying, setOtpVerifying] = useState(false);
@@ -46,6 +55,24 @@ export default function ProfileForm() {
     useEffect(() => {
         loadProfile();
     }, []);
+
+    useEffect(() => {
+        if (!message) return;
+        const timeoutId = window.setTimeout(() => setMessage(null), 3500);
+        return () => window.clearTimeout(timeoutId);
+    }, [message]);
+
+    const normalizedPhone = (profile.phone ?? '').trim();
+    const phoneValidationError =
+        normalizedPhone && !/^\+?[0-9\s()-]{8,20}$/.test(normalizedPhone)
+            ? t('cabinet.profile.phone.invalid', 'Укажите корректный номер телефона')
+            : null;
+
+    const isDirty = useMemo(() => {
+        return JSON.stringify(profile) !== JSON.stringify(initialProfile);
+    }, [initialProfile, profile]);
+
+    const canSubmit = isDirty && !saving && !phoneValidationError;
 
     async function loadProfile() {
         setLoading(true);
@@ -71,7 +98,7 @@ export default function ProfileForm() {
             const telegramFromProfile = !!data?.telegram_id && !!data?.telegram_verified;
             const telegramFromMeta = !!meta.telegram_id;
 
-            setProfile({
+            const nextProfile = {
                 full_name: data?.full_name ?? null,
                 phone: data?.phone ?? null,
                 notify_email: data?.notify_email ?? true,
@@ -79,7 +106,10 @@ export default function ProfileForm() {
                 whatsapp_verified: data?.whatsapp_verified ?? false,
                 notify_telegram: data?.notify_telegram ?? true,
                 telegram_connected: telegramFromProfile || telegramFromMeta,
-            });
+            };
+
+            setProfile(nextProfile);
+            setInitialProfile(nextProfile);
         } catch (e) {
             const { logError } = require('@/lib/log');
             logError('ProfileForm', 'Error loading profile', e);
@@ -90,6 +120,14 @@ export default function ProfileForm() {
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        if (!isDirty) {
+            setMessage(t('cabinet.profile.noChanges', 'Изменений пока нет'));
+            return;
+        }
+        if (phoneValidationError) {
+            setError(phoneValidationError);
+            return;
+        }
         setSaving(true);
         setMessage(null);
         setError(null);
@@ -100,7 +138,7 @@ export default function ProfileForm() {
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
                     full_name: profile.full_name || null,
-                    phone: profile.phone || null,
+                    phone: normalizedPhone || null,
                     notify_email: profile.notify_email,
                     notify_whatsapp: profile.notify_whatsapp,
                     notify_telegram: profile.notify_telegram,
@@ -112,8 +150,13 @@ export default function ProfileForm() {
                 throw new Error(data.message || data.error || t('cabinet.profile.error.save', 'РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё'));
             }
 
-            setMessage(t('cabinet.profile.saved', 'РџСЂРѕС„РёР»СЊ РѕР±РЅРѕРІР»РµРЅ'));
-            setTimeout(() => setMessage(null), 3000);
+            const nextProfile = {
+                ...profile,
+                phone: normalizedPhone || null,
+            };
+            setProfile(nextProfile);
+            setInitialProfile(nextProfile);
+            setMessage(t('cabinet.profile.saved', 'Профиль обновлен'));
             router.refresh();
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -146,7 +189,6 @@ export default function ProfileForm() {
 
             setMessage(t('cabinet.profile.whatsapp.codeSent', 'РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РЅР° WhatsApp'));
             setShowOtpInput(true);
-            setTimeout(() => setMessage(null), 5000);
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setError(msg);
@@ -181,13 +223,20 @@ export default function ProfileForm() {
             setProfile({ ...profile, whatsapp_verified: true });
             setShowOtpInput(false);
             setOtpCode('');
-            setTimeout(() => setMessage(null), 5000);
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             setError(msg);
         } finally {
             setOtpVerifying(false);
         }
+    }
+
+    function resetChanges() {
+        setProfile(initialProfile);
+        setError(null);
+        setMessage(t('cabinet.profile.reset', 'Изменения отменены'));
+        setShowOtpInput(false);
+        setOtpCode('');
     }
 
     if (loading) {
@@ -203,29 +252,54 @@ export default function ProfileForm() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            <Input
-                label={t('cabinet.profile.name.label', 'РРјСЏ')}
-                value={profile.full_name || ''}
-                onChange={(e) => setProfile({ ...profile, full_name: e.target.value || null })}
-                placeholder={t('cabinet.profile.name.placeholder', 'Р’Р°С€Рµ РёРјСЏ')}
-            />
+            <Card variant="default" padding="lg" className="space-y-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h3 className="type-section-title text-gray-900 dark:text-gray-100">
+                            {t('cabinet.profile.section.personal', 'Личные данные')}
+                        </h3>
+                        <p className="type-caption mt-1 text-gray-500 dark:text-gray-400">
+                            {t('cabinet.profile.section.personalDesc', 'Поддерживайте профиль актуальным, чтобы связь и запись проходили без лишнего трения')}
+                        </p>
+                    </div>
+                    <div className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
+                        {isDirty
+                            ? t('cabinet.profile.unsaved', 'Есть несохраненные изменения')
+                            : t('cabinet.profile.synced', 'Все изменения сохранены')}
+                    </div>
+                </div>
+                <Input
+                    label={t('cabinet.profile.name.label', 'РРјСЏ')}
+                    value={profile.full_name || ''}
+                    onChange={(e) => {
+                        setProfile({ ...profile, full_name: e.target.value || null });
+                        setError(null);
+                    }}
+                    placeholder={t('cabinet.profile.name.placeholder', 'Р’Р°С€Рµ РёРјСЏ')}
+                />
 
-            <Input
-                label={t('cabinet.profile.phone.label', 'РўРµР»РµС„РѕРЅ')}
-                type="tel"
-                value={profile.phone || ''}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value || null })}
-                placeholder={t('cabinet.profile.phone.placeholder', '+996555123456')}
-                helperText={
-                    !profile.phone
-                        ? t('cabinet.profile.phone.warning.desc', 'Р­С‚Рѕ РЅСѓР¶РЅРѕ РґР»СЏ СЃРІСЏР·Рё СЃ РІР°РјРё')
-                        : t(
-                              'cabinet.profile.phone.description',
-                              'РЈРєР°Р¶РёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°, С‡С‚РѕР±С‹ РјР°СЃС‚РµСЂР° РјРѕРіР»Рё СЃРІСЏР·Р°С‚СЊСЃСЏ СЃ РІР°РјРё РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё',
-                          )
-                }
-                className={!profile.phone ? 'border-amber-300 bg-amber-50/50 focus:border-amber-400 dark:border-amber-700 dark:bg-amber-950/20' : undefined}
-            />
+                <Input
+                    label={t('cabinet.profile.phone.label', 'РўРµР»РµС„РѕРЅ')}
+                    type="tel"
+                    value={profile.phone || ''}
+                    onChange={(e) => {
+                        setProfile({ ...profile, phone: e.target.value || null });
+                        setError(null);
+                    }}
+                    placeholder={t('cabinet.profile.phone.placeholder', '+996555123456')}
+                    helperText={
+                        !profile.phone
+                            ? t('cabinet.profile.phone.warning.desc', 'Р­С‚Рѕ РЅСѓР¶РЅРѕ РґР»СЏ СЃРІСЏР·Рё СЃ РІР°РјРё')
+                            : t(
+                                  'cabinet.profile.phone.description',
+                                  'РЈРєР°Р¶РёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°, С‡С‚РѕР±С‹ РјР°СЃС‚РµСЂР° РјРѕРіР»Рё СЃРІСЏР·Р°С‚СЊСЃСЏ СЃ РІР°РјРё РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё',
+                              )
+                    }
+                    error={phoneValidationError ?? undefined}
+                    className={!profile.phone ? 'border-amber-300 bg-amber-50/50 focus:border-amber-400 dark:border-amber-700 dark:bg-amber-950/20' : undefined}
+                />
+
+            </Card>
 
             {!profile.phone && (
                 <Card
@@ -272,7 +346,10 @@ export default function ProfileForm() {
                         <input
                             type="checkbox"
                             checked={profile.notify_email}
-                            onChange={(e) => setProfile({ ...profile, notify_email: e.target.checked })}
+                            onChange={(e) => {
+                                setProfile({ ...profile, notify_email: e.target.checked });
+                                setError(null);
+                            }}
                             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
                     </label>
@@ -291,7 +368,10 @@ export default function ProfileForm() {
                                 <input
                                     type="checkbox"
                                     checked={profile.notify_whatsapp}
-                                    onChange={(e) => setProfile({ ...profile, notify_whatsapp: e.target.checked })}
+                                    onChange={(e) => {
+                                        setProfile({ ...profile, notify_whatsapp: e.target.checked });
+                                        setError(null);
+                                    }}
                                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                 />
                             </label>
@@ -378,12 +458,13 @@ export default function ProfileForm() {
                         <input
                             type="checkbox"
                             checked={profile.notify_telegram}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setProfile({
                                     ...profile,
                                     notify_telegram: e.target.checked,
-                                })
-                            }
+                                });
+                                setError(null);
+                            }}
                             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
                     </label>
@@ -398,7 +479,6 @@ export default function ProfileForm() {
                                     onSuccess={() => {
                                         loadProfile();
                                         setMessage(t('cabinet.profile.telegram.connected', 'Telegram СѓСЃРїРµС€РЅРѕ РїРѕРґРєР»СЋС‡РµРЅ!'));
-                                        setTimeout(() => setMessage(null), 3000);
                                     }}
                                     onError={(err) => {
                                         setError(err);
@@ -445,9 +525,43 @@ export default function ProfileForm() {
 
             {error ? <AlertBanner variant="danger" message={error} /> : null}
 
-            <Button type="submit" fullWidth isLoading={saving}>
-                {saving ? t('cabinet.profile.saving', 'РЎРѕС…СЂР°РЅРµРЅРёРµ...') : t('cabinet.profile.save', 'РЎРѕС…СЂР°РЅРёС‚СЊ')}
-            </Button>
+            {isDirty && !error ? (
+                <AlertBanner
+                    variant="info"
+                    title={t('cabinet.profile.unsavedTitle', 'Изменения еще не сохранены')}
+                    message={t('cabinet.profile.unsavedMessage', 'Проверьте данные и сохраните профиль, чтобы обновления применились к следующим записям и уведомлениям')}
+                />
+            ) : null}
+
+            <Card variant="elevated" padding="md" className="sticky bottom-4 z-10 border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)] backdrop-blur">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="type-label text-gray-900 dark:text-gray-100">
+                            {isDirty
+                                ? t('cabinet.profile.saveBar.titleDirty', 'Профиль изменен')
+                                : t('cabinet.profile.saveBar.titleClean', 'Профиль актуален')}
+                        </p>
+                        <p className="type-caption mt-1 text-gray-500 dark:text-gray-400">
+                            {isDirty
+                                ? t('cabinet.profile.saveBar.descDirty', 'Сохраните изменения, когда будете готовы')
+                                : t('cabinet.profile.saveBar.descClean', 'Новых действий не требуется')}
+                        </p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={resetChanges}
+                            disabled={!isDirty || saving}
+                        >
+                            {t('common.reset', 'Сбросить')}
+                        </Button>
+                        <Button type="submit" isLoading={saving} disabled={!canSubmit}>
+                            {saving ? t('cabinet.profile.saving', 'РЎРѕС…СЂР°РЅРµРЅРёРµ...') : t('cabinet.profile.save', 'РЎРѕС…СЂР°РЅРёС‚СЊ')}
+                        </Button>
+                    </div>
+                </div>
+            </Card>
         </form>
     );
 }

@@ -1,11 +1,8 @@
 'use client';
 
-
 import { filterServicesForStaff, resolveScheduleContext } from '@core-domain/schedule';
 import { addDays } from 'date-fns';
 import { useMemo, useState } from 'react';
-
-
 
 import { QuickDeskClientSection } from './QuickDeskClientSection';
 import { useQuickBooking } from './useQuickBooking';
@@ -18,10 +15,10 @@ import { useTemporaryTransfers } from './useTemporaryTransfers';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { StatusPanel, StatusItem } from '@/components/dashboard';
+import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { logDebug } from '@/lib/log';
 import { formatDateInTz, todayStringInTz } from '@/lib/time';
-
 
 type TabKey = 'calendar' | 'list' | 'desk';
 
@@ -35,7 +32,6 @@ type ServiceRow = {
 };
 
 type StaffRow = { id: string; full_name: string; branch_id: string };
-
 type BranchRow = { id: string; name: string };
 
 type QuickDeskProps = {
@@ -58,7 +54,6 @@ export function QuickDesk({
     const { t, locale } = useLanguage();
     const toast = useToast();
     const [branchId, _setBranchId] = useState<string>('');
-
     const [serviceId, setServiceId] = useState<string>('');
     const [staffId, setStaffId] = useState<string>('');
     const [date, setDate] = useState<string>(() => todayStringInTz(timezone));
@@ -66,10 +61,7 @@ export function QuickDesk({
     const temporaryTransfers = useTemporaryTransfers(bizId, date, staff);
     const serviceToStaffMap = useServiceStaffMap(staff);
 
-    const staffForSchedule = useMemo(
-        () => staff.map((s) => ({ id: s.id, branch_id: s.branch_id })),
-        [staff],
-    );
+    const staffForSchedule = useMemo(() => staff.map((member) => ({ id: member.id, branch_id: member.branch_id })), [staff]);
 
     const scheduleContext = useMemo(
         () =>
@@ -135,7 +127,7 @@ export function QuickDesk({
 
     const quickBooking = useQuickBooking({
         getParams: () => {
-            const svc = servicesByBranch.find((s) => s.id === serviceId);
+            const svc = servicesByBranch.find((service) => service.id === serviceId);
             if (!svc) {
                 return { ok: false, error: t('bookings.desk.errors.selectService', 'Выбери услугу') };
             }
@@ -148,6 +140,7 @@ export function QuickDesk({
             if (!staffId) {
                 return { ok: false, error: t('bookings.desk.errors.selectMaster', 'Выбери мастера') };
             }
+
             const createCtx =
                 branchId && date
                     ? resolveScheduleContext({
@@ -158,6 +151,7 @@ export function QuickDesk({
                           staff: staffForSchedule,
                       })
                     : null;
+
             const targetBranchId = createCtx?.targetBranchId ?? branchId;
             if (createCtx?.isTemporaryTransfer) {
                 logDebug('QuickDesk', 'Creating booking with temporary branch', {
@@ -167,10 +161,12 @@ export function QuickDesk({
                     selectedBranch: branchId,
                 });
             }
+
             const clientResult = client.getClientPayload(t);
             if (!clientResult.ok) {
                 return { ok: false, error: clientResult.error };
             }
+
             const { clientId, clientName, clientPhone } = clientResult.payload;
             return {
                 ok: true,
@@ -194,165 +190,125 @@ export function QuickDesk({
             slotsApi.clearSlots();
             client.reset();
         },
-        showError: (msg) => toast.showError(msg),
+        showError: (message) => toast.showError(message),
     });
 
-    const canCreate =
-        branchId &&
-        serviceId &&
-        staffId &&
-        slotsApi.slotStartISO &&
-        client.canSubmitClient;
-
+    const canCreate = branchId && serviceId && staffId && slotsApi.slotStartISO && client.canSubmitClient;
     const today = todayStringInTz(timezone);
     const tomorrow = formatDateInTz(addDays(new Date(), 1), timezone);
 
     return (
-        <section className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4 sm:space-y-6">
-            <StatusPanel
-                title={t('bookings.desk.statusPanel.title', 'Статус на сегодня/завтра')}
-                loading={statusStats.loading}
-            >
-                <div className="grid grid-cols-2 gap-4">
-                    <StatusItem
-                        label={t('bookings.desk.statusPanel.today', 'Сегодня')}
-                        value={`${statusStats.todayCount} ${t(
-                            'bookings.desk.statusPanel.bookings',
-                            'записей',
-                        )}`}
-                        subtitle={
-                            slotsApi.slots.length > 0 && date === today
-                                ? `${slotsApi.slots.length} ${t(
-                                      'bookings.desk.statusPanel.freeSlots',
-                                      'свободных слотов',
-                                  )}`
-                                : undefined
-                        }
-                    />
-                    <StatusItem
-                        label={t('bookings.desk.statusPanel.tomorrow', 'Завтра')}
-                        value={`${statusStats.tomorrowCount} ${t(
-                            'bookings.desk.statusPanel.bookings',
-                            'записей',
-                        )}`}
-                        subtitle={
-                            slotsApi.slots.length > 0 && date === tomorrow
-                                ? `${slotsApi.slots.length} ${t(
-                                      'bookings.desk.statusPanel.freeSlots',
-                                      'свободных слотов',
-                                  )}`
-                                : undefined
-                        }
-                    />
-                </div>
-            </StatusPanel>
-
-            <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                        <svg
-                            className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                            />
-                        </svg>
-                        <span className="hidden sm:inline">
-                            {t('bookings.desk.title', 'Быстрая запись (стойка)')}
-                        </span>
-                        <span className="sm:hidden">{t('bookings.desk.title', 'Стойка')}</span>
-                    </h2>
-                </div>
-
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <button
-                        type="button"
-                        className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white shadow-md transition-all duration-200 bg-gradient-to-r from-indigo-600 to-pink-600 ${
-                            !canCreate || quickBooking.creating
-                                ? 'opacity-60 cursor-not-allowed'
-                                : 'hover:from-indigo-700 hover:to-pink-700 hover:shadow-lg'
-                        }`}
-                        onClick={quickBooking.create}
-                        disabled={!canCreate || quickBooking.creating}
-                    >
-                        {quickBooking.creating ? (
-                            <>
-                                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    />
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                    />
-                                </svg>
-                                {t('bookings.desk.creating', 'Создание...')}
-                            </>
-                        ) : (
-                            <>
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                    />
-                                </svg>
-                                {t('bookings.desk.create', 'Создать запись')}
-                            </>
-                        )}
-                    </button>
-
-                    {onTabChange && (
-                        <div className="flex flex-wrap gap-2">
-                            <button
-                                type="button"
-                                onClick={() => onTabChange('calendar')}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-                            >
-                                {t('bookings.desk.statusPanel.goToCalendar', 'Календарь')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onTabChange('list')}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-gray-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-                            >
-                                {t('bookings.desk.statusPanel.goToList', 'Список')}
-                            </button>
+        <section className="rounded-[28px] border border-[var(--border-default)] bg-[var(--surface-card)] p-4 shadow-[var(--shadow-md)] sm:p-5 lg:p-6">
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+                <div className="space-y-4">
+                    <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <p className="type-label text-[var(--text-secondary)]">{t('bookings.desk.mode', 'Режим стойки')}</p>
+                                <h2 className="type-section-title mt-1 text-[var(--text-primary)]">
+                                    {t('bookings.desk.title', 'Быстрая запись')}
+                                </h2>
+                                <p className="type-body mt-2 text-[var(--text-muted)]">
+                                    {t(
+                                        'bookings.desk.description',
+                                        'Используйте этот режим, когда клиент уже перед администратором и нужна максимально быстрая запись без длинного маршрута по разделам.',
+                                    )}
+                                </p>
+                            </div>
+                            <span className="inline-flex rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)]">
+                                QuickDesk
+                            </span>
                         </div>
-                    )}
+                    </div>
+
+                    <StatusPanel title={t('bookings.desk.statusPanel.title', 'Статус на сегодня/завтра')} loading={statusStats.loading}>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <StatusItem
+                                label={t('bookings.desk.statusPanel.today', 'Сегодня')}
+                                value={`${statusStats.todayCount} ${t('bookings.desk.statusPanel.bookings', 'записей')}`}
+                                subtitle={
+                                    slotsApi.slots.length > 0 && date === today
+                                        ? `${slotsApi.slots.length} ${t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}`
+                                        : undefined
+                                }
+                            />
+                            <StatusItem
+                                label={t('bookings.desk.statusPanel.tomorrow', 'Завтра')}
+                                value={`${statusStats.tomorrowCount} ${t('bookings.desk.statusPanel.bookings', 'записей')}`}
+                                subtitle={
+                                    slotsApi.slots.length > 0 && date === tomorrow
+                                        ? `${slotsApi.slots.length} ${t('bookings.desk.statusPanel.freeSlots', 'свободных слотов')}`
+                                        : undefined
+                                }
+                            />
+                        </div>
+                    </StatusPanel>
+
+                    <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="type-label text-[var(--text-secondary)]">
+                                    {t('bookings.desk.primaryAction', 'Основное действие')}
+                                </p>
+                                <p className="type-body mt-1 text-[var(--text-muted)]">
+                                    {t(
+                                        'bookings.desk.primaryActionDesc',
+                                        'Как только выбраны параметры и клиент, создавайте запись отсюда. Это главный action bar для стойки.',
+                                    )}
+                                </p>
+                            </div>
+                            <Button
+                                type="button"
+                                onClick={quickBooking.create}
+                                disabled={!canCreate || quickBooking.creating}
+                                isLoading={quickBooking.creating}
+                            >
+                                {quickBooking.creating ? t('bookings.desk.creating', 'Создание...') : t('bookings.desk.create', 'Создать запись')}
+                            </Button>
+                        </div>
+
+                        {onTabChange ? (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <Button
+                                    type="button"
+                                    onClick={() => onTabChange('calendar')}
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    {t('bookings.desk.statusPanel.goToCalendar', 'Календарь')}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={() => onTabChange('list')}
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    {t('bookings.desk.statusPanel.goToList', 'Список')}
+                                </Button>
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <QuickDeskClientSection
+                        clientMode={client.clientMode}
+                        setClientMode={client.setClientMode}
+                        searchQ={client.searchQ}
+                        setSearchQ={client.setSearchQ}
+                        foundUsers={client.foundUsers}
+                        selectedClientId={client.selectedClientId}
+                        setSelectedClientId={client.setSelectedClientId}
+                        newClientName={client.newClientName}
+                        setNewClientName={client.setNewClientName}
+                        newClientPhone={client.newClientPhone}
+                        setNewClientPhone={client.setNewClientPhone}
+                        searchLoading={client.searchLoading}
+                        searchErr={client.searchErr}
+                        t={t}
+                    />
                 </div>
             </div>
-
-            <QuickDeskClientSection
-                clientMode={client.clientMode}
-                setClientMode={client.setClientMode}
-                searchQ={client.searchQ}
-                setSearchQ={client.setSearchQ}
-                foundUsers={client.foundUsers}
-                selectedClientId={client.selectedClientId}
-                setSelectedClientId={client.setSelectedClientId}
-                newClientName={client.newClientName}
-                setNewClientName={client.setNewClientName}
-                newClientPhone={client.newClientPhone}
-                setNewClientPhone={client.setNewClientPhone}
-                searchLoading={client.searchLoading}
-                searchErr={client.searchErr}
-                t={t}
-            />
         </section>
     );
 }
-

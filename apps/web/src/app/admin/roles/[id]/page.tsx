@@ -2,6 +2,7 @@ import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
 import Link from 'next/link';
 
+import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
 import EditRoleClient from './EditRoleClient';
 
 export const dynamic = 'force-dynamic';
@@ -95,6 +96,8 @@ export default async function RoleEditPage({ params }: { params: Promise<{ id: s
                         </Link>
                     </div>
                 </section>
+
+                <AdminEntityFlowTabs entity="roles" detailHref={`/admin/roles/${role.id}`} className="max-w-3xl" />
 
                 <EditRoleClient role={role}/>
             </div>

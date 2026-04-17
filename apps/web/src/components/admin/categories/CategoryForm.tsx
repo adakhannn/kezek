@@ -23,15 +23,13 @@ type CreateBody = {
     is_active: boolean;
 };
 
-/** Транслитерация ru/ky + нормализация в slug */
+/** Transliterate RU/KY text and normalize it for URL-safe slugs. */
 function makeSlug(input: string): string {
     const map: Record<string, string> = {
-        // ru
         а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
         к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f',
-        х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'shch', ы: 'y', э: 'e', ю: 'yu', я: 'ya', ъ: '', ь: '',
-        // ky (базово)
-        ӊ: 'ng', ү: 'u', ө: 'o', Ң: 'ng', Ү: 'u', Ө: 'o',
+        х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ы: 'y', э: 'e', ю: 'yu', я: 'ya', ъ: '', ь: '',
+        ң: 'ng', ү: 'u', ө: 'o', қ: 'k', ғ: 'g', ә: 'a', ұ: 'u', і: 'i', һ: 'h',
     };
 
     const lower = input.toLowerCase().trim();
@@ -39,15 +37,14 @@ function makeSlug(input: string): string {
     for (const ch of lower) out += map[ch] ?? ch;
 
     return out
-        .replace(/[^a-z0-9]+/g, '-') // всё кроме латиницы/цифр → дефис
-        .replace(/^-+|-+$/g, '')     // крайние дефисы
-        .replace(/-+/g, '-');        // подряд дефисы → один
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-+/g, '-');
 }
 
-function isValidSlug(s: string): boolean {
-    // Разрешаем пустой (бэкенд может сам сгенерить), иначе латиница/цифры/дефис, длина ≥2
-    if (!s.trim()) return true;
-    return /^[a-z0-9-]{2,}$/.test(s);
+function isValidSlug(value: string): boolean {
+    if (!value.trim()) return true;
+    return /^[a-z0-9-]{2,}$/.test(value);
 }
 
 export function CategoryForm({ mode, categoryId, initial }: Props) {
@@ -57,16 +54,12 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
     const [slug, setSlug] = useState<string>(initial?.slug ?? '');
     const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // если пользователь трогал slug руками — авто-генерацию выключаем
     const [slugDirty, setSlugDirty] = useState<boolean>(false);
-
-    // защита от двойного эффекта в dev
     const initRef = useRef(false);
 
-    // Авто-slug из nameRu (и при create, и при edit), пока slug не редактировали вручную
     useEffect(() => {
-        // при первом рендере, если есть initial.slug, считаем, что slug уже задан вручную
         if (!initRef.current) {
             initRef.current = true;
             if (mode === 'edit' && initial?.slug) setSlugDirty(true);
@@ -76,12 +69,13 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
 
         if (!nameRu.trim()) {
             setSlug('');
-        } else {
-            setSlug((prev) => {
-                const next = makeSlug(nameRu);
-                return prev === next ? prev : next;
-            });
+            return;
         }
+
+        setSlug((prev) => {
+            const next = makeSlug(nameRu);
+            return prev === next ? prev : next;
+        });
     }, [nameRu, slugDirty, mode, initial?.slug]);
 
     const changed = useMemo(() => {
@@ -103,7 +97,7 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
         e.preventDefault();
         setError(null);
         setLoading(true);
-        
+
         const url =
             mode === 'create'
                 ? '/admin/api/categories/create'
@@ -119,14 +113,14 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                 mode === 'create'
                     ? ({
                         name_ru: nameRu.trim(),
-                        slug: slug.trim() ? makeSlug(slug) : null, // нормализуем перед отправкой
+                        slug: slug.trim() ? makeSlug(slug) : null,
                         is_active: isActive,
                     } satisfies CreateBody)
                     : {
                         name_ru: nameRu.trim() || null,
                         slug: slug.trim() ? makeSlug(slug) : null,
                         is_active: isActive,
-                        propagateSlug: true, // как раньше по умолчанию
+                        propagateSlug: true,
                     };
 
             const resp = await fetch(url, {
@@ -147,26 +141,22 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                 data = { ok: true };
             }
 
-            if (!resp.ok || !('ok' in data) || !data.ok) {
-                const apiErr = (data && 'error' in data ? (data as ApiErr).error : undefined) ?? `HTTP ${resp.status}`;
+            if (!resp.ok || !data || !data.ok) {
+                const apiErr = (data && 'error' in data ? data.error : undefined) ?? `HTTP ${resp.status}`;
                 throw new Error(apiErr);
             }
 
             router.push('/admin/categories');
             router.refresh();
         } catch (e) {
-            // мягко показываем ошибку
             setError(extractError(e));
         } finally {
             setLoading(false);
         }
     }
 
-    const [error, setError] = useState<string | null>(null);
-
     return (
         <form onSubmit={submit} className="space-y-6">
-            {/* Название */}
             <div>
                 <Input
                     label="Название категории"
@@ -178,7 +168,6 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                 />
             </div>
 
-            {/* Slug */}
             <div>
                 <Input
                     label="Slug (URL-идентификатор)"
@@ -186,27 +175,26 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                     value={slug}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         setSlug(e.target.value);
-                        setSlugDirty(true); // пользователь начал править — отключаем авто
+                        setSlugDirty(true);
                     }}
                     onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-                        const v = e.target.value.trim();
-                        if (!v) {
-                            // очищено — снова включаем автогенерацию
+                        const value = e.target.value.trim();
+                        if (!value) {
                             setSlugDirty(false);
                             setSlug(makeSlug(nameRu));
-                        } else {
-                            setSlug(makeSlug(v)); // нормализуем вручную введённый slug
+                            return;
                         }
+                        setSlug(makeSlug(value));
                     }}
                     helperText={
-                        slugDirty 
-                            ? "Slug будет автоматически нормализован (латиница, дефисы)"
-                            : "Slug генерируется автоматически из названия. Можно редактировать вручную."
+                        slugDirty
+                            ? 'Slug будет автоматически нормализован (латиница, цифры и дефисы)'
+                            : 'Slug генерируется автоматически из названия. Его можно отредактировать вручную.'
                     }
                 />
                 {slug && (
-                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Предпросмотр:</p>
+                    <div className="mt-2 rounded-lg bg-gray-100 p-2 dark:bg-gray-800">
+                        <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">Предпросмотр:</p>
                         <code className="text-sm font-mono text-gray-900 dark:text-gray-100">
                             /b/{makeSlug(slug)}
                         </code>
@@ -214,14 +202,13 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                 )}
             </div>
 
-            {/* Статус */}
-            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
                 <input
                     type="checkbox"
                     id="is_active"
                     checked={isActive}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsActive(e.target.checked)}
-                    className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 focus:ring-2"
+                    className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600"
                 />
                 <label htmlFor="is_active" className="flex-1 cursor-pointer">
                     <div className="font-medium text-gray-900 dark:text-gray-100">Активна</div>
@@ -231,30 +218,27 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                 </label>
             </div>
 
-            {/* Предупреждение для редактирования */}
             {mode === 'edit' && (
-                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
                     <div className="flex gap-3">
-                        <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                         <div className="flex-1">
-                            <p className="text-sm font-medium text-amber-800 dark:text-amber-300 mb-1">
+                            <p className="mb-1 text-sm font-medium text-amber-800 dark:text-amber-300">
                                 Изменение slug
                             </p>
                             <p className="text-xs text-amber-700 dark:text-amber-400">
-                                Изменение slug может быть распространено на связанные бизнесы (если опция включена в API).
+                                Изменение slug может быть распространено на связанные бизнесы (если эта опция включена в API).
                             </p>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Ошибка */}
             {error ? <AlertBanner variant="danger" title="Ошибка" message={error} /> : null}
 
-            {/* Кнопки */}
-            <div className="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-4 border-t border-gray-200 pt-4 dark:border-gray-700">
                 <Button
                     type="submit"
                     disabled={mode === 'edit' ? !changed : false}
@@ -263,14 +247,14 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                 >
                     {mode === 'create' ? (
                         <>
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
                             Создать
                         </>
                     ) : (
                         <>
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                             Сохранить
@@ -278,8 +262,8 @@ export function CategoryForm({ mode, categoryId, initial }: Props) {
                     )}
                 </Button>
                 {mode === 'edit' && !changed && (
-                    <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         Нет изменений

@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
+import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
+
 import { getT } from '@/app/_components/i18n/server';
 import { DeleteCategoryButton } from '@/components/admin/categories/DeleteCategoryButton';
 import { Button } from '@/components/ui/Button';
@@ -83,6 +85,8 @@ export default async function CategoriesPage() {
                         </div>
                     }
                 />
+
+                <AdminEntityFlowTabs entity="categories" className="max-w-3xl" />
 
                 <section className="grid gap-4 sm:grid-cols-3">
                     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-gray-900">

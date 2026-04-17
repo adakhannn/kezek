@@ -53,6 +53,8 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: Staf
                     type="button"
                     data-testid="master-card-any"
                     onClick={() => onSelect('any')}
+                    aria-pressed={selectedStaffId === 'any'}
+                    aria-label={t('booking.step3.anyMaster', 'Любой мастер')}
                     className={[
                         'flex items-center gap-3 rounded-[22px] border p-4 text-sm font-medium transition-all',
                         selectedStaffId === 'any'
@@ -84,6 +86,8 @@ export function StaffSelector({ staff, selectedStaffId, onSelect, dayStr }: Staf
                             type="button"
                             data-testid="master-card"
                             onClick={() => onSelect(person.id)}
+                            aria-pressed={active}
+                            aria-label={`${formatName(person.full_name)}: ${active ? t('booking.step3.selectedMaster', 'Выбран для визита') : t('booking.step3.availableMaster', 'Можно выбрать')}`}
                             className={[
                                 'flex items-center gap-3 rounded-[22px] border p-4 text-sm font-medium transition-all',
                                 active

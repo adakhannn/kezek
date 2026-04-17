@@ -566,7 +566,7 @@ Progress:
 ### UI-17 Redesign customer booking cards on web
 
 - Priority: `high`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -583,10 +583,18 @@ Primary targets:
 
 - `apps/web/src/app/cabinet/components/BookingCard.tsx`
 
+Progress:
+
+- rebuilt [BookingCard.tsx](/C:/projects/kezek/apps/web/src/app/cabinet/components/BookingCard.tsx) around a clearer top-level summary with stable status chips, denser but more readable booking facts, and a dedicated progress block instead of equally weighted raw sections
+- improved scanability by separating service/title context from date, duration, and next-action summary cards, so the customer can understand the booking state without reading the full card line by line
+- normalized repeat booking, open, map, review, edit review, and cancel affordances onto the shared [Button.tsx](/C:/projects/kezek/apps/web/src/components/ui/Button.tsx) action language, reducing visual noise and making the primary action more obvious
+- kept promo, package, review, and multi-service details as secondary informational surfaces so dense cards stay actionable instead of collapsing into one long wall of content
+- verified with local web typecheck
+
 ### UI-18 Redesign customer profile and settings flow
 
 - Priority: `medium`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -598,10 +606,22 @@ Done when:
 
 - profile editing feels trustworthy and low-friction
 
+Primary targets:
+
+- `apps/web/src/app/cabinet/components/ProfileForm.tsx`
+
+Progress:
+
+- rebuilt [ProfileForm.tsx](/C:/projects/kezek/apps/web/src/app/cabinet/components/ProfileForm.tsx) around a clearer personal-data section with explicit saved vs unsaved status, stronger field hierarchy, and less ambiguous edit state
+- simplified edit/save behavior by tracking an `initialProfile` snapshot, gating submit on dirty state, adding a reset path, and surfacing a sticky save bar instead of a detached one-shot submit button
+- improved form trust and validation by normalizing phone validation, trimming submitted phone data, clearing stale errors during edits, and making notification toggles participate in the same low-friction save flow
+- normalized success and unsaved feedback with shared inline banners plus one consistent auto-dismissing success-state model, so profile editing no longer depends on scattered local timers and ad hoc messaging
+- verified with local web typecheck
+
 ### UI-19 Redesign mobile cabinet experience
 
 - Priority: `high`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -618,6 +638,14 @@ Primary targets:
 - `apps/mobile/src/screens/CabinetScreen.tsx`
 - `apps/mobile/src/screens/cabinet/CabinetScreenSections.tsx`
 
+Progress:
+
+- refreshed [CabinetScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/CabinetScreen.tsx) so loading and empty-user states now read cleanly and hand off into a stronger cabinet surface instead of a thin companion-shell
+- rebuilt [CabinetScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/cabinet/CabinetScreenSections.tsx) around a real mobile-cabinet hierarchy: overview card, visible upcoming/history split with counts, clearer sync/offline messaging, and richer booking cards that preview timeline, staff, location, and the next detail action
+- redesigned [cabinetScreenStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/cabinet/cabinetScreenStyles.ts) to support a more intentional first-class mobile surface with stronger spacing rhythm, section framing, stat cards, segmented controls, and booking detail affordances
+- improved offline-aware messaging by distinguishing cached vs live data, surfacing the last sync moment, and wiring refresh/retry into the shared [OfflineBanner.tsx](/C:/projects/kezek/apps/mobile/src/components/ui/OfflineBanner.tsx) pattern
+- verified with local mobile typecheck
+
 ---
 
 ## Phase 6. Dashboard And Staff Workspace
@@ -625,7 +653,7 @@ Primary targets:
 ### UI-20 Redesign dashboard home as a true command center
 
 - Priority: `critical`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -642,10 +670,19 @@ Primary targets:
 
 - `apps/web/src/app/dashboard/components/DashboardHomeClient.tsx`
 
+Progress:
+
+- rebuilt [DashboardHomeClient.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/components/DashboardHomeClient.tsx) around a stronger command-center layout: hero, primary focus, quick actions, KPI hierarchy, onboarding state, and operational support cards now read in one intentional sequence
+- redesigned [dashboardHomeViewModel.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/components/home/dashboardHomeViewModel.tsx) so the home screen now derives a real top-priority operational focus instead of treating all metrics and actions as equally important
+- upgraded [DashboardQuickActionsCard.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/components/home/DashboardQuickActionsCard.tsx) into a next-actions panel with an explicit primary focus, clearer action emphasis, and stronger owner-facing decision framing
+- reworked [DashboardMetricsGrid.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/components/home/DashboardMetricsGrid.tsx) so the daily bookings KPI leads the hierarchy and the remaining metrics support it instead of competing visually at the same weight
+- improved [DashboardOnboardingNotice.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/components/home/DashboardOnboardingNotice.tsx) so onboarding now behaves like a guided readiness checklist rather than a generic warning block
+- verified with local web typecheck
+
 ### UI-21 Redesign QuickDesk and dashboard bookings workspace
 
 - Priority: `critical`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -663,10 +700,19 @@ Primary targets:
 - `apps/web/src/app/dashboard/bookings/view.tsx`
 - related extracted components under `apps/web/src/app/dashboard/bookings/components`
 
+Progress:
+
+- rebuilt [view.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/view.tsx) into a clearer operator shell with stronger workspace framing, explicit today/history/QuickDesk distinction, and better top-level orientation for owners and admins
+- redesigned [BookingFilters.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/BookingFilters.tsx) so the list workspace now has a real control layer: search, status, branch, visible result count, presets, and clearer mode messaging instead of a thin title-only strip
+- rebuilt [BookingsList.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/BookingsList.tsx) to improve density and clarity across desktop and mobile widths: stronger row hierarchy, client/service/time grouping, visible branch context, cleaner status chips, and better action ergonomics
+- updated [DashboardBookingsListSection.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/DashboardBookingsListSection.tsx) and [useDashboardBookingsListController.ts](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/useDashboardBookingsListController.ts) so the redesigned list workspace can surface real counts and richer booking context
+- refreshed [QuickDesk.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/QuickDesk.tsx) into the same operational language as the rest of the workspace, with a stronger left-side action rail, clearer quick-create framing, and easier return paths back to calendar and list
+- verified with local web typecheck
+
 ### UI-22 Redesign staff detail experience
 
 - Priority: `high`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -682,10 +728,18 @@ Primary targets:
 
 - `apps/web/src/app/dashboard/staff/[id]/StaffDetailPageClient.tsx`
 
+Progress:
+
+- rebuilt [StaffDetailPageClient.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/StaffDetailPageClient.tsx) into a composed workspace structure with clear hierarchy: hero, operational shortcuts, profile/finance, competencies, rating context, reviews, and transfer guidance
+- improved visibility of schedule, slots, finance, and transfer actions at the top of the page so operators can jump directly to the right workflow without scanning a long information wall
+- reduced perceived complexity by replacing long dense blocks with sectioned cards and summary surfaces (contact, branch/status, finance split, review signals), while preserving existing editing and admin capabilities
+- normalized review and rating presentation into clearer section blocks with explicit context and actionable hints instead of one continuous overloaded detail stream
+- verified with local web typecheck
+
 ### UI-23 Redesign staff finance workspace
 
 - Priority: `high`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -697,10 +751,18 @@ Done when:
 
 - finance workspace becomes readable for everyday operational use
 
+Progress:
+
+- redesigned [StaffFinancePageClient.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/finance/StaffFinancePageClient.tsx) into a clearer operator shell with explicit navigation between shift control and analytics, so daily finance work no longer starts from a dense utility header
+- rebuilt [StaffFinanceStatsPageClient.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/finance/stats/StaffFinanceStatsPageClient.tsx) as a composed finance-review page with actionable context cards for money, guarantees, and audit visibility
+- reworked [StaffFinanceStats.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/finance/components/StaffFinanceStats.tsx), [StaffFinanceStatsSections.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/finance/components/StaffFinanceStatsSections.tsx), and [StaffFinanceShiftCard.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/finance/components/StaffFinanceShiftCard.tsx) to strengthen money hierarchy, expose guarantee impact clearly, reduce list-level overload, and make shift review/edit flows easier for everyday operational use
+- improved audit readability in [FinanceSettingsAuditLog.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/finance/components/FinanceSettingsAuditLog.tsx) so percentage/hourly-rate changes are visible as a clear timeline instead of a dense raw table block
+- verified with local web typecheck
+
 ### UI-24 Redesign mobile staff shift workspace
 
 - Priority: `high`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -719,6 +781,14 @@ Primary targets:
 - `apps/mobile/src/screens/ShiftQuickScreen.tsx`
 - `apps/mobile/src/screens/shiftQuick/ShiftQuickSections.tsx`
 
+Progress:
+
+- redesigned [ShiftQuickSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/ShiftQuickSections.tsx) into a clearer shift workspace with stronger shift-status hierarchy, timeline context, more readable KPI cards, and cleaner client rows for fast scanning during active shifts
+- improved client add flow in [ShiftQuickSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/ShiftQuickSections.tsx) by adding clearer form framing, inline validation feedback via shared `FeedbackBanner`, and more predictable action controls for save/cancel
+- strengthened offline robustness by exposing queued operation visibility from [useShiftQuickScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/useShiftQuickScreenData.ts), wiring it through [ShiftQuickScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftQuickScreen.tsx), and surfacing queue/sync state directly in the workspace with retry affordances
+- rebuilt [shiftQuickStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/shiftQuickStyles.ts) to align spacing, card rhythm, status chips, and section density with the unified mobile design system
+- verified with local mobile typecheck: `apps/mobile/node_modules/.bin/tsc --noEmit`
+
 ---
 
 ## Phase 7. Admin Experience
@@ -726,7 +796,7 @@ Primary targets:
 ### UI-25 Rework admin information architecture
 
 - Priority: `medium`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -738,10 +808,28 @@ Done when:
 
 - admin tools feel navigable and coherent, not only available
 
+Progress:
+
+- redesigned [AdminNav.tsx](/C:/projects/kezek/apps/web/src/app/admin/_components/AdminNav.tsx) into section-based information architecture (operations, quality/reputation, analytics, diagnostics) with a clearer top-level primary strip and grouped "sections" menu to reduce navigation ambiguity
+- introduced reusable flow navigation in [AdminEntityFlowTabs.tsx](/C:/projects/kezek/apps/web/src/app/admin/_components/AdminEntityFlowTabs.tsx) to standardize list/detail/edit movement patterns across admin entities
+- rolled consistent flow-tabs through key admin entity surfaces:
+  [businesses/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/page.tsx),
+  [businesses/new/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/new/page.tsx),
+  [businesses/[id]/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/page.tsx),
+  [categories/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/categories/page.tsx),
+  [categories/new/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/categories/new/page.tsx),
+  [categories/[id]/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/categories/[id]/page.tsx),
+  [users/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/users/page.tsx),
+  [users/[id]/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/users/[id]/page.tsx),
+  [roles/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/roles/page.tsx),
+  [roles/new/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/roles/new/page.tsx),
+  and [roles/[id]/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/roles/[id]/page.tsx)
+- verified with local web typecheck: `apps/web/node_modules/.bin/tsc --noEmit`
+
 ### UI-26 Standardize admin tables and forms
 
 - Priority: `medium`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -752,6 +840,15 @@ Done when:
 
 - admin CRUD surfaces share common interaction patterns
 
+Progress:
+
+- introduced shared admin CRUD primitives in [AdminDataTable.tsx](/C:/projects/kezek/apps/web/src/app/admin/_components/AdminDataTable.tsx), [AdminFilterBar.tsx](/C:/projects/kezek/apps/web/src/app/admin/_components/AdminFilterBar.tsx), [AdminPagination.tsx](/C:/projects/kezek/apps/web/src/app/admin/_components/AdminPagination.tsx), [AdminFormSection.tsx](/C:/projects/kezek/apps/web/src/app/admin/_components/AdminFormSection.tsx), and [AdminDangerZone.tsx](/C:/projects/kezek/apps/web/src/app/admin/_components/AdminDangerZone.tsx) to normalize density, filter framing, table action placement, pagination, form section rhythm, and danger-zone presentation
+- rebuilt [UsersClient.tsx](/C:/projects/kezek/apps/web/src/app/admin/users/UsersClient.tsx) around the shared CRUD layer: unified filter bar, dense table layout, consistent row actions, explicit per-page pagination, and page-level bulk selection behavior
+- rebuilt [RolesClient.tsx](/C:/projects/kezek/apps/web/src/app/admin/roles/RolesClient.tsx) onto the same CRUD language with unified filters, dense table rows, standardized action placement, consistent pagination, and bulk delete flow for non-system roles
+- standardized admin form section composition in [RolesNewClient.tsx](/C:/projects/kezek/apps/web/src/app/admin/roles/new/RolesNewClient.tsx) and [EditRoleClient.tsx](/C:/projects/kezek/apps/web/src/app/admin/roles/[id]/EditRoleClient.tsx) so role create/edit screens follow one sectioned form model instead of local layout variants
+- normalized destructive presentation in [DeleteBizButton.tsx](/C:/projects/kezek/apps/web/src/components/admin/DeleteBizButton.tsx), [DeleteCategoryButton.tsx](/C:/projects/kezek/apps/web/src/components/admin/categories/DeleteCategoryButton.tsx), and [DeleteBranchButton.tsx](/C:/projects/kezek/apps/web/src/components/admin/branches/DeleteBranchButton.tsx), and aligned business detail danger framing via [businesses/[id]/page.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/page.tsx)
+- verified with local web typecheck: `apps/web/node_modules/.bin/tsc --noEmit`
+
 ---
 
 ## Phase 8. Accessibility, Quality, And Consistency
@@ -759,7 +856,7 @@ Done when:
 ### UI-27 Run full accessibility hardening pass
 
 - Priority: `critical`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -778,10 +875,18 @@ Reference:
 
 - `A11Y_AUDIT.md`
 
+Progress:
+
+- created [A11Y_AUDIT.md](/C:/projects/kezek/docs/A11Y_AUDIT.md) as the source-of-truth audit snapshot for public booking, cabinet, dashboard, staff, and mobile equivalents
+- hardened shared web dialog accessibility in [Dialog.tsx](/C:/projects/kezek/apps/web/src/components/ui/Dialog.tsx) with focus trap, focus restore, initial focus on open, and unique ARIA ids
+- improved booking-flow semantics and keyboard/screen-reader clarity across [BookingDateCalendar.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/components/BookingDateCalendar.tsx), [BookingSteps.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/components/BookingSteps.tsx), [BranchSelector.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/components/BranchSelector.tsx), [ServiceSelector.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/components/ServiceSelector.tsx), and [SlotPicker.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/components/SlotPicker.tsx)
+- tightened workspace a11y details in [BookingsViewSections.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/BookingsViewSections.tsx), [StaffDetailPageClient.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/StaffDetailPageClient.tsx), and [BookingFormClient.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/booking/BookingFormClient.tsx)
+- aligned mobile accessibility behavior through shared primitives and key screens in [MotionPressable.tsx](/C:/projects/kezek/apps/mobile/src/components/ui/MotionPressable.tsx), [Button.tsx](/C:/projects/kezek/apps/mobile/src/components/ui/Button.tsx), [Input.tsx](/C:/projects/kezek/apps/mobile/src/components/ui/Input.tsx), [ConfirmDialog.tsx](/C:/projects/kezek/apps/mobile/src/components/ui/ConfirmDialog.tsx), [Toast.tsx](/C:/projects/kezek/apps/mobile/src/components/ui/Toast.tsx), [CabinetScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/cabinet/CabinetScreenSections.tsx), and [ShiftQuickSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/ShiftQuickSections.tsx)
+
 ### UI-28 Remove legacy UI debt
 
 - Priority: `high`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -793,10 +898,20 @@ Done when:
 
 - the main UI no longer visually fragments by screen owner or implementation age
 
+Progress:
+
+- removed hardcoded gray/indigo dark-mode utility patterns from the dashboard day-calendar workspace in [BookingsViewSections.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/BookingsViewSections.tsx), replacing them with semantic surface/border/text/focus token usage
+- normalized the public booking calendar visual layer in [BookingDateCalendar.tsx](/C:/projects/kezek/apps/web/src/app/b/[slug]/components/BookingDateCalendar.tsx) to token-driven styles and shared accent semantics instead of local raw color utilities
+- replaced ad hoc action-button styling in [QuickDesk.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/QuickDesk.tsx) with shared `Button` primitives for create and navigation actions, reducing one-off CTA behavior in the operator workspace
+- replaced local pagination button styling in [BookingsList.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/bookings/components/BookingsList.tsx) with the shared `Button` primitive so booking list controls follow the same interaction language as the rest of workspace UI
+- removed legacy hardcoded success/info/review color blocks in [BookingCard.tsx](/C:/projects/kezek/apps/web/src/app/cabinet/components/BookingCard.tsx) by moving to semantic token surfaces and shared `Badge` status vocabulary
+- this reduces visual drift between public, cabinet, and workspace screens and moves repeated interaction/status states onto one consistent token + primitive layer
+- verified with local web typecheck: `apps/web/node_modules/.bin/tsc --noEmit -p apps/web/tsconfig.json`
+
 ### UI-29 Clean UI-facing encoding and comment debt
 
 - Priority: `medium`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -807,6 +922,14 @@ Done when:
 
 - active UI code and docs are readable and safe to maintain
 
+Progress:
+
+- cleaned severe UI-facing mojibake and comment debt in [BookingCard.tsx](/C:/projects/kezek/apps/web/src/app/cabinet/components/BookingCard.tsx), including status/timeline/review/cancel/map fallback labels and noisy broken comments
+- fully rewrote [CategoryForm.tsx](/C:/projects/kezek/apps/web/src/components/admin/categories/CategoryForm.tsx) in clean UTF-8 with readable labels, helper text, and maintainable slug/transliteration comments
+- cleaned high-value admin detail surface [page.tsx](/C:/projects/kezek/apps/web/src/app/admin/users/[id]/page.tsx) by removing broken legacy comments, normalizing fallback text, and replacing corrupted separators
+- fixed broken metadata encoding in [layout.tsx](/C:/projects/kezek/apps/web/src/app/layout.tsx) so top-level app title/description are readable and stable
+- validated targeted files with a mojibake scan; local typecheck in this session was blocked because `pnpm` is unavailable in the current shell environment
+
 ---
 
 ## Phase 9. Verification And Release Discipline
@@ -814,7 +937,7 @@ Done when:
 ### UI-30 Expand visual regression coverage
 
 - Priority: `high`
-- Status: `todo`
+- Status: `done`
 
 Tasks:
 
@@ -829,12 +952,22 @@ Primary targets:
 
 - `apps/web/e2e/visual-regressions.spec.ts`
 
-  - extended the same feedback cleanup through admin business management in [page.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/new/page.tsx), [NewMemberExisting.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/members/new/NewMemberExisting.tsx), [MembersClient.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/members/MembersClient.tsx), [OwnerForm.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/owner/ui/OwnerForm.tsx), and [BusinessCardEdit.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx), replacing local red/green feedback blocks with shared `AlertBanner` and `EmptyState`
-  - normalized additional product-facing feedback islands in [BranchForm.tsx](/C:/projects/kezek/apps/web/src/components/admin/branches/BranchForm.tsx), [CategoryForm.tsx](/C:/projects/kezek/apps/web/src/components/admin/categories/CategoryForm.tsx), [UserSecurityActions.tsx](/C:/projects/kezek/apps/web/src/components/admin/users/UserSecurityActions.tsx), [ProfileForm.tsx](/C:/projects/kezek/apps/web/src/app/cabinet/components/ProfileForm.tsx), [ReviewDialog.tsx](/C:/projects/kezek/apps/web/src/app/cabinet/components/ReviewDialog.tsx), [BranchAdminsPanel.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/branches/[id]/BranchAdminsPanel.tsx), [NewFromUser.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/NewFromUser.tsx), [StaffForm.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/StaffForm.tsx), [BranchScheduleEditor.tsx](/C:/projects/kezek/apps/web/src/components/admin/branches/BranchScheduleEditor.tsx), and [StaffServicesEditor.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/StaffServicesEditor.tsx)
-  - re-verified the shared feedback layer with `pnpm -C apps/web typecheck` and `pnpm -C apps/mobile typecheck`; native browser/mobile alerts are gone from active product flows, but a final diagnostic/admin tail still keeps `UI-9` in `active`
-  - extended the shared feedback rollout through admin business management in [page.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/new/page.tsx), [NewMemberExisting.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/members/new/NewMemberExisting.tsx), [MembersClient.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/members/MembersClient.tsx), [OwnerForm.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/owner/ui/OwnerForm.tsx), and [BusinessCardEdit.tsx](/C:/projects/kezek/apps/web/src/app/admin/businesses/[id]/BusinessCardEdit.tsx)
-  - normalized more product-facing feedback islands in [BranchForm.tsx](/C:/projects/kezek/apps/web/src/components/admin/branches/BranchForm.tsx), [CategoryForm.tsx](/C:/projects/kezek/apps/web/src/components/admin/categories/CategoryForm.tsx), [UserSecurityActions.tsx](/C:/projects/kezek/apps/web/src/components/admin/users/UserSecurityActions.tsx), [ProfileForm.tsx](/C:/projects/kezek/apps/web/src/app/cabinet/components/ProfileForm.tsx), [ReviewDialog.tsx](/C:/projects/kezek/apps/web/src/app/cabinet/components/ReviewDialog.tsx), [BranchAdminsPanel.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/branches/[id]/BranchAdminsPanel.tsx), [NewFromUser.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/NewFromUser.tsx), [StaffForm.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/StaffForm.tsx), [BranchScheduleEditor.tsx](/C:/projects/kezek/apps/web/src/components/admin/branches/BranchScheduleEditor.tsx), [StaffServicesEditor.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/[id]/StaffServicesEditor.tsx), [BusinessSwitcher.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/components/BusinessSwitcher.tsx), [FlashBanner.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/FlashBanner.tsx), [DeleteBranchButton.tsx](/C:/projects/kezek/apps/web/src/components/admin/branches/DeleteBranchButton.tsx), [DeleteCategoryButton.tsx](/C:/projects/kezek/apps/web/src/components/admin/categories/DeleteCategoryButton.tsx), [page.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/staff/page.tsx), and [page.tsx](/C:/projects/kezek/apps/web/src/app/dashboard/branches/new/page.tsx)
-  - re-verified with `pnpm -C apps/web typecheck`, `pnpm -C apps/mobile typecheck`, and a global search: native browser/mobile alerts are gone from active flows, while the remaining raw red/green matches are now mostly diagnostic admin pages, intentional danger zones, status indicators, or semantic action styling
+Progress:
+
+- rebuilt [visual-regressions.spec.ts](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) into two suites (public + authenticated workspace) with stable screenshot helpers, role/business fallback navigation, and deterministic capture settings
+- kept and stabilized existing public coverage: business page and booking step visual snapshots
+- added new workspace screenshot coverage for:
+- [cabinet](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `/cabinet`
+- [dashboard home](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `/dashboard`
+- [dashboard bookings quickdesk](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `/dashboard/bookings` QuickDesk tab
+- [dashboard bookings list](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `/dashboard/bookings` list tab
+- [staff detail](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `/dashboard/staff/[id]`
+- [staff finance](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `/dashboard/staff/[id]/finance`
+- [staff finance stats](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `/dashboard/staff/[id]/finance/stats`
+- [staff cabinet finance](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `/staff/finance` (staff-auth suite)
+- [mobile quickdesk viewport](/C:/projects/kezek/apps/web/e2e/visual-regressions.spec.ts) `390x844` screenshot baseline for operator ergonomics
+- added dedicated non-optional CI gate in [.github/workflows/ci.yml](/C:/projects/kezek/.github/workflows/ci.yml) (`e2e_visual_regressions`) that runs `pnpm test:e2e:visual` and fails releases on visual regressions
+- added explicit visual suite script in [apps/web/package.json](/C:/projects/kezek/apps/web/package.json): `test:e2e:visual`
 ### UI-31 Add UI acceptance checklist
 
 - Priority: `medium`

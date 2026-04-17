@@ -1,7 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useId, useRef } from 'react';
 
 type DialogProps = {
     open: boolean;
@@ -32,15 +32,62 @@ export function Dialog({
     dismissible = true,
     className,
 }: DialogProps) {
+    const dialogRef = useRef<HTMLDivElement | null>(null);
+    const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+    const titleId = useId();
+    const descriptionId = useId();
+
     useEffect(() => {
         if (!open) return;
 
         const previousOverflow = document.body.style.overflow;
+        previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         document.body.style.overflow = 'hidden';
+
+        const focusDialog = () => {
+            if (!dialogRef.current) return;
+            const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+            );
+            if (focusable.length > 0) {
+                focusable[0].focus();
+                return;
+            }
+            dialogRef.current.focus();
+        };
+
+        window.requestAnimationFrame(focusDialog);
 
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && dismissible) {
                 onClose();
+                return;
+            }
+
+            if (event.key !== 'Tab' || !dialogRef.current) return;
+
+            const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+            );
+            if (focusable.length === 0) {
+                event.preventDefault();
+                dialogRef.current.focus();
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const active = document.activeElement;
+
+            if (event.shiftKey && active === first) {
+                event.preventDefault();
+                last.focus();
+                return;
+            }
+
+            if (!event.shiftKey && active === last) {
+                event.preventDefault();
+                first.focus();
             }
         };
 
@@ -49,6 +96,7 @@ export function Dialog({
         return () => {
             document.body.style.overflow = previousOverflow;
             window.removeEventListener('keydown', handleKeyDown);
+            previouslyFocusedRef.current?.focus();
         };
     }, [dismissible, onClose, open]);
 
@@ -64,8 +112,10 @@ export function Dialog({
             <div
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="dialog-title"
-                aria-describedby={description ? 'dialog-description' : undefined}
+                aria-labelledby={titleId}
+                aria-describedby={description ? descriptionId : undefined}
+                ref={dialogRef}
+                tabIndex={-1}
                 onClick={(event) => event.stopPropagation()}
                 className={clsx(
                     'w-full rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] shadow-[var(--shadow-lg)]',
@@ -75,11 +125,11 @@ export function Dialog({
             >
                 <div className="flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] px-5 py-4">
                     <div className="min-w-0">
-                        <h3 id="dialog-title" className="type-section-title text-[var(--text-primary)]">
+                        <h3 id={titleId} className="type-section-title text-[var(--text-primary)]">
                             {title}
                         </h3>
                         {description ? (
-                            <p id="dialog-description" className="type-caption mt-1 text-[var(--text-muted)]">
+                            <p id={descriptionId} className="type-caption mt-1 text-[var(--text-muted)]">
                                 {description}
                             </p>
                         ) : null}

@@ -25,6 +25,7 @@ export default function ShiftQuickScreen() {
         error,
         refreshing,
         isProcessingQueue,
+        pendingQueueCount,
         metrics,
         openShiftMutation,
         closeShiftMutation,
@@ -137,6 +138,7 @@ export default function ShiftQuickScreen() {
             financeData={financeData}
             refreshing={refreshing}
             isProcessingQueue={isProcessingQueue}
+            pendingQueueCount={pendingQueueCount}
             isOpening={openShiftMutation.isPending}
             isClosing={closeShiftMutation.isPending}
             isAddingClient={addClientMutation.isPending}

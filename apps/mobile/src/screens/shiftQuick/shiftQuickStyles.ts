@@ -8,38 +8,81 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.surface.page,
     },
     header: {
-        padding: colors.layout.space5,
+        paddingHorizontal: colors.layout.space5,
+        paddingTop: colors.layout.space5,
+        paddingBottom: colors.layout.space4,
         backgroundColor: colors.surface.card,
         borderBottomWidth: 1,
         borderBottomColor: colors.border.subtle,
     },
-    bannerWrap: {
+    contentWrap: {
         paddingHorizontal: colors.layout.space4,
         paddingTop: colors.layout.space4,
+        paddingBottom: colors.layout.space6,
+        gap: colors.layout.space4,
+    },
+    bannerWrap: {
+        marginBottom: colors.layout.space1,
     },
     title: {
-        fontSize: 28,
+        fontSize: 30,
         fontWeight: '700',
         color: colors.text.primary,
         marginBottom: 4,
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 14,
         color: colors.text.secondary,
     },
     statusCard: {
-        margin: colors.layout.space4,
+        margin: 0,
+    },
+    statusTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: colors.layout.space2,
+        marginBottom: colors.layout.space3,
+    },
+    statusCardTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: colors.text.primary,
+    },
+    statusPill: {
+        borderRadius: colors.layout.radiusXl,
+        paddingHorizontal: colors.layout.space3,
+        paddingVertical: colors.layout.space1,
+        borderWidth: 1,
+    },
+    statusPillOpen: {
+        backgroundColor: colors.feedback.successSurface,
+        borderColor: colors.status.success,
+    },
+    statusPillClosed: {
+        backgroundColor: colors.surface.elevated,
+        borderColor: colors.border.light,
+    },
+    statusPillText: {
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    statusPillTextOpen: {
+        color: colors.status.success,
+    },
+    statusPillTextClosed: {
+        color: colors.text.secondary,
     },
     statusRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
+        alignItems: 'flex-start',
+        gap: colors.layout.space3,
     },
     statusIndicator: {
         width: 12,
         height: 12,
         borderRadius: 6,
-        marginRight: 8,
+        marginTop: 5,
     },
     statusOpen: {
         backgroundColor: colors.status.success,
@@ -47,38 +90,87 @@ export const styles = StyleSheet.create({
     statusClosed: {
         backgroundColor: colors.text.tertiary,
     },
+    statusIdle: {
+        backgroundColor: colors.status.info,
+    },
+    statusTextWrap: {
+        flex: 1,
+        gap: 2,
+    },
     statusText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
         color: colors.text.primary,
     },
-    statusTime: {
-        fontSize: 12,
+    statusSubtext: {
+        fontSize: 13,
+        lineHeight: 18,
         color: colors.text.secondary,
-        marginTop: 4,
+    },
+    timelineGrid: {
+        flexDirection: 'row',
+        gap: colors.layout.space3,
+        marginTop: colors.layout.space4,
+    },
+    timelineItem: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: colors.border.subtle,
+        borderRadius: colors.layout.radiusMd,
+        paddingHorizontal: colors.layout.space3,
+        paddingVertical: colors.layout.space2,
+        backgroundColor: colors.surface.elevated,
+    },
+    timelineLabel: {
+        fontSize: 11,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        color: colors.text.tertiary,
+        marginBottom: 4,
+    },
+    timelineValue: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: colors.text.primary,
+    },
+    queueInlineBanner: {
+        marginTop: colors.layout.space4,
     },
     actionsRow: {
         marginTop: colors.layout.space4,
     },
+    metricsSection: {
+        gap: colors.layout.space3,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: colors.text.primary,
+    },
     statsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        paddingHorizontal: colors.layout.space4,
         gap: colors.layout.space3,
     },
     statCard: {
-        flex: 1,
-        minWidth: '45%',
+        flexBasis: '47%',
+        flexGrow: 1,
+        minHeight: 112,
+    },
+    statTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: colors.layout.space2,
     },
     statLabel: {
         fontSize: 12,
         fontWeight: '600',
         color: colors.text.secondary,
         textTransform: 'uppercase',
-        marginBottom: 8,
     },
     statValue: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: '700',
         color: colors.text.primary,
     },
@@ -86,12 +178,27 @@ export const styles = StyleSheet.create({
         color: colors.status.success,
     },
     statHint: {
-        fontSize: 10,
+        fontSize: 11,
+        lineHeight: 16,
         color: colors.text.secondary,
-        marginTop: 4,
+        marginTop: colors.layout.space1,
     },
     addClientCard: {
-        margin: colors.layout.space4,
+        margin: 0,
+    },
+    addClientHeader: {
+        marginBottom: colors.layout.space3,
+        gap: 2,
+    },
+    addClientTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: colors.text.primary,
+    },
+    addClientSubtitle: {
+        fontSize: 13,
+        lineHeight: 18,
+        color: colors.text.secondary,
     },
     addClientButton: {
         borderStyle: 'dashed',
@@ -103,12 +210,6 @@ export const styles = StyleSheet.create({
     addClientForm: {
         gap: colors.layout.space3,
     },
-    addClientFormTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 4,
-    },
     amountRow: {
         flexDirection: 'row',
         gap: colors.layout.space3,
@@ -119,46 +220,39 @@ export const styles = StyleSheet.create({
     addClientActions: {
         flexDirection: 'row',
         gap: colors.layout.space3,
-        marginTop: 4,
+        marginTop: colors.layout.space1,
     },
     addClientActionButton: {
         flex: 1,
     },
     clientsSection: {
-        padding: colors.layout.space4,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: 12,
+        gap: colors.layout.space3,
     },
     clientCard: {
-        marginBottom: colors.layout.space3,
+        margin: 0,
     },
     clientHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
+        justifyContent: 'space-between',
+        gap: colors.layout.space3,
+    },
+    clientMain: {
+        flex: 1,
+        gap: 2,
     },
     clientName: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
         color: colors.text.primary,
-        flex: 1,
-    },
-    bookingBadge: {
-        marginLeft: 8,
     },
     clientService: {
-        fontSize: 14,
+        fontSize: 13,
         color: colors.text.secondary,
-        marginBottom: 8,
     },
-    clientAmounts: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+    clientAmountWrap: {
+        alignItems: 'flex-end',
+        minWidth: 88,
+        gap: 2,
     },
     clientAmount: {
         fontSize: 16,
@@ -166,14 +260,48 @@ export const styles = StyleSheet.create({
         color: colors.text.primary,
     },
     clientConsumables: {
-        fontSize: 12,
+        fontSize: 11,
         color: colors.status.warning,
     },
+    clientMetaRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: colors.layout.space3,
+    },
+    sourceChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: colors.layout.space1,
+        paddingHorizontal: colors.layout.space2,
+        paddingVertical: 5,
+        borderRadius: colors.layout.radiusXl,
+        borderWidth: 1,
+    },
+    sourceChipBooking: {
+        backgroundColor: colors.feedback.successSurface,
+        borderColor: colors.status.success,
+    },
+    sourceChipManual: {
+        backgroundColor: colors.surface.elevated,
+        borderColor: colors.border.subtle,
+    },
+    sourceChipText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: colors.text.secondary,
+    },
+    clientTime: {
+        fontSize: 11,
+        color: colors.text.tertiary,
+    },
     emptyCard: {
-        margin: colors.layout.space4,
+        margin: 0,
     },
     offlineIndicator: {
-        paddingHorizontal: colors.layout.space4,
-        paddingBottom: colors.layout.space4,
+        marginTop: colors.layout.space1,
+    },
+    offlineBanner: {
+        marginBottom: 0,
     },
 });

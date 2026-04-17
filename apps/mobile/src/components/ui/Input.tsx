@@ -56,6 +56,9 @@ export default function Input({
                     style={[styles.input, style]}
                     placeholderTextColor={colors.text.tertiary}
                     selectionColor={colors.interactive.focusRing}
+                    accessibilityLabel={props.accessibilityLabel ?? label ?? props.placeholder}
+                    accessibilityHint={props.accessibilityHint ?? helperText}
+                    accessibilityState={{ disabled: !editable }}
                     {...props}
                 />
                 {trailingIcon ? <View style={styles.iconWrap}>{trailingIcon}</View> : null}

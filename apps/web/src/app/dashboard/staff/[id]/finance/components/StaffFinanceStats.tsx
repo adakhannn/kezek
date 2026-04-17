@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import {
     StaffFinanceStatsFilters,
@@ -15,8 +15,6 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { formatDateBrowser, formatMonthYear } from '@/lib/dateFormat';
-
-
 
 export default function StaffFinanceStats({ staffId }: { staffId: string }) {
     const { t, locale } = useLanguage();
@@ -45,7 +43,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
     if (loading && !stats) {
         return (
             <div className="flex items-center justify-center py-12">
-                <div className="text-gray-500 dark:text-gray-400">{t('finance.loading', 'Загрузка...')}</div>
+                <div className="text-[var(--text-muted)]">{t('finance.loading', 'Loading...')}</div>
             </div>
         );
     }
@@ -54,11 +52,11 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
         return (
             <AlertBanner
                 variant="danger"
-                title={t('finance.error.title', 'Ошибка загрузки статистики')}
+                title={t('finance.error.title', 'Failed to load finance stats')}
                 message={error}
                 action={
                     <Button type="button" variant="danger" size="sm" onClick={() => void loadStats()}>
-                        {t('finance.retry', 'Попробовать снова')}
+                        {t('finance.retry', 'Retry')}
                     </Button>
                 }
             />
@@ -68,11 +66,11 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
     if (!stats) {
         return (
             <EmptyState
-                title={t('finance.empty.title', 'Пока нет данных')}
-                description={t('finance.empty.description', 'Статистика появится после первых смен и начислений.')}
+                title={t('finance.empty.title', 'No finance data yet')}
+                description={t('finance.empty.description', 'Stats will appear after shifts and payouts are recorded.')}
                 action={
                     <Button type="button" variant="secondary" size="sm" onClick={() => void loadStats()}>
-                        {t('finance.refresh', 'Обновить')}
+                        {t('finance.refresh', 'Refresh')}
                     </Button>
                 }
                 compact
@@ -81,7 +79,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-5">
             <StaffFinanceStatsFilters
                 period={period}
                 date={date}
@@ -94,7 +92,7 @@ export default function StaffFinanceStats({ staffId }: { staffId: string }) {
                 t={t}
             />
 
-            {loading && stats && <StaffFinanceStatsRefreshing t={t} />}
+            {loading && stats ? <StaffFinanceStatsRefreshing t={t} /> : null}
 
             <StaffFinanceStatsSummary
                 stats={stats}

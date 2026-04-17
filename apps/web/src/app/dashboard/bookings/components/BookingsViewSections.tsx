@@ -240,15 +240,16 @@ export function CalendarDaySection({
     }, [filteredStaff, items]);
 
     return (
-        <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-800 space-y-4">
+        <section className="space-y-4 rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-md)]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('bookings.calendar.title', 'Календарь на день')}</h2>
+                <h2 className="type-section-title text-[var(--text-primary)]">{t('bookings.calendar.title', 'Календарь на день')}</h2>
                 <div className="flex items-center gap-3 flex-wrap">
                     {branches.length > 1 && (
                         <select
-                            className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm"
+                            className="min-h-[40px] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-2.5 text-sm text-[var(--text-primary)] outline-none transition-all duration-[var(--motion-base)] hover:border-[var(--border-strong)] focus:border-[var(--focus-ring)]"
                             value={selectedBranchId}
                             onChange={(event) => setSelectedBranchId(event.target.value)}
+                            aria-label={t('bookings.calendar.branchFilter', 'Фильтр по филиалу')}
                         >
                             <option value="all">{t('bookings.calendar.allBranches', 'Все филиалы')}</option>
                             {branches.map((branch) => (
@@ -259,14 +260,16 @@ export function CalendarDaySection({
                         </select>
                     )}
                     <input
-                        className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                        className="min-h-[40px] rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-2.5 text-[var(--text-primary)] outline-none transition-all duration-[var(--motion-base)] hover:border-[var(--border-strong)] focus:border-[var(--focus-ring)]"
                         type="date"
                         value={date}
                         onChange={(event) => setDate(event.target.value)}
+                        aria-label={t('bookings.calendar.date', 'Дата календаря')}
                     />
                     <button
-                        className="px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 text-sm flex items-center gap-2"
+                        className="motion-interactive inline-flex min-h-[40px] items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
                         onClick={exportCsv}
+                        aria-label={t('bookings.calendar.exportCsv', 'Экспорт CSV')}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -279,25 +282,25 @@ export function CalendarDaySection({
             <div className="overflow-x-auto">
                 <table className="min-w-full">
                     <thead className="sticky top-0 z-[96]">
-                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4 w-24">{t('bookings.calendar.time', 'Время')}</th>
+                        <tr className="border-b border-[var(--border-subtle)] bg-[var(--surface-emphasis)]">
+                            <th className="w-24 p-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{t('bookings.calendar.time', 'Время')}</th>
                             {filteredStaff.length === 0 ? (
-                                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">{t('bookings.calendar.noStaff', 'Нет мастеров')}</th>
+                                <th className="p-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{t('bookings.calendar.noStaff', 'Нет мастеров')}</th>
                             ) : (
                                 filteredStaff.map((member) => (
-                                    <th key={member.id} className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-4">
+                                    <th key={member.id} className="p-4 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                                         {member.full_name}
                                     </th>
                                 ))
                             )}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody className="divide-y divide-[var(--border-subtle)]">
                         {hours.map((hour) => (
                             <tr key={hour} className="align-top">
-                                <td className="p-4 text-sm font-medium text-gray-600 dark:text-gray-400">{`${String(hour).padStart(2, '0')}:00`}</td>
+                                <td className="p-4 text-sm font-medium text-[var(--text-secondary)]">{`${String(hour).padStart(2, '0')}:00`}</td>
                                 {filteredStaff.length === 0 ? (
-                                    <td className="p-4 text-sm text-gray-400 dark:text-gray-500">{t('bookings.calendar.noStaffInBranch', '—')}</td>
+                                    <td className="p-4 text-sm text-[var(--text-muted)]">{t('bookings.calendar.noStaffInBranch', '—')}</td>
                                 ) : (
                                     filteredStaff.map((member) => {
                                         const events = (bookingsByStaff.get(member.id) ?? []).filter(
@@ -306,7 +309,7 @@ export function CalendarDaySection({
 
                                         return (
                                             <td key={cellKey(member.id, hour)} className="p-4">
-                                                {events.length === 0 && <span className="text-gray-300 dark:text-gray-600 text-xs">—</span>}
+                                                {events.length === 0 && <span className="text-xs text-[var(--text-muted)]">—</span>}
                                                 {events.map((event) => (
                                                     <div key={event.id} className="mb-1">
                                                         <BookingPill

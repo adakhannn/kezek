@@ -5,6 +5,8 @@ import Link from 'next/link';
 
 import { BusinessCardEdit } from './BusinessCardEdit';
 
+import { AdminDangerZone } from '../../_components/AdminDangerZone';
+import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
 import { DeleteBizButton } from '@/components/admin/DeleteBizButton';
 
 export const dynamic = 'force-dynamic';
@@ -197,6 +199,8 @@ export default async function BizPage({ params }: { params: Promise<RouteParams>
             </div>
 
             {/* Статистика */}
+            <AdminEntityFlowTabs entity="businesses" detailHref={`/admin/businesses/${biz.id}`} className="max-w-3xl" />
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
@@ -348,21 +352,12 @@ export default async function BizPage({ params }: { params: Promise<RouteParams>
                 </div>
             </div>
 
-            {/* Опасная зона */}
-            <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-6 shadow-lg border-2 border-red-200 dark:border-red-800">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg">
-                        <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-xl font-semibold text-red-900 dark:text-red-300">Опасная зона</h2>
-                </div>
-                <p className="text-sm text-red-800 dark:text-red-400 mb-4">
-                    Удаление безвозвратно удалит записи, сотрудников, услуги, часы работы и роли, связанные с бизнесом.
-                </p>
+            <AdminDangerZone
+                title="Опасная зона"
+                description="Удаление безвозвратно удалит записи, сотрудников, услуги, часы работы и роли, связанные с бизнесом."
+            >
                 <DeleteBizButton bizId={biz.id} bizName={biz.name} />
-            </div>
+            </AdminDangerZone>
         </div>
     );
 }

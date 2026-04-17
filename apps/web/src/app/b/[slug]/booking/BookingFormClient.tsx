@@ -30,6 +30,7 @@ export function BookingFormClient(props: BookingFormProps): JSX.Element {
                             {t('booking.error.message', 'Произошла ошибка при отображении формы бронирования. Попробуйте обновить страницу.')}
                         </p>
                         <button
+                            type="button"
                             onClick={() => window.location.reload()}
                             className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-5 py-3 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-md)] transition-all duration-[var(--motion-base)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)]"
                         >

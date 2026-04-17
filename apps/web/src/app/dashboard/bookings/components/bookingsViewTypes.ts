@@ -23,6 +23,8 @@ export type BookingItem = {
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled' | 'no_show';
     start_at: string;
     end_at: string;
+    branch_id?: string | null;
+    staff_id?: string | null;
     services?: { name_ru: string; name_ky?: string | null; name_en?: string | null }[];
     staff?: { full_name: string }[];
     servicesSummary?: string;

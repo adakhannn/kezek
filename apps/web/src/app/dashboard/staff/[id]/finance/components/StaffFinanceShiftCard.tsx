@@ -1,26 +1,27 @@
 'use client';
 
+import { formatInTimeZone } from 'date-fns-tz';
 import { useState } from 'react';
 
-import { useToast } from '@/hooks/useToast';
-import { formatTime } from '@/lib/dateFormat';
 import type { StaffFinanceStatsShift } from '@/lib/finance/types';
 import { logError } from '@/lib/log';
+import { TZ } from '@/lib/time';
+
+function formatMoney(value: number, locale: string) {
+    return `${value.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`;
+}
 
 export function StaffFinanceShiftCard({
     shift,
-    formatDate,
     locale,
     t,
     onHoursUpdated,
 }: {
     shift: StaffFinanceStatsShift;
-    formatDate: (dateStr: string) => string;
     locale: string;
     t: (key: string, fallback: string) => string;
     onHoursUpdated?: () => void | Promise<void>;
 }) {
-    const toast = useToast();
     const [isExpanded, setIsExpanded] = useState(shift.status === 'open');
     const [isEditingHours, setIsEditingHours] = useState(false);
     const [hoursInput, setHoursInput] = useState(() => {
@@ -28,118 +29,138 @@ export function StaffFinanceShiftCard({
         return Number.isFinite(current) ? current.toFixed(2) : '0.00';
     });
     const [isSavingHours, setIsSavingHours] = useState(false);
+    const [inlineError, setInlineError] = useState<string | null>(null);
+
+    const shiftDate = formatInTimeZone(new Date(`${shift.shift_date}T12:00:00`), TZ, 'dd.MM.yyyy');
+    const openedTime = shift.opened_at ? formatInTimeZone(new Date(shift.opened_at), TZ, 'HH:mm') : null;
+    const closedTime = shift.closed_at ? formatInTimeZone(new Date(shift.closed_at), TZ, 'HH:mm') : null;
+    const guaranteeDominates = shift.guaranteed_amount > 0 && shift.guaranteed_amount > shift.master_share;
+
+    async function saveEditedHours() {
+        const raw = hoursInput.trim().replace(',', '.');
+        const nextValue = Number(raw);
+        if (!Number.isFinite(nextValue) || nextValue < 0 || nextValue > 24) {
+            setInlineError(t('finance.staffStats.editHoursInvalid', 'Invalid hours value'));
+            return;
+        }
+
+        setInlineError(null);
+        try {
+            setIsSavingHours(true);
+            const response = await fetch(`/api/dashboard/staff-shifts/${shift.id}/update-hours`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    hours_worked: nextValue,
+                }),
+            });
+            const json = await response.json().catch(() => ({}));
+            if (!response.ok || !json.ok) {
+                throw new Error(json.error || `HTTP_${response.status}`);
+            }
+            setIsEditingHours(false);
+            await onHoursUpdated?.();
+        } catch (error) {
+            logError('StaffFinanceShiftCard', 'Failed to update shift hours', error);
+            setInlineError(t('finance.staffStats.editHoursError', 'Failed to update hours'));
+        } finally {
+            setIsSavingHours(false);
+        }
+    }
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                onClick={() => setIsExpanded(!isExpanded)}
+        <div className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)]">
+            <button
+                type="button"
+                className="flex w-full items-start justify-between gap-4 px-4 py-4 text-left transition hover:bg-[var(--surface-card)]"
+                onClick={() => setIsExpanded((value) => !value)}
             >
-                <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {formatDate(shift.shift_date)}
-                        </span>
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <p className="type-label text-[var(--text-primary)]">{shiftDate}</p>
                         <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                 shift.status === 'open'
-                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
                                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                             }`}
                         >
                             {shift.status === 'open'
-                                ? t('finance.staffStats.status.open', 'Открыта')
-                                : t('finance.staffStats.status.closed', 'Закрыта')}
+                                ? t('finance.staffStats.status.open', 'Open')
+                                : t('finance.staffStats.status.closed', 'Closed')}
                         </span>
-                        {shift.items.length > 0 && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                ({shift.items.length} {t('finance.staffStats.clients', 'клиентов')})
-                            </span>
-                        )}
+                        <span className="type-caption text-[var(--text-muted)]">
+                            {shift.items.length} {t('finance.staffStats.clients', 'clients')}
+                        </span>
                     </div>
-                    {shift.opened_at && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {t('finance.staffStats.openedAt', 'Открыта')}
-                            {': '}
-                            {formatTime(shift.opened_at, locale as 'ru' | 'ky' | 'en')}
-                        </div>
-                    )}
+
+                    <p className="type-caption mt-1 text-[var(--text-muted)]">
+                        {openedTime ? `${t('finance.staffStats.openedAt', 'Opened')}: ${openedTime}` : t('finance.shift.noOpenTime', 'No open time')}
+                        {closedTime ? ` • ${t('finance.shift.closedAt', 'Closed')}: ${closedTime}` : ''}
+                    </p>
                 </div>
-                <div className="text-right mr-4 min-w-[160px]">
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                        {shift.total_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                    </div>
-                    <div className="text-[10px] leading-tight text-gray-500 dark:text-gray-400 mb-1">
-                        {t('finance.staffStats.consumables', 'Расходники')}:{' '}
-                        {shift.consumables_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                    </div>
-                    {shift.guaranteed_amount > 0 && shift.hourly_rate && shift.guaranteed_amount > shift.master_share ? (
-                        <div className="space-y-0.5">
-                            <div className="text-[10px] leading-tight text-emerald-600 dark:text-emerald-400">
-                                {t('finance.staffStats.toEmployee', 'Сотруднику')}:{' '}
-                                <span className="font-semibold">
-                                    {shift.guaranteed_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                                </span>
-                            </div>
-                            {shift.hours_worked !== null && (
-                                <div className="text-[10px] leading-tight text-amber-600 dark:text-amber-400">
-                                    {t('finance.staffStats.guaranteedAmount', 'За выход')}: {shift.hours_worked.toFixed(1)}{' '}
-                                    {t('finance.staffStats.hours', 'ч')}
-                                </div>
-                            )}
-                            <div className="text-[10px] leading-tight text-gray-400 dark:text-gray-500 line-through">
-                                {t('finance.staffStats.baseShare', 'Базовая')}: {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                            </div>
-                            <div className="text-[10px] leading-tight text-gray-500 dark:text-gray-400">
-                                {t('finance.staffStats.toBusiness', 'Бизнесу')}: {shift.salon_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                            </div>
+
+                <div className="min-w-[220px] space-y-1 text-right">
+                    <p className="type-label text-[var(--text-primary)]">{formatMoney(shift.total_amount, locale)}</p>
+                    <p className="type-caption text-[var(--text-muted)]">
+                        {t('finance.staffStats.consumables', 'Consumables')}: {formatMoney(shift.consumables_amount, locale)}
+                    </p>
+                    <p className="type-caption text-emerald-600 dark:text-emerald-400">
+                        {t('finance.staffStats.toEmployee', 'Employee')}: {formatMoney(guaranteeDominates ? shift.guaranteed_amount : shift.master_share, locale)}
+                    </p>
+                    <p className="type-caption text-indigo-600 dark:text-indigo-400">
+                        {t('finance.staffStats.toBusiness', 'Business')}: {formatMoney(shift.salon_share, locale)}
+                    </p>
+                </div>
+
+                <svg
+                    className={`mt-1 h-5 w-5 flex-shrink-0 text-[var(--text-muted)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+
+            {isExpanded ? (
+                <div className="border-t border-[var(--border-subtle)] px-4 py-4">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
+                            <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.baseShare', 'Base share')}</p>
+                            <p className="type-label mt-1 text-[var(--text-primary)]">{formatMoney(shift.master_share, locale)}</p>
                         </div>
-                    ) : (
-                        <div className="space-y-0.5">
-                            <div className="text-[10px] leading-tight text-gray-500 dark:text-gray-400">
-                                {t('finance.staffStats.toEmployee', 'Сотруднику')}: {shift.master_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                            </div>
-                            {shift.guaranteed_amount > 0 && shift.hourly_rate && (
-                                <div className="text-[10px] leading-tight text-gray-500 dark:text-gray-400">
-                                    {t('finance.staffStats.guaranteedAmount', 'За выход')}: {shift.guaranteed_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                                    {shift.hours_worked !== null && (
-                                        <span className="ml-1">
-                                            ({shift.hours_worked.toFixed(1)} {t('finance.staffStats.hours', 'ч')})
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-                            <div className="text-[10px] leading-tight text-gray-500 dark:text-gray-400">
-                                {t('finance.staffStats.toBusiness', 'Бизнесу')}: {shift.salon_share.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом
-                            </div>
+                        <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
+                            <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.guaranteedAmount', 'Guarantee')}</p>
+                            <p className="type-label mt-1 text-[var(--text-primary)]">{formatMoney(shift.guaranteed_amount, locale)}</p>
                         </div>
-                    )}
-                    {shift.status === 'closed' && shift.hours_worked !== null && (
-                        <div className="mt-1">
-                            <button
-                                type="button"
-                                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 disabled:opacity-50"
-                                disabled={isSavingHours}
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    const current = shift.hours_worked ?? 0;
-                                    setHoursInput(Number.isFinite(current) ? current.toFixed(2) : '0.00');
-                                    setIsEditingHours((value) => !value);
-                                }}
-                            >
-                                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M15.232 5.232l3.536 3.536M9 11l4-4 6 6M5 19h4.586a1 1 0 00.707-.293l9.414-9.414a2 2 0 000-2.828l-2.172-2.172a2 2 0 00-2.828 0L5 13.586V19z"
-                                    />
-                                </svg>
-                                <span>{t('finance.staffStats.editHours', 'Исправить часы')}</span>
-                            </button>
-                            {isEditingHours && (
-                                <div className="mt-2 flex flex-col gap-2" onClick={(event) => event.stopPropagation()}>
-                                    <div className="flex items-center gap-2">
+                        <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
+                            <p className="type-caption text-[var(--text-secondary)]">{t('finance.staffStats.hours', 'Hours')}</p>
+                            <p className="type-label mt-1 text-[var(--text-primary)]">{shift.hours_worked !== null ? shift.hours_worked.toFixed(2) : '—'}</p>
+                        </div>
+                    </div>
+
+                    {shift.status === 'closed' ? (
+                        <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <button
+                                    type="button"
+                                    className="rounded-[var(--radius-sm)] border border-[var(--border-default)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--border-strong)]"
+                                    disabled={isSavingHours}
+                                    onClick={() => {
+                                        const current = shift.hours_worked ?? 0;
+                                        setHoursInput(Number.isFinite(current) ? current.toFixed(2) : '0.00');
+                                        setInlineError(null);
+                                        setIsEditingHours((value) => !value);
+                                    }}
+                                >
+                                    {t('finance.staffStats.editHours', 'Adjust hours')}
+                                </button>
+
+                                {isEditingHours ? (
+                                    <>
                                         <input
                                             type="number"
                                             inputMode="decimal"
@@ -148,194 +169,80 @@ export function StaffFinanceShiftCard({
                                             step={0.25}
                                             value={hoursInput}
                                             onChange={(event) => setHoursInput(event.target.value)}
-                                            className="w-28 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100"
+                                            className="h-8 w-24 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-elevated)] px-2 text-xs text-[var(--text-primary)]"
                                         />
-                                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                            {t('finance.staffStats.hours', 'ч')}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
                                         <button
                                             type="button"
-                                            className="rounded-md bg-indigo-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                            className="rounded-[var(--radius-sm)] bg-[var(--accent-primary)] px-2.5 py-1 text-xs font-semibold text-[var(--text-inverse)] disabled:opacity-50"
                                             disabled={isSavingHours}
-                                            onClick={async () => {
-                                                const raw = hoursInput.trim().replace(',', '.');
-                                                const next = Number(raw);
-                                                if (!Number.isFinite(next) || next < 0 || next > 24) {
-                                                    toast.showError(
-                                                        t('finance.staffStats.editHoursInvalid', 'Некорректное значение часов'),
-                                                    );
-                                                    return;
-                                                }
-                                                try {
-                                                    setIsSavingHours(true);
-                                                    const response = await fetch(
-                                                        `/api/dashboard/staff-shifts/${shift.id}/update-hours`,
-                                                        {
-                                                            method: 'POST',
-                                                            headers: {
-                                                                'Content-Type': 'application/json',
-                                                            },
-                                                            body: JSON.stringify({
-                                                                hours_worked: next,
-                                                            }),
-                                                        },
-                                                    );
-                                                    const json = await response.json().catch(() => ({}));
-                                                    if (!response.ok || !json.ok) {
-                                                        throw new Error(json.error || `HTTP_${response.status}`);
-                                                    }
-                                                    setIsEditingHours(false);
-                                                    await onHoursUpdated?.();
-                                                } catch (error) {
-                                                    logError('StaffFinanceStats', 'Failed to update shift hours', error);
-                                                    toast.showError(
-                                                        t(
-                                                            'finance.staffStats.editHoursError',
-                                                            'Не удалось обновить часы. Попробуйте позже.',
-                                                        ),
-                                                    );
-                                                } finally {
-                                                    setIsSavingHours(false);
-                                                }
+                                            onClick={() => {
+                                                void saveEditedHours();
                                             }}
                                         >
-                                            {isSavingHours ? t('finance.loading', 'Загрузка...') : t('common.save', 'Сохранить')}
+                                            {isSavingHours ? t('finance.loading', 'Loading...') : t('common.save', 'Save')}
                                         </button>
                                         <button
                                             type="button"
-                                            className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
+                                            className="rounded-[var(--radius-sm)] border border-[var(--border-default)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)]"
                                             disabled={isSavingHours}
                                             onClick={() => setIsEditingHours(false)}
                                         >
-                                            {t('common.cancel', 'Отмена')}
+                                            {t('common.cancel', 'Cancel')}
                                         </button>
-                                    </div>
-                                    <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                                        {t('finance.staffStats.editHoursHint', 'Введите фактические часы (0–24)')}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-                <button
-                    type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        setIsExpanded(!isExpanded);
-                    }}
-                >
-                    <svg
-                        className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-            </div>
-
-            {isExpanded && shift.items.length > 0 && (
-                <div className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30">
-                    <div className="p-3">
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">
-                            {t('finance.staffStats.clientsList', 'Список клиентов')}
-                        </h4>
-                        <div className="space-y-2">
-                            <div className="hidden sm:grid grid-cols-[2fr,2fr,1fr,1fr,1fr] gap-3 px-3 py-2 bg-gray-100 dark:bg-gray-800/50 rounded-lg text-[10px] font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
-                                <span>{t('finance.staffStats.client', 'Клиент')}</span>
-                                <span>{t('finance.staffStats.service', 'Услуга')}</span>
-                                <span className="text-right">{t('finance.staffStats.amount', 'Сумма')}</span>
-                                <span className="text-right">{t('finance.staffStats.consumables', 'Расходники')}</span>
-                                <span className="text-right">{t('finance.staffStats.createdAt', 'Время заполнения')}</span>
+                                    </>
+                                ) : null}
                             </div>
-                            {shift.items.map((item) => {
-                                const hasBooking = !!item.booking_id;
-                                const itemTime = item.created_at
-                                    ? (() => {
-                                          try {
-                                              const dateValue = new Date(item.created_at);
-                                              const localeMap: Record<string, string> = {
-                                                  ky: 'ky-KG',
-                                                  ru: 'ru-RU',
-                                                  en: 'en-US',
-                                              };
-                                              return dateValue.toLocaleTimeString(localeMap[locale] || 'ru-RU', {
-                                                  hour: '2-digit',
-                                                  minute: '2-digit',
-                                              });
-                                          } catch {
-                                              return '—';
-                                          }
-                                      })()
-                                    : '—';
-
-                                return (
-                                    <div
-                                        key={item.id}
-                                        className="grid grid-cols-[2fr,2fr,1fr,1fr,1fr] gap-3 items-center py-2.5 px-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-sm transition-all"
-                                    >
-                                        <div className="min-w-0 flex items-center gap-2">
-                                            {hasBooking && (
-                                                <span
-                                                    className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500"
-                                                    title={t('staff.finance.clients.fromBooking', 'Из записи')}
-                                                />
-                                            )}
-                                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                                {item.client_name || t('finance.staffStats.clientNotSpecified', 'Клиент не указан')}
-                                            </div>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                                                {item.service_name || <span className="text-gray-400 italic">—</span>}
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div
-                                                className={`text-sm font-bold ${
-                                                    item.service_amount > 0 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'
-                                                }`}
-                                            >
-                                                {item.service_amount === 0 && !item.service_name
-                                                    ? <span className="text-gray-400">—</span>
-                                                    : `${item.service_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`}
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div
-                                                className={`text-sm font-semibold ${
-                                                    item.consumables_amount > 0
-                                                        ? 'text-amber-600 dark:text-amber-400'
-                                                        : 'text-gray-400'
-                                                }`}
-                                            >
-                                                {item.consumables_amount === 0
-                                                    ? <span className="text-gray-400">0</span>
-                                                    : `${item.consumables_amount.toLocaleString(locale === 'en' ? 'en-US' : 'ru-RU')} сом`}
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">{itemTime}</div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                            {inlineError ? <p className="type-caption mt-2 text-[var(--status-danger)]">{inlineError}</p> : null}
                         </div>
+                    ) : null}
+
+                    <div className="mt-4 overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border-subtle)]">
+                        <table className="min-w-full text-sm">
+                            <thead className="bg-[var(--surface-card)]">
+                                <tr className="text-left text-xs uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                                    <th className="px-3 py-2">{t('finance.staffStats.client', 'Client')}</th>
+                                    <th className="px-3 py-2">{t('finance.staffStats.service', 'Service')}</th>
+                                    <th className="px-3 py-2 text-right">{t('finance.staffStats.amount', 'Amount')}</th>
+                                    <th className="px-3 py-2 text-right">{t('finance.staffStats.consumables', 'Consumables')}</th>
+                                    <th className="px-3 py-2 text-right">{t('finance.staffStats.createdAt', 'Created')}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--border-subtle)] bg-[var(--surface-elevated)]">
+                                {shift.items.length === 0 ? (
+                                    <tr>
+                                        <td className="px-3 py-4 text-center text-xs text-[var(--text-muted)]" colSpan={5}>
+                                            {t('finance.staffStats.noClients', 'No client entries in this shift')}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    shift.items.map((item) => {
+                                        const createdAt = item.created_at
+                                            ? formatInTimeZone(new Date(item.created_at), TZ, 'HH:mm')
+                                            : '—';
+                                        return (
+                                            <tr key={item.id}>
+                                                <td className="px-3 py-2 text-[var(--text-primary)]">
+                                                    {item.client_name || t('finance.staffStats.clientNotSpecified', 'Unknown')}
+                                                </td>
+                                                <td className="px-3 py-2 text-[var(--text-secondary)]">
+                                                    {item.service_name || '—'}
+                                                </td>
+                                                <td className="px-3 py-2 text-right text-[var(--text-primary)]">
+                                                    {formatMoney(item.service_amount, locale)}
+                                                </td>
+                                                <td className="px-3 py-2 text-right text-amber-500">
+                                                    {formatMoney(item.consumables_amount, locale)}
+                                                </td>
+                                                <td className="px-3 py-2 text-right text-[var(--text-muted)]">{createdAt}</td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            )}
-            {isExpanded && shift.items.length === 0 && (
-                <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {t('finance.staffStats.noClients', 'Нет добавленных клиентов')}
-                    </p>
-                </div>
-            )}
+            ) : null}
         </div>
     );
 }

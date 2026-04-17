@@ -7,6 +7,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import FeedbackBanner from '../../components/ui/FeedbackBanner';
 import Input from '../../components/ui/Input';
 import OfflineBanner from '../../components/ui/OfflineBanner';
+import { colors } from '../../constants/colors';
 import { formatDate, formatPrice, formatTime } from '../../utils/format';
 import { styles } from './shiftQuickStyles';
 import type { FinanceData, ShiftItem, ShiftQuickMetrics } from './types';
@@ -34,6 +35,7 @@ type ShiftQuickSectionsProps = {
     financeData: FinanceData;
     refreshing: boolean;
     isProcessingQueue: boolean;
+    pendingQueueCount: number;
     isOpening: boolean;
     isClosing: boolean;
     isAddingClient: boolean;
@@ -45,10 +47,17 @@ type ShiftQuickSectionsProps = {
     onCloseShift: () => void;
 };
 
+type ShiftStatusMeta = {
+    label: string;
+    description: string;
+    state: 'open' | 'closed' | 'idle';
+};
+
 export function ShiftQuickSections({
     financeData,
     refreshing,
     isProcessingQueue,
+    pendingQueueCount,
     isOpening,
     isClosing,
     isAddingClient,
@@ -62,6 +71,7 @@ export function ShiftQuickSections({
     const shift = financeData.today.shift;
     const items = financeData.today.items || [];
     const isOpen = shift?.status === 'open';
+    const shiftMeta = getShiftStatusMeta(isOpen, !!shift);
 
     return (
         <ScrollView
@@ -69,178 +79,290 @@ export function ShiftQuickSections({
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>РњРѕСЏ СЃРјРµРЅР°</Text>
+                <Text style={styles.title}>Моя смена</Text>
                 <Text style={styles.subtitle}>{formatDate(new Date().toISOString())}</Text>
             </View>
 
-            {financeData.isDayOff && !isOpen && !shift ? (
-                <View style={styles.bannerWrap}>
-                    <FeedbackBanner
-                        variant="warning"
-                        title="Р’С‹С…РѕРґРЅРѕР№ РґРµРЅСЊ"
-                        message="РЎРµРіРѕРґРЅСЏ РѕС‚РјРµС‡РµРЅ РІС‹С…РѕРґРЅРѕР№, РїРѕСЌС‚РѕРјСѓ РѕС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹ РЅРµРґРѕСЃС‚СѓРїРЅРѕ."
-                        compact
-                    />
-                </View>
-            ) : null}
-
-            <Card style={styles.statusCard} variant="elevated" padding="md">
-                <View style={styles.statusRow}>
-                    <View style={[styles.statusIndicator, isOpen ? styles.statusOpen : styles.statusClosed]} />
-                    <Text style={styles.statusText}>
-                        {isOpen
-                            ? 'РЎРјРµРЅР° РѕС‚РєСЂС‹С‚Р°'
-                            : shift
-                              ? 'РЎРјРµРЅР° Р·Р°РєСЂС‹С‚Р°'
-                              : 'РЎРјРµРЅР° РЅРµ РѕС‚РєСЂС‹С‚Р°'}
-                    </Text>
-                </View>
-
-                {shift?.opened_at ? <Text style={styles.statusTime}>РћС‚РєСЂС‹С‚Р°: {formatTime(shift.opened_at)}</Text> : null}
-                {isOpen && financeData.currentHoursWorked ? (
-                    <Text style={styles.statusTime}>РћС‚СЂР°Р±РѕС‚Р°РЅРѕ: {financeData.currentHoursWorked.toFixed(1)} С‡</Text>
+            <View style={styles.contentWrap}>
+                {financeData.isDayOff && !isOpen && !shift ? (
+                    <View style={styles.bannerWrap}>
+                        <FeedbackBanner
+                            variant="warning"
+                            title="Выходной день"
+                            message="Сегодня отмечен выходной, поэтому открыть смену не получится."
+                            compact
+                        />
+                    </View>
                 ) : null}
 
-                <View style={styles.actionsRow}>
-                    {!isOpen && !shift ? (
-                        <Button
-                            title="РћС‚РєСЂС‹С‚СЊ СЃРјРµРЅСѓ"
-                            onPress={onOpenShift}
-                            disabled={isOpening || financeData.isDayOff}
-                            loading={isOpening}
-                            fullWidth
-                            leadingIcon={<Ionicons name="play" size={18} color="#fff" />}
-                        />
-                    ) : null}
-                    {isOpen ? (
-                        <Button
-                            title="Р—Р°РєСЂС‹С‚СЊ СЃРјРµРЅСѓ"
-                            onPress={onCloseShift}
-                            disabled={isClosing}
-                            loading={isClosing}
-                            variant="danger"
-                            fullWidth
-                            leadingIcon={<Ionicons name="stop" size={18} color="#fff" />}
-                        />
-                    ) : null}
-                </View>
-            </Card>
-
-            {isOpen ? (
-                <View style={styles.statsGrid}>
-                    <Card style={styles.statCard} variant="muted" padding="md">
-                        <Text style={styles.statLabel}>РћР±РѕСЂРѕС‚</Text>
-                        <Text style={styles.statValue}>{formatPrice(metrics.totalAmount)}</Text>
-                    </Card>
-                    <Card style={styles.statCard} variant="muted" padding="md">
-                        <Text style={styles.statLabel}>РњРЅРµ</Text>
-                        <Text style={[styles.statValue, styles.statValueEmployee]}>{formatPrice(metrics.finalMasterShare)}</Text>
-                        {metrics.currentGuaranteed > metrics.baseMasterShare ? (
-                            <Text style={styles.statHint}>(РіР°СЂР°РЅС‚РёСЏ: {formatPrice(metrics.currentGuaranteed)})</Text>
-                        ) : null}
-                    </Card>
-                    <Card style={styles.statCard} variant="muted" padding="md">
-                        <Text style={styles.statLabel}>РљР»РёРµРЅС‚РѕРІ</Text>
-                        <Text style={styles.statValue}>{items.length}</Text>
-                    </Card>
-                </View>
-            ) : null}
-
-            {isOpen ? (
-                <Card style={styles.addClientCard} variant="elevated" padding="md">
-                    {!addClientForm.showAddClient ? (
-                        <Button
-                            title="Р”РѕР±Р°РІРёС‚СЊ РєР»РёРµРЅС‚Р°"
-                            onPress={() => addClientActions.setShowAddClient(true)}
-                            variant="outline"
-                            fullWidth
-                            leadingIcon={<Ionicons name="add-circle" size={20} color="#4f46e5" />}
-                            style={styles.addClientButton}
-                            textStyle={styles.addClientButtonText}
-                        />
-                    ) : (
-                        <View style={styles.addClientForm}>
-                            <Text style={styles.addClientFormTitle}>РќРѕРІС‹Р№ РєР»РёРµРЅС‚</Text>
-                            <Input
-                                placeholder="РРјСЏ РєР»РёРµРЅС‚Р° *"
-                                value={addClientForm.newClientName}
-                                onChangeText={addClientActions.setNewClientName}
-                                autoFocus
-                                error={addClientForm.error ?? undefined}
-                            />
-                            <Input
-                                placeholder="РЈСЃР»СѓРіР°"
-                                value={addClientForm.newServiceName}
-                                onChangeText={addClientActions.setNewServiceName}
-                            />
-                            <View style={styles.amountRow}>
-                                <Input
-                                    containerStyle={styles.amountInputContainer}
-                                    placeholder="РЎСѓРјРјР°"
-                                    value={addClientForm.newServiceAmount}
-                                    onChangeText={addClientActions.setNewServiceAmount}
-                                    keyboardType="numeric"
-                                />
-                                <Input
-                                    containerStyle={styles.amountInputContainer}
-                                    placeholder="Р Р°СЃС…РѕРґРЅРёРєРё"
-                                    value={addClientForm.newConsumablesAmount}
-                                    onChangeText={addClientActions.setNewConsumablesAmount}
-                                    keyboardType="numeric"
-                                />
-                            </View>
-                            <View style={styles.addClientActions}>
-                                <Button
-                                    title="РћС‚РјРµРЅР°"
-                                    onPress={addClientActions.resetForm}
-                                    variant="secondary"
-                                    fullWidth
-                                    style={styles.addClientActionButton}
-                                />
-                                <Button
-                                    title="Р”РѕР±Р°РІРёС‚СЊ"
-                                    onPress={addClientActions.submit}
-                                    disabled={isAddingClient || !addClientForm.newClientName.trim()}
-                                    loading={isAddingClient}
-                                    fullWidth
-                                    style={styles.addClientActionButton}
-                                />
-                            </View>
+                <Card style={styles.statusCard} variant="elevated" padding="md">
+                    <View style={styles.statusTopRow}>
+                        <Text style={styles.statusCardTitle}>Статус смены</Text>
+                        <View style={[styles.statusPill, isOpen ? styles.statusPillOpen : styles.statusPillClosed]}>
+                            <Text style={[styles.statusPillText, isOpen ? styles.statusPillTextOpen : styles.statusPillTextClosed]}>
+                                {isOpen ? 'Открыта' : shift ? 'Закрыта' : 'Не начата'}
+                            </Text>
                         </View>
-                    )}
+                    </View>
+
+                    <View style={styles.statusRow}>
+                        <View
+                            style={[
+                                styles.statusIndicator,
+                                shiftMeta.state === 'open'
+                                    ? styles.statusOpen
+                                    : shiftMeta.state === 'closed'
+                                      ? styles.statusClosed
+                                      : styles.statusIdle,
+                            ]}
+                            accessibilityElementsHidden
+                            importantForAccessibility="no-hide-descendants"
+                        />
+                        <View style={styles.statusTextWrap} accessibilityRole="text" accessibilityLiveRegion="polite">
+                            <Text style={styles.statusText}>{shiftMeta.label}</Text>
+                            <Text style={styles.statusSubtext}>{shiftMeta.description}</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.timelineGrid}>
+                        <View style={styles.timelineItem}>
+                            <Text style={styles.timelineLabel}>Открыта</Text>
+                            <Text style={styles.timelineValue}>{shift?.opened_at ? formatTime(shift.opened_at) : '—'}</Text>
+                        </View>
+                        <View style={styles.timelineItem}>
+                            <Text style={styles.timelineLabel}>Отработано</Text>
+                            <Text style={styles.timelineValue}>
+                                {isOpen && financeData.currentHoursWorked != null
+                                    ? `${financeData.currentHoursWorked.toFixed(1)} ч`
+                                    : '—'}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {pendingQueueCount > 0 ? (
+                        <View style={styles.queueInlineBanner}>
+                            <FeedbackBanner
+                                variant="info"
+                                compact
+                                title={
+                                    isProcessingQueue
+                                        ? 'Синхронизируем офлайн-операции'
+                                        : `${pendingQueueCount} операций в очереди`
+                                }
+                                message={
+                                    isProcessingQueue
+                                        ? 'Пожалуйста, подождите. Данные скоро обновятся автоматически.'
+                                        : 'Действия сохранены локально и отправятся при стабильном интернете.'
+                                }
+                            />
+                        </View>
+                    ) : null}
+
+                    <View style={styles.actionsRow}>
+                        {!isOpen && !shift ? (
+                            <Button
+                                title="Открыть смену"
+                                onPress={onOpenShift}
+                                disabled={isOpening || financeData.isDayOff}
+                                loading={isOpening}
+                                fullWidth
+                                leadingIcon={<Ionicons name="play" size={18} color="#fff" />}
+                            />
+                        ) : null}
+                        {isOpen ? (
+                            <Button
+                                title="Закрыть смену"
+                                onPress={onCloseShift}
+                                disabled={isClosing}
+                                loading={isClosing}
+                                variant="danger"
+                                fullWidth
+                                leadingIcon={<Ionicons name="stop" size={18} color="#fff" />}
+                            />
+                        ) : null}
+                    </View>
                 </Card>
-            ) : null}
 
-            {items.length > 0 ? (
-                <View style={styles.clientsSection}>
-                    <Text style={styles.sectionTitle}>РљР»РёРµРЅС‚С‹ ({items.length})</Text>
-                    {items.map((item, index) => (
-                        <ClientCard key={item.id || index} item={item} />
-                    ))}
-                </View>
-            ) : null}
+                {isOpen ? (
+                    <View style={styles.metricsSection}>
+                        <Text style={styles.sectionTitle}>Показатели смены</Text>
+                        <View style={styles.statsGrid}>
+                            <MetricCard
+                                label="Оборот"
+                                value={formatPrice(metrics.totalAmount)}
+                                icon="wallet-outline"
+                            />
+                            <MetricCard
+                                label="Мастер"
+                                value={formatPrice(metrics.finalMasterShare)}
+                                hint={
+                                    metrics.currentGuaranteed > metrics.baseMasterShare
+                                        ? `Гарантия: ${formatPrice(metrics.currentGuaranteed)}`
+                                        : undefined
+                                }
+                                icon="trending-up-outline"
+                                tone="success"
+                            />
+                            <MetricCard
+                                label="Салон"
+                                value={formatPrice(metrics.finalSalonShare)}
+                                icon="business-outline"
+                            />
+                            <MetricCard
+                                label="Клиенты"
+                                value={String(items.length)}
+                                icon="people-outline"
+                            />
+                        </View>
+                    </View>
+                ) : null}
 
-            {isOpen && items.length === 0 ? (
-                <Card style={styles.emptyCard} variant="muted">
-                    <EmptyState
-                        compact
-                        title="РќРµС‚ РґРѕР±Р°РІР»РµРЅРЅС‹С… РєР»РёРµРЅС‚РѕРІ"
-                        message='РќР°Р¶РјРёС‚Рµ "Р”РѕР±Р°РІРёС‚СЊ РєР»РёРµРЅС‚Р°" РґР»СЏ РЅР°С‡Р°Р»Р° СЂР°Р±РѕС‚С‹'
-                    />
-                </Card>
-            ) : null}
+                {isOpen ? (
+                    <Card style={styles.addClientCard} variant="elevated" padding="md">
+                        <View style={styles.addClientHeader}>
+                            <Text style={styles.addClientTitle}>Добавление клиента</Text>
+                            <Text style={styles.addClientSubtitle}>Быстро зафиксируйте услугу и сумму без лишних шагов.</Text>
+                        </View>
 
-            {isProcessingQueue ? (
-                <View style={styles.offlineIndicator}>
-                    <OfflineBanner
-                        compact
-                        title="РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ РѕС„Р»Р°Р№РЅ-РґР°РЅРЅС‹С…"
-                        message="РћС‡РµСЂРµРґСЊ РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ, РєР°Рє С‚РѕР»СЊРєРѕ СЃРѕРµРґРёРЅРµРЅРёРµ СЃРЅРѕРІР° СЃС‚Р°Р±РёР»СЊРЅРѕ."
-                        style={{ marginBottom: 0 }}
-                    />
-                </View>
-            ) : null}
+                        {!addClientForm.showAddClient ? (
+                            <Button
+                                title="Добавить клиента"
+                                onPress={() => addClientActions.setShowAddClient(true)}
+                                variant="outline"
+                                fullWidth
+                                leadingIcon={<Ionicons name="add-circle" size={20} color={colors.accent.primary} />}
+                                style={styles.addClientButton}
+                                textStyle={styles.addClientButtonText}
+                            />
+                        ) : (
+                            <View style={styles.addClientForm}>
+                                {addClientForm.error ? (
+                                    <FeedbackBanner
+                                        variant="danger"
+                                        compact
+                                        title="Проверьте форму"
+                                        message={addClientForm.error}
+                                    />
+                                ) : null}
+                                <Input
+                                    placeholder="Имя клиента *"
+                                    value={addClientForm.newClientName}
+                                    onChangeText={addClientActions.setNewClientName}
+                                    autoFocus
+                                    error={addClientForm.error ?? undefined}
+                                />
+                                <Input
+                                    placeholder="Услуга"
+                                    value={addClientForm.newServiceName}
+                                    onChangeText={addClientActions.setNewServiceName}
+                                />
+                                <View style={styles.amountRow}>
+                                    <Input
+                                        containerStyle={styles.amountInputContainer}
+                                        placeholder="Сумма"
+                                        value={addClientForm.newServiceAmount}
+                                        onChangeText={addClientActions.setNewServiceAmount}
+                                        keyboardType="numeric"
+                                    />
+                                    <Input
+                                        containerStyle={styles.amountInputContainer}
+                                        placeholder="Расходники"
+                                        value={addClientForm.newConsumablesAmount}
+                                        onChangeText={addClientActions.setNewConsumablesAmount}
+                                        keyboardType="numeric"
+                                    />
+                                </View>
+                                <View style={styles.addClientActions}>
+                                    <Button
+                                        title="Отмена"
+                                        onPress={addClientActions.resetForm}
+                                        variant="secondary"
+                                        fullWidth
+                                        style={styles.addClientActionButton}
+                                    />
+                                    <Button
+                                        title="Сохранить"
+                                        onPress={addClientActions.submit}
+                                        disabled={isAddingClient || !addClientForm.newClientName.trim()}
+                                        loading={isAddingClient}
+                                        fullWidth
+                                        style={styles.addClientActionButton}
+                                    />
+                                </View>
+                            </View>
+                        )}
+                    </Card>
+                ) : null}
+
+                {items.length > 0 ? (
+                    <View style={styles.clientsSection}>
+                        <Text style={styles.sectionTitle}>Клиенты ({items.length})</Text>
+                        {items.map((item, index) => (
+                            <ClientCard key={item.id || `${item.clientName}-${index}`} item={item} />
+                        ))}
+                    </View>
+                ) : null}
+
+                {isOpen && items.length === 0 ? (
+                    <Card style={styles.emptyCard} variant="muted">
+                        <EmptyState
+                            compact
+                            title="Пока нет клиентов в смене"
+                            message='Нажмите "Добавить клиента", чтобы зафиксировать первую запись.'
+                        />
+                    </Card>
+                ) : null}
+
+                {pendingQueueCount > 0 || isProcessingQueue ? (
+                    <View style={styles.offlineIndicator}>
+                        <OfflineBanner
+                            compact
+                            title={
+                                isProcessingQueue
+                                    ? 'Синхронизация офлайн-очереди'
+                                    : `Офлайн-очередь: ${pendingQueueCount}`
+                            }
+                            message={
+                                isProcessingQueue
+                                    ? 'Ожидайте завершения синхронизации, затем список обновится автоматически.'
+                                    : 'Действия будут отправлены на сервер, как только соединение станет стабильным.'
+                            }
+                            onRetry={() => void onRefresh()}
+                            style={styles.offlineBanner}
+                        />
+                    </View>
+                ) : null}
+            </View>
         </ScrollView>
+    );
+}
+
+function MetricCard({
+    label,
+    value,
+    hint,
+    icon,
+    tone = 'default',
+}: {
+    label: string;
+    value: string;
+    hint?: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    tone?: 'default' | 'success';
+}) {
+    return (
+        <Card style={styles.statCard} variant="muted" padding="md">
+            <View style={styles.statTop}>
+                <Text style={styles.statLabel}>{label}</Text>
+                <Ionicons
+                    name={icon}
+                    size={16}
+                    color={tone === 'success' ? colors.status.success : colors.text.secondary}
+                />
+            </View>
+            <Text style={[styles.statValue, tone === 'success' ? styles.statValueEmployee : null]}>{value}</Text>
+            {hint ? <Text style={styles.statHint}>{hint}</Text> : null}
+        </Card>
     );
 }
 
@@ -248,20 +370,52 @@ function ClientCard({ item }: { item: ShiftItem }) {
     return (
         <Card style={styles.clientCard} variant="elevated" padding="md">
             <View style={styles.clientHeader}>
-                <Text style={styles.clientName}>{item.clientName || 'РљР»РёРµРЅС‚'}</Text>
-                {item.bookingId ? (
-                    <View style={styles.bookingBadge}>
-                        <Ionicons name="calendar" size={12} color="#10b981" />
-                    </View>
-                ) : null}
+                <View style={styles.clientMain}>
+                    <Text style={styles.clientName}>{item.clientName || 'Клиент'}</Text>
+                    {item.serviceName ? <Text style={styles.clientService}>{item.serviceName}</Text> : null}
+                </View>
+                <View style={styles.clientAmountWrap}>
+                    <Text style={styles.clientAmount}>{item.serviceAmount > 0 ? formatPrice(item.serviceAmount) : '—'}</Text>
+                    {item.consumablesAmount > 0 ? (
+                        <Text style={styles.clientConsumables}>Расходники {formatPrice(item.consumablesAmount)}</Text>
+                    ) : null}
+                </View>
             </View>
-            {item.serviceName ? <Text style={styles.clientService}>{item.serviceName}</Text> : null}
-            <View style={styles.clientAmounts}>
-                {item.serviceAmount > 0 ? <Text style={styles.clientAmount}>{formatPrice(item.serviceAmount)}</Text> : null}
-                {item.consumablesAmount > 0 ? (
-                    <Text style={styles.clientConsumables}>Р Р°СЃС…РѕРґРЅРёРєРё: {formatPrice(item.consumablesAmount)}</Text>
-                ) : null}
+            <View style={styles.clientMetaRow}>
+                <View style={[styles.sourceChip, item.bookingId ? styles.sourceChipBooking : styles.sourceChipManual]}>
+                    <Ionicons
+                        name={item.bookingId ? 'calendar-outline' : 'create-outline'}
+                        size={12}
+                        color={item.bookingId ? colors.status.success : colors.text.secondary}
+                    />
+                    <Text style={styles.sourceChipText}>{item.bookingId ? 'Из брони' : 'Добавлен вручную'}</Text>
+                </View>
+                {item.createdAt ? <Text style={styles.clientTime}>{formatTime(item.createdAt)}</Text> : null}
             </View>
         </Card>
     );
+}
+
+function getShiftStatusMeta(isOpen: boolean, hasShift: boolean): ShiftStatusMeta {
+    if (isOpen) {
+        return {
+            label: 'Смена активна',
+            description: 'Можно добавлять клиентов и оперативно контролировать показатели.',
+            state: 'open',
+        };
+    }
+
+    if (hasShift) {
+        return {
+            label: 'Смена закрыта',
+            description: 'Рабочий день завершен. Данные доступны для просмотра.',
+            state: 'closed',
+        };
+    }
+
+    return {
+        label: 'Смена не открыта',
+        description: 'Откройте смену, чтобы начать работу с клиентами.',
+        state: 'idle',
+    };
 }

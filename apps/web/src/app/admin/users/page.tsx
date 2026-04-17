@@ -4,6 +4,7 @@ import {cookies, headers} from 'next/headers';
 import Link from 'next/link';
 import {redirect} from 'next/navigation';
 
+import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
 import UsersClient from './UsersClient';
 
 import { getT } from '@/app/_components/i18n/server';
@@ -171,6 +172,8 @@ export default async function UsersListPage(
                 </section>
 
                 {/* Клиентский компонент с пользователями */}
+                <AdminEntityFlowTabs entity="users" className="max-w-3xl" />
+
                 <UsersClient
                     initialUsers={data.items}
                     initialPage={page}

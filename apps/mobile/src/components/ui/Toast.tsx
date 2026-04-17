@@ -75,6 +75,8 @@ export default function Toast({ message, type = 'info', visible, onHide, duratio
 
     return (
         <Animated.View
+            accessibilityLiveRegion={type === 'error' ? 'assertive' : 'polite'}
+            accessibilityRole={type === 'error' ? 'alert' : 'text'}
             style={[
                 styles.container,
                 {

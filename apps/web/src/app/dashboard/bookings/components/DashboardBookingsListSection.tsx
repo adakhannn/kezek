@@ -74,6 +74,8 @@ export function DashboardBookingsListSection({
                     timezone={timezone}
                     currentStaffId={currentStaffId}
                     hasStaffAccess={hasStaffAccess}
+                    visibleCount={list.length}
+                    totalCount={totalCount}
                 />
 
                 <BookingsList

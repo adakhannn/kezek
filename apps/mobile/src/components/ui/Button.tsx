@@ -17,6 +17,8 @@ type ButtonProps = {
     trailingIcon?: ReactNode;
     style?: ViewStyle;
     textStyle?: TextStyle;
+    accessibilityLabel?: string;
+    accessibilityHint?: string;
 };
 
 export default function Button({
@@ -31,6 +33,8 @@ export default function Button({
     trailingIcon,
     style,
     textStyle,
+    accessibilityLabel,
+    accessibilityHint,
 }: ButtonProps) {
     const isDisabled = disabled || loading;
     const sizeStyle = size === 'sm' ? styles.buttonSm : size === 'lg' ? styles.buttonLg : styles.buttonMd;
@@ -64,6 +68,9 @@ export default function Button({
             <MotionPressable
                 onPress={onPress}
                 disabled={isDisabled}
+                accessibilityLabel={accessibilityLabel ?? title}
+                accessibilityHint={accessibilityHint}
+                accessibilityState={{ disabled: isDisabled, busy: loading }}
                 style={[
                     styles.primaryContainer,
                     sizeStyle,
@@ -97,7 +104,14 @@ export default function Button({
     ];
 
     return (
-        <MotionPressable style={buttonStyle} onPress={onPress} disabled={isDisabled}>
+        <MotionPressable
+            style={buttonStyle}
+            onPress={onPress}
+            disabled={isDisabled}
+            accessibilityLabel={accessibilityLabel ?? title}
+            accessibilityHint={accessibilityHint}
+            accessibilityState={{ disabled: isDisabled, busy: loading }}
+        >
             {content}
         </MotionPressable>
     );

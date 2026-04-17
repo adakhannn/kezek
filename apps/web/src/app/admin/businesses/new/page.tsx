@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
+
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -185,6 +187,8 @@ export default function NewBizPage() {
             </div>
 
             {/* Форма */}
+            <AdminEntityFlowTabs entity="businesses" className="max-w-3xl" />
+
             <form onSubmit={submit} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 space-y-8 max-w-3xl">
                 {/* Основная информация */}
                 <div className="space-y-6">

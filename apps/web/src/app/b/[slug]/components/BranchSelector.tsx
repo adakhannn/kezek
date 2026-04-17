@@ -55,6 +55,8 @@ export function BranchSelector({
                                 type="button"
                                 data-testid="branch-card"
                                 onClick={() => onSelect(branch.id)}
+                                aria-pressed={active}
+                                aria-label={`${formatBranchName(branch.name)}: ${active ? t('booking.step1.selectedBranch', 'Выбрано для записи') : t('booking.step1.availableBranch', 'Доступно для выбора')}`}
                                 className={cardStyles({
                                     variant: active ? 'glass' : 'default',
                                     padding: 'md',

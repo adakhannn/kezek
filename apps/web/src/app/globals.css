@@ -61,7 +61,10 @@
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
-  --container-max: 80rem;
+  --container-lg: 72rem;
+  --container-xl: 88rem;
+  --container-2xl: 96rem;
+  --container-max: var(--container-xl);
 
   /* motion */
   --motion-fast: 120ms;

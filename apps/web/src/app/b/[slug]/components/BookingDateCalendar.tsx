@@ -69,20 +69,22 @@ export function BookingDateCalendar({ value, onChange, min, max, variant = 'publ
     return (
         <div
             data-testid="date-picker"
+            role="group"
+            aria-label={t('datePicker.calendarLabel', 'Календарь выбора даты записи')}
             className={[
-                'rounded-2xl p-3 shadow-sm',
+                'rounded-[20px] p-3 shadow-[var(--shadow-sm)]',
                 isDashboard
-                    ? 'border border-indigo-500/40 bg-slate-950/70 shadow-indigo-500/20'
-                    : 'border border-gray-200/80 bg-white shadow-gray-200/60 dark:border-gray-700/70 dark:bg-[#05060a] dark:shadow-black/40',
+                    ? 'border border-[var(--accent-primary)]/45 bg-[color:color-mix(in_srgb,var(--surface-card)_88%,var(--surface-canvas))]'
+                    : 'border border-[var(--border-subtle)] bg-[var(--surface-card)]',
                 className,
             ].join(' ')}
         >
             <div className="flex items-center justify-between px-1 pb-2">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <p className="type-caption font-medium text-[var(--text-secondary)]">
                     {t('datePicker.chooseDate', 'Выберите удобный день')}
                 </p>
-                <div className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-200 dark:ring-indigo-900/60">
-                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                <div className="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--accent-primary)_24%,transparent)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--accent-primary)]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-primary)]" />
                     {format(value, 'dd.MM.yyyy', { locale: dateLocale })}
                 </div>
             </div>
@@ -92,24 +94,26 @@ export function BookingDateCalendar({ value, onChange, min, max, variant = 'publ
                     type="button"
                     onClick={() => handleMonthChange(-1)}
                     disabled={!canGoPrev}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-500 hover:bg-indigo-600/10 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-100"
+                    aria-label={t('datePicker.prevMonth', 'Предыдущий месяц')}
+                    className="motion-interactive inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:bg-[color:color-mix(in_srgb,var(--accent-primary)_12%,transparent)] hover:text-[var(--accent-primary)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     ‹
                 </button>
-                <div className="text-sm font-semibold capitalize text-gray-900 dark:text-gray-50">
+                <div className="text-sm font-semibold capitalize text-[var(--text-primary)]" aria-live="polite">
                     {monthLabel}
                 </div>
                 <button
                     type="button"
                     onClick={() => handleMonthChange(1)}
                     disabled={!canGoNext}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-500 hover:bg-indigo-600/10 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-100"
+                    aria-label={t('datePicker.nextMonth', 'Следующий месяц')}
+                    className="motion-interactive inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:bg-[color:color-mix(in_srgb,var(--accent-primary)_12%,transparent)] hover:text-[var(--accent-primary)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     ›
                 </button>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 px-1 pb-1 text-center text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+            <div className="grid grid-cols-7 gap-1 px-1 pb-1 text-center text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
                 {weekdayLabels.map((label) => (
                     <span key={label}>{label}</span>
                 ))}
@@ -127,13 +131,15 @@ export function BookingDateCalendar({ value, onChange, min, max, variant = 'publ
                             data-date={format(day, 'yyyy-MM-dd')}
                             onClick={() => handleSelect(day)}
                             disabled={disabled}
+                            aria-label={format(day, 'PPPP', { locale: dateLocale })}
+                            aria-pressed={selected}
                             className={[
                                 'flex h-9 w-9 items-center justify-center rounded-full transition-colors',
                                 disabled
-                                    ? 'cursor-not-allowed text-gray-500/40 dark:text-gray-500/50'
-                                    : 'cursor-pointer text-gray-900 hover:bg-indigo-500/10 hover:text-indigo-900 dark:text-gray-50 dark:hover:bg-indigo-500/25 dark:hover:text-indigo-50',
+                                    ? 'cursor-not-allowed text-[var(--text-muted)]/45'
+                                    : 'cursor-pointer text-[var(--text-primary)] hover:bg-[color:color-mix(in_srgb,var(--accent-primary)_12%,transparent)] hover:text-[var(--accent-primary)]',
                                 selected &&
-                                    'bg-gradient-to-r from-indigo-500 to-pink-500 text-white hover:from-indigo-500 hover:to-pink-500',
+                                    'bg-[linear-gradient(120deg,var(--accent-primary),var(--accent-secondary))] text-[var(--text-inverse)] hover:text-[var(--text-inverse)]',
                                 !isSameMonth(day, monthStart) && 'opacity-40',
                             ]
                                 .filter(Boolean)
@@ -145,13 +151,13 @@ export function BookingDateCalendar({ value, onChange, min, max, variant = 'publ
                 })}
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2 px-1 text-[11px] text-gray-500 dark:text-gray-500">
+            <div className="mt-3 flex flex-wrap items-center gap-2 px-1 text-[11px] text-[var(--text-secondary)]">
                 <div className="flex items-center gap-1">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500" />
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[linear-gradient(120deg,var(--accent-primary),var(--accent-secondary))]" />
                     <span>{t('datePicker.legend.selected', 'Выбранный день')}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-gray-300/60 dark:bg-gray-600/80" />
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--text-muted)]/45" />
                     <span>{t('datePicker.legend.disabled', 'Недоступно для записи')}</span>
                 </div>
             </div>

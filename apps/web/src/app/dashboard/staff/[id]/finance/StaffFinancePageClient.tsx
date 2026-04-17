@@ -4,6 +4,8 @@ import { ErrorBanner } from '@/app/_components/ErrorBanner';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { FinancePage } from '@/app/staff/finance/components/FinancePage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Badge } from '@/components/ui/Badge';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function StaffFinancePageClient({
     id,
@@ -15,45 +17,45 @@ export default function StaffFinancePageClient({
     const { t } = useLanguage();
 
     return (
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 min-w-0">
-            {/* Заголовок: на мобиле — колонка, чтобы кнопка «Статистика» не обрезалась */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                    <a
-                        href={`/dashboard/staff/${id}`}
-                        className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-2"
-                    >
-                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        <span className="truncate">{t('staff.detail.back.title', 'Вернуться к списку сотрудников')}</span>
-                    </a>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate min-w-0">
-                            {t('staff.finance.shift.title', 'Управление сменой')}: {fullName ?? ''}
-                        </h1>
+        <div className="mx-auto max-w-[var(--container-2xl)] space-y-5 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+            <section className="rounded-[28px] border border-[var(--border-default)] bg-[var(--surface-card)] p-4 shadow-[var(--shadow-md)] sm:p-5">
+                <PageHeader
+                    eyebrow={
+                        <div className="flex flex-wrap items-center gap-2">
+                            <a
+                                href={`/dashboard/staff/${id}`}
+                                className="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--border-default)]"
+                            >
+                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                {t('staff.finance.backToStaff', 'Back to staff')}
+                            </a>
+                            <Badge variant="accent">{t('staff.finance.workspace', 'Staff Finance Workspace')}</Badge>
+                        </div>
+                    }
+                    title={`${t('staff.finance.shift.title', 'Shift workspace')}: ${fullName ?? ''}`}
+                    description={t(
+                        'staff.finance.shift.subtitle',
+                        'Daily money flow, guarantees, client entries, and shift-level actions in one operator-focused workspace.',
+                    )}
+                    actions={
                         <a
                             href={`/dashboard/staff/${id}/finance/stats`}
-                            className="inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors flex-shrink-0 w-full sm:w-auto"
+                            className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-elevated)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-card)]"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
-                            {t('finance.staffStats.title', 'Статистика по сотрудникам')}
+                            {t('finance.staffStats.title', 'Open stats')}
                         </a>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {t('staff.finance.shift.subtitle', 'Управление текущей сменой, клиентами и расчетами')}
-                    </p>
-                </div>
-            </div>
+                    }
+                />
+            </section>
 
-            {/* Основной контент - управление сменой и клиентами */}
-            {/* overflow-hidden убираем, чтобы поповер календаря (DatePickerPopover) не обрезался; min-w-0 для корректного сжатия на мобиле */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 min-w-0 overflow-x-hidden">
+            <div className="rounded-[28px] border border-[var(--border-default)] bg-[var(--surface-card)] shadow-[var(--shadow-md)] min-w-0 overflow-x-hidden">
                 <ErrorBoundary
                     onError={(error, errorInfo) => {
-                        // Дополнительное логирование для finance компонентов
                         const { logError } = require('@/lib/log');
                         logError('StaffFinancePage', 'FinancePage error', { error, errorInfo });
                     }}
@@ -61,10 +63,10 @@ export default function StaffFinancePageClient({
                         <div className="p-6">
                             <ErrorBanner
                                 variant="internal"
-                                title={t('staff.finance.error.boundary.title', 'Ошибка в компоненте управления сменой')}
+                                title={t('staff.finance.error.boundary.title', 'Finance workspace error')}
                                 message={t(
                                     'staff.finance.error.boundary.message',
-                                    'Произошла ошибка при отображении компонента. Попробуйте обновить страницу.',
+                                    'The finance workspace failed to render. Try reloading the page.',
                                 )}
                                 onRetry={() => window.location.reload()}
                             />
@@ -77,5 +79,3 @@ export default function StaffFinancePageClient({
         </div>
     );
 }
-
-

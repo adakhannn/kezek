@@ -187,6 +187,8 @@ export function useDashboardBookingsListController({
                     status: row.status as BookingItem['status'],
                     start_at: String(row.start_at),
                     end_at: String(row.end_at),
+                    branch_id: row.branch_id,
+                    staff_id: row.staff_id,
                     services: row.services as BookingItem['services'],
                     staff: row.staff as BookingItem['staff'],
                     client_name: row.client_name ?? undefined,

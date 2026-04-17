@@ -1,8 +1,3 @@
-/**
- * Компонент для отображения списка бронирований
- * Вынесен из view.tsx для улучшения поддерживаемости
- */
-
 'use client';
 
 import { formatInTimeZone } from 'date-fns-tz';
@@ -11,8 +6,10 @@ import Link from 'next/link';
 import { QuickActions } from './QuickActions';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { StatusChip } from '@/components/ui/StatusChip';
 import { TZ } from '@/lib/time';
-
 
 type BranchRow = { id: string; name: string };
 
@@ -21,11 +18,11 @@ type BookingItem = {
     status: 'hold' | 'confirmed' | 'paid' | 'cancelled' | 'no_show';
     start_at: string;
     end_at: string;
+    branch_id?: string | null;
     services?: { name_ru: string; name_ky?: string | null; name_en?: string | null }[];
     staff?: { full_name: string }[];
     client_name?: string | null;
     client_phone?: string | null;
-    /** Человекочитаемое описание состава услуг (для комплексов) */
     servicesSummary?: string;
 };
 
@@ -62,78 +59,117 @@ export function BookingsList({
         return service.name_ru;
     };
 
-    const statusColors = {
-        hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-        confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
-        no_show: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+    const getBranchName = (branchId?: string | null) => {
+        if (!branchId) return null;
+        return branches.find((branch) => branch.id === branchId)?.name ?? null;
+    };
+
+    const getStatusLabel = (booking: BookingItem) => {
+        const isPast = new Date(booking.start_at) < new Date();
+        if (booking.status === 'no_show') return t('bookings.status.noShowShort', 'не пришел');
+        if (booking.status === 'paid' && isPast) return t('bookings.status.attended', 'пришел');
+        return t(`bookings.status.${booking.status}`, booking.status);
     };
 
     if (isLoading) {
-        return (
-            <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                {t('bookings.list.loading', 'Загрузка...')}
-            </div>
-        );
+        return <div className="py-6 text-center text-sm text-[var(--text-muted)]">{t('bookings.list.loading', 'Загрузка...')}</div>;
     }
 
     if (bookings.length === 0) {
         return (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <p className="text-sm">{t('bookings.list.empty', 'Нет бронирований')}</p>
-            </div>
+            <EmptyState
+                title={t('bookings.list.empty', 'Нет бронирований')}
+                description={t(
+                    'bookings.workspace.emptyHint',
+                    'Попробуйте другой пресет, поиск или фильтр по филиалу. История и сегодняшние записи переключаются через один и тот же workspace.',
+                )}
+                className="border border-dashed border-[var(--border-subtle)] bg-[var(--surface-elevated)]"
+            />
         );
     }
 
     return (
         <>
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto -mx-3 sm:mx-0">
-                <div className="inline-block min-w-full align-middle">
-                    <table className="min-w-full">
-                    <thead className="sticky top-0 z-[96]">
-                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">#</th>
-                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.service', 'Услуга')}</th>
-                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.master', 'Мастер')}</th>
-                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.start', 'Начало')}</th>
-                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.status', 'Статус')}</th>
-                            <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider p-3 lg:p-4">{t('bookings.list.actions', 'Действия')}</th>
+            <div className="hidden lg:block overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border-subtle)]">
+                <table className="min-w-full">
+                    <thead className="sticky top-0 z-[96] bg-[var(--surface-emphasis)]">
+                        <tr className="border-b border-[var(--border-subtle)]">
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">ID</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                                {t('bookings.list.service', 'Услуга')}
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                                {t('bookings.workspace.client', 'Клиент')}
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                                {t('bookings.list.master', 'Мастер')}
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                                {t('bookings.list.start', 'Начало')}
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                                {t('bookings.list.status', 'Статус')}
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                                {t('bookings.list.actions', 'Действия')}
+                            </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {bookings.map((b) => {
-                            const service = Array.isArray(b.services) ? b.services[0] : b.services;
-                            const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
-                            const isPast = new Date(b.start_at) < new Date();
-                            const serviceLabel = b.servicesSummary || getServiceName(service);
+                    <tbody className="divide-y divide-[var(--border-subtle)] bg-[var(--surface-card)]">
+                        {bookings.map((booking) => {
+                            const service = Array.isArray(booking.services) ? booking.services[0] : booking.services;
+                            const master = Array.isArray(booking.staff) ? booking.staff[0] : booking.staff;
+                            const branchName = getBranchName(booking.branch_id);
+                            const serviceLabel = booking.servicesSummary || getServiceName(service);
+
                             return (
-                                <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                    <td className="p-3 lg:p-4 text-sm font-mono text-gray-600 dark:text-gray-400">
-                                        <Link href={`/booking/${b.id}`} className="hover:text-indigo-600 dark:hover:text-indigo-400">
-                                            {String(b.id).slice(0, 8)}
+                                <tr key={booking.id} className="align-top transition hover:bg-[var(--surface-elevated)]">
+                                    <td className="px-4 py-4 text-sm font-mono text-[var(--text-secondary)]">
+                                        <Link href={`/booking/${booking.id}`} className="hover:text-[var(--accent-primary)]">
+                                            {String(booking.id).slice(0, 8)}
                                         </Link>
                                     </td>
-                                    <td className="p-3 lg:p-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {serviceLabel}
+                                    <td className="px-4 py-4">
+                                        <div className="max-w-[20rem]">
+                                            <p className="type-label text-[var(--text-primary)]">{serviceLabel}</p>
+                                            {branchName ? <p className="type-caption mt-1 text-[var(--text-muted)]">{branchName}</p> : null}
+                                        </div>
                                     </td>
-                                    <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{master?.full_name}</td>
-                                    <td className="p-3 lg:p-4 text-sm text-gray-700 dark:text-gray-300">{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</td>
-                                    <td className="p-3 lg:p-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
-                                            {b.status === 'no_show' ? t('bookings.status.noShowShort', 'не пришел') : b.status === 'paid' && isPast ? t('bookings.status.attended', 'пришел') : t(`bookings.status.${b.status}`, b.status)}
-                                        </span>
+                                    <td className="px-4 py-4">
+                                        <div className="min-w-[12rem]">
+                                            <p className="type-label text-[var(--text-primary)]">{booking.client_name || t('bookings.workspace.walkIn', 'Клиент у стойки')}</p>
+                                            {booking.client_phone ? (
+                                                <p className="type-caption mt-1 text-[var(--text-muted)]">{booking.client_phone}</p>
+                                            ) : null}
+                                        </div>
                                     </td>
-                                    <td className="p-3 lg:p-4">
+                                    <td className="px-4 py-4 text-sm text-[var(--text-secondary)]">{master?.full_name || '—'}</td>
+                                    <td className="px-4 py-4">
+                                        <div className="min-w-[11rem]">
+                                            <p className="type-label text-[var(--text-primary)]">
+                                                {formatInTimeZone(new Date(booking.start_at), TZ, 'dd.MM.yyyy')}
+                                            </p>
+                                            <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                                {formatInTimeZone(new Date(booking.start_at), TZ, 'HH:mm')} - {formatInTimeZone(new Date(booking.end_at), TZ, 'HH:mm')}
+                                            </p>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <StatusChip
+                                            status={booking.status}
+                                            tone="soft"
+                                            label={getStatusLabel(booking)}
+                                        />
+                                    </td>
+                                    <td className="px-4 py-4">
                                         <QuickActions
-                                            bookingId={b.id}
-                                            status={b.status}
-                                            startAt={b.start_at}
+                                            bookingId={booking.id}
+                                            status={booking.status}
+                                            startAt={booking.start_at}
                                             onConfirm={onConfirm}
                                             onCancel={onCancel}
                                             onMarkAttendance={onMarkAttendance}
-                                            compact={true}
+                                            compact
                                         />
                                     </td>
                                 </tr>
@@ -141,49 +177,56 @@ export function BookingsList({
                         })}
                     </tbody>
                 </table>
-                </div>
             </div>
 
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-3">
-                {bookings.map((b) => {
-                    const service = Array.isArray(b.services) ? b.services[0] : b.services;
-                    const master = Array.isArray(b.staff) ? b.staff[0] : b.staff;
-                    const isPast = new Date(b.start_at) < new Date();
-                    const serviceLabel = b.servicesSummary || getServiceName(service);
+            <div className="space-y-3 lg:hidden">
+                {bookings.map((booking) => {
+                    const service = Array.isArray(booking.services) ? booking.services[0] : booking.services;
+                    const master = Array.isArray(booking.staff) ? booking.staff[0] : booking.staff;
+                    const branchName = getBranchName(booking.branch_id);
+                    const serviceLabel = booking.servicesSummary || getServiceName(service);
+
                     return (
-                        <div key={b.id} className="bg-white dark:bg-gray-900 rounded-lg p-4 space-y-3 border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                    <Link href={`/booking/${b.id}`} className="text-xs font-mono text-indigo-600 dark:text-indigo-400 hover:underline block mb-1">
-                                        #{String(b.id).slice(0, 8)}
+                        <div
+                            key={booking.id}
+                            className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-4 shadow-[var(--shadow-sm)]"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <Link href={`/booking/${booking.id}`} className="type-caption font-mono text-[var(--accent-primary)] hover:underline">
+                                        #{String(booking.id).slice(0, 8)}
                                     </Link>
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                        {serviceLabel || '—'}
-                                    </p>
-                                    {master?.full_name && (
-                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 truncate">{master.full_name}</p>
-                                    )}
+                                    <p className="type-label mt-1 text-[var(--text-primary)]">{serviceLabel || '—'}</p>
+                                    {branchName ? <p className="type-caption mt-1 text-[var(--text-muted)]">{branchName}</p> : null}
                                 </div>
-                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${statusColors[b.status as keyof typeof statusColors] || statusColors.cancelled}`}>
-                                    {b.status === 'no_show' ? t('bookings.status.noShowShort', 'не пришел') : b.status === 'paid' && isPast ? t('bookings.status.attended', 'пришел') : t(`bookings.status.${b.status}`, b.status)}
-                                </span>
+                                <StatusChip status={booking.status} tone="soft" label={getStatusLabel(booking)} />
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span>{formatInTimeZone(new Date(b.start_at), TZ, 'dd.MM.yyyy HH:mm')}</span>
+
+                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-3 py-3">
+                                    <p className="type-caption text-[var(--text-secondary)]">{t('bookings.workspace.client', 'Клиент')}</p>
+                                    <p className="type-label mt-1 text-[var(--text-primary)]">{booking.client_name || t('bookings.workspace.walkIn', 'Клиент у стойки')}</p>
+                                    {booking.client_phone ? (
+                                        <p className="type-caption mt-1 text-[var(--text-muted)]">{booking.client_phone}</p>
+                                    ) : null}
+                                </div>
+                                <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-3 py-3">
+                                    <p className="type-caption text-[var(--text-secondary)]">{t('bookings.list.master', 'Мастер')}</p>
+                                    <p className="type-label mt-1 text-[var(--text-primary)]">{master?.full_name || '—'}</p>
+                                    <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                        {formatInTimeZone(new Date(booking.start_at), TZ, 'dd.MM.yyyy')} • {formatInTimeZone(new Date(booking.start_at), TZ, 'HH:mm')}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+
+                            <div className="mt-4 border-t border-[var(--border-subtle)] pt-3">
                                 <QuickActions
-                                    bookingId={b.id}
-                                    status={b.status}
-                                    startAt={b.start_at}
+                                    bookingId={booking.id}
+                                    status={booking.status}
+                                    startAt={booking.start_at}
                                     onConfirm={onConfirm}
                                     onCancel={onCancel}
                                     onMarkAttendance={onMarkAttendance}
-                                    compact={false}
                                 />
                             </div>
                         </div>
@@ -191,34 +234,35 @@ export function BookingsList({
                 })}
             </div>
 
-            {/* Pagination */}
-            {totalCount !== undefined && currentPage !== undefined && onPageChange && totalCount > itemsPerPage && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('bookings.list.paginationInfo', 'Показано')} {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalCount)} {t('bookings.list.of', 'из')} {totalCount}
-                    </div>
+            {totalCount > itemsPerPage ? (
+                <div className="flex flex-col gap-3 border-t border-[var(--border-subtle)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="type-caption text-[var(--text-muted)]">
+                        {t('bookings.list.paginationInfo', 'Показано')} {(currentPage - 1) * itemsPerPage + 1}-
+                        {Math.min(currentPage * itemsPerPage, totalCount)} {t('bookings.list.of', 'из')} {totalCount}
+                    </p>
                     <div className="flex items-center gap-2">
-                        <button
+                        <Button
                             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1 || isLoading}
-                            className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                            variant="outline"
+                            size="sm"
                         >
                             {t('bookings.list.prev', 'Назад')}
-                        </button>
-                        <span className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300">
+                        </Button>
+                        <span className="type-caption px-2 text-[var(--text-secondary)]">
                             {t('bookings.list.page', 'Страница')} {currentPage} {t('bookings.list.of', 'из')} {Math.ceil(totalCount / itemsPerPage)}
                         </span>
-                        <button
+                        <Button
                             onClick={() => onPageChange(Math.min(Math.ceil(totalCount / itemsPerPage), currentPage + 1))}
                             disabled={currentPage >= Math.ceil(totalCount / itemsPerPage) || isLoading}
-                            className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                            variant="outline"
+                            size="sm"
                         >
                             {t('bookings.list.next', 'Вперед')}
-                        </button>
+                        </Button>
                     </div>
                 </div>
-            )}
+            ) : null}
         </>
     );
 }
-

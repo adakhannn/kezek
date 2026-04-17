@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
+
 import { getT } from '@/app/_components/i18n/server';
 import { Badge } from '@/components/ui/Badge';
 import { Button, buttonStyles } from '@/components/ui/Button';
@@ -128,6 +130,7 @@ export default async function Page() {
                     </Link>
                 }
             />
+            <AdminEntityFlowTabs entity="businesses" className="max-w-3xl" />
 
             {!list || list.length === 0 ? (
                 <EmptyState

@@ -1,17 +1,17 @@
-import type {Metadata} from 'next';
-import {Geist, Geist_Mono} from 'next/font/google';
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
 
 import './globals.css';
-import {AppShellHeader} from './_components/AppShellHeader';
-import {AuthStatusUpdater} from './_components/AuthStatusWrapper';
-import {Footer} from './_components/Footer';
-import {ReminderBanners} from './_components/ReminderBanners';
-import {LanguageProvider} from './_components/i18n/LanguageProvider';
-import {getServerLocale} from './_components/i18n/server';
+import { AppShellHeader } from './_components/AppShellHeader';
+import { AuthStatusUpdater } from './_components/AuthStatusWrapper';
+import { Footer } from './_components/Footer';
+import { ReminderBanners } from './_components/ReminderBanners';
+import { LanguageProvider } from './_components/i18n/LanguageProvider';
+import { getServerLocale } from './_components/i18n/server';
 
-import {ErrorBoundary} from '@/components/ErrorBoundary';
-import {PerformanceTracking} from '@/components/PerformanceTracking';
-import {ReactQueryProvider} from '@/lib/react-query';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { PerformanceTracking } from '@/components/PerformanceTracking';
+import { ReactQueryProvider } from '@/lib/react-query';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -24,12 +24,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'Kezek вЂ” Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ РІ РћС€Рµ',
-    description: 'Р‘С‹СЃС‚СЂР°СЏ Р·Р°РїРёСЃСЊ РІ СЃРµСЂРІРёСЃС‹ РіРѕСЂРѕРґР° РћС€',
+    title: 'Kezek - booking platform and business workspace',
+    description: 'Fast booking flow and service marketplace for clients and teams.',
     manifest: '/manifest.webmanifest',
     icons: [
-        {rel: 'icon', url: '/icon-192.png'},
-        {rel: 'apple-touch-icon', url: '/icon-192.png'},
+        { rel: 'icon', url: '/icon-192.png' },
+        { rel: 'apple-touch-icon', url: '/icon-192.png' },
     ],
     other: {
         'facebook-domain-verification': 'g5lm3sbfqpeijkt93lqgoxg65tqlz3',

@@ -26,12 +26,17 @@ export default function ConfirmDialog({
     onCancel,
 }: ConfirmDialogProps) {
     return (
-        <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} accessibilityViewIsModal>
             <View style={styles.overlay}>
-                <MotionPressable style={styles.backdrop} onPress={onCancel}>
+                <MotionPressable
+                    style={styles.backdrop}
+                    onPress={onCancel}
+                    accessibilityLabel="Закрыть диалог"
+                    accessibilityHint="Закрывает диалог без подтверждения"
+                >
                     <View />
                 </MotionPressable>
-                <View style={styles.dialog}>
+                <View style={styles.dialog} accessibilityRole="alert" accessible>
                     <Text style={styles.title}>{title}</Text>
                     <Text style={styles.message}>{message}</Text>
                     <View style={styles.actions}>

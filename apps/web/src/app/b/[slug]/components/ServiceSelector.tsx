@@ -89,6 +89,8 @@ export function ServiceSelector({
                             data-testid="service-card"
                             data-selected={selected}
                             onClick={() => onToggle(service.id)}
+                            aria-pressed={selected}
+                            aria-label={`${formatServiceName(service)}: ${selected ? t('booking.step4.selected', 'Добавлено в визит') : t('booking.step4.available', 'Можно выбрать')}`}
                             className={[
                                 'flex w-full items-start justify-between gap-3 rounded-[22px] border px-4 py-4 text-left transition-all',
                                 selected
@@ -143,7 +145,7 @@ export function ServiceSelector({
             </div>
 
             {selectedServiceIds.length > 0 ? (
-                <div className="rounded-[22px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3">
+                <div className="rounded-[22px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-4 py-3" aria-live="polite">
                     <div className="type-label text-[var(--text-primary)]">
                         {t('booking.step4.total', 'Всего')}: {totalDurationMin} {t('booking.duration.min', 'мин')}
                         {(totalPriceFrom > 0 || totalPriceTo > 0) ? (

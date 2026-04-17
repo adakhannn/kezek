@@ -184,6 +184,68 @@ jobs:
           path: apps/web/playwright-report/
           retention-days: 30
 
+  e2e_visual_regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install deps (root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Install deps (apps/web)
+        run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Validate visual regression env on main/schedule
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+        env:
+          E2E_TEST_BUSINESS_SLUG: ${{ secrets.E2E_TEST_BUSINESS_SLUG }}
+          E2E_TEST_MANAGER_EMAIL: ${{ secrets.E2E_TEST_MANAGER_EMAIL }}
+          E2E_TEST_STAFF_ID: ${{ secrets.E2E_TEST_STAFF_ID }}
+        run: |
+          for v in E2E_TEST_BUSINESS_SLUG E2E_TEST_MANAGER_EMAIL E2E_TEST_STAFF_ID; do
+            if [ -z "${!v}" ]; then
+              echo "Missing required visual regression env: $v"
+              exit 1
+            fi
+          done
+
+      - name: Run visual regression suite
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.E2E_TEST_BASE_URL || 'http://localhost:3000' }}
+          E2E_TEST_BUSINESS_SLUG: ${{ secrets.E2E_TEST_BUSINESS_SLUG }}
+          E2E_TEST_MANAGER_EMAIL: ${{ secrets.E2E_TEST_MANAGER_EMAIL }}
+          E2E_TEST_STAFF_ID: ${{ secrets.E2E_TEST_STAFF_ID }}
+          E2E_TEST_STAFF_EMAIL: ${{ secrets.E2E_TEST_STAFF_EMAIL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder' }}
+        run: pnpm test:e2e:visual
+        working-directory: apps/web
+
+      - name: Upload visual regression results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-regressions-report
+          path: apps/web/playwright-report/
+          retention-days: 30
+
   e2e_tests:
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -217,6 +279,8 @@ jobs:
         env:
           PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.E2E_TEST_BASE_URL || 'http://localhost:3000' }}
           E2E_TEST_BUSINESS_SLUG: ${{ secrets.E2E_TEST_BUSINESS_SLUG }}
+          E2E_TEST_MANAGER_EMAIL: ${{ secrets.E2E_TEST_MANAGER_EMAIL }}
+          E2E_TEST_STAFF_ID: ${{ secrets.E2E_TEST_STAFF_ID }}
           E2E_TEST_STAFF_EMAIL: ${{ secrets.E2E_TEST_STAFF_EMAIL }}
           E2E_TEST_STAFF_PASSWORD: ${{ secrets.E2E_TEST_STAFF_PASSWORD }}
         run: pnpm test:e2e:full-seeded

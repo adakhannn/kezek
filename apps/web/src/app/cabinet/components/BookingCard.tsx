@@ -8,7 +8,10 @@ import MapDialog from './MapDialog';
 import ReviewDialog from './ReviewDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { Badge } from '@/components/ui/Badge';
+import { Button, buttonStyles } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { StatusChip } from '@/components/ui/StatusChip';
 import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { getTimezone } from '@/lib/env';
@@ -41,7 +44,7 @@ export default function BookingCard({
     start_at: string;
     end_at: string;
     service: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number } | null;
-    /** РџРѕР»РЅС‹Р№ СЃРїРёСЃРѕРє СѓСЃР»СѓРі РІРёР·РёС‚Р° (РµСЃР»Рё СЌС‚Рѕ РєРѕРјРїР»РµРєСЃ); РїСЂРё РѕС‚СЃСѓС‚СЃС‚РІРёРё вЂ” РІРµРґС‘Рј СЃРµР±СЏ РєР°Рє СЃРµР№С‡Р°СЃ (РѕРґРЅР° СѓСЃР»СѓРіР°) */
+    /** Full list of visit services (for service bundles); when absent, treat as single-service visit. */
     servicesList?: { id: string; name_ru: string; name_ky?: string | null; name_en?: string | null; duration_min: number }[];
     staff: { id: string; full_name: string } | null;
     branch: { id: string; name: string; lat: number | null; lon: number | null; address: string | null } | null;
@@ -59,24 +62,21 @@ export default function BookingCard({
     const [openReview, setOpenReview] = useState(false);
     const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
     const [busy, setBusy] = useState(false);
-    // Р›РѕРєР°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РґР»СЏ РѕС‚Р·С‹РІР° (РѕРїС‚РёРјРёСЃС‚РёС‡РЅРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ)
     const [review, setReview] = useState(initialReview);
-    // Р¤Р»Р°Рі РґР»СЏ Р±Р»РѕРєРёСЂРѕРІРєРё РїРѕРІС‚РѕСЂРЅС‹С… РєР»РёРєРѕРІ
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
-    // Ref РґР»СЏ С…СЂР°РЅРµРЅРёСЏ timeoutId РґР»СЏ РѕС‡РёСЃС‚РєРё РїСЂРё СЂР°Р·РјРѕРЅС‚РёСЂРѕРІР°РЅРёРё
     const reloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const { t, locale } = useLanguage();
     const toast = useToast();
 
     const getServiceName = (svc: typeof service): string => {
-        if (!svc) return t('cabinet.bookings.card.service', 'РЈСЃР»СѓРіР°');
+        if (!svc) return t('cabinet.bookings.card.service', 'Service');
         if (locale === 'ky' && svc.name_ky) return svc.name_ky;
         if (locale === 'en' && svc.name_en) return svc.name_en;
         return svc.name_ru;
     };
 
     const formatStaffName = (name: string | null | undefined): string => {
-        if (!name) return t('cabinet.bookings.card.masterNotSet', 'РњР°СЃС‚РµСЂ РЅРµ СѓРєР°Р·Р°РЅ');
+        if (!name) return t('cabinet.bookings.card.masterNotSet', 'Master is not assigned');
         if (locale === 'en') return transliterate(name);
         return name;
     };
@@ -107,12 +107,10 @@ export default function BookingCard({
         window.location.href = `/b/${business.slug}`;
     }
 
-    // РЎРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РѕС‚Р·С‹РІР° РїСЂРё РёР·РјРµРЅРµРЅРёРё РїСЂРѕРїСЃРѕРІ
     useEffect(() => {
         setReview(initialReview);
     }, [initialReview]);
 
-    // Cleanup: РѕС‡РёС‰Р°РµРј timeout РїСЂРё СЂР°Р·РјРѕРЅС‚РёСЂРѕРІР°РЅРёРё РєРѕРјРїРѕРЅРµРЅС‚Р°
     useEffect(() => {
         return () => {
             if (reloadTimeoutRef.current) {
@@ -134,7 +132,7 @@ export default function BookingCard({
                     payload.error ||
                         t(
                             'cabinet.bookings.card.cancelError',
-                            'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РјРµРЅРёС‚СЊ',
+                            'Failed to cancel booking',
                         ),
                 );
                 return;
@@ -170,26 +168,24 @@ export default function BookingCard({
     
     const startDate = new Date(start_at);
     const endDate = new Date(end_at);
-    const when = `${dateFormatter.format(startDate)} вЂ” ${timeFormatter.format(endDate)}`;
+    const when = `${dateFormatter.format(startDate)} - ${timeFormatter.format(endDate)}`;
 
     const totalDurationMin =
         servicesList && servicesList.length > 0
             ? servicesList.reduce((sum, s) => sum + (s.duration_min || 0), 0)
             : service?.duration_min ?? 0;
     const hasMultipleServices = servicesList && servicesList.length > 1;
-
-    const statusColors = {
-        hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-        confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        paid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    };
+    const canLeaveReview = !canCancel && !review && status !== 'cancelled';
+    const canEditReview = !canCancel && !!review && status !== 'cancelled';
+    const canRepeatBooking = !!(service && business);
+    const hasLocation = !!(business?.name || branch?.name || branch?.address);
+    const hasMapCoordinates = branch?.lat != null && branch?.lon != null;
 
     const statusLabels = {
-        hold: t('cabinet.bookings.card.status.hold', 'РћР¶РёРґР°РµС‚ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ'),
-        confirmed: t('cabinet.bookings.card.status.confirmed', 'РџРѕРґС‚РІРµСЂР¶РґРµРЅР°'),
-        paid: t('cabinet.bookings.card.status.paid', 'РћРїР»Р°С‡РµРЅР°'),
-        cancelled: t('cabinet.bookings.card.status.cancelled', 'РћС‚РјРµРЅРµРЅР°'),
+        hold: t('cabinet.bookings.card.status.hold', 'Pending confirmation'),
+        confirmed: t('cabinet.bookings.card.status.confirmed', 'Confirmed'),
+        paid: t('cabinet.bookings.card.status.paid', 'Paid'),
+        cancelled: t('cabinet.bookings.card.status.cancelled', 'Cancelled'),
     };
 
     const statusOrder: Record<typeof status, number> = {
@@ -206,139 +202,186 @@ export default function BookingCard({
     }> = [
         {
             key: 'created',
-            label: t('cabinet.bookings.timeline.created', 'РЎРѕР·РґР°РЅРѕ'),
+            label: t('cabinet.bookings.timeline.created', 'Created'),
             done: true,
         },
         {
             key: 'confirmed',
-            label: t('cabinet.bookings.timeline.confirmed', 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРѕ'),
+            label: t('cabinet.bookings.timeline.confirmed', 'Confirmed'),
             done: statusOrder[status] >= 2,
         },
         {
             key: 'completed',
             label:
                 status === 'cancelled'
-                    ? t('cabinet.bookings.timeline.cancelled', 'РћС‚РјРµРЅРµРЅРѕ')
-                    : t('cabinet.bookings.timeline.completed', 'Р—Р°РІРµСЂС€РµРЅРѕ'),
+                    ? t('cabinet.bookings.timeline.cancelled', 'Cancelled')
+                    : t('cabinet.bookings.timeline.completed', 'Completed'),
             done: statusOrder[status] >= 3,
         },
         {
             key: 'promo',
-            label: t('cabinet.bookings.timeline.promo', 'РџСЂРѕРјРѕ РїСЂРёРјРµРЅРµРЅРѕ'),
+            label: t('cabinet.bookings.timeline.promo', 'Promo applied'),
             done: !!(promotionApplied && status === 'paid'),
         },
     ];
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-5 sm:p-6 shadow-md border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all duration-200">
-            {/* Р—Р°РіРѕР»РѕРІРѕРє РєР°СЂС‚РѕС‡РєРё */}
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}>
-                            <span className={`w-2 h-2 rounded-full ${
-                                status === 'paid' ? 'bg-green-500' :
-                                status === 'confirmed' ? 'bg-blue-500' :
-                                status === 'hold' ? 'bg-yellow-500' :
-                                'bg-red-500'
-                            }`}></span>
-                            {statusLabels[status]}
-                        </div>
+        <div className="rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-md)] transition-all duration-[var(--motion-base)] hover:shadow-[var(--shadow-lg)] sm:p-6">
+            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <StatusChip status={status} label={statusLabels[status]} className="shrink-0" />
+                        <span className="type-label rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-[var(--text-secondary)]">
+                            #{bookingId.slice(0, 8)}
+                        </span>
+                        {promotionApplied ? (
+                            <Badge variant="success" size="md">
+                                {t('cabinet.bookings.timeline.promo', 'Promo applied')}
+                            </Badge>
+                        ) : null}
+                        {subscriptionApplied ? (
+                            <Badge variant="info" size="md">
+                                {t('cabinet.bookings.card.paidWithPackage', 'Paid with package')}
+                            </Badge>
+                        ) : null}
                     </div>
-                    <h3 className="type-section-title mb-1 text-gray-900 dark:text-gray-100">
-                        {getServiceName(service)}
-                    </h3>
-                    {hasMultipleServices && servicesList && (
-                        <div className="mt-1 space-y-1.5 text-gray-600 dark:text-gray-400">
-                            <p className="type-label text-gray-700 dark:text-gray-200">
-                                {t('cabinet.bookings.card.servicesList.title', 'РЈСЃР»СѓРіРё РІ РІРёР·РёС‚Рµ:')}
-                            </p>
-                            <ul className="space-y-0.5">
-                                {servicesList.map((s) => (
-                                    <li key={s.id} className="flex items-baseline justify-between gap-2">
-                                        <span className="type-body font-medium text-gray-800 dark:text-gray-100">
-                                            {getServiceName(s as typeof service)}
-                                        </span>
-                                        <span className="type-caption text-gray-500 dark:text-gray-400">
-                                            {s.duration_min}{' '}{t('booking.duration.min', 'РјРёРЅ')}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <p className="type-label text-gray-700 dark:text-gray-300">
-                                {t('cabinet.bookings.card.totalDuration', 'Р’СЃРµРіРѕ:')}{' '}
-                                {totalDurationMin}{' '}{t('booking.duration.min', 'РјРёРЅ')}
-                            </p>
+                    <div className="space-y-2">
+                        <h3 className="type-section-title text-[var(--text-primary)]">
+                            {getServiceName(service)}
+                        </h3>
+                        <div className="type-body flex flex-wrap items-center gap-x-3 gap-y-2 text-[var(--text-secondary)]">
+                            <span className="inline-flex items-center gap-2">
+                                <svg className="h-4 w-4 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>{when}</span>
+                            </span>
+                            <span className="inline-flex items-center gap-2">
+                                <svg className="h-4 w-4 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span>{formatStaffName(staff?.full_name)}</span>
+                            </span>
                         </div>
-                    )}
-                    <div className="type-caption flex flex-wrap items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            {formatStaffName(staff?.full_name)}
-                        </span>
-                        <span>вЂў</span>
-                        <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {business?.name} {branch?.name && `вЂў ${branch.name}`}
-                        </span>
+                        {hasLocation ? (
+                            <div className="type-caption flex flex-wrap items-center gap-2 text-[var(--text-muted)]">
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span>
+                                    {business?.name}
+                                    {branch?.name ? ` • ${branch.name}` : ''}
+                                    {branch?.address ? ` • ${branch.address}` : ''}
+                                </span>
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[18rem] lg:grid-cols-1">
+                    <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
+                        <p className="type-label text-[var(--text-muted)]">
+                            {t('cabinet.bookings.card.summary.when', 'Date and time')}
+                        </p>
+                        <p className="type-body mt-2 font-medium text-[var(--text-primary)]">{dateFormatter.format(startDate)}</p>
+                        <p className="type-caption mt-1 text-[var(--text-secondary)]">
+                            {timeFormatter.format(startDate)} - {timeFormatter.format(endDate)} • {TZ}
+                        </p>
+                    </div>
+                    <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
+                        <p className="type-label text-[var(--text-muted)]">
+                            {t('cabinet.bookings.card.summary.duration', 'Duration')}
+                        </p>
+                        <p className="type-body mt-2 font-medium text-[var(--text-primary)]">
+                            {totalDurationMin} {t('booking.duration.min', 'мин')}
+                        </p>
+                        <p className="type-caption mt-1 text-[var(--text-secondary)]">
+                            {hasMultipleServices
+                                ? t('cabinet.bookings.card.servicesList.title', 'Services in visit')
+                                : t('cabinet.bookings.card.service', 'Service')}
+                        </p>
+                    </div>
+                    <div className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
+                        <p className="type-label text-[var(--text-muted)]">
+                            {t('cabinet.bookings.card.summary.nextAction', 'Next action')}
+                        </p>
+                        <p className="type-body mt-2 font-medium text-[var(--text-primary)]">
+                            {canCancel
+                                ? t('cabinet.bookings.card.actions.cancel', 'Cancel')
+                                : canLeaveReview
+                                    ? t('cabinet.bookings.card.actions.review', 'Leave review')
+                                    : canEditReview
+                                        ? t('cabinet.bookings.card.actions.editReviewShort', 'Edit review')
+                                        : t('cabinet.bookings.card.actions.repeat', 'Repeat')}
+                        </p>
+                        <p className="type-caption mt-1 text-[var(--text-secondary)]">
+                            {status === 'cancelled'
+                                ? t('cabinet.bookings.timeline.cancelled', 'Cancelled')
+                                : status === 'paid'
+                                    ? t('cabinet.bookings.timeline.completed', 'Completed')
+                                    : statusLabels[status]}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            {/* РўР°Р№РјР»Р°Р№РЅ СЃС‚Р°С‚СѓСЃРѕРІ */}
-            <div className="flex items-center gap-2 mb-3">
-                {timelineSteps.map((step, index) => (
-                    <div key={step.key} className="type-caption flex items-center gap-1 text-gray-500 dark:text-gray-400">
+            <div className="mb-4 rounded-[20px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_88%,var(--surface-page))] p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="type-label text-[var(--text-secondary)]">
+                        {t('cabinet.bookings.card.progress', 'Booking progress')}
+                    </p>
+                    <span className="type-caption text-[var(--text-muted)]">{statusLabels[status]}</span>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-4">
+                    {timelineSteps.map((step) => (
                         <div
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                            key={step.key}
+                            className={`rounded-[16px] border px-3 py-3 ${
                                 step.done
-                                    ? 'bg-indigo-600 border-indigo-600 text-white'
-                                    : 'border-gray-300 dark:border-gray-600'
+                                    ? 'border-[color:color-mix(in_srgb,var(--accent-primary)_24%,transparent)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)]'
+                                    : 'border-[var(--border-subtle)] bg-[var(--surface-card)]'
                             }`}
                         >
-                            {step.done ? (
-                                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 10l3 3 7-7"
-                                    />
-                                </svg>
-                            ) : (
-                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
-                            )}
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className={`flex h-6 w-6 items-center justify-center rounded-full border ${
+                                        step.done
+                                            ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)] text-[var(--text-inverse)]'
+                                            : 'border-[var(--border-default)] text-[var(--text-muted)]'
+                                    }`}
+                                >
+                                    {step.done ? (
+                                        <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l3 3 7-7" />
+                                        </svg>
+                                    ) : (
+                                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                                    )}
+                                </div>
+                                <span className="type-label text-[var(--text-primary)]">{step.label}</span>
+                            </div>
                         </div>
-                        <span>{step.label}</span>
-                        {index < timelineSteps.length - 1 && (
-                            <span className="w-6 h-px bg-gray-200 dark:bg-gray-700 mx-1" />
-                        )}
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
 
-            {/* РџСЂРёРјРµРЅС‘РЅРЅР°СЏ Р°РєС†РёСЏ */}
             {promotionApplied && typeof promotionApplied === 'object' && 'promotion_type' in promotionApplied && (
-                <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/40">
+                <div className="mb-3 rounded-lg border border-[color:color-mix(in_srgb,var(--status-success)_30%,transparent)] bg-[var(--status-success-soft)] px-3 py-2">
                     <div className="flex items-start gap-2">
-                        <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--status-success)]" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                         </svg>
                         <div className="flex-1">
-                            <p className="type-label mb-1 text-emerald-900 dark:text-emerald-100">
-                                {t('cabinet.bookings.card.promotionApplied', 'РџСЂРёРјРµРЅРµРЅР° Р°РєС†РёСЏ:')}
+                            <p className="type-label mb-1 text-[var(--status-success)]">
+                                {t('cabinet.bookings.card.promotionApplied', 'Applied promotion:')}
                             </p>
-                            <p className="type-caption text-emerald-800 dark:text-emerald-200">
+                            <p className="type-caption text-[color:color-mix(in_srgb,var(--status-success)_86%,var(--text-primary))]">
                                 {String(promotionApplied.promotion_title || promotionApplied.promotion_type || '')}
-                                {('discount_percent' in promotionApplied && promotionApplied.discount_percent) ? ` вЂ” ${String(promotionApplied.discount_percent)}%` : ''}
+                                {('discount_percent' in promotionApplied && promotionApplied.discount_percent) ? ` - ${String(promotionApplied.discount_percent)}%` : ''}
                                 {('final_amount' in promotionApplied && promotionApplied.final_amount) ? (
                                     <span className="ml-2 font-semibold">
-                                        {t('cabinet.bookings.card.finalAmount', 'РС‚РѕРіРѕРІР°СЏ СЃСѓРјРјР°:')} {String(promotionApplied.final_amount)} {t('booking.currency', 'СЃРѕРј')}
+                                        {t('cabinet.bookings.card.finalAmount', 'Final amount:')} {String(promotionApplied.final_amount)} {t('booking.currency', 'som')}
                                     </span>
                                 ) : null}
                             </p>
@@ -347,22 +390,21 @@ export default function BookingCard({
                 </div>
             )}
 
-            {/* РћРїР»Р°С‡РµРЅРѕ РїР°РєРµС‚РѕРј РІРёР·РёС‚РѕРІ */}
             {subscriptionApplied && typeof subscriptionApplied === 'object' && ('plan_id' in subscriptionApplied || 'plan_name_ru' in subscriptionApplied || 'promotion_title' in subscriptionApplied) && (() => {
                 const name = String((subscriptionApplied as Record<string, unknown>).plan_name_ru ?? (subscriptionApplied as Record<string, unknown>).promotion_title ?? '');
                 const finalAmount = (subscriptionApplied as Record<string, unknown>).final_amount;
                 return (
-                    <div className="mb-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 dark:border-indigo-800 dark:bg-indigo-950/40">
+                    <div className="mb-3 rounded-lg border border-[color:color-mix(in_srgb,var(--status-info)_30%,transparent)] bg-[var(--status-info-soft)] px-3 py-2">
                         <div className="flex items-start gap-2">
-                            <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--status-info)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
                             <div className="flex-1">
-                                <p className="type-label text-indigo-900 dark:text-indigo-100">
-                                    {t('cabinet.bookings.card.paidWithPackage', 'РћРїР»Р°С‡РµРЅРѕ РїР°РєРµС‚РѕРј')}: В«{name}В»
+                                <p className="type-label text-[var(--status-info)]">
+                                    {t('cabinet.bookings.card.paidWithPackage', 'Paid with package')}: "{name}"
                                     {finalAmount != null && (
-                                        <span className="ml-2 font-semibold text-indigo-800 dark:text-indigo-200">
-                                            {t('cabinet.bookings.card.finalAmount', 'РС‚РѕРіРѕРІР°СЏ СЃСѓРјРјР°:')} {String(finalAmount)} {t('booking.currency', 'СЃРѕРј')}
+                                        <span className="ml-2 font-semibold text-[color:color-mix(in_srgb,var(--status-info)_86%,var(--text-primary))]">
+                                            {t('cabinet.bookings.card.finalAmount', 'Final amount:')} {String(finalAmount)} {t('booking.currency', 'som')}
                                         </span>
                                     )}
                                 </p>
@@ -372,22 +414,38 @@ export default function BookingCard({
                 );
             })()}
 
-            {/* Р’СЂРµРјСЏ */}
-            <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <div className="flex-1">
-                    <div className="type-body font-medium text-gray-900 dark:text-gray-100">{when}</div>
-                    <div className="type-caption text-gray-500 dark:text-gray-400">{TZ}</div>
+            {hasMultipleServices && servicesList ? (
+                <div className="mb-4 rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="type-label text-[var(--text-secondary)]">
+                            {t('cabinet.bookings.card.servicesList.title', 'Services in visit')}
+                        </p>
+                        <span className="type-caption text-[var(--text-muted)]">
+                            {t('cabinet.bookings.card.totalDuration', 'Total:')} {totalDurationMin} {t('booking.duration.min', 'min')}
+                        </span>
+                    </div>
+                    <ul className="mt-3 grid gap-2">
+                        {servicesList.map((s) => (
+                            <li
+                                key={s.id}
+                                className="flex items-center justify-between gap-3 rounded-[16px] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-2"
+                            >
+                                <span className="type-body font-medium text-[var(--text-primary)]">
+                                    {getServiceName(s as typeof service)}
+                                </span>
+                                <span className="type-caption text-[var(--text-muted)]">
+                                    {s.duration_min} {t('booking.duration.min', 'min')}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
-            </div>
+            ) : null}
 
-            {/* РћС‚Р·С‹РІ (РµСЃР»Рё РµСЃС‚СЊ) */}
             {review && status !== 'cancelled' && (
-                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="mb-4 rounded-lg border border-[color:color-mix(in_srgb,var(--status-success)_30%,transparent)] bg-[var(--status-success-soft)] p-3">
                     <div className="flex items-start gap-2">
-                        <svg className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--status-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                         </svg>
                         <div className="flex-1">
@@ -396,7 +454,7 @@ export default function BookingCard({
                                     {Array.from({ length: 5 }).map((_, i) => (
                                         <svg
                                             key={i}
-                                            className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300 dark:text-gray-600'}`}
+                                            className={`h-4 w-4 ${i < review.rating ? 'fill-current text-[var(--status-warning)]' : 'text-[var(--text-muted)]/55'}`}
                                             fill="currentColor"
                                             viewBox="0 0 20 20"
                                         >
@@ -404,90 +462,116 @@ export default function BookingCard({
                                         </svg>
                                     ))}
                                 </div>
-                                <span className="type-body font-medium text-gray-700 dark:text-gray-300">
-                                    {t('cabinet.bookings.card.review.title', 'Р’Р°С€ РѕС‚Р·С‹РІ: {rating}в…').replace('{rating}', String(review.rating))}
+                                <span className="type-body font-medium text-[var(--text-primary)]">
+                                    {t('cabinet.bookings.card.review.title', 'Your review: {rating}*').replace('{rating}', String(review.rating))}
                                 </span>
                             </div>
                             {review.comment && (
-                                <p className="type-body mt-1 whitespace-pre-wrap text-gray-600 dark:text-gray-400">{review.comment}</p>
+                                <p className="type-body mt-1 whitespace-pre-wrap text-[var(--text-secondary)]">{review.comment}</p>
                             )}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Р”РµР№СЃС‚РІРёСЏ */}
-            <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <a
-                    className="type-label inline-flex items-center gap-2 rounded-lg bg-indigo-50 px-4 py-2 text-indigo-700 transition-colors hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300 dark:hover:bg-indigo-900/30"
-                    href={`/booking/${bookingId}`}
-                    target="_blank"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    {t('cabinet.bookings.card.actions.open', 'РћС‚РєСЂС‹С‚СЊ')}
-                </a>
-                <button
-                    className="type-label inline-flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                    onClick={() => setShowMap(true)}
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {t('cabinet.bookings.card.actions.onMap', 'РќР° РєР°СЂС‚Рµ')}
-                </button>
-                {canCancel && (
-                    <button
-                        disabled={busy}
-                        className="type-label inline-flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30"
-                        onClick={() => setConfirmCancelOpen(true)}
+            <div className="flex flex-col gap-3 border-t border-[var(--border-subtle)] pt-4">
+                <div className="flex flex-wrap gap-2">
+                    {canRepeatBooking ? (
+                        <Button
+                            type="button"
+                            onClick={repeatBooking}
+                            size="md"
+                            leadingIcon={
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            }
+                        >
+                            {t('cabinet.bookings.card.actions.repeat', 'Повторить')}
+                        </Button>
+                    ) : null}
+
+                    <a
+                        className={buttonStyles({ variant: 'secondary', size: 'md' })}
+                        href={`/booking/${bookingId}`}
+                        target="_blank"
+                        rel="noreferrer"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        {busy ? t('cabinet.bookings.card.actions.cancelling', 'РћС‚РјРµРЅР°...') : t('cabinet.bookings.card.actions.cancel', 'РћС‚РјРµРЅРёС‚СЊ')}
-                    </button>
-                )}
-                {!canCancel && !review && status !== 'cancelled' && (
-                    <button
-                        disabled={reviewSubmitting}
-                        className="type-label inline-flex items-center gap-2 rounded-lg bg-yellow-50 px-4 py-2 text-yellow-700 transition-colors hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-yellow-900/20 dark:text-yellow-300 dark:hover:bg-yellow-900/30"
-                        onClick={() => {
-                            setReviewSubmitting(true);
-                            setOpenReview(true);
-                        }}
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                        </svg>
-                        {t('cabinet.bookings.card.actions.review', 'РћСЃС‚Р°РІРёС‚СЊ РѕС‚Р·С‹РІ')}
-                    </button>
-                )}
-                {!canCancel && review && status !== 'cancelled' && (
-                    <button
-                        className="type-label inline-flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2 text-green-700 transition-colors hover:bg-green-100 dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-900/30"
-                        onClick={() => setOpenReview(true)}
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        {t('cabinet.bookings.card.actions.editReview', 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ РѕС‚Р·С‹РІ ({rating}в…)').replace('{rating}', String(review.rating))}
-                    </button>
-                )}
-                {service && business && (
-                    <button
+                        <span>{t('cabinet.bookings.card.actions.open', 'Открыть')}</span>
+                    </a>
+
+                    <Button
                         type="button"
-                        onClick={repeatBooking}
-                        className="type-label inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-pink-600 px-4 py-2 text-white shadow-sm transition-all hover:from-indigo-700 hover:to-pink-700 hover:shadow-md"
+                        variant="outline"
+                        size="md"
+                        onClick={() => setShowMap(true)}
+                        disabled={!hasMapCoordinates}
+                        leadingIcon={
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        }
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        {t('cabinet.bookings.card.actions.repeat', 'РџРѕРІС‚РѕСЂРёС‚СЊ')}
-                    </button>
-                )}
+                        {t('cabinet.bookings.card.actions.onMap', 'На карте')}
+                    </Button>
+
+                    {canLeaveReview ? (
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="md"
+                            disabled={reviewSubmitting}
+                            onClick={() => {
+                                setReviewSubmitting(true);
+                                setOpenReview(true);
+                            }}
+                            leadingIcon={
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                </svg>
+                            }
+                        >
+                            {t('cabinet.bookings.card.actions.review', 'Оставить отзыв')}
+                        </Button>
+                    ) : null}
+
+                    {canEditReview ? (
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="md"
+                            onClick={() => setOpenReview(true)}
+                            leadingIcon={
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            }
+                        >
+                            {t('cabinet.bookings.card.actions.editReview', 'Редактировать отзыв ({rating}★)').replace('{rating}', String(review?.rating ?? ''))}
+                        </Button>
+                    ) : null}
+
+                    {canCancel ? (
+                        <Button
+                            type="button"
+                            variant="danger"
+                            size="md"
+                            disabled={busy}
+                            onClick={() => setConfirmCancelOpen(true)}
+                            leadingIcon={
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            }
+                        >
+                            {busy ? t('cabinet.bookings.card.actions.cancelling', 'Отмена...') : t('cabinet.bookings.card.actions.cancel', 'Отменить')}
+                        </Button>
+                    ) : null}
+                </div>
             </div>
 
             {showMap && (
@@ -496,7 +580,7 @@ export default function BookingCard({
                     onClose={() => setShowMap(false)}
                     lat={branch?.lat ?? null}
                     lon={branch?.lon ?? null}
-                    title={`${business?.name ?? ''} вЂ” ${branch?.name ?? ''}`}
+                    title={`${business?.name ?? ''} - ${branch?.name ?? ''}`}
                     address={branch?.address ?? ''}
                 />
             )}
@@ -510,15 +594,12 @@ export default function BookingCard({
                     }}
                     existingReview={review || null}
                     onReviewCreated={(newReview) => {
-                        // РћРїС‚РёРјРёСЃС‚РёС‡РЅРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ: СЃСЂР°Р·Сѓ РѕР±РЅРѕРІР»СЏРµРј СЃРѕСЃС‚РѕСЏРЅРёРµ
                         setReview(newReview);
                         setOpenReview(false);
                         setReviewSubmitting(false);
-                        // РћС‡РёС‰Р°РµРј РїСЂРµРґС‹РґСѓС‰РёР№ timeout, РµСЃР»Рё РѕРЅ РµСЃС‚СЊ
                         if (reloadTimeoutRef.current) {
                             clearTimeout(reloadTimeoutRef.current);
                         }
-                        // РџРµСЂРµР·Р°РіСЂСѓР¶Р°РµРј СЃС‚СЂР°РЅРёС†Сѓ РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃ СЃРµСЂРІРµСЂРѕРј
                         reloadTimeoutRef.current = setTimeout(() => {
                             window.location.reload();
                         }, 300);
@@ -529,10 +610,10 @@ export default function BookingCard({
                 open={confirmCancelOpen}
                 onClose={() => setConfirmCancelOpen(false)}
                 onConfirm={cancelBooking}
-                title={t('cabinet.bookings.card.cancelConfirmTitle', 'РћС‚РјРµРЅРёС‚СЊ Р·Р°РїРёСЃСЊ?')}
-                message={t('cabinet.bookings.card.cancelConfirm', 'РћС‚РјРµРЅРёС‚СЊ Р·Р°РїРёСЃСЊ?')}
-                confirmLabel={t('cabinet.bookings.card.actions.cancel', 'РћС‚РјРµРЅРёС‚СЊ')}
-                cancelLabel={t('common.cancel', 'РћС‚РјРµРЅР°')}
+                title={t('cabinet.bookings.card.cancelConfirmTitle', 'Cancel booking?')}
+                message={t('cabinet.bookings.card.cancelConfirm', 'Are you sure you want to cancel this booking?')}
+                confirmLabel={t('cabinet.bookings.card.actions.cancel', 'Cancel booking')}
+                cancelLabel={t('common.cancel', 'Back')}
                 confirmVariant="danger"
                 isLoading={busy}
             />

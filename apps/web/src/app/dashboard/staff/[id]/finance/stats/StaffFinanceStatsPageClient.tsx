@@ -6,6 +6,9 @@ import StaffFinanceStats from '../components/StaffFinanceStats';
 import { ErrorBanner } from '@/app/_components/ErrorBanner';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function StaffFinanceStatsPageClient({
     id,
@@ -17,55 +20,75 @@ export default function StaffFinanceStatsPageClient({
     const { t } = useLanguage();
 
     return (
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6">
-            {/* Заголовок */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <a
-                        href={`/dashboard/staff/${id}/finance`}
-                        className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-2"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        {t('staff.finance.backToShift', 'Вернуться к управлению сменой')}
-                    </a>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">
-                        {t('finance.staffStats.title', 'Статистика по сотрудникам')}: {fullName ?? ''}
-                    </h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {t('finance.staffStats.subtitle', 'Детальная статистика по сменам и финансовым показателям')}
-                    </p>
-                </div>
-            </div>
+        <div className="mx-auto max-w-[var(--container-2xl)] space-y-6 px-4 py-6 lg:px-8 lg:py-8">
+            <section className="rounded-[28px] border border-[var(--border-default)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-md)]">
+                <PageHeader
+                    eyebrow={
+                        <div className="flex flex-wrap items-center gap-2">
+                            <a
+                                href={`/dashboard/staff/${id}/finance`}
+                                className="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--border-default)]"
+                            >
+                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                {t('staff.finance.backToShift', 'Back to shift workspace')}
+                            </a>
+                            <Badge variant="accent">{t('finance.staffStats.title', 'Finance analytics')}</Badge>
+                        </div>
+                    }
+                    title={`${t('finance.staffStats.title', 'Staff finance stats')}: ${fullName ?? ''}`}
+                    description={t(
+                        'finance.staffStats.subtitle',
+                        'Review money distribution, guarantees, shifts, and operational risks for everyday financial control.',
+                    )}
+                    meta={
+                        <div className="grid gap-2 sm:grid-cols-3">
+                            <Card variant="outlined" padding="sm">
+                                <p className="type-label text-[var(--text-secondary)]">Money</p>
+                                <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                    {t('finance.meta.money', 'Turnover and split between employee and business.')}
+                                </p>
+                            </Card>
+                            <Card variant="outlined" padding="sm">
+                                <p className="type-label text-[var(--text-secondary)]">Guarantees</p>
+                                <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                    {t('finance.meta.guarantees', 'Base share versus guaranteed top-ups and edited hours.')}
+                                </p>
+                            </Card>
+                            <Card variant="outlined" padding="sm">
+                                <p className="type-label text-[var(--text-secondary)]">Audit</p>
+                                <p className="type-caption mt-1 text-[var(--text-muted)]">
+                                    {t('finance.meta.audit', 'Who changed percentages and hourly settings, and when.')}
+                                </p>
+                            </Card>
+                        </div>
+                    }
+                />
+            </section>
 
-            {/* Статистика */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800">
-                <div className="p-6">
-                    <ErrorBoundary
-                        onError={(error, errorInfo) => {
-                            // Дополнительное логирование для stats компонентов
-                            const { logError } = require('@/lib/log');
-                            logError('StaffFinanceStatsPage', 'StaffFinanceStats error', { error, errorInfo });
-                        }}
-                        fallback={
-                            <ErrorBanner
-                                variant="internal"
-                                title={t('staff.finance.stats.error.boundary.title', 'Ошибка в компоненте статистики')}
-                                message={t(
-                                    'staff.finance.stats.error.boundary.message',
-                                    'Произошла ошибка при отображении статистики. Попробуйте обновить страницу.',
-                                )}
-                                onRetry={() => window.location.reload()}
-                            />
-                        }
-                    >
-                        <StaffFinanceStats staffId={id} />
-                        <FinanceSettingsAuditLog staffId={id} />
-                    </ErrorBoundary>
-                </div>
-            </div>
+            <Card variant="default" padding="lg">
+                <ErrorBoundary
+                    onError={(error, errorInfo) => {
+                        const { logError } = require('@/lib/log');
+                        logError('StaffFinanceStatsPage', 'StaffFinanceStats error', { error, errorInfo });
+                    }}
+                    fallback={
+                        <ErrorBanner
+                            variant="internal"
+                            title={t('staff.finance.stats.error.boundary.title', 'Stats component error')}
+                            message={t(
+                                'staff.finance.stats.error.boundary.message',
+                                'The stats component failed to render. Try reloading this page.',
+                            )}
+                            onRetry={() => window.location.reload()}
+                        />
+                    }
+                >
+                    <StaffFinanceStats staffId={id} />
+                    <FinanceSettingsAuditLog staffId={id} />
+                </ErrorBoundary>
+            </Card>
         </div>
     );
 }
-

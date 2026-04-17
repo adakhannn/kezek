@@ -91,7 +91,7 @@ If an item is not applicable, mark it explicitly as `n/a`.
 - Are the main actions placed where users expect them?
 - Are dangerous actions visually distinct from primary actions?
 - Is status information easy to scan in busy workflows?
-- Would a first-time teammate understand the screen’s structure quickly?
+- Would a first-time teammate understand the screen's structure quickly?
 
 ## 11. Offline And Network Resilience
 

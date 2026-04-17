@@ -3,9 +3,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import type { CabinetStackParamList, RootStackParamList } from '../navigation/types';
 import { CabinetScreenSections } from './cabinet/CabinetScreenSections';
 import { useCabinetScreenData } from './cabinet/useCabinetScreenData';
-import type { CabinetStackParamList, RootStackParamList } from '../navigation/types';
 
 type CabinetScreenNavigationProp = NativeStackNavigationProp<CabinetStackParamList, 'CabinetMain'>;
 type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -32,12 +32,7 @@ export default function CabinetScreen() {
     }
 
     if (!user) {
-        return (
-            <EmptyState
-                title="Пользователь не найден"
-                message="Попробуйте обновить экран или войти снова."
-            />
-        );
+        return <EmptyState title="Пользователь не найден" message="Попробуйте обновить экран или войти снова." />;
     }
 
     return (

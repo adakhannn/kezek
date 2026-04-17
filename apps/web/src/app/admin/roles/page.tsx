@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 
+import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
 import RolesClient from './RolesClient';
 
 export const dynamic = 'force-dynamic';
@@ -83,6 +84,8 @@ export default async function RolesPage() {
                         </div>
                     </div>
                 </section>
+
+                <AdminEntityFlowTabs entity="roles" className="max-w-3xl" />
 
                 <RolesClient baseURL={baseURL} />
             </div>

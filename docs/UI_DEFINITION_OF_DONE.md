@@ -52,7 +52,7 @@ At minimum, where applicable:
 
 - User-facing strings are localized where the surrounding area is localized.
 - Long RU, KY, and EN strings do not break layout in obvious ways.
-- Dates, times, numbers, and labels use the project’s formatting approach.
+- Dates, times, numbers, and labels use the project's formatting approach.
 
 ### 6. Responsive And Platform Behavior Were Checked
 
@@ -87,7 +87,7 @@ Before marking a UI task done, ask:
 4. Would this still look correct in another language or on a smaller screen?
 5. Did we leave behind a reusable pattern or another exception?
 
-If any answer is “no”, the task is not done yet.
+If any answer is "no", the task is not done yet.
 
 ---
 

@@ -15,6 +15,7 @@
     "test:ci:extended": "jest --watchAll=false --maxWorkers=50% src/__tests__/lib src/__tests__/api",
     "test:e2e:smoke": "playwright test --workers=1 e2e/smoke-public.spec.ts",
     "test:e2e:http": "playwright test --workers=1 e2e/whatsapp-webhook.spec.ts",
+    "test:e2e:visual": "playwright test --workers=1 e2e/visual-regressions.spec.ts",
     "test:e2e:auth-required": "playwright test e2e/quickdesk.spec.ts e2e/ratings-admin-flow.spec.ts e2e/role-switching.spec.ts e2e/shift-management.spec.ts",
     "test:e2e:seed-required": "playwright test e2e/booking-flow.spec.ts e2e/branch-map.spec.ts e2e/error-recovery.spec.ts e2e/finance-disputes-verification.spec.ts e2e/hours-worked-recalculation.spec.ts e2e/promotion-application.spec.ts e2e/staff-finance-pages.spec.ts e2e/visit-packages-flow.spec.ts e2e/visual-regressions.spec.ts",
     "test:e2e:full-seeded": "playwright test e2e/booking-flow.spec.ts e2e/branch-map.spec.ts e2e/error-recovery.spec.ts e2e/finance-disputes-verification.spec.ts e2e/hours-worked-recalculation.spec.ts e2e/promotion-application.spec.ts e2e/quickdesk.spec.ts e2e/ratings-admin-flow.spec.ts e2e/role-switching.spec.ts e2e/shift-management.spec.ts e2e/staff-finance-pages.spec.ts e2e/visit-packages-flow.spec.ts e2e/visual-regressions.spec.ts e2e/whatsapp-webhook.spec.ts",

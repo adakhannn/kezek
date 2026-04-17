@@ -145,7 +145,7 @@ export default async function Home({
     return (
         <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_28%),radial-gradient(circle_at_top_right,rgba(244,114,182,0.07),transparent_26%),linear-gradient(180deg,var(--surface-canvas),color-mix(in_srgb,var(--surface-muted)_72%,var(--surface-canvas)))]">
             <HomeViewTracker />
-            <div className="mx-auto flex w-full max-w-[var(--container-xl)] flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+            <div className="mx-auto flex w-full max-w-[var(--container-2xl)] flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
                 <HomeHero
                     totalBusinesses={total}
                     ratedBusinesses={ratedBusinesses}

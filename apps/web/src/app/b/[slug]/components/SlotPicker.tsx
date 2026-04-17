@@ -173,6 +173,8 @@ export function SlotPicker({
                                 disabled={bookingLoading}
                                 data-testid="time-slot"
                                 onClick={() => onSelect(date, slot.staff_id)}
+                                aria-pressed={isSelected}
+                                aria-label={`${toLabel(date)}${showStaffName && slotStaff ? `, ${formatName(slotStaff.full_name)}` : ''}`}
                                 className={[
                                     'rounded-[22px] border px-4 py-4 text-left transition-all',
                                     isSelected

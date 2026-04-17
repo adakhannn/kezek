@@ -27,9 +27,15 @@ type MutationResult = {
 export function useShiftQuickScreenData() {
     const [refreshing, setRefreshing] = useState(false);
     const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+    const [pendingQueueCount, setPendingQueueCount] = useState(0);
     const { user } = useAuth();
     const { showToast } = useToast();
     const queryClient = useQueryClient();
+
+    const refreshQueueCount = useCallback(async () => {
+        const queue = await getOfflineQueue();
+        setPendingQueueCount(queue.length);
+    }, []);
 
     const { data: staffInfo } = useQuery({
         queryKey: ['staff-info', user?.id],
@@ -82,6 +88,7 @@ export function useShiftQuickScreenData() {
 
         try {
             const queue = await getOfflineQueue();
+            setPendingQueueCount(queue.length);
             if (queue.length === 0) {
                 return;
             }
@@ -111,19 +118,22 @@ export function useShiftQuickScreenData() {
             }
 
             await clearOfflineQueue();
+            setPendingQueueCount(0);
             await financeQuery.refetch();
         } catch (error) {
             logError('ShiftQuickScreen', 'Error processing offline queue', error);
+            await refreshQueueCount();
         } finally {
             setIsProcessingQueue(false);
         }
-    }, [financeQuery, isProcessingQueue]);
+    }, [financeQuery, isProcessingQueue, refreshQueueCount]);
 
     useEffect(() => {
+        void refreshQueueCount();
         processOfflineQueue();
         const interval = setInterval(processOfflineQueue, 30000);
         return () => clearInterval(interval);
-    }, [processOfflineQueue]);
+    }, [processOfflineQueue, refreshQueueCount]);
 
     const openShiftMutation = useMutation({
         mutationFn: async (): Promise<MutationResult> => {
@@ -146,6 +156,9 @@ export function useShiftQuickScreenData() {
         },
         onSuccess: (result) => {
             queryClient.invalidateQueries({ queryKey: ['staff-finance'] });
+            if (result.queued) {
+                void refreshQueueCount();
+            }
             showToast(
                 result.queued
                     ? 'РћС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹ СЃРѕС…СЂР°РЅРµРЅРѕ РІ РѕС‡РµСЂРµРґСЊ Рё Р±СѓРґРµС‚ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РїРѕСЃР»Рµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРІСЏР·Рё.'
@@ -199,6 +212,9 @@ export function useShiftQuickScreenData() {
         },
         onSuccess: (result) => {
             queryClient.invalidateQueries({ queryKey: ['staff-finance'] });
+            if (result.queued) {
+                void refreshQueueCount();
+            }
             showToast(
                 result.queued
                     ? 'Р—Р°РєСЂС‹С‚РёРµ СЃРјРµРЅС‹ СЃРѕС…СЂР°РЅРµРЅРѕ РІ РѕС‡РµСЂРµРґСЊ Рё Р±СѓРґРµС‚ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РїРѕСЃР»Рµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРІСЏР·Рё.'
@@ -247,13 +263,20 @@ export function useShiftQuickScreenData() {
                 return { queued: true };
             }
         },
+        onSuccess: (result) => {
+            queryClient.invalidateQueries({ queryKey: ['staff-finance'] });
+            if (result.queued) {
+                void refreshQueueCount();
+            }
+        },
     });
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
         await Promise.all([financeQuery.refetch(), processOfflineQueue()]);
+        await refreshQueueCount();
         setRefreshing(false);
-    }, [financeQuery, processOfflineQueue]);
+    }, [financeQuery, processOfflineQueue, refreshQueueCount]);
 
     const metrics = useMemo<ShiftQuickMetrics>(() => {
         const items = financeQuery.data?.today.items || [];
@@ -287,6 +310,7 @@ export function useShiftQuickScreenData() {
         error: financeQuery.error,
         refreshing,
         isProcessingQueue,
+        pendingQueueCount,
         metrics,
         openShiftMutation,
         closeShiftMutation,

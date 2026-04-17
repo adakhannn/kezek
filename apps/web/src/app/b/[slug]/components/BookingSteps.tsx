@@ -53,12 +53,16 @@ export function BookingSteps({
 
                 <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-emphasis)]">
                     <div
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(progress)}
                         className="h-full rounded-full bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] transition-all duration-[var(--motion-emphasis)]"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
 
-                <div className="grid gap-3 md:grid-cols-5">
+                <div className="grid gap-3 md:grid-cols-5" role="list">
                     {stepsMeta.map((item, index) => {
                         const isActive = item.id === step;
                         const isCompleted = item.id < step;
@@ -67,6 +71,8 @@ export function BookingSteps({
                         return (
                             <div
                                 key={item.id}
+                                role="listitem"
+                                aria-current={isActive ? 'step' : undefined}
                                 className={[
                                     'rounded-[22px] border px-4 py-4 text-left transition-all',
                                     isActive

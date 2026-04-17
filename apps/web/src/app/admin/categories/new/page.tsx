@@ -2,6 +2,7 @@ import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
 import Link from 'next/link';
 
+import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
 import {CategoryForm} from '@/components/admin/categories/CategoryForm';
 import {Button} from '@/components/ui/Button';
 
@@ -49,6 +50,8 @@ export default async function CategoryNewPage() {
                 </section>
 
                 {/* Форма */}
+                <AdminEntityFlowTabs entity="categories" className="max-w-3xl" />
+
                 <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-lg p-6">
                     <CategoryForm mode="create" />
                 </section>
