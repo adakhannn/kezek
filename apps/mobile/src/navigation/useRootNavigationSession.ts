@@ -57,7 +57,17 @@ export async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string)
         throw new Error(`Mobile exchange failed: ${response.status} ${errorText}`);
     }
 
-    const { accessToken, refreshToken } = await response.json();
+    const payload = await response.json();
+    const tokenData =
+        payload && typeof payload === 'object' && 'data' in payload
+            ? (payload.data as { accessToken?: string; refreshToken?: string })
+            : (payload as { accessToken?: string; refreshToken?: string });
+
+    const { accessToken, refreshToken } = tokenData;
+    if (!accessToken || !refreshToken) {
+        throw new Error('Mobile exchange response missing tokens');
+    }
+
     await setSessionFromTokens(accessToken, refreshToken);
 }
 
@@ -128,7 +138,11 @@ export async function tryRestorePendingSession(apiUrl: string) {
         return false;
     }
 
-    const data = await response.json();
+    const payload = await response.json();
+    const data =
+        payload && typeof payload === 'object' && 'data' in payload
+            ? (payload.data as { hasPending?: boolean; code?: string })
+            : (payload as { hasPending?: boolean; code?: string });
 
     if (!data.hasPending || !data.code) {
         return false;

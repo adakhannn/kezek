@@ -138,7 +138,10 @@ function TelegramLoginWidgetComponent({
 
                 onSuccessRef.current?.();
 
-                const targetUrl = payload.redirect || redirectToRef.current;
+                const redirectTo = redirectToRef.current;
+                // Для mobile callback всегда приоритизируем redirect из URL страницы входа.
+                const forceRedirectTo = typeof redirectTo === 'string' && redirectTo.startsWith('/auth/callback-mobile');
+                const targetUrl = forceRedirectTo ? redirectTo : (payload.redirect || redirectTo);
 
                 // Для корректного обновления серверного хедера после входа
                 // выполняем полноценную навигацию браузера, чтобы куки и

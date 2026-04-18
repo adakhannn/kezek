@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 
 import Button from '../../components/ui/Button';
@@ -16,13 +15,28 @@ import { getValidationError } from '../../utils/validation';
 
 type SignInScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
 
+type OAuthProvider = 'google' | 'telegram';
+
+const MOBILE_REDIRECT = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
+
 export default function SignInScreen() {
     const navigation = useNavigation<SignInScreenNavigationProp>();
     const { showToast } = useToast();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
+    const [telegramLoading, setTelegramLoading] = useState(false);
     const [errors, setErrors] = useState<{ email?: string }>({});
+
+    const setProviderLoading = (provider: OAuthProvider, value: boolean) => {
+        if (provider === 'google') {
+            setGoogleLoading(value);
+            return;
+        }
+        setTelegramLoading(value);
+    };
+
+    const getProviderLabel = (provider: OAuthProvider) => (provider === 'google' ? 'Google' : 'Telegram');
 
     const handleSignIn = async () => {
         const emailError = getValidationError('email', email);
@@ -35,104 +49,125 @@ export default function SignInScreen() {
         setErrors({});
         setLoading(true);
         try {
-            const redirectTo = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
-
             const { error } = await supabase.auth.signInWithOtp({
                 email: email.trim(),
                 options: {
-                    emailRedirectTo: redirectTo,
+                    emailRedirectTo: MOBILE_REDIRECT,
                 },
             });
             if (error) throw error;
-            showToast('РџСЂРѕРІРµСЂСЊС‚Рµ email Рё РїРµСЂРµР№РґРёС‚Рµ РїРѕ СЃСЃС‹Р»РєРµ', 'success');
+            showToast('Проверьте email и перейдите по ссылке', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
+            const errorMessage =
+                error instanceof Error ? error.message : 'Не удалось отправить код';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleGoogleSignIn = async () => {
-        setGoogleLoading(true);
+    const handleOAuthSignIn = async (provider: OAuthProvider) => {
+        const providerLabel = getProviderLabel(provider);
+        setProviderLoading(provider, true);
+
         try {
-            const redirectTo = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
+            logDebug('SignInScreen', 'Starting OAuth', { provider, redirectTo: MOBILE_REDIRECT });
+            let authUrl: string;
+            let returnUrl = 'kezek://auth/callback';
 
-            logDebug('SignInScreen', 'Starting Google OAuth', { redirectTo });
+            if (provider === 'telegram') {
+                const redirectPath = '/auth/callback-mobile?redirect=kezek://auth/callback';
+                authUrl = `https://kezek.kg/auth/sign-in?redirect=${encodeURIComponent(redirectPath)}`;
+            } else {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: MOBILE_REDIRECT,
+                        skipBrowserRedirect: true,
+                    },
+                });
 
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo,
-                    skipBrowserRedirect: true,
-                },
-            });
+                if (error) {
+                    logError('SignInScreen', 'OAuth error', { provider, error });
+                    throw error;
+                }
 
-            if (error) {
-                logError('SignInScreen', 'OAuth error', error);
-                throw error;
+                if (!data?.url) {
+                    throw new Error('?? ??????? ???????? OAuth URL');
+                }
+
+                authUrl = data.url;
             }
 
-            if (!data?.url) {
-                throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ OAuth URL');
-            }
-
-            logDebug('SignInScreen', 'OAuth URL received, opening browser', { url: data.url, redirectTo });
-
-            const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-
-            logDebug('SignInScreen', 'WebBrowser result', result);
+            const result = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl);
+            logDebug('SignInScreen', 'OAuth result', { provider, result });
             WebBrowser.maybeCompleteAuthSession();
 
             if (result.type === 'success' && result.url) {
-                logDebug('SignInScreen', 'OAuth completed successfully', { url: result.url });
                 setTimeout(async () => {
                     const {
                         data: { session },
                     } = await supabase.auth.getSession();
+
                     if (session) {
-                        logDebug('SignInScreen', 'Session confirmed after OAuth');
-                        showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
+                        showToast('Вход выполнен успешно', 'success');
                     }
                 }, 1000);
-            } else if (result.type === 'dismiss') {
-                logDebug('SignInScreen', 'Browser dismissed, checking if user authorized on web');
+                return;
+            }
 
+            if (result.type === 'dismiss') {
                 setTimeout(async () => {
                     const {
                         data: { session },
                     } = await supabase.auth.getSession();
+
                     if (session) {
-                        logDebug('SignInScreen', 'Session found after dismiss');
-                        showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
+                        showToast('Вход выполнен успешно', 'success');
                     } else {
-                        logDebug('SignInScreen', 'No session after dismiss');
-                        showToast('РђРІС‚РѕСЂРёР·Р°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР° РЅР° РІРµР±-СЃР°Р№С‚Рµ. Р’РµСЂРЅРёС‚РµСЃСЊ РІ РїСЂРёР»РѕР¶РµРЅРёРµ РёР»Рё РїРµСЂРµР·Р°РїСѓСЃС‚РёС‚Рµ РµРіРѕ.', 'info');
+                        showToast(
+                            'Авторизация завершена на веб-сайте. Вернитесь в приложение или перезапустите его.',
+                            'info',
+                        );
                     }
                 }, 3000);
-            } else if (result.type === 'cancel') {
-                logDebug('SignInScreen', 'OAuth cancelled by user');
-                showToast('Р’С…РѕРґ РѕС‚РјРµРЅРµРЅ', 'info');
-            } else if (result.type === 'locked') {
-                logDebug('SignInScreen', 'OAuth locked (browser already open)');
-                showToast('Р‘СЂР°СѓР·РµСЂ СѓР¶Рµ РѕС‚РєСЂС‹С‚. Р—Р°РєСЂРѕР№С‚Рµ РµРіРѕ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.', 'info');
-            } else {
-                logWarn('SignInScreen', 'OAuth result type', { type: result.type });
-                showToast('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РІРµСЂС€РёС‚СЊ Р°РІС‚РѕСЂРёР·Р°С†РёСЋ. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.', 'error');
+                return;
             }
+
+            if (result.type === 'cancel') {
+                showToast('Вход отменен', 'info');
+                return;
+            }
+
+            if (result.type === 'locked') {
+                showToast(
+                    'Браузер уже открыт. Закройте его и попробуйте снова.',
+                    'info',
+                );
+                return;
+            }
+
+            logWarn('SignInScreen', 'Unexpected OAuth result type', { provider, type: result.type });
+            showToast('Не удалось завершить авторизацию. Попробуйте снова.', 'error');
         } catch (error: unknown) {
-            logError('SignInScreen', 'Google sign in error', error);
-            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕР№С‚Рё С‡РµСЂРµР· Google';
+            logError('SignInScreen', 'OAuth sign in error', { provider, error });
+            const fallback =
+                providerLabel === 'Google'
+                    ? 'Не удалось войти через Google'
+                    : 'Не удалось войти через Telegram';
+            const errorMessage = error instanceof Error ? error.message : fallback;
             showToast(errorMessage, 'error');
         } finally {
-            setGoogleLoading(false);
+            setProviderLoading(provider, false);
         }
     };
 
+    const anySocialLoading = googleLoading || telegramLoading;
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Р’С…РѕРґ РІ Kezek</Text>
-            <Text style={styles.subtitle}>Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± РІС…РѕРґР°</Text>
+            <Text style={styles.title}>Вход в Kezek</Text>
+            <Text style={styles.subtitle}>Выберите способ входа</Text>
 
             <Input
                 label="Email"
@@ -147,32 +182,41 @@ export default function SignInScreen() {
             />
 
             <Button
-                title="РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ"
+                title="Отправить код"
                 onPress={handleSignIn}
                 loading={loading}
-                disabled={loading || googleLoading}
+                disabled={loading || anySocialLoading}
                 fullWidth
             />
 
             <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>РёР»Рё</Text>
+                <Text style={styles.dividerText}>или</Text>
                 <View style={styles.dividerLine} />
             </View>
 
             <Button
-                title={googleLoading ? 'Р’С…РѕРґ...' : 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ СЃ Google'}
-                onPress={handleGoogleSignIn}
-                disabled={loading || googleLoading}
+                title={googleLoading ? 'Вход...' : 'Продолжить с Google'}
+                onPress={() => void handleOAuthSignIn('google')}
+                disabled={loading || anySocialLoading}
                 variant="outline"
                 style={styles.socialButton}
                 fullWidth
             />
 
             <Button
-                title="Р’РѕР№С‚Рё С‡РµСЂРµР· WhatsApp"
+                title={telegramLoading ? 'Вход...' : 'Войти через Telegram'}
+                onPress={() => void handleOAuthSignIn('telegram')}
+                disabled={loading || anySocialLoading}
+                variant="outline"
+                style={styles.telegramButton}
+                fullWidth
+            />
+
+            <Button
+                title="Войти через WhatsApp"
                 onPress={() => navigation.navigate('WhatsApp')}
-                disabled={loading || googleLoading}
+                disabled={loading || anySocialLoading}
                 variant="secondary"
                 style={styles.whatsAppButton}
                 textStyle={styles.whatsAppButtonText}
@@ -180,7 +224,7 @@ export default function SignInScreen() {
             />
 
             <Button
-                title="Р РµРіРёСЃС‚СЂР°С†РёСЏ"
+                title="Регистрация"
                 onPress={() => navigation.navigate('SignUp')}
                 variant="ghost"
                 style={styles.secondaryButton}
@@ -229,6 +273,10 @@ const styles = StyleSheet.create({
     },
     socialButton: {
         marginBottom: colors.layout.space3,
+    },
+    telegramButton: {
+        marginBottom: colors.layout.space3,
+        borderColor: '#229ED9',
     },
     whatsAppButton: {
         marginBottom: colors.layout.space3,

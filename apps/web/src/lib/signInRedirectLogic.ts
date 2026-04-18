@@ -16,6 +16,11 @@ export async function decideSignInRedirect(
     fallback: string,
     userId?: string,
 ): Promise<string> {
+    // Для mobile OAuth callback нельзя заменять целевой путь ролевыми редиректами.
+    if (fallback?.startsWith('/auth/callback-mobile')) {
+        return fallback;
+    }
+
     if (await deps.fetchIsSuper()) {
         return '/admin';
     }
