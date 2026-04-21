@@ -25,7 +25,7 @@ export function SearchSection({
                 containerStyle={{ marginBottom: 0 }}
                 inputContainerStyle={styles.searchInputContainer}
                 style={styles.searchInput}
-                placeholder="Р СџР С•Р С‘РЎРѓР С” Р С—Р С• Р Р…Р В°Р В·Р Р†Р В°Р Р…Р С‘РЎР‹ Р С‘Р В»Р С‘ Р В°Р Т‘РЎР‚Р ВµРЎРѓРЎС“..."
+                placeholder="Поиск по названию или адресу..."
                 value={search}
                 onChangeText={onSearchChange}
                 leadingIcon={<Ionicons name="search" size={20} color="#9ca3af" />}

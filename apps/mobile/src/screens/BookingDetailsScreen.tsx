@@ -42,7 +42,7 @@ export default function BookingDetailsScreen() {
     const handleRepeat = () => {
         const slug = booking?.business?.slug;
         if (!slug) {
-            showToast('РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ Р·Р°РїРёСЃСЊ, Р±РёР·РЅРµСЃ РЅРµ РЅР°Р№РґРµРЅ', 'error');
+            showToast('Не удалось открыть запись, бизнес не найден', 'error');
             return;
         }
 
@@ -51,8 +51,8 @@ export default function BookingDetailsScreen() {
 
     const handleCancel = async () => {
         const shouldCancel = await confirm({
-            title: 'РћС‚РјРµРЅРёС‚СЊ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ?',
-            message: 'Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ РѕС‚РјРµРЅРёС‚СЊ СЌС‚Сѓ Р·Р°РїРёСЃСЊ?',
+            title: 'Отменить бронирование?',
+            message: 'Вы уверены, что хотите отменить эту запись?',
             confirmLabel: 'Р”Р°, РѕС‚РјРµРЅРёС‚СЊ',
             cancelLabel: 'РќРµС‚',
             variant: 'danger',
@@ -66,11 +66,11 @@ export default function BookingDetailsScreen() {
     };
 
     if (isLoading) {
-        return <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР° Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ..." />;
+        return <LoadingSpinner message="Загрузка бронирования..." />;
     }
 
     if (!booking) {
-        return <EmptyState title="Р‘СЂРѕРЅРёСЂРѕРІР°РЅРёРµ РЅРµ РЅР°Р№РґРµРЅРѕ" />;
+        return <EmptyState title="Бронирование не найдено" />;
     }
 
     return (

@@ -12,6 +12,23 @@ import type { HomeBooking, HomeBusiness, RecentPlace } from './types';
 
 const NETWORK_ERROR_RE = /network request failed|failed to fetch|network/i;
 
+type ApiEnvelope<T> = {
+    ok?: boolean;
+    data?: T;
+};
+
+function unwrapList<T>(payload: T[] | ApiEnvelope<T[]> | null | undefined): T[] {
+    if (Array.isArray(payload)) {
+        return payload;
+    }
+
+    if (payload && typeof payload === 'object' && Array.isArray(payload.data)) {
+        return payload.data;
+    }
+
+    return [];
+}
+
 function mapBusinessDto(business: PublicBusinessDto): HomeBusiness {
     return {
         id: business.id,
@@ -95,11 +112,14 @@ export function useHomeScreenData() {
             }
 
             const endpoint = `/mobile/businesses${params.toString() ? `?${params.toString()}` : ''}`;
-            const data = await apiRequest<PublicBusinessDto[]>(endpoint);
+            const payload = await apiRequest<PublicBusinessDto[] | ApiEnvelope<PublicBusinessDto[]>>(
+                endpoint,
+            );
+            const data = unwrapList(payload);
 
-            logDebug('HomeScreen', 'Businesses loaded', { count: data?.length || 0 });
+            logDebug('HomeScreen', 'Businesses loaded', { count: data.length });
 
-            return (data ?? []).map(mapBusinessDto);
+            return data.map(mapBusinessDto);
         },
     });
 
@@ -111,10 +131,13 @@ export function useHomeScreenData() {
                 return [];
             }
 
-            const data = await apiRequest<ClientBookingListItemDto[]>('/mobile/bookings');
-            logDebug('HomeScreen', 'Home bookings loaded', { count: data?.length || 0 });
+            const payload = await apiRequest<
+                ClientBookingListItemDto[] | ApiEnvelope<ClientBookingListItemDto[]>
+            >('/mobile/bookings');
+            const data = unwrapList(payload);
+            logDebug('HomeScreen', 'Home bookings loaded', { count: data.length });
 
-            return (data ?? []).map(mapBookingDto);
+            return data.map(mapBookingDto);
         },
     });
 

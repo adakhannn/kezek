@@ -20,11 +20,11 @@ export function useBookingStep6Confirm(navigation: NavigationProp) {
     const selectedService = bookingData.services.find((service) => service.id === bookingData.serviceId);
     const selectedStaff = bookingData.staff.find((staff) => staff.id === bookingData.staffId);
     const dateLabel = bookingData.selectedDate ? formatDateLabel(bookingData.selectedDate, 'ru-RU') : null;
-    const priceLabel = formatServicePrice(selectedService, 'СЃРѕРј');
+    const priceLabel = formatServicePrice(selectedService, 'сом');
 
     const { createBooking, isPending } = useConfirmBooking({
         onSuccess: (bookingId) => {
-            showToast('Р—Р°РїРёСЃСЊ СЃРѕР·РґР°РЅР°!', 'success');
+            showToast('Запись создана!', 'success');
             reset();
             setTimeout(() => {
                 navigation.navigate('BookingDetails', { id: bookingId });
@@ -40,13 +40,13 @@ export function useBookingStep6Confirm(navigation: NavigationProp) {
 
             if (isNetworkError) {
                 showToast(
-                    'РќРµС‚ СЃРµС‚Рё РёР»Рё РѕС€РёР±РєР° СЃРµСЂРІРµСЂР°. Р—Р°РїРёСЃСЊ РЅРµ СЃРѕР·РґР°РЅР°, РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·, РєРѕРіРґР° СЃРѕРµРґРёРЅРµРЅРёРµ РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЃСЏ.',
+                    'Нет сети или ошибка сервера. Запись не создана, попробуйте ещё раз, когда соединение восстановится.',
                     'error',
                 );
                 return;
             }
 
-            showToast(error.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ Р·Р°РїРёСЃСЊ', 'error');
+            showToast(error.message || 'Не удалось создать запись', 'error');
         },
     });
 
@@ -57,13 +57,13 @@ export function useBookingStep6Confirm(navigation: NavigationProp) {
         }
 
         if (!bookingData.business) {
-            showToast('Р”Р°РЅРЅС‹Рµ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ РЅРµРїРѕР»РЅС‹Рµ', 'error');
+            showToast('Данные бронирования неполные', 'error');
             return;
         }
 
         const shouldCreate = await confirm({
-            title: 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ',
-            message: 'РЎРѕР·РґР°С‚СЊ Р·Р°РїРёСЃСЊ?',
+            title: 'Подтверждение',
+            message: 'Создать запись?',
             confirmLabel: 'РЎРѕР·РґР°С‚СЊ',
             cancelLabel: 'РћС‚РјРµРЅР°',
         });

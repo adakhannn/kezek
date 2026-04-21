@@ -52,9 +52,9 @@ export default function VerifyScreen() {
             } else {
                 throw new Error('РќРµ СѓРєР°Р·Р°РЅ email РёР»Рё С‚РµР»РµС„РѕРЅ');
             }
-            showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
+            showToast('Вход выполнен успешно', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'РќРµРІРµСЂРЅС‹Р№ РєРѕРґ';
+            const errorMessage = error instanceof Error ? error.message : 'Неверный код';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -81,9 +81,9 @@ export default function VerifyScreen() {
                 });
                 if (error) throw error;
             }
-            showToast('РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РїРѕРІС‚РѕСЂРЅРѕ', 'success');
+            showToast('Код отправлен повторно', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -92,11 +92,11 @@ export default function VerifyScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ</Text>
-            <Text style={styles.subtitle}>Р’РІРµРґРёС‚Рµ РєРѕРґ, РѕС‚РїСЂР°РІР»РµРЅРЅС‹Р№ РЅР° {email || phone}</Text>
+            <Text style={styles.title}>Подтверждение</Text>
+            <Text style={styles.subtitle}>Введите код, отправленный на {email || phone}</Text>
 
             <Input
-                label="РљРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ"
+                label="Код подтверждения"
                 placeholder="000000"
                 value={code}
                 onChangeText={(text) => setCode(text.replace(/\D/g, '').slice(0, 6))}
@@ -109,7 +109,7 @@ export default function VerifyScreen() {
             />
 
             <Button
-                title="РџРѕРґС‚РІРµСЂРґРёС‚СЊ"
+                title="Подтвердить"
                 onPress={handleVerify}
                 loading={loading}
                 disabled={loading || code.length !== 6}
@@ -117,7 +117,7 @@ export default function VerifyScreen() {
             />
 
             <Button
-                title="РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ СЃРЅРѕРІР°"
+                title="Отправить код снова"
                 onPress={handleResend}
                 variant="ghost"
                 style={styles.resendButton}

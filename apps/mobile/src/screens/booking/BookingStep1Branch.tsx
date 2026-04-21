@@ -56,7 +56,7 @@ export default function BookingStep1Branch() {
     if (isLoading) {
         return (
             <View style={styles.container}>
-                <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР°..." />
+                <LoadingSpinner message="Загрузка..." />
             </View>
         );
     }
@@ -67,7 +67,7 @@ export default function BookingStep1Branch() {
                 <EmptyState
                     icon="business-outline"
                     title="Р‘РёР·РЅРµСЃ РЅРµ РЅР°Р№РґРµРЅ"
-                    message="РџРѕРїСЂРѕР±СѓР№С‚Рµ РІРµСЂРЅСѓС‚СЊСЃСЏ Рє СЃРїРёСЃРєСѓ Рё РІС‹Р±СЂР°С‚СЊ РґСЂСѓРіРѕР№ Р±РёР·РЅРµСЃ."
+                    message="Попробуйте вернуться к списку и выбрать другой бизнес."
                 />
             </View>
         );
@@ -145,8 +145,8 @@ export default function BookingStep1Branch() {
                     ) : (
                         <EmptyState
                             icon="location-outline"
-                            title="РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… С„РёР»РёР°Р»РѕРІ"
-                            message="РџРѕСЃР»Рµ РІС‹Р±РѕСЂР° Р±РёР·РЅРµСЃР° Р·РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ С„РёР»РёР°Р»С‹ РґР»СЏ Р·Р°РїРёСЃРё."
+                            title="Нет доступных филиалов"
+                            message="После выбора бизнеса здесь появятся филиалы для записи."
                             compact
                             style={styles.emptyContainer}
                         />

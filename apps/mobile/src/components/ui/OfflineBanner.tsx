@@ -5,11 +5,11 @@ import { colors } from '../../constants/colors';
 import Button from './Button';
 
 export const OFFLINE_BANNER_DEFAULT = {
-    title: 'РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ',
+    title: 'Нет подключения к интернету',
     messageGeneric:
-        'РЎРїРёСЃРѕРє РѕР±РЅРѕРІРёС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё, РєРѕРіРґР° СЃРµС‚СЊ РїРѕСЏРІРёС‚СЃСЏ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕС‚СЏРЅСѓС‚СЊ РІРЅРёР· РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ.',
+        'Список обновится автоматически, когда сеть появится. Попробуйте потянуть вниз для обновления.',
     messageWithRetry:
-        'РњС‹ РЅРµ РјРѕР¶РµРј Р·Р°РіСЂСѓР·РёС‚СЊ РґР°РЅРЅС‹Рµ. РџСЂРѕРІРµСЂСЊС‚Рµ СЃРµС‚СЊ Рё РЅР°Р¶РјРёС‚Рµ В«РћР±РЅРѕРІРёС‚СЊВ», РєРѕРіРґР° СЃРѕРµРґРёРЅРµРЅРёРµ РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЃСЏ.',
+        'Мы не можем загрузить данные. Проверьте сеть и нажмите «Обновить», когда соединение восстановится.',
 } as const;
 
 type OfflineBannerProps = {
@@ -41,7 +41,7 @@ export default function OfflineBanner({
                 <Text style={styles.message}>{displayMessage}</Text>
                 {onRetry ? (
                     <View style={styles.actions}>
-                        <Button title="РћР±РЅРѕРІРёС‚СЊ" onPress={onRetry} variant="outline" size="sm" />
+                        <Button title="Обновить" onPress={onRetry} variant="outline" size="sm" />
                     </View>
                 ) : null}
             </View>

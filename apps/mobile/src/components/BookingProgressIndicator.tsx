@@ -19,7 +19,7 @@ const STEPS: StepInfo[] = [
     { number: 3, title: 'РњР°СЃС‚РµСЂ', screenName: 'BookingStep3Staff' },
     { number: 4, title: 'Р”Р°С‚Р°', screenName: 'BookingStep4Date' },
     { number: 5, title: 'Р’СЂРµРјСЏ', screenName: 'BookingStep5Time' },
-    { number: 6, title: 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ', screenName: 'BookingStep6Confirm' },
+    { number: 6, title: 'Подтверждение', screenName: 'BookingStep6Confirm' },
 ];
 
 type BookingProgressIndicatorProps = {

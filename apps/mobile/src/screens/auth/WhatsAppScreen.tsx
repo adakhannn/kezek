@@ -56,14 +56,14 @@ export default function WhatsAppScreen() {
             const data = await response.json();
 
             if (!data.ok) {
-                throw new Error(data.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ');
+                throw new Error(data.message || 'Не удалось отправить код');
             }
 
             setStep('otp');
             setCountdown(60);
-            showToast('РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РЅР° WhatsApp', 'success');
+            showToast('Код отправлен на WhatsApp', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
             showToast(errorMessage, 'error');
         } finally {
             setSending(false);
@@ -72,7 +72,7 @@ export default function WhatsAppScreen() {
 
     const handleVerifyOtp = async () => {
         if (otp.length !== 6) {
-            showToast('Р’РІРµРґРёС‚Рµ 6-Р·РЅР°С‡РЅС‹Р№ РєРѕРґ', 'error');
+            showToast('Введите 6-значный код', 'error');
             return;
         }
 
@@ -91,7 +91,7 @@ export default function WhatsAppScreen() {
             logDebug('WhatsAppScreen', 'Verify OTP response', { ok: data.ok, userId: data.userId });
 
             if (!data.ok) {
-                throw new Error(data.message || 'РќРµРІРµСЂРЅС‹Р№ РєРѕРґ');
+                throw new Error(data.message || 'Неверный код');
             }
 
             logDebug('WhatsAppScreen', 'Creating session', { userId: data.userId });
@@ -114,7 +114,7 @@ export default function WhatsAppScreen() {
             });
 
             if (!sessionData.ok) {
-                throw new Error(sessionData.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ СЃРµСЃСЃРёСЋ');
+                throw new Error(sessionData.message || 'Не удалось создать сессию');
             }
 
             if (sessionData.email && sessionData.password && sessionData.needsSignIn) {
@@ -127,7 +127,7 @@ export default function WhatsAppScreen() {
 
                 if (signInError) {
                     logError('WhatsAppScreen', 'Sign in error', signInError);
-                    throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕР№С‚Рё: ' + signInError.message);
+                    throw new Error('Не удалось войти: ' + signInError.message);
                 }
 
                 const {
@@ -136,11 +136,11 @@ export default function WhatsAppScreen() {
                 } = await supabase.auth.getUser();
                 if (userError || !currentUser) {
                     logError('WhatsAppScreen', 'User not found after sign in', userError);
-                    throw new Error('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ, РЅРѕ СЃРµСЃСЃРёСЏ РЅРµ Р±С‹Р»Р° СЃРѕР·РґР°РЅР°');
+                    throw new Error('Вход выполнен, но сессия не была создана');
                 }
 
                 logDebug('WhatsAppScreen', 'Sign in successful', { userId: currentUser.id });
-                showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
+                showToast('Вход выполнен успешно', 'success');
             } else if (sessionData.session) {
                 const { supabase } = await import('../../lib/supabase');
                 const { error } = await supabase.auth.setSession({
@@ -150,14 +150,14 @@ export default function WhatsAppScreen() {
 
                 if (error) throw error;
 
-                showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
+                showToast('Вход выполнен успешно', 'success');
             } else if (sessionData.magicLink) {
-                showToast('РџСЂРѕРІРµСЂСЊС‚Рµ email РґР»СЏ Р·Р°РІРµСЂС€РµРЅРёСЏ РІС…РѕРґР°', 'info');
+                showToast('Проверьте email для завершения входа', 'info');
             } else {
-                throw new Error('РќРµРѕР¶РёРґР°РЅРЅС‹Р№ С„РѕСЂРјР°С‚ РѕС‚РІРµС‚Р° РѕС‚ СЃРµСЂРІРµСЂР°');
+                throw new Error('Неожиданный формат ответа от сервера');
             }
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕР№С‚Рё';
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось войти';
             showToast(errorMessage, 'error');
         } finally {
             setVerifying(false);
@@ -174,14 +174,14 @@ export default function WhatsAppScreen() {
             <Text style={styles.title}>Р’С…РѕРґ С‡РµСЂРµР· WhatsApp</Text>
             <Text style={styles.subtitle}>
                 {step === 'phone'
-                    ? 'Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РєРѕРґР°'
-                    : 'Р’РІРµРґРёС‚Рµ РєРѕРґ, РѕС‚РїСЂР°РІР»РµРЅРЅС‹Р№ РЅР° WhatsApp'}
+                    ? 'Введите номер телефона для получения кода'
+                    : 'Введите код, отправленный на WhatsApp'}
             </Text>
 
             {step === 'phone' ? (
                 <>
                     <Input
-                        label="РќРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°"
+                        label="Номер телефона"
                         placeholder="+996500574029"
                         value={phone}
                         onChangeText={setPhone}
@@ -189,7 +189,7 @@ export default function WhatsAppScreen() {
                         containerStyle={styles.field}
                     />
                     <Button
-                        title={sending ? 'РћС‚РїСЂР°РІРєР°...' : 'РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ'}
+                        title={sending ? 'Отправка...' : 'Отправить код'}
                         onPress={() => void handleSendOtp()}
                         loading={sending}
                         disabled={sending}
@@ -210,19 +210,19 @@ export default function WhatsAppScreen() {
                             style={styles.otpInput}
                             inputContainerStyle={styles.otpInputContainer}
                         />
-                        <Text style={styles.otpHint}>РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РЅР° {phone}</Text>
+                        <Text style={styles.otpHint}>Код отправлен на {phone}</Text>
                     </View>
 
                     <View style={styles.otpActions}>
                         <Button
-                            title="РР·РјРµРЅРёС‚СЊ РЅРѕРјРµСЂ"
+                            title="Изменить номер"
                             onPress={() => setStep('phone')}
                             variant="ghost"
                             size="sm"
                             style={styles.otpActionButton}
                         />
                         <Button
-                            title={countdown > 0 ? `РћС‚РїСЂР°РІРёС‚СЊ СЃРЅРѕРІР° (${countdown}СЃ)` : 'РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ СЃРЅРѕРІР°'}
+                            title={countdown > 0 ? `Отправить снова (${countdown}с)` : 'Отправить код снова'}
                             onPress={handleResendOtp}
                             disabled={countdown > 0}
                             variant="ghost"
@@ -232,7 +232,7 @@ export default function WhatsAppScreen() {
                     </View>
 
                     <Button
-                        title={verifying ? 'РџСЂРѕРІРµСЂРєР°...' : 'Р’РѕР№С‚Рё'}
+                        title={verifying ? 'Проверка...' : 'Войти'}
                         onPress={() => void handleVerifyOtp()}
                         loading={verifying}
                         disabled={verifying || otp.length !== 6}
@@ -242,7 +242,7 @@ export default function WhatsAppScreen() {
             )}
 
             <Button
-                title="Р’РµСЂРЅСѓС‚СЊСЃСЏ Рє РґСЂСѓРіРёРј СЃРїРѕСЃРѕР±Р°Рј РІС…РѕРґР°"
+                title="Вернуться к другим способам входа"
                 onPress={() => navigation.goBack()}
                 variant="ghost"
                 style={styles.backButton}

@@ -17,16 +17,16 @@ export function CabinetNavigator() {
                 name="CabinetMain"
                 component={CabinetScreen}
                 options={{
-                    title: 'Р›РёС‡РЅС‹Р№ РєР°Р±РёРЅРµС‚',
-                    headerTitle: createNavigationHeaderTitle('Р›РёС‡РЅС‹Р№ РєР°Р±РёРЅРµС‚'),
+                    title: 'Личный кабинет',
+                    headerTitle: createNavigationHeaderTitle('Личный кабинет'),
                 }}
             />
             <CabinetStack.Screen
                 name="Profile"
                 component={ProfileScreen}
                 options={{
-                    title: 'РџСЂРѕС„РёР»СЊ',
-                    headerTitle: createNavigationHeaderTitle('РџСЂРѕС„РёР»СЊ'),
+                    title: 'Профиль',
+                    headerTitle: createNavigationHeaderTitle('Профиль'),
                 }}
             />
         </CabinetStack.Navigator>

@@ -34,10 +34,10 @@ export default function SignUpScreen() {
                 },
             });
             if (error) throw error;
-            showToast('РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РЅР° email', 'success');
+            showToast('Код отправлен на email', 'success');
             navigation.navigate('Verify', { email });
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -46,7 +46,7 @@ export default function SignUpScreen() {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Р РµРіРёСЃС‚СЂР°С†РёСЏ</Text>
+            <Text style={styles.title}>Регистрация</Text>
             <Text style={styles.subtitle}>РЎРѕР·РґР°Р№С‚Рµ Р°РєРєР°СѓРЅС‚ РІ Kezek</Text>
 
             <Input
@@ -61,7 +61,7 @@ export default function SignUpScreen() {
             />
 
             <Button
-                title="Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ"
+                title="Зарегистрироваться"
                 onPress={handleSignUp}
                 loading={loading}
                 disabled={loading}

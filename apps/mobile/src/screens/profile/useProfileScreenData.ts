@@ -68,16 +68,16 @@ export function useProfileScreenData() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['profile', userQuery.data?.id] });
-            showToast('РџСЂРѕС„РёР»СЊ РѕР±РЅРѕРІР»РµРЅ', 'success');
+            showToast('Профиль обновлен', 'success');
         },
         onError: (error: Error) => {
-            showToast(error.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ РїСЂРѕС„РёР»СЊ', 'error');
+            showToast(error.message || 'Не удалось обновить профиль', 'error');
         },
     });
 
     const saveProfile = () => {
         if (!fullName.trim()) {
-            showToast('Р’РІРµРґРёС‚Рµ РёРјСЏ', 'error');
+            showToast('Введите имя', 'error');
             return;
         }
         updateProfileMutation.mutate();

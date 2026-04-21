@@ -27,9 +27,9 @@ export function DashboardScreenSections({
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>РљР°Р±РёРЅРµС‚ Р±РёР·РЅРµСЃР°</Text>
+                <Text style={styles.title}>Кабинет бизнеса</Text>
                 <Text style={styles.subtitle}>
-                    РЈРїСЂР°РІР»РµРЅРёРµ {businesses.length === 1 ? 'Р±РёР·РЅРµСЃРѕРј' : 'Р±РёР·РЅРµСЃР°РјРё'}
+                    Управление {businesses.length === 1 ? 'бизнесом' : 'бизнесами'}
                 </Text>
             </View>
 
@@ -52,7 +52,7 @@ export function DashboardScreenSections({
                                 ) : null}
                                 <View style={styles.businessActions}>
                                     <Button
-                                        title="РЈРїСЂР°РІР»РµРЅРёРµ"
+                                        title="Управление"
                                         onPress={() => onBusinessPress(business.id)}
                                         variant="outline"
                                         fullWidth
@@ -65,8 +65,8 @@ export function DashboardScreenSections({
             ) : (
                 <EmptyState
                     icon="business"
-                    title="РќРµС‚ Р±РёР·РЅРµСЃРѕРІ"
-                    message="Р—Р°СЂРµРіРёСЃС‚СЂРёСЂСѓР№С‚Рµ Р±РёР·РЅРµСЃ, С‡С‚РѕР±С‹ РЅР°С‡Р°С‚СЊ СѓРїСЂР°РІР»РµРЅРёРµ"
+                    title="Нет бизнесов"
+                    message="Зарегистрируйте бизнес, чтобы начать управление"
                 />
             )}
         </ScrollView>

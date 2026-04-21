@@ -70,7 +70,7 @@ export default function BookingStep5Time() {
                     {showOfflineBanner ? <OfflineBanner onRetry={() => refetch()} /> : null}
 
                     {isLoading ? (
-                        <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР° РґРѕСЃС‚СѓРїРЅРѕРіРѕ РІСЂРµРјРµРЅРё..." size="small" />
+                        <LoadingSpinner message="Загрузка доступного времени..." size="small" />
                     ) : slots && slots.length > 0 ? (
                         <View style={styles.slotsGrid}>
                             {slots.map((slot, index: number) => (
@@ -99,15 +99,15 @@ export default function BookingStep5Time() {
                         <EmptyState
                             icon="alert-circle-outline"
                             title={domainErrorMessage}
-                            message="РџРѕРїСЂРѕР±СѓР№С‚Рµ РІС‹Р±СЂР°С‚СЊ РґСЂСѓРіСѓСЋ РґР°С‚Сѓ РёР»Рё РѕР±РЅРѕРІРёС‚СЊ СЃРїРёСЃРѕРє."
+                            message="Попробуйте выбрать другую дату или обновить список."
                             compact
                             style={styles.noSlotsContainer}
                         />
                     ) : !showOfflineBanner ? (
                         <EmptyState
                             icon="time-outline"
-                            title="РќРµС‚ РґРѕСЃС‚СѓРїРЅРѕРіРѕ РІСЂРµРјРµРЅРё"
-                            message="РџРѕРїСЂРѕР±СѓР№С‚Рµ РІС‹Р±СЂР°С‚СЊ РґСЂСѓРіСѓСЋ РґР°С‚Сѓ."
+                            title="Нет доступного времени"
+                            message="Попробуйте выбрать другую дату."
                             compact
                             style={styles.noSlotsContainer}
                         />

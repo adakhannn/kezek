@@ -23,7 +23,7 @@ export default function RootNavigator() {
     if (loading) {
         return (
             <View style={styles.loading}>
-                <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР°..." />
+                <LoadingSpinner message="Загрузка..." />
             </View>
         );
     }
@@ -45,3 +45,4 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background.primary,
     },
 });
+

@@ -8,9 +8,14 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
-import { supabase } from '../../lib/supabase';
 import { logDebug, logError, logWarn } from '../../lib/log';
+import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
+import {
+    getMobileApiUrl,
+    handleDeepLinkAuth,
+    tryRestorePendingSession,
+} from '../../navigation/useRootNavigationSession';
 import { getValidationError } from '../../utils/validation';
 
 type SignInScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
@@ -28,6 +33,8 @@ export default function SignInScreen() {
     const [telegramLoading, setTelegramLoading] = useState(false);
     const [errors, setErrors] = useState<{ email?: string }>({});
 
+    const apiUrl = getMobileApiUrl();
+
     const setProviderLoading = (provider: OAuthProvider, value: boolean) => {
         if (provider === 'google') {
             setGoogleLoading(value);
@@ -36,7 +43,37 @@ export default function SignInScreen() {
         setTelegramLoading(value);
     };
 
-    const getProviderLabel = (provider: OAuthProvider) => (provider === 'google' ? 'Google' : 'Telegram');
+    const getProviderLabel = (provider: OAuthProvider) =>
+        provider === 'google' ? 'Google' : 'Telegram';
+
+    const ensureSessionRestored = async (callbackUrl?: string, attempts = 4) => {
+        if (callbackUrl) {
+            await handleDeepLinkAuth(callbackUrl, apiUrl);
+        }
+
+        for (let i = 0; i < attempts; i += 1) {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+            if (session) {
+                return true;
+            }
+
+            const restored = await tryRestorePendingSession(apiUrl).catch(() => false);
+            if (restored) {
+                const {
+                    data: { session: restoredSession },
+                } = await supabase.auth.getSession();
+                if (restoredSession) {
+                    return true;
+                }
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 700));
+        }
+
+        return false;
+    };
 
     const handleSignIn = async () => {
         const emailError = getValidationError('email', email);
@@ -48,6 +85,7 @@ export default function SignInScreen() {
 
         setErrors({});
         setLoading(true);
+
         try {
             const { error } = await supabase.auth.signInWithOtp({
                 email: email.trim(),
@@ -55,7 +93,11 @@ export default function SignInScreen() {
                     emailRedirectTo: MOBILE_REDIRECT,
                 },
             });
-            if (error) throw error;
+
+            if (error) {
+                throw error;
+            }
+
             showToast('Проверьте email и перейдите по ссылке', 'success');
         } catch (error: unknown) {
             const errorMessage =
@@ -71,9 +113,13 @@ export default function SignInScreen() {
         setProviderLoading(provider, true);
 
         try {
-            logDebug('SignInScreen', 'Starting OAuth', { provider, redirectTo: MOBILE_REDIRECT });
+            logDebug('SignInScreen', 'Starting OAuth', {
+                provider,
+                redirectTo: MOBILE_REDIRECT,
+            });
+
             let authUrl: string;
-            let returnUrl = 'kezek://auth/callback';
+            const returnUrl = 'kezek://auth/callback';
 
             if (provider === 'telegram') {
                 const redirectPath = '/auth/callback-mobile?redirect=kezek://auth/callback';
@@ -93,7 +139,7 @@ export default function SignInScreen() {
                 }
 
                 if (!data?.url) {
-                    throw new Error('?? ??????? ???????? OAuth URL');
+                    throw new Error('Не удалось получить OAuth URL');
                 }
 
                 authUrl = data.url;
@@ -104,33 +150,28 @@ export default function SignInScreen() {
             WebBrowser.maybeCompleteAuthSession();
 
             if (result.type === 'success' && result.url) {
-                setTimeout(async () => {
-                    const {
-                        data: { session },
-                    } = await supabase.auth.getSession();
-
-                    if (session) {
-                        showToast('Вход выполнен успешно', 'success');
-                    }
-                }, 1000);
+                const restored = await ensureSessionRestored(result.url, 4);
+                if (restored) {
+                    showToast('Вход выполнен успешно', 'success');
+                } else {
+                    showToast(
+                        'Авторизация обработана, но сессия еще не синхронизировалась. Повторите вход.',
+                        'info',
+                    );
+                }
                 return;
             }
 
             if (result.type === 'dismiss') {
-                setTimeout(async () => {
-                    const {
-                        data: { session },
-                    } = await supabase.auth.getSession();
-
-                    if (session) {
-                        showToast('Вход выполнен успешно', 'success');
-                    } else {
-                        showToast(
-                            'Авторизация завершена на веб-сайте. Вернитесь в приложение или перезапустите его.',
-                            'info',
-                        );
-                    }
-                }, 3000);
+                const restored = await ensureSessionRestored(undefined, 6);
+                if (restored) {
+                    showToast('Вход выполнен успешно', 'success');
+                } else {
+                    showToast(
+                        'Авторизация завершена на веб-сайте. Вернитесь в приложение или перезапустите его.',
+                        'info',
+                    );
+                }
                 return;
             }
 
@@ -140,14 +181,14 @@ export default function SignInScreen() {
             }
 
             if (result.type === 'locked') {
-                showToast(
-                    'Браузер уже открыт. Закройте его и попробуйте снова.',
-                    'info',
-                );
+                showToast('Браузер уже открыт. Закройте его и попробуйте снова.', 'info');
                 return;
             }
 
-            logWarn('SignInScreen', 'Unexpected OAuth result type', { provider, type: result.type });
+            logWarn('SignInScreen', 'Unexpected OAuth result type', {
+                provider,
+                type: result.type,
+            });
             showToast('Не удалось завершить авторизацию. Попробуйте снова.', 'error');
         } catch (error: unknown) {
             logError('SignInScreen', 'OAuth sign in error', { provider, error });

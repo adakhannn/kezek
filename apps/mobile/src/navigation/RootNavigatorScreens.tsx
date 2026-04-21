@@ -20,7 +20,8 @@ import {
     detailStackScreenOptions,
 } from './mainNavigatorConfig';
 
-export const rootStackScreenOptions: NativeStackNavigationOptions = detailStackScreenOptions;
+export const rootStackScreenOptions: NativeStackNavigationOptions =
+    detailStackScreenOptions;
 
 const bookingStepOptions = (
     title: string,
@@ -53,52 +54,52 @@ export function SignedInStackScreens(Stack: any) {
                 component={BookingDetailsScreen}
                 options={{
                     ...detailStackScreenOptions,
-                    title: 'Р”РµС‚Р°Р»Рё Р·Р°РїРёСЃРё',
-                    headerTitle: createNavigationHeaderTitle('Р”РµС‚Р°Р»Рё Р·Р°РїРёСЃРё', 'Booking'),
+                    title: 'Детали записи',
+                    headerTitle: createNavigationHeaderTitle('Детали записи', 'Booking'),
                 }}
             />
             <Stack.Screen
                 name="Booking"
                 component={BookingScreen}
-                options={{ title: 'Р—Р°РїРёСЃСЊ', headerShown: false }}
+                options={{ title: 'Запись', headerShown: false }}
             />
             <Stack.Screen
                 name="BookingStep1Branch"
                 component={BookingStep1Branch}
-                options={bookingStepOptions('Р’С‹Р±РѕСЂ С„РёР»РёР°Р»Р°', '1 / 6')}
+                options={bookingStepOptions('Выбор филиала', '1 / 6')}
             />
             <Stack.Screen
                 name="BookingStep2Service"
                 component={BookingStep2Service}
-                options={bookingStepOptions('Р’С‹Р±РѕСЂ СѓСЃР»СѓРіРё', '2 / 6')}
+                options={bookingStepOptions('Выбор услуги', '2 / 6')}
             />
             <Stack.Screen
                 name="BookingStep3Staff"
                 component={BookingStep3Staff}
-                options={bookingStepOptions('Р’С‹Р±РѕСЂ РјР°СЃС‚РµСЂР°', '3 / 6')}
+                options={bookingStepOptions('Выбор мастера', '3 / 6')}
             />
             <Stack.Screen
                 name="BookingStep4Date"
                 component={BookingStep4Date}
-                options={bookingStepOptions('Р’С‹Р±РѕСЂ РґР°С‚С‹', '4 / 6')}
+                options={bookingStepOptions('Выбор даты', '4 / 6')}
             />
             <Stack.Screen
                 name="BookingStep5Time"
                 component={BookingStep5Time}
-                options={bookingStepOptions('Р’С‹Р±РѕСЂ РІСЂРµРјРµРЅРё', '5 / 6')}
+                options={bookingStepOptions('Выбор времени', '5 / 6')}
             />
             <Stack.Screen
                 name="BookingStep6Confirm"
                 component={BookingStep6Confirm}
-                options={bookingStepOptions('РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ', '6 / 6')}
+                options={bookingStepOptions('Подтверждение', '6 / 6')}
             />
             <Stack.Screen
                 name="Shifts"
                 component={ShiftsScreen}
                 options={{
                     ...detailStackScreenOptions,
-                    title: 'РЎРјРµРЅС‹ Рё СЃС‚Р°С‚РёСЃС‚РёРєР°',
-                    headerTitle: createNavigationHeaderTitle('РЎРјРµРЅС‹ Рё СЃС‚Р°С‚РёСЃС‚РёРєР°', 'Workspace'),
+                    title: 'Смены и статистика',
+                    headerTitle: createNavigationHeaderTitle('Смены и статистика', 'Workspace'),
                 }}
             />
             <Stack.Screen
@@ -106,8 +107,8 @@ export function SignedInStackScreens(Stack: any) {
                 component={ShiftQuickScreen}
                 options={{
                     ...detailStackScreenOptions,
-                    title: 'РњРѕСЏ СЃРјРµРЅР°',
-                    headerTitle: createNavigationHeaderTitle('РњРѕСЏ СЃРјРµРЅР°', 'Workspace'),
+                    title: 'Моя смена',
+                    headerTitle: createNavigationHeaderTitle('Моя смена', 'Workspace'),
                 }}
             />
         </>

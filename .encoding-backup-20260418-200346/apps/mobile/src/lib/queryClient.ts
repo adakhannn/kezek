@@ -1,0 +1,37 @@
+import { QueryClient } from '@tanstack/react-query';
+import { getErrorMessage } from '../lib/errors';
+import { logError } from './log';
+
+/**
+ * ??????????? QueryClient ? ?????????? ?????????? ??????
+ */
+export const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: (failureCount, error) => {
+                // Не повторяем запросы для ошибок авторизации
+                if (error && typeof error === 'object' && 'message' in error) {
+                    const message = String(error.message).toLowerCase();
+                    if (message.includes('unauthorized') || message.includes('401')) {
+                        return false;
+                    }
+                }
+                // ????????? ?? 2 ??? ??? ?????? ??????
+                return failureCount < 2;
+            },
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+            staleTime: 5 * 60 * 1000, // 5 ?????
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
+            refetchOnMount: true,
+        },
+        mutations: {
+            retry: 0, // ??????? ?? ????????? ?????????????
+            onError: (error) => {
+                // Логируем ошибки мутаций для отладки
+                logError('QueryClient', 'Mutation error', { message: getErrorMessage(error) });
+            },
+        },
+    },
+});
+

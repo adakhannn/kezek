@@ -31,7 +31,7 @@ export function StaffScreenSections({
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>РљР°Р±РёРЅРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєР°</Text>
+                <Text style={styles.title}>Кабинет сотрудника</Text>
                 <Text style={styles.subtitle}>{staffInfo.full_name}</Text>
             </View>
 
@@ -50,7 +50,7 @@ export function StaffScreenSections({
             )}
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>РџСЂРµРґСЃС‚РѕСЏС‰РёРµ Р·Р°РїРёСЃРё</Text>
+                <Text style={styles.sectionTitle}>Предстоящие записи</Text>
 
                 {upcomingBookings.length > 0 ? (
                     <View style={styles.bookingsList}>
@@ -77,14 +77,14 @@ export function StaffScreenSections({
                 ) : (
                     <EmptyState
                         icon="calendar"
-                        title="РќРµС‚ РїСЂРµРґСЃС‚РѕСЏС‰РёС… Р·Р°РїРёСЃРµР№"
-                        message="Р—Р°РїРёСЃРё РїРѕСЏРІСЏС‚СЃСЏ Р·РґРµСЃСЊ, РєРѕРіРґР° РєР»РёРµРЅС‚С‹ Р·Р°РїРёС€СѓС‚СЃСЏ Рє РІР°Рј"
+                        title="Нет предстоящих записей"
+                        message="Записи появятся здесь, когда клиенты запишутся к вам"
                     />
                 )}
             </View>
 
             <View style={styles.section}>
-                <Button title="РњРѕСЏ СЃРјРµРЅР°" onPress={onOpenShiftQuick} fullWidth />
+                <Button title="Моя смена" onPress={onOpenShiftQuick} fullWidth />
                 <Button
                     title="РЎС‚Р°С‚РёСЃС‚РёРєР°"
                     onPress={onOpenShifts}

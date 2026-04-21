@@ -58,12 +58,12 @@ export function ShiftsScreenSections({
 
             <View style={styles.statsGrid}>
                 <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>РћР±РѕСЂРѕС‚</Text>
+                    <Text style={styles.statLabel}>Оборот</Text>
                     <Text style={styles.statValue}>{formatPrice(stats.totalAmount)}</Text>
                 </Card>
 
                 <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>Р”РѕР»СЏ СЃРѕС‚СЂСѓРґРЅРёРєР°</Text>
+                    <Text style={styles.statLabel}>Доля сотрудника</Text>
                     <Text style={[styles.statValue, styles.statValueEmployee]}>
                         {formatPrice(stats.totalMaster)}
                     </Text>
@@ -93,12 +93,12 @@ export function ShiftsScreenSections({
                     <Text style={styles.additionalStatValue}>{stats.shiftsCount}</Text>
                 </Card>
                 <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>Р Р°СЃС…РѕРґРЅРёРєРё</Text>
+                    <Text style={styles.additionalStatLabel}>Расходники</Text>
                     <Text style={styles.additionalStatValue}>{formatPrice(stats.totalConsumables)}</Text>
                 </Card>
                 <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>РћРїРѕР·РґР°РЅРёСЏ</Text>
-                    <Text style={styles.additionalStatValue}>{stats.totalLateMinutes} РјРёРЅ</Text>
+                    <Text style={styles.additionalStatLabel}>Опоздания</Text>
+                    <Text style={styles.additionalStatValue}>{stats.totalLateMinutes} мин</Text>
                 </Card>
                 <Card style={styles.additionalStatCard}>
                     <Text style={styles.additionalStatLabel}>РљР»РёРµРЅС‚РѕРІ</Text>
@@ -108,7 +108,7 @@ export function ShiftsScreenSections({
 
             {stats.shifts.length > 0 ? (
                 <View style={styles.shiftsSection}>
-                    <Text style={styles.sectionTitle}>РЎРјРµРЅС‹ Р·Р° РїРµСЂРёРѕРґ</Text>
+                    <Text style={styles.sectionTitle}>Смены за период</Text>
                     {stats.shifts.map((shift) => (
                         <ShiftCard key={shift.id} shift={shift} />
                     ))}
@@ -118,7 +118,7 @@ export function ShiftsScreenSections({
                     <EmptyState
                         icon="calendar"
                         title="РќРµС‚ СЃРјРµРЅ"
-                        message="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ СЃРјРµРЅ РЅРµ РЅР°Р№РґРµРЅРѕ"
+                        message="За выбранный период смен не найдено"
                     />
                 </View>
             )}
@@ -171,12 +171,12 @@ function ShiftCard({ shift }: { shift: Shift }) {
                 <View style={styles.shiftHeaderRight}>
                     <Text style={styles.shiftTotalAmount}>{formatPrice(shift.total_amount)}</Text>
                     <Text style={styles.shiftConsumables}>
-                        Р Р°СЃС…РѕРґРЅРёРєРё: {formatPrice(shift.consumables_amount)}
+                        Расходники: {formatPrice(shift.consumables_amount)}
                     </Text>
                     {hasGuaranteed ? (
                         <View style={styles.shiftFinancials}>
                             <Text style={styles.shiftMasterShareGuaranteed}>
-                                РЎРѕС‚СЂСѓРґРЅРёРєСѓ: {formatPrice(shift.guaranteed_amount)}
+                                Сотруднику: {formatPrice(shift.guaranteed_amount)}
                             </Text>
                             {shift.hours_worked !== null ? (
                                 <Text style={styles.shiftHours}>
@@ -193,7 +193,7 @@ function ShiftCard({ shift }: { shift: Shift }) {
                     ) : (
                         <View style={styles.shiftFinancials}>
                             <Text style={styles.shiftMasterShare}>
-                                РЎРѕС‚СЂСѓРґРЅРёРєСѓ: {formatPrice(shift.master_share)}
+                                Сотруднику: {formatPrice(shift.master_share)}
                             </Text>
                             {shift.guaranteed_amount > 0 && shift.hourly_rate ? (
                                 <Text style={styles.shiftGuaranteed}>
@@ -213,7 +213,7 @@ function ShiftCard({ shift }: { shift: Shift }) {
 
             {expanded && shift.items.length > 0 ? (
                 <View style={styles.shiftItems}>
-                    <Text style={styles.shiftItemsTitle}>РЎРїРёСЃРѕРє РєР»РёРµРЅС‚РѕРІ</Text>
+                    <Text style={styles.shiftItemsTitle}>Список клиентов</Text>
                     {shift.items.map((item) => (
                         <View key={item.id} style={styles.shiftItem}>
                             <View style={styles.shiftItemLeft}>
@@ -222,14 +222,14 @@ function ShiftCard({ shift }: { shift: Shift }) {
                                     <Text style={styles.shiftItemClient}>
                                         {item.client_name || 'РљР»РёРµРЅС‚ РЅРµ СѓРєР°Р·Р°РЅ'}
                                     </Text>
-                                    <Text style={styles.shiftItemService}>{item.service_name || 'вЂ”'}</Text>
+                                    <Text style={styles.shiftItemService}>{item.service_name || '—'}</Text>
                                 </View>
                             </View>
                             <View style={styles.shiftItemRight}>
                                 <Text style={styles.shiftItemAmount}>{formatPrice(item.service_amount)}</Text>
                                 {item.consumables_amount > 0 ? (
                                     <Text style={styles.shiftItemConsumables}>
-                                        Р Р°СЃС…РѕРґРЅРёРєРё: {formatPrice(item.consumables_amount)}
+                                        Расходники: {formatPrice(item.consumables_amount)}
                                     </Text>
                                 ) : null}
                                 {item.created_at ? (

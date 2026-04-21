@@ -23,9 +23,9 @@ export default function MainNavigator() {
                 name="Home"
                 component={HomeScreen}
                 options={{
-                    title: 'Р“Р»Р°РІРЅР°СЏ',
-                    headerTitle: createNavigationHeaderTitle('Р“Р»Р°РІРЅР°СЏ'),
-                    tabBarLabel: 'Р“Р»Р°РІРЅР°СЏ',
+                    title: 'Главная',
+                    headerTitle: createNavigationHeaderTitle('Главная'),
+                    tabBarLabel: 'Главная',
                     tabBarIcon: renderTabIcon('home'),
                 }}
             />
@@ -34,7 +34,7 @@ export default function MainNavigator() {
                 component={CabinetNavigator}
                 options={{
                     headerShown: false,
-                    tabBarLabel: 'РљР°Р±РёРЅРµС‚',
+                    tabBarLabel: 'Кабинет',
                     tabBarIcon: renderTabIcon('person'),
                 }}
             />
@@ -43,9 +43,9 @@ export default function MainNavigator() {
                     name="Dashboard"
                     component={DashboardScreen}
                     options={{
-                        title: 'РњРѕР№ Р±РёР·РЅРµСЃ',
-                        headerTitle: createNavigationHeaderTitle('РњРѕР№ Р±РёР·РЅРµСЃ'),
-                        tabBarLabel: 'Р‘РёР·РЅРµСЃ',
+                        title: 'Мой бизнес',
+                        headerTitle: createNavigationHeaderTitle('Мой бизнес'),
+                        tabBarLabel: 'Бизнес',
                         tabBarIcon: renderTabIcon('business'),
                     }}
                 />
@@ -55,9 +55,9 @@ export default function MainNavigator() {
                     name="Staff"
                     component={StaffScreen}
                     options={{
-                        title: 'Р Р°Р±РѕС‡Р°СЏ Р·РѕРЅР°',
-                        headerTitle: createNavigationHeaderTitle('Р Р°Р±РѕС‡Р°СЏ Р·РѕРЅР°'),
-                        tabBarLabel: 'Р Р°Р±РѕС‚Р°',
+                        title: 'Рабочая зона',
+                        headerTitle: createNavigationHeaderTitle('Рабочая зона'),
+                        tabBarLabel: 'Работа',
                         tabBarIcon: renderTabIcon('briefcase'),
                     }}
                 />

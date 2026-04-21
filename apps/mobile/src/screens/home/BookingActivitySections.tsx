@@ -23,18 +23,18 @@ type RecentPlacesSectionProps = {
 
 function getBookingStatusLabel(status: string) {
     if (status === 'confirmed') {
-        return 'Р СџР С•Р Т‘РЎвЂљР Р†Р ВµРЎР‚Р В¶Р Т‘Р ВµР Р…Р С•';
+        return 'Подтверждено';
     }
 
     if (status === 'hold') {
-        return 'Р С›Р В¶Р С‘Р Т‘Р В°Р ВµРЎвЂљ';
+        return 'РћР¶РёРґР°РµС‚';
     }
 
     if (status === 'paid') {
-        return 'Р С›Р С—Р В»Р В°РЎвЂЎР ВµР Р…Р С•';
+        return 'РћРїР»Р°С‡РµРЅРѕ';
     }
 
-    return 'Р вЂ”Р В°Р С—Р С‘РЎРѓРЎРЉ';
+    return 'Запись';
 }
 
 export function UpcomingBookingsSection({
@@ -49,9 +49,9 @@ export function UpcomingBookingsSection({
     return (
         <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>Р вЂР В»Р С‘Р В¶Р В°Р в„–РЎв‚¬Р С‘Р Вµ Р В·Р В°Р С—Р С‘РЎРѓР С‘</Text>
+                <Text style={styles.sectionTitle}>Ближайшие записи</Text>
                 <MotionPressable onPress={onOpenAll} style={styles.sectionLinkPressable}>
-                    <Text style={styles.sectionLink}>Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ Р Р†РЎРѓР Вµ</Text>
+                    <Text style={styles.sectionLink}>РћС‚РєСЂС‹С‚СЊ РІСЃРµ</Text>
                 </MotionPressable>
             </View>
 
@@ -65,7 +65,7 @@ export function UpcomingBookingsSection({
                         <View style={styles.bookingRow}>
                             <View style={styles.bookingMain}>
                                 <Text style={styles.bookingBusiness}>
-                                    {booking.business?.name || 'Р вЂ”Р В°Р С—Р С‘РЎРѓРЎРЉ'}
+                                    {booking.business?.name || 'Запись'}
                                 </Text>
                                 {booking.branch?.name ? (
                                     <Text style={styles.bookingBranch}>
@@ -107,7 +107,7 @@ export function RecentPlacesSection({
 
     return (
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Р СњР ВµР Т‘Р В°Р Р†Р Р…Р С‘Р Вµ Р СР ВµРЎРѓРЎвЂљР В°</Text>
+            <Text style={styles.sectionTitle}>Недавние места</Text>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

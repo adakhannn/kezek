@@ -24,7 +24,7 @@ function getSessionId(): string {
 
 export async function trackMobileEvent(params: MobileAnalyticsEventParams): Promise<void> {
     try {
-        await apiRequest('/admin/analytics/track', {
+        await apiRequest('/admin/api/analytics/track', {
             method: 'POST',
             body: JSON.stringify({
                 event_type: params.eventType,

@@ -16,10 +16,10 @@ export default function BookingCancelButton() {
 
     const handleCancel = async () => {
         const shouldCancel = await confirm({
-            title: 'РћС‚РјРµРЅРёС‚СЊ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ?',
-            message: 'Р’СЃРµ РІС‹Р±СЂР°РЅРЅС‹Рµ РґР°РЅРЅС‹Рµ Р±СѓРґСѓС‚ РїРѕС‚РµСЂСЏРЅС‹.',
+            title: 'Отменить бронирование?',
+            message: 'Все выбранные данные будут потеряны.',
             confirmLabel: 'РћС‚РјРµРЅРёС‚СЊ',
-            cancelLabel: 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ',
+            cancelLabel: 'Продолжить',
             variant: 'danger',
         });
 

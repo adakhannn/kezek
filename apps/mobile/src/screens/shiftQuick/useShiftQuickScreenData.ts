@@ -161,13 +161,13 @@ export function useShiftQuickScreenData() {
             }
             showToast(
                 result.queued
-                    ? 'РћС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹ СЃРѕС…СЂР°РЅРµРЅРѕ РІ РѕС‡РµСЂРµРґСЊ Рё Р±СѓРґРµС‚ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РїРѕСЃР»Рµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРІСЏР·Рё.'
+                    ? 'Открытие смены сохранено в очередь и будет синхронизировано после восстановления связи.'
                     : 'РЎРјРµРЅР° РѕС‚РєСЂС‹С‚Р°.',
                 result.queued ? 'warning' : 'success',
             );
         },
         onError: (error) => {
-            const message = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ СЃРјРµРЅСѓ';
+            const message = error instanceof Error ? error.message : 'Не удалось открыть смену';
             showToast(message, 'error');
         },
     });
@@ -217,13 +217,13 @@ export function useShiftQuickScreenData() {
             }
             showToast(
                 result.queued
-                    ? 'Р—Р°РєСЂС‹С‚РёРµ СЃРјРµРЅС‹ СЃРѕС…СЂР°РЅРµРЅРѕ РІ РѕС‡РµСЂРµРґСЊ Рё Р±СѓРґРµС‚ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РїРѕСЃР»Рµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРІСЏР·Рё.'
+                    ? 'Закрытие смены сохранено в очередь и будет синхронизировано после восстановления связи.'
                     : 'РЎРјРµРЅР° Р·Р°РєСЂС‹С‚Р°.',
                 result.queued ? 'warning' : 'success',
             );
         },
         onError: (error) => {
-            const message = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РєСЂС‹С‚СЊ СЃРјРµРЅСѓ';
+            const message = error instanceof Error ? error.message : 'Не удалось закрыть смену';
             showToast(message, 'error');
         },
     });

@@ -10,7 +10,7 @@ const DEFAULT_API_URL = 'https://kezek.kg';
 const AUTH_CALLBACK_RE =
     /auth\/callback|callback-mobile|access_token=|refresh_token=|\?code=|exchange_code=/i;
 
-function getMobileApiUrl() {
+export function getMobileApiUrl() {
     return (
         process.env.EXPO_PUBLIC_API_URL ||
         Constants.expoConfig?.extra?.apiUrl ||

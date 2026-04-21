@@ -1,18 +1,18 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { formatServicePrice } from '@shared-client/formatters';
-import { useBooking } from '../../contexts/BookingContext';
-import { colors } from '../../constants/colors';
-import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
+import Button from '../../components/ui/Button';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import MotionPressable from '../../components/ui/MotionPressable';
-import { RootStackParamList } from '../../navigation/types';
+import { colors } from '../../constants/colors';
+import { useBooking } from '../../contexts/BookingContext';
 import { trackMobileEvent } from '../../lib/analytics';
+import { RootStackParamList } from '../../navigation/types';
 import { useBookingStep2Services } from './useBookingStep2Services';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -47,7 +47,7 @@ export default function BookingStep2Service() {
     if (isLoading) {
         return (
             <View style={styles.container}>
-                <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР° СѓСЃР»СѓРі..." />
+                <LoadingSpinner message="Загрузка услуг..." />
             </View>
         );
     }
@@ -61,8 +61,8 @@ export default function BookingStep2Service() {
                 </View>
                 <EmptyState
                     icon="cut-outline"
-                    title="РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… СѓСЃР»СѓРі"
-                    message="Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ С„РёР»РёР°Р»Р° РїРѕРєР° РЅРµС‚ Р°РєС‚РёРІРЅС‹С… СѓСЃР»СѓРі."
+                    title="Нет доступных услуг"
+                    message="Для выбранного филиала пока нет активных услуг."
                     compact
                     style={styles.emptyContainer}
                 />
@@ -72,7 +72,11 @@ export default function BookingStep2Service() {
 
     return (
         <LinearGradient
-            colors={[colors.background.gradient.from, colors.background.gradient.via, colors.background.gradient.to]}
+            colors={[
+                colors.background.gradient.from,
+                colors.background.gradient.via,
+                colors.background.gradient.to,
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientContainer}
@@ -86,7 +90,7 @@ export default function BookingStep2Service() {
                 <View style={styles.section}>
                     <View style={styles.optionsList}>
                         {servicesData.map((service) => {
-                            const price = formatServicePrice(service, 'СЃРѕРј');
+                            const price = formatServicePrice(service, 'сом');
                             const isSelected = bookingData.serviceId === service.id;
                             return (
                                 <MotionPressable
@@ -108,13 +112,13 @@ export default function BookingStep2Service() {
                                                     </Text>
                                                     {service.duration_min ? (
                                                         <Text style={styles.serviceDurationSelected}>
-                                                            {service.duration_min} РјРёРЅ
+                                                            {service.duration_min} мин
                                                         </Text>
                                                     ) : null}
                                                 </View>
                                                 {price ? (
                                                     <Text style={styles.priceTextSelected}>
-                                                        {price.replace(' - ', 'вЂ“').replace('РѕС‚ ', '')}
+                                                        {price.replace(' - ', '–').replace('от ', '')}
                                                     </Text>
                                                 ) : null}
                                             </View>
@@ -126,13 +130,13 @@ export default function BookingStep2Service() {
                                                     <Text style={styles.serviceName}>{service.name_ru}</Text>
                                                     {service.duration_min ? (
                                                         <Text style={styles.serviceDuration}>
-                                                            {service.duration_min} РјРёРЅ
+                                                            {service.duration_min} мин
                                                         </Text>
                                                     ) : null}
                                                 </View>
                                                 {price ? (
                                                     <Text style={styles.priceText}>
-                                                        {price.replace(' - ', 'вЂ“').replace('РѕС‚ ', '')}
+                                                        {price.replace(' - ', '–').replace('от ', '')}
                                                     </Text>
                                                 ) : null}
                                             </View>
@@ -145,13 +149,13 @@ export default function BookingStep2Service() {
 
                     <View style={styles.buttonContainer}>
                         <Button
-                            title="РќР°Р·Р°Рґ"
+                            title="Назад"
                             onPress={() => navigation.goBack()}
                             variant="outline"
                             style={styles.backButton}
                         />
                         <Button
-                            title="Р”Р°Р»СЊС€Рµ"
+                            title="Дальше"
                             onPress={handleNext}
                             disabled={!bookingData.serviceId}
                             variant="primary"

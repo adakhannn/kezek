@@ -73,7 +73,7 @@ export default function BookingStep4Date() {
                                                 bookingData.selectedDate === date && styles.todayLabelSelected,
                                             ]}
                                         >
-                                            РЎРµРіРѕРґРЅСЏ
+                                            Сегодня
                                         </Text>
                                     ) : null}
                                     <Text

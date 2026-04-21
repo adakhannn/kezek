@@ -41,14 +41,14 @@ export function CategoriesSection({
 
     return (
         <View style={styles.categoriesContainer}>
-            <Text style={styles.categoriesLabel}>Р СџР С•Р С—РЎС“Р В»РЎРЏРЎР‚Р Р…РЎвЂ№Р Вµ Р С”Р В°РЎвЂљР ВµР С–Р С•РЎР‚Р С‘Р С‘:</Text>
+            <Text style={styles.categoriesLabel}>Популярные категории:</Text>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 style={styles.categoriesScroll}
             >
                 <CategoryChip
-                    label="Р вЂ™РЎРѓР Вµ"
+                    label="Р’СЃРµ"
                     isActive={!selectedCategory}
                     onPress={() => onSelectCategory(null)}
                 />
@@ -104,7 +104,7 @@ export function BusinessListSection({
     onOpenBusiness,
 }: BusinessListSectionProps) {
     if (isLoading && !isRefreshing) {
-        return <LoadingSpinner message="Р вЂ”Р В°Р С–РЎР‚РЎС“Р В·Р С”Р В°..." />;
+        return <LoadingSpinner message="Загрузка..." />;
     }
 
     if (businesses.length === 0) {
@@ -113,13 +113,13 @@ export function BusinessListSection({
                 icon="search"
                 title={
                     search || selectedCategory
-                        ? 'Р СњР С‘РЎвЂЎР ВµР С–Р С• Р Р…Р Вµ Р Р…Р В°Р в„–Р Т‘Р ВµР Р…Р С•'
-                        : 'Р СњР ВµРЎвЂљ Р Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р Р…РЎвЂ№РЎвЂ¦ Р В±Р С‘Р В·Р Р…Р ВµРЎРѓР С•Р Р†'
+                        ? 'РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ'
+                        : 'Нет доступных бизнесов'
                 }
                 message={
                     search || selectedCategory
-                        ? 'Р СџР С•Р С—РЎР‚Р С•Р В±РЎС“Р в„–РЎвЂљР Вµ Р Т‘РЎР‚РЎС“Р С–Р С•Р в„– Р В·Р В°Р С—РЎР‚Р С•РЎРѓ'
-                        : 'Р вЂР С‘Р В·Р Р…Р ВµРЎРѓРЎвЂ№ Р С—Р С•РЎРЏР Р†РЎРЏРЎвЂљРЎРѓРЎРЏ Р В·Р Т‘Р ВµРЎРѓРЎРЉ Р С—Р С•РЎРѓР В»Р Вµ РЎР‚Р ВµР С–Р С‘РЎРѓРЎвЂљРЎР‚Р В°РЎвЂ Р С‘Р С‘'
+                        ? 'Попробуйте другой запрос'
+                        : 'Бизнесы появятся здесь после регистрации'
                 }
             />
         );
@@ -181,7 +181,7 @@ export function BusinessListSection({
 
                         <View style={styles.businessFooter}>
                             <Button
-                                title="Р вЂ”Р В°Р С—Р С‘РЎРѓР В°РЎвЂљРЎРЉРЎРѓРЎРЏ"
+                                title="Записаться"
                                 onPress={() => onOpenBusiness(business.slug)}
                                 trailingIcon={<Ionicons name="arrow-forward" size={16} color={colors.text.light} />}
                                 fullWidth

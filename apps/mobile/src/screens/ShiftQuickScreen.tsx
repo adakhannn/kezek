@@ -45,7 +45,7 @@ export default function ShiftQuickScreen() {
     const handleOpenShift = () => {
         if (financeData?.isDayOff) {
             showToast(
-                'РЎРµРіРѕРґРЅСЏ РѕС‚РјРµС‡РµРЅ РІС‹С…РѕРґРЅРѕР№ РґРµРЅСЊ, РїРѕСЌС‚РѕРјСѓ РѕС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹ РЅРµРґРѕСЃС‚СѓРїРЅРѕ.',
+                'Сегодня отмечен выходной день, поэтому открытие смены недоступно.',
                 'warning',
             );
             return;
@@ -57,7 +57,7 @@ export default function ShiftQuickScreen() {
     const handleCloseShift = async () => {
         const shouldClose = await confirm({
             title: 'Р—Р°РєСЂС‹С‚СЊ СЃРјРµРЅСѓ?',
-            message: 'РџРѕСЃР»Рµ Р·Р°РєСЂС‹С‚РёСЏ СЃРјРµРЅС‹ РІС‹ РЅРµ СЃРјРѕР¶РµС‚Рµ РґРѕР±Р°РІР»СЏС‚СЊ РєР»РёРµРЅС‚РѕРІ. РџСЂРѕРґРѕР»Р¶РёС‚СЊ?',
+            message: 'После закрытия смены вы не сможете добавлять клиентов. Продолжить?',
             confirmLabel: 'Р—Р°РєСЂС‹С‚СЊ',
             cancelLabel: 'РћС‚РјРµРЅР°',
             variant: 'danger',
@@ -72,7 +72,7 @@ export default function ShiftQuickScreen() {
 
     const handleAddClient = () => {
         if (!newClientName.trim()) {
-            setAddClientError('Р’РІРµРґРёС‚Рµ РёРјСЏ РєР»РёРµРЅС‚Р°');
+            setAddClientError('Введите имя клиента');
             return;
         }
 
@@ -90,14 +90,14 @@ export default function ShiftQuickScreen() {
                     resetAddClientForm();
                     showToast(
                         result.queued
-                            ? 'РљР»РёРµРЅС‚ СЃРѕС…СЂР°РЅС‘РЅ РІ РѕС‡РµСЂРµРґСЊ Рё Р±СѓРґРµС‚ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅ РїРѕСЃР»Рµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃРІСЏР·Рё.'
+                            ? 'Клиент сохранён в очередь и будет синхронизирован после восстановления связи.'
                             : 'РљР»РёРµРЅС‚ РґРѕР±Р°РІР»РµРЅ.',
                         result.queued ? 'warning' : 'success',
                     );
                 },
                 onError: (mutationError) => {
                     const message =
-                        mutationError instanceof Error ? mutationError.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РґРѕР±Р°РІРёС‚СЊ РєР»РёРµРЅС‚Р°';
+                        mutationError instanceof Error ? mutationError.message : 'Не удалось добавить клиента';
                     setAddClientError(message);
                 },
             },
@@ -105,15 +105,15 @@ export default function ShiftQuickScreen() {
     };
 
     if (isLoading && !financeData) {
-        return <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР°..." />;
+        return <LoadingSpinner message="Загрузка..." />;
     }
 
     if (!staffInfo) {
         return (
             <EmptyState
                 icon="briefcase"
-                title="Р’С‹ РЅРµ СЏРІР»СЏРµС‚РµСЃСЊ СЃРѕС‚СЂСѓРґРЅРёРєРѕРј"
-                message="Р—РґРµСЃСЊ Р±СѓРґРµС‚ РѕС‚РѕР±СЂР°Р¶Р°С‚СЊСЃСЏ СѓРїСЂР°РІР»РµРЅРёРµ СЃРјРµРЅРѕР№ РїРѕСЃР»Рµ РЅР°Р·РЅР°С‡РµРЅРёСЏ СЃРѕС‚СЂСѓРґРЅРёРєРѕРј"
+                title="Вы не являетесь сотрудником"
+                message="Здесь будет отображаться управление сменой после назначения сотрудником"
             />
         );
     }
@@ -122,15 +122,15 @@ export default function ShiftQuickScreen() {
         return (
             <EmptyState
                 icon="alert-circle"
-                title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё"
-                message="РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РґР°РЅРЅС‹Рµ СЃРјРµРЅС‹. РџСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ."
-                action={<Button title="РћР±РЅРѕРІРёС‚СЊ" onPress={() => void onRefresh()} />}
+                title="Ошибка загрузки"
+                message="Не удалось загрузить данные смены. Проверьте подключение к интернету."
+                action={<Button title="Обновить" onPress={() => void onRefresh()} />}
             />
         );
     }
 
     if (!financeData) {
-        return <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР°..." />;
+        return <LoadingSpinner message="Загрузка..." />;
     }
 
     return (

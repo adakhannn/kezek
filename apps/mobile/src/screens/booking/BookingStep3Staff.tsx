@@ -47,7 +47,7 @@ export default function BookingStep3Staff() {
     if (isLoading) {
         return (
             <View style={styles.container}>
-                <LoadingSpinner message="Р—Р°РіСЂСѓР·РєР° РјР°СЃС‚РµСЂРѕРІ..." />
+                <LoadingSpinner message="Загрузка мастеров..." />
             </View>
         );
     }
@@ -67,8 +67,8 @@ export default function BookingStep3Staff() {
                     </View>
                     <EmptyState
                         icon="person-outline"
-                        title="РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РјР°СЃС‚РµСЂРѕРІ"
-                        message="Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕР№ СѓСЃР»СѓРіРё РїРѕРєР° РЅРµС‚ Р°РєС‚РёРІРЅС‹С… СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ."
+                        title="Нет доступных мастеров"
+                        message="Для выбранной услуги пока нет активных сотрудников."
                         compact
                         style={styles.emptyContainer}
                     />
