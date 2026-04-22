@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 
 import {logDebug, logError, logWarn} from '@/lib/log';
+import { supabase } from '@/lib/supabaseClient';
 
 /**
  * Промежуточная страница для редиректа с веб-сайта на мобильное приложение
@@ -64,6 +65,49 @@ function CallbackMobileContent() {
                     }
                 } catch (error) {
                     logError('CallbackMobile', 'Error storing tokens', error);
+                }
+            }
+
+            // Fallback для flow'ов (например, Telegram), где токены не приходят в URL,
+            // но веб-сессия уже установлена в браузере.
+            if (!exchangeCode && !code && (!accessToken || !refreshToken)) {
+                try {
+                    const {
+                        data: { session },
+                    } = await supabase.auth.getSession();
+
+                    const sessionAccessToken = session?.access_token;
+                    const sessionRefreshToken = session?.refresh_token;
+
+                    if (sessionAccessToken && sessionRefreshToken) {
+                        const response = await fetch('/api/auth/mobile-exchange', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                accessToken: sessionAccessToken,
+                                refreshToken: sessionRefreshToken,
+                            }),
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            exchangeCode =
+                                data && typeof data === 'object' && 'data' in data
+                                    ? data.data?.code
+                                    : data?.code;
+                        } else {
+                            const errorText = await response.text();
+                            logError('CallbackMobile', 'Failed to store session tokens', {
+                                error: errorText,
+                            });
+                        }
+                    } else {
+                        logWarn('CallbackMobile', 'No URL tokens and no browser session tokens');
+                    }
+                } catch (error) {
+                    logError('CallbackMobile', 'Error storing browser session tokens', error);
                 }
             }
 
