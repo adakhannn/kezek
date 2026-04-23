@@ -179,7 +179,7 @@ export async function runTelegramMobileConfirmRoute({
     const serviceRoleKey = getSupabaseServiceRoleKey();
     const supabaseUrl = getSupabaseUrl();
     const anonKey = getSupabaseAnonKey();
-    const admin = createClient(supabaseUrl, serviceRoleKey) as Parameters<
+    const admin = createClient(supabaseUrl, serviceRoleKey) as unknown as Parameters<
         typeof handleTelegramLogin
     >[0]['admin'];
     const authClient = createClient(supabaseUrl, anonKey);

@@ -14,8 +14,18 @@ type ProfileRow = {
     telegram_id: number | null;
 };
 
+type DbError = { message?: string } | null;
+type QueryResult<T> = { data: T | null; error: DbError };
+type QueryChain<T> = PromiseLike<QueryResult<T>> & {
+    select: (columns: string) => QueryChain<T>;
+    eq: (column: string, value: unknown) => QueryChain<T>;
+    maybeSingle: () => Promise<QueryResult<T>>;
+    update: (payload: unknown) => QueryChain<T>;
+    insert: (payload: unknown) => Promise<{ error: DbError }>;
+};
+
 export type TelegramLoginAdminClientLike = {
-    from: (table: string) => unknown;
+    from: <T = unknown>(table: string) => QueryChain<T>;
     auth: {
         admin: {
             createUser: (payload: unknown) => Promise<{ data?: { user?: { id: string } }; error?: { message?: string } | null }>;
@@ -57,7 +67,7 @@ function defaultRandomHex(size: number) {
 
 async function findExistingProfile(admin: TelegramLoginAdminClientLike, telegramId: number) {
     const profileResponse = (admin
-        .from('profiles')
+        .from<ProfileRow>('profiles')
         .select('id, telegram_id')
         .eq('telegram_id', telegramId)
         .maybeSingle() as Promise<{ data: ProfileRow | null; error: { message?: string } | null }>);
@@ -72,7 +82,7 @@ async function findExistingProfile(admin: TelegramLoginAdminClientLike, telegram
 
 async function updateExistingProfile(admin: TelegramLoginAdminClientLike, userId: string, normalized: TelegramNormalizedData) {
     const { error } = await admin
-        .from('profiles')
+        .from<ProfileRow>('profiles')
         .update({
             full_name: normalized.full_name,
             telegram_username: normalized.telegram_username,

@@ -4,8 +4,28 @@ type Alert = {
     details?: Record<string, unknown>;
 };
 
+type DbError = { message?: string } | null;
+type QueryResult<T> = {
+    data: T | null;
+    count?: number | null;
+    error?: DbError;
+};
+
+type QueryChain<T> = PromiseLike<QueryResult<T>> & {
+    select: (columns: string, options?: { count?: 'exact'; head?: boolean }) => QueryChain<T>;
+    eq: (column: string, value: unknown) => QueryChain<T>;
+    gte: (column: string, value: unknown) => QueryChain<T>;
+    lt: (column: string, value: unknown) => QueryChain<T>;
+    order: (
+        column: string,
+        options?: { ascending?: boolean },
+    ) => QueryChain<T>;
+    limit: (count: number) => QueryChain<T>;
+    maybeSingle: () => Promise<QueryResult<T>>;
+};
+
 type AdminClientLike = {
-    from: (table: string) => unknown;
+    from: <T = unknown>(table: string) => QueryChain<T>;
 };
 
 type EmailSenderLike = (alerts: Alert[]) => Promise<{ success: boolean; error?: string }>;
@@ -27,7 +47,7 @@ async function getAnalyticsEventCount(
     toIsoValue: string,
 ): Promise<number> {
     const response = await admin
-        .from('analytics_events')
+        .from<{ id: string }[]>('analytics_events')
         .select('id', { count: 'exact', head: true })
         .eq('event_type', eventType)
         .gte('created_at', fromIso)
@@ -82,7 +102,7 @@ export async function runHealthCheckAlerts({
     const twoDaysAgoYmd = formatDate(twoDaysAgo, tz, 'yyyy-MM-dd');
 
     const { data: openShifts } = await admin
-        .from('staff_shifts')
+        .from<{ id: string; shift_date: string; staff_id: string }[]>('staff_shifts')
         .select('id, shift_date, staff_id')
         .eq('status', 'open')
         .lt('shift_date', twoDaysAgoYmd);
@@ -97,9 +117,24 @@ export async function runHealthCheckAlerts({
     }
 
     const [{ data: staffMax }, { data: branchMax }, { data: bizMax }] = await Promise.all([
-        admin.from('staff_day_metrics').select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle(),
-        admin.from('branch_day_metrics').select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle(),
-        admin.from('biz_day_metrics').select('metric_date').order('metric_date', { ascending: false }).limit(1).maybeSingle(),
+        admin
+            .from<{ metric_date: string }>('staff_day_metrics')
+            .select('metric_date')
+            .order('metric_date', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        admin
+            .from<{ metric_date: string }>('branch_day_metrics')
+            .select('metric_date')
+            .order('metric_date', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        admin
+            .from<{ metric_date: string }>('biz_day_metrics')
+            .select('metric_date')
+            .order('metric_date', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
     ]);
 
     const lastMetricDate =
@@ -131,14 +166,14 @@ export async function runHealthCheckAlerts({
     }
 
     const { data: lastPromoUsage } = await admin
-        .from('client_promotion_usage')
+        .from<{ created_at: string }>('client_promotion_usage')
         .select('created_at')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
     const { data: activePromotions } = await admin
-        .from('branch_promotions')
+        .from<{ id: string }[]>('branch_promotions')
         .select('id', { count: 'exact', head: true })
         .eq('is_active', true);
 

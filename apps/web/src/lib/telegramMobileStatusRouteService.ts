@@ -37,7 +37,7 @@ export function runTelegramMobileStatusRoute({
     return {
         ok: true,
         payload: {
-            status: result.status,
+            status: result.status === 'consumed' ? 'pending' : result.status,
             expiresAt: result.expiresAt,
             exchangeCode: result.exchangeCode,
         },

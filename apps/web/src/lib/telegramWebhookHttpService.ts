@@ -324,7 +324,7 @@ async function handleTelegramConfirmCallback(callback: TelegramCallbackQuery) {
 
 async function processTelegramWebhookUpdate(update: TelegramUpdate) {
     const messageText = update.message?.text?.trim();
-    if (messageText?.startsWith('/start')) {
+    if (messageText?.startsWith('/start') && update.message) {
         await handleTelegramStartCommand(update.message);
         return;
     }

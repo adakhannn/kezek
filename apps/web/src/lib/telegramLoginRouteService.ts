@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 import { getSupabaseServiceRoleKey, getSupabaseUrl } from '@/lib/env';
-import { handleTelegramLogin } from '@/lib/telegramLoginService';
 import {
     normalizeTelegramData,
     verifyTelegramAuth,
     type TelegramAuthData,
 } from '@/lib/telegram/verify';
+import { handleTelegramLogin } from '@/lib/telegramLoginService';
 
 type Failure = {
     ok: false;
@@ -69,7 +69,7 @@ export async function runTelegramLoginRoute(
     const admin = createClient(
         getSupabaseUrl(),
         serviceKey,
-    ) as Parameters<typeof handleTelegramLogin>[0]['admin'];
+    ) as unknown as Parameters<typeof handleTelegramLogin>[0]['admin'];
     const normalized = normalizeTelegramData(body);
     const result = await handleTelegramLogin({
         admin,
