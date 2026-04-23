@@ -11,6 +11,7 @@ const RETENTION = {
     funnelEventsDays: 400,
     bookingsPiiOlderThanDays: 2555,
     profilesInactiveDays: 1095,
+    telegramMobileAttemptsKeepMinutes: 1440,
 } as const;
 
 export async function runDataRetention({
@@ -67,6 +68,20 @@ export async function runDataRetention({
             result.profiles_pii_error = e5.message ?? 'anonymize_inactive_profiles_pii failed';
         } else {
             result.profiles_pii_anonymized = typeof profilesAnonymized === 'number' ? profilesAnonymized : 0;
+        }
+
+        const { data: telegramAttemptsDeleted, error: e6 } = await supabase.rpc(
+            'cleanup_expired_telegram_mobile_auth_attempts',
+            {
+                p_keep_minutes: RETENTION.telegramMobileAttemptsKeepMinutes,
+            },
+        );
+        if (e6) {
+            result.telegram_mobile_attempts_error =
+                e6.message ?? 'cleanup_expired_telegram_mobile_auth_attempts failed';
+        } else {
+            result.telegram_mobile_attempts_deleted =
+                typeof telegramAttemptsDeleted === 'number' ? telegramAttemptsDeleted : 0;
         }
     } catch (error) {
         return {

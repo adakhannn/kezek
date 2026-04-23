@@ -3,6 +3,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { createTelegramMobileBotRequestAuthHeaders } from '@/lib/telegramMobileBotRequestAuth';
 
 /**
  * Создает мок Request для тестирования API routes
@@ -30,6 +31,22 @@ export function createMockRequest(
     }
 
     return new Request(url, requestInit);
+}
+
+export function createTelegramMobileSignedHeaders(params: {
+    secret: string;
+    body: unknown;
+    now?: number;
+    requestId?: string;
+}) {
+    const bodyRaw =
+        typeof params.body === 'string' ? params.body : JSON.stringify(params.body);
+    return createTelegramMobileBotRequestAuthHeaders({
+        secret: params.secret,
+        bodyRaw,
+        now: params.now,
+        requestId: params.requestId,
+    });
 }
 
 /**

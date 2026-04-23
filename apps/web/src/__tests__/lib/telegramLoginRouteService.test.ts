@@ -80,6 +80,7 @@ describe('telegramLoginRouteService', () => {
                 password: 'secret',
                 needsSignIn: true,
                 redirect: '/',
+                linkage: 'existing',
             },
         });
 
@@ -99,6 +100,7 @@ describe('telegramLoginRouteService', () => {
                 password: 'secret',
                 needsSignIn: true,
                 redirect: '/',
+                linkage: 'existing',
             },
         });
     });

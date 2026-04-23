@@ -36,6 +36,33 @@ jest.mock('expo-network', () => ({
     })),
 }));
 
+jest.mock('expo-linear-gradient', () => {
+    const React = require('react');
+    const { View } = require('react-native');
+    return {
+        LinearGradient: ({ children, ...props }) =>
+            React.createElement(View, props, children),
+    };
+});
+
+jest.mock('@expo/vector-icons', () => {
+    const React = require('react');
+    const { Text } = require('react-native');
+
+    const Icon = ({ name = 'icon', ...props }) =>
+        React.createElement(Text, props, String(name));
+
+    return {
+        Ionicons: Icon,
+        MaterialIcons: Icon,
+        MaterialCommunityIcons: Icon,
+        FontAwesome: Icon,
+        FontAwesome5: Icon,
+        Entypo: Icon,
+        AntDesign: Icon,
+    };
+});
+
 // Mock Supabase client
 jest.mock('./src/lib/supabase', () => ({
     supabase: {
@@ -99,6 +126,13 @@ jest.mock('./src/contexts/ToastContext', () => ({
         showToast: jest.fn(),
     }),
     ToastProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+jest.mock('./src/contexts/ConfirmContext', () => ({
+    useConfirm: () => ({
+        confirm: jest.fn().mockResolvedValue(true),
+    }),
+    ConfirmProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock Booking Context

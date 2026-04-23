@@ -7,7 +7,7 @@ import {
 type Failure = {
     ok: false;
     status: number;
-    error: 'validation' | 'not_found';
+    error: 'validation' | 'not_found' | 'conflict';
     message: string;
 };
 

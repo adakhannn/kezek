@@ -5,10 +5,44 @@ type Alert = {
 };
 
 type AdminClientLike = {
-    from: (table: string) => any;
+    from: (table: string) => unknown;
 };
 
 type EmailSenderLike = (alerts: Alert[]) => Promise<{ success: boolean; error?: string }>;
+
+const TELEGRAM_ALERT_WINDOW_HOURS = 24;
+const TELEGRAM_FAILURE_GROWTH_MIN_DELTA = 5;
+const TELEGRAM_FAILURE_GROWTH_MULTIPLIER = 1.5;
+const TELEGRAM_APPROVED_RATE_MIN = 0.6;
+const TELEGRAM_APPROVED_RATE_DROP_DELTA = 0.15;
+
+function toIso(date: Date) {
+    return date.toISOString();
+}
+
+async function getAnalyticsEventCount(
+    admin: AdminClientLike,
+    eventType: string,
+    fromIso: string,
+    toIsoValue: string,
+): Promise<number> {
+    const response = await admin
+        .from('analytics_events')
+        .select('id', { count: 'exact', head: true })
+        .eq('event_type', eventType)
+        .gte('created_at', fromIso)
+        .lt('created_at', toIsoValue);
+
+    if (typeof response?.count === 'number') {
+        return response.count;
+    }
+
+    if (Array.isArray(response?.data)) {
+        return response.data.length;
+    }
+
+    return 0;
+}
 
 export async function runHealthCheckAlerts({
     admin,
@@ -125,6 +159,122 @@ export async function runHealthCheckAlerts({
         });
     }
 
+    const currentWindowEnd = now;
+    const currentWindowStart = new Date(
+        now.getTime() - TELEGRAM_ALERT_WINDOW_HOURS * 60 * 60 * 1000,
+    );
+    const previousWindowStart = new Date(
+        currentWindowStart.getTime() - TELEGRAM_ALERT_WINDOW_HOURS * 60 * 60 * 1000,
+    );
+
+    const [
+        currentFailed,
+        currentExpired,
+        currentApproved,
+        previousFailed,
+        previousExpired,
+        previousApproved,
+    ] = await Promise.all([
+        getAnalyticsEventCount(
+            admin,
+            'telegram_mobile_login_failed',
+            toIso(currentWindowStart),
+            toIso(currentWindowEnd),
+        ),
+        getAnalyticsEventCount(
+            admin,
+            'telegram_mobile_login_expired',
+            toIso(currentWindowStart),
+            toIso(currentWindowEnd),
+        ),
+        getAnalyticsEventCount(
+            admin,
+            'telegram_mobile_login_approved',
+            toIso(currentWindowStart),
+            toIso(currentWindowEnd),
+        ),
+        getAnalyticsEventCount(
+            admin,
+            'telegram_mobile_login_failed',
+            toIso(previousWindowStart),
+            toIso(currentWindowStart),
+        ),
+        getAnalyticsEventCount(
+            admin,
+            'telegram_mobile_login_expired',
+            toIso(previousWindowStart),
+            toIso(currentWindowStart),
+        ),
+        getAnalyticsEventCount(
+            admin,
+            'telegram_mobile_login_approved',
+            toIso(previousWindowStart),
+            toIso(currentWindowStart),
+        ),
+    ]);
+
+    const currentNegative = currentFailed + currentExpired;
+    const previousNegative = previousFailed + previousExpired;
+    const currentTotal = currentNegative + currentApproved;
+    const previousTotal = previousNegative + previousApproved;
+    const currentApprovedRate = currentTotal > 0 ? currentApproved / currentTotal : null;
+    const previousApprovedRate = previousTotal > 0 ? previousApproved / previousTotal : null;
+
+    const negativeGrowthTriggered =
+        currentNegative >= previousNegative * TELEGRAM_FAILURE_GROWTH_MULTIPLIER &&
+        currentNegative - previousNegative >= TELEGRAM_FAILURE_GROWTH_MIN_DELTA;
+
+    if (negativeGrowthTriggered) {
+        alerts.push({
+            type: 'warning',
+            message:
+                'Рост telegram mobile login ошибок: increased failed/expired attempts in the last 24h window',
+            details: {
+                windowHours: TELEGRAM_ALERT_WINDOW_HOURS,
+                current: {
+                    failed: currentFailed,
+                    expired: currentExpired,
+                    negative: currentNegative,
+                },
+                previous: {
+                    failed: previousFailed,
+                    expired: previousExpired,
+                    negative: previousNegative,
+                },
+            },
+        });
+    }
+
+    if (
+        currentApprovedRate !== null &&
+        previousApprovedRate !== null &&
+        currentApprovedRate < TELEGRAM_APPROVED_RATE_MIN &&
+        previousApprovedRate - currentApprovedRate >= TELEGRAM_APPROVED_RATE_DROP_DELTA
+    ) {
+        alerts.push({
+            type: 'error',
+            message:
+                'Падение telegram mobile login approved rate detected',
+            details: {
+                windowHours: TELEGRAM_ALERT_WINDOW_HOURS,
+                currentApprovedRate,
+                previousApprovedRate,
+                current: {
+                    approved: currentApproved,
+                    failed: currentFailed,
+                    expired: currentExpired,
+                    total: currentTotal,
+                },
+                previous: {
+                    approved: previousApproved,
+                    failed: previousFailed,
+                    expired: previousExpired,
+                    total: previousTotal,
+                },
+            },
+        });
+    }
+
     const healthCheck = {
         ok: alerts.length === 0,
         alerts,
@@ -148,6 +298,30 @@ export async function runHealthCheckAlerts({
                 lastAppliedDate: lastPromoDate?.toISOString() ?? null,
                 daysSinceLastApplication: daysSinceLastPromo,
                 activePromotionsCount,
+            },
+            telegramMobileAuth: {
+                ok:
+                    !negativeGrowthTriggered &&
+                    !(
+                        currentApprovedRate !== null &&
+                        previousApprovedRate !== null &&
+                        currentApprovedRate < TELEGRAM_APPROVED_RATE_MIN &&
+                        previousApprovedRate - currentApprovedRate >=
+                            TELEGRAM_APPROVED_RATE_DROP_DELTA
+                    ),
+                windowHours: TELEGRAM_ALERT_WINDOW_HOURS,
+                current: {
+                    approved: currentApproved,
+                    failed: currentFailed,
+                    expired: currentExpired,
+                    approvedRate: currentApprovedRate,
+                },
+                previous: {
+                    approved: previousApproved,
+                    failed: previousFailed,
+                    expired: previousExpired,
+                    approvedRate: previousApprovedRate,
+                },
             },
         },
     };

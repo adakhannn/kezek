@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -51,9 +51,10 @@ describe('CabinetScreen', () => {
         expect(await screen.findByTestId('cabinet-screen')).toBeTruthy();
     });
 
-    test('renders cabinet screen title', async () => {
+    test('renders cabinet screen user label', async () => {
         renderWithProviders(<CabinetScreen />);
 
-        expect(await screen.findByText('Личный кабинет')).toBeTruthy();
+        expect(await screen.findByText('test@example.com')).toBeTruthy();
     });
 });
+

@@ -15,7 +15,7 @@ type ProfileRow = {
 };
 
 export type TelegramLoginAdminClientLike = {
-    from: (table: string) => any;
+    from: (table: string) => unknown;
     auth: {
         admin: {
             createUser: (payload: unknown) => Promise<{ data?: { user?: { id: string } }; error?: { message?: string } | null }>;
@@ -40,6 +40,7 @@ type TelegramLoginResult =
               password: string;
               needsSignIn: true;
               redirect: '/';
+              linkage: 'existing' | 'created';
           };
       }
     | {
@@ -141,9 +142,11 @@ export async function handleTelegramLogin({
 }: TelegramLoginInput): Promise<TelegramLoginResult> {
     const existingProfile = await findExistingProfile(admin, normalized.telegram_id);
     let userId: string;
+    let linkage: 'existing' | 'created';
 
     if (existingProfile?.id) {
         userId = existingProfile.id;
+        linkage = 'existing';
         await updateExistingProfile(admin, userId, normalized);
     } else {
         const creation = await createNewTelegramUser(admin, normalized, randomHex(32));
@@ -151,6 +154,7 @@ export async function handleTelegramLogin({
             return creation;
         }
         userId = creation.userId;
+        linkage = 'created';
     }
 
     const tempPassword = randomHex(16);
@@ -196,6 +200,7 @@ export async function handleTelegramLogin({
             password: tempPassword,
             needsSignIn: true,
             redirect: '/',
+            linkage,
         },
     };
 }

@@ -1,7 +1,6 @@
-import {
+﻿import {
     __resetMobileExchangeStoreForTests,
     exchangeMobileTokens,
-    getLatestPendingMobileExchange,
     storeMobileTokens,
 } from '@/lib/mobileExchangeService';
 
@@ -10,42 +9,47 @@ describe('mobileExchangeService', () => {
         __resetMobileExchangeStoreForTests();
     });
 
-    test('stores tokens and exchanges them once', () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    test('allows exchange code only once', () => {
         const { code } = storeMobileTokens({
             accessToken: 'access-token',
             refreshToken: 'refresh-token',
         });
 
-        const exchanged = exchangeMobileTokens(code);
-        expect(exchanged).toEqual({
-            ok: true,
-            data: {
-                accessToken: 'access-token',
-                refreshToken: 'refresh-token',
-            },
-        });
+        const first = exchangeMobileTokens(code);
+        expect(first.ok).toBe(true);
 
-        const secondAttempt = exchangeMobileTokens(code);
-        expect(secondAttempt).toEqual({
-            ok: false,
-            error: 'not_found',
-            message: 'Неверный или истекший код',
-            status: 404,
-        });
+        const second = exchangeMobileTokens(code);
+        expect(second.ok).toBe(false);
+        if (second.ok) {
+            return;
+        }
+
+        expect(second.error).toBe('conflict');
+        expect(second.status).toBe(409);
     });
 
-    test('returns latest pending code', () => {
-        storeMobileTokens({
-            accessToken: 'access-token-1',
-            refreshToken: 'refresh-token-1',
-        });
-        const latest = storeMobileTokens({
-            accessToken: 'access-token-2',
-            refreshToken: 'refresh-token-2',
+    test('expires exchange code after ttl', () => {
+        const nowSpy = jest.spyOn(Date, 'now');
+        nowSpy.mockReturnValue(1_000_000);
+
+        const { code } = storeMobileTokens({
+            accessToken: 'access-token',
+            refreshToken: 'refresh-token',
         });
 
-        const pending = getLatestPendingMobileExchange();
-        expect(pending).not.toBeNull();
-        expect(pending?.code).toBe(latest.code);
+        nowSpy.mockReturnValue(1_000_000 + 2 * 60 * 1000 + 1);
+
+        const result = exchangeMobileTokens(code);
+        expect(result.ok).toBe(false);
+        if (result.ok) {
+            return;
+        }
+
+        expect(result.error).toBe('validation');
+        expect(result.status).toBe(410);
     });
 });

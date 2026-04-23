@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -70,9 +70,10 @@ describe('ShiftsScreen', () => {
         mockedApiRequest.mockReset();
     });
 
-    test('renders shifts screen title', async () => {
+    test('renders shifts screen header data', async () => {
         renderWithProviders(<ShiftsScreen />);
 
-        expect(await screen.findByText('Смены и статистика')).toBeTruthy();
+        expect(await screen.findByText('Test Staff')).toBeTruthy();
     });
 });
+

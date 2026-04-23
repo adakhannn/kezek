@@ -62,8 +62,84 @@ describe('telegramLoginService', () => {
                 password: 'hex-16',
                 needsSignIn: true,
                 redirect: '/',
+                linkage: 'existing',
             },
         });
+    });
+
+    test('creates new user/profile when telegram is not linked yet', async () => {
+        const admin = createMockSupabase();
+        (admin as unknown as {
+            auth: {
+                admin: {
+                    getUserById: jest.Mock;
+                    updateUserById: jest.Mock;
+                    createUser: jest.Mock;
+                };
+            };
+        }).auth.admin = {
+            getUserById: jest.fn(),
+            updateUserById: jest.fn(),
+            createUser: jest.fn(),
+        };
+
+        const maybeSingle = jest.fn().mockResolvedValue({
+            data: null,
+            error: null,
+        });
+        const insert = jest.fn().mockResolvedValue({ error: null });
+
+        admin.from.mockImplementation((table: string) => {
+            if (table === 'profiles') {
+                return {
+                    select: jest.fn().mockReturnThis(),
+                    eq: jest.fn().mockReturnThis(),
+                    maybeSingle,
+                    insert,
+                    update: jest.fn().mockReturnThis(),
+                };
+            }
+
+            return admin;
+        });
+
+        admin.auth.admin.createUser.mockResolvedValue({
+            data: { user: { id: 'new-user-id' } },
+            error: null,
+        });
+        admin.auth.admin.getUserById.mockResolvedValue({
+            data: { user: { email: null } },
+            error: null,
+        });
+        admin.auth.admin.updateUserById.mockResolvedValue({
+            data: { user: { id: 'new-user-id' } },
+            error: null,
+        });
+
+        const result = await handleTelegramLogin({
+            admin,
+            normalized: {
+                telegram_id: 222333444,
+                full_name: 'New User',
+                telegram_username: 'newuser',
+                telegram_photo_url: null,
+            },
+            randomHex: (size) => `hex-${size}`,
+        });
+
+        expect(result).toEqual({
+            ok: true,
+            data: {
+                userId: 'new-user-id',
+                email: 'telegram_222333444@telegram.local',
+                password: 'hex-16',
+                needsSignIn: true,
+                redirect: '/',
+                linkage: 'created',
+            },
+        });
+        expect(admin.auth.admin.createUser).toHaveBeenCalled();
+        expect(insert).toHaveBeenCalled();
     });
 
     test('returns internal error when auth user creation fails', async () => {

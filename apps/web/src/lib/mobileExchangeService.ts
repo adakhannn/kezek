@@ -12,14 +12,17 @@ type StoredTokens = {
 
 type ExchangeFailure = {
     ok: false;
-    error: 'not_found' | 'validation';
+    error: 'not_found' | 'validation' | 'conflict';
     message: string;
     status: number;
 };
 
 const tokenStore = new Map<string, StoredTokens>();
+const consumedTokenStore = new Map<string, number>();
 let cleanupInterval: NodeJS.Timeout | null = null;
 let creationSequence = 0;
+const EXCHANGE_CODE_TTL_MS = 2 * 60 * 1000;
+const CONSUMED_CODE_RETENTION_MS = 10 * 60 * 1000;
 
 function nowMs() {
     return Date.now();
@@ -35,6 +38,11 @@ function cleanupExpiredTokens() {
     for (const [code, data] of tokenStore.entries()) {
         if (data.expiresAt < now) {
             tokenStore.delete(code);
+        }
+    }
+    for (const [code, consumedUntil] of consumedTokenStore.entries()) {
+        if (consumedUntil < now) {
+            consumedTokenStore.delete(code);
         }
     }
 
@@ -63,20 +71,24 @@ export function storeMobileTokens({
     accessToken: string;
     refreshToken: string;
 }) {
-    const code = randomCode();
+    let code = randomCode();
+    while (tokenStore.has(code)) {
+        code = randomCode();
+    }
     const now = nowMs();
+    const expiresAt = now + EXCHANGE_CODE_TTL_MS;
 
     tokenStore.set(code, {
         accessToken,
         refreshToken,
-        expiresAt: now + 10 * 60 * 1000,
+        expiresAt,
         createdAt: now,
         sequence: ++creationSequence,
     });
 
     logWarn('MobileExchange', 'Token stored', {
-        code,
-        expiresAt: new Date(now + 10 * 60 * 1000).toISOString(),
+        exchangeCode: code,
+        expiresAt: new Date(expiresAt).toISOString(),
     });
 
     return { code };
@@ -124,6 +136,15 @@ export function exchangeMobileTokens(
     const tokenData = tokenStore.get(code);
 
     if (!tokenData) {
+        if (consumedTokenStore.has(code)) {
+            return {
+                ok: false,
+                error: 'conflict',
+                message: 'РљРѕРґ СѓР¶Рµ РёСЃРїРѕР»СЊР·РѕРІР°РЅ',
+                status: 409,
+            };
+        }
+
         return {
             ok: false,
             error: 'not_found',
@@ -143,6 +164,7 @@ export function exchangeMobileTokens(
     }
 
     tokenStore.delete(code);
+    consumedTokenStore.set(code, nowMs() + CONSUMED_CODE_RETENTION_MS);
 
     return {
         ok: true,
@@ -155,5 +177,6 @@ export function exchangeMobileTokens(
 
 export function __resetMobileExchangeStoreForTests() {
     tokenStore.clear();
+    consumedTokenStore.clear();
     creationSequence = 0;
 }

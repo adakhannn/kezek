@@ -1,9 +1,4 @@
-/**
- * Тесты для /api/auth/mobile-exchange
- * Обмен токенов для мобильных приложений
- */
-
-import { POST, GET } from '@/app/api/auth/mobile-exchange/route';
+﻿import { POST, GET } from '@/app/api/auth/mobile-exchange/route';
 import {
     setupApiTestMocks,
     createMockNextRequest,
@@ -16,7 +11,7 @@ setupApiTestMocks();
 
 describe('/api/auth/mobile-exchange', () => {
     describe('POST /api/auth/mobile-exchange', () => {
-        test('должен успешно сохранить токены и вернуть код', async () => {
+        test('stores tokens and returns exchange code', async () => {
             const req = createMockRequest('http://localhost/api/auth/mobile-exchange', {
                 method: 'POST',
                 body: {
@@ -32,7 +27,7 @@ describe('/api/auth/mobile-exchange', () => {
             expect(typeof (data as { data: { code: string } }).data.code).toBe('string');
         });
 
-        test('должен вернуть 400 при отсутствии accessToken', async () => {
+        test('returns 400 when accessToken missing', async () => {
             const req = createMockRequest('http://localhost/api/auth/mobile-exchange', {
                 method: 'POST',
                 body: {
@@ -44,7 +39,7 @@ describe('/api/auth/mobile-exchange', () => {
             await expectErrorResponse(res, 400);
         });
 
-        test('должен вернуть 400 при отсутствии refreshToken', async () => {
+        test('returns 400 when refreshToken missing', async () => {
             const req = createMockRequest('http://localhost/api/auth/mobile-exchange', {
                 method: 'POST',
                 body: {
@@ -58,8 +53,7 @@ describe('/api/auth/mobile-exchange', () => {
     });
 
     describe('GET /api/auth/mobile-exchange', () => {
-        test('должен успешно обменять код на токены', async () => {
-            // Сначала создаем код
+        test('exchanges code to tokens', async () => {
             const postReq = createMockRequest('http://localhost/api/auth/mobile-exchange', {
                 method: 'POST',
                 body: {
@@ -72,7 +66,6 @@ describe('/api/auth/mobile-exchange', () => {
             const postData = await expectSuccessResponse(postRes, 200);
             const code = (postData as { data: { code: string } }).data.code;
 
-            // Теперь обмениваем код на токены
             const getReq = createMockNextRequest(`http://localhost/api/auth/mobile-exchange?code=${code}`, {
                 method: 'GET',
             });
@@ -84,7 +77,7 @@ describe('/api/auth/mobile-exchange', () => {
             expect(getData).toHaveProperty('data.refreshToken', 'refresh-token');
         });
 
-        test('должен вернуть 400 при неверном коде', async () => {
+        test('returns 404 for unknown code', async () => {
             const req = createMockNextRequest('http://localhost/api/auth/mobile-exchange?code=INVALID', {
                 method: 'GET',
             });
@@ -93,8 +86,35 @@ describe('/api/auth/mobile-exchange', () => {
             await expectErrorResponse(res, 404);
         });
 
-        test('должен вернуть последний pending код при check=true', async () => {
-            // Создаем код
+        test('returns 409 when same exchange code is retried', async () => {
+            const postReq = createMockRequest('http://localhost/api/auth/mobile-exchange', {
+                method: 'POST',
+                body: {
+                    accessToken: 'access-token',
+                    refreshToken: 'refresh-token',
+                },
+            });
+
+            const postRes = await POST(postReq);
+            const postData = await expectSuccessResponse(postRes, 200);
+            const code = (postData as { data: { code: string } }).data.code;
+
+            const firstGetReq = createMockNextRequest(
+                `http://localhost/api/auth/mobile-exchange?code=${code}`,
+                { method: 'GET' },
+            );
+            const firstGetRes = await GET(firstGetReq);
+            await expectSuccessResponse(firstGetRes, 200);
+
+            const secondGetReq = createMockNextRequest(
+                `http://localhost/api/auth/mobile-exchange?code=${code}`,
+                { method: 'GET' },
+            );
+            const secondGetRes = await GET(secondGetReq);
+            await expectErrorResponse(secondGetRes, 409, 'conflict');
+        });
+
+        test('returns latest pending code with check=true', async () => {
             const postReq = createMockRequest('http://localhost/api/auth/mobile-exchange', {
                 method: 'POST',
                 body: {
@@ -105,7 +125,6 @@ describe('/api/auth/mobile-exchange', () => {
 
             await POST(postReq);
 
-            // Проверяем pending код
             const checkReq = createMockNextRequest('http://localhost/api/auth/mobile-exchange?check=true', {
                 method: 'GET',
             });
@@ -117,5 +136,3 @@ describe('/api/auth/mobile-exchange', () => {
         });
     });
 });
-
-
