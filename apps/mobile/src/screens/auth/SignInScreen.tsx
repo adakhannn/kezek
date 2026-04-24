@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     AppState,
     type AppStateStatus,
@@ -66,6 +66,54 @@ function buildTelegramWebWidgetFallbackUrl(apiUrl: string) {
     const base = apiUrl.replace(/\/+$/, '');
     const redirectParam = encodeURIComponent(TELEGRAM_WEB_WIDGET_FALLBACK_REDIRECT);
     return `${base}/auth/sign-in?redirect=${redirectParam}`;
+}
+
+function buildTelegramAppDeepLink(botDeepLink: string): string | null {
+    try {
+        const parsed = new URL(botDeepLink);
+        const host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+        if (host !== 't.me' && host !== 'telegram.me') {
+            return null;
+        }
+
+        const domain = parsed.pathname.replace(/^\/+/, '').trim();
+        if (!domain) {
+            return null;
+        }
+
+        const start = parsed.searchParams.get('start');
+        if (start) {
+            return `tg://resolve?domain=${encodeURIComponent(domain)}&start=${encodeURIComponent(start)}`;
+        }
+
+        const startApp = parsed.searchParams.get('startapp');
+        if (startApp) {
+            return `tg://resolve?domain=${encodeURIComponent(domain)}&startapp=${encodeURIComponent(startApp)}`;
+        }
+
+        return `tg://resolve?domain=${encodeURIComponent(domain)}`;
+    } catch {
+        return null;
+    }
+}
+
+async function openTelegramLink(botDeepLink: string) {
+    const appDeepLink = buildTelegramAppDeepLink(botDeepLink);
+
+    if (appDeepLink) {
+        const canOpenAppDeepLink = await Linking.canOpenURL(appDeepLink);
+        if (canOpenAppDeepLink) {
+            await Linking.openURL(appDeepLink);
+            return;
+        }
+    }
+
+    const canOpenWebDeepLink = await Linking.canOpenURL(botDeepLink);
+    if (!canOpenWebDeepLink) {
+        throw new Error('Не удалось открыть Telegram');
+    }
+
+    await Linking.openURL(botDeepLink);
 }
 
 export default function SignInScreen() {
@@ -176,10 +224,10 @@ export default function SignInScreen() {
                 throw error;
             }
 
-            showToast('РџСЂРѕРІРµСЂСЊС‚Рµ email Рё РїРµСЂРµР№РґРёС‚Рµ РїРѕ СЃСЃС‹Р»РєРµ', 'success');
+            showToast('Проверьте email и перейдите по ссылке', 'success');
         } catch (error: unknown) {
             const errorMessage =
-                error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РєРѕРґ';
+                error instanceof Error ? error.message : 'Не удалось отправить код';
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -210,7 +258,7 @@ export default function SignInScreen() {
             }
 
             if (!data?.url) {
-                throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ OAuth URL');
+                throw new Error('Не удалось получить OAuth URL');
             }
 
             const result = await WebBrowser.openAuthSessionAsync(data.url, returnUrl);
@@ -220,10 +268,10 @@ export default function SignInScreen() {
             if (result.type === 'success' && result.url) {
                 const restored = await ensureSessionRestored(result.url, 4);
                 if (restored) {
-                    showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
+                    showToast('Вход выполнен успешно', 'success');
                 } else {
                     showToast(
-                        'РђРІС‚РѕСЂРёР·Р°С†РёСЏ РѕР±СЂР°Р±РѕС‚Р°РЅР°, РЅРѕ СЃРµСЃСЃРёСЏ РµС‰Рµ РЅРµ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°Р»Р°СЃСЊ. РџРѕРІС‚РѕСЂРёС‚Рµ РІС…РѕРґ.',
+                        'Авторизация обработана, но сессия еще не синхронизировалась. Повторите вход.',
                         'info',
                     );
                 }
@@ -233,10 +281,10 @@ export default function SignInScreen() {
             if (result.type === 'dismiss') {
                 const restored = await ensureSessionRestored(undefined, 6);
                 if (restored) {
-                    showToast('Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ', 'success');
+                    showToast('Вход выполнен успешно', 'success');
                 } else {
                     showToast(
-                        'РђРІС‚РѕСЂРёР·Р°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР° РЅР° РІРµР±-СЃР°Р№С‚Рµ. Р’РµСЂРЅРёС‚РµСЃСЊ РІ РїСЂРёР»РѕР¶РµРЅРёРµ РёР»Рё РїРµСЂРµР·Р°РїСѓСЃС‚РёС‚Рµ РµРіРѕ.',
+                        'Авторизация завершена на веб-сайте. Вернитесь в приложение или перезапустите его.',
                         'info',
                     );
                 }
@@ -244,12 +292,12 @@ export default function SignInScreen() {
             }
 
             if (result.type === 'cancel') {
-                showToast('Р’С…РѕРґ РѕС‚РјРµРЅРµРЅ', 'info');
+                showToast('Вход отменен', 'info');
                 return;
             }
 
             if (result.type === 'locked') {
-                showToast('Р‘СЂР°СѓР·РµСЂ СѓР¶Рµ РѕС‚РєСЂС‹С‚. Р—Р°РєСЂРѕР№С‚Рµ РµРіРѕ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.', 'info');
+                showToast('Браузер уже открыт. Закройте его и попробуйте снова.', 'info');
                 return;
             }
 
@@ -257,11 +305,11 @@ export default function SignInScreen() {
                 provider: 'google',
                 type: result.type,
             });
-            showToast('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РІРµСЂС€РёС‚СЊ Р°РІС‚РѕСЂРёР·Р°С†РёСЋ. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.', 'error');
+            showToast('Не удалось завершить авторизацию. Попробуйте снова.', 'error');
         } catch (error: unknown) {
             logError('SignInScreen', 'OAuth sign in error', { provider: 'google', error });
             const errorMessage =
-                error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕР№С‚Рё С‡РµСЂРµР· Google';
+                error instanceof Error ? error.message : 'Не удалось войти через Google';
             showToast(errorMessage, 'error');
         } finally {
             setGoogleLoading(false);
@@ -316,7 +364,7 @@ export default function SignInScreen() {
                     } = await supabase.auth.getSession();
 
                     if (!session) {
-                        throw new Error('РЎРµСЃСЃРёСЏ РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅР° РїРѕСЃР»Рµ exchange');
+                        throw new Error('Сессия не установлена после exchange');
                     }
 
                     setTelegramUiStatus('approved');
@@ -324,7 +372,7 @@ export default function SignInScreen() {
                     setTelegramNonce(null);
                     setTelegramDeepLink(null);
                     await clearPersistedTelegramFlow();
-                    showToast('РџРѕРґС‚РІРµСЂР¶РґРµРЅРѕ', 'success');
+                    showToast('Подтверждено', 'success');
                     return;
                 }
 
@@ -334,7 +382,7 @@ export default function SignInScreen() {
                     setTelegramNonce(null);
                     setTelegramDeepLink(null);
                     await clearPersistedTelegramFlow();
-                    showToast('РСЃС‚РµРєР»Рѕ', 'info');
+                    showToast('Истекло', 'info');
                     return;
                 }
 
@@ -348,7 +396,7 @@ export default function SignInScreen() {
             setTelegramNonce(null);
             setTelegramDeepLink(null);
             await clearPersistedTelegramFlow();
-            showToast('РСЃС‚РµРєР»Рѕ', 'info');
+            showToast('Истекло', 'info');
         } catch (error: unknown) {
             logError('SignInScreen', 'Telegram status polling error', { error });
             telegramPollingNonceRef.current = null;
@@ -359,7 +407,7 @@ export default function SignInScreen() {
             const errorMessage =
                 error instanceof Error
                     ? error.message
-                    : 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РІРµСЂС€РёС‚СЊ РІС…РѕРґ С‡РµСЂРµР· Telegram';
+                    : 'Не удалось завершить вход через Telegram';
             showToast(errorMessage, 'error');
         } finally {
             if (telegramPollingInFlightRef.current === nonce) {
@@ -431,7 +479,7 @@ export default function SignInScreen() {
             const botDeepLink = payload?.data?.botDeepLink ?? payload?.botDeepLink;
 
             if (!nonce || !botDeepLink) {
-                throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РґР°РЅРЅС‹Рµ Р·Р°РїСѓСЃРєР° Telegram');
+                throw new Error('Не удалось получить данные запуска Telegram');
             }
 
             const startedAt = Date.now();
@@ -439,20 +487,15 @@ export default function SignInScreen() {
             setTelegramDeepLink(botDeepLink);
             await persistTelegramFlow({ nonce, botDeepLink, startedAt });
 
-            const canOpen = await Linking.canOpenURL(botDeepLink);
-            if (!canOpen) {
-                throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ Telegram');
-            }
-
-            await Linking.openURL(botDeepLink);
-            showToast('РћС‚РєСЂС‹РІР°РµРј Telegram РґР»СЏ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РІС…РѕРґР°', 'info');
+            await openTelegramLink(botDeepLink);
+            showToast('Открываем Telegram для подтверждения входа', 'info');
             void pollTelegramStatus(nonce, startedAt);
         } catch (error: unknown) {
             logError('SignInScreen', 'Telegram mobile start error', { error });
             const errorMessage =
                 error instanceof Error
                     ? error.message
-                    : 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РїСѓСЃС‚РёС‚СЊ РІС…РѕРґ С‡РµСЂРµР· Telegram';
+                    : 'Не удалось запустить вход через Telegram';
             showToast(errorMessage, 'error');
             setTelegramUiStatus('idle');
             setTelegramNonce(null);
@@ -465,19 +508,15 @@ export default function SignInScreen() {
 
     const openTelegramAgain = async () => {
         if (!telegramDeepLink) {
-            showToast('РЎСЃС‹Р»РєР° Telegram РЅРµРґРѕСЃС‚СѓРїРЅР°. Р—Р°РїСѓСЃС‚РёС‚Рµ РІС…РѕРґ Р·Р°РЅРѕРІРѕ.', 'info');
+            showToast('Ссылка Telegram недоступна. Запустите вход заново.', 'info');
             return;
         }
 
         try {
-            const canOpen = await Linking.canOpenURL(telegramDeepLink);
-            if (!canOpen) {
-                throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ Telegram');
-            }
-            await Linking.openURL(telegramDeepLink);
+            await openTelegramLink(telegramDeepLink);
         } catch (error: unknown) {
             const message =
-                error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ Telegram';
+                error instanceof Error ? error.message : 'Не удалось открыть Telegram';
             showToast(message, 'error');
         }
     };
@@ -489,7 +528,7 @@ export default function SignInScreen() {
         setTelegramNonce(null);
         setTelegramDeepLink(null);
         setTelegramUiStatus('idle');
-        showToast('Р’С…РѕРґ С‡РµСЂРµР· Telegram РѕС‚РјРµРЅРµРЅ', 'info');
+        showToast('Вход через Telegram отменен', 'info');
     };
 
     useEffect(() => {
@@ -568,8 +607,8 @@ export default function SignInScreen() {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Р’С…РѕРґ РІ Kezek</Text>
-            <Text style={styles.subtitle}>Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± РІС…РѕРґР°</Text>
+            <Text style={styles.title}>Вход в Kezek</Text>
+            <Text style={styles.subtitle}>Выберите способ входа</Text>
 
             <Input
                 label="Email"
@@ -584,7 +623,7 @@ export default function SignInScreen() {
             />
 
             <Button
-                title="РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ"
+                title="Отправить код"
                 onPress={handleSignIn}
                 loading={loading}
                 disabled={loading || anySocialLoading}
@@ -593,12 +632,12 @@ export default function SignInScreen() {
 
             <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>РёР»Рё</Text>
+                <Text style={styles.dividerText}>или</Text>
                 <View style={styles.dividerLine} />
             </View>
 
             <Button
-                title={googleLoading ? 'Р’С…РѕРґ...' : 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ СЃ Google'}
+                title={googleLoading ? 'Вход...' : 'Продолжить с Google'}
                 onPress={() => void handleGoogleSignIn()}
                 disabled={loading || anySocialLoading}
                 variant="outline"
@@ -607,7 +646,7 @@ export default function SignInScreen() {
             />
 
             <Button
-                title={telegramLoading ? 'Р’С…РѕРґ...' : 'Р’РѕР№С‚Рё С‡РµСЂРµР· Telegram'}
+                title={telegramLoading ? 'Вход...' : 'Войти через Telegram'}
                 onPress={() => void startTelegramMobileLogin()}
                 disabled={
                     loading || anySocialLoading || !TELEGRAM_DEEPLINK_AUTH_ENABLED
@@ -619,23 +658,23 @@ export default function SignInScreen() {
             {telegramUiStatus !== 'idle' && (
                 <Text style={styles.telegramStatusText}>
                     {telegramUiStatus === 'pending'
-                        ? 'РћР¶РёРґР°РµРј РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ'
+                        ? 'Ожидаем подтверждение'
                         : telegramUiStatus === 'approved'
-                            ? 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРѕ'
-                            : 'РСЃС‚РµРєР»Рѕ'}
+                            ? 'Подтверждено'
+                            : 'Истекло'}
                 </Text>
             )}
             {telegramNonce && (
                 <View style={styles.telegramFlowActions}>
                     <Button
-                        title="РћС‚РєСЂС‹С‚СЊ Telegram СЃРЅРѕРІР°"
+                        title="Открыть Telegram снова"
                         onPress={() => void openTelegramAgain()}
                         variant="outline"
                         style={styles.telegramActionButton}
                         fullWidth
                     />
                     <Button
-                        title="РћС‚РјРµРЅРёС‚СЊ РІС…РѕРґ"
+                        title="Отменить вход"
                         onPress={cancelTelegramLogin}
                         variant="ghost"
                         style={styles.telegramActionButton}
@@ -645,7 +684,7 @@ export default function SignInScreen() {
             )}
 
             <Button
-                title="Р’РѕР№С‚Рё С‡РµСЂРµР· WhatsApp"
+                title="Войти через WhatsApp"
                 onPress={() => navigation.navigate('WhatsApp')}
                 disabled={loading || anySocialLoading}
                 variant="secondary"
@@ -655,7 +694,7 @@ export default function SignInScreen() {
             />
 
             <Button
-                title="Р РµРіРёСЃС‚СЂР°С†РёСЏ"
+                title="Регистрация"
                 onPress={() => navigation.navigate('SignUp')}
                 variant="ghost"
                 style={styles.secondaryButton}
@@ -734,5 +773,6 @@ const styles = StyleSheet.create({
         marginTop: colors.layout.space2,
     },
 });
+
 
 

@@ -109,12 +109,12 @@ describe('SignInScreen', () => {
         jest.restoreAllMocks();
     });
 
-    test('СЂРµРЅРґРµСЂРёС‚СЃСЏ Р±РµР· РѕС€РёР±РѕРє', () => {
+    test('рендерится без ошибок', () => {
         render(<SignInScreen />);
         expect(screen.getByText(/Kezek/i)).toBeTruthy();
     });
 
-    test('mobile smoke: СѓСЃРїРµС€РЅС‹Р№ РІС…РѕРґ С‡РµСЂРµР· Telegram', async () => {
+    test('mobile smoke: успешный вход через Telegram', async () => {
         const fetchMock = global.fetch as unknown as jest.Mock;
         fetchMock
             .mockResolvedValueOnce(
@@ -143,7 +143,7 @@ describe('SignInScreen', () => {
 
         await waitFor(() => {
             expect(mockOpenURL).toHaveBeenCalledWith(
-                'https://t.me/kezek_auth_bot?start=km1_nonce-1',
+                'tg://resolve?domain=kezek_auth_bot&start=km1_nonce-1',
             );
         });
 
@@ -159,7 +159,7 @@ describe('SignInScreen', () => {
         expect(mockShowToast).toHaveBeenCalled();
     });
 
-    test('mobile smoke: cancel/timeout РїРµСЂРµРІРѕРґРёС‚ flow РІ РёСЃС‚РµРєС€РёР№', async () => {
+    test('mobile smoke: cancel/timeout переводит flow в истекший', async () => {
         const fetchMock = global.fetch as unknown as jest.Mock;
         fetchMock
             .mockResolvedValueOnce(
@@ -185,11 +185,11 @@ describe('SignInScreen', () => {
             expect(mockShowToast).toHaveBeenCalledWith(expect.any(String), 'info');
         });
 
-        expect(screen.queryByText(/РћС‚РєСЂС‹С‚СЊ Telegram СЃРЅРѕРІР°/i)).toBeNull();
-        expect(screen.queryByText(/РћС‚РјРµРЅРёС‚СЊ РІС…РѕРґ/i)).toBeNull();
+        expect(screen.queryByText(/Открыть Telegram снова/i)).toBeNull();
+        expect(screen.queryByText(/Отменить вход/i)).toBeNull();
     });
 
-    test('mobile smoke: РїРѕСЃР»Рµ РІРѕР·РІСЂР°С‚Р° РёР· С„РѕРЅР° flow РєРѕСЂСЂРµРєС‚РЅРѕ Р·Р°РІРµСЂС€Р°РµС‚СЃСЏ РїРѕ timeout', async () => {
+    test('mobile smoke: после возврата из фона flow корректно завершается по timeout', async () => {
         jest.useFakeTimers();
         let now = 10_000;
         const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
@@ -232,7 +232,7 @@ describe('SignInScreen', () => {
         });
 
         await waitFor(() => {
-            expect(screen.queryByText(/РћС‚РєСЂС‹С‚СЊ Telegram СЃРЅРѕРІР°/i)).toBeNull();
+            expect(screen.queryByText(/Открыть Telegram снова/i)).toBeNull();
         });
 
         await act(async () => {
@@ -265,4 +265,5 @@ describe('SignInScreen', () => {
         });
     });
 });
+
 
