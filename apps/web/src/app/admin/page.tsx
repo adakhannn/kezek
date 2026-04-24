@@ -318,7 +318,7 @@ export default async function AdminHomePage() {
                             title={t('admin.home.latestBusinesses.title', 'Последние бизнесы')}
                             action={
                                 <Link href="/admin/businesses" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
-                                    {t('admin.home.latestBusinesses.all', 'Все')} >
+                                    {t('admin.home.latestBusinesses.all', 'Все')}
                                 </Link>
                             }
                             className="mb-4"
