@@ -2,10 +2,9 @@ import crypto from 'crypto';
 
 import { formatTelegramMobileStartPayload } from '@/lib/telegramMobileDeepLinkPayload';
 import { trackTelegramMobileMetric } from '@/lib/telegramMobileMetricsService';
+import { getServiceClient } from '@/lib/supabaseService';
 
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
-const MAX_STORE_SIZE = 5000;
-const EXPIRED_RETENTION_MS = 15 * 60 * 1000;
 
 export type TelegramMobileAuthAttemptStatus =
     | 'pending'
@@ -41,53 +40,41 @@ export type TelegramMobileAuthAttempt = {
     telegramLastName?: string;
 };
 
-const attemptsStore = new Map<string, TelegramMobileAuthAttempt>();
-let cleanupInterval: NodeJS.Timeout | null = null;
+type AttemptRow = {
+    nonce: string;
+    status: string;
+    telegram_id: number | null;
+    user_id: string | null;
+    exchange_code: string | null;
+    expires_at: string;
+    consumed_at: string | null;
+    created_at: string;
+};
+
+function getAttemptsAdmin(): any {
+    return getServiceClient() as any;
+}
 
 function nowMs() {
     return Date.now();
 }
 
-function cleanupExpiredAttempts() {
-    const now = nowMs();
-
-    for (const [nonce, attempt] of attemptsStore.entries()) {
-        if (attempt.expiresAt <= now && attempt.status === 'pending') {
-            attemptsStore.set(nonce, {
-                ...attempt,
-                status: 'expired',
-            });
-            void trackTelegramMobileMetric('telegram_mobile_login_expired', {
-                nonce,
-                telegramId: attempt.telegramId ?? null,
-                metadata: {
-                    reason: 'ttl_cleanup',
-                },
-            });
-            continue;
-        }
-
-        if (attempt.expiresAt + EXPIRED_RETENTION_MS <= now) {
-            attemptsStore.delete(nonce);
-        }
-    }
-
-    if (attemptsStore.size > MAX_STORE_SIZE) {
-        const oldest = [...attemptsStore.values()]
-            .sort((a, b) => a.createdAt - b.createdAt)
-            .slice(0, attemptsStore.size - MAX_STORE_SIZE);
-
-        oldest.forEach((attempt) => attemptsStore.delete(attempt.nonce));
-    }
+function nowIso() {
+    return new Date(nowMs()).toISOString();
 }
 
-function startCleanupInterval() {
-    if (cleanupInterval) {
-        return;
-    }
-
-    cleanupInterval = setInterval(cleanupExpiredAttempts, 60 * 1000);
-    cleanupInterval.unref?.();
+function toAttempt(row: AttemptRow): TelegramMobileAuthAttempt {
+    return {
+        nonce: row.nonce,
+        status: row.status as TelegramMobileAuthAttemptStatus,
+        createdAt: Date.parse(row.created_at),
+        expiresAt: Date.parse(row.expires_at),
+        telegramId: row.telegram_id ?? undefined,
+        expectedTelegramId: row.telegram_id ?? undefined,
+        userId: row.user_id ?? undefined,
+        exchangeCode: row.exchange_code ?? undefined,
+        consumedAt: row.consumed_at ? Date.parse(row.consumed_at) : undefined,
+    };
 }
 
 function generateNonce() {
@@ -99,9 +86,53 @@ function buildBotDeepLink(botUsername: string, nonce: string) {
     return `https://t.me/${botUsername}?start=${startPayload}`;
 }
 
-startCleanupInterval();
+async function getAttemptRow(nonce: string): Promise<AttemptRow | null> {
+    const admin = getAttemptsAdmin();
+    const { data, error } = await admin
+        .from('telegram_mobile_auth_attempts')
+        .select('nonce,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
+        .eq('nonce', nonce)
+        .single();
 
-export function createTelegramMobileAuthAttempt({
+    if (error) {
+        return null;
+    }
+
+    return data;
+}
+
+async function markExpiredIfNeeded(row: AttemptRow): Promise<AttemptRow> {
+    if (row.status !== 'pending') {
+        return row;
+    }
+
+    if (Date.parse(row.expires_at) > nowMs()) {
+        return row;
+    }
+
+    const admin = getAttemptsAdmin();
+    const { data } = await admin
+        .from('telegram_mobile_auth_attempts')
+        .update({ status: 'expired' })
+        .eq('nonce', row.nonce)
+        .select('nonce,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
+        .maybeSingle();
+
+    if (data) {
+        void trackTelegramMobileMetric('telegram_mobile_login_expired', {
+            nonce: row.nonce,
+            telegramId: row.telegram_id ?? null,
+            metadata: {
+                reason: 'ttl_read_attempt',
+            },
+        });
+        return data;
+    }
+
+    return row;
+}
+
+export async function createTelegramMobileAuthAttempt({
     botUsername,
     ttlMs = DEFAULT_TTL_MS,
     source,
@@ -112,19 +143,30 @@ export function createTelegramMobileAuthAttempt({
 }) {
     const now = nowMs();
     const expiresAt = now + ttlMs;
+    const admin = getAttemptsAdmin();
 
     let nonce = generateNonce();
-    while (attemptsStore.has(nonce)) {
+    let inserted = false;
+
+    for (let i = 0; i < 5 && !inserted; i += 1) {
+        const { error } = await admin.from('telegram_mobile_auth_attempts').insert({
+            nonce,
+            status: 'pending',
+            expires_at: new Date(expiresAt).toISOString(),
+        });
+
+        if (!error) {
+            inserted = true;
+            break;
+        }
+
         nonce = generateNonce();
     }
 
-    attemptsStore.set(nonce, {
-        nonce,
-        status: 'pending',
-        createdAt: now,
-        expiresAt,
-        source,
-    });
+    if (!inserted) {
+        throw new Error('Не удалось создать попытку входа через Telegram');
+    }
+
     void trackTelegramMobileMetric('telegram_mobile_login_started', {
         nonce,
         metadata: {
@@ -140,103 +182,87 @@ export function createTelegramMobileAuthAttempt({
     };
 }
 
-export function getTelegramMobileAuthAttempt(nonce: string) {
-    const attempt = attemptsStore.get(nonce);
-    if (!attempt) {
+export async function getTelegramMobileAuthAttempt(nonce: string) {
+    const row = await getAttemptRow(nonce);
+    if (!row) {
         return null;
     }
 
-    if (attempt.status === 'pending' && attempt.expiresAt <= nowMs()) {
-        const expiredAttempt: TelegramMobileAuthAttempt = {
-            ...attempt,
-            status: 'expired',
-            failureReason: attempt.failureReason ?? 'attempt_expired',
-        };
-        attemptsStore.set(nonce, expiredAttempt);
-        void trackTelegramMobileMetric('telegram_mobile_login_expired', {
-            nonce,
-            telegramId: attempt.telegramId ?? null,
-            metadata: {
-                reason: 'ttl_read_attempt',
-            },
-        });
-        return expiredAttempt;
-    }
-
-    return attempt;
+    const effective = await markExpiredIfNeeded(row);
+    return toAttempt(effective);
 }
 
-export function getTelegramMobileAuthStatus(nonce: string): {
+export async function getTelegramMobileAuthStatus(nonce: string): Promise<{
     status: TelegramMobileAuthAttemptStatus;
     expiresAt: number | null;
     exchangeCode?: string;
-} {
-    const attempt = attemptsStore.get(nonce);
-
-    if (!attempt) {
+}> {
+    const row = await getAttemptRow(nonce);
+    if (!row) {
         return {
             status: 'failed',
             expiresAt: null,
         };
     }
 
-    if (attempt.status === 'pending' && attempt.expiresAt <= nowMs()) {
-        const expiredAttempt: TelegramMobileAuthAttempt = {
-            ...attempt,
-            status: 'expired',
-        };
-        attemptsStore.set(nonce, expiredAttempt);
-        void trackTelegramMobileMetric('telegram_mobile_login_expired', {
-            nonce,
-            telegramId: attempt.telegramId ?? null,
-            metadata: {
-                reason: 'ttl_status_poll',
-            },
-        });
-        return {
-            status: 'expired',
-            expiresAt: expiredAttempt.expiresAt,
-        };
-    }
-
-    const status = attempt.status === 'consumed' ? 'pending' : attempt.status;
+    const effective = await markExpiredIfNeeded(row);
+    const status =
+        effective.status === 'consumed'
+            ? 'pending'
+            : (effective.status as TelegramMobileAuthAttemptStatus);
 
     return {
         status,
-        expiresAt: attempt.expiresAt,
-        exchangeCode: attempt.exchangeCode,
+        expiresAt: Date.parse(effective.expires_at),
+        exchangeCode: effective.exchange_code ?? undefined,
     };
 }
 
-export function consumePendingTelegramMobileAuthAttempt(nonce: string): {
+export async function consumePendingTelegramMobileAuthAttempt(nonce: string): Promise<{
     ok: true;
     attempt: TelegramMobileAuthAttempt;
 } | {
     ok: false;
     error: 'not_found' | 'expired' | 'invalid_status';
-} {
-    const attempt = attemptsStore.get(nonce);
-    if (!attempt) {
+}> {
+    const admin = getAttemptsAdmin();
+    const consumedAtIso = nowIso();
+    const nowIsoValue = nowIso();
+
+    const { data: consumed, error } = await admin
+        .from('telegram_mobile_auth_attempts')
+        .update({
+            status: 'consumed',
+            consumed_at: consumedAtIso,
+        })
+        .eq('nonce', nonce)
+        .eq('status', 'pending')
+        .is('consumed_at', null)
+        .gt('expires_at', nowIsoValue)
+        .select('nonce,status,telegram_id,user_id,exchange_code,expires_at,consumed_at,created_at')
+        .maybeSingle();
+
+    if (error) {
+        return { ok: false, error: 'invalid_status' };
+    }
+
+    if (consumed) {
+        return { ok: true, attempt: toAttempt(consumed) };
+    }
+
+    const current = await getAttemptRow(nonce);
+    if (!current) {
         return { ok: false, error: 'not_found' };
     }
 
-    if (attempt.status !== 'pending') {
-        return { ok: false, error: 'invalid_status' };
-    }
-
-    if (attempt.consumedAt) {
-        return { ok: false, error: 'invalid_status' };
-    }
-
-    if (attempt.expiresAt <= nowMs()) {
-        attemptsStore.set(nonce, {
-            ...attempt,
-            status: 'expired',
-            failureReason: 'attempt_expired',
-        });
+    if (Date.parse(current.expires_at) <= nowMs()) {
+        await admin
+            .from('telegram_mobile_auth_attempts')
+            .update({ status: 'expired' })
+            .eq('nonce', nonce);
         void trackTelegramMobileMetric('telegram_mobile_login_expired', {
             nonce,
-            telegramId: attempt.telegramId ?? null,
+            telegramId: current.telegram_id ?? null,
             metadata: {
                 reason: 'ttl_consume',
             },
@@ -244,18 +270,10 @@ export function consumePendingTelegramMobileAuthAttempt(nonce: string): {
         return { ok: false, error: 'expired' };
     }
 
-    const consumedAt = nowMs();
-    const consumedAttempt: TelegramMobileAuthAttempt = {
-        ...attempt,
-        status: 'consumed',
-        consumedAt,
-    };
-    attemptsStore.set(nonce, consumedAttempt);
-
-    return { ok: true, attempt: consumedAttempt };
+    return { ok: false, error: 'invalid_status' };
 }
 
-export function markTelegramMobileAuthAttemptApproved({
+export async function markTelegramMobileAuthAttemptApproved({
     nonce,
     telegramId,
     userId,
@@ -268,20 +286,17 @@ export function markTelegramMobileAuthAttemptApproved({
     exchangeCode: string;
     linkage: 'existing' | 'created';
 }) {
-    const attempt = attemptsStore.get(nonce);
-    if (!attempt) {
-        return;
-    }
+    const admin = getAttemptsAdmin();
+    await admin
+        .from('telegram_mobile_auth_attempts')
+        .update({
+            status: 'approved',
+            telegram_id: telegramId,
+            user_id: userId,
+            exchange_code: exchangeCode,
+        })
+        .eq('nonce', nonce);
 
-    attemptsStore.set(nonce, {
-        ...attempt,
-        status: 'approved',
-        telegramId,
-        userId,
-        linkage,
-        exchangeCode,
-        failureReason: undefined,
-    });
     void trackTelegramMobileMetric('telegram_mobile_login_approved', {
         nonce,
         telegramId,
@@ -291,39 +306,38 @@ export function markTelegramMobileAuthAttemptApproved({
     });
 }
 
-export function markTelegramMobileAuthAttemptFailed({
+export async function markTelegramMobileAuthAttemptFailed({
     nonce,
     reason,
 }: {
     nonce: string;
     reason: string;
 }) {
-    const attempt = attemptsStore.get(nonce);
-    if (!attempt) {
-        return;
-    }
+    const admin = getAttemptsAdmin();
+    const current = await getAttemptRow(nonce);
+    await admin
+        .from('telegram_mobile_auth_attempts')
+        .update({
+            status: 'failed',
+        })
+        .eq('nonce', nonce);
 
-    attemptsStore.set(nonce, {
-        ...attempt,
-        status: 'failed',
-        failureReason: reason,
-    });
     void trackTelegramMobileMetric('telegram_mobile_login_failed', {
         nonce,
-        telegramId: attempt.telegramId ?? null,
+        telegramId: current?.telegram_id ?? null,
         metadata: {
             reason,
         },
     });
 }
 
-export function attachTelegramMobileAuthAttemptTelegramContext({
+export async function attachTelegramMobileAuthAttemptTelegramContext({
     nonce,
     telegramId,
-    chatId,
-    username,
-    firstName,
-    lastName,
+    chatId: _chatId,
+    username: _username,
+    firstName: _firstName,
+    lastName: _lastName,
 }: {
     nonce: string;
     telegramId: number;
@@ -331,51 +345,57 @@ export function attachTelegramMobileAuthAttemptTelegramContext({
     username?: string | null;
     firstName?: string | null;
     lastName?: string | null;
-}): {
+}): Promise<{
     ok: true;
     attempt: TelegramMobileAuthAttempt;
 } | {
     ok: false;
     error: 'not_found' | 'expired' | 'invalid_status' | 'already_bound_other_telegram';
-} {
-    const attempt = getTelegramMobileAuthAttempt(nonce);
-    if (!attempt) {
+}> {
+    const row = await getAttemptRow(nonce);
+    if (!row) {
         return { ok: false, error: 'not_found' };
     }
 
-    if (attempt.status === 'expired') {
+    const effective = await markExpiredIfNeeded(row);
+    if (effective.status === 'expired') {
         return { ok: false, error: 'expired' };
     }
 
-    if (attempt.status !== 'pending') {
+    if (effective.status !== 'pending') {
         return { ok: false, error: 'invalid_status' };
     }
 
-    if (attempt.expectedTelegramId && attempt.expectedTelegramId !== telegramId) {
+    if (effective.telegram_id && effective.telegram_id !== telegramId) {
         return { ok: false, error: 'already_bound_other_telegram' };
     }
 
-    const updated: TelegramMobileAuthAttempt = {
-        ...attempt,
-        expectedTelegramId: telegramId,
-        telegramChatId: chatId,
-        telegramUsername: username?.trim() || undefined,
-        telegramFirstName: firstName?.trim() || undefined,
-        telegramLastName: lastName?.trim() || undefined,
-    };
-    attemptsStore.set(nonce, updated);
+    const admin = getAttemptsAdmin();
+    await admin
+        .from('telegram_mobile_auth_attempts')
+        .update({
+            telegram_id: telegramId,
+        })
+        .eq('nonce', nonce)
+        .eq('status', 'pending');
+
+    const updated = await getAttemptRow(nonce);
+    if (!updated) {
+        return { ok: false, error: 'not_found' };
+    }
 
     return {
         ok: true,
-        attempt: updated,
+        attempt: toAttempt(updated),
     };
 }
 
-export function __resetTelegramMobileAuthAttemptsForTests() {
-    attemptsStore.clear();
+export async function __resetTelegramMobileAuthAttemptsForTests() {
+    const admin = getAttemptsAdmin();
+    await admin.from('telegram_mobile_auth_attempts').delete().lt('created_at', '9999-12-31T23:59:59.999Z');
 }
 
-export function __setTelegramMobileAuthAttemptStatusForTests(
+export async function __setTelegramMobileAuthAttemptStatusForTests(
     nonce: string,
     status: TelegramMobileAuthAttemptStatus,
     options?: {
@@ -385,17 +405,14 @@ export function __setTelegramMobileAuthAttemptStatusForTests(
         linkage?: 'existing' | 'created';
     },
 ) {
-    const attempt = attemptsStore.get(nonce);
-    if (!attempt) {
-        return;
-    }
-
-    attemptsStore.set(nonce, {
-        ...attempt,
-        status,
-        exchangeCode: options?.exchangeCode ?? attempt.exchangeCode,
-        telegramId: options?.telegramId ?? attempt.telegramId,
-        userId: options?.userId ?? attempt.userId,
-        linkage: options?.linkage ?? attempt.linkage,
-    });
+    const admin = getAttemptsAdmin();
+    await admin
+        .from('telegram_mobile_auth_attempts')
+        .update({
+            status,
+            exchange_code: options?.exchangeCode,
+            telegram_id: options?.telegramId,
+            user_id: options?.userId,
+        })
+        .eq('nonce', nonce);
 }

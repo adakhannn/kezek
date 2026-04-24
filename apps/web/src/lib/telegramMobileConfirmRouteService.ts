@@ -102,7 +102,7 @@ export async function runTelegramMobileConfirmRoute({
         };
     }
 
-    const currentAttempt = getTelegramMobileAuthAttempt(nonce);
+    const currentAttempt = await getTelegramMobileAuthAttempt(nonce);
     if (currentAttempt?.status === 'approved') {
         if (currentAttempt.telegramId && currentAttempt.telegramId !== telegramId) {
             return {
@@ -132,7 +132,7 @@ export async function runTelegramMobileConfirmRoute({
         };
     }
 
-    const pending = consumePendingTelegramMobileAuthAttempt(nonce);
+    const pending = await consumePendingTelegramMobileAuthAttempt(nonce);
     if (!pending.ok) {
         if (pending.error === 'not_found') {
             return {
@@ -164,7 +164,7 @@ export async function runTelegramMobileConfirmRoute({
         pending.attempt.expectedTelegramId &&
         pending.attempt.expectedTelegramId !== telegramId
     ) {
-        markTelegramMobileAuthAttemptFailed({
+        await markTelegramMobileAuthAttemptFailed({
             nonce,
             reason: 'telegram_identity_mismatch',
         });
@@ -195,7 +195,7 @@ export async function runTelegramMobileConfirmRoute({
     });
 
     if (!loginResult.ok) {
-        markTelegramMobileAuthAttemptFailed({
+        await markTelegramMobileAuthAttemptFailed({
             nonce,
             reason: 'telegram_login_failed',
         });
@@ -217,7 +217,7 @@ export async function runTelegramMobileConfirmRoute({
     const refreshToken = signInData.session?.refresh_token;
 
     if (signInError || !accessToken || !refreshToken) {
-        markTelegramMobileAuthAttemptFailed({
+        await markTelegramMobileAuthAttemptFailed({
             nonce,
             reason: 'supabase_sign_in_failed',
         });
@@ -235,7 +235,7 @@ export async function runTelegramMobileConfirmRoute({
     });
 
     if (!exchangeResult.ok) {
-        markTelegramMobileAuthAttemptFailed({
+        await markTelegramMobileAuthAttemptFailed({
             nonce,
             reason: 'mobile_exchange_prepare_failed',
         });
@@ -249,7 +249,7 @@ export async function runTelegramMobileConfirmRoute({
 
     const code = exchangeResult.payload.code;
 
-    markTelegramMobileAuthAttemptApproved({
+    await markTelegramMobileAuthAttemptApproved({
         nonce,
         telegramId,
         userId: loginResult.data.userId,

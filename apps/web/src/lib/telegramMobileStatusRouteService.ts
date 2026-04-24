@@ -18,11 +18,11 @@ type Success = {
 
 export type TelegramMobileStatusRouteResult = Failure | Success;
 
-export function runTelegramMobileStatusRoute({
+export async function runTelegramMobileStatusRoute({
     nonce,
 }: {
     nonce?: string | null;
-}): TelegramMobileStatusRouteResult {
+}): Promise<TelegramMobileStatusRouteResult> {
     if (!nonce || !nonce.trim()) {
         return {
             ok: false,
@@ -32,7 +32,7 @@ export function runTelegramMobileStatusRoute({
         };
     }
 
-    const result = getTelegramMobileAuthStatus(nonce.trim());
+    const result = await getTelegramMobileAuthStatus(nonce.trim());
 
     return {
         ok: true,

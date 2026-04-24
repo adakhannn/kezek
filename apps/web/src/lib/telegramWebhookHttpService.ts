@@ -144,7 +144,7 @@ async function handleTelegramStartCommand(message: TelegramMessage) {
         return;
     }
 
-    const attempt = getTelegramMobileAuthAttempt(parsed.nonce);
+    const attempt = await getTelegramMobileAuthAttempt(parsed.nonce);
     if (!attempt) {
         await sendTelegramBotMessage({
             chatId,
@@ -167,7 +167,7 @@ async function handleTelegramStartCommand(message: TelegramMessage) {
         return;
     }
 
-    const bindResult = attachTelegramMobileAuthAttemptTelegramContext({
+    const bindResult = await attachTelegramMobileAuthAttemptTelegramContext({
         nonce: parsed.nonce,
         telegramId: from.id,
         chatId,

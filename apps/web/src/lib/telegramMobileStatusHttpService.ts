@@ -22,7 +22,7 @@ export async function runTelegramMobileStatusHttp(
         );
     }
 
-    const result = runTelegramMobileStatusRoute({
+    const result = await runTelegramMobileStatusRoute({
         nonce: request.nextUrl.searchParams.get('nonce'),
     });
 

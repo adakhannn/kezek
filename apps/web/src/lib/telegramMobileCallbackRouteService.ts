@@ -78,7 +78,7 @@ export async function runTelegramMobileCallbackRoute({
     }
 
     if (decision === 'cancel') {
-        const attempt = getTelegramMobileAuthAttempt(nonce);
+        const attempt = await getTelegramMobileAuthAttempt(nonce);
         if (!attempt) {
             await writeTelegramAuthAuditEvent({
                 eventType: 'bot_login_failed',
@@ -133,7 +133,7 @@ export async function runTelegramMobileCallbackRoute({
             };
         }
 
-        markTelegramMobileAuthAttemptFailed({
+        await markTelegramMobileAuthAttemptFailed({
             nonce,
             reason: 'cancelled_by_telegram_user',
         });

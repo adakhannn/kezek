@@ -25,7 +25,7 @@ export async function runTelegramMobileStartRoute({
     source?: TelegramMobileAuthSourceMeta;
 } = {}): Promise<TelegramMobileStartRouteResult> {
     const botUsername = resolveTelegramBotUsername();
-    const payload = createTelegramMobileAuthAttempt({ botUsername, source });
+    const payload = await createTelegramMobileAuthAttempt({ botUsername, source });
     await writeTelegramAuthAuditEvent({
         eventType: 'mobile_start_created',
         nonce: payload.nonce,
