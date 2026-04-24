@@ -14,11 +14,11 @@ type StepInfo = {
 };
 
 const STEPS: StepInfo[] = [
-    { number: 1, title: 'Р¤РёР»РёР°Р»', screenName: 'BookingStep1Branch' },
-    { number: 2, title: 'РЈСЃР»СѓРіР°', screenName: 'BookingStep2Service' },
-    { number: 3, title: 'РњР°СЃС‚РµСЂ', screenName: 'BookingStep3Staff' },
-    { number: 4, title: 'Р”Р°С‚Р°', screenName: 'BookingStep4Date' },
-    { number: 5, title: 'Р’СЂРµРјСЏ', screenName: 'BookingStep5Time' },
+    { number: 1, title: 'Филиал', screenName: 'BookingStep1Branch' },
+    { number: 2, title: 'Услуга', screenName: 'BookingStep2Service' },
+    { number: 3, title: 'Мастер', screenName: 'BookingStep3Staff' },
+    { number: 4, title: 'Дата', screenName: 'BookingStep4Date' },
+    { number: 5, title: 'Время', screenName: 'BookingStep5Time' },
     { number: 6, title: 'Подтверждение', screenName: 'BookingStep6Confirm' },
 ];
 
@@ -60,7 +60,7 @@ export default function BookingProgressIndicator({ currentStep }: BookingProgres
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.stepText}>
-                    РЁР°Рі {currentStep} РёР· {totalSteps}
+                    Шаг {currentStep} из {totalSteps}
                 </Text>
                 <Text style={styles.stepTitle}>{STEPS[currentStep - 1]?.title}</Text>
             </View>
@@ -191,3 +191,4 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary.from,
     },
 });
+

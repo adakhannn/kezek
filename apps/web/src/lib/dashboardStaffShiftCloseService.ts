@@ -73,7 +73,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 500,
             errorType: 'internal',
-            message: 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РґР°РЅРЅС‹Рµ СЃРѕС‚СЂСѓРґРЅРёРєР°',
+            message: 'Не удалось загрузить данные сотрудника',
         };
     }
 
@@ -82,7 +82,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 404,
             errorType: 'not_found',
-            message: 'РЎРѕС‚СЂСѓРґРЅРёРє РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РґРѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ',
+            message: 'Сотрудник не найден или доступ запрещён',
         };
     }
 
@@ -98,7 +98,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 403,
             errorType: 'forbidden',
-            message: 'РЎРѕС‚СЂСѓРґРЅРёРє РЅРµ РїСЂРёРЅР°РґР»РµР¶РёС‚ СЌС‚РѕРјСѓ Р±РёР·РЅРµСЃСѓ',
+            message: 'Сотрудник не принадлежит этому бизнесу',
         };
     }
 
@@ -112,8 +112,8 @@ export async function runDashboardStaffShiftClose({
         const errorResponse = await validationResult.response.json();
         const errorMessage =
             (errorResponse as { errors?: Array<{ path: string; message: string }> }).errors
-                ? `РћС€РёР±РєР° РІР°Р»РёРґР°С†РёРё: ${(errorResponse as { errors: Array<{ path: string; message: string }> }).errors.map((entry) => `${entry.path}: ${entry.message}`).join(', ')}`
-                : (errorResponse as { message?: string }).message || 'РћС€РёР±РєР° РІР°Р»РёРґР°С†РёРё РґР°РЅРЅС‹С…';
+                ? `Ошибка валидации: ${(errorResponse as { errors: Array<{ path: string; message: string }> }).errors.map((entry) => `${entry.path}: ${entry.message}`).join(', ')}`
+                : (errorResponse as { message?: string }).message || 'Ошибка валидации данных';
         return {
             ok: false,
             statusCode: 400,
@@ -139,7 +139,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 500,
             errorType: 'internal',
-            message: 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРјРµРЅСѓ',
+            message: 'Не удалось загрузить смену',
         };
     }
 
@@ -148,7 +148,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 400,
             errorType: 'validation',
-            message: 'РЎРјРµРЅР° РЅР° РІС‹Р±СЂР°РЅРЅСѓСЋ РґР°С‚Сѓ РЅРµ РѕС‚РєСЂС‹С‚Р°. РЎРЅР°С‡Р°Р»Р° РѕС‚РєСЂРѕР№С‚Рµ СЃРјРµРЅСѓ.',
+            message: 'Смена на выбранную дату не открыта. Сначала откройте смену.',
         };
     }
 
@@ -157,7 +157,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 400,
             errorType: 'validation',
-            message: 'РЎРјРµРЅР° СѓР¶Рµ Р·Р°РєСЂС‹С‚Р°. РћР±РЅРѕРІРёС‚Рµ СЃС‚СЂР°РЅРёС†Сѓ РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР° СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ.',
+            message: 'Смена уже закрыта. Обновите страницу для просмотра результатов.',
         };
     }
 
@@ -180,7 +180,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 400,
             errorType: 'validation',
-            message: 'РЎРјРµРЅР° РЅР° РІС‹Р±СЂР°РЅРЅСѓСЋ РґР°С‚Сѓ РЅРµ РѕС‚РєСЂС‹С‚Р°. РЎРЅР°С‡Р°Р»Р° РѕС‚РєСЂРѕР№С‚Рµ СЃРјРµРЅСѓ.',
+            message: 'Смена на выбранную дату не открыта. Сначала откройте смену.',
         };
     }
 
@@ -189,7 +189,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 400,
             errorType: 'validation',
-            message: 'РЎРјРµРЅР° СѓР¶Рµ Р·Р°РєСЂС‹С‚Р°. РћР±РЅРѕРІРёС‚Рµ СЃС‚СЂР°РЅРёС†Сѓ РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР° СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ.',
+            message: 'Смена уже закрыта. Обновите страницу для просмотра результатов.',
         };
     }
 
@@ -218,11 +218,11 @@ export async function runDashboardStaffShiftClose({
 
     if (rpcError) {
         logError('DashboardStaffShiftClose', 'Error calling close_staff_shift_safe RPC', rpcError);
-        let message = 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РєСЂС‹С‚СЊ СЃРјРµРЅСѓ';
+        let message = 'Не удалось закрыть смену';
         if (rpcError.code === 'P0001' || rpcError.message?.includes('already closed')) {
-            message = 'РЎРјРµРЅР° СѓР¶Рµ Р·Р°РєСЂС‹С‚Р°';
+            message = 'Смена уже закрыта';
         } else if (rpcError.code === '23505') {
-            message = 'РљРѕРЅС„Р»РёРєС‚ РґР°РЅРЅС‹С…. РћР±РЅРѕРІРёС‚Рµ СЃС‚СЂР°РЅРёС†Сѓ.';
+            message = 'Конфликт данных. Обновите страницу.';
         } else if (rpcError.message) {
             message = rpcError.message;
         }
@@ -237,7 +237,7 @@ export async function runDashboardStaffShiftClose({
 
     const typedResult = rpcResult as CloseStaffShiftRpcResult | null;
     if (!typedResult?.ok) {
-        const message = typedResult?.error || 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РєСЂС‹С‚СЊ СЃРјРµРЅСѓ';
+        const message = typedResult?.error || 'Не удалось закрыть смену';
         logError('DashboardStaffShiftClose', 'RPC returned error', { error: message, result: rpcResult });
         return {
             ok: false,
@@ -253,7 +253,7 @@ export async function runDashboardStaffShiftClose({
             ok: false,
             statusCode: 500,
             errorType: 'internal',
-            message: 'РЎРјРµРЅР° Р·Р°РєСЂС‹С‚Р°, РЅРѕ РЅРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РѕР±РЅРѕРІР»С‘РЅРЅС‹Рµ РґР°РЅРЅС‹Рµ. РћР±РЅРѕРІРёС‚Рµ СЃС‚СЂР°РЅРёС†Сѓ.',
+            message: 'Смена закрыта, но не удалось получить обновлённые данные. Обновите страницу.',
         };
     }
 
@@ -296,7 +296,7 @@ function resolveShiftDate(req: Request):
             ok: false,
             statusCode: 400,
             errorType: 'validation',
-            message: 'РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ РґР°С‚С‹. РћР¶РёРґР°РµС‚СЃСЏ YYYY-MM-DD.',
+            message: 'Неверный формат даты. Ожидается YYYY-MM-DD.',
         };
     }
 
@@ -531,7 +531,7 @@ async function queueShiftCloseNotification({
     }
 
     sendShiftCloseNotification({
-        staffName: staff.full_name || 'РЎРѕС‚СЂСѓРґРЅРёРє',
+        staffName: staff.full_name || 'Сотрудник',
         staffEmail,
         ownerEmail,
         shiftDate: ymd,
@@ -546,3 +546,4 @@ async function queueShiftCloseNotification({
         logError('DashboardStaffShiftClose', 'Failed to send shift close notification', error);
     });
 }
+

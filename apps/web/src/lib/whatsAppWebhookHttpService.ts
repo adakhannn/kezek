@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { getWhatsAppVerifyToken } from '@/lib/env';
@@ -14,7 +14,7 @@ export async function runWhatsAppWebhookGetHttp(req: NextRequest): Promise<NextR
         return new NextResponse(challenge, { status: 200 });
     }
 
-    return createErrorResponse('forbidden', 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰РµРЅ', undefined, 403);
+    return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
 }
 
 export async function runWhatsAppWebhookPostHttp(req: NextRequest): Promise<NextResponse> {
@@ -24,3 +24,4 @@ export async function runWhatsAppWebhookPostHttp(req: NextRequest): Promise<Next
 
     return createSuccessResponse(undefined, { success: true });
 }
+

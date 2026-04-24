@@ -1,4 +1,4 @@
-import { GET, POST } from '@/app/api/cron/analytics/daily/route';
+﻿import { GET, POST } from '@/app/api/cron/analytics/daily/route';
 
 import { expectErrorResponse, expectSuccessResponse } from '../testHelpers';
 
@@ -52,7 +52,7 @@ describe('/api/cron/analytics/daily', () => {
 
     test('surfaces auth error from cron http service', async () => {
         runAnalyticsDailyCronHttp.mockResolvedValue(
-            Response.json({ ok: false, error: 'auth', message: 'РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ' }, { status: 401 }),
+            Response.json({ ok: false, error: 'auth', message: 'Не авторизован' }, { status: 401 }),
         );
 
         const res = await GET(
@@ -62,6 +62,7 @@ describe('/api/cron/analytics/daily', () => {
         );
         const data = await expectErrorResponse(res, 401, 'auth');
 
-        expect(data.message).toBe('РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ');
+        expect(data.message).toBe('Не авторизован');
     });
 });
+

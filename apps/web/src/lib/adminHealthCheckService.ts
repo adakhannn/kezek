@@ -73,7 +73,7 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
     if (!shiftsOk) {
         alerts.push({
             type: 'error',
-            message: `РћР±РЅР°СЂСѓР¶РµРЅРѕ ${openShiftsCount} РЅРµР·Р°РєСЂС‹С‚С‹С… СЃРјРµРЅ СЃС‚Р°СЂС€Рµ 2 РґРЅРµР№`,
+            message: `Обнаружено ${openShiftsCount} незакрытых смен старше 2 дней`,
             details: {
                 count: openShiftsCount,
                 threshold: '2 days',
@@ -109,8 +109,8 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
             type: lastMetricDate === null ? 'error' : 'warning',
             message:
                 lastMetricDate === null
-                    ? 'Р РµР№С‚РёРЅРіРё РЅРёРєРѕРіРґР° РЅРµ РїРµСЂРµСЃС‡РёС‚С‹РІР°Р»РёСЃСЊ'
-                    : `РџРѕСЃР»РµРґРЅРёР№ РїРµСЂРµСЃС‡РµС‚ СЂРµР№С‚РёРЅРіРѕРІ Р±С‹Р» ${daysSinceLastMetric} РґРЅРµР№ РЅР°Р·Р°Рґ`,
+                    ? 'Рейтинги никогда не пересчитывались'
+                    : `Последний пересчет рейтингов был ${daysSinceLastMetric} дней назад`,
             details: {
                 lastMetricDate: lastMetricDate?.toISOString() ?? null,
                 daysSinceLastMetric,
@@ -152,7 +152,7 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
     if (!promotionsOk && activePromotionsCount > 0) {
         alerts.push({
             type: 'warning',
-            message: `РђРєС‚РёРІРЅС‹Рµ РїСЂРѕРјРѕ РµСЃС‚СЊ (${activePromotionsCount}), РЅРѕ РїРѕСЃР»РµРґРЅРµРµ РїСЂРёРјРµРЅРµРЅРёРµ Р±С‹Р»Рѕ ${daysSinceLastPromo} РґРЅРµР№ РЅР°Р·Р°Рґ`,
+            message: `Активные промо есть (${activePromotionsCount}), но последнее применение было ${daysSinceLastPromo} дней назад`,
             details: {
                 activePromotionsCount,
                 lastPromoDate: lastPromoDate?.toISOString() ?? null,
@@ -182,19 +182,19 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
                 email: {
                     status: 'degraded',
                     details: {
-                        note: 'RESEND_API_KEY presence is checked by /api/notify; Р·РґРµСЃСЊ С‚РѕР»СЊРєРѕ СЃС‚Р°С‚РёС‡РµСЃРєРёР№ СЃС‚Р°С‚СѓСЃ',
+                        note: 'RESEND_API_KEY presence is checked by /api/notify; здесь только статический статус',
                     },
                 },
                 whatsapp: {
                     status: 'degraded',
                     details: {
-                        note: 'РРЅС‚РµРіСЂР°С†РёСЏ РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ С‡РµСЂРµР· /api/webhooks/whatsapp Рё РґРёР°РіРЅРѕСЃС‚РёС‡РµСЃРєРёРµ endpoints',
+                        note: 'Интеграция проверяется через /api/webhooks/whatsapp и диагностические endpoints',
                     },
                 },
                 redis: {
                     status: 'degraded',
                     details: {
-                        note: 'Rate limiting РёСЃРїРѕР»СЊР·СѓРµС‚ Upstash Redis, РЅРѕ health СЌС‚РѕРіРѕ СЃРµСЂРІРёСЃР° РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ РїСЂРё РІС‹РїРѕР»РЅРµРЅРёРё Р·Р°РїСЂРѕСЃРѕРІ',
+                        note: 'Rate limiting использует Upstash Redis, но health этого сервиса проверяется отдельно при выполнении запросов',
                     },
                 },
             },
@@ -221,3 +221,4 @@ export async function runAdminHealthCheck({ admin }: { admin: any }): Promise<Re
         },
     };
 }
+

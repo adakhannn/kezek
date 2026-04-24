@@ -35,7 +35,7 @@ export default async function CategoriesPage() {
     const {
         data: { user },
     } = await supa.auth.getUser();
-    if (!user) return <div className="p-4">{t('admin.error.unauthorized', 'РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ')}</div>;
+    if (!user) return <div className="p-4">{t('admin.error.unauthorized', 'Не авторизован')}</div>;
 
     const { data: superRow, error: superErr } = await supa
         .from('user_roles_with_user')
@@ -45,11 +45,11 @@ export default async function CategoriesPage() {
         .limit(1)
         .maybeSingle();
 
-    if (superErr) return <div className="p-4">{t('admin.error.load', 'РћС€РёР±РєР°')}: {superErr.message}</div>;
-    if (!superRow) return <div className="p-4">{t('admin.noAccess.title', 'РќРµС‚ РґРѕСЃС‚СѓРїР°')}</div>;
+    if (superErr) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {superErr.message}</div>;
+    if (!superRow) return <div className="p-4">{t('admin.noAccess.title', 'Нет доступа')}</div>;
 
     const { data: rpcData, error } = await supa.rpc('categories_with_usage_v2');
-    if (error) return <div className="p-4">{t('admin.error.load', 'РћС€РёР±РєР°')}: {error.message}</div>;
+    if (error) return <div className="p-4">{t('admin.error.load', 'Ошибка')}: {error.message}</div>;
 
     const list: CategoryUsageRow[] = Array.isArray(rpcData) ? (rpcData as CategoryUsageRow[]) : [];
 
@@ -62,8 +62,8 @@ export default async function CategoriesPage() {
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
             <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
                 <PageHeader
-                    title={t('admin.categories.title', 'РљР°С‚РµРіРѕСЂРёРё Р±РёР·РЅРµСЃР°')}
-                    description={t('admin.categories.subtitle', 'РЈРїСЂР°РІР»РµРЅРёРµ РєР°С‚РµРіРѕСЂРёСЏРјРё РґР»СЏ Р±РёР·РЅРµСЃРѕРІ')}
+                    title={t('admin.categories.title', 'Категории бизнеса')}
+                    description={t('admin.categories.subtitle', 'Управление категориями для бизнесов')}
                     actions={
                         <div className="flex flex-col gap-3 sm:flex-row">
                             <Link href="/admin">
@@ -71,7 +71,7 @@ export default async function CategoriesPage() {
                                     <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                     </svg>
-                                    {t('admin.categories.backToAdmin', 'Р’ Р°РґРјРёРЅРєСѓ')}
+                                    {t('admin.categories.backToAdmin', 'В админку')}
                                 </Button>
                             </Link>
                             <Link href="/admin/categories/new">
@@ -79,7 +79,7 @@ export default async function CategoriesPage() {
                                     <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                     </svg>
-                                    {t('admin.categories.new', 'РќРѕРІР°СЏ РєР°С‚РµРіРѕСЂРёСЏ')}
+                                    {t('admin.categories.new', 'Новая категория')}
                                 </Button>
                             </Link>
                         </div>
@@ -97,7 +97,7 @@ export default async function CategoriesPage() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.categories.stats.total', 'Р’СЃРµРіРѕ РєР°С‚РµРіРѕСЂРёР№')}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.categories.stats.total', 'Всего категорий')}</p>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalCategories}</p>
                             </div>
                         </div>
@@ -110,7 +110,7 @@ export default async function CategoriesPage() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.categories.stats.active', 'РђРєС‚РёРІРЅС‹С…')}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.categories.stats.active', 'Активных')}</p>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{activeCategories}</p>
                             </div>
                         </div>
@@ -123,7 +123,7 @@ export default async function CategoriesPage() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.categories.stats.usage', 'РСЃРїРѕР»СЊР·РѕРІР°РЅРёР№')}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{t('admin.categories.stats.usage', 'Использований')}</p>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalUsage}</p>
                             </div>
                         </div>
@@ -134,26 +134,26 @@ export default async function CategoriesPage() {
                     {list.length > 0 ? (
                         <>
                             <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-800">
-                                <SectionHeader title={t('admin.categories.list.title', 'РЎРїРёСЃРѕРє РєР°С‚РµРіРѕСЂРёР№')} />
+                                <SectionHeader title={t('admin.categories.list.title', 'Список категорий')} />
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-800">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                                {t('admin.categories.table.name', 'РќР°Р·РІР°РЅРёРµ')}
+                                                {t('admin.categories.table.name', 'Название')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                                 {t('admin.categories.table.slug', 'Slug')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                                {t('admin.categories.table.status', 'РЎС‚Р°С‚СѓСЃ')}
+                                                {t('admin.categories.table.status', 'Статус')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                                {t('admin.categories.table.usage', 'РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ')}
+                                                {t('admin.categories.table.usage', 'Используется')}
                                             </th>
                                             <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                                {t('admin.categories.table.actions', 'Р”РµР№СЃС‚РІРёСЏ')}
+                                                {t('admin.categories.table.actions', 'Действия')}
                                             </th>
                                         </tr>
                                     </thead>
@@ -180,8 +180,8 @@ export default async function CategoriesPage() {
                                                         status={c.is_active ? 'active' : 'inactive'}
                                                         label={
                                                             c.is_active
-                                                                ? t('admin.categories.status.active', 'РђРєС‚РёРІРЅР°')
-                                                                : t('admin.categories.status.inactive', 'Р’С‹РєР»СЋС‡РµРЅР°')
+                                                                ? t('admin.categories.status.active', 'Активна')
+                                                                : t('admin.categories.status.inactive', 'Выключена')
                                                         }
                                                     />
                                                 </td>
@@ -191,10 +191,10 @@ export default async function CategoriesPage() {
                                                         {c.usage_count > 0 ? (
                                                             <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                 {c.usage_count === 1
-                                                                    ? t('admin.categories.usage.one', 'Р±РёР·РЅРµСЃ')
+                                                                    ? t('admin.categories.usage.one', 'бизнес')
                                                                     : c.usage_count < 5
-                                                                      ? t('admin.categories.usage.few', 'Р±РёР·РЅРµСЃР°')
-                                                                      : t('admin.categories.usage.many', 'Р±РёР·РЅРµСЃРѕРІ')}
+                                                                      ? t('admin.categories.usage.few', 'бизнеса')
+                                                                      : t('admin.categories.usage.many', 'бизнесов')}
                                                             </span>
                                                         ) : null}
                                                     </div>
@@ -208,7 +208,7 @@ export default async function CategoriesPage() {
                                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                             </svg>
-                                                            {t('admin.categories.edit', 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ')}
+                                                            {t('admin.categories.edit', 'Редактировать')}
                                                         </Link>
                                                         <DeleteCategoryButton id={c.id} slug={c.slug} />
                                                     </div>
@@ -225,8 +225,8 @@ export default async function CategoriesPage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                         </svg>
                                         <span>
-                                            {t('admin.categories.mostPopular', 'РЎР°РјР°СЏ РїРѕРїСѓР»СЏСЂРЅР°СЏ')}: <strong className="text-gray-900 dark:text-gray-100">{mostUsed.name_ru}</strong> ({mostUsed.usage_count}{' '}
-                                            {mostUsed.usage_count === 1 ? t('admin.categories.usage.one', 'Р±РёР·РЅРµСЃ') : t('admin.categories.usage.many', 'Р±РёР·РЅРµСЃРѕРІ')})
+                                            {t('admin.categories.mostPopular', 'Самая популярная')}: <strong className="text-gray-900 dark:text-gray-100">{mostUsed.name_ru}</strong> ({mostUsed.usage_count}{' '}
+                                            {mostUsed.usage_count === 1 ? t('admin.categories.usage.one', 'бизнес') : t('admin.categories.usage.many', 'бизнесов')})
                                         </span>
                                     </div>
                                 </div>
@@ -240,15 +240,15 @@ export default async function CategoriesPage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                     </svg>
                                 }
-                                title={t('admin.categories.empty.title', 'РљР°С‚РµРіРѕСЂРёР№ РїРѕРєР° РЅРµС‚')}
-                                description={t('admin.categories.empty.description', 'РЎРѕР·РґР°Р№С‚Рµ РїРµСЂРІСѓСЋ РєР°С‚РµРіРѕСЂРёСЋ РґР»СЏ РѕСЂРіР°РЅРёР·Р°С†РёРё Р±РёР·РЅРµСЃРѕРІ')}
+                                title={t('admin.categories.empty.title', 'Категорий пока нет')}
+                                description={t('admin.categories.empty.description', 'Создайте первую категорию для организации бизнесов')}
                                 action={
                                     <Link href="/admin/categories/new">
                                         <Button>
                                             <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                             </svg>
-                                            {t('admin.categories.empty.create', 'РЎРѕР·РґР°С‚СЊ РїРµСЂРІСѓСЋ РєР°С‚РµРіРѕСЂРёСЋ')}
+                                            {t('admin.categories.empty.create', 'Создать первую категорию')}
                                         </Button>
                                     </Link>
                                 }
@@ -260,3 +260,4 @@ export default async function CategoriesPage() {
         </main>
     );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -21,7 +21,7 @@ export default function ResetPasswordPage() {
         }
 
         toast.showSuccess(
-            'РџРёСЃСЊРјРѕ РґР»СЏ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ РѕС‚РїСЂР°РІР»РµРЅРѕ (РµСЃР»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅР°Р№РґРµРЅ)',
+            'Письмо для восстановления отправлено (если пользователь найден)',
         );
     }
 
@@ -35,10 +35,11 @@ export default function ResetPasswordPage() {
                     onChange={(e) => setEmail(e.target.value)}
                 />
                 <button className="w-full rounded border px-3 py-1" onClick={sendLink}>
-                    РћС‚РїСЂР°РІРёС‚СЊ СЃСЃС‹Р»РєСѓ
+                    Отправить ссылку
                 </button>
             </div>
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </>
     );
 }
+

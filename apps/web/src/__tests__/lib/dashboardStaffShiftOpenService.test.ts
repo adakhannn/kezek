@@ -1,4 +1,4 @@
-import { runDashboardStaffShiftOpen } from '@/lib/dashboardStaffShiftOpenService';
+﻿import { runDashboardStaffShiftOpen } from '@/lib/dashboardStaffShiftOpenService';
 
 describe('dashboardStaffShiftOpenService', () => {
     const supabase = {
@@ -29,7 +29,8 @@ describe('dashboardStaffShiftOpenService', () => {
             statusCode: 400,
             errorType: 'validation',
             message:
-                'РЈ СЃРѕС‚СЂСѓРґРЅРёРєР° РЅРµ СѓРєР°Р·Р°РЅ С„РёР»РёР°Р». РЈРєР°Р¶РёС‚Рµ С„РёР»РёР°Р» РІ РєР°СЂС‚РѕС‡РєРµ СЃРѕС‚СЂСѓРґРЅРёРєР° Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.',
+                'У сотрудника не указан филиал. Укажите филиал в карточке сотрудника и попробуйте снова.',
         });
     });
 });
+

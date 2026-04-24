@@ -140,7 +140,7 @@ export function exchangeMobileTokens(
             return {
                 ok: false,
                 error: 'conflict',
-                message: 'РљРѕРґ СѓР¶Рµ РёСЃРїРѕР»СЊР·РѕРІР°РЅ',
+                message: 'Код уже использован',
                 status: 409,
             };
         }
@@ -180,3 +180,4 @@ export function __resetMobileExchangeStoreForTests() {
     consumedTokenStore.clear();
     creationSequence = 0;
 }
+

@@ -53,8 +53,8 @@ export default function BookingDetailsScreen() {
         const shouldCancel = await confirm({
             title: 'Отменить бронирование?',
             message: 'Вы уверены, что хотите отменить эту запись?',
-            confirmLabel: 'Р”Р°, РѕС‚РјРµРЅРёС‚СЊ',
-            cancelLabel: 'РќРµС‚',
+            confirmLabel: 'Да, отменить',
+            cancelLabel: 'Нет',
             variant: 'danger',
         });
 
@@ -87,3 +87,4 @@ export default function BookingDetailsScreen() {
         />
     );
 }
+

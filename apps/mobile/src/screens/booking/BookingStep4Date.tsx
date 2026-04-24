@@ -107,13 +107,13 @@ export default function BookingStep4Date() {
 
                     <View style={styles.buttonContainer}>
                         <Button
-                            title="РќР°Р·Р°Рґ"
+                            title="Назад"
                             onPress={() => navigation.goBack()}
                             variant="outline"
                             style={styles.backButton}
                         />
                         <Button
-                            title="Р”Р°Р»СЊС€Рµ"
+                            title="Дальше"
                             onPress={handleNext}
                             disabled={!bookingData.selectedDate}
                             variant="primary"
@@ -218,3 +218,4 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
+

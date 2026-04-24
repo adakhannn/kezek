@@ -13,7 +13,7 @@ export async function runRatingsManualRecalculateHttp(req: Request): Promise<Nex
     } = await supabase.auth.getUser();
 
     if (!user) {
-        return createErrorResponse('auth', 'Р СњР Вµ Р В°Р Р†РЎвЂљР С•РЎР‚Р С‘Р В·Р С•Р Р†Р В°Р Р…', undefined, 401);
+        return createErrorResponse('auth', 'Не авторизован', undefined, 401);
     }
 
     const accessResult = await ensureSuperAdminAccess({
@@ -42,3 +42,4 @@ export async function runRatingsManualRecalculateHttp(req: Request): Promise<Nex
 
     return createSuccessResponse(result.data);
 }
+

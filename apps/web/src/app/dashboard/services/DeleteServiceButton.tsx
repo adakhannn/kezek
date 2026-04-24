@@ -26,30 +26,30 @@ export default function DeleteServiceButton({ id }: { id: string }) {
 
                 if (payload.details && payload.error === 'HAS_BOOKINGS') {
                     const { total, active, cancelled, bookings } = payload.details;
-                    errorMessage += `\n\n${t('services.delete.totalBookings', 'Р’СЃРµРіРѕ Р±СЂРѕРЅРµР№')}: ${total}`;
+                    errorMessage += `\n\n${t('services.delete.totalBookings', 'Всего броней')}: ${total}`;
                     if (active > 0) {
-                        errorMessage += `\n${t('services.delete.activeBookings', 'РђРєС‚РёРІРЅС‹С…')}: ${active}`;
+                        errorMessage += `\n${t('services.delete.activeBookings', 'Активных')}: ${active}`;
                     }
                     if (cancelled > 0) {
-                        errorMessage += `\n${t('services.delete.cancelledBookings', 'РћС‚РјРµРЅС‘РЅРЅС‹С…')}: ${cancelled}`;
+                        errorMessage += `\n${t('services.delete.cancelledBookings', 'Отменённых')}: ${cancelled}`;
                     }
                     if (bookings && bookings.length > 0) {
-                        errorMessage += `\n\n${t('services.delete.examples', 'РџСЂРёРјРµСЂС‹ Р±СЂРѕРЅРµР№')}:`;
+                        errorMessage += `\n\n${t('services.delete.examples', 'Примеры броней')}:`;
                         bookings.forEach((b: { id: string; status: string; client_name?: string }) => {
-                            const base = `\n- ${t('services.delete.bookingPrefix', 'Р‘СЂРѕРЅСЊ')} #${b.id.slice(0, 8)} (${b.status})`;
+                            const base = `\n- ${t('services.delete.bookingPrefix', 'Бронь')} #${b.id.slice(0, 8)} (${b.status})`;
                             errorMessage += b.client_name ? `${base} - ${b.client_name}` : base;
                         });
                     }
                     errorMessage += `\n\n${t(
                         'services.delete.hint',
-                        'РЎРЅР°С‡Р°Р»Р° РѕС‚РјРµРЅРёС‚Рµ РёР»Рё СѓРґР°Р»РёС‚Рµ РІСЃРµ Р±СЂРѕРЅРё, СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ СЌС‚РѕР№ СѓСЃР»СѓРіРѕР№.'
+                        'Сначала отмените или удалите все брони, связанные с этой услугой.'
                     )}`;
                 }
 
                 toast.showError(errorMessage);
                 return;
             }
-            toast.showSuccess(t('services.delete.success', 'РЈСЃР»СѓРіР° СѓРґР°Р»РµРЅР°'));
+            toast.showSuccess(t('services.delete.success', 'Услуга удалена'));
             setConfirmOpen(false);
             r.refresh();
         } finally {
@@ -68,16 +68,16 @@ export default function DeleteServiceButton({ id }: { id: string }) {
                 isLoading={loading}
                 className="w-full sm:w-auto"
             >
-                {loading ? t('services.delete.deleting', 'РЈРґР°Р»СЏРµРјвЂ¦') : t('services.delete.button', 'РЈРґР°Р»РёС‚СЊ')}
+                {loading ? t('services.delete.deleting', 'Удаляем…') : t('services.delete.button', 'Удалить')}
             </Button>
             <ConfirmDialog
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onDelete}
-                title={t('services.delete.confirmTitle', 'РЈРґР°Р»РёС‚СЊ СѓСЃР»СѓРіСѓ?')}
-                message={t('services.delete.confirm', 'РЈРґР°Р»РёС‚СЊ СѓСЃР»СѓРіСѓ?')}
-                confirmLabel={t('services.delete.button', 'РЈРґР°Р»РёС‚СЊ')}
-                cancelLabel={t('common.cancel', 'РћС‚РјРµРЅР°')}
+                title={t('services.delete.confirmTitle', 'Удалить услугу?')}
+                message={t('services.delete.confirm', 'Удалить услугу?')}
+                confirmLabel={t('services.delete.button', 'Удалить')}
+                cancelLabel={t('common.cancel', 'Отмена')}
                 confirmVariant="danger"
                 isLoading={loading}
             />
@@ -85,3 +85,4 @@ export default function DeleteServiceButton({ id }: { id: string }) {
         </>
     );
 }
+

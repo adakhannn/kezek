@@ -61,7 +61,7 @@ export default async function Page() {
     if (listErr) {
         return (
             <main className="p-6">
-                <div className="text-red-600">{t('admin.businesses.error.load', 'РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё Р±РёР·РЅРµСЃРѕРІ')}: {listErr.message}</div>
+                <div className="text-red-600">{t('admin.businesses.error.load', 'Ошибка загрузки бизнесов')}: {listErr.message}</div>
             </main>
         );
     }
@@ -119,14 +119,14 @@ export default async function Page() {
     return (
         <div className="space-y-6">
             <PageHeader
-                title={t('admin.businesses.title', 'Р‘РёР·РЅРµСЃС‹')}
-                description={`${t('admin.businesses.stats.total', 'Р’СЃРµРіРѕ')}: ${totalCount} • ${t('admin.businesses.stats.approved', 'РћРґРѕР±СЂРµРЅРѕ')}: ${approvedCount}`}
+                title={t('admin.businesses.title', 'Бизнесы')}
+                description={`${t('admin.businesses.stats.total', 'Всего')}: ${totalCount} • ${t('admin.businesses.stats.approved', 'Одобрено')}: ${approvedCount}`}
                 actions={
                     <Link href="/admin/businesses/new" className={buttonStyles({ size: 'md' })}>
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        <span>{t('admin.businesses.create', 'РЎРѕР·РґР°С‚СЊ Р±РёР·РЅРµСЃ')}</span>
+                        <span>{t('admin.businesses.create', 'Создать бизнес')}</span>
                     </Link>
                 }
             />
@@ -139,11 +139,11 @@ export default async function Page() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                     }
-                    title={t('admin.businesses.empty.title', 'РџРѕРєР° РЅРµС‚ Р±РёР·РЅРµСЃРѕРІ')}
-                    description={t('admin.businesses.empty.description', 'РЎРѕР·РґР°Р№С‚Рµ РїРµСЂРІС‹Р№ Р±РёР·РЅРµСЃ, С‡С‚РѕР±С‹ РЅР°С‡Р°С‚СЊ СЂР°Р±РѕС‚Сѓ')}
+                    title={t('admin.businesses.empty.title', 'Пока нет бизнесов')}
+                    description={t('admin.businesses.empty.description', 'Создайте первый бизнес, чтобы начать работу')}
                     action={
                         <Link href="/admin/businesses/new">
-                            <Button>{t('admin.businesses.create', 'РЎРѕР·РґР°С‚СЊ Р±РёР·РЅРµСЃ')}</Button>
+                            <Button>{t('admin.businesses.create', 'Создать бизнес')}</Button>
                         </Link>
                     }
                 />
@@ -166,8 +166,8 @@ export default async function Page() {
                                         status={b.is_approved ? 'approved' : 'pending'}
                                         label={
                                             b.is_approved
-                                                ? t('admin.businesses.status.approved', 'РћРґРѕР±СЂРµРЅ')
-                                                : t('admin.businesses.status.moderation', 'РќР° РјРѕРґРµСЂР°С†РёРё')
+                                                ? t('admin.businesses.status.approved', 'Одобрен')
+                                                : t('admin.businesses.status.moderation', 'На модерации')
                                         }
                                     />
                                 </div>
@@ -203,24 +203,24 @@ export default async function Page() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                         </svg>
                                         <span className="font-medium">{branches}</span>
-                                        <span className="text-xs">{t('admin.businesses.stats.branches', 'С„РёР»РёР°Р»РѕРІ')}</span>
+                                        <span className="text-xs">{t('admin.businesses.stats.branches', 'филиалов')}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                         </svg>
                                         <span className="font-medium">{staff}</span>
-                                        <span className="text-xs">{t('admin.businesses.stats.staff', 'СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ')}</span>
+                                        <span className="text-xs">{t('admin.businesses.stats.staff', 'сотрудников')}</span>
                                     </div>
                                 </div>
 
                                 <div className="mb-4 text-sm">
-                                    <span className="text-gray-500 dark:text-gray-400">{t('admin.businesses.owner.label', 'Р’Р»Р°РґРµР»РµС†')}: </span>
+                                    <span className="text-gray-500 dark:text-gray-400">{t('admin.businesses.owner.label', 'Владелец')}: </span>
                                     <span className="font-medium text-gray-900 dark:text-gray-100">{ownerName}</span>
                                 </div>
 
                                 <div className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-                                    {t('admin.businesses.created', 'РЎРѕР·РґР°РЅ')}: {new Date(b.created_at).toLocaleDateString('ru-RU', {
+                                    {t('admin.businesses.created', 'Создан')}: {new Date(b.created_at).toLocaleDateString('ru-RU', {
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric',
@@ -233,7 +233,7 @@ export default async function Page() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
-                                        <span>{t('admin.businesses.open', 'РћС‚РєСЂС‹С‚СЊ')}</span>
+                                        <span>{t('admin.businesses.open', 'Открыть')}</span>
                                     </Link>
                                 </div>
                             </Card>
@@ -244,3 +244,4 @@ export default async function Page() {
         </div>
     );
 }
+

@@ -48,7 +48,7 @@ export function CategoriesSection({
                 style={styles.categoriesScroll}
             >
                 <CategoryChip
-                    label="Р’СЃРµ"
+                    label="Все"
                     isActive={!selectedCategory}
                     onPress={() => onSelectCategory(null)}
                 />
@@ -113,7 +113,7 @@ export function BusinessListSection({
                 icon="search"
                 title={
                     search || selectedCategory
-                        ? 'РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ'
+                        ? 'Ничего не найдено'
                         : 'Нет доступных бизнесов'
                 }
                 message={
@@ -193,3 +193,4 @@ export function BusinessListSection({
         </View>
     );
 }
+

@@ -24,16 +24,17 @@ export default function UpdatePasswordPage() {
             <div className="space-y-2">
                 <input
                     className="w-full rounded border px-2 py-1"
-                    placeholder="РЅРѕРІС‹Р№ РїР°СЂРѕР»СЊ"
+                    placeholder="новый пароль"
                     type="password"
                     value={pass}
                     onChange={(e) => setPass(e.target.value)}
                 />
                 <button className="w-full rounded border px-3 py-1" onClick={update}>
-                    РЎРјРµРЅРёС‚СЊ РїР°СЂРѕР»СЊ
+                    Сменить пароль
                 </button>
             </div>
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </>
     );
 }
+

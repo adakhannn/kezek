@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 
@@ -14,32 +14,32 @@ export function Footer() {
                 <div className="rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_86%,transparent)] px-4 py-4 shadow-[var(--shadow-md)] backdrop-blur-xl sm:px-5 sm:py-5">
                     <div className="flex flex-col items-center justify-between gap-3 sm:gap-4 md:flex-row md:items-center">
                         <p className="text-center text-xs text-[var(--text-muted)] sm:text-sm md:text-left" suppressHydrationWarning>
-                            В© {year} Kezek. {t('footer.rights', 'Р’СЃРµ РїСЂР°РІР° Р·Р°С‰РёС‰РµРЅС‹.')}
+                            © {year} Kezek. {t('footer.rights', 'Все права защищены.')}
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
                             <Link
                                 href="/map"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
-                                {t('footer.map', 'РљР°СЂС‚Р° С„РёР»РёР°Р»РѕРІ')}
+                                {t('footer.map', 'Карта филиалов')}
                             </Link>
                             <Link
                                 href="/privacy"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
-                                {t('footer.privacy', 'РџРѕР»РёС‚РёРєР° РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё')}
+                                {t('footer.privacy', 'Политика конфиденциальности')}
                             </Link>
                             <Link
                                 href="/terms"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
-                                {t('footer.terms', 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ')}
+                                {t('footer.terms', 'Пользовательское соглашение')}
                             </Link>
                             <Link
                                 href="/data-deletion"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
-                                {t('footer.dataDeletion', 'РЈРґР°Р»РµРЅРёРµ РґР°РЅРЅС‹С…')}
+                                {t('footer.dataDeletion', 'Удаление данных')}
                             </Link>
                         </div>
                     </div>
@@ -48,3 +48,4 @@ export function Footer() {
         </footer>
     );
 }
+

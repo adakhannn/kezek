@@ -32,22 +32,22 @@ export default function DeleteBranchButton({ id }: { id: string }) {
 
                 if (payload.details && payload.error === 'HAS_BOOKINGS') {
                     const { total, active, cancelled, bookings } = payload.details;
-                    errorMessage += `\n\n${t('branches.delete.error.totalBookings', 'Р’СЃРµРіРѕ Р±СЂРѕРЅРµР№:')} ${total}`;
-                    if (active > 0) errorMessage += `\n${t('branches.delete.error.activeBookings', 'РђРєС‚РёРІРЅС‹С…:')} ${active}`;
-                    if (cancelled > 0) errorMessage += `\n${t('branches.delete.error.cancelledBookings', 'РћС‚РјРµРЅС‘РЅРЅС‹С…:')} ${cancelled}`;
+                    errorMessage += `\n\n${t('branches.delete.error.totalBookings', 'Всего броней:')} ${total}`;
+                    if (active > 0) errorMessage += `\n${t('branches.delete.error.activeBookings', 'Активных:')} ${active}`;
+                    if (cancelled > 0) errorMessage += `\n${t('branches.delete.error.cancelledBookings', 'Отменённых:')} ${cancelled}`;
                     if (bookings && bookings.length > 0) {
-                        errorMessage += `\n\n${t('branches.delete.error.examples', 'РџСЂРёРјРµСЂС‹ Р±СЂРѕРЅРµР№:')}`;
+                        errorMessage += `\n\n${t('branches.delete.error.examples', 'Примеры броней:')}`;
                         bookings.forEach((b: { id: string; status: string; client_name?: string }) => {
-                            errorMessage += `\n- ${t('branches.delete.error.bookingExample', 'Р‘СЂРѕРЅСЊ #')}${b.id.slice(0, 8)} (${b.status})${b.client_name ? ` - ${b.client_name}` : ''}`;
+                            errorMessage += `\n- ${t('branches.delete.error.bookingExample', 'Бронь #')}${b.id.slice(0, 8)} (${b.status})${b.client_name ? ` - ${b.client_name}` : ''}`;
                         });
                     }
-                    errorMessage += `\n\n${t('branches.delete.error.firstCancel', 'РЎРЅР°С‡Р°Р»Р° РѕС‚РјРµРЅРёС‚Рµ РёР»Рё СѓРґР°Р»РёС‚Рµ РІСЃРµ Р±СЂРѕРЅРё, СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ СЌС‚РёРј С„РёР»РёР°Р»РѕРј.')}`;
+                    errorMessage += `\n\n${t('branches.delete.error.firstCancel', 'Сначала отмените или удалите все брони, связанные с этим филиалом.')}`;
                 }
 
                 toast.showError(errorMessage);
                 return;
             }
-            toast.showSuccess(t('branches.delete.success', 'Р¤РёР»РёР°Р» СѓРґР°Р»РµРЅ'));
+            toast.showSuccess(t('branches.delete.success', 'Филиал удален'));
             setConfirmOpen(false);
             r.push('/dashboard/branches');
         } finally {
@@ -65,16 +65,16 @@ export default function DeleteBranchButton({ id }: { id: string }) {
                 disabled={loading}
                 isLoading={loading}
             >
-                {loading ? t('branches.delete.deleting', 'РЈРґР°Р»СЏРµРјвЂ¦') : t('branches.delete.button', 'РЈРґР°Р»РёС‚СЊ')}
+                {loading ? t('branches.delete.deleting', 'Удаляем…') : t('branches.delete.button', 'Удалить')}
             </Button>
             <ConfirmDialog
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={onDelete}
-                title={t('branches.delete.confirmTitle', 'РЈРґР°Р»РёС‚СЊ С„РёР»РёР°Р»?')}
-                message={t('branches.delete.confirm', 'РЈРґР°Р»РёС‚СЊ С„РёР»РёР°Р»? Р‘СѓРґРµС‚ РѕС‚РєР°Р·Р°РЅРѕ, РµСЃР»Рё РµСЃС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєРё/Р±СЂРѕРЅРё.')}
-                confirmLabel={t('branches.delete.button', 'РЈРґР°Р»РёС‚СЊ')}
-                cancelLabel={t('common.cancel', 'РћС‚РјРµРЅР°')}
+                title={t('branches.delete.confirmTitle', 'Удалить филиал?')}
+                message={t('branches.delete.confirm', 'Удалить филиал? Будет отказано, если есть сотрудники/брони.')}
+                confirmLabel={t('branches.delete.button', 'Удалить')}
+                cancelLabel={t('common.cancel', 'Отмена')}
                 confirmVariant="danger"
                 isLoading={loading}
             />
@@ -82,3 +82,4 @@ export default function DeleteBranchButton({ id }: { id: string }) {
         </>
     );
 }
+

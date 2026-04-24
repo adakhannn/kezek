@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -88,7 +88,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         }
         const json: SystemOverviewResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРёСЃС‚РµРјРЅСѓСЋ Р°РЅР°Р»РёС‚РёРєСѓ');
+          throw new Error(json.error || 'Не удалось загрузить системную аналитику');
         }
         if (!ignore) {
           setData(json.data);
@@ -135,7 +135,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Р—Р°РіСЂСѓР¶Р°РµРј СЃРёСЃС‚РµРјРЅСѓСЋ Р°РЅР°Р»РёС‚РёРєСѓ...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем системную аналитику...</span>
           </div>
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         <div className="mx-auto max-w-xl">
           <AlertBanner
             variant="danger"
-            title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё Р°РЅР°Р»РёС‚РёРєРё РїР»Р°С‚С„РѕСЂРјС‹"
+            title="Ошибка загрузки аналитики платформы"
             message={error}
             action={
               <Button
@@ -161,7 +161,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
                   setStartDate((s) => s);
                 }}
               >
-                РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°
+                Попробовать снова
               </Button>
             }
           />
@@ -181,26 +181,26 @@ export default function AdminSystemAnalyticsOverviewPage() {
       <header className="space-y-1">
         <p className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-[11px] font-medium text-indigo-700 dark:text-indigo-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          РЈСЂРѕРІРµРЅСЊ: РїР»Р°С‚С„РѕСЂРјР°
+          Уровень: платформа
         </p>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">РЎРёСЃС‚РµРјРЅР°СЏ Р°РЅР°Р»РёС‚РёРєР°</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">Системная аналитика</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          РЎРІРѕРґРєР° РїРѕ РІСЃРµРј Р±РёР·РЅРµСЃР°Рј: Р°РєС‚РёРІРЅРѕСЃС‚СЊ, РІС‹СЂСѓС‡РєР° Рё Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ.
+          Сводка по всем бизнесам: активность, выручка и бронирования за выбранный период.
         </p>
       </header>
 
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Р¤РёР»СЊС‚СЂС‹</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              РџРµСЂРёРѕРґ Р·Р°РґР°С‘С‚ РѕРєРЅРѕ РґР»СЏ РІСЃРµС… РјРµС‚СЂРёРє Рё С‚СЂРµРЅРґРѕРІ РЅР° СЌС‚РѕРј СЌРєСЂР°РЅРµ.
+              Период задаёт окно для всех метрик и трендов на этом экране.
             </p>
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">РџРµСЂРёРѕРґ</p>
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Период</p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
                 <button
@@ -213,14 +213,14 @@ export default function AdminSystemAnalyticsOverviewPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' ? '7 РґРЅРµР№' : p === '30' ? '30 РґРЅРµР№' : p === '90' ? '90 РґРЅРµР№' : 'РЎРІРѕР№ РїРµСЂРёРѕРґ'}
+                  {p === '7' ? '7 дней' : p === '30' ? '30 дней' : p === '90' ? '90 дней' : 'Свой период'}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">РќР°С‡Р°Р»Рѕ</p>
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Начало</p>
             <input
               type="date"
               value={startDate}
@@ -233,7 +233,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">РћРєРѕРЅС‡Р°РЅРёРµ</p>
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Окончание</p>
             <input
               type="date"
               value={endDate}
@@ -250,7 +250,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-            РђРєС‚РёРІРЅС‹Рµ Р±РёР·РЅРµСЃС‹
+            Активные бизнесы
           </p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formatNumber(summary.activeBusinesses)}
@@ -258,7 +258,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         </div>
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-            Р‘СЂРѕРЅРё (СѓСЃРїРµС€РЅС‹Рµ)
+            Брони (успешные)
           </p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formatNumber(summary.bookings.confirmed)}
@@ -266,7 +266,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         </div>
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-            Р’С‹СЂСѓС‡РєР° Р·Р° РїРµСЂРёРѕРґ
+            Выручка за период
           </p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formatCurrencyKGS(summary.revenue.total)}
@@ -274,7 +274,7 @@ export default function AdminSystemAnalyticsOverviewPage() {
         </div>
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-            РЎСЂРµРґРЅРёР№ С‡РµРє
+            Средний чек
           </p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {formatCurrencyKGS(summary.revenue.avgCheck)}
@@ -286,9 +286,9 @@ export default function AdminSystemAnalyticsOverviewPage() {
         <section className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">РўСЂРµРЅРґС‹ РїРѕ РґРЅСЏРј</h2>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Тренды по дням</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                РљР°Рє РјРµРЅСЏР»РёСЃСЊ СѓСЃРїРµС€РЅС‹Рµ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ Рё РІС‹СЂСѓС‡РєР° РїРѕ РїР»Р°С‚С„РѕСЂРјРµ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ.
+                Как менялись успешные бронирования и выручка по платформе за выбранный период.
               </p>
             </div>
           </div>
@@ -298,10 +298,10 @@ export default function AdminSystemAnalyticsOverviewPage() {
                 <span className="text-gray-600 dark:text-gray-300">{p.date}</span>
                 <div className="flex items-center gap-4">
                   <span className="text-gray-500 dark:text-gray-400">
-                    Р‘СЂРѕРЅРё: <span className="font-medium text-gray-900 dark:text-gray-100">{formatNumber(p.bookings)}</span>
+                    Брони: <span className="font-medium text-gray-900 dark:text-gray-100">{formatNumber(p.bookings)}</span>
                   </span>
                   <span className="text-gray-500 dark:text-gray-400">
-                    Р’С‹СЂСѓС‡РєР°:{' '}
+                    Выручка:{' '}
                     <span className="font-medium text-gray-900 dark:text-gray-100">
                       {formatCurrencyKGS(p.revenue)}
                     </span>
@@ -315,5 +315,6 @@ export default function AdminSystemAnalyticsOverviewPage() {
     </div>
   );
 }
+
 
 

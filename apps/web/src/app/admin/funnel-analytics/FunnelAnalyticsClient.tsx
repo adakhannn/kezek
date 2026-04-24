@@ -88,24 +88,24 @@ export default function FunnelAnalyticsClient() {
     return (
         <div className="container mx-auto space-y-6 px-4 py-8">
             <PageHeader
-                title="РђРЅР°Р»РёС‚РёРєР° РІРѕСЂРѕРЅРєРё"
-                description="РљРѕРЅРІРµСЂСЃРёСЏ РјРµР¶РґСѓ С€Р°РіР°РјРё РїСЂРѕС†РµСЃСЃР° Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ"
+                title="Аналитика воронки"
+                description="Конверсия между шагами процесса бронирования"
                 actions={
                     <Button type="button" variant="secondary" onClick={loadAnalytics} isLoading={loading}>
-                        РћР±РЅРѕРІРёС‚СЊ
+                        Обновить
                     </Button>
                 }
             />
 
             <section className="rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-6">
                 <SectionHeader
-                    title="Р¤РёР»СЊС‚СЂС‹"
-                    description="РћС‚СЃРµР№С‚Рµ РїРµСЂРёРѕРґ Рё РёСЃС‚РѕС‡РЅРёРє, С‡С‚РѕР±С‹ СЃСЂР°РІРЅРёРІР°С‚СЊ РєРѕРЅРІРµСЂСЃРёСЋ РјРµР¶РґСѓ РїСѓР±Р»РёС‡РЅС‹Рј РїРѕС‚РѕРєРѕРј Рё QuickDesk."
+                    title="Фильтры"
+                    description="Отсейте период и источник, чтобы сравнивать конверсию между публичным потоком и QuickDesk."
                     className="mb-4"
                 />
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
-                        <label className="type-label mb-1 block text-[var(--text-secondary)]">Р”Р°С‚Р° РЅР°С‡Р°Р»Р°</label>
+                        <label className="type-label mb-1 block text-[var(--text-secondary)]">Дата начала</label>
                         <input
                             type="date"
                             value={filters.startDate}
@@ -114,7 +114,7 @@ export default function FunnelAnalyticsClient() {
                         />
                     </div>
                     <div>
-                        <label className="type-label mb-1 block text-[var(--text-secondary)]">Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ</label>
+                        <label className="type-label mb-1 block text-[var(--text-secondary)]">Дата окончания</label>
                         <input
                             type="date"
                             value={filters.endDate}
@@ -123,14 +123,14 @@ export default function FunnelAnalyticsClient() {
                         />
                     </div>
                     <div>
-                        <label className="type-label mb-1 block text-[var(--text-secondary)]">РСЃС‚РѕС‡РЅРёРє</label>
+                        <label className="type-label mb-1 block text-[var(--text-secondary)]">Источник</label>
                         <select
                             value={filters.source}
                             onChange={(e) => setFilters({ ...filters, source: e.target.value as 'public' | 'quickdesk' | '' })}
                             className="min-h-[44px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)]"
                         >
-                            <option value="">Р’СЃРµ</option>
-                            <option value="public">РџСѓР±Р»РёС‡РЅС‹Р№ РїРѕС‚РѕРє</option>
+                            <option value="">Все</option>
+                            <option value="public">Публичный поток</option>
                             <option value="quickdesk">QuickDesk</option>
                         </select>
                     </div>
@@ -140,11 +140,11 @@ export default function FunnelAnalyticsClient() {
             {error ? (
                 <AlertBanner
                     variant="danger"
-                    title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё"
+                    title="Ошибка загрузки"
                     message={error}
                     action={
                         <Button type="button" size="sm" variant="danger" onClick={loadAnalytics}>
-                            РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°
+                            Попробовать снова
                         </Button>
                     }
                 />
@@ -153,17 +153,17 @@ export default function FunnelAnalyticsClient() {
             {loading && !data ? (
                 <div className="rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-6 py-12 text-center">
                     <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[var(--accent-primary)]" />
-                    <p className="type-body mt-4 text-[var(--text-secondary)]">Р—Р°РіСЂСѓР·РєР° Р°РЅР°Р»РёС‚РёРєРё РІРѕСЂРѕРЅРєРё...</p>
+                    <p className="type-body mt-4 text-[var(--text-secondary)]">Загрузка аналитики воронки...</p>
                 </div>
             ) : null}
 
             {!loading && !error && data && data.funnel.length === 0 ? (
                 <EmptyState
-                    title="РќРµС‚ РґР°РЅРЅС‹С… РІРѕСЂРѕРЅРєРё"
-                    description="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ Рё С„РёР»СЊС‚СЂС‹ РїРѕРєР° РЅРµС‚ СЃРѕР±С‹С‚РёР№ РґР»СЏ Р°РЅР°Р»РёР·Р°."
+                    title="Нет данных воронки"
+                    description="За выбранный период и фильтры пока нет событий для анализа."
                     action={
                         <Button type="button" variant="secondary" onClick={loadAnalytics}>
-                            РћР±РЅРѕРІРёС‚СЊ
+                            Обновить
                         </Button>
                     }
                 />
@@ -172,20 +172,20 @@ export default function FunnelAnalyticsClient() {
             {data ? (
                 <>
                     <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                        <SummaryCard label="Р’СЃРµРіРѕ РїСЂРѕСЃРјРѕС‚СЂРѕРІ" value={data.summary.totalViews} />
-                        <SummaryCard label="РЈСЃРїРµС€РЅС‹С… Р±СЂРѕРЅРµР№" value={data.summary.totalBookings} />
+                        <SummaryCard label="Всего просмотров" value={data.summary.totalViews} />
+                        <SummaryCard label="Успешных броней" value={data.summary.totalBookings} />
                         <SummaryCard
-                            label="РћР±С‰Р°СЏ РєРѕРЅРІРµСЂСЃРёСЏ"
+                            label="Общая конверсия"
                             value={`${data.summary.overallConversionRate.toFixed(2)}%`}
                             accentClassName={getConversionColor(data.summary.overallConversionRate)}
                         />
-                        <SummaryCard label="Р’СЃРµРіРѕ СЃРѕР±С‹С‚РёР№" value={data.summary.totalEvents} />
+                        <SummaryCard label="Всего событий" value={data.summary.totalEvents} />
                     </section>
 
                     <section className="rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-6">
                         <SectionHeader
-                            title="Р’РѕСЂРѕРЅРєР° РєРѕРЅРІРµСЂСЃРёРё"
-                            description="РЎРјРѕС‚СЂРёС‚Рµ, РіРґРµ РёРјРµРЅРЅРѕ С‚РµСЂСЏСЋС‚СЃСЏ СЃРµСЃСЃРёРё РјРµР¶РґСѓ С€Р°РіР°РјРё."
+                            title="Воронка конверсии"
+                            description="Смотрите, где именно теряются сессии между шагами."
                             className="mb-5"
                         />
                         <div className="space-y-4">
@@ -198,11 +198,11 @@ export default function FunnelAnalyticsClient() {
                                             </span>
                                             <div>
                                                 <p className="type-body text-[var(--text-primary)]">{step.stepName}</p>
-                                                <p className="type-caption text-[var(--text-muted)]">{step.totalEvents} РІСЃРµРіРѕ СЃРѕР±С‹С‚РёР№</p>
+                                                <p className="type-caption text-[var(--text-muted)]">{step.totalEvents} всего событий</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="type-label text-[var(--text-secondary)]">{step.uniqueSessions} СЃРµСЃСЃРёР№</p>
+                                            <p className="type-label text-[var(--text-secondary)]">{step.uniqueSessions} сессий</p>
                                             {index > 0 ? (
                                                 <p className={`type-body ${getConversionColor(step.conversionRate)}`}>{step.conversionRate.toFixed(2)}%</p>
                                             ) : null}
@@ -218,7 +218,7 @@ export default function FunnelAnalyticsClient() {
                                     </div>
                                     {index > 0 ? (
                                         <p className="type-caption mt-2 text-[var(--text-muted)]">
-                                            РљРѕРЅРІРµСЂСЃРёСЏ РѕС‚ РїСЂРµРґС‹РґСѓС‰РµРіРѕ С€Р°РіР°: {step.conversionRate.toFixed(2)}%
+                                            Конверсия от предыдущего шага: {step.conversionRate.toFixed(2)}%
                                         </p>
                                     ) : null}
                                 </div>
@@ -247,3 +247,4 @@ function SummaryCard({
         </div>
     );
 }
+

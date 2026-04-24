@@ -18,7 +18,7 @@ export default function BookingCancelButton() {
         const shouldCancel = await confirm({
             title: 'Отменить бронирование?',
             message: 'Все выбранные данные будут потеряны.',
-            confirmLabel: 'РћС‚РјРµРЅРёС‚СЊ',
+            confirmLabel: 'Отменить',
             cancelLabel: 'Продолжить',
             variant: 'danger',
         });
@@ -48,3 +48,4 @@ const styles = StyleSheet.create({
         borderRadius: colors.layout.radiusSm,
     },
 });
+

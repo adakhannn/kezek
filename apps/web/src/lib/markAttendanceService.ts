@@ -48,7 +48,7 @@ export async function runMarkAttendance({
                 ok: false,
                 statusCode: 404,
                 errorType: 'not_found',
-                message: 'Р‘СЂРѕРЅСЊ РЅРµ РЅР°Р№РґРµРЅР°',
+                message: 'Бронь не найдена',
             };
         }
 
@@ -57,7 +57,7 @@ export async function runMarkAttendance({
                 ok: false,
                 statusCode: 403,
                 errorType: 'forbidden',
-                message: 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰РµРЅ',
+                message: 'Доступ запрещен',
             };
         }
 
@@ -81,7 +81,7 @@ export async function runMarkAttendance({
             ok: false,
             statusCode: 500,
             errorType: 'internal',
-            message: 'РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР° РїСЂРё РѕС‚РјРµС‚РєРµ РїРѕСЃРµС‰РµРЅРёСЏ',
+            message: 'Неизвестная ошибка при отметке посещения',
         };
     }
 
@@ -175,7 +175,7 @@ export async function runMarkAttendance({
                     statusCode: 400,
                     errorType: 'validation',
                     message:
-                        'РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ. Р’РѕР·РјРѕР¶РЅРѕ, СЃРѕС‚СЂСѓРґРЅРёРє Р±РѕР»СЊС€Рµ РЅРµ РЅР°Р·РЅР°С‡РµРЅ РЅР° С„РёР»РёР°Р».',
+                        'Не удалось обновить статус. Возможно, сотрудник больше не назначен на филиал.',
                 };
             }
 
@@ -197,6 +197,7 @@ export async function runMarkAttendance({
         ok: false,
         statusCode: 400,
         errorType: 'validation',
-        message: rpcError?.message || 'РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°',
+        message: rpcError?.message || 'Неизвестная ошибка',
     };
 }
+

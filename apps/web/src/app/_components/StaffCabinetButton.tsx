@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { clsx } from 'clsx';
 import Link from 'next/link';
@@ -23,7 +23,8 @@ export function StaffCabinetButton({
                 className,
             )}
         >
-            {t('header.staffCabinet', 'РљР°Р±РёРЅРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєР°')}
+            {t('header.staffCabinet', 'Кабинет сотрудника')}
         </Link>
     );
 }
+

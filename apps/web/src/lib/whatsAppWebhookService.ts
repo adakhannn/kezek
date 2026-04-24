@@ -251,7 +251,7 @@ async function handleRemindCommand(fromPhone: string, activeBookings: ActiveBook
         if (activeBookings.length === 0) {
             await sendWhatsApp({
                 to: fromPhone,
-                text: 'РЈ РІР°СЃ РЅРµС‚ РїСЂРµРґСЃС‚РѕСЏС‰РёС… Р±СЂРѕРЅРёСЂРѕРІР°РЅРёР№.',
+                text: 'У вас нет предстоящих бронирований.',
             });
             return;
         }
@@ -318,3 +318,4 @@ async function handleStatusUpdate(status: WhatsAppStatus) {
         logError('WhatsAppWebhook', 'Error handling status update', { error, statusId: status.id });
     }
 }
+

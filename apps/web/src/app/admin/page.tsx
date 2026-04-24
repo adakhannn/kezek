@@ -128,11 +128,11 @@ export default async function AdminHomePage() {
     const canceledCount = statusCounts.canceled ?? 0;
 
     const checks = [
-        { ok: !!process.env.SUPABASE_SERVICE_ROLE_KEY, label: t('admin.home.systemChecks.serviceRoleKey', 'SUPABASE_SERVICE_ROLE_KEY Р·Р°РґР°РЅ') },
-        { ok: !!process.env.NEXT_PUBLIC_SITE_ORIGIN, label: t('admin.home.systemChecks.siteOrigin', 'NEXT_PUBLIC_SITE_ORIGIN Р·Р°РґР°РЅ') },
+        { ok: !!process.env.SUPABASE_SERVICE_ROLE_KEY, label: t('admin.home.systemChecks.serviceRoleKey', 'SUPABASE_SERVICE_ROLE_KEY задан') },
+        { ok: !!process.env.NEXT_PUBLIC_SITE_ORIGIN, label: t('admin.home.systemChecks.siteOrigin', 'NEXT_PUBLIC_SITE_ORIGIN задан') },
         {
             ok: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            label: t('admin.home.systemChecks.supabaseKeys', 'РџСѓР±Р»РёС‡РЅС‹Рµ РєР»СЋС‡Рё Supabase Р·Р°РґР°РЅС‹'),
+            label: t('admin.home.systemChecks.supabaseKeys', 'Публичные ключи Supabase заданы'),
         },
     ];
 
@@ -140,22 +140,22 @@ export default async function AdminHomePage() {
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
             <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
                 <PageHeader
-                    title={t('admin.home.title', 'РџР°РЅРµР»СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°')}
-                    description={t('admin.home.subtitle', 'РћР±Р·РѕСЂ СЃРёСЃС‚РµРјС‹ Рё СѓРїСЂР°РІР»РµРЅРёРµ')}
+                    title={t('admin.home.title', 'Панель администратора')}
+                    description={t('admin.home.subtitle', 'Обзор системы и управление')}
                     actions={
                         <div className="flex flex-wrap gap-2">
                             <Link href="/admin/businesses/new" className={buttonStyles({ size: 'sm' })}>
                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                <span>{t('admin.home.createBusiness', 'РЎРѕР·РґР°С‚СЊ Р±РёР·РЅРµСЃ')}</span>
+                                <span>{t('admin.home.createBusiness', 'Создать бизнес')}</span>
                             </Link>
                             <Link href="/admin/categories/new">
                                 <Button variant="outline" size="sm">
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                     </svg>
-                                    <span>{t('admin.home.createCategory', 'РљР°С‚РµРіРѕСЂРёСЏ')}</span>
+                                    <span>{t('admin.home.createCategory', 'Категория')}</span>
                                 </Button>
                             </Link>
                         </div>
@@ -163,10 +163,10 @@ export default async function AdminHomePage() {
                 />
 
                 <section>
-                    <SectionHeader title={t('admin.home.stats.title', 'РћР±С‰Р°СЏ СЃС‚Р°С‚РёСЃС‚РёРєР°')} className="mb-4" />
+                    <SectionHeader title={t('admin.home.stats.title', 'Общая статистика')} className="mb-4" />
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <MetricCard
-                            title={t('admin.home.stats.businesses', 'Р‘РёР·РЅРµСЃС‹')}
+                            title={t('admin.home.stats.businesses', 'Бизнесы')}
                             value={bizCount ?? 0}
                             href="/admin/businesses"
                             icon={
@@ -177,10 +177,10 @@ export default async function AdminHomePage() {
                             gradient="from-blue-500 to-cyan-500"
                         />
                         <MetricCard
-                            title={t('admin.home.stats.branches', 'Р¤РёР»РёР°Р»С‹')}
+                            title={t('admin.home.stats.branches', 'Филиалы')}
                             value={branchCount ?? 0}
                             href="/admin/businesses"
-                            hint={t('admin.home.stats.branchesHint', 'СѓРїСЂР°РІР»РµРЅРёРµ РІ РєР°СЂС‚РѕС‡РєР°С… Р±РёР·РЅРµСЃР°')}
+                            hint={t('admin.home.stats.branchesHint', 'управление в карточках бизнеса')}
                             icon={
                                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -190,7 +190,7 @@ export default async function AdminHomePage() {
                             gradient="from-emerald-500 to-teal-500"
                         />
                         <MetricCard
-                            title={t('admin.home.stats.staff', 'РЎРѕС‚СЂСѓРґРЅРёРєРё')}
+                            title={t('admin.home.stats.staff', 'Сотрудники')}
                             value={staffCount ?? 0}
                             icon={
                                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +200,7 @@ export default async function AdminHomePage() {
                             gradient="from-purple-500 to-pink-500"
                         />
                         <MetricCard
-                            title={t('admin.home.stats.services', 'РЈСЃР»СѓРіРё')}
+                            title={t('admin.home.stats.services', 'Услуги')}
                             value={serviceCount ?? 0}
                             icon={
                                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +210,7 @@ export default async function AdminHomePage() {
                             gradient="from-orange-500 to-red-500"
                         />
                         <MetricCard
-                            title={t('admin.home.stats.bookings', 'Р‘СЂРѕРЅРё (РІСЃРµРіРѕ)')}
+                            title={t('admin.home.stats.bookings', 'Брони (всего)')}
                             value={bookingCount ?? 0}
                             icon={
                                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,7 +220,7 @@ export default async function AdminHomePage() {
                             gradient="from-indigo-500 to-purple-500"
                         />
                         <MetricCard
-                            title={t('admin.home.stats.categories', 'РљР°С‚РµРіРѕСЂРёРё')}
+                            title={t('admin.home.stats.categories', 'Категории')}
                             value={catCount ?? 0}
                             href="/admin/categories"
                             icon={
@@ -235,7 +235,7 @@ export default async function AdminHomePage() {
 
                 <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-900">
                     <SectionHeader
-                        title={t('admin.home.bookingsToday.title', 'Р‘СЂРѕРЅРё СЃРµРіРѕРґРЅСЏ')}
+                        title={t('admin.home.bookingsToday.title', 'Брони сегодня')}
                         description={`${label} (Asia/Bishkek)`}
                         action={
                             <div className="flex flex-wrap gap-2">
@@ -253,22 +253,22 @@ export default async function AdminHomePage() {
                                 <thead className="bg-gray-50 dark:bg-gray-800">
                                     <tr>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                            {t('admin.home.bookingsToday.table.time', 'Р’СЂРµРјСЏ')}
+                                            {t('admin.home.bookingsToday.table.time', 'Время')}
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                            {t('admin.home.bookingsToday.table.business', 'Р‘РёР·РЅРµСЃ / С„РёР»РёР°Р»')}
+                                            {t('admin.home.bookingsToday.table.business', 'Бизнес / филиал')}
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                            {t('admin.home.bookingsToday.table.service', 'РЈСЃР»СѓРіР°')}
+                                            {t('admin.home.bookingsToday.table.service', 'Услуга')}
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                            {t('admin.home.bookingsToday.table.master', 'РњР°СЃС‚РµСЂ')}
+                                            {t('admin.home.bookingsToday.table.master', 'Мастер')}
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                            {t('admin.home.bookingsToday.table.client', 'РљР»РёРµРЅС‚')}
+                                            {t('admin.home.bookingsToday.table.client', 'Клиент')}
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                            {t('admin.home.bookingsToday.table.status', 'РЎС‚Р°С‚СѓСЃ')}
+                                            {t('admin.home.bookingsToday.table.status', 'Статус')}
                                         </th>
                                     </tr>
                                 </thead>
@@ -307,7 +307,7 @@ export default async function AdminHomePage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             }
-                            title={t('admin.home.bookingsToday.empty', 'РќР° СЃРµРіРѕРґРЅСЏ Р±СЂРѕРЅРµР№ РЅРµС‚')}
+                            title={t('admin.home.bookingsToday.empty', 'На сегодня броней нет')}
                         />
                     )}
                 </section>
@@ -315,10 +315,10 @@ export default async function AdminHomePage() {
                 <div className="grid gap-6 lg:grid-cols-2">
                     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-900">
                         <SectionHeader
-                            title={t('admin.home.latestBusinesses.title', 'РџРѕСЃР»РµРґРЅРёРµ Р±РёР·РЅРµСЃС‹')}
+                            title={t('admin.home.latestBusinesses.title', 'Последние бизнесы')}
                             action={
                                 <Link href="/admin/businesses" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
-                                    {t('admin.home.latestBusinesses.all', 'Р’СЃРµ')} →
+                                    {t('admin.home.latestBusinesses.all', 'Все')} >
                                 </Link>
                             }
                             className="mb-4"
@@ -354,13 +354,13 @@ export default async function AdminHomePage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
                                 }
-                                title={t('admin.home.latestBusinesses.empty', 'РџРѕРєР° РЅРµС‚ Р±РёР·РЅРµСЃРѕРІ')}
+                                title={t('admin.home.latestBusinesses.empty', 'Пока нет бизнесов')}
                             />
                         )}
                     </section>
 
                     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-900">
-                        <SectionHeader title={t('admin.home.systemChecks.title', 'РЎРёСЃС‚РµРјРЅС‹Рµ РїСЂРѕРІРµСЂРєРё')} className="mb-4" />
+                        <SectionHeader title={t('admin.home.systemChecks.title', 'Системные проверки')} className="mb-4" />
                         <div className="space-y-3">
                             {checks.map((c, i) => (
                                 <div
@@ -375,7 +375,7 @@ export default async function AdminHomePage() {
                                     <div className="flex-1">
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.label}</p>
                                         <p className={`text-xs ${c.ok ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'}`}>
-                                            {c.ok ? t('common.ok', 'РћРљ') : t('admin.home.systemChecks.checkEnv', 'РџСЂРѕРІРµСЂСЊ .env')}
+                                            {c.ok ? t('common.ok', 'ОК') : t('admin.home.systemChecks.checkEnv', 'Проверь .env')}
                                         </p>
                                     </div>
                                 </div>
@@ -385,12 +385,12 @@ export default async function AdminHomePage() {
                 </div>
 
                 <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-900">
-                    <SectionHeader title={t('admin.home.quickLinks.title', 'Р‘С‹СЃС‚СЂС‹Рµ СЃСЃС‹Р»РєРё')} className="mb-4" />
+                    <SectionHeader title={t('admin.home.quickLinks.title', 'Быстрые ссылки')} className="mb-4" />
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        <QuickLink href="/admin/businesses" icon="🏢" label={t('admin.home.quickLinks.allBusinesses', 'Р’СЃРµ Р±РёР·РЅРµСЃС‹')} />
-                        <QuickLink href="/admin/categories" icon="🏷" label={t('admin.home.quickLinks.categories', 'РљР°С‚РµРіРѕСЂРёРё')} />
-                        <QuickLink href="/admin/users" icon="👥" label={t('admin.home.quickLinks.users', 'РџРѕР»СЊР·РѕРІР°С‚РµР»Рё')} />
-                        <QuickLink href="/" icon="🌐" label={t('admin.home.quickLinks.publicSite', 'РџСѓР±Р»РёС‡РЅС‹Р№ СЃР°Р№С‚')} />
+                        <QuickLink href="/admin/businesses" icon="??" label={t('admin.home.quickLinks.allBusinesses', 'Все бизнесы')} />
+                        <QuickLink href="/admin/categories" icon="??" label={t('admin.home.quickLinks.categories', 'Категории')} />
+                        <QuickLink href="/admin/users" icon="??" label={t('admin.home.quickLinks.users', 'Пользователи')} />
+                        <QuickLink href="/" icon="??" label={t('admin.home.quickLinks.publicSite', 'Публичный сайт')} />
                     </div>
                 </section>
             </div>
@@ -400,10 +400,10 @@ export default async function AdminHomePage() {
 
 function bookingStatusLabel(status: string) {
     const labels: Record<string, string> = {
-        confirmed: 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРѕ',
-        hold: 'РћР¶РёРґР°РЅРёРµ',
-        canceled: 'РћС‚РјРµРЅРµРЅРѕ',
-        paid: 'Р’С‹РїРѕР»РЅРµРЅРѕ',
+        confirmed: 'Подтверждено',
+        hold: 'Ожидание',
+        canceled: 'Отменено',
+        paid: 'Выполнено',
     };
     return labels[status] ?? status;
 }
@@ -474,3 +474,4 @@ function QuickLink({ href, icon, label }: { href: string; icon: string; label: s
         </Link>
     );
 }
+

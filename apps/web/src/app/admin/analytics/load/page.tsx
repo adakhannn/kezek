@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -46,12 +46,12 @@ function formatNumber(n: number) {
 }
 
 const WEEKDAY_LABELS: Record<number, string> = {
-  0: 'Р’СЃ',
-  1: 'РџРЅ',
-  2: 'Р’С‚',
+  0: 'Вс',
+  1: 'Пн',
+  2: 'Вт',
   3: 'РЎСЂ',
-  4: 'Р§С‚',
-  5: 'РџС‚',
+  4: 'Чт',
+  5: 'Пт',
   6: 'РЎР±',
 };
 
@@ -137,7 +137,7 @@ export default function AdminAnalyticsLoadPage() {
         }
         const json: LoadResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РґР°РЅРЅС‹Рµ РїРѕ Р·Р°РіСЂСѓР·РєРµ');
+          throw new Error(json.error || 'Не удалось загрузить данные по загрузке');
         }
         if (!ignore) {
           setData(json.data);
@@ -193,7 +193,7 @@ export default function AdminAnalyticsLoadPage() {
       return { cells: sorted, maxValue: max, axisYLabels: labels };
     }
 
-    // byWeekday: СѓСЃСЂРµРґРЅСЏРµРј РїРѕ РґРЅСЏРј РЅРµРґРµР»Рё
+    // byWeekday: усредняем по дням недели
     const sums = new Map<string, { labelY: string; hour: number; sum: number; countDays: number }>();
     const daysByWeekday = new Map<number, Set<string>>();
 
@@ -224,7 +224,7 @@ export default function AdminAnalyticsLoadPage() {
       });
     });
     const sorted = cellsArr.sort((a, b) => {
-      const order = ['РџРЅ', 'Р’С‚', 'РЎСЂ', 'Р§С‚', 'РџС‚', 'РЎР±', 'Р’СЃ'];
+      const order = ['Пн', 'Вт', 'РЎСЂ', 'Чт', 'Пт', 'РЎР±', 'Вс'];
       const ai = order.indexOf(a.labelY);
       const bi = order.indexOf(b.labelY);
       if (ai !== bi) return ai - bi;
@@ -250,7 +250,7 @@ export default function AdminAnalyticsLoadPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Р—Р°РіСЂСѓР¶Р°РµРј РґР°РЅРЅС‹Рµ РїРѕ Р·Р°РіСЂСѓР·РєРµ...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем данные по загрузке...</span>
           </div>
         </div>
       </div>
@@ -263,7 +263,7 @@ export default function AdminAnalyticsLoadPage() {
         <div className="mx-auto max-w-xl">
           <AlertBanner
             variant="danger"
-            title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё heatmap"
+            title="Ошибка загрузки heatmap"
             message={error}
             action={
               <Button
@@ -276,7 +276,7 @@ export default function AdminAnalyticsLoadPage() {
                   setStartDate((s) => s);
                 }}
               >
-                РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°
+                Попробовать снова
               </Button>
             }
           />
@@ -291,25 +291,25 @@ export default function AdminAnalyticsLoadPage() {
 
   return (
     <div className="space-y-6 py-6">
-      {/* Р¤РёР»СЊС‚СЂС‹ */}
+      {/* Фильтры */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Р¤РёР»СЊС‚СЂС‹</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              РџРµСЂРёРѕРґ Рё С„РёР»РёР°Р» / СЂРµР¶РёРј Р°РіСЂРµРіР°С†РёРё Р·Р°РґР°СЋС‚ СЃСЂРµР· РґР»СЏ РєР°СЂС‚С‹ Р·Р°РіСЂСѓР·РєРё.
+              Период и филиал / режим агрегации задают срез для карты загрузки.
             </p>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            РџРµСЂРёРѕРґ РґР°РЅРЅС‹С…: {data.period.startDate} вЂ” {data.period.endDate}
+            Период данных: {data.period.startDate} — {data.period.endDate}
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {/* РџРµСЂРёРѕРґ */}
+          {/* Период */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              РџРµСЂРёРѕРґ
+              Период
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
@@ -323,19 +323,19 @@ export default function AdminAnalyticsLoadPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' && '7 РґРЅРµР№'}
-                  {p === '30' && '30 РґРЅРµР№'}
-                  {p === '90' && '90 РґРЅРµР№'}
-                  {p === 'custom' && 'РљР°СЃС‚РѕРјРЅС‹Р№'}
+                  {p === '7' && '7 дней'}
+                  {p === '30' && '30 дней'}
+                  {p === '90' && '90 дней'}
+                  {p === 'custom' && 'Кастомный'}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Р”Р°С‚Р° РЅР°С‡Р°Р»Р° */}
+          {/* Дата начала */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р”Р°С‚Р° РЅР°С‡Р°Р»Р°
+              Дата начала
             </label>
             <input
               type="date"
@@ -348,10 +348,10 @@ export default function AdminAnalyticsLoadPage() {
             />
           </div>
 
-          {/* Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ */}
+          {/* Дата окончания */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ
+              Дата окончания
             </label>
             <input
               type="date"
@@ -364,17 +364,17 @@ export default function AdminAnalyticsLoadPage() {
             />
           </div>
 
-          {/* Р¤РёР»РёР°Р» */}
+          {/* Филиал */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р¤РёР»РёР°Р»
+              Филиал
             </label>
             <select
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Р’СЃРµ С„РёР»РёР°Р»С‹</option>
+              <option value="all">Все филиалы</option>
               {branches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
@@ -383,10 +383,10 @@ export default function AdminAnalyticsLoadPage() {
             </select>
           </div>
 
-          {/* Р РµР¶РёРј heatmap */}
+          {/* Режим heatmap */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р РµР¶РёРј
+              Режим
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               <button
@@ -398,7 +398,7 @@ export default function AdminAnalyticsLoadPage() {
                     : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                 }`}
               >
-                РџРѕ РґР°С‚Р°Рј
+                По датам
               </button>
               <button
                 type="button"
@@ -409,7 +409,7 @@ export default function AdminAnalyticsLoadPage() {
                     : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                 }`}
               >
-                РџРѕ РґРЅСЏРј РЅРµРґРµР»Рё
+                По дням недели
               </button>
             </div>
           </div>
@@ -421,10 +421,10 @@ export default function AdminAnalyticsLoadPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              РљР°СЂС‚Р° Р·Р°РіСЂСѓР·РєРё РїРѕ С‡Р°СЃР°Рј
+              Карта загрузки по часам
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Р¦РІРµС‚ СЏС‡РµР№РєРё РїРѕРєР°Р·С‹РІР°РµС‚ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅСѓСЋ Р·Р°РіСЂСѓР·РєСѓ (РєРѕР»РёС‡РµСЃС‚РІРѕ СѓСЃРїРµС€РЅС‹С… Р±СЂРѕРЅРёСЂРѕРІР°РЅРёР№) РІ РІС‹Р±СЂР°РЅРЅРѕРј СЃСЂРµР·Рµ.
+              Цвет ячейки показывает относительную загрузку (количество успешных бронирований) в выбранном срезе.
             </p>
           </div>
         </div>
@@ -432,16 +432,16 @@ export default function AdminAnalyticsLoadPage() {
         {cells.length === 0 ? (
           <EmptyState
             compact
-            title="РќРµС‚ РґР°РЅРЅС‹С… РїРѕ heatmap"
-            description="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ Рё С„РёР»СЊС‚СЂС‹ РЅРµС‚ РґРѕСЃС‚Р°С‚РѕС‡РЅРѕРіРѕ РЅР°Р±РѕСЂР° Р±СЂРѕРЅРµР№ РґР»СЏ РєР°СЂС‚С‹ Р·Р°РіСЂСѓР·РєРё."
+            title="Нет данных по heatmap"
+            description="За выбранный период и фильтры нет достаточного набора броней для карты загрузки."
           />
         ) : (
           <div className="overflow-x-auto">
             <div className="inline-block min-w-full align-middle">
               <div className="grid" style={{ gridTemplateColumns: `80px repeat(24, minmax(24px, 1fr))` }}>
-                {/* Р—Р°РіРѕР»РѕРІРѕРє X */}
+                {/* Заголовок X */}
                 <div className="text-xs text-gray-500 dark:text-gray-400 flex items-end justify-end pr-2">
-                  Р§Р°СЃ
+                  Час
                 </div>
                 {Array.from({ length: 24 }).map((_, h) => (
                   <div
@@ -452,7 +452,7 @@ export default function AdminAnalyticsLoadPage() {
                   </div>
                 ))}
 
-                {/* РЎС‚СЂРѕРєРё РїРѕ Y */}
+                {/* Строки по Y */}
                 {axisYLabels.map((labelY) => (
                   <>
                     <div
@@ -471,8 +471,8 @@ export default function AdminAnalyticsLoadPage() {
                           className={`border-b border-gray-100 dark:border-gray-800 border-l border-gray-50 dark:border-gray-900 text-[10px] text-center cursor-default ${classes}`}
                           title={
                             val > 0
-                              ? `${labelY}, ${h}:00 вЂ” ${formatNumber(Math.round(val))} Р±СЂРѕРЅРµР№`
-                              : `${labelY}, ${h}:00 вЂ” РЅРµС‚ Р±СЂРѕРЅРµР№`
+                              ? `${labelY}, ${h}:00 — ${formatNumber(Math.round(val))} броней`
+                              : `${labelY}, ${h}:00 — нет броней`
                           }
                         >
                           {val > 0 ? Math.round(val) : ''}
@@ -487,12 +487,13 @@ export default function AdminAnalyticsLoadPage() {
         )}
 
         <div className="flex items-center gap-3 text-[11px] text-gray-500 dark:text-gray-400 pt-2">
-          <span>РњРёРЅ. Р·Р°РіСЂСѓР·РєР°</span>
+          <span>Мин. загрузка</span>
           <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-emerald-100 via-emerald-300 to-emerald-600" />
-          <span>РњР°РєСЃ. Р·Р°РіСЂСѓР·РєР°</span>
+          <span>Макс. загрузка</span>
         </div>
       </section>
     </div>
   );
 }
+
 

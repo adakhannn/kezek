@@ -20,7 +20,7 @@ export default function SignUpScreen() {
 
     const handleSignUp = async () => {
         if (!email) {
-            showToast('Р’РІРµРґРёС‚Рµ email', 'error');
+            showToast('Введите email', 'error');
             return;
         }
 
@@ -47,7 +47,7 @@ export default function SignUpScreen() {
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Text style={styles.title}>Регистрация</Text>
-            <Text style={styles.subtitle}>РЎРѕР·РґР°Р№С‚Рµ Р°РєРєР°СѓРЅС‚ РІ Kezek</Text>
+            <Text style={styles.subtitle}>Создайте аккаунт в Kezek</Text>
 
             <Input
                 label="Email"
@@ -69,7 +69,7 @@ export default function SignUpScreen() {
             />
 
             <Button
-                title="РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚? Р’РѕР№С‚Рё"
+                title="Уже есть аккаунт? Войти"
                 onPress={() => navigation.navigate('SignIn')}
                 variant="ghost"
                 style={styles.secondaryButton}
@@ -105,3 +105,4 @@ const styles = StyleSheet.create({
         marginTop: colors.layout.space3,
     },
 });
+

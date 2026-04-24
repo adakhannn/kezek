@@ -116,13 +116,13 @@ export default function BookingStep5Time() {
                     {slots && slots.length > 0 ? (
                         <View style={styles.buttonContainer}>
                             <Button
-                                title="РќР°Р·Р°Рґ"
+                                title="Назад"
                                 onPress={() => navigation.goBack()}
                                 variant="outline"
                                 style={styles.backButton}
                             />
                             <Button
-                                title="Р”Р°Р»СЊС€Рµ"
+                                title="Дальше"
                                 onPress={handleNext}
                                 disabled={!bookingData.selectedSlot}
                                 variant="primary"
@@ -201,3 +201,4 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
+

@@ -50,7 +50,7 @@ export function SellVisitPackageModal({
             const json = await res.json();
             if (!json?.ok || !Array.isArray(json?.data?.plans)) {
                 setPlans([]);
-                setError(t('dashboard.visitPackages.loadError', 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРїРёСЃРѕРє РїР°РєРµС‚РѕРІ'));
+                setError(t('dashboard.visitPackages.loadError', 'Не удалось загрузить список пакетов'));
                 return;
             }
             const activePlans = (json.data.plans as Plan[]).filter((plan) => plan.is_active);
@@ -58,7 +58,7 @@ export function SellVisitPackageModal({
             setSelectedPlanId(activePlans[0]?.id ?? '');
         } catch {
             setPlans([]);
-            setError(t('dashboard.visitPackages.loadError', 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРїРёСЃРѕРє РїР°РєРµС‚РѕРІ'));
+            setError(t('dashboard.visitPackages.loadError', 'Не удалось загрузить список пакетов'));
         } finally {
             setLoading(false);
         }
@@ -73,7 +73,7 @@ export function SellVisitPackageModal({
 
     const handleSubmit = async () => {
         if (!selectedPlanId) {
-            toast.showError(t('dashboard.visitPackages.sell.selectPlan', 'Р’С‹Р±РµСЂРёС‚Рµ РїР°РєРµС‚'));
+            toast.showError(t('dashboard.visitPackages.sell.selectPlan', 'Выберите пакет'));
             return;
         }
         setSelling(true);
@@ -91,11 +91,11 @@ export function SellVisitPackageModal({
                 setSelling(false);
                 return;
             }
-            toast.showSuccess(t('dashboard.visitPackages.sell.success', 'РџР°РєРµС‚ СѓСЃРїРµС€РЅРѕ РїСЂРѕРґР°РЅ'));
+            toast.showSuccess(t('dashboard.visitPackages.sell.success', 'Пакет успешно продан'));
             onSuccess?.();
             onClose();
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'РћС€РёР±РєР°');
+            setError(e instanceof Error ? e.message : 'Ошибка');
             setSelling(false);
         }
     };
@@ -110,13 +110,13 @@ export function SellVisitPackageModal({
         <Dialog
             open={isOpen}
             onClose={onClose}
-            title={t('dashboard.visitPackages.sell.title', 'РџСЂРѕРґР°С‚СЊ РїР°РєРµС‚ РІРёР·РёС‚РѕРІ')}
-            description={`${t('dashboard.visitPackages.sell.clientLabel', 'РљР»РёРµРЅС‚')}: ${clientName}`}
+            title={t('dashboard.visitPackages.sell.title', 'Продать пакет визитов')}
+            description={`${t('dashboard.visitPackages.sell.clientLabel', 'Клиент')}: ${clientName}`}
             size="sm"
             footer={
                 <div className="flex flex-wrap items-center justify-end gap-2">
                     <Button type="button" variant="secondary" onClick={onClose}>
-                        {t('dashboard.visitPackages.sell.cancel', 'РћС‚РјРµРЅР°')}
+                        {t('dashboard.visitPackages.sell.cancel', 'Отмена')}
                     </Button>
                     <Button
                         type="button"
@@ -125,8 +125,8 @@ export function SellVisitPackageModal({
                         isLoading={selling}
                     >
                         {selling
-                            ? t('dashboard.visitPackages.sell.selling', 'РћС„РѕСЂРјР»РµРЅРёРµ...')
-                            : t('dashboard.visitPackages.sell.confirm', 'РџСЂРѕРґР°С‚СЊ РїР°РєРµС‚')}
+                            ? t('dashboard.visitPackages.sell.selling', 'Оформление...')
+                            : t('dashboard.visitPackages.sell.confirm', 'Продать пакет')}
                     </Button>
                 </div>
             }
@@ -134,7 +134,7 @@ export function SellVisitPackageModal({
             <div className="space-y-4">
                 {loading ? (
                     <p className="type-body text-[var(--text-secondary)]">
-                        {t('dashboard.integrations.loading', 'Р—Р°РіСЂСѓР·РєР°...')}
+                        {t('dashboard.integrations.loading', 'Загрузка...')}
                     </p>
                 ) : null}
 
@@ -143,15 +143,15 @@ export function SellVisitPackageModal({
                 {!loading && plans.length === 0 && !error ? (
                     <EmptyState
                         compact
-                        title={t('dashboard.visitPackages.sell.noPlansTitle', 'РќРµС‚ Р°РєС‚РёРІРЅС‹С… РїР°РєРµС‚РѕРІ')}
-                        description={t('dashboard.visitPackages.sell.noPlans', 'РќРµС‚ Р°РєС‚РёРІРЅС‹С… С‚РёРїРѕРІ РїР°РєРµС‚РѕРІ. РЎРѕР·РґР°Р№С‚Рµ РїР°РєРµС‚ РІ СЂР°Р·РґРµР»Рµ В«РџР°РєРµС‚С‹ РІРёР·РёС‚РѕРІВ».')}
+                        title={t('dashboard.visitPackages.sell.noPlansTitle', 'Нет активных пакетов')}
+                        description={t('dashboard.visitPackages.sell.noPlans', 'Нет активных типов пакетов. Создайте пакет в разделе В«Пакеты визитовВ».')}
                     />
                 ) : null}
 
                 {!loading && plans.length > 0 ? (
                     <div className="space-y-3">
                         <label className="type-label block text-[var(--text-primary)]">
-                            {t('dashboard.visitPackages.sell.choosePlan', 'Р’С‹Р±РµСЂРёС‚Рµ С‚РёРї РїР°РєРµС‚Р°')}
+                            {t('dashboard.visitPackages.sell.choosePlan', 'Выберите тип пакета')}
                         </label>
                         <select
                             value={selectedPlanId}
@@ -160,14 +160,14 @@ export function SellVisitPackageModal({
                         >
                             {plans.map((plan) => (
                                 <option key={plan.id} value={plan.id}>
-                                    {plan.name_ru} вЂ” {plan.visit_count} РІРёР·РёС‚РѕРІ, {plan.validity_days} РґРЅ.
-                                    {plan.discount_type === 'percent' ? `, в€’${plan.discount_value}%` : `, ${plan.discount_value} Р·Р° РІРёР·РёС‚`}
+                                    {plan.name_ru} — {plan.visit_count} визитов, {plan.validity_days} дн.
+                                    {plan.discount_type === 'percent' ? `, −${plan.discount_value}%` : `, ${plan.discount_value} за визит`}
                                 </option>
                             ))}
                         </select>
                         {selectedPlan ? (
                             <p className="type-caption text-[var(--text-muted)]">
-                                {selectedPlan.name_ru}: {selectedPlan.visit_count} РІРёР·РёС‚РѕРІ, СЃСЂРѕРє {selectedPlan.validity_days} РґРЅ., СЃРєРёРґРєР° {discountLabel}
+                                {selectedPlan.name_ru}: {selectedPlan.visit_count} визитов, срок {selectedPlan.validity_days} дн., скидка {discountLabel}
                             </p>
                         ) : null}
                     </div>
@@ -176,3 +176,4 @@ export function SellVisitPackageModal({
         </Dialog>
     );
 }
+

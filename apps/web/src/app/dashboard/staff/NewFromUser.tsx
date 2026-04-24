@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -57,11 +57,11 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
 
     async function createStaff() {
         if (!selectedUserId) {
-            toast.showError(t('staff.new.errors.selectUser', 'Р’С‹Р±РµСЂРёС‚Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ'));
+            toast.showError(t('staff.new.errors.selectUser', 'Выберите пользователя'));
             return;
         }
         if (!branchId) {
-            toast.showError(t('staff.new.errors.selectBranch', 'Р’С‹Р±РµСЂРёС‚Рµ С„РёР»РёР°Р»'));
+            toast.showError(t('staff.new.errors.selectBranch', 'Выберите филиал'));
             return;
         }
 
@@ -77,7 +77,7 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
         const j = await res.json();
         if (!j.ok) {
             toast.showError(
-                j.error ?? t('staff.new.errors.createFailed', 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР°'),
+                j.error ?? t('staff.new.errors.createFailed', 'Не удалось создать сотрудника'),
             );
             return;
         }
@@ -106,9 +106,9 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
 
             <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t('staff.new.search.label', 'РџРѕРёСЃРє РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ')}{' '}
+                    {t('staff.new.search.label', 'Поиск пользователя')}{' '}
                     <span className="text-xs text-gray-500">
-                        ({t('staff.new.search.hint', 'email / С‚РµР»РµС„РѕРЅ / Р¤РРћ')})
+                        ({t('staff.new.search.hint', 'email / телефон / ФИО')})
                     </span>
                 </label>
                 <div className="flex flex-col gap-2 sm:flex-row">
@@ -118,7 +118,7 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                         onChange={(e) => setQ(e.target.value)}
                         placeholder={t(
                             'staff.new.search.placeholder',
-                            'РќР°РїСЂРёРјРµСЂ: +996..., example@mail.com, РРІР°РЅ',
+                            'Например: +996..., example@mail.com, Иван',
                         )}
                     />
                     <button
@@ -127,8 +127,8 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                         disabled={loading}
                     >
                         {loading
-                            ? t('staff.new.search.searching', 'РС‰РµРјвЂ¦')
-                            : t('staff.new.search.button', 'РќР°Р№С‚Рё')}
+                            ? t('staff.new.search.searching', 'Ищем…')
+                            : t('staff.new.search.button', 'Найти')}
                     </button>
                 </div>
 
@@ -140,16 +140,16 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                                     {t('staff.new.table.number', '#')}
                                 </th>
                                 <th className="px-3 py-2">
-                                    {t('staff.new.table.name', 'РРјСЏ')}
+                                    {t('staff.new.table.name', 'Имя')}
                                 </th>
                                 <th className="px-3 py-2">
                                     {t('staff.new.table.email', 'Email')}
                                 </th>
                                 <th className="px-3 py-2">
-                                    {t('staff.new.table.phone', 'РўРµР»РµС„РѕРЅ')}
+                                    {t('staff.new.table.phone', 'Телефон')}
                                 </th>
                                 <th className="w-24 px-3 py-2 text-center">
-                                    {t('staff.new.table.select', 'Р’С‹Р±СЂР°С‚СЊ')}
+                                    {t('staff.new.table.select', 'Выбрать')}
                                 </th>
                             </tr>
                         </thead>
@@ -166,10 +166,10 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                                         {u.full_name}
                                     </td>
                                     <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">
-                                        {u.email ?? 'вЂ”'}
+                                        {u.email ?? '—'}
                                     </td>
                                     <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">
-                                        {u.phone ?? 'вЂ”'}
+                                        {u.phone ?? '—'}
                                     </td>
                                     <td className="px-3 py-2 text-center">
                                         <input
@@ -191,11 +191,11 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                                         {hasSearched
                                             ? t(
                                                   'staff.new.table.empty.noResults',
-                                                  'РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РёР·РјРµРЅРёС‚СЊ Р·Р°РїСЂРѕСЃ.',
+                                                  'Ничего не найдено. Попробуйте изменить запрос.',
                                               )
                                             : t(
                                                   'staff.new.table.empty.enterQuery',
-                                                  'Р’РІРµРґРёС‚Рµ Р·Р°РїСЂРѕСЃ Рё РЅР°Р¶РјРёС‚Рµ В«РќР°Р№С‚РёВ», С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№.',
+                                                  'Введите запрос и нажмите «Найти», чтобы увидеть пользователей.',
                                               )}
                                     </td>
                                 </tr>
@@ -208,7 +208,7 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
             <div className="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 sm:grid-cols-3 dark:border-gray-800 dark:bg-gray-900">
                 <div>
                     <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {t('staff.new.branch.label', 'Р¤РёР»РёР°Р»')}
+                        {t('staff.new.branch.label', 'Филиал')}
                     </label>
                     <select
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -231,7 +231,7 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600"
                     />
                     <span>
-                        {t('staff.new.active.label', 'РђРєС‚РёРІРµРЅ (РґРѕСЃС‚СѓРїРµРЅ РґР»СЏ Р·Р°РїРёСЃРё)')}
+                        {t('staff.new.active.label', 'Активен (доступен для записи)')}
                     </span>
                 </label>
                 <div className="flex items-end">
@@ -239,7 +239,7 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
                         onClick={createStaff}
                         className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {t('staff.new.create.button', 'Р”РѕР±Р°РІРёС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР°')}
+                        {t('staff.new.create.button', 'Добавить сотрудника')}
                     </button>
                 </div>
             </div>
@@ -247,5 +247,6 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
         </div>
     );
 }
+
 
 

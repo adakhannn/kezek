@@ -1,4 +1,4 @@
-jest.mock('@/lib/dbHelpers', () => ({
+﻿jest.mock('@/lib/dbHelpers', () => ({
     checkResourceBelongsToBiz: jest.fn(),
 }));
 
@@ -32,7 +32,7 @@ describe('branchDeleteService', () => {
     test('returns validation when branch does not belong to business', async () => {
         (checkResourceBelongsToBiz as jest.Mock).mockResolvedValueOnce({
             data: null,
-            error: 'Р¤РёР»РёР°Р» РЅРµ РїСЂРёРЅР°РґР»РµР¶РёС‚ СЌС‚РѕРјСѓ Р±РёР·РЅРµСЃСѓ',
+            error: 'Филиал не принадлежит этому бизнесу',
         });
 
         const result = await runBranchDelete({
@@ -45,7 +45,7 @@ describe('branchDeleteService', () => {
             ok: false,
             statusCode: 400,
             errorType: 'validation',
-            message: 'Р¤РёР»РёР°Р» РЅРµ РїСЂРёРЅР°РґР»РµР¶РёС‚ СЌС‚РѕРјСѓ Р±РёР·РЅРµСЃСѓ',
+            message: 'Филиал не принадлежит этому бизнесу',
         });
     });
 
@@ -74,3 +74,4 @@ describe('branchDeleteService', () => {
         }
     });
 });
+

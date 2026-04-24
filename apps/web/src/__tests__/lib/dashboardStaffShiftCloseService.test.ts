@@ -107,7 +107,8 @@ describe('dashboardStaffShiftCloseService', () => {
             ok: false,
             statusCode: 403,
             errorType: 'forbidden',
-            message: 'РЎРѕС‚СЂСѓРґРЅРёРє РЅРµ РїСЂРёРЅР°РґР»РµР¶РёС‚ СЌС‚РѕРјСѓ Р±РёР·РЅРµСЃСѓ',
+            message: 'Сотрудник не принадлежит этому бизнесу',
         });
     });
 });
+

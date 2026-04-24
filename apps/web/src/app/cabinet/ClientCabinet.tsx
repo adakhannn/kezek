@@ -71,15 +71,15 @@ export default function ClientCabinet({
         if (tab === 'upcoming') {
             const count = upcoming.length;
             if (count === 1) {
-                return t('cabinet.bookings.subtitle.upcoming.one', 'Р Р€ Р Р†Р В°РЎРѓ 1 Р С—РЎР‚Р ВµР Т‘РЎРѓРЎвЂљР С•РЎРЏРЎвЂ°Р В°РЎРЏ Р В·Р В°Р С—Р С‘РЎРѓРЎРЉ');
+                return t('cabinet.bookings.subtitle.upcoming.one', 'Р Р€ РІРВ°РЎРѓ 1 РїСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РВ°РЎРЏ РВ·РВ°пись');
             }
             if (count < 5) {
-                return t('cabinet.bookings.subtitle.upcoming.few', 'Р Р€ Р Р†Р В°РЎРѓ {count} Р С—РЎР‚Р ВµР Т‘РЎРѓРЎвЂљР С•РЎРЏРЎвЂ°Р С‘Р Вµ Р В·Р В°Р С—Р С‘РЎРѓР С‘').replace(
+                return t('cabinet.bookings.subtitle.upcoming.few', 'Р Р€ РІРВ°РЎРѓ {count} РїСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёРВµ РВ·РВ°писи').replace(
                     '{count}',
                     String(count),
                 );
             }
-            return t('cabinet.bookings.subtitle.upcoming.many', 'Р Р€ Р Р†Р В°РЎРѓ {count} Р С—РЎР‚Р ВµР Т‘РЎРѓРЎвЂљР С•РЎРЏРЎвЂ°Р С‘РЎвЂ¦ Р В·Р В°Р С—Р С‘РЎРѓР ВµР в„–').replace(
+            return t('cabinet.bookings.subtitle.upcoming.many', 'Р Р€ РІРВ°РЎРѓ {count} РїСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёСвЂ¦ РВ·РВ°Р С—Р С‘РЎРѓР ВµРв„–').replace(
                 '{count}',
                 String(count),
             );
@@ -87,15 +87,15 @@ export default function ClientCabinet({
 
         const count = past.length;
         if (count === 1) {
-            return t('cabinet.bookings.subtitle.past.one', 'Р Р€ Р Р†Р В°РЎРѓ 1 Р С—РЎР‚Р С•РЎв‚¬Р ВµР Т‘РЎв‚¬Р В°РЎРЏ Р В·Р В°Р С—Р С‘РЎРѓРЎРЉ');
+            return t('cabinet.bookings.subtitle.past.one', 'Р Р€ РІРВ°РЎРѓ 1 Р С—РЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РВ°РЎРЏ РВ·РВ°пись');
         }
         if (count < 5) {
-            return t('cabinet.bookings.subtitle.past.few', 'Р Р€ Р Р†Р В°РЎРѓ {count} Р С—РЎР‚Р С•РЎв‚¬Р ВµР Т‘РЎв‚¬Р С‘Р Вµ Р В·Р В°Р С—Р С‘РЎРѓР С‘').replace(
+            return t('cabinet.bookings.subtitle.past.few', 'Р Р€ РІРВ°РЎРѓ {count} Р С—РЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёРВµ РВ·РВ°писи').replace(
                 '{count}',
                 String(count),
             );
         }
-        return t('cabinet.bookings.subtitle.past.many', 'Р Р€ Р Р†Р В°РЎРѓ {count} Р С—РЎР‚Р С•РЎв‚¬Р ВµР Т‘РЎв‚¬Р С‘РЎвЂ¦ Р В·Р В°Р С—Р С‘РЎРѓР ВµР в„–').replace(
+        return t('cabinet.bookings.subtitle.past.many', 'Р Р€ РІРВ°РЎРѓ {count} Р С—РЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёСвЂ¦ РВ·РВ°Р С—Р С‘РЎРѓР ВµРв„–').replace(
             '{count}',
             String(count),
         );
@@ -106,7 +106,7 @@ export default function ClientCabinet({
             <MyVisitPackagesBlock />
 
             <PageHeader
-                title={t('cabinet.bookings.title', 'Р СљР С•Р С‘ Р В·Р В°Р С—Р С‘РЎРѓР С‘')}
+                title={t('cabinet.bookings.title', 'Мои РВ·РВ°писи')}
                 description={getSubtitle()}
                 actions={
                     <div className="w-full sm:w-[24rem]">
@@ -116,11 +116,11 @@ export default function ClientCabinet({
                             items={[
                                 {
                                     key: 'upcoming',
-                                    label: t('cabinet.bookings.tabs.upcoming', 'Р СџРЎР‚Р ВµР Т‘РЎРѓРЎвЂљР С•РЎРЏРЎвЂ°Р С‘Р Вµ'),
+                                    label: t('cabinet.bookings.tabs.upcoming', 'РџСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёРВµ'),
                                 },
                                 {
                                     key: 'past',
-                                    label: t('cabinet.bookings.tabs.past', 'Р СџРЎР‚Р С•РЎв‚¬Р ВµР Т‘РЎв‚¬Р С‘Р Вµ'),
+                                    label: t('cabinet.bookings.tabs.past', 'Р СџРЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёРВµ'),
                                 },
                             ]}
                             stretch
@@ -138,11 +138,11 @@ export default function ClientCabinet({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             }
-                            title={t('cabinet.bookings.empty.upcoming.title', 'Р СњР ВµРЎвЂљ Р С—РЎР‚Р ВµР Т‘РЎРѓРЎвЂљР С•РЎРЏРЎвЂ°Р С‘РЎвЂ¦ Р В·Р В°Р С—Р С‘РЎРѓР ВµР в„–')}
-                            description={t('cabinet.bookings.empty.upcoming.desc', 'Р вЂ”Р В°Р С—Р С‘РЎв‚¬Р С‘РЎвЂљР ВµРЎРѓРЎРЉ Р Р…Р В° РЎС“РЎРѓР В»РЎС“Р С–РЎС“, РЎвЂЎРЎвЂљР С•Р В±РЎвЂ№ РЎС“Р Р†Р С‘Р Т‘Р ВµРЎвЂљРЎРЉ Р ВµРЎвЂ Р В·Р Т‘Р ВµРЎРѓРЎРЉ')}
+                            title={t('cabinet.bookings.empty.upcoming.title', 'РќРВµт РїСЂРВµРТ‘СЃС‚РѕСЏСвЂ°РёСвЂ¦ РВ·РВ°Р С—Р С‘РЎРѓР ВµРв„–')}
+                            description={t('cabinet.bookings.empty.upcoming.desc', 'РвЂ”РВ°РїРёСв‚¬РёС‚РВµСЃСЊ РЅРВ° СѓСЃРВ»угу, чтРѕРВ±СвЂ№ РЎС“Р Р†Р С‘Р Т‘РВµтСЊ РВµСвЂ РВ·РТ‘РВµСЃСЊ')}
                             action={
                                 <Link href="/" className={buttonStyles({ variant: 'primary', size: 'lg' })}>
-                                    {t('cabinet.bookings.empty.upcoming.action', 'Р СњР В°Р в„–РЎвЂљР С‘ РЎС“РЎРѓР В»РЎС“Р С–РЎС“')}
+                                    {t('cabinet.bookings.empty.upcoming.action', 'РќРВ°Рв„–тРё СѓСЃРВ»угу')}
                                 </Link>
                             }
                         />
@@ -207,8 +207,8 @@ export default function ClientCabinet({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             }
-                            title={t('cabinet.bookings.empty.past.title', 'Р СњР ВµРЎвЂљ Р С—РЎР‚Р С•РЎв‚¬Р ВµР Т‘РЎв‚¬Р С‘РЎвЂ¦ Р В·Р В°Р С—Р С‘РЎРѓР ВµР в„–')}
-                            description={t('cabinet.bookings.empty.past.desc', 'Р вЂ”Р Т‘Р ВµРЎРѓРЎРЉ Р В±РЎС“Р Т‘РЎС“РЎвЂљ Р С•РЎвЂљР С•Р В±РЎР‚Р В°Р В¶Р В°РЎвЂљРЎРЉРЎРѓРЎРЏ Р Р†Р В°РЎв‚¬Р С‘ Р В·Р В°Р Р†Р ВµРЎР‚РЎв‚¬РЎвЂР Р…Р Р…РЎвЂ№Р Вµ Р В·Р В°Р С—Р С‘РЎРѓР С‘')}
+                            title={t('cabinet.bookings.empty.past.title', 'РќРВµт Р С—РЎР‚Р С•РЎв‚¬РВµРТ‘Св‚¬РёСвЂ¦ РВ·РВ°Р С—Р С‘РЎРѓР ВµРв„–')}
+                            description={t('cabinet.bookings.empty.past.desc', 'РвЂ”РТ‘РВµСЃСЊ РВ±СѓРТ‘СѓС‚ РѕС‚РѕРВ±СЂРВ°РВ¶РВ°С‚РЎРЉРЎРѓРЎРЏ РІРВ°Св‚¬Р С‘ РВ·РВ°РІРВµСЂСв‚¬СвЂРЅРЅСвЂ№РВµ РВ·РВ°писи')}
                         />
                     ) : (
                         past.map((b) => {
@@ -262,3 +262,4 @@ export default function ClientCabinet({
         </div>
     );
 }
+

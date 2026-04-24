@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -30,7 +30,7 @@ type PeriodPreset = '7' | '30' | '90' | 'custom';
 type SourceFilter = 'all' | 'web' | 'mobile';
 
 function formatPercent(value: number | null | undefined) {
-  if (value == null) return 'вЂ”';
+  if (value == null) return '—';
   return `${value.toFixed(2)}%`;
 }
 
@@ -79,7 +79,7 @@ export default function AdminAnalyticsFunnelPage() {
         }
         const json: FunnelResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р°РЅР°Р»РёС‚РёРєСѓ РІРѕСЂРѕРЅРєРё');
+          throw new Error(json.error || 'Не удалось загрузить аналитику воронки');
         }
         if (!ignore) {
           setData(json.data);
@@ -131,7 +131,7 @@ export default function AdminAnalyticsFunnelPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Р—Р°РіСЂСѓР¶Р°РµРј Р°РЅР°Р»РёС‚РёРєСѓ РІРѕСЂРѕРЅРєРё...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем аналитику воронки...</span>
           </div>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function AdminAnalyticsFunnelPage() {
         <div className="mx-auto max-w-xl">
           <AlertBanner
             variant="danger"
-            title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РІРѕСЂРѕРЅРєРё"
+            title="Ошибка загрузки воронки"
             message={error}
             action={
               <Button
@@ -157,7 +157,7 @@ export default function AdminAnalyticsFunnelPage() {
                   setStartDate((s) => s);
                 }}
               >
-                РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°
+                Попробовать снова
               </Button>
             }
           />
@@ -172,25 +172,25 @@ export default function AdminAnalyticsFunnelPage() {
 
   return (
     <div className="space-y-6 py-6">
-      {/* Р¤РёР»СЊС‚СЂС‹ */}
+      {/* Фильтры */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Р¤РёР»СЊС‚СЂС‹</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              РџРµСЂРёРѕРґ Рё РєР°РЅР°Р» Р·Р°РґР°СЋС‚ СЃСЂРµР· РґР»СЏ СЃРѕР±С‹С‚РёР№ РІРѕСЂРѕРЅРєРё.
+              Период и канал задают срез для событий воронки.
             </p>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            РџРµСЂРёРѕРґ РґР°РЅРЅС‹С…: {data.period.startDate} вЂ” {data.period.endDate}
+            Период данных: {data.period.startDate} — {data.period.endDate}
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {/* РџРµСЂРёРѕРґ */}
+          {/* Период */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              РџРµСЂРёРѕРґ
+              Период
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
@@ -204,19 +204,19 @@ export default function AdminAnalyticsFunnelPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' && '7 РґРЅРµР№'}
-                  {p === '30' && '30 РґРЅРµР№'}
-                  {p === '90' && '90 РґРЅРµР№'}
-                  {p === 'custom' && 'РљР°СЃС‚РѕРјРЅС‹Р№'}
+                  {p === '7' && '7 дней'}
+                  {p === '30' && '30 дней'}
+                  {p === '90' && '90 дней'}
+                  {p === 'custom' && 'Кастомный'}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Р”Р°С‚С‹ */}
+          {/* Даты */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р”Р°С‚Р° РЅР°С‡Р°Р»Р°
+              Дата начала
             </label>
             <input
               type="date"
@@ -231,7 +231,7 @@ export default function AdminAnalyticsFunnelPage() {
 
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ
+              Дата окончания
             </label>
             <input
               type="date"
@@ -244,17 +244,17 @@ export default function AdminAnalyticsFunnelPage() {
             />
           </div>
 
-          {/* РљР°РЅР°Р» */}
+          {/* Канал */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              РљР°РЅР°Р»
+              Канал
             </label>
             <select
               value={source}
               onChange={(e) => setSource(e.target.value as SourceFilter)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Р’СЃРµ (web + mobile)</option>
+              <option value="all">Все (web + mobile)</option>
               <option value="web">Web</option>
               <option value="mobile">Mobile</option>
             </select>
@@ -262,39 +262,39 @@ export default function AdminAnalyticsFunnelPage() {
         </div>
       </section>
 
-      {/* РЎРІРѕРґРєР° РїРѕ РІРѕСЂРѕРЅРєРµ */}
+      {/* Сводка по воронке */}
       <section className="grid gap-4 md:grid-cols-3">
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            РћР±С‰Р°СЏ РєРѕРЅРІРµСЂСЃРёСЏ РІРѕСЂРѕРЅРєРё
+            Общая конверсия воронки
           </p>
           <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
             {formatPercent(data.overallConversion)}
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            РћС‚ РїРµСЂРІРѕРіРѕ С€Р°РіР° (РїСЂРѕСЃРјРѕС‚СЂС‹ РіР»Р°РІРЅРѕР№) РґРѕ СѓСЃРїРµС€РЅРѕР№ Р±СЂРѕРЅРё.
+            От первого шага (просмотры главной) до успешной брони.
           </p>
         </div>
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm col-span-2">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            РЁР°РіРё РІРѕСЂРѕРЅРєРё
+            Шаги воронки
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Р”Р»СЏ РєР°Р¶РґРѕРіРѕ С€Р°РіР° РїРѕРєР°Р·Р°РЅРѕ РєРѕР»РёС‡РµСЃС‚РІРѕ СЃРµСЃСЃРёР№ Рё РєРѕРЅРІРµСЂСЃРёСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РїСЂРµРґС‹РґСѓС‰РµРіРѕ С€Р°РіР°.
+            Для каждого шага показано количество сессий и конверсия относительно предыдущего шага.
           </p>
         </div>
       </section>
 
-      {/* Р’РёР·СѓР°Р»РёР·Р°С†РёСЏ РІРѕСЂРѕРЅРєРё */}
+      {/* Визуализация воронки */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Р’РѕСЂРѕРЅРєР° С€Р°РіРѕРІ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ
+          Воронка шагов бронирования
         </h3>
         {data.steps.length === 0 ? (
           <EmptyState
             compact
-            title="РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РІРѕСЂРѕРЅРєРµ"
-            description="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ Рё СЃСЂРµР· РЅРµС‚ СЃРѕР±С‹С‚РёР№, РєРѕС‚РѕСЂС‹Рµ РјРѕР¶РЅРѕ РїРѕРєР°Р·Р°С‚СЊ РІ РѕС‚С‡РµС‚Рµ."
+            title="Нет данных по воронке"
+            description="За выбранный период и срез нет событий, которые можно показать в отчете."
           />
         ) : (
           <div className="space-y-4">
@@ -302,11 +302,11 @@ export default function AdminAnalyticsFunnelPage() {
               const widthPercent = maxSessions > 0 ? Math.max((step.sessions / maxSessions) * 100, 5) : 0;
               const tooltip = [
                 `${step.label}`,
-                `РЎРµСЃСЃРёР№ РЅР° С€Р°РіРµ: ${step.sessions}`,
+                `Сессий на шаге: ${step.sessions}`,
                 index === 0
-                  ? `РљРѕРЅРІРµСЂСЃРёСЏ РѕС‚ РЅР°С‡Р°Р»Р° РІРѕСЂРѕРЅРєРё: ${formatPercent(data.overallConversion)}`
-                  : `РљРѕРЅРІРµСЂСЃРёСЏ РѕС‚ РїСЂРµРґС‹РґСѓС‰РµРіРѕ С€Р°РіР°: ${formatPercent(step.conversionFromPrev)}`,
-              ].join(' вЂў ');
+                  ? `Конверсия от начала воронки: ${formatPercent(data.overallConversion)}`
+                  : `Конверсия от предыдущего шага: ${formatPercent(step.conversionFromPrev)}`,
+              ].join(' • ');
 
               return (
                 <div
@@ -322,21 +322,21 @@ export default function AdminAnalyticsFunnelPage() {
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{step.label}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          РЎРµСЃСЃРёР№: <span className="font-semibold">{step.sessions}</span>
+                          Сессий: <span className="font-semibold">{step.sessions}</span>
                         </p>
                       </div>
                     </div>
                     <div className="text-right text-xs text-gray-500 dark:text-gray-400">
                       {index === 0 ? (
                         <>
-                          <p>РЎС‚Р°СЂС‚ РІРѕСЂРѕРЅРєРё</p>
+                          <p>Старт воронки</p>
                           <p className="font-semibold text-emerald-600 dark:text-emerald-400">
                             {formatPercent(data.overallConversion)}
                           </p>
                         </>
                       ) : (
                         <>
-                          <p>РљРѕРЅРІРµСЂСЃРёСЏ РѕС‚ РїСЂРѕС€Р». С€Р°РіР°</p>
+                          <p>Конверсия от прошл. шага</p>
                           <p className="font-semibold text-indigo-600 dark:text-indigo-400">
                             {formatPercent(step.conversionFromPrev)}
                           </p>
@@ -351,7 +351,7 @@ export default function AdminAnalyticsFunnelPage() {
                     />
                   </div>
                   <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                    РќР°РІРµРґРёС‚Рµ РєСѓСЂСЃРѕСЂ, С‡С‚РѕР±С‹ СѓРІРёРґРµС‚СЊ РїРѕРґСЂРѕР±РЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ.
+                    Наведите курсор, чтобы увидеть подробные значения.
                   </div>
                 </div>
               );
@@ -362,4 +362,5 @@ export default function AdminAnalyticsFunnelPage() {
     </div>
   );
 }
+
 

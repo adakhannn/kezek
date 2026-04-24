@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -35,7 +35,7 @@ export function MobileHeaderMenu() {
                 type="button"
                 onClick={() => setIsOpen((prev) => !prev)}
                 className="motion-interactive inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] shadow-[var(--shadow-xs)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
-                aria-label={t('header.menu', 'РњРµРЅСЋ')}
+                aria-label={t('header.menu', 'Меню')}
                 aria-expanded={isOpen}
             >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@ export function MobileHeaderMenu() {
                 <>
                     <button
                         type="button"
-                        aria-label={t('common.close', 'Р—Р°РєСЂС‹С‚СЊ')}
+                        aria-label={t('common.close', 'Закрыть')}
                         className="fixed inset-0 z-[105] bg-black/20 backdrop-blur-[2px] md:hidden"
                         onClick={() => setIsOpen(false)}
                     />
@@ -60,21 +60,21 @@ export function MobileHeaderMenu() {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <p className="type-caption px-1 text-[var(--text-muted)]">
-                                    {t('header.language', 'РЇР·С‹Рє')}
+                                    {t('header.language', 'Язык')}
                                 </p>
                                 <LanguageSwitcher onLanguageChange={() => setIsOpen(false)} />
                             </div>
 
                             <div className="space-y-2">
                                 <p className="type-caption px-1 text-[var(--text-muted)]">
-                                    {t('header.roleBusiness.sections.cabinets', 'РљР°Р±РёРЅРµС‚С‹')}
+                                    {t('header.roleBusiness.sections.cabinets', 'Кабинеты')}
                                 </p>
                                 <RoleAndBusinessSwitcher mode="mobile" onNavigate={() => setIsOpen(false)} />
                             </div>
 
                             <div className="space-y-2">
                                 <p className="type-caption px-1 text-[var(--text-muted)]">
-                                    {t('header.account', 'РђРєРєР°СѓРЅС‚')}
+                                    {t('header.account', 'Аккаунт')}
                                 </p>
                                 <MobileAuthStatus onAction={() => setIsOpen(false)} />
                             </div>
@@ -116,7 +116,7 @@ function MobileAuthStatus({ onAction }: { onAction: () => void }) {
                 profile?.full_name?.trim() ||
                 authUser.email ||
                 (authUser.phone as string | undefined) ||
-                'Р°РєРєР°СѓРЅС‚';
+                'аккаунт';
             setLabel(userName);
 
             const { data: staff } = await supabase
@@ -162,3 +162,4 @@ function MobileAuthStatus({ onAction }: { onAction: () => void }) {
         </div>
     );
 }
+

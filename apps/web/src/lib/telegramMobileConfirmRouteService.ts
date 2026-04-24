@@ -109,7 +109,7 @@ export async function runTelegramMobileConfirmRoute({
                 ok: false,
                 status: 409,
                 error: 'conflict',
-                message: 'РџРѕРїС‹С‚РєР° РІС…РѕРґР° РїРѕРґС‚РІРµСЂР¶РґР°РµС‚СЃСЏ РёР· РґСЂСѓРіРѕРіРѕ Telegram Р°РєРєР°СѓРЅС‚Р°',
+                message: 'Попытка входа подтверждается из другого Telegram аккаунта',
             };
         }
 
@@ -128,7 +128,7 @@ export async function runTelegramMobileConfirmRoute({
             ok: false,
             status: 410,
             error: 'conflict',
-            message: 'РџРѕРїС‹С‚РєР° РІС…РѕРґР° РёСЃС‚РµРєР»Р°',
+            message: 'Попытка входа истекла',
         };
     }
 
@@ -267,3 +267,4 @@ export async function runTelegramMobileConfirmRoute({
         },
     };
 }
+

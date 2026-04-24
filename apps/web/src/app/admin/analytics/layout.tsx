@@ -1,14 +1,14 @@
-import { Suspense } from 'react';
+﻿import { Suspense } from 'react';
 
 import { getT } from '@/app/_components/i18n/server';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Tabs } from '@/components/ui/Tabs';
 
 const tabs = [
-    { href: '/admin/analytics/overview', key: 'overview', labelFallback: 'РћР±Р·РѕСЂ' },
-    { href: '/admin/analytics/funnel', key: 'funnel', labelFallback: 'Р’РѕСЂРѕРЅРєР°' },
-    { href: '/admin/analytics/load', key: 'load', labelFallback: 'Р—Р°РіСЂСѓР·РєР°' },
-    { href: '/admin/analytics/promotions', key: 'promotions', labelFallback: 'РџСЂРѕРјРѕ' },
+    { href: '/admin/analytics/overview', key: 'overview', labelFallback: 'Обзор' },
+    { href: '/admin/analytics/funnel', key: 'funnel', labelFallback: 'Воронка' },
+    { href: '/admin/analytics/load', key: 'load', labelFallback: 'Загрузка' },
+    { href: '/admin/analytics/promotions', key: 'promotions', labelFallback: 'Промо' },
 ] as const;
 
 export const dynamic = 'force-dynamic';
@@ -20,10 +20,10 @@ export default async function AnalyticsLayout({ children }: { children: React.Re
         <main className="min-h-screen">
             <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
                 <PageHeader
-                    title={t('admin.analytics.title', 'РђРЅР°Р»РёС‚РёРєР° Р±РёР·РЅРµСЃР°')}
+                    title={t('admin.analytics.title', 'Аналитика бизнеса')}
                     description={t(
                         'admin.analytics.subtitle',
-                        'РљРѕРЅРІРµСЂСЃРёСЏ, Р·Р°РіСЂСѓР·РєР° РїРѕ С‡Р°СЃР°Рј Рё СЌС„С„РµРєС‚РёРІРЅРѕСЃС‚СЊ РїСЂРѕРјРѕ РґР»СЏ СѓРїСЂР°РІР»РµРЅС‡РµСЃРєРёС… СЂРµС€РµРЅРёР№.',
+                        'Конверсия, загрузка по часам и эффективность промо для управленческих решений.',
                     )}
                 />
 
@@ -45,3 +45,4 @@ export default async function AnalyticsLayout({ children }: { children: React.Re
         </main>
     );
 }
+

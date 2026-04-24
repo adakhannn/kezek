@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
 import { AlertBanner } from '@/components/ui/AlertBanner';
@@ -31,10 +31,10 @@ function SignInBenefits({
             <div className="space-y-6">
                 <div className="space-y-3">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {t('auth.benefits.title', 'Р‘С‹СЃС‚СЂРѕ Рё Р±РµР·РѕРїР°СЃРЅРѕ')}
+                        {t('auth.benefits.title', 'Быстро и безопасно')}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('auth.benefits.subtitle', 'Р’РѕР№РґРёС‚Рµ Р±РµР· РїР°СЂРѕР»СЏ вЂ” РёСЃРїРѕР»СЊР·СѓР№С‚Рµ eвЂ‘mail, Google РёР»Рё Telegram')}
+                        {t('auth.benefits.subtitle', 'Войдите без пароля — используйте e‑mail, Google или Telegram')}
                     </p>
                 </div>
 
@@ -47,10 +47,10 @@ function SignInBenefits({
                         </div>
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                {t('auth.benefits.fast.title', 'РњРіРЅРѕРІРµРЅРЅС‹Р№ РІС…РѕРґ')}
+                                {t('auth.benefits.fast.title', 'Мгновенный вход')}
                             </h3>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
-                                {t('auth.benefits.fast.desc', 'Р‘РµР· СЂРµРіРёСЃС‚СЂР°С†РёРё Рё РїР°СЂРѕР»РµР№ вЂ” РІС‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± Рё РІРѕР№РґРёС‚Рµ Р·Р° СЃРµРєСѓРЅРґС‹')}
+                                {t('auth.benefits.fast.desc', 'Без регистрации и паролей — выберите способ и войдите за секунды')}
                             </p>
                         </div>
                     </div>
@@ -63,10 +63,10 @@ function SignInBenefits({
                         </div>
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                {t('auth.benefits.secure.title', 'Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ')}
+                                {t('auth.benefits.secure.title', 'Безопасность')}
                             </h3>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
-                                {t('auth.benefits.secure.desc', 'Р’СЃРµ РґР°РЅРЅС‹Рµ Р·Р°С‰РёС‰РµРЅС‹, Р°РєРєР°СѓРЅС‚ СЃРѕР·РґР°С‘С‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РїСЂРё РїРµСЂРІРѕРј РІС…РѕРґРµ')}
+                                {t('auth.benefits.secure.desc', 'Все данные защищены, аккаунт создаётся автоматически при первом входе')}
                             </p>
                         </div>
                     </div>
@@ -79,10 +79,10 @@ function SignInBenefits({
                         </div>
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                {t('auth.benefits.easy.title', 'РџСЂРѕСЃС‚РѕС‚Р°')}
+                                {t('auth.benefits.easy.title', 'Простота')}
                             </h3>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
-                                {t('auth.benefits.easy.desc', 'РћРґРёРЅ РєР»РёРє вЂ” Рё РІС‹ СѓР¶Рµ РІРЅСѓС‚СЂРё. РќРёРєР°РєРёС… СЃР»РѕР¶РЅС‹С… С„РѕСЂРј Рё РґР»РёРЅРЅС‹С… Р°РЅРєРµС‚')}
+                                {t('auth.benefits.easy.desc', 'Один клик — и вы уже внутри. Никаких сложных форм и длинных анкет')}
                             </p>
                         </div>
                     </div>
@@ -123,10 +123,10 @@ export function SignInPageView({
                                     {t('auth.title', 'Kezek')}
                                 </h1>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
-                                    {t('auth.subtitle', 'Р’РѕР№РґРёС‚Рµ РёР»Рё СЃРѕР·РґР°Р№С‚Рµ Р°РєРєР°СѓРЅС‚ Р·Р° РїР°СЂСѓ РєР»РёРєРѕРІ вЂ” Р±РµР· РїР°СЂРѕР»СЏ Рё СЃР»РѕР¶РЅС‹С… С„РѕСЂРј')}
+                                    {t('auth.subtitle', 'Войдите или создайте аккаунт за пару кликов — без пароля и сложных форм')}
                                 </p>
                                 <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                                    {t('auth.stepsHint', '1) Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± РІС…РѕРґР° В· 2) РџРѕРґС‚РІРµСЂРґРёС‚Рµ eвЂ‘mail РёР»Рё Р°РєРєР°СѓРЅС‚ В· 3) РњС‹ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё СЃРѕР·РґР°РґРёРј РїСЂРѕС„РёР»СЊ')}
+                                    {t('auth.stepsHint', '1) Выберите способ входа · 2) Подтвердите e‑mail или аккаунт · 3) Мы автоматически создадим профиль')}
                                 </p>
                             </div>
 
@@ -134,17 +134,17 @@ export function SignInPageView({
                                 <div className="space-y-1">
                                     <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
                                         <span className="inline-flex h-1 w-1 rounded-full bg-indigo-500" />
-                                        <span>{t('auth.variantEmail', 'Р’Р°СЂРёР°РЅС‚ 1 вЂ” РІС…РѕРґ РїРѕ eвЂ‘mail')}</span>
+                                        <span>{t('auth.variantEmail', 'Вариант 1 — вход по e‑mail')}</span>
                                     </div>
                                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                                        {t('auth.variantEmailHint', 'РЈРєР°Р¶РёС‚Рµ РїРѕС‡С‚Сѓ, РјС‹ РїСЂРёС€Р»С‘Рј РЅР° РЅРµС‘ Р±РµР·РѕРїР°СЃРЅСѓСЋ СЃСЃС‹Р»РєСѓ/РєРѕРґ РґР»СЏ РІС…РѕРґР°. РџР°СЂРѕР»СЊ РїСЂРёРґСѓРјС‹РІР°С‚СЊ РЅРµ РЅСѓР¶РЅРѕ.')}
+                                        {t('auth.variantEmailHint', 'Укажите почту, мы пришлём на неё безопасную ссылку/код для входа. Пароль придумывать не нужно.')}
                                     </p>
                                 </div>
 
                                 {mode === 'phone' ? (
                                     <div>
                                         <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300 sm:text-sm">
-                                            {t('auth.phone.label', 'РќРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°')}
+                                            {t('auth.phone.label', 'Номер телефона')}
                                         </label>
                                         <input
                                             className="w-full px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
@@ -157,7 +157,7 @@ export function SignInPageView({
                                 ) : (
                                     <div>
                                         <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300 sm:text-sm">
-                                            {t('auth.email.label', 'E-mail Р°РґСЂРµСЃ')}
+                                            {t('auth.email.label', 'E-mail адрес')}
                                         </label>
                                         <input
                                             className="w-full px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
@@ -178,8 +178,8 @@ export function SignInPageView({
                                     type="submit"
                                 >
                                     {sending
-                                        ? t('auth.submit.sending', 'РћС‚РїСЂР°РІР»СЏСЋ...')
-                                        : t('auth.submit.idle', 'РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ')}
+                                        ? t('auth.submit.sending', 'Отправляю...')
+                                        : t('auth.submit.idle', 'Отправить код')}
                                 </button>
                             </form>
 
@@ -189,7 +189,7 @@ export function SignInPageView({
                                 </div>
                                 <div className="relative flex justify-center text-xs sm:text-sm">
                                     <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                                        {t('auth.otherMethodsTitle', 'РёР»Рё РІС‹Р±РµСЂРёС‚Рµ Р±С‹СЃС‚СЂС‹Р№ РІС…РѕРґ')}
+                                        {t('auth.otherMethodsTitle', 'или выберите быстрый вход')}
                                     </span>
                                 </div>
                             </div>
@@ -200,7 +200,7 @@ export function SignInPageView({
                                 disabled={sending}
                                 className="w-full px-5 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {t('auth.google', 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ СЃ Google')}
+                                {t('auth.google', 'Продолжить с Google')}
                             </button>
 
                             <button
@@ -209,7 +209,7 @@ export function SignInPageView({
                                 disabled={sending}
                                 className="w-full px-5 py-3 bg-[#FC3F1D] dark:bg-[#FC3F1D] text-sm text-white font-semibold rounded-lg hover:bg-[#E6391A] dark:hover:bg-[#E6391A] shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {t('auth.yandex', 'Р’РѕР№С‚Рё С‡РµСЂРµР· РЇРЅРґРµРєСЃ')}
+                                {t('auth.yandex', 'Войти через Яндекс')}
                             </button>
 
                             <div className="w-full">
@@ -233,3 +233,4 @@ export function SignInPageView({
         </main>
     );
 }
+

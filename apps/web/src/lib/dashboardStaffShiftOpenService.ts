@@ -1,4 +1,4 @@
-import { logDebug, logError } from '@/lib/log';
+﻿import { logDebug, logError } from '@/lib/log';
 import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
 
 type Result =
@@ -43,7 +43,7 @@ export async function runDashboardStaffShiftOpen({
             statusCode: 400,
             errorType: 'validation',
             message:
-                'РЈ СЃРѕС‚СЂСѓРґРЅРёРєР° РЅРµ СѓРєР°Р·Р°РЅ С„РёР»РёР°Р». РЈРєР°Р¶РёС‚Рµ С„РёР»РёР°Р» РІ РєР°СЂС‚РѕС‡РєРµ СЃРѕС‚СЂСѓРґРЅРёРєР° Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.',
+                'У сотрудника не указан филиал. Укажите филиал в карточке сотрудника и попробуйте снова.',
         };
     }
 
@@ -60,7 +60,7 @@ export async function runDashboardStaffShiftOpen({
             ok: false,
             statusCode: 500,
             errorType: 'internal',
-            message: 'РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕРІРµСЂРёС‚СЊ СЃСѓС‰РµСЃС‚РІСѓСЋС‰СѓСЋ СЃРјРµРЅСѓ',
+            message: 'Не удалось проверить существующую смену',
         };
     }
 
@@ -109,7 +109,7 @@ export async function runDashboardStaffShiftOpen({
                 ok: false,
                 statusCode: 500,
                 errorType: 'internal',
-                message: 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ СЃРјРµРЅСѓ',
+                message: 'Не удалось открыть смену',
             };
         }
 
@@ -155,7 +155,7 @@ export async function runDashboardStaffShiftOpen({
             ok: false,
             statusCode: 500,
             errorType: 'internal',
-            message: (createError as { message?: string })?.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ СЃРјРµРЅСѓ',
+            message: (createError as { message?: string })?.message || 'Не удалось создать смену',
             details: errorPayload,
         };
     }
@@ -238,3 +238,4 @@ async function resolveExpectedStart({
 
     return { expectedStart };
 }
+

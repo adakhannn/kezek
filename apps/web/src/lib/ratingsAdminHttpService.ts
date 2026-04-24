@@ -14,7 +14,7 @@ export async function runRatingsStatusHttp(req: Request): Promise<NextResponse> 
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return createErrorResponse('auth', 'РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ', undefined, 401);
+    return createErrorResponse('auth', 'Не авторизован', undefined, 401);
   }
 
   const { data: superRow, error: superErr } = await supabase
@@ -29,7 +29,7 @@ export async function runRatingsStatusHttp(req: Request): Promise<NextResponse> 
     return createErrorResponse('internal', superErr.message, undefined, 400);
   }
   if (!superRow) {
-    return createErrorResponse('forbidden', 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰РµРЅ', undefined, 403);
+    return createErrorResponse('forbidden', 'Доступ запрещен', undefined, 403);
   }
 
   const errorsWindowDaysParam = new URL(req.url).searchParams.get('errors_days');
@@ -48,7 +48,7 @@ export async function runRatingsJobsHttp(): Promise<NextResponse> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return createErrorResponse('auth', 'Р СњР Вµ Р В°Р Р†РЎвЂљР С•РЎР‚Р С‘Р В·Р С•Р Р†Р В°Р Р…', undefined, 401);
+    return createErrorResponse('auth', 'Не авторизован', undefined, 401);
   }
 
   const accessResult = await ensureSuperAdminAccess({
@@ -68,3 +68,4 @@ export async function runRatingsJobsHttp(): Promise<NextResponse> {
 
   return createSuccessResponse(result.data);
 }
+

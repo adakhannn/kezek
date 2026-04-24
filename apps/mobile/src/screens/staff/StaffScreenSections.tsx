@@ -37,14 +37,14 @@ export function StaffScreenSections({
 
             {staffInfo.branch && (
                 <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Р¤РёР»РёР°Р»</Text>
+                    <Text style={styles.sectionTitle}>Филиал</Text>
                     <Text style={styles.branchName}>{staffInfo.branch.name}</Text>
                 </Card>
             )}
 
             {staffInfo.business && (
                 <Card style={styles.card}>
-                    <Text style={styles.sectionTitle}>Р‘РёР·РЅРµСЃ</Text>
+                    <Text style={styles.sectionTitle}>Бизнес</Text>
                     <Text style={styles.businessName}>{staffInfo.business.name}</Text>
                 </Card>
             )}
@@ -57,10 +57,10 @@ export function StaffScreenSections({
                         {upcomingBookings.map((booking) => (
                             <Card key={booking.id} style={styles.bookingCard}>
                                 <Text style={styles.bookingService}>
-                                    {booking.service?.name_ru || 'РЈСЃР»СѓРіР°'}
+                                    {booking.service?.name_ru || 'Услуга'}
                                 </Text>
                                 {booking.client_name && (
-                                    <Text style={styles.bookingClient}>РљР»РёРµРЅС‚: {booking.client_name}</Text>
+                                    <Text style={styles.bookingClient}>Клиент: {booking.client_name}</Text>
                                 )}
                                 {booking.client_phone && (
                                     <Text style={styles.bookingPhone}>{booking.client_phone}</Text>
@@ -86,7 +86,7 @@ export function StaffScreenSections({
             <View style={styles.section}>
                 <Button title="Моя смена" onPress={onOpenShiftQuick} fullWidth />
                 <Button
-                    title="РЎС‚Р°С‚РёСЃС‚РёРєР°"
+                    title="Статистика"
                     onPress={onOpenShifts}
                     variant="outline"
                     fullWidth
@@ -96,3 +96,4 @@ export function StaffScreenSections({
         </ScrollView>
     );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -46,7 +46,7 @@ export default function ActionButtons({
                     onClick={() => call(`/api/staff/${id}/dismiss`)}
                     className="flex-1 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-center text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-950/20"
                 >
-                    {busy ? '...' : t('staff.actions.dismiss', 'РЈРІРѕР»РёС‚СЊ')}
+                    {busy ? '...' : t('staff.actions.dismiss', 'Уволить')}
                 </button>
             ) : (
                 <button
@@ -54,10 +54,11 @@ export default function ActionButtons({
                     onClick={() => call(`/api/staff/${id}/restore`)}
                     className="flex-1 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-center text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-50 dark:border-emerald-800 dark:bg-gray-800 dark:text-emerald-400 dark:hover:bg-emerald-950/20"
                 >
-                    {busy ? '...' : t('staff.actions.restore', 'Р’РѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ')}
+                    {busy ? '...' : t('staff.actions.restore', 'Восстановить')}
                 </button>
             )}
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </>
     );
 }
+

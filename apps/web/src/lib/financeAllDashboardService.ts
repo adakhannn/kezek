@@ -1,4 +1,4 @@
-import { logDebug, logError } from '@/lib/log';
+﻿import { logDebug, logError } from '@/lib/log';
 import { TZ, todayStringInTz } from '@/lib/time';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { financeAllQuerySchema } from '@/lib/validation/schemas';
@@ -147,7 +147,7 @@ export async function runFinanceAllDashboard({
             ok: false,
             statusCode: 500,
             errorType: 'internal',
-            message: statsError.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ С„РёРЅР°РЅСЃРѕРІСѓСЋ СЃС‚Р°С‚РёСЃС‚РёРєСѓ',
+            message: statsError.message || 'Не удалось получить финансовую статистику',
             details: { details: statsError.details, hint: statsError.hint, code: statsError.code },
         };
     }
@@ -334,3 +334,4 @@ function resolveDateRange(period: Period, date: string) {
         dateTo: `${year}-12-31`,
     };
 }
+

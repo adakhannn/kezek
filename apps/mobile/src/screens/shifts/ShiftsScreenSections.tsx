@@ -31,7 +31,7 @@ export function ShiftsScreenSections({
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
             <View style={styles.header}>
-                <Text style={styles.title}>РЎРјРµРЅС‹ Рё СЃС‚Р°С‚РёСЃС‚РёРєР°</Text>
+                <Text style={styles.title}>Смены и статистика</Text>
                 <Text style={styles.subtitle}>{staffName}</Text>
             </View>
 
@@ -49,7 +49,7 @@ export function ShiftsScreenSections({
                                     period === periodValue && styles.periodButtonTextActive,
                                 ]}
                             >
-                                {periodValue === 'day' ? 'Р”РµРЅСЊ' : periodValue === 'month' ? 'РњРµСЃСЏС†' : 'Р“РѕРґ'}
+                                {periodValue === 'day' ? 'День' : periodValue === 'month' ? 'Месяц' : 'Год'}
                             </Text>
                         </MotionPressable>
                     ))}
@@ -75,7 +75,7 @@ export function ShiftsScreenSections({
                 </Card>
 
                 <Card style={styles.statCard}>
-                    <Text style={styles.statLabel}>Р”РѕР»СЏ Р±РёР·РЅРµСЃР°</Text>
+                    <Text style={styles.statLabel}>Доля бизнеса</Text>
                     <Text style={[styles.statValue, styles.statValueBusiness]}>
                         {formatPrice(stats.totalSalon)}
                     </Text>
@@ -89,7 +89,7 @@ export function ShiftsScreenSections({
 
             <View style={styles.additionalStats}>
                 <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>РЎРјРµРЅ</Text>
+                    <Text style={styles.additionalStatLabel}>Смен</Text>
                     <Text style={styles.additionalStatValue}>{stats.shiftsCount}</Text>
                 </Card>
                 <Card style={styles.additionalStatCard}>
@@ -101,7 +101,7 @@ export function ShiftsScreenSections({
                     <Text style={styles.additionalStatValue}>{stats.totalLateMinutes} мин</Text>
                 </Card>
                 <Card style={styles.additionalStatCard}>
-                    <Text style={styles.additionalStatLabel}>РљР»РёРµРЅС‚РѕРІ</Text>
+                    <Text style={styles.additionalStatLabel}>Клиентов</Text>
                     <Text style={styles.additionalStatValue}>{stats.totalClients}</Text>
                 </Card>
             </View>
@@ -117,7 +117,7 @@ export function ShiftsScreenSections({
                 <View style={styles.emptySection}>
                     <EmptyState
                         icon="calendar"
-                        title="РќРµС‚ СЃРјРµРЅ"
+                        title="Нет смен"
                         message="За выбранный период смен не найдено"
                     />
                 </View>
@@ -151,16 +151,16 @@ function ShiftCard({ shift }: { shift: Shift }) {
                                         : styles.shiftStatusTextClosed,
                                 ]}
                             >
-                                {shift.status === 'open' ? 'РћС‚РєСЂС‹С‚Р°' : 'Р—Р°РєСЂС‹С‚Р°'}
+                                {shift.status === 'open' ? 'Открыта' : 'Закрыта'}
                             </Text>
                         </View>
                         {shift.items.length > 0 ? (
-                            <Text style={styles.shiftClientsCount}>({shift.items.length} РєР»РёРµРЅС‚РѕРІ)</Text>
+                            <Text style={styles.shiftClientsCount}>({shift.items.length} клиентов)</Text>
                         ) : null}
                     </View>
                     {shift.opened_at ? (
                         <Text style={styles.shiftTime}>
-                            РћС‚РєСЂС‹С‚Р°:{' '}
+                            Открыта:{' '}
                             {new Date(shift.opened_at).toLocaleTimeString('ru-RU', {
                                 hour: '2-digit',
                                 minute: '2-digit',
@@ -180,14 +180,14 @@ function ShiftCard({ shift }: { shift: Shift }) {
                             </Text>
                             {shift.hours_worked !== null ? (
                                 <Text style={styles.shiftHours}>
-                                    Р—Р° РІС‹С…РѕРґ: {shift.hours_worked.toFixed(1)} С‡
+                                    За выход: {shift.hours_worked.toFixed(1)} ч
                                 </Text>
                             ) : null}
                             <Text style={styles.shiftBaseShareStriked}>
-                                Р‘Р°Р·РѕРІР°СЏ: {formatPrice(shift.master_share)}
+                                Базовая: {formatPrice(shift.master_share)}
                             </Text>
                             <Text style={styles.shiftSalonShare}>
-                                Р‘РёР·РЅРµСЃСѓ: {formatPrice(shift.salon_share)}
+                                Бизнесу: {formatPrice(shift.salon_share)}
                             </Text>
                         </View>
                     ) : (
@@ -197,14 +197,14 @@ function ShiftCard({ shift }: { shift: Shift }) {
                             </Text>
                             {shift.guaranteed_amount > 0 && shift.hourly_rate ? (
                                 <Text style={styles.shiftGuaranteed}>
-                                    Р—Р° РІС‹С…РѕРґ: {formatPrice(shift.guaranteed_amount)}
+                                    За выход: {formatPrice(shift.guaranteed_amount)}
                                     {shift.hours_worked !== null ? (
-                                        <Text> ({shift.hours_worked.toFixed(1)} С‡)</Text>
+                                        <Text> ({shift.hours_worked.toFixed(1)} ч)</Text>
                                     ) : null}
                                 </Text>
                             ) : null}
                             <Text style={styles.shiftSalonShare}>
-                                Р‘РёР·РЅРµСЃСѓ: {formatPrice(shift.salon_share)}
+                                Бизнесу: {formatPrice(shift.salon_share)}
                             </Text>
                         </View>
                     )}
@@ -220,7 +220,7 @@ function ShiftCard({ shift }: { shift: Shift }) {
                                 {item.booking_id ? <View style={styles.bookingIndicator} /> : null}
                                 <View style={styles.shiftItemInfo}>
                                     <Text style={styles.shiftItemClient}>
-                                        {item.client_name || 'РљР»РёРµРЅС‚ РЅРµ СѓРєР°Р·Р°РЅ'}
+                                        {item.client_name || 'Клиент не указан'}
                                     </Text>
                                     <Text style={styles.shiftItemService}>{item.service_name || '—'}</Text>
                                 </View>
@@ -248,9 +248,10 @@ function ShiftCard({ shift }: { shift: Shift }) {
 
             {expanded && shift.items.length === 0 ? (
                 <View style={styles.shiftItemsEmpty}>
-                    <Text style={styles.shiftItemsEmptyText}>РќРµС‚ РґРѕР±Р°РІР»РµРЅРЅС‹С… РєР»РёРµРЅС‚РѕРІ</Text>
+                    <Text style={styles.shiftItemsEmptyText}>Нет добавленных клиентов</Text>
                 </View>
             ) : null}
         </Card>
     );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -30,7 +30,7 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
 
         const trimmedPhone = phone.trim();
         if (!trimmedPhone) {
-            setError(t('notifications.whatsapp.enterPhone', 'Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°'));
+            setError(t('notifications.whatsapp.enterPhone', 'Введите номер телефона'));
             return;
         }
 
@@ -40,7 +40,7 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
                 phoneValidation.error ||
                     t(
                         'notifications.whatsapp.invalidFormat',
-                        'РўРµР»РµС„РѕРЅ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІ С„РѕСЂРјР°С‚Рµ E.164, РЅР°РїСЂРёРјРµСЂ: +996555123456'
+                        'Телефон должен быть в формате E.164, например: +996555123456'
                     )
             );
             return;
@@ -58,7 +58,7 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
             if (!response.ok) {
                 const data = await response.json();
                 throw new Error(
-                    data.error || t('notifications.whatsapp.updateError', 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ С‚РµР»РµС„РѕРЅ')
+                    data.error || t('notifications.whatsapp.updateError', 'Не удалось обновить телефон')
                 );
             }
 
@@ -87,10 +87,10 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
             <Dialog
                 open
                 onClose={() => setSuccess(false)}
-                title={t('notifications.whatsapp.connectedTitle', 'РўРµР»РµС„РѕРЅ РїРѕРґРєР»СЋС‡РµРЅ!')}
+                title={t('notifications.whatsapp.connectedTitle', 'Телефон подключен!')}
                 description={t(
                     'notifications.whatsapp.connectedDescription',
-                    'РўРµРїРµСЂСЊ РІС‹ Р±СѓРґРµС‚Рµ РїРѕР»СѓС‡Р°С‚СЊ СѓРІРµРґРѕРјР»РµРЅРёСЏ С‡РµСЂРµР· WhatsApp'
+                    'Теперь вы будете получать уведомления через WhatsApp'
                 )}
                 size="sm"
                 footer={
@@ -116,23 +116,23 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
         <Dialog
             open
             onClose={() => onDismiss?.()}
-            title={t('notifications.whatsapp.connectTitle', 'РџРѕРґРєР»СЋС‡РёС‚Рµ WhatsApp')}
+            title={t('notifications.whatsapp.connectTitle', 'Подключите WhatsApp')}
             description={t(
                 'notifications.whatsapp.connectDescription',
-                'РџРѕРґРєР»СЋС‡РёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ СѓРІРµРґРѕРјР»РµРЅРёР№ С‡РµСЂРµР· WhatsApp. Р­С‚Рѕ СѓРґРѕР±РЅРµРµ Рё Р±С‹СЃС‚СЂРµРµ!'
+                'Подключите номер телефона для получения уведомлений через WhatsApp. Это удобнее и быстрее!'
             )}
             size="sm"
             footer={
                 <div className="flex gap-3">
                     {onDismiss ? (
                         <Button type="button" variant="secondary" fullWidth onClick={onDismiss} disabled={loading}>
-                            {t('notifications.whatsapp.later', 'РџРѕР·Р¶Рµ')}
+                            {t('notifications.whatsapp.later', 'Позже')}
                         </Button>
                     ) : null}
                     <Button type="submit" form="whatsapp-connect-form" fullWidth disabled={loading || !phone.trim()} isLoading={loading}>
                         {loading
-                            ? t('notifications.whatsapp.sending', 'РћС‚РїСЂР°РІРєР°...')
-                            : t('notifications.whatsapp.submit', 'РџРѕРґРєР»СЋС‡РёС‚СЊ')}
+                            ? t('notifications.whatsapp.sending', 'Отправка...')
+                            : t('notifications.whatsapp.submit', 'Подключить')}
                     </Button>
                 </div>
             }
@@ -145,7 +145,7 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
                         </svg>
                     </div>
                     <p className="type-caption text-[var(--text-muted)]">
-                        {t('notifications.whatsapp.phoneHint', 'Р¤РѕСЂРјР°С‚: +996555123456 (СЃ РєРѕРґРѕРј СЃС‚СЂР°РЅС‹)')}
+                        {t('notifications.whatsapp.phoneHint', 'Формат: +996555123456 (с кодом страны)')}
                     </p>
                 </div>
 
@@ -154,7 +154,7 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    label={t('notifications.whatsapp.phoneLabel', 'РќРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°')}
+                    label={t('notifications.whatsapp.phoneLabel', 'Номер телефона')}
                     placeholder="+996555123456"
                     disabled={loading}
                     autoComplete="tel"
@@ -165,3 +165,4 @@ export function WhatsAppConnectPrompt({ onDismiss, onSuccess }: Props) {
         </Dialog>
     );
 }
+

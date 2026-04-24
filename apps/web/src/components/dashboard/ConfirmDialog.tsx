@@ -1,7 +1,7 @@
-/**
- * ConfirmDialog - РјРѕРґР°Р»СЊРЅРѕРµ РѕРєРЅРѕ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РґР»СЏ РѕРїРµСЂР°С‚РѕСЂСЃРєРёС… СЌРєСЂР°РЅРѕРІ
+﻿/**
+ * ConfirmDialog - модальное окно подтверждения для операторских экранов
  *
- * РСЃРїРѕР»СЊР·СѓРµС‚ РѕР±С‰РёР№ Dialog, С‡С‚РѕР±С‹ modal-pattern РЅРµ СЂР°СЃС…РѕРґРёР»СЃСЏ РјРµР¶РґСѓ workspace-СЌРєСЂР°РЅР°РјРё
+ * Использует общий Dialog, чтобы modal-pattern не расходился между workspace-экранами
  */
 
 'use client';
@@ -27,8 +27,8 @@ export function ConfirmDialog({
     isOpen,
     title,
     message,
-    confirmLabel = 'РџРѕРґС‚РІРµСЂРґРёС‚СЊ',
-    cancelLabel = 'РћС‚РјРµРЅР°',
+    confirmLabel = 'Подтвердить',
+    cancelLabel = 'Отмена',
     variant = 'info',
     onConfirm,
     onCancel,
@@ -59,3 +59,4 @@ export function ConfirmDialog({
         </Dialog>
     );
 }
+

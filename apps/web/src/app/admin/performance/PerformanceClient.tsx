@@ -98,11 +98,11 @@ export default function PerformanceClient() {
         return (
             <AlertBanner
                 variant="danger"
-                title="РћС€РёР±РєР°"
+                title="Ошибка"
                 message={error}
                 action={
                     <Button onClick={loadStats} variant="danger" size="sm">
-                        РџРѕРІС‚РѕСЂРёС‚СЊ
+                        Повторить
                     </Button>
                 }
             />
@@ -110,17 +110,17 @@ export default function PerformanceClient() {
     }
 
     if (stats.length === 0) {
-        return <EmptyState compact title="РќРµС‚ РґР°РЅРЅС‹С…" description="РџРѕРєР° РЅРµС‚ РјРµС‚СЂРёРє Рѕ РїСЂРѕРёР·РІРѕРґРёС‚РµР»СЊРЅРѕСЃС‚Рё." />;
+        return <EmptyState compact title="Нет данных" description="Пока нет метрик о производительности." />;
     }
 
     return (
         <div className="space-y-4">
             <SectionHeader
-                title="РџСЂРѕРёР·РІРѕРґРёС‚РµР»СЊРЅРѕСЃС‚СЊ"
-                description={lastUpdate ? `РџРѕСЃР»РµРґРЅРµРµ РѕР±РЅРѕРІР»РµРЅРёРµ: ${lastUpdate.toLocaleTimeString()}` : undefined}
+                title="Производительность"
+                description={lastUpdate ? `Последнее обновление: ${lastUpdate.toLocaleTimeString()}` : undefined}
                 action={
                     <Button onClick={loadStats} disabled={loading} size="sm">
-                        {loading ? 'РћР±РЅРѕРІР»РµРЅРёРµ...' : 'РћР±РЅРѕРІРёС‚СЊ'}
+                        {loading ? 'Обновление...' : 'Обновить'}
                     </Button>
                 }
             />
@@ -131,22 +131,22 @@ export default function PerformanceClient() {
                         <div className="mb-4 flex items-start justify-between gap-3">
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{stat.operation}</h3>
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">РћРїРµСЂР°С†РёРѕРЅРЅР°СЏ РјРµС‚СЂРёРєР° Р·Р° Р°РєС‚СѓР°Р»СЊРЅРѕРµ РѕРєРЅРѕ РЅР°Р±Р»СЋРґРµРЅРёСЏ</p>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Операционная метрика за актуальное окно наблюдения</p>
                             </div>
                             <StatusChip status={getStatus(stat.operation, stat.p95Duration)} label={`P95 ${formatDuration(stat.p95Duration)}`} />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-                            <MetricBlock label="Р—Р°РїСЂРѕСЃРѕРІ" value={stat.count} />
-                            <MetricBlock label="РЎСЂРµРґРЅРµРµ" value={formatDuration(stat.avgDuration)} status={getStatus(stat.operation, stat.avgDuration)} />
+                            <MetricBlock label="Запросов" value={stat.count} />
+                            <MetricBlock label="Среднее" value={formatDuration(stat.avgDuration)} status={getStatus(stat.operation, stat.avgDuration)} />
                             <MetricBlock label="P95" value={formatDuration(stat.p95Duration)} status={getStatus(stat.operation, stat.p95Duration)} />
                             <MetricBlock label="P99" value={formatDuration(stat.p99Duration)} status={getStatus(stat.operation, stat.p99Duration)} />
                         </div>
 
                         <div className="mt-4 grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
-                            <MetricBlock label="РњРёРЅ" value={formatDuration(stat.minDuration)} />
-                            <MetricBlock label="РњР°РєСЃ" value={formatDuration(stat.maxDuration)} />
-                            <MetricBlock label="РћС€РёР±РѕРє" value={`${(stat.errorRate * 100).toFixed(1)}%`} status={stat.errorRate > 0.1 ? 'error' : 'neutral'} />
+                            <MetricBlock label="Мин" value={formatDuration(stat.minDuration)} />
+                            <MetricBlock label="Макс" value={formatDuration(stat.maxDuration)} />
+                            <MetricBlock label="Ошибок" value={`${(stat.errorRate * 100).toFixed(1)}%`} status={stat.errorRate > 0.1 ? 'error' : 'neutral'} />
                         </div>
                     </Card>
                 ))}
@@ -180,3 +180,4 @@ function MetricBlock({
         </div>
     );
 }
+

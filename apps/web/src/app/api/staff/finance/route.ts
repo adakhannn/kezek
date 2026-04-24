@@ -1,10 +1,10 @@
-/**
- * Р•РґРёРЅС‹Р№ API endpoint РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РґР°РЅРЅС‹С… СЃРјРµРЅС‹ СЃРѕС‚СЂСѓРґРЅРёРєР°
- * РџРѕРґРґРµСЂР¶РёРІР°РµС‚ РєР°Рє СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ (С‡РµСЂРµР· getStaffContext), С‚Р°Рє Рё РјРµРЅРµРґР¶РµСЂРѕРІ (С‡РµСЂРµР· getBizContextForManagers)
+﻿/**
+ * Единый API endpoint для получения данных смены сотрудника
+ * Поддерживает как сотрудников (через getStaffContext), так и менеджеров (через getBizContextForManagers)
  * 
- * Query РїР°СЂР°РјРµС‚СЂС‹:
- * - staffId (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ) - ID СЃРѕС‚СЂСѓРґРЅРёРєР° (РґР»СЏ РјРµРЅРµРґР¶РµСЂРѕРІ)
- * - date (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ) - РґР°С‚Р° РІ С„РѕСЂРјР°С‚Рµ YYYY-MM-DD (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ СЃРµРіРѕРґРЅСЏ)
+ * Query параметры:
+ * - staffId (опционально) - ID сотрудника (для менеджеров)
+ * - date (опционально) - дата в формате YYYY-MM-DD (по умолчанию сегодня)
  */
 
 import { withErrorHandler } from '@/lib/apiErrorHandler';
@@ -16,3 +16,4 @@ export const runtime = 'nodejs';
 export async function GET(req: Request) {
     return withErrorHandler('StaffFinance', async () => runStaffFinanceHttp(req));
 }
+

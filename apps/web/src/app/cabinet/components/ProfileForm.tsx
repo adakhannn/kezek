@@ -147,7 +147,7 @@ export default function ProfileForm() {
 
             const data = await res.json();
             if (!res.ok || !data.ok) {
-                throw new Error(data.message || data.error || t('cabinet.profile.error.save', 'РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё'));
+                throw new Error(data.message || data.error || t('cabinet.profile.error.save', 'Ошибка при сохранении'));
             }
 
             const nextProfile = {
@@ -168,7 +168,7 @@ export default function ProfileForm() {
 
     async function handleSendOtp() {
         if (!profile.phone) {
-            setError(t('cabinet.profile.error.phoneRequired', 'РЎРЅР°С‡Р°Р»Р° СѓРєР°Р¶РёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°'));
+            setError(t('cabinet.profile.error.phoneRequired', 'Сначала укажите номер телефона'));
             return;
         }
 
@@ -184,10 +184,10 @@ export default function ProfileForm() {
 
             const data = await res.json();
             if (!res.ok || !data.ok) {
-                throw new Error(data.message || data.error || t('cabinet.profile.error.sendCode', 'РћС€РёР±РєР° РїСЂРё РѕС‚РїСЂР°РІРєРµ РєРѕРґР°'));
+                throw new Error(data.message || data.error || t('cabinet.profile.error.sendCode', 'Ошибка при отправке кода'));
             }
 
-            setMessage(t('cabinet.profile.whatsapp.codeSent', 'РљРѕРґ РѕС‚РїСЂР°РІР»РµРЅ РЅР° WhatsApp'));
+            setMessage(t('cabinet.profile.whatsapp.codeSent', 'Код отправлен на WhatsApp'));
             setShowOtpInput(true);
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -199,7 +199,7 @@ export default function ProfileForm() {
 
     async function handleVerifyOtp() {
         if (otpCode.length !== 6) {
-            setError(t('cabinet.profile.error.codeLength', 'Р’РІРµРґРёС‚Рµ 6-Р·РЅР°С‡РЅС‹Р№ РєРѕРґ'));
+            setError(t('cabinet.profile.error.codeLength', 'Введите 6-значный код'));
             return;
         }
 
@@ -216,10 +216,10 @@ export default function ProfileForm() {
 
             const data = await res.json();
             if (!res.ok || !data.ok) {
-                throw new Error(data.message || data.error || t('cabinet.profile.error.verifyCode', 'РћС€РёР±РєР° РїСЂРё РїСЂРѕРІРµСЂРєРµ РєРѕРґР°'));
+                throw new Error(data.message || data.error || t('cabinet.profile.error.verifyCode', 'Ошибка при проверке кода'));
             }
 
-            setMessage(t('cabinet.profile.whatsapp.verifiedSuccess', 'WhatsApp РЅРѕРјРµСЂ РїРѕРґС‚РІРµСЂР¶РґРµРЅ'));
+            setMessage(t('cabinet.profile.whatsapp.verifiedSuccess', 'WhatsApp номер подтвержден'));
             setProfile({ ...profile, whatsapp_verified: true });
             setShowOtpInput(false);
             setOtpCode('');
@@ -244,7 +244,7 @@ export default function ProfileForm() {
             <Card variant="elevated" padding="lg" className="py-10 text-center">
                 <div className="mx-auto inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-[var(--accent-primary)]" />
                 <p className="type-body mt-4 text-gray-500 dark:text-gray-400">
-                    {t('cabinet.profile.loading', 'Р—Р°РіСЂСѓР·РєР°...')}
+                    {t('cabinet.profile.loading', 'Загрузка...')}
                 </p>
             </Card>
         );
@@ -269,17 +269,17 @@ export default function ProfileForm() {
                     </div>
                 </div>
                 <Input
-                    label={t('cabinet.profile.name.label', 'РРјСЏ')}
+                    label={t('cabinet.profile.name.label', 'Имя')}
                     value={profile.full_name || ''}
                     onChange={(e) => {
                         setProfile({ ...profile, full_name: e.target.value || null });
                         setError(null);
                     }}
-                    placeholder={t('cabinet.profile.name.placeholder', 'Р’Р°С€Рµ РёРјСЏ')}
+                    placeholder={t('cabinet.profile.name.placeholder', 'Ваше имя')}
                 />
 
                 <Input
-                    label={t('cabinet.profile.phone.label', 'РўРµР»РµС„РѕРЅ')}
+                    label={t('cabinet.profile.phone.label', 'Телефон')}
                     type="tel"
                     value={profile.phone || ''}
                     onChange={(e) => {
@@ -289,10 +289,10 @@ export default function ProfileForm() {
                     placeholder={t('cabinet.profile.phone.placeholder', '+996555123456')}
                     helperText={
                         !profile.phone
-                            ? t('cabinet.profile.phone.warning.desc', 'Р­С‚Рѕ РЅСѓР¶РЅРѕ РґР»СЏ СЃРІСЏР·Рё СЃ РІР°РјРё')
+                            ? t('cabinet.profile.phone.warning.desc', 'Это нужно для связи с вами')
                             : t(
                                   'cabinet.profile.phone.description',
-                                  'РЈРєР°Р¶РёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°, С‡С‚РѕР±С‹ РјР°СЃС‚РµСЂР° РјРѕРіР»Рё СЃРІСЏР·Р°С‚СЊСЃСЏ СЃ РІР°РјРё РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё',
+                                  'Укажите номер телефона, чтобы мастера могли связаться с вами при необходимости',
                               )
                     }
                     error={phoneValidationError ?? undefined}
@@ -313,10 +313,10 @@ export default function ProfileForm() {
                         </svg>
                         <div>
                             <p className="type-label">
-                                {t('cabinet.profile.phone.warning.title', 'Р—Р°РїРѕР»РЅРёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°')}
+                                {t('cabinet.profile.phone.warning.title', 'Заполните номер телефона')}
                             </p>
                             <p className="type-caption mt-1 text-amber-700 dark:text-amber-300">
-                                {t('cabinet.profile.phone.warning.desc', 'Р­С‚Рѕ РЅСѓР¶РЅРѕ РґР»СЏ СЃРІСЏР·Рё СЃ РІР°РјРё')}
+                                {t('cabinet.profile.phone.warning.desc', 'Это нужно для связи с вами')}
                             </p>
                         </div>
                     </div>
@@ -326,10 +326,10 @@ export default function ProfileForm() {
             <Card variant="default" padding="lg" className="space-y-4">
                 <div>
                     <h3 className="type-section-title text-gray-900 dark:text-gray-100">
-                        {t('cabinet.profile.notifications.title', 'РЈРІРµРґРѕРјР»РµРЅРёСЏ Рѕ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏС…')}
+                        {t('cabinet.profile.notifications.title', 'Уведомления о бронированиях')}
                     </h3>
                     <p className="type-caption mt-1 text-gray-500 dark:text-gray-400">
-                        {t('cabinet.profile.notifications.desc', 'Р’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР±С‹ РїРѕР»СѓС‡РµРЅРёСЏ СѓРІРµРґРѕРјР»РµРЅРёР№ Рѕ РІР°С€РёС… Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏС…')}
+                        {t('cabinet.profile.notifications.desc', 'Выберите способы получения уведомлений о ваших бронированиях')}
                     </p>
                 </div>
 
@@ -383,7 +383,7 @@ export default function ProfileForm() {
                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            <span>{t('cabinet.profile.whatsapp.verified', 'РќРѕРјРµСЂ РїРѕРґС‚РІРµСЂР¶РґРµРЅ')}</span>
+                                            <span>{t('cabinet.profile.whatsapp.verified', 'Номер подтвержден')}</span>
                                         </div>
                                     ) : (
                                         <div className="space-y-2">
@@ -391,7 +391,7 @@ export default function ProfileForm() {
                                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                 </svg>
-                                                <span>{t('cabinet.profile.whatsapp.notVerified', 'РќРѕРјРµСЂ РЅРµ РїРѕРґС‚РІРµСЂР¶РґРµРЅ. РџРѕРґС‚РІРµСЂРґРёС‚Рµ РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ СѓРІРµРґРѕРјР»РµРЅРёР№.')}</span>
+                                                <span>{t('cabinet.profile.whatsapp.notVerified', 'Номер не подтвержден. Подтвердите для получения уведомлений.')}</span>
                                             </div>
                                             {!showOtpInput ? (
                                                 <Button
@@ -400,7 +400,7 @@ export default function ProfileForm() {
                                                     onClick={handleSendOtp}
                                                     disabled={otpSending || !profile.phone}
                                                 >
-                                                    {otpSending ? t('cabinet.profile.whatsapp.sending', 'РћС‚РїСЂР°РІРєР°...') : t('cabinet.profile.whatsapp.sendCode', 'РћС‚РїСЂР°РІРёС‚СЊ РєРѕРґ')}
+                                                    {otpSending ? t('cabinet.profile.whatsapp.sending', 'Отправка...') : t('cabinet.profile.whatsapp.sendCode', 'Отправить код')}
                                                 </Button>
                                             ) : (
                                                 <div className="space-y-2">
@@ -423,7 +423,7 @@ export default function ProfileForm() {
                                                             disabled={otpVerifying || otpCode.length !== 6}
                                                             isLoading={otpVerifying}
                                                         >
-                                                            {t('cabinet.profile.whatsapp.verify', 'РџРѕРґС‚РІРµСЂРґРёС‚СЊ')}
+                                                            {t('cabinet.profile.whatsapp.verify', 'Подтвердить')}
                                                         </Button>
                                                     </div>
                                                     <Button
@@ -435,7 +435,7 @@ export default function ProfileForm() {
                                                             setOtpCode('');
                                                         }}
                                                     >
-                                                        {t('cabinet.profile.whatsapp.cancel', 'РћС‚РјРµРЅРёС‚СЊ')}
+                                                        {t('cabinet.profile.whatsapp.cancel', 'Отменить')}
                                                     </Button>
                                                 </div>
                                             )}
@@ -472,13 +472,13 @@ export default function ProfileForm() {
                     {!profile.telegram_connected && (
                         <div className="ml-7 mt-2 space-y-2">
                             <p className="type-caption text-gray-500 dark:text-gray-400">
-                                {t('cabinet.profile.telegram.notConnected', 'Р§С‚РѕР±С‹ РїРѕР»СѓС‡Р°С‚СЊ СѓРІРµРґРѕРјР»РµРЅРёСЏ РІ Telegram, РїРѕРґРєР»СЋС‡РёС‚Рµ Telegram Р°РєРєР°СѓРЅС‚:')}
+                                {t('cabinet.profile.telegram.notConnected', 'Чтобы получать уведомления в Telegram, подключите Telegram аккаунт:')}
                             </p>
                             <div className="flex justify-start">
                                 <TelegramLinkWidget
                                     onSuccess={() => {
                                         loadProfile();
-                                        setMessage(t('cabinet.profile.telegram.connected', 'Telegram СѓСЃРїРµС€РЅРѕ РїРѕРґРєР»СЋС‡РµРЅ!'));
+                                        setMessage(t('cabinet.profile.telegram.connected', 'Telegram успешно подключен!'));
                                     }}
                                     onError={(err) => {
                                         setError(err);
@@ -487,32 +487,32 @@ export default function ProfileForm() {
                                     size="medium"
                                 />
                             </div>
-                            {error && error.includes('СѓР¶Рµ РїСЂРёРІСЏР·Р°РЅ') && (
+                            {error && error.includes('уже привязан') && (
                                 <Card
                                     variant="outlined"
                                     padding="sm"
                                     className="border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20"
                                 >
                                     <p className="type-label mb-2 text-amber-800 dark:text-amber-200">
-                                        {t('cabinet.profile.telegram.alreadyLinked.title', 'Р­С‚РѕС‚ Telegram Р°РєРєР°СѓРЅС‚ СѓР¶Рµ РїСЂРёРІСЏР·Р°РЅ Рє РґСЂСѓРіРѕРјСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ.')}
+                                        {t('cabinet.profile.telegram.alreadyLinked.title', 'Этот Telegram аккаунт уже привязан к другому пользователю.')}
                                     </p>
                                     <p className="type-caption mb-2 text-amber-700 dark:text-amber-300">
-                                        {t('cabinet.profile.telegram.alreadyLinked.desc', 'Р§С‚РѕР±С‹ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РґСЂСѓРіРѕР№ Telegram Р°РєРєР°СѓРЅС‚:')}
+                                        {t('cabinet.profile.telegram.alreadyLinked.desc', 'Чтобы использовать другой Telegram аккаунт:')}
                                     </p>
                                     <ol className="type-caption ml-2 list-inside list-decimal space-y-1 text-amber-700 dark:text-amber-300">
                                         <li>
-                                            {t('cabinet.profile.telegram.alreadyLinked.step1.prefix', 'РћС‚РєСЂРѕР№С‚Рµ')}{' '}
+                                            {t('cabinet.profile.telegram.alreadyLinked.step1.prefix', 'Откройте')}{' '}
                                             <a href="https://web.telegram.org" target="_blank" rel="noopener noreferrer" className="underline">
                                                 web.telegram.org
                                             </a>{' '}
-                                            {t('cabinet.profile.telegram.alreadyLinked.step1.suffix', 'РІ РЅРѕРІРѕР№ РІРєР»Р°РґРєРµ')}
+                                            {t('cabinet.profile.telegram.alreadyLinked.step1.suffix', 'в новой вкладке')}
                                         </li>
-                                        <li>{t('cabinet.profile.telegram.alreadyLinked.step2', 'Р’С‹Р№РґРёС‚Рµ РёР· С‚РµРєСѓС‰РµРіРѕ Telegram Р°РєРєР°СѓРЅС‚Р°')}</li>
-                                        <li>{t('cabinet.profile.telegram.alreadyLinked.step3', 'Р’РѕР№РґРёС‚Рµ РІ РЅСѓР¶РЅС‹Р№ Telegram Р°РєРєР°СѓРЅС‚')}</li>
-                                        <li>{t('cabinet.profile.telegram.alreadyLinked.step4', 'Р’РµСЂРЅРёС‚РµСЃСЊ РЅР° СЌС‚Сѓ СЃС‚СЂР°РЅРёС†Сѓ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°')}</li>
+                                        <li>{t('cabinet.profile.telegram.alreadyLinked.step2', 'Выйдите из текущего Telegram аккаунта')}</li>
+                                        <li>{t('cabinet.profile.telegram.alreadyLinked.step3', 'Войдите в нужный Telegram аккаунт')}</li>
+                                        <li>{t('cabinet.profile.telegram.alreadyLinked.step4', 'Вернитесь на эту страницу и попробуйте снова')}</li>
                                     </ol>
                                     <p className="type-caption mt-2 italic text-amber-600 dark:text-amber-400">
-                                        {t('cabinet.profile.telegram.alreadyLinked.hint', 'РР»Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ СЂРµР¶РёРј РёРЅРєРѕРіРЅРёС‚Рѕ Р±СЂР°СѓР·РµСЂР° РґР»СЏ РІС…РѕРґР° РІ РґСЂСѓРіРѕР№ Р°РєРєР°СѓРЅС‚.')}
+                                        {t('cabinet.profile.telegram.alreadyLinked.hint', 'Или используйте режим инкогнито браузера для входа в другой аккаунт.')}
                                     </p>
                                 </Card>
                             )}
@@ -557,7 +557,7 @@ export default function ProfileForm() {
                             {t('common.reset', 'Сбросить')}
                         </Button>
                         <Button type="submit" isLoading={saving} disabled={!canSubmit}>
-                            {saving ? t('cabinet.profile.saving', 'РЎРѕС…СЂР°РЅРµРЅРёРµ...') : t('cabinet.profile.save', 'РЎРѕС…СЂР°РЅРёС‚СЊ')}
+                            {saving ? t('cabinet.profile.saving', 'Сохранение...') : t('cabinet.profile.save', 'Сохранить')}
                         </Button>
                     </div>
                 </div>
@@ -565,6 +565,7 @@ export default function ProfileForm() {
         </form>
     );
 }
+
 
 
 

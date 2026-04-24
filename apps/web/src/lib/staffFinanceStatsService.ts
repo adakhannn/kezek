@@ -1,4 +1,4 @@
-import type { StaffFinanceStatsPeriod, StaffFinanceStatsShiftItem } from '@/lib/finance/types';
+﻿import type { StaffFinanceStatsPeriod, StaffFinanceStatsShiftItem } from '@/lib/finance/types';
 import { logDebug, logError } from '@/lib/log';
 import { TZ, todayStringInTz } from '@/lib/time';
 
@@ -184,16 +184,16 @@ function validatePeriodDate(
 ): string | StaffFinanceStatsFailure {
     if (period === 'day') {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-            return validationFailure('РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ РґР°С‚С‹. РћР¶РёРґР°РµС‚СЃСЏ YYYY-MM-DD РґР»СЏ РїРµСЂРёРѕРґР° "РґРµРЅСЊ"');
+            return validationFailure('Неверный формат даты. Ожидается YYYY-MM-DD для периода "день"');
         }
 
         const [year, month, day] = dateParam.split('-').map(Number);
         if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
-            return validationFailure('РќРµРІРµСЂРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РґР°С‚С‹');
+            return validationFailure('Неверные значения даты');
         }
 
         if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
-            return validationFailure('Р”Р°С‚Р° РІРЅРµ РґРѕРїСѓСЃС‚РёРјРѕРіРѕ РґРёР°РїР°Р·РѕРЅР°');
+            return validationFailure('Дата вне допустимого диапазона');
         }
 
         const testDate = new Date(year, month - 1, day);
@@ -202,7 +202,7 @@ function validatePeriodDate(
             testDate.getMonth() !== month - 1 ||
             testDate.getDate() !== day
         ) {
-            return validationFailure('РќРµРІРµСЂРЅР°СЏ РґР°С‚Р° (РЅР°РїСЂРёРјРµСЂ, 30 С„РµРІСЂР°Р»СЏ)');
+            return validationFailure('Неверная дата (например, 30 февраля)');
         }
 
         return dateParam;
@@ -210,32 +210,32 @@ function validatePeriodDate(
 
     if (period === 'month') {
         if (!/^\d{4}-\d{2}$/.test(dateParam)) {
-            return validationFailure('РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ РґР°С‚С‹. РћР¶РёРґР°РµС‚СЃСЏ YYYY-MM РґР»СЏ РїРµСЂРёРѕРґР° "РјРµСЃСЏС†"');
+            return validationFailure('Неверный формат даты. Ожидается YYYY-MM для периода "месяц"');
         }
 
         const [year, month] = dateParam.split('-').map(Number);
         if (!Number.isFinite(year) || !Number.isFinite(month)) {
-            return validationFailure('РќРµРІРµСЂРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РјРµСЃСЏС†Р°');
+            return validationFailure('Неверные значения месяца');
         }
 
         if (year < 1900 || year > 2100 || month < 1 || month > 12) {
-            return validationFailure('РњРµСЃСЏС† РІРЅРµ РґРѕРїСѓСЃС‚РёРјРѕРіРѕ РґРёР°РїР°Р·РѕРЅР°');
+            return validationFailure('Месяц вне допустимого диапазона');
         }
 
         return dateParam;
     }
 
     if (!/^\d{4}$/.test(dateParam)) {
-        return validationFailure('РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ РґР°С‚С‹. РћР¶РёРґР°РµС‚СЃСЏ YYYY РґР»СЏ РїРµСЂРёРѕРґР° "РіРѕРґ"');
+        return validationFailure('Неверный формат даты. Ожидается YYYY для периода "год"');
     }
 
     const year = Number(dateParam);
     if (!Number.isFinite(year)) {
-        return validationFailure('РќРµРІРµСЂРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РіРѕРґР°');
+        return validationFailure('Неверное значение года');
     }
 
     if (year < 1900 || year > 2100) {
-        return validationFailure('Р“РѕРґ РІРЅРµ РґРѕРїСѓСЃС‚РёРјРѕРіРѕ РґРёР°РїР°Р·РѕРЅР°');
+        return validationFailure('Год вне допустимого диапазона');
     }
 
     return dateParam;
@@ -436,3 +436,4 @@ function mapShiftForStats({
         })),
     };
 }
+

@@ -109,7 +109,7 @@ export function RoleAndBusinessSwitcher({
                 )}
             >
                 <div className="h-3 w-3 rounded-full border-2 border-[var(--accent-primary)] border-t-transparent animate-spin" />
-                <span>{t('header.roleBusiness.loading', 'Р—Р°РіСЂСѓР¶Р°РµРј РґРѕСЃС‚СѓРїРЅС‹Рµ РєР°Р±РёРЅРµС‚С‹...')}</span>
+                <span>{t('header.roleBusiness.loading', 'Загружаем доступные кабинеты...')}</span>
             </div>
         );
     }
@@ -120,13 +120,13 @@ export function RoleAndBusinessSwitcher({
 
     const { roles } = state;
 
-    let roleLabel = t('header.roleBusiness.client', 'РљР»РёРµРЅС‚');
+    let roleLabel = t('header.roleBusiness.client', 'Клиент');
     if (roles.hasAdmin) {
-        roleLabel = t('header.roleBusiness.admin', 'РђРґРјРёРЅ');
+        roleLabel = t('header.roleBusiness.admin', 'Админ');
     } else if (roles.hasDashboard) {
-        roleLabel = t('header.roleBusiness.owner', 'Р’Р»Р°РґРµР»РµС† / РјРµРЅРµРґР¶РµСЂ');
+        roleLabel = t('header.roleBusiness.owner', 'Владелец / менеджер');
     } else if (roles.hasStaff) {
-        roleLabel = t('header.roleBusiness.staff', 'РЎРѕС‚СЂСѓРґРЅРёРє');
+        roleLabel = t('header.roleBusiness.staff', 'Сотрудник');
     }
 
     const handleNavigate = () => {
@@ -171,10 +171,10 @@ export function RoleAndBusinessSwitcher({
                     <div className={menuClassName}>
                         <div className="border-b border-[var(--border-subtle)] px-4 py-3">
                             <p className="type-label text-[var(--text-primary)]">
-                                {t('header.roleBusiness.captionRoles', 'Р’С‹Р±РµСЂРёС‚Рµ РєР°Р±РёРЅРµС‚ (СЂРѕР»СЊ)')}
+                                {t('header.roleBusiness.captionRoles', 'Выберите кабинет (роль)')}
                             </p>
                             <p className="type-caption mt-1 text-[var(--text-muted)]">
-                                {t('header.roleBusiness.sections.cabinets', 'РљР°Р±РёРЅРµС‚С‹')}
+                                {t('header.roleBusiness.sections.cabinets', 'Кабинеты')}
                             </p>
                         </div>
 
@@ -185,7 +185,7 @@ export function RoleAndBusinessSwitcher({
                                     onClick={handleNavigate}
                                     className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                 >
-                                    <span>{t('header.businessCabinet', 'РљР°Р±РёРЅРµС‚ Р±РёР·РЅРµСЃР°')}</span>
+                                    <span>{t('header.businessCabinet', 'Кабинет бизнеса')}</span>
                                 </Link>
                             ) : null}
                             {roles.hasStaff ? (
@@ -194,7 +194,7 @@ export function RoleAndBusinessSwitcher({
                                     onClick={handleNavigate}
                                     className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                 >
-                                    <span>{t('header.staffCabinet', 'РљР°Р±РёРЅРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєР°')}</span>
+                                    <span>{t('header.staffCabinet', 'Кабинет сотрудника')}</span>
                                 </Link>
                             ) : null}
                             {roles.hasCabinet ? (
@@ -203,7 +203,7 @@ export function RoleAndBusinessSwitcher({
                                     onClick={handleNavigate}
                                     className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                 >
-                                    <span>{t('header.myBookings', 'РњРѕРё Р·Р°РїРёСЃРё')}</span>
+                                    <span>{t('header.myBookings', 'Мои записи')}</span>
                                 </Link>
                             ) : null}
                             {roles.hasAdmin ? (
@@ -212,7 +212,7 @@ export function RoleAndBusinessSwitcher({
                                     onClick={handleNavigate}
                                     className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
                                 >
-                                    <span>{t('header.adminPanel', 'РђРґРјРёРЅ-РїР°РЅРµР»СЊ')}</span>
+                                    <span>{t('header.adminPanel', 'Админ-панель')}</span>
                                 </Link>
                             ) : null}
                         </div>
@@ -222,3 +222,4 @@ export function RoleAndBusinessSwitcher({
         </div>
     );
 }
+

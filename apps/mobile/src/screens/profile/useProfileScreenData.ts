@@ -85,10 +85,10 @@ export function useProfileScreenData() {
 
     const confirmSignOut = async () => {
         const shouldSignOut = await confirm({
-            title: 'Р’С‹С…РѕРґ',
-            message: 'Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ РІС‹Р№С‚Рё?',
-            confirmLabel: 'Р’С‹Р№С‚Рё',
-            cancelLabel: 'РћС‚РјРµРЅР°',
+            title: 'Выход',
+            message: 'Вы уверены, что хотите выйти?',
+            confirmLabel: 'Выйти',
+            cancelLabel: 'Отмена',
             variant: 'danger',
         });
 
@@ -116,3 +116,4 @@ export function useProfileScreenData() {
         isSaving: updateProfileMutation.isPending,
     };
 }
+

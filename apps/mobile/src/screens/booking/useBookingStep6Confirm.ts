@@ -52,7 +52,7 @@ export function useBookingStep6Confirm(navigation: NavigationProp) {
 
     const handleCreateBooking = async () => {
         if (!bookingData.selectedSlot) {
-            showToast('Р’С‹Р±РµСЂРёС‚Рµ РІСЂРµРјСЏ', 'error');
+            showToast('Выберите время', 'error');
             return;
         }
 
@@ -64,8 +64,8 @@ export function useBookingStep6Confirm(navigation: NavigationProp) {
         const shouldCreate = await confirm({
             title: 'Подтверждение',
             message: 'Создать запись?',
-            confirmLabel: 'РЎРѕР·РґР°С‚СЊ',
-            cancelLabel: 'РћС‚РјРµРЅР°',
+            confirmLabel: 'Создать',
+            cancelLabel: 'Отмена',
         });
 
         if (!shouldCreate) {
@@ -92,3 +92,4 @@ export function useBookingStep6Confirm(navigation: NavigationProp) {
         isPending,
     };
 }
+

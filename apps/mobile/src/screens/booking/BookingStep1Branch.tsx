@@ -66,7 +66,7 @@ export default function BookingStep1Branch() {
             <View style={styles.container}>
                 <EmptyState
                     icon="business-outline"
-                    title="Р‘РёР·РЅРµСЃ РЅРµ РЅР°Р№РґРµРЅ"
+                    title="Бизнес не найден"
                     message="Попробуйте вернуться к списку и выбрать другой бизнес."
                 />
             </View>
@@ -91,7 +91,7 @@ export default function BookingStep1Branch() {
 
                 {bookingData.promotions && bookingData.promotions.length > 0 && bookingData.branchId ? (
                     <View style={styles.promotionsSection}>
-                        <Text style={styles.promotionsTitle}>РђРєС†РёРё</Text>
+                        <Text style={styles.promotionsTitle}>Акции</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.promotionsScroll}>
                             {bookingData.promotions
                                 .filter((promo) => promo.branch_id === bookingData.branchId)
@@ -99,7 +99,7 @@ export default function BookingStep1Branch() {
                                     <View key={promo.id} style={styles.promotionCard}>
                                         <Ionicons name="gift-outline" size={20} color={colors.status.success} />
                                         <Text style={styles.promotionText} numberOfLines={2}>
-                                            {promo.title_ru || 'РђРєС†РёСЏ'}
+                                            {promo.title_ru || 'Акция'}
                                         </Text>
                                     </View>
                                 ))}
@@ -155,7 +155,7 @@ export default function BookingStep1Branch() {
                     {businessData.branches.length > 0 ? (
                         <View style={styles.buttonContainer}>
                             <Button
-                                title="Р”Р°Р»СЊС€Рµ"
+                                title="Дальше"
                                 onPress={handleNext}
                                 disabled={!bookingData.branchId}
                                 variant="primary"
@@ -276,3 +276,4 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
+

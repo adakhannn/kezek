@@ -19,10 +19,10 @@ export default function SignInPage() {
 
     const redirectParam = sp.get('redirect') || '/';
     const {t} = useLanguage();
-    // Р’СЂРµРјРµРЅРЅРѕ РѕС‚РєР»СЋС‡РµРЅ РІС…РѕРґ РїРѕ С‚РµР»РµС„РѕРЅСѓ - РёСЃРїРѕР»СЊР·СѓРµРј С‚РѕР»СЊРєРѕ email
+    // Временно отключен вход по телефону - используем только email
     const initialMode: Mode = 'email';
 
-    const [mode] = useState<Mode>(initialMode); // РЈР±СЂР°Р»Рё setMode - СЂРµР¶РёРј С„РёРєСЃРёСЂРѕРІР°РЅ
+    const [mode] = useState<Mode>(initialMode); // Убрали setMode - режим фиксирован
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [sending, setSending] = useState(false);
@@ -65,4 +65,5 @@ export default function SignInPage() {
         />
     );
 }
+
 

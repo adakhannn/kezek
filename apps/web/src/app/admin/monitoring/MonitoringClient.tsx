@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -253,8 +253,8 @@ export default function MonitoringClient() {
     return (
         <div className="container mx-auto px-4 py-8">
             <PageHeader
-                title="Р СљР С•Р Р…Р С‘РЎвЂљР С•РЎР‚Р С‘Р Р…Р С– Р С‘ Р В°Р Р…Р В°Р В»Р С‘РЎвЂљР С‘Р С”Р В°"
-                description="Р СљР ВµРЎвЂљРЎР‚Р С‘Р С”Р С‘ API, Р С•Р С—Р ВµРЎР‚Р В°РЎвЂ Р С‘Р С•Р Р…Р Р…РЎвЂ№Р Вµ Р В»Р С•Р С–Р С‘ Р С‘ РЎРѓР Р†Р С•Р Т‘Р С”Р В° Р С—Р С• Р С—РЎР‚Р С•Р С‘Р В·Р Р†Р С•Р Т‘Р С‘РЎвЂљР ВµР В»РЎРЉР Р…Р С•РЎРѓРЎвЂљР С‘ Р С”РЎР‚Р С‘РЎвЂљР С‘РЎвЂЎР ВµРЎРѓР С”Р С‘РЎвЂ¦ РЎРЊР Р…Р Т‘Р С—Р С•Р С‘Р Р…РЎвЂљР С•Р Р†."
+                title="Р СљР С•Р Р…Р С‘РЎ‚оринг Р С‘ РВ°РЅРВ°РВ»РёС‚РёРєРВ°"
+                description="РњРВµС‚РЎР‚Р С‘Р С”Р С‘ API, РѕРїРВµСЂРВ°СвЂ Р С‘Р С•Р Р…Р Р…РЎвЂ№РВµ РВ»оги Р С‘ РЎРѓР Р†Р С•Р Т‘РєРВ° РїРѕ Р С—РЎР‚Р С•Р С‘Р В·РІРѕРТ‘РёС‚РВµРВ»РЎРЉР Р…Р С•РЎРѓРЎ‚Р С‘ Р С”РЎР‚Р С‘РЎ‚РёС‡РВµРЎРѓР С”Р С‘РЎвЂ¦ СЌРЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚РѕРІ."
                 className="mb-6"
             />
 
@@ -262,24 +262,24 @@ export default function MonitoringClient() {
                 value={activeTab}
                 onValueChange={(value) => setActiveTab(value as Tab)}
                 items={[
-                    { key: 'stats', label: 'Р РЋРЎвЂљР В°РЎвЂљР С‘РЎРѓРЎвЂљР С‘Р С”Р В°' },
-                    { key: 'metrics', label: 'Р СљР ВµРЎвЂљРЎР‚Р С‘Р С”Р С‘ API' },
-                    { key: 'logs', label: 'Р вЂєР С•Р С–Р С‘ Р С•Р С—Р ВµРЎР‚Р В°РЎвЂ Р С‘Р в„–' },
+                    { key: 'stats', label: 'РЎС‚РВ°тРёСЃС‚РёРєРВ°' },
+                    { key: 'metrics', label: 'РњРВµС‚РЎР‚Р С‘Р С”Р С‘ API' },
+                    { key: 'logs', label: 'РвЂєоги РѕРїРВµСЂРВ°СвЂ РёРв„–' },
                 ]}
                 className="mb-6 w-full max-w-2xl"
                 stretch
             />
 
-            {error ? <AlertBanner variant="danger" title="Р С›РЎв‚¬Р С‘Р В±Р С”Р В°" message={error} className="mb-6" /> : null}
+            {error ? <AlertBanner variant="danger" title="РћСв‚¬РёРВ±РєРВ°" message={error} className="mb-6" /> : null}
 
             {activeTab === 'stats' ? (
                 <div className="space-y-6">
                     <SectionHeader
-                        title="Р РЋР Р†Р С•Р Т‘Р С”Р В° Р С—Р С• РЎРЊР Р…Р Т‘Р С—Р С•Р С‘Р Р…РЎвЂљРЎС“"
-                        description="Р С›Р В±Р Р…Р С•Р Р†Р В»РЎРЏР ВµР СР В°РЎРЏ Р С”Р В°РЎР‚РЎвЂљР С‘Р Р…Р В° Р С—Р С• РЎРѓР С”Р С•РЎР‚Р С•РЎРѓРЎвЂљР С‘, РЎС“РЎРѓР С—Р ВµРЎв‚¬Р Р…Р С•РЎРѓРЎвЂљР С‘ Р С‘ РЎР‚Р С‘РЎРѓР С”Р В°Р С Р В·Р В° Р С—Р С•РЎРѓР В»Р ВµР Т‘Р Р…Р С‘Р в„– РЎвЂЎР В°РЎРѓ."
+                        title="Р РЋР Р†Р С•Р Т‘РєРВ° РїРѕ СЌРЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚РЎС“"
+                        description="РћРВ±Р Р…Р С•Р Р†Р В»СЏРВµРјРВ°РЎРЏ РєРВ°СЂС‚РёРЅРВ° РїРѕ РЎРѓР С”Р С•РЎР‚Р С•РЎРѓРЎ‚Р С‘, РЎС“РЎРѓР С—Р ВµСв‚¬Р Р…Р С•РЎРѓРЎ‚Р С‘ Р С‘ РЎР‚Р С‘РЎРѓР С”Р В°Р С РВ·РВ° Р С—Р С•РЎРѓР В»РВµРТ‘РЅРёРв„– С‡РВ°РЎРѓ."
                         action={
                             <Button onClick={loadStats} disabled={loading} size="sm">
-                                {loading ? 'Р вЂ”Р В°Р С–РЎР‚РЎС“Р В·Р С”Р В°...' : 'Р С›Р В±Р Р…Р С•Р Р†Р С‘РЎвЂљРЎРЉ'}
+                                {loading ? 'РвЂ”РВ°Р С–РЎР‚РЎС“Р В·РєРВ°...' : 'РћРВ±Р Р…Р С•Р Р†Р С‘РЎ‚РЎРЉ'}
                             </Button>
                         }
                     />
@@ -289,14 +289,14 @@ export default function MonitoringClient() {
                     ) : stats ? (
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                <StatCard title="Р вЂ™РЎРѓР ВµР С–Р С• Р В·Р В°Р С—РЎР‚Р С•РЎРѓР С•Р Р†" value={stats.total_requests} />
-                                <StatCard title="Р Р€РЎРѓР С—Р ВµРЎв‚¬Р Р…РЎвЂ№РЎвЂ¦" value={stats.success_count} valueClassName="text-green-600 dark:text-green-400" />
-                                <StatCard title="Р С›РЎв‚¬Р С‘Р В±Р С•Р С”" value={stats.client_error_count + stats.server_error_count} valueClassName="text-red-600 dark:text-red-400" />
-                                <StatCard title="Р РЋРЎР‚Р ВµР Т‘Р Р…Р ВµР Вµ Р Р†РЎР‚Р ВµР СРЎРЏ" value={formatDuration(stats.avg_duration_ms)} />
+                                <StatCard title="ВСЃРВµРіРѕ РВ·РВ°просов" value={stats.total_requests} />
+                                <StatCard title="Р Р€РЎРѓР С—Р ВµСв‚¬РЅСвЂ№СвЂ¦" value={stats.success_count} valueClassName="text-green-600 dark:text-green-400" />
+                                <StatCard title="РћСв‚¬РёРВ±РѕРє" value={stats.client_error_count + stats.server_error_count} valueClassName="text-red-600 dark:text-red-400" />
+                                <StatCard title="РЎСЂРВµРТ‘РЅРВµРВµ РІСЂРВµРјСЏ" value={formatDuration(stats.avg_duration_ms)} />
                                 <StatCard title="P95" value={formatDuration(stats.p95_duration_ms)} />
                                 <StatCard title="P99" value={formatDuration(stats.p99_duration_ms)} />
-                                <StatCard title="Р СџРЎР‚Р С•РЎвЂ Р ВµР Р…РЎвЂљ Р С•РЎв‚¬Р С‘Р В±Р С•Р С”" value={`${stats.error_rate.toFixed(2)}%`} />
-                                <StatCard title="Р В­Р Р…Р Т‘Р С—Р С•Р С‘Р Р…РЎвЂљ" value={stats.endpoint} />
+                                <StatCard title="Р СџРЎР‚Р С•РЎвЂ РВµРЅС‚ РѕСв‚¬РёРВ±РѕРє" value={`${stats.error_rate.toFixed(2)}%`} />
+                                <StatCard title="РВ­РЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚" value={stats.endpoint} />
                             </div>
 
                             {authFlow ? (
@@ -327,7 +327,7 @@ export default function MonitoringClient() {
                             ) : null}
                         </div>
                     ) : (
-                        <EmptyState compact title="Р СњР ВµРЎвЂљ Р Т‘Р В°Р Р…Р Р…РЎвЂ№РЎвЂ¦" description="Р вЂќР В»РЎРЏ РЎРЊРЎвЂљР С•Р С–Р С• РЎРЊР Р…Р Т‘Р С—Р С•Р С‘Р Р…РЎвЂљР В° Р С—Р С•Р С”Р В° Р Р…Р ВµРЎвЂљ РЎРѓР Р†Р С•Р Т‘Р Р…Р С•Р в„– РЎРѓРЎвЂљР В°РЎвЂљР С‘РЎРѓРЎвЂљР С‘Р С”Р С‘." />
+                        <EmptyState compact title="РќРВµт РТ‘РВ°РЅРЅСвЂ№СвЂ¦" description="Р”РВ»РЎРЏ СЌС‚Р С•Р С–Р С• СЌРЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚РВ° Р С—Р С•Р С”Р В° РЅРВµт РЎРѓР Р†Р С•Р Т‘РЅРѕРв„– СЃС‚РВ°тРёСЃС‚Р С‘Р С”Р С‘." />
                     )}
                 </div>
             ) : null}
@@ -335,9 +335,9 @@ export default function MonitoringClient() {
             {activeTab === 'metrics' ? (
                 <div className="space-y-6">
                     <Card variant="elevated" padding="lg">
-                        <SectionHeader title="Р В¤Р С‘Р В»РЎРЉРЎвЂљРЎР‚РЎвЂ№ Р СР ВµРЎвЂљРЎР‚Р С‘Р С”" description="Р С›РЎвЂљРЎРѓР ВµР в„–РЎвЂљР Вµ Р Р…РЎС“Р В¶Р Р…РЎвЂ№Р Вµ РЎРЊР Р…Р Т‘Р С—Р С•Р С‘Р Р…РЎвЂљРЎвЂ№, Р СР ВµРЎвЂљР С•Р Т‘РЎвЂ№, Р С•РЎв‚¬Р С‘Р В±Р С”Р С‘ Р С‘ Р СР ВµР Т‘Р В»Р ВµР Р…Р Р…РЎвЂ№Р Вµ Р В·Р В°Р С—РЎР‚Р С•РЎРѓРЎвЂ№." className="mb-4" />
+                        <SectionHeader title="РВ¤РёРВ»СЊС‚СЂСвЂ№ РјРВµС‚РЎР‚Р С‘Р С”" description="РћС‚СЃРВµРв„–С‚РВµ РЅСѓРВ¶РЅСвЂ№РВµ СЌРЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚СвЂ№, РјРВµтРѕРТ‘СвЂ№, РѕСв‚¬РёРВ±РєРё Р С‘ РјРВµРТ‘РВ»РВµРЅРЅСвЂ№РВµ РВ·РВ°Р С—РЎР‚Р С•РЎРѓРЎвЂ№." className="mb-4" />
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <FilterField label="Р В­Р Р…Р Т‘Р С—Р С•Р С‘Р Р…РЎвЂљ">
+                            <FilterField label="РВ­РЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚">
                                 <input
                                     type="text"
                                     value={metricsFilters.endpoint}
@@ -346,20 +346,20 @@ export default function MonitoringClient() {
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
                             </FilterField>
-                            <FilterField label="Р СљР ВµРЎвЂљР С•Р Т‘">
+                            <FilterField label="РњРВµтРѕРТ‘">
                                 <select
                                     value={metricsFilters.method}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, method: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Р вЂ™РЎРѓР Вµ</option>
+                                    <option value="">ВСЃРВµ</option>
                                     <option value="GET">GET</option>
                                     <option value="POST">POST</option>
                                     <option value="PUT">PUT</option>
                                     <option value="DELETE">DELETE</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="Р РЋРЎвЂљР В°РЎвЂљРЎС“РЎРѓ Р С”Р С•Р Т‘">
+                            <FilterField label="РЎС‚РВ°тСѓСЃ РєРѕРТ‘">
                                 <input
                                     type="number"
                                     value={metricsFilters.statusCode}
@@ -368,13 +368,13 @@ export default function MonitoringClient() {
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 />
                             </FilterField>
-                            <FilterField label="Р СћР С‘Р С— Р С•РЎв‚¬Р С‘Р В±Р С”Р С‘">
+                            <FilterField label="Тип РѕСв‚¬РёРВ±РєРё">
                                 <select
                                     value={metricsFilters.errorType}
                                     onChange={(e) => setMetricsFilters({ ...metricsFilters, errorType: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Р вЂ™РЎРѓР Вµ</option>
+                                    <option value="">ВСЃРВµ</option>
                                     <option value="validation">Validation</option>
                                     <option value="database">Database</option>
                                     <option value="auth">Auth</option>
@@ -382,7 +382,7 @@ export default function MonitoringClient() {
                                     <option value="network">Network</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="Р СљР С‘Р Р…. Р Р†РЎР‚Р ВµР СРЎРЏ (Р СРЎРѓ)">
+                            <FilterField label="Мин. РІСЂРВµРјя (Рјс)">
                                 <input
                                     type="number"
                                     value={metricsFilters.minDuration}
@@ -394,7 +394,7 @@ export default function MonitoringClient() {
                         </div>
                         <div className="mt-4">
                             <Button onClick={loadMetrics} disabled={loading}>
-                                {loading ? 'Р вЂ”Р В°Р С–РЎР‚РЎС“Р В·Р С”Р В°...' : 'Р СџРЎР‚Р С‘Р СР ВµР Р…Р С‘РЎвЂљРЎРЉ РЎвЂћР С‘Р В»РЎРЉРЎвЂљРЎР‚РЎвЂ№'}
+                                {loading ? 'РвЂ”РВ°Р С–РЎР‚РЎС“Р В·РєРВ°...' : 'Р СџРЎР‚Р С‘Р СР ВµнитСЊ СвЂћРёРВ»СЊС‚СЂСвЂ№'}
                             </Button>
                         </div>
                     </Card>
@@ -406,12 +406,12 @@ export default function MonitoringClient() {
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <TableHead>Р вЂ™РЎР‚Р ВµР СРЎРЏ</TableHead>
-                                        <TableHead>Р В­Р Р…Р Т‘Р С—Р С•Р С‘Р Р…РЎвЂљ</TableHead>
-                                        <TableHead>Р СљР ВµРЎвЂљР С•Р Т‘</TableHead>
-                                        <TableHead>Р РЋРЎвЂљР В°РЎвЂљРЎС“РЎРѓ</TableHead>
-                                        <TableHead>Р вЂ™РЎР‚Р ВµР СРЎРЏ</TableHead>
-                                        <TableHead>Р С›РЎв‚¬Р С‘Р В±Р С”Р В°</TableHead>
+                                        <TableHead>ВСЂРВµРјя</TableHead>
+                                        <TableHead>РВ­РЅРТ‘Р С—Р С•Р С‘Р Р…РЎ‚</TableHead>
+                                        <TableHead>РњРВµтРѕРТ‘</TableHead>
+                                        <TableHead>РЎС‚РВ°тСѓСЃ</TableHead>
+                                        <TableHead>ВСЂРВµРјя</TableHead>
+                                        <TableHead>РћСв‚¬РёРВ±РєРВ°</TableHead>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -440,7 +440,7 @@ export default function MonitoringClient() {
                             </table>
                         </Card>
                     ) : (
-                        <EmptyState compact title="Р СњР ВµРЎвЂљ Р СР ВµРЎвЂљРЎР‚Р С‘Р С”" description="Р В¤Р С‘Р В»РЎРЉРЎвЂљРЎР‚РЎвЂ№ Р Р…Р Вµ Р Р†Р ВµРЎР‚Р Р…РЎС“Р В»Р С‘ Р Т‘Р В°Р Р…Р Р…РЎвЂ№РЎвЂ¦. Р СџР С•Р С—РЎР‚Р С•Р В±РЎС“Р в„–РЎвЂљР Вµ Р С‘Р В·Р СР ВµР Р…Р С‘РЎвЂљРЎРЉ РЎС“РЎРѓР В»Р С•Р Р†Р С‘РЎРЏ Р Р†РЎвЂ№Р В±Р С•РЎР‚Р С”Р С‘." />
+                        <EmptyState compact title="РќРВµт РјРВµС‚РЎР‚Р С‘Р С”" description="РВ¤РёРВ»СЊС‚СЂСвЂ№ РЅРВµ РІРВµРЎР‚Р Р…РЎС“Р В»Р С‘ РТ‘РВ°РЅРЅСвЂ№СвЂ¦. Р СџР С•Р С—РЎР‚Р С•Р В±СѓРв„–С‚РВµ РёРВ·РјРВµнитСЊ СѓСЃРВ»овия РІСвЂ№РВ±орки." />
                     )}
                 </div>
             ) : null}
@@ -448,31 +448,31 @@ export default function MonitoringClient() {
             {activeTab === 'logs' ? (
                 <div className="space-y-6">
                     <Card variant="elevated" padding="lg">
-                        <SectionHeader title="Р В¤Р С‘Р В»РЎРЉРЎвЂљРЎР‚РЎвЂ№ Р В»Р С•Р С–Р С•Р Р†" description="Р С›РЎРѓРЎвЂљР В°Р Р†РЎРЉРЎвЂљР Вµ Р Р…РЎС“Р В¶Р Р…РЎвЂ№Р в„– РЎвЂљР С‘Р С— Р С•Р С—Р ВµРЎР‚Р В°РЎвЂ Р С‘Р С‘ Р С‘ РЎС“РЎР‚Р С•Р Р†Р ВµР Р…РЎРЉ Р В¶РЎС“РЎР‚Р Р…Р В°Р В»Р В°." className="mb-4" />
+                        <SectionHeader title="РВ¤РёРВ»СЊС‚СЂСвЂ№ РВ»огов" description="РћСЃС‚РВ°РІСЊС‚РВµ РЅСѓРВ¶РЅСвЂ№Рв„– тРёРї РѕРїРВµСЂРВ°СвЂ РёРё Р С‘ РЎС“РЎР‚Р С•Р Р†Р ВµРЅСЊ РВ¶РЎС“РЎР‚Р Р…Р В°РВ»РВ°." className="mb-4" />
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <FilterField label="Р СћР С‘Р С— Р С•Р С—Р ВµРЎР‚Р В°РЎвЂ Р С‘Р С‘">
+                            <FilterField label="Тип РѕРїРВµСЂРВ°СвЂ РёРё">
                                 <select
                                     value={logsFilters.operationType}
                                     onChange={(e) => setLogsFilters({ ...logsFilters, operationType: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Р вЂ™РЎРѓР Вµ</option>
-                                    <option value="shift_open">Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљР С‘Р Вµ РЎРѓР СР ВµР Р…РЎвЂ№</option>
-                                    <option value="shift_close">Р вЂ”Р В°Р С”РЎР‚РЎвЂ№РЎвЂљР С‘Р Вµ РЎРѓР СР ВµР Р…РЎвЂ№</option>
-                                    <option value="item_create">Р РЋР С•Р В·Р Т‘Р В°Р Р…Р С‘Р Вµ Р С”Р В»Р С‘Р ВµР Р…РЎвЂљР В°</option>
-                                    <option value="item_update">Р С›Р В±Р Р…Р С•Р Р†Р В»Р ВµР Р…Р С‘Р Вµ Р С”Р В»Р С‘Р ВµР Р…РЎвЂљР В°</option>
-                                    <option value="item_delete">Р Р€Р Т‘Р В°Р В»Р ВµР Р…Р С‘Р Вµ Р С”Р В»Р С‘Р ВµР Р…РЎвЂљР В°</option>
-                                    <option value="items_save">Р РЋР С•РЎвЂ¦РЎР‚Р В°Р Р…Р ВµР Р…Р С‘Р Вµ РЎРѓР С—Р С‘РЎРѓР С”Р В°</option>
-                                    <option value="error">Р С›РЎв‚¬Р С‘Р В±Р С”Р В°</option>
+                                    <option value="">ВСЃРВµ</option>
+                                    <option value="shift_open">РћС‚РєСЂСвЂ№тРёРВµ СЃРјРВµРЅСвЂ№</option>
+                                    <option value="shift_close">РвЂ”РВ°РєСЂСвЂ№тРёРВµ СЃРјРВµРЅСвЂ№</option>
+                                    <option value="item_create">РЎРѕРВ·РТ‘РВ°РЅРёРВµ РєРВ»РёРВµРЅС‚РВ°</option>
+                                    <option value="item_update">РћРВ±Р Р…Р С•Р Р†Р В»РВµРЅРёРВµ РєРВ»РёРВµРЅС‚РВ°</option>
+                                    <option value="item_delete">РЈРТ‘РВ°РВ»РВµРЅРёРВµ РєРВ»РёРВµРЅС‚РВ°</option>
+                                    <option value="items_save">РЎРѕСвЂ¦СЂРВ°РЅРВµРЅРёРВµ РЎРѓР С—Р С‘РЎРѓР С”Р В°</option>
+                                    <option value="error">РћСв‚¬РёРВ±РєРВ°</option>
                                 </select>
                             </FilterField>
-                            <FilterField label="Р Р€РЎР‚Р С•Р Р†Р ВµР Р…РЎРЉ">
+                            <FilterField label="Р Р€РЎР‚Р С•Р Р†Р ВµРЅСЊ">
                                 <select
                                     value={logsFilters.logLevel}
                                     onChange={(e) => setLogsFilters({ ...logsFilters, logLevel: e.target.value })}
                                     className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--focus-ring)] focus:outline-none"
                                 >
-                                    <option value="">Р вЂ™РЎРѓР Вµ</option>
+                                    <option value="">ВСЃРВµ</option>
                                     <option value="debug">Debug</option>
                                     <option value="info">Info</option>
                                     <option value="warn">Warn</option>
@@ -482,7 +482,7 @@ export default function MonitoringClient() {
                         </div>
                         <div className="mt-4">
                             <Button onClick={loadLogs} disabled={loading}>
-                                {loading ? 'Р вЂ”Р В°Р С–РЎР‚РЎС“Р В·Р С”Р В°...' : 'Р СџРЎР‚Р С‘Р СР ВµР Р…Р С‘РЎвЂљРЎРЉ РЎвЂћР С‘Р В»РЎРЉРЎвЂљРЎР‚РЎвЂ№'}
+                                {loading ? 'РвЂ”РВ°Р С–РЎР‚РЎС“Р В·РєРВ°...' : 'Р СџРЎР‚Р С‘Р СР ВµнитСЊ СвЂћРёРВ»СЊС‚СЂСвЂ№'}
                             </Button>
                         </div>
                     </Card>
@@ -494,12 +494,12 @@ export default function MonitoringClient() {
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <TableHead>Р вЂ™РЎР‚Р ВµР СРЎРЏ</TableHead>
-                                        <TableHead>Р СћР С‘Р С—</TableHead>
-                                        <TableHead>Р Р€РЎР‚Р С•Р Р†Р ВµР Р…РЎРЉ</TableHead>
-                                        <TableHead>Р РЋР С•РЎвЂљРЎР‚РЎС“Р Т‘Р Р…Р С‘Р С”</TableHead>
-                                        <TableHead>Р РЋР С•Р С•Р В±РЎвЂ°Р ВµР Р…Р С‘Р Вµ</TableHead>
-                                        <TableHead>Р С›РЎв‚¬Р С‘Р В±Р С”Р В°</TableHead>
+                                        <TableHead>ВСЂРВµРјя</TableHead>
+                                        <TableHead>Тип</TableHead>
+                                        <TableHead>Р Р€РЎР‚Р С•Р Р†Р ВµРЅСЊ</TableHead>
+                                        <TableHead>РЎРѕС‚СЂСѓРТ‘ник</TableHead>
+                                        <TableHead>Р РЋР С•Р С•Р В±СвЂ°РВµРЅРёРВµ</TableHead>
+                                        <TableHead>РћСв‚¬РёРВ±РєРВ°</TableHead>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -522,7 +522,7 @@ export default function MonitoringClient() {
                             </table>
                         </Card>
                     ) : (
-                        <EmptyState compact title="Р СњР ВµРЎвЂљ Р В»Р С•Р С–Р С•Р Р†" description="Р СџР С• РЎвЂљР ВµР С”РЎС“РЎвЂ°Р ВµР в„– Р Р†РЎвЂ№Р В±Р С•РЎР‚Р С”Р Вµ Р С•Р С—Р ВµРЎР‚Р В°РЎвЂ Р С‘Р С•Р Р…Р Р…РЎвЂ№Р в„– Р В¶РЎС“РЎР‚Р Р…Р В°Р В» Р С—РЎС“РЎРѓРЎвЂљ." />
+                        <EmptyState compact title="РќРВµт РВ»огов" description="РџРѕ С‚РВµРєСѓСвЂ°РВµРв„– РІСвЂ№РВ±Р С•РЎР‚Р С”Р Вµ РѕРїРВµСЂРВ°СвЂ Р С‘Р С•Р Р…Р Р…РЎвЂ№Рв„– РВ¶РЎС“РЎР‚Р Р…Р В°РВ» Р С—РЎС“РЎРѓРЎ‚." />
                     )}
                 </div>
             ) : null}
@@ -589,4 +589,5 @@ function TableSkeleton() {
         </Card>
     );
 }
+
 

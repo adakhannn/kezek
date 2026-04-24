@@ -45,7 +45,7 @@ export default function VisitPackagesListClient() {
                 setError(
                     t(
                         'dashboard.visitPackages.loadError',
-                        'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРїРёСЃРѕРє РїР°РєРµС‚РѕРІ',
+                        'Не удалось загрузить список пакетов',
                     ),
                 );
                 setPlans([]);
@@ -56,7 +56,7 @@ export default function VisitPackagesListClient() {
             setError(
                 t(
                     'dashboard.visitPackages.loadError',
-                    'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРїРёСЃРѕРє РїР°РєРµС‚РѕРІ',
+                    'Не удалось загрузить список пакетов',
                 ),
             );
             setPlans([]);
@@ -85,14 +85,14 @@ export default function VisitPackagesListClient() {
                 toast.showSuccess(
                     t(
                         'dashboard.visitPackages.deactivateSuccess',
-                        'РџР°РєРµС‚ РґРµР°РєС‚РёРІРёСЂРѕРІР°РЅ',
+                        'Пакет деактивирован',
                     ),
                 );
             } else {
                 toast.showError(
                     t(
                         'dashboard.visitPackages.deactivateError',
-                        'РќРµ СѓРґР°Р»РѕСЃСЊ РґРµР°РєС‚РёРІРёСЂРѕРІР°С‚СЊ РїР°РєРµС‚',
+                        'Не удалось деактивировать пакет',
                     ),
                 );
             }
@@ -100,7 +100,7 @@ export default function VisitPackagesListClient() {
             toast.showError(
                 t(
                     'dashboard.visitPackages.deactivateError',
-                    'РќРµ СѓРґР°Р»РѕСЃСЊ РґРµР°РєС‚РёРІРёСЂРѕРІР°С‚СЊ РїР°РєРµС‚',
+                    'Не удалось деактивировать пакет',
                 ),
             );
         }
@@ -113,10 +113,10 @@ export default function VisitPackagesListClient() {
 
     const formatBinding = (p: VisitPackagePlan) => {
         const parts: string[] = [];
-        if (p.service_id) parts.push('СѓСЃР»СѓРіР°');
-        else parts.push('Р»СЋР±Р°СЏ СѓСЃР»СѓРіР°');
-        if (p.branch_ids && p.branch_ids.length > 0) parts.push(`${p.branch_ids.length} С„РёР».`);
-        else parts.push('РІСЃРµ С„РёР»РёР°Р»С‹');
+        if (p.service_id) parts.push('услуга');
+        else parts.push('любая услуга');
+        if (p.branch_ids && p.branch_ids.length > 0) parts.push(`${p.branch_ids.length} фил.`);
+        else parts.push('все филиалы');
         return parts.join(', ');
     };
 
@@ -126,12 +126,12 @@ export default function VisitPackagesListClient() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div>
                         <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-100 sm:mb-2 sm:text-3xl">
-                            {t('dashboard.visitPackages.title', 'РџР°РєРµС‚С‹ РІРёР·РёС‚РѕРІ')}
+                            {t('dashboard.visitPackages.title', 'Пакеты визитов')}
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
                             {t(
                                 'dashboard.visitPackages.subtitle',
-                                'РўРёРїС‹ РїР°РєРµС‚РѕРІ РґР»СЏ РїСЂРѕРґР°Р¶Рё РєР»РёРµРЅС‚Р°Рј',
+                                'Типы пакетов для продажи клиентам',
                             )}
                         </p>
                     </div>
@@ -147,7 +147,7 @@ export default function VisitPackagesListClient() {
                                 d="M12 4v16m8-8H4"
                             />
                         </svg>
-                        {t('dashboard.visitPackages.create', 'РЎРѕР·РґР°С‚СЊ РїР°РєРµС‚')}
+                        {t('dashboard.visitPackages.create', 'Создать пакет')}
                     </Link>
                 </div>
             </div>
@@ -155,7 +155,7 @@ export default function VisitPackagesListClient() {
             <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-800 dark:bg-gray-900 sm:rounded-2xl sm:p-4">
                 {loading && (
                     <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                        {t('dashboard.integrations.loading', 'Р—Р°РіСЂСѓР·РєР°...')}
+                        {t('dashboard.integrations.loading', 'Загрузка...')}
                     </div>
                 )}
                 {error && (
@@ -167,7 +167,7 @@ export default function VisitPackagesListClient() {
                     <p className="py-8 text-center text-gray-500 dark:text-gray-400">
                         {t(
                             'dashboard.visitPackages.empty',
-                            'РќРµС‚ С‚РёРїРѕРІ РїР°РєРµС‚РѕРІ. РЎРѕР·РґР°Р№С‚Рµ РїРµСЂРІС‹Р№ РїР°РєРµС‚.',
+                            'Нет типов пакетов. Создайте первый пакет.',
                         )}
                     </p>
                 )}
@@ -176,26 +176,26 @@ export default function VisitPackagesListClient() {
                         <thead>
                             <tr className="border-b border-gray-200 dark:border-gray-700">
                                 <th className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300">
-                                    {t('dashboard.visitPackages.name', 'РќР°Р·РІР°РЅРёРµ')}
+                                    {t('dashboard.visitPackages.name', 'Название')}
                                 </th>
                                 <th className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300">
-                                    {t('dashboard.visitPackages.visits', 'Р’РёР·РёС‚РѕРІ')}
+                                    {t('dashboard.visitPackages.visits', 'Визитов')}
                                 </th>
                                 <th className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300">
-                                    {t('dashboard.visitPackages.validityDays', 'РЎСЂРѕРє (РґРЅРµР№)')}
+                                    {t('dashboard.visitPackages.validityDays', 'Срок (дней)')}
                                 </th>
                                 <th className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300">
-                                    {t('dashboard.visitPackages.discount', 'РЎРєРёРґРєР°')}
+                                    {t('dashboard.visitPackages.discount', 'Скидка')}
                                 </th>
                                 <th className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300">
-                                    {t('dashboard.visitPackages.binding', 'РџСЂРёРІСЏР·РєР°')}
+                                    {t('dashboard.visitPackages.binding', 'Привязка')}
                                 </th>
                                 <th className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300">
-                                    {t('dashboard.visitPackages.active', 'РЎС‚Р°С‚СѓСЃ')}
+                                    {t('dashboard.visitPackages.active', 'Статус')}
                                 </th>
                                 <th
                                     className="px-2 py-3 font-medium text-gray-700 dark:text-gray-300"
-                                    aria-label="Р”РµР№СЃС‚РІРёСЏ"
+                                    aria-label="Действия"
                                 >
                                     {' '}
                                 </th>
@@ -231,8 +231,8 @@ export default function VisitPackagesListClient() {
                                             }`}
                                         >
                                             {plan.is_active
-                                                ? t('dashboard.visitPackages.active', 'РђРєС‚РёРІРµРЅ')
-                                                : t('dashboard.visitPackages.inactive', 'РќРµР°РєС‚РёРІРµРЅ')}
+                                                ? t('dashboard.visitPackages.active', 'Активен')
+                                                : t('dashboard.visitPackages.inactive', 'Неактивен')}
                                         </span>
                                     </td>
                                     <td className="px-2 py-3">
@@ -241,7 +241,7 @@ export default function VisitPackagesListClient() {
                                                 href={`/dashboard/visit-packages/${plan.id}`}
                                                 className="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
                                             >
-                                                {t('dashboard.visitPackages.edit', 'РР·РјРµРЅРёС‚СЊ')}
+                                                {t('dashboard.visitPackages.edit', 'Изменить')}
                                             </Link>
                                             {plan.is_active && (
                                                 <button
@@ -251,7 +251,7 @@ export default function VisitPackagesListClient() {
                                                 >
                                                     {t(
                                                         'dashboard.visitPackages.deactivate',
-                                                        'Р”РµР°РєС‚РёРІРёСЂРѕРІР°С‚СЊ',
+                                                        'Деактивировать',
                                                     )}
                                                 </button>
                                             )}
@@ -272,16 +272,17 @@ export default function VisitPackagesListClient() {
                         void handleDeactivate(confirmPlanId);
                     }
                 }}
-                title={t('dashboard.visitPackages.deactivateTitle', 'Р”РµР°РєС‚РёРІРёСЂРѕРІР°С‚СЊ РїР°РєРµС‚?')}
+                title={t('dashboard.visitPackages.deactivateTitle', 'Деактивировать пакет?')}
                 message={t(
                     'dashboard.visitPackages.deactivateConfirm',
-                    'Р”РµР°РєС‚РёРІРёСЂРѕРІР°С‚СЊ СЌС‚РѕС‚ С‚РёРї РїР°РєРµС‚Р°?',
+                    'Деактивировать этот тип пакета?',
                 )}
-                confirmLabel={t('dashboard.visitPackages.deactivate', 'Р”РµР°РєС‚РёРІРёСЂРѕРІР°С‚СЊ')}
-                cancelLabel={t('common.cancel', 'РћС‚РјРµРЅР°')}
+                confirmLabel={t('dashboard.visitPackages.deactivate', 'Деактивировать')}
+                cancelLabel={t('common.cancel', 'Отмена')}
                 confirmVariant="danger"
             />
             <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
         </div>
     );
 }
+

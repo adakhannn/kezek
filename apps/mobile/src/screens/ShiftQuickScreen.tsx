@@ -56,10 +56,10 @@ export default function ShiftQuickScreen() {
 
     const handleCloseShift = async () => {
         const shouldClose = await confirm({
-            title: 'Р—Р°РєСЂС‹С‚СЊ СЃРјРµРЅСѓ?',
+            title: 'Закрыть смену?',
             message: 'После закрытия смены вы не сможете добавлять клиентов. Продолжить?',
-            confirmLabel: 'Р—Р°РєСЂС‹С‚СЊ',
-            cancelLabel: 'РћС‚РјРµРЅР°',
+            confirmLabel: 'Закрыть',
+            cancelLabel: 'Отмена',
             variant: 'danger',
         });
 
@@ -91,7 +91,7 @@ export default function ShiftQuickScreen() {
                     showToast(
                         result.queued
                             ? 'Клиент сохранён в очередь и будет синхронизирован после восстановления связи.'
-                            : 'РљР»РёРµРЅС‚ РґРѕР±Р°РІР»РµРЅ.',
+                            : 'Клиент добавлен.',
                         result.queued ? 'warning' : 'success',
                     );
                 },
@@ -178,3 +178,4 @@ export default function ShiftQuickScreen() {
         />
     );
 }
+

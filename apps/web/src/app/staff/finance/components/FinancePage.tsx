@@ -1,6 +1,6 @@
-﻿/**
- * РћРїС‚РёРјРёР·РёСЂРѕРІР°РЅРЅС‹Р№ РєРѕРјРїРѕРЅРµРЅС‚ СЃС‚СЂР°РЅРёС†С‹ С„РёРЅР°РЅСЃРѕРІ
- * РСЃРїРѕР»СЊР·СѓРµС‚ React Query РґР»СЏ РєСЌС€РёСЂРѕРІР°РЅРёСЏ Рё РѕРїС‚РёРјРёСЃС‚РёС‡РЅС‹С… РѕР±РЅРѕРІР»РµРЅРёР№
+/**
+ * Оптимизированный компонент страницы финансов
+ * Использует React Query для кэширования и оптимистичных обновлений
  */
 
 'use client';
@@ -27,7 +27,7 @@ import {
     FinanceTabsSection,
 } from './FinancePageSections';
 
-// Р›РµРЅРёРІР°СЏ Р·Р°РіСЂСѓР·РєР° РєРѕРјРїРѕРЅРµРЅС‚Р° СЃС‚Р°С‚РёСЃС‚РёРєРё - Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РїСЂРё РїРµСЂРµРєР»СЋС‡РµРЅРёРё РЅР° РІРєР»Р°РґРєСѓ "РЎС‚Р°С‚РёСЃС‚РёРєР°"
+// Ленивая загрузка компонента статистики - загружается только при переключении на вкладку "Статистика"
 const StatsView = lazy(() => import('./StatsView').then((module) => ({ default: module.StatsView })));
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -38,12 +38,12 @@ import { useToast } from '@/hooks/useToast';
 interface FinancePageProps {
     staffId?: string;
     showHeader?: boolean;
-    /** Р”Р°РЅРЅС‹Рµ СЃРјРµРЅС‹ СЃ СЃРµСЂРІРµСЂР° (SSR prefetch) вЂ” СЃСЂР°Р·Сѓ РѕС‚РѕР±СЂР°Р¶Р°СЋС‚СЃСЏ Р±РµР· Р·Р°РіСЂСѓР·РєРё */
+    /** Данные смены с сервера (SSR prefetch) — сразу отображаются без загрузки */
     initialData?: import('@/app/staff/finance/services/shiftDataService').FinanceResponsePayload;
 }
 
 /**
- * РћРїС‚РёРјРёР·РёСЂРѕРІР°РЅРЅС‹Р№ РєРѕРјРїРѕРЅРµРЅС‚ СЃС‚СЂР°РЅРёС†С‹ С„РёРЅР°РЅСЃРѕРІ
+ * Оптимизированный компонент страницы финансов
  */
 export const FinancePage = memo(function FinancePage({ staffId, showHeader = true, initialData }: FinancePageProps) {
     const { t } = useLanguage();
@@ -68,18 +68,18 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         handleTabChange,
     } = useFinancePageViewState({ staffId });
 
-    // Р›РѕРєР°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РґР»СЏ items (РґР»СЏ РѕРїС‚РёРјРёСЃС‚РёС‡РЅС‹С… РѕР±РЅРѕРІР»РµРЅРёР№)
+    // Локальное состояние для items (для оптимистичных обновлений)
     const [localItems, setLocalItems] = useState<ShiftItem[]>([]);
     const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
-    // РћС‚СЃР»РµР¶РёРІР°РµРј, РєР°РєРёРµ СЌР»РµРјРµРЅС‚С‹ Р±С‹Р»Рё С‚РѕР»СЊРєРѕ С‡С‚Рѕ СЃРѕС…СЂР°РЅРµРЅС‹ (РЅРѕРІС‹Рµ СЌР»РµРјРµРЅС‚С‹ Р±РµР· id)
+    // Отслеживаем, какие элементы были только что сохранены (новые элементы без id)
     const savedItemsWithoutIdRef = useRef<Set<number>>(new Set());
-    // Р¤Р»Р°Рі РґР»СЏ РїСЂРµРґРѕС‚РІСЂР°С‰РµРЅРёСЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ РґРѕР±Р°РІР»РµРЅРёСЏ РЅРѕРІРѕРіРѕ СЌР»РµРјРµРЅС‚Р°
+    // Флаг для предотвращения синхронизации сразу после добавления нового элемента
     const skipNextSyncRef = useRef(false);
-    // Р‘Р»РѕРєРёСЂРѕРІРєР° РїРѕРІС‚РѕСЂРЅРѕРіРѕ РґРѕР±Р°РІР»РµРЅРёСЏ РєР»РёРµРЅС‚Р° (Р·Р°С‰РёС‚Р° РѕС‚ РїРµС‚Р»Рё РїСЂРё Р±С‹СЃС‚СЂС‹С… РєР»РёРєР°С… РёР»Рё РґРІРѕР№РЅРѕРј СЃСЂР°Р±Р°С‚С‹РІР°РЅРёРё)
+    // Блокировка повторного добавления клиента (защита от петли при быстрых кликах или двойном срабатывании)
     const addClientLockRef = useRef(false);
     const addClientUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const autoClientLabel = t('staff.finance.clients.client', 'РљР»РёРµРЅС‚');
+    const autoClientLabel = t('staff.finance.clients.client', 'Клиент');
 
     const prepareItemsForSave = useCallback(
         (items: ShiftItem[]): ShiftItem[] =>
@@ -87,7 +87,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         [autoClientLabel],
     );
 
-    // Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… С‡РµСЂРµР· React Query (initialData РѕС‚ SSR СѓР±РёСЂР°РµС‚ РїРµСЂРІС‹Р№ Р·Р°РїСЂРѕСЃ)
+    // Загрузка данных через React Query (initialData от SSR убирает первый запрос)
     const financeData = useFinanceData({
         staffId,
         date: shiftDate,
@@ -95,7 +95,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         initialData,
     });
 
-    // РњСѓС‚Р°С†РёРё
+    // Мутации
     const mutations = useFinanceMutations({ staffId, date: shiftDate });
 
     const currentTodayStatus = financeData.data?.todayStatus ?? 'none';
@@ -103,7 +103,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
     const currentIsClosed = currentTodayStatus === 'closed';
     const currentIsReadOnlyForOwner = !!staffId && currentIsClosed;
 
-    // Р”РµСЂР¶РёРј РІ ref Р°РєС‚СѓР°Р»СЊРЅС‹Рµ С„Р»Р°РіРё РґР»СЏ РїСЂРѕРІРµСЂРєРё РІРЅСѓС‚СЂРё РєРѕР»Р±СЌРєР° РґРµР±Р°СѓРЅСЃР°
+    // Держим в ref актуальные флаги для проверки внутри колбэка дебаунса
     const {
         clearPendingSave,
         handleSaveNow,
@@ -212,8 +212,8 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             <FinanceHeaderSection
                 showHeader={showHeader}
                 staffId={staffId}
-                title={t('staff.finance.title', 'Р¤РёРЅР°РЅСЃС‹')}
-                subtitle={t('staff.finance.subtitle', 'РЈРїСЂР°РІР»РµРЅРёРµ СЃРјРµРЅРѕР№, РєР»РёРµРЅС‚Р°РјРё Рё С‚РµРј, СЃРєРѕР»СЊРєРѕ РїРѕР»СѓС‡Р°РµС‚ СЃРѕС‚СЂСѓРґРЅРёРє Рё Р±РёР·РЅРµСЃ')}
+                title={t('staff.finance.title', 'Финансы')}
+                subtitle={t('staff.finance.subtitle', 'Управление сменой, клиентами и тем, сколько получает сотрудник и бизнес')}
             />
 
             <FinanceTabsSection
@@ -275,7 +275,7 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
             {activeTab === 'stats' && stats && !staffId && (
                 <FinanceStatsTabSection
                     staffId={staffId}
-                    loadingLabel={t('staff.finance.stats.loading', 'Р—Р°РіСЂСѓР·РєР° СЃС‚Р°С‚РёСЃС‚РёРєРё...')}
+                    loadingLabel={t('staff.finance.stats.loading', 'Загрузка статистики...')}
                     statsContent={
                         <StatsView
                             stats={stats}
@@ -295,5 +295,6 @@ export const FinancePage = memo(function FinancePage({ staffId, showHeader = tru
         </>
     );
 });
+
 
 

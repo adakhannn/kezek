@@ -133,11 +133,11 @@ export default function SystemHealthClient() {
             <div className="container mx-auto px-4 py-8">
                 <AlertBanner
                     variant="danger"
-                    title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё"
+                    title="Ошибка загрузки"
                     message={error}
                     action={
                         <Button onClick={loadHealth} variant="danger" size="sm">
-                            РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°
+                            Попробовать снова
                         </Button>
                     }
                 />
@@ -152,12 +152,12 @@ export default function SystemHealthClient() {
     return (
         <div className="container mx-auto space-y-6 px-4 py-8">
             <PageHeader
-                title="Р—РґРѕСЂРѕРІСЊРµ СЃРёСЃС‚РµРјС‹"
-                description="РђРіСЂРµРіРёСЂРѕРІР°РЅРЅР°СЏ РїР°РЅРµР»СЊ РјРѕРЅРёС‚РѕСЂРёРЅРіР° СЃРѕСЃС‚РѕСЏРЅРёСЏ СЃРёСЃС‚РµРјС‹."
+                title="Здоровье системы"
+                description="Агрегированная панель мониторинга состояния системы."
                 meta={
                     lastUpdate ? (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                            РћР±РЅРѕРІР»РµРЅРѕ: {formatDateTime(lastUpdate.toISOString(), 'ru', true)}
+                            Обновлено: {formatDateTime(lastUpdate.toISOString(), 'ru', true)}
                         </span>
                     ) : null
                 }
@@ -166,45 +166,45 @@ export default function SystemHealthClient() {
                         <svg className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        <span>{loading ? 'РћР±РЅРѕРІР»РµРЅРёРµ...' : 'РћР±РЅРѕРІРёС‚СЊ'}</span>
+                        <span>{loading ? 'Обновление...' : 'Обновить'}</span>
                     </Button>
                 }
             />
 
             <AlertBanner
                 variant={data.ok ? 'success' : 'danger'}
-                title="РћР±С‰РёР№ СЃС‚Р°С‚СѓСЃ СЃРёСЃС‚РµРјС‹"
+                title="Общий статус системы"
                 message={
                     data.ok
-                        ? 'Р’СЃРµ РєРѕРјРїРѕРЅРµРЅС‚С‹ СЂР°Р±РѕС‚Р°СЋС‚ РЅРѕСЂРјР°Р»СЊРЅРѕ.'
-                        : 'РћР±РЅР°СЂСѓР¶РµРЅС‹ РїСЂРѕР±Р»РµРјС‹ РІ РѕРґРЅРѕРј РёР»Рё РЅРµСЃРєРѕР»СЊРєРёС… РєРѕРјРїРѕРЅРµРЅС‚Р°С….'
+                        ? 'Все компоненты работают нормально.'
+                        : 'Обнаружены проблемы в одном или нескольких компонентах.'
                 }
-                action={<StatusChip status={data.ok ? 'ok' : 'error'} label={data.ok ? 'OK' : 'РџСЂРѕР±Р»РµРјР°'} />}
+                action={<StatusChip status={data.ok ? 'ok' : 'error'} label={data.ok ? 'OK' : 'Проблема'} />}
             />
 
             <div className="grid gap-6 md:grid-cols-2">
                 <Card variant="elevated" padding="lg">
                     <SectionHeader
-                        title="Cron-Р·Р°РґР°С‡Рё"
-                        action={<StatusChip status={data.cronJobs.shifts.ok && data.cronJobs.ratings.ok ? 'ok' : 'error'} label={data.cronJobs.shifts.ok && data.cronJobs.ratings.ok ? 'OK' : 'РџСЂРѕР±Р»РµРјР°'} />}
+                        title="Cron-задачи"
+                        action={<StatusChip status={data.cronJobs.shifts.ok && data.cronJobs.ratings.ok ? 'ok' : 'error'} label={data.cronJobs.shifts.ok && data.cronJobs.ratings.ok ? 'OK' : 'Проблема'} />}
                         className="mb-4"
                     />
                     <div className="space-y-4">
                         <HealthPanel
-                            title="Р—Р°РєСЂС‹С‚РёРµ СЃРјРµРЅ"
+                            title="Закрытие смен"
                             ok={data.cronJobs.shifts.ok}
                             lines={[
-                                `РќРµР·Р°РєСЂС‹С‚С‹С… СЃРјРµРЅ СЃС‚Р°СЂС€Рµ 2 РґРЅРµР№: ${data.cronJobs.shifts.openShiftsOlderThan2Days}`,
-                                `РџРѕСЃР»РµРґРЅСЏСЏ РїСЂРѕРІРµСЂРєР°: ${data.cronJobs.shifts.lastCheckDate}`,
+                                `Незакрытых смен старше 2 дней: ${data.cronJobs.shifts.openShiftsOlderThan2Days}`,
+                                `Последняя проверка: ${data.cronJobs.shifts.lastCheckDate}`,
                             ]}
                         />
                         <HealthPanel
-                            title="РџРµСЂРµСЃС‡РµС‚ СЂРµР№С‚РёРЅРіРѕРІ"
+                            title="Пересчет рейтингов"
                             ok={data.cronJobs.ratings.ok}
                             lines={[
                                 data.cronJobs.ratings.daysSinceLastMetric !== null
-                                    ? `РџРѕСЃР»РµРґРЅРёР№ РїРµСЂРµСЃС‡РµС‚: ${data.cronJobs.ratings.daysSinceLastMetric} РґРЅ. РЅР°Р·Р°Рґ`
-                                    : 'Р РµР№С‚РёРЅРіРё РЅРёРєРѕРіРґР° РЅРµ РїРµСЂРµСЃС‡РёС‚С‹РІР°Р»РёСЃСЊ',
+                                    ? `Последний пересчет: ${data.cronJobs.ratings.daysSinceLastMetric} дн. назад`
+                                    : 'Рейтинги никогда не пересчитывались',
                                 `Staff: ${formatDate(data.cronJobs.ratings.staffLastMetricDate)}`,
                                 `Branch: ${formatDate(data.cronJobs.ratings.branchLastMetricDate)}`,
                                 `Biz: ${formatDate(data.cronJobs.ratings.bizLastMetricDate)}`,
@@ -215,39 +215,39 @@ export default function SystemHealthClient() {
 
                 <Card variant="elevated" padding="lg">
                     <SectionHeader
-                        title="API-РјРµС‚СЂРёРєРё"
-                        action={<StatusChip status={data.apiMetrics.ok ? 'ok' : 'error'} label={data.apiMetrics.ok ? 'OK' : 'РџСЂРѕР±Р»РµРјР°'} />}
+                        title="API-метрики"
+                        action={<StatusChip status={data.apiMetrics.ok ? 'ok' : 'error'} label={data.apiMetrics.ok ? 'OK' : 'Проблема'} />}
                         className="mb-4"
                     />
                     <div className="grid grid-cols-2 gap-4">
-                        <MetricBlock label="Р’СЃРµРіРѕ Р·Р°РїСЂРѕСЃРѕРІ (1С‡)" value={data.apiMetrics.totalRequests} />
-                        <MetricBlock label="РџСЂРѕС†РµРЅС‚ РѕС€РёР±РѕРє" value={`${data.apiMetrics.errorRate.toFixed(2)}%`} />
-                        <MetricBlock label="РЎСЂРµРґРЅРµРµ РІСЂРµРјСЏ" value={formatDuration(data.apiMetrics.avgDuration)} />
+                        <MetricBlock label="Всего запросов (1ч)" value={data.apiMetrics.totalRequests} />
+                        <MetricBlock label="Процент ошибок" value={`${data.apiMetrics.errorRate.toFixed(2)}%`} />
+                        <MetricBlock label="Среднее время" value={formatDuration(data.apiMetrics.avgDuration)} />
                         <MetricBlock label="P95" value={formatDuration(data.apiMetrics.p95Duration)} />
                         <MetricBlock label="P99" value={formatDuration(data.apiMetrics.p99Duration)} />
-                        <MetricBlock label="РћС€РёР±РѕРє (1С‡)" value={data.apiMetrics.recentErrors} highlight={data.apiMetrics.recentErrors > 0} />
+                        <MetricBlock label="Ошибок (1ч)" value={data.apiMetrics.recentErrors} highlight={data.apiMetrics.recentErrors > 0} />
                     </div>
                 </Card>
 
                 <Card variant="elevated" padding="lg">
                     <SectionHeader
-                        title="РћС€РёР±РєРё UI"
-                        action={<StatusChip status={data.uiErrors.ok ? 'ok' : 'error'} label={data.uiErrors.ok ? 'OK' : 'РџСЂРѕР±Р»РµРјР°'} />}
+                        title="Ошибки UI"
+                        action={<StatusChip status={data.uiErrors.ok ? 'ok' : 'error'} label={data.uiErrors.ok ? 'OK' : 'Проблема'} />}
                         className="mb-4"
                     />
                     <div className="space-y-3">
-                        <MetricBlock label="РћС€РёР±РѕРє Р·Р° РїРѕСЃР»РµРґРЅРёРµ 24С‡" value={data.uiErrors.recentErrors} highlight={data.uiErrors.recentErrors > 0} />
-                        <MetricBlock label="РџРѕСЃР»РµРґРЅСЏСЏ РѕС€РёР±РєР°" value={formatDate(data.uiErrors.lastErrorDate)} />
+                        <MetricBlock label="Ошибок за последние 24ч" value={data.uiErrors.recentErrors} highlight={data.uiErrors.recentErrors > 0} />
+                        <MetricBlock label="Последняя ошибка" value={formatDate(data.uiErrors.lastErrorDate)} />
                     </div>
                 </Card>
 
                 <Card variant="elevated" padding="lg">
                     <SectionHeader
-                        title="РРЅС‚РµРіСЂР°С†РёРё"
+                        title="Интеграции"
                         action={
                             <StatusChip
                                 status={data.integrations.whatsapp.ok && data.integrations.telegram.ok ? 'ok' : 'error'}
-                                label={data.integrations.whatsapp.ok && data.integrations.telegram.ok ? 'OK' : 'РџСЂРѕР±Р»РµРјР°'}
+                                label={data.integrations.whatsapp.ok && data.integrations.telegram.ok ? 'OK' : 'Проблема'}
                             />
                         }
                         className="mb-4"
@@ -257,16 +257,16 @@ export default function SystemHealthClient() {
                             title="WhatsApp"
                             ok={data.integrations.whatsapp.ok}
                             lines={[
-                                `РџРѕСЃР»РµРґРЅРёР№ СѓСЃРїРµС…: ${formatDate(data.integrations.whatsapp.lastSuccessDate)}`,
-                                data.integrations.whatsapp.recentFailures > 0 ? `РћС€РёР±РѕРє Р·Р° 24С‡: ${data.integrations.whatsapp.recentFailures}` : 'РќРµС‚ РЅРѕРІС‹С… СЃР±РѕРµРІ',
+                                `Последний успех: ${formatDate(data.integrations.whatsapp.lastSuccessDate)}`,
+                                data.integrations.whatsapp.recentFailures > 0 ? `Ошибок за 24ч: ${data.integrations.whatsapp.recentFailures}` : 'Нет новых сбоев',
                             ]}
                         />
                         <HealthPanel
                             title="Telegram"
                             ok={data.integrations.telegram.ok}
                             lines={[
-                                `РџРѕСЃР»РµРґРЅРёР№ СѓСЃРїРµС…: ${formatDate(data.integrations.telegram.lastSuccessDate)}`,
-                                data.integrations.telegram.recentFailures > 0 ? `РћС€РёР±РѕРє Р·Р° 24С‡: ${data.integrations.telegram.recentFailures}` : 'РќРµС‚ РЅРѕРІС‹С… СЃР±РѕРµРІ',
+                                `Последний успех: ${formatDate(data.integrations.telegram.lastSuccessDate)}`,
+                                data.integrations.telegram.recentFailures > 0 ? `Ошибок за 24ч: ${data.integrations.telegram.recentFailures}` : 'Нет новых сбоев',
                             ]}
                         />
                     </div>
@@ -275,11 +275,11 @@ export default function SystemHealthClient() {
 
             <Card variant="outlined" padding="md" className="text-xs text-gray-600 dark:text-gray-400">
                 <p>
-                    Р”Р°РЅРЅС‹Рµ РѕР±РЅРѕРІР»СЏСЋС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РєР°Р¶РґС‹Рµ 30 СЃРµРєСѓРЅРґ. Р”Р»СЏ РґРµС‚Р°Р»СЊРЅРѕР№ РёРЅС„РѕСЂРјР°С†РёРё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ СЂР°Р·РґРµР»С‹{' '}
+                    Данные обновляются автоматически каждые 30 секунд. Для детальной информации используйте разделы{' '}
                     <a href="/admin/monitoring" className="text-blue-600 hover:underline dark:text-blue-400">
-                        РњРѕРЅРёС‚РѕСЂРёРЅРі
+                        Мониторинг
                     </a>{' '}
-                    Рё{' '}
+                    и{' '}
                     <a href="/admin/health-check" className="text-blue-600 hover:underline dark:text-blue-400">
                         Health Check
                     </a>
@@ -309,7 +309,7 @@ function HealthPanel({
         >
             <div className="mb-2 flex items-center justify-between gap-3">
                 <span className="font-medium text-gray-900 dark:text-gray-100">{title}</span>
-                <StatusChip status={ok ? 'ok' : 'error'} label={ok ? 'OK' : 'РџСЂРѕР±Р»РµРјР°'} />
+                <StatusChip status={ok ? 'ok' : 'error'} label={ok ? 'OK' : 'Проблема'} />
             </div>
             <div className="space-y-1.5">
                 {lines.map((line, index) => (
@@ -338,3 +338,4 @@ function MetricBlock({
         </div>
     );
 }
+

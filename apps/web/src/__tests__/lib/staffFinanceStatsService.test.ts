@@ -1,4 +1,4 @@
-import { runStaffFinanceStats } from '@/lib/staffFinanceStatsService';
+﻿import { runStaffFinanceStats } from '@/lib/staffFinanceStatsService';
 
 describe('staffFinanceStatsService', () => {
     const fixedNow = new Date('2024-01-15T10:00:00.000Z');
@@ -29,7 +29,7 @@ describe('staffFinanceStatsService', () => {
             ok: false,
             status: 400,
             error: 'validation',
-            message: 'РќРµРІРµСЂРЅР°СЏ РґР°С‚Р° (РЅР°РїСЂРёРјРµСЂ, 30 С„РµРІСЂР°Р»СЏ)',
+            message: 'Неверная дата (например, 30 февраля)',
         });
     });
 
@@ -101,3 +101,4 @@ describe('staffFinanceStatsService', () => {
         }
     });
 });
+

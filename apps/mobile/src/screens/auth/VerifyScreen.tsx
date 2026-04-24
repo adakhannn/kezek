@@ -50,7 +50,7 @@ export default function VerifyScreen() {
                 });
                 if (error) throw error;
             } else {
-                throw new Error('РќРµ СѓРєР°Р·Р°РЅ email РёР»Рё С‚РµР»РµС„РѕРЅ');
+                throw new Error('Не указан email или телефон');
             }
             showToast('Вход выполнен успешно', 'success');
         } catch (error: unknown) {
@@ -126,7 +126,7 @@ export default function VerifyScreen() {
             />
 
             <Button
-                title="РќР°Р·Р°Рґ"
+                title="Назад"
                 onPress={() => navigation.goBack()}
                 variant="secondary"
                 style={styles.backButton}
@@ -171,3 +171,4 @@ const styles = StyleSheet.create({
         marginTop: colors.layout.space2,
     },
 });
+

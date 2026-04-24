@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -121,7 +121,7 @@ export default function AdminAnalyticsPromotionsPage() {
         }
         const json: PromotionsResponse = await resp.json();
         if (!json.ok || !json.data) {
-          throw new Error(json.error || 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р°РЅР°Р»РёС‚РёРєСѓ РїСЂРѕРјРѕ');
+          throw new Error(json.error || 'Не удалось загрузить аналитику промо');
         }
         if (!ignore) {
           setData(json.data);
@@ -220,7 +220,7 @@ export default function AdminAnalyticsPromotionsPage() {
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-600 dark:text-gray-300">Р—Р°РіСЂСѓР¶Р°РµРј Р°РЅР°Р»РёС‚РёРєСѓ РїСЂРѕРјРѕ...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем аналитику промо...</span>
           </div>
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function AdminAnalyticsPromotionsPage() {
         <div className="mx-auto max-w-xl">
           <AlertBanner
             variant="danger"
-            title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РїСЂРѕРјРѕ"
+            title="Ошибка загрузки промо"
             message={error}
             action={
               <Button
@@ -246,7 +246,7 @@ export default function AdminAnalyticsPromotionsPage() {
                   setStartDate((s) => s);
                 }}
               >
-                РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°
+                Попробовать снова
               </Button>
             }
           />
@@ -268,25 +268,25 @@ export default function AdminAnalyticsPromotionsPage() {
 
   return (
     <div className="space-y-6 py-6">
-      {/* Р¤РёР»СЊС‚СЂС‹ */}
+      {/* Фильтры */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Р¤РёР»СЊС‚СЂС‹</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              РџРµСЂРёРѕРґ, С„РёР»РёР°Р» Рё С‚РёРї РїСЂРѕРјРѕ Р·Р°РґР°СЋС‚ СЃСЂРµР· РґР»СЏ Р°РЅР°Р»РёС‚РёРєРё РїСЂРѕРјРѕвЂ‘Р°РєС†РёР№.
+              Период, филиал и тип промо задают срез для аналитики промо‑акций.
             </p>
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            РџРµСЂРёРѕРґ РґР°РЅРЅС‹С…: {period.startDate} вЂ” {period.endDate}
+            Период данных: {period.startDate} — {period.endDate}
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {/* РџРµСЂРёРѕРґ */}
+          {/* Период */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              РџРµСЂРёРѕРґ
+              Период
             </p>
             <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
               {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((p) => (
@@ -300,19 +300,19 @@ export default function AdminAnalyticsPromotionsPage() {
                       : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }`}
                 >
-                  {p === '7' && '7 РґРЅРµР№'}
-                  {p === '30' && '30 РґРЅРµР№'}
-                  {p === '90' && '90 РґРЅРµР№'}
-                  {p === 'custom' && 'РљР°СЃС‚РѕРјРЅС‹Р№'}
+                  {p === '7' && '7 дней'}
+                  {p === '30' && '30 дней'}
+                  {p === '90' && '90 дней'}
+                  {p === 'custom' && 'Кастомный'}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Р”Р°С‚Р° РЅР°С‡Р°Р»Р° */}
+          {/* Дата начала */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р”Р°С‚Р° РЅР°С‡Р°Р»Р°
+              Дата начала
             </label>
             <input
               type="date"
@@ -325,10 +325,10 @@ export default function AdminAnalyticsPromotionsPage() {
             />
           </div>
 
-          {/* Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ */}
+          {/* Дата окончания */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ
+              Дата окончания
             </label>
             <input
               type="date"
@@ -341,17 +341,17 @@ export default function AdminAnalyticsPromotionsPage() {
             />
           </div>
 
-          {/* Р¤РёР»РёР°Р» */}
+          {/* Филиал */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              Р¤РёР»РёР°Р»
+              Филиал
             </label>
             <select
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Р’СЃРµ С„РёР»РёР°Р»С‹</option>
+              <option value="all">Все филиалы</option>
               {branches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
@@ -360,17 +360,17 @@ export default function AdminAnalyticsPromotionsPage() {
             </select>
           </div>
 
-          {/* РўРёРї РїСЂРѕРјРѕ (РєР»РёРµРЅС‚СЃРєРёР№ С„РёР»СЊС‚СЂ РїРѕ byType) */}
+          {/* Тип промо (клиентский фильтр по byType) */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-              РўРёРї РїСЂРѕРјРѕ
+              Тип промо
             </label>
             <select
               value={promoTypeFilter}
               onChange={(e) => setPromoTypeFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">Р’СЃРµ С‚РёРїС‹</option>
+              <option value="all">Все типы</option>
               {allTypes.map((t) => (
                 <option key={t} value={t}>
                   {t}
@@ -381,11 +381,11 @@ export default function AdminAnalyticsPromotionsPage() {
         </div>
       </section>
 
-      {/* KPI РїРѕ РїСЂРѕРјРѕ */}
+      {/* KPI по промо */}
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            РџСЂРѕРјРѕвЂ‘Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏ
+            Промо‑бронирования
           </p>
           <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
             {formatNumber(summary.promoBookings)}
@@ -394,7 +394,7 @@ export default function AdminAnalyticsPromotionsPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Р’С‹СЂСѓС‡РєР° СЃ РїСЂРѕРјРѕ
+            Выручка с промо
           </p>
           <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
             {formatCurrencyKGS(summary.promoRevenue)}
@@ -403,7 +403,7 @@ export default function AdminAnalyticsPromotionsPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Р’С‹СЂСѓС‡РєР° Р±РµР· РїСЂРѕРјРѕ (РѕС†РµРЅРєР°)
+            Выручка без промо (оценка)
           </p>
           <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
             {formatCurrencyKGS(nonPromoRevenue)}
@@ -412,26 +412,26 @@ export default function AdminAnalyticsPromotionsPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Р”РѕР»СЏ РїСЂРѕРјРѕвЂ‘РІС‹СЂСѓС‡РєРё
+            Доля промо‑выручки
           </p>
           <p className="mt-2 text-3xl font-bold text-indigo-600 dark:text-indigo-400">
             {promoShare.toFixed(2)}%
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            РР· РѕР±С‰РµР№ РІС‹СЂСѓС‡РєРё {formatCurrencyKGS(summary.totalRevenue)}
+            Из общей выручки {formatCurrencyKGS(summary.totalRevenue)}
           </p>
         </div>
       </section>
 
-      {/* РўР°Р±Р»РёС†Р° РїРѕ С‚РёРїР°Рј РїСЂРѕРјРѕ */}
+      {/* Таблица по типам промо */}
       <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Р’РєР»Р°Рґ РѕС‚РґРµР»СЊРЅС‹С… С‚РёРїРѕРІ РїСЂРѕРјРѕ
+              Вклад отдельных типов промо
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              РЎСЂР°РІРЅРёС‚Рµ СЌС„С„РµРєС‚РёРІРЅРѕСЃС‚СЊ СЂР°Р·РЅС‹С… С‚РёРїРѕРІ РїСЂРѕРјРѕ РїРѕ РІС‹СЂСѓС‡РєРµ, РєРѕР»РёС‡РµСЃС‚РІСѓ Рё СЃСѓРјРјРµ СЃРєРёРґРєРё.
+              Сравните эффективность разных типов промо по выручке, количеству и сумме скидки.
             </p>
           </div>
         </div>
@@ -439,8 +439,8 @@ export default function AdminAnalyticsPromotionsPage() {
         {filteredAndSorted.length === 0 ? (
           <EmptyState
             compact
-            title="РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїСЂРѕРјРѕ"
-            description="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ Рё С„РёР»СЊС‚СЂС‹ РЅРµС‚ РїРѕРґС…РѕРґСЏС‰РёС… РїСЂРѕРјРѕ-Р°РєС†РёР№ РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ."
+            title="Нет данных по промо"
+            description="За выбранный период и фильтры нет подходящих промо-акций для сравнения."
           />
         ) : (
           <div className="overflow-x-auto">
@@ -451,28 +451,28 @@ export default function AdminAnalyticsPromotionsPage() {
                     className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer"
                     onClick={() => handleSortChange('type')}
                   >
-                    РўРёРї РїСЂРѕРјРѕ
+                    Тип промо
                   </th>
                   <th
                     className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer"
                     onClick={() => handleSortChange('bookings')}
                   >
-                    Р‘СЂРѕРЅРёСЂРѕРІР°РЅРёР№
+                    Бронирований
                   </th>
                   <th
                     className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer"
                     onClick={() => handleSortChange('revenue')}
                   >
-                    Р’С‹СЂСѓС‡РєР° СЃ РїСЂРѕРјРѕ
+                    Выручка с промо
                   </th>
                   <th
                     className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer"
                     onClick={() => handleSortChange('discount')}
                   >
-                    РЎСѓРјРјР° СЃРєРёРґРѕРє
+                    Сумма скидок
                   </th>
                   <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Р”РѕР»СЏ РІ РїСЂРѕРјРѕвЂ‘РІС‹СЂСѓС‡РєРµ
+                    Доля в промо‑выручке
                   </th>
                 </tr>
               </thead>
@@ -510,4 +510,5 @@ export default function AdminAnalyticsPromotionsPage() {
     </div>
   );
 }
+
 

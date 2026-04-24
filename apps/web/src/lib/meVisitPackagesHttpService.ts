@@ -14,7 +14,7 @@ export async function runMeVisitPackagesHttp(req: Request): Promise<NextResponse
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return createErrorResponse('auth', 'Р СњР Вµ Р В°Р Р†РЎвЂљР С•РЎР‚Р С‘Р В·Р С•Р Р†Р В°Р Р…', undefined, 401);
+    return createErrorResponse('auth', 'Не авторизован', undefined, 401);
   }
 
   const status = new URL(req.url).searchParams.get('status');
@@ -31,3 +31,4 @@ export async function runMeVisitPackagesHttp(req: Request): Promise<NextResponse
 
   return createSuccessResponse(result.data);
 }
+

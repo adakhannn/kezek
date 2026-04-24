@@ -24,7 +24,7 @@ export function AdminAnalyticsOverviewLoading() {
             <div className="flex items-center justify-center">
                 <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-gray-600 dark:text-gray-300">Р—Р°РіСЂСѓР¶Р°РµРј РѕР±Р·РѕСЂ Р°РЅР°Р»РёС‚РёРєРё...</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Загружаем обзор аналитики...</span>
                 </div>
             </div>
         </div>
@@ -43,11 +43,11 @@ export function AdminAnalyticsOverviewError({
             <div className="mx-auto max-w-xl">
                 <AlertBanner
                     variant="danger"
-                    title="РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РѕР±Р·РѕСЂР°"
+                    title="Ошибка загрузки обзора"
                     message={error}
                     action={
                         <Button type="button" variant="danger" size="sm" onClick={onRetry}>
-                            РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°
+                            Попробовать снова
                         </Button>
                     }
                 />
@@ -81,16 +81,16 @@ export function AdminAnalyticsFiltersSection({
         <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 space-y-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Р¤РёР»СЊС‚СЂС‹</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Фильтры</h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                        РџРµСЂРёРѕРґ Рё С„РёР»РёР°Р» Р·Р°РґР°СЋС‚ СЃСЂРµР· РґР»СЏ РІСЃРµС… РјРµС‚СЂРёРє Рё С‚СЂРµРЅРґРѕРІ.
+                        Период и филиал задают срез для всех метрик и трендов.
                     </p>
                 </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
                 <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">РџРµСЂРёРѕРґ</p>
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">Период</p>
                     <div className="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 p-1 text-xs font-medium">
                         {(['7', '30', '90', 'custom'] as PeriodPreset[]).map((preset) => (
                             <button
@@ -103,10 +103,10 @@ export function AdminAnalyticsFiltersSection({
                                         : 'text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
                                 }`}
                             >
-                                {preset === '7' && '7 РґРЅРµР№'}
-                                {preset === '30' && '30 РґРЅРµР№'}
-                                {preset === '90' && '90 РґРЅРµР№'}
-                                {preset === 'custom' && 'РљР°СЃС‚РѕРјРЅС‹Р№'}
+                                {preset === '7' && '7 дней'}
+                                {preset === '30' && '30 дней'}
+                                {preset === '90' && '90 дней'}
+                                {preset === 'custom' && 'Кастомный'}
                             </button>
                         ))}
                     </div>
@@ -114,7 +114,7 @@ export function AdminAnalyticsFiltersSection({
 
                 <div className="space-y-2">
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-                        Р”Р°С‚Р° РЅР°С‡Р°Р»Р°
+                        Дата начала
                     </label>
                     <input
                         type="date"
@@ -126,7 +126,7 @@ export function AdminAnalyticsFiltersSection({
 
                 <div className="space-y-2">
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-                        Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ
+                        Дата окончания
                     </label>
                     <input
                         type="date"
@@ -138,14 +138,14 @@ export function AdminAnalyticsFiltersSection({
 
                 <div className="space-y-2">
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-                        Р¤РёР»РёР°Р»
+                        Филиал
                     </label>
                     <select
                         value={branchId}
                         onChange={(event) => onBranchIdChange(event.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
-                        <option value="all">Р’СЃРµ С„РёР»РёР°Р»С‹</option>
+                        <option value="all">Все филиалы</option>
                         {branches.map((branch) => (
                             <option key={branch.id} value={branch.id}>
                                 {branch.name}
@@ -169,48 +169,48 @@ export function AdminAnalyticsKpiSection({
         <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Р‘СЂРѕРЅРё (СѓСЃРїРµС€РЅС‹Рµ)
+                    Брони (успешные)
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {formatNumber(summary.bookings.confirmedOrPaid)}
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    РР· {formatNumber(summary.bookings.created)} СЃРѕР·РґР°РЅРЅС‹С… Р·Р° РїРµСЂРёРѕРґ
+                    Из {formatNumber(summary.bookings.created)} созданных за период
                 </p>
             </div>
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    РљРѕРЅРІРµСЂСЃРёСЏ home в†’ Р±СЂРѕРЅСЊ
+                    Конверсия home → бронь
                 </p>
                 <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                     {summary.funnel.conversionHomeToBooking.toFixed(2)}%
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {formatNumber(summary.funnel.homeViews)} РїСЂРѕСЃРјРѕС‚СЂРѕРІ РіР»Р°РІРЅРѕР№,{' '}
-                    {formatNumber(summary.bookings.confirmedOrPaid)} СѓСЃРїРµС€РЅС‹С… Р±СЂРѕРЅРµР№
+                    {formatNumber(summary.funnel.homeViews)} просмотров главной,{' '}
+                    {formatNumber(summary.bookings.confirmedOrPaid)} успешных броней
                 </p>
             </div>
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Р’С‹СЂСѓС‡РєР° (РѕС†РµРЅРєР°)
+                    Выручка (оценка)
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {formatCurrencyKGS(summary.revenue.total)}
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Р’РєР»СЋС‡Р°СЏ РїСЂРѕРјРѕ-РІС‹СЂСѓС‡РєСѓ {formatCurrencyKGS(summary.revenue.promoRevenue)}
+                    Включая промо-выручку {formatCurrencyKGS(summary.revenue.promoRevenue)}
                 </p>
             </div>
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Р”РѕР»СЏ РїСЂРѕРјРѕ-Р±СЂРѕРЅРёСЂРѕРІР°РЅРёР№
+                    Доля промо-бронирований
                 </p>
                 <p className="mt-2 text-3xl font-bold text-indigo-600 dark:text-indigo-400">{promoShare.toFixed(2)}%</p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {formatNumber(summary.revenue.promoBookings)} Р±СЂРѕРЅРµР№ СЃ РїСЂРѕРјРѕ Р·Р° РїРµСЂРёРѕРґ
+                    {formatNumber(summary.revenue.promoBookings)} броней с промо за период
                 </p>
             </div>
         </section>
@@ -231,10 +231,10 @@ export function AdminAnalyticsTrendsSection({
                     <div className="flex items-center justify-between gap-2">
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                РўСЂРµРЅРґ РїРѕ СѓСЃРїРµС€РЅС‹Рј Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏРј
+                                Тренд по успешным бронированиям
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Р Р°СЃРїСЂРµРґРµР»РµРЅРёРµ РїРѕРґС‚РІРµСЂР¶РґС‘РЅРЅС‹С…/РѕРїР»Р°С‡РµРЅРЅС‹С… Р±СЂРѕРЅРµР№ РїРѕ РґРЅСЏРј.
+                                Распределение подтверждённых/оплаченных броней по дням.
                             </p>
                         </div>
                     </div>
@@ -252,8 +252,8 @@ export function AdminAnalyticsTrendsSection({
                         ) : (
                             <EmptyState
                                 compact
-                                title="РќРµС‚ РґР°РЅРЅС‹С… РїРѕ Р±СЂРѕРЅСЏРј"
-                                description="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ РЅРµС‚ С‚РѕС‡РµРє РґР»СЏ С‚СЂРµРЅРґР° СѓСЃРїРµС€РЅС‹С… Р±СЂРѕРЅРµР№."
+                                title="Нет данных по броням"
+                                description="За выбранный период нет точек для тренда успешных броней."
                                 className="h-full"
                             />
                         )}
@@ -263,9 +263,9 @@ export function AdminAnalyticsTrendsSection({
                 <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm space-y-4">
                     <div className="flex items-center justify-between gap-2">
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">РўСЂРµРЅРґ РїРѕ РІС‹СЂСѓС‡РєРµ</h3>
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Тренд по выручке</h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                РћС†РµРЅРѕС‡РЅР°СЏ РІС‹СЂСѓС‡РєР° РїРѕ РґРЅСЏРј СЃ СѓС‡РµС‚РѕРј РїСЂРѕРјРѕ.
+                                Оценочная выручка по дням с учетом промо.
                             </p>
                         </div>
                     </div>
@@ -283,8 +283,8 @@ export function AdminAnalyticsTrendsSection({
                         ) : (
                             <EmptyState
                                 compact
-                                title="РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РІС‹СЂСѓС‡РєРµ"
-                                description="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ РЅРµС‚ С‚РѕС‡РµРє РґР»СЏ С‚СЂРµРЅРґР° РїРѕ РІС‹СЂСѓС‡РєРµ."
+                                title="Нет данных по выручке"
+                                description="За выбранный период нет точек для тренда по выручке."
                                 className="h-full"
                             />
                         )}
@@ -296,10 +296,10 @@ export function AdminAnalyticsTrendsSection({
                 <div className="flex items-center justify-between gap-2">
                     <div>
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Р”РѕР»СЏ РїСЂРѕРјРѕ-Р±СЂРѕРЅРёСЂРѕРІР°РЅРёР№ РїРѕ РґРЅСЏРј
+                            Доля промо-бронирований по дням
                         </h3>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            РљР°РєСѓСЋ С‡Р°СЃС‚СЊ СѓСЃРїРµС€РЅС‹С… Р±СЂРѕРЅРµР№ СЃРѕСЃС‚Р°РІР»СЏСЋС‚ РїСЂРѕРјРѕ-Р°РєС†РёРё.
+                            Какую часть успешных броней составляют промо-акции.
                         </p>
                     </div>
                 </div>
@@ -317,20 +317,20 @@ export function AdminAnalyticsTrendsSection({
                     ) : (
                         <EmptyState
                             compact
-                            title="РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїСЂРѕРјРѕ-РґРѕР»Рµ"
-                            description="Р—Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ РЅРµС‚ РґР°РЅРЅС‹С… РґР»СЏ С‚СЂРµРЅРґР° РґРѕР»Рё РїСЂРѕРјРѕ-Р±СЂРѕРЅРµР№."
+                            title="Нет данных по промо-доле"
+                            description="За выбранный период нет данных для тренда доли промо-броней."
                             className="h-full"
                         />
                     )}
                 </div>
 
                 <details className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    <summary className="cursor-pointer select-none">РЎС‹СЂС‹Рµ РґР°РЅРЅС‹Рµ РїРѕ РґРЅСЏРј (РґР»СЏ С‚РµС…. СЃРІРµСЂРєРё)</summary>
+                    <summary className="cursor-pointer select-none">Сырые данные по дням (для тех. сверки)</summary>
                     <div className="mt-2 max-h-64 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
                         <table className="min-w-full text-[11px]">
                             <thead className="bg-gray-50 dark:bg-gray-800">
                                 <tr>
-                                    <th className="px-2 py-1 text-left font-medium text-gray-500 dark:text-gray-400">Р”Р°С‚Р°</th>
+                                    <th className="px-2 py-1 text-left font-medium text-gray-500 dark:text-gray-400">Дата</th>
                                     <th className="px-2 py-1 text-right font-medium text-gray-500 dark:text-gray-400">Home</th>
                                     <th className="px-2 py-1 text-right font-medium text-gray-500 dark:text-gray-400">Biz</th>
                                     <th className="px-2 py-1 text-right font-medium text-gray-500 dark:text-gray-400">Starts</th>
@@ -363,3 +363,4 @@ export function AdminAnalyticsTrendsSection({
         </>
     );
 }
+

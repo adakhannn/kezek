@@ -1,4 +1,4 @@
-import { runMarkAttendance } from '@/lib/markAttendanceService';
+﻿import { runMarkAttendance } from '@/lib/markAttendanceService';
 
 jest.mock('@/lib/performance', () => ({
     measurePerformance: jest.fn((_operation, fn) => fn()),
@@ -40,7 +40,8 @@ describe('markAttendanceService', () => {
             ok: false,
             statusCode: 403,
             errorType: 'forbidden',
-            message: 'Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰РµРЅ',
+            message: 'Доступ запрещен',
         });
     });
 });
+

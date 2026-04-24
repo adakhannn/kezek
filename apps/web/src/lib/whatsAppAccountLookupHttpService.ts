@@ -14,7 +14,7 @@ export async function runWhatsAppBusinessAccountLookupHttp(): Promise<NextRespon
   } catch {
     return createErrorResponse(
       'internal',
-      'WHATSAPP_ACCESS_TOKEN Р Р…Р Вµ РЎС“РЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р В»Р ВµР Р… Р Р† Р С—Р ВµРЎР‚Р ВµР СР ВµР Р…Р Р…РЎвЂ№РЎвЂ¦ Р С•Р С”РЎР‚РЎС“Р В¶Р ВµР Р…Р С‘РЎРЏ',
+      'WHATSAPP_ACCESS_TOKEN не установлен в переменных окружения',
       { code: 'no_token' },
       500,
     );
@@ -39,7 +39,7 @@ export async function runWhatsAppPhoneNumbersLookupHttp(req: Request): Promise<N
   } catch {
     return createErrorResponse(
       'internal',
-      'WHATSAPP_ACCESS_TOKEN Р Р…Р Вµ РЎС“РЎРѓРЎвЂљР В°Р Р…Р С•Р Р†Р В»Р ВµР Р… Р Р† Р С—Р ВµРЎР‚Р ВµР СР ВµР Р…Р Р…РЎвЂ№РЎвЂ¦ Р С•Р С”РЎР‚РЎС“Р В¶Р ВµР Р…Р С‘РЎРЏ',
+      'WHATSAPP_ACCESS_TOKEN не установлен в переменных окружения',
       { code: 'no_token' },
       500,
     );
@@ -57,3 +57,5 @@ export async function runWhatsAppPhoneNumbersLookupHttp(req: Request): Promise<N
 
   return createSuccessResponse(result.data);
 }
+
+

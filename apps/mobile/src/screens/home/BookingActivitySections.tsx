@@ -27,11 +27,11 @@ function getBookingStatusLabel(status: string) {
     }
 
     if (status === 'hold') {
-        return 'РћР¶РёРґР°РµС‚';
+        return 'Ожидает';
     }
 
     if (status === 'paid') {
-        return 'РћРїР»Р°С‡РµРЅРѕ';
+        return 'Оплачено';
     }
 
     return 'Запись';
@@ -51,7 +51,7 @@ export function UpcomingBookingsSection({
             <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionTitle}>Ближайшие записи</Text>
                 <MotionPressable onPress={onOpenAll} style={styles.sectionLinkPressable}>
-                    <Text style={styles.sectionLink}>РћС‚РєСЂС‹С‚СЊ РІСЃРµ</Text>
+                    <Text style={styles.sectionLink}>Открыть все</Text>
                 </MotionPressable>
             </View>
 
@@ -81,7 +81,7 @@ export function UpcomingBookingsSection({
 
                             <View style={styles.bookingMeta}>
                                 <Text style={styles.bookingDate}>
-                                    {formatDate(booking.start_at)} РІР‚Сћ {formatTime(booking.start_at)}
+                                    {formatDate(booking.start_at)} • {formatTime(booking.start_at)}
                                 </Text>
                                 <View style={styles.bookingStatusPill}>
                                     <Text style={styles.bookingStatusText}>
@@ -132,3 +132,4 @@ export function RecentPlacesSection({
         </View>
     );
 }
+

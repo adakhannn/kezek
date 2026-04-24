@@ -42,15 +42,15 @@ export function useFinanceShiftActions({
 
     const loadingMessage = useMemo(() => {
         if (mutations.isClosing) {
-            return t('staff.finance.shift.closing', 'Р—Р°РєСЂС‹С‚РёРµ СЃРјРµРЅС‹...');
+            return t('staff.finance.shift.closing', 'Закрытие смены...');
         }
         if (mutations.isOpening) {
-            return t('staff.finance.shift.opening', 'РћС‚РєСЂС‹С‚РёРµ СЃРјРµРЅС‹...');
+            return t('staff.finance.shift.opening', 'Открытие смены...');
         }
         if (mutations.isSaving) {
-            return t('staff.finance.clients.saving', 'РЎРѕС…СЂР°РЅРµРЅРёРµ РєР»РёРµРЅС‚Р°...');
+            return t('staff.finance.clients.saving', 'Сохранение клиента...');
         }
-        return t('staff.finance.loading', 'Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С… СЃРјРµРЅС‹...');
+        return t('staff.finance.loading', 'Загрузка данных смены...');
     }, [mutations.isClosing, mutations.isOpening, mutations.isSaving, t]);
 
     return {
@@ -60,3 +60,4 @@ export function useFinanceShiftActions({
         shouldShowLoading,
     };
 }
+
