@@ -19,6 +19,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
+import { trackMobileEvent } from '../../lib/analytics';
 import { logDebug, logError, logWarn } from '../../lib/log';
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
@@ -33,11 +34,30 @@ import { getValidationError } from '../../utils/validation';
 type SignInScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
 
 const MOBILE_REDIRECT = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback';
+const GOOGLE_NATIVE_REDIRECT = 'kezek://auth/callback';
+const GOOGLE_SESSION_SYNC_DELAY_MS = 500;
 const TELEGRAM_POLL_INTERVAL_MS = 2500;
 const TELEGRAM_POLL_TIMEOUT_MS = 3 * 60 * 1000;
 const TELEGRAM_ACTIVE_FLOW_STORAGE_KEY = 'telegram_mobile_active_login_v1';
 const TELEGRAM_WEB_WIDGET_FALLBACK_REDIRECT =
     '/auth/callback-mobile?redirect=kezek://auth/callback';
+const GOOGLE_AUTH_FLOW_NAME = 'mobile_google_oauth';
+const MOBILE_GOOGLE_NATIVE_AUTH_ENABLED = (() => {
+    const raw = process.env.EXPO_PUBLIC_MOBILE_GOOGLE_NATIVE_AUTH;
+    if (raw == null) {
+        return true;
+    }
+
+    const normalized = raw.trim().toLowerCase();
+    if (['1', 'true', 'yes', 'on', 'enabled'].includes(normalized)) {
+        return true;
+    }
+    if (['0', 'false', 'no', 'off', 'disabled'].includes(normalized)) {
+        return false;
+    }
+
+    return true;
+})();
 const TELEGRAM_DEEPLINK_AUTH_ENABLED = (() => {
     const raw = process.env.EXPO_PUBLIC_MOBILE_TELEGRAM_DEEPLINK_AUTH;
     if (raw == null) {
@@ -61,6 +81,25 @@ type TelegramFlowState = {
     botDeepLink: string;
     startedAt: number;
 };
+
+function getUrlParam(url: string, key: string) {
+    try {
+        const parsed = new URL(url);
+        const queryValue = parsed.searchParams.get(key);
+        if (queryValue) {
+            return queryValue;
+        }
+
+        if (parsed.hash) {
+            const hashParams = new URLSearchParams(parsed.hash.replace(/^#/, ''));
+            return hashParams.get(key);
+        }
+
+        return null;
+    } catch {
+        return null;
+    }
+}
 
 function buildTelegramWebWidgetFallbackUrl(apiUrl: string) {
     const base = apiUrl.replace(/\/+$/, '');
@@ -131,7 +170,14 @@ export default function SignInScreen() {
     const telegramPollingNonceRef = useRef<string | null>(null);
     const telegramPollingInFlightRef = useRef<string | null>(null);
     const telegramFlowRef = useRef<TelegramFlowState | null>(null);
+    const googleAuthInProgressRef = useRef(false);
+    const googleSuccessShownRef = useRef(false);
+    const googleExpectedStateRef = useRef<string | null>(null);
+    const googleLastProcessedCallbackRef = useRef<string | null>(null);
+    const googleSessionResolveInFlightRef = useRef(false);
     const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+    const googleSuccessMetricSentRef = useRef(false);
+    const googleCallbackMetricSentRef = useRef(false);
 
     const apiUrl = getMobileApiUrl();
 
@@ -201,6 +247,181 @@ export default function SignInScreen() {
         return false;
     };
 
+    const hasActiveSession = async () => {
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
+        return Boolean(session);
+    };
+
+    const tryResolveGoogleSession = async (callbackUrl?: string) => {
+        if (googleSessionResolveInFlightRef.current) {
+            return false;
+        }
+        googleSessionResolveInFlightRef.current = true;
+
+        const finish = (value: boolean) => {
+            googleSessionResolveInFlightRef.current = false;
+            return value;
+        };
+
+        if (callbackUrl) {
+            if (googleLastProcessedCallbackRef.current === callbackUrl) {
+                return finish(await hasActiveSession());
+            }
+
+            const callbackState = getUrlParam(callbackUrl, 'state');
+            const expectedState = googleExpectedStateRef.current;
+            if (expectedState && callbackState && callbackState !== expectedState) {
+                googleLastProcessedCallbackRef.current = callbackUrl;
+                throw new Error('oauth_state_mismatch');
+            }
+
+            await handleDeepLinkAuth(callbackUrl, apiUrl);
+            googleLastProcessedCallbackRef.current = callbackUrl;
+        }
+
+        if (await hasActiveSession()) {
+            return finish(true);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, GOOGLE_SESSION_SYNC_DELAY_MS));
+        if (await hasActiveSession()) {
+            return finish(true);
+        }
+
+        const restored = await tryRestorePendingSession(apiUrl).catch(() => false);
+        if (!restored) {
+            return finish(false);
+        }
+
+        return finish(await hasActiveSession());
+    };
+
+    const showGoogleSuccessOnce = () => {
+        if (googleSuccessShownRef.current) {
+            return;
+        }
+
+        googleSuccessShownRef.current = true;
+        showToast('Вход выполнен успешно', 'success');
+    };
+
+    const mapGoogleSignInError = (error: unknown) => {
+        const raw = error instanceof Error ? error.message : String(error);
+        const normalized = raw.toLowerCase();
+
+        if (
+            normalized.includes('network') ||
+            normalized.includes('failed to fetch') ||
+            normalized.includes('timed out')
+        ) {
+            return 'Network error. Check your internet connection and try again.';
+        }
+
+        if (
+            normalized.includes('redirect') ||
+            normalized.includes('invalid redirect') ||
+            normalized.includes('redirect_uri_mismatch') ||
+            normalized.includes('callback')
+        ) {
+            return 'Google sign-in redirect is misconfigured. Contact support.';
+        }
+
+        if (
+            normalized.includes('temporarily_unavailable') ||
+            normalized.includes('provider') ||
+            normalized.includes('server_error')
+        ) {
+            return 'Google sign-in is temporarily unavailable. Try again later.';
+        }
+
+        if (normalized.includes('oauth_state_mismatch')) {
+            return 'Google sign-in session validation failed. Please try again.';
+        }
+
+        return raw || 'Failed to sign in with Google';
+    };
+
+    const trackGoogleLoginEvent = (
+        eventType:
+            | 'mobile_google_login_started'
+            | 'mobile_google_login_callback_received'
+            | 'mobile_google_login_success'
+            | 'mobile_google_login_failed'
+            | 'mobile_google_login_cancelled',
+        metadata?: Record<string, unknown>,
+    ) => {
+        void trackMobileEvent({
+            eventType,
+            metadata: {
+                flow: GOOGLE_AUTH_FLOW_NAME,
+                ...metadata,
+            },
+        });
+    };
+
+    const logGoogleFlowStage = (stage: string, details?: Record<string, unknown>) => {
+        logDebug('SignInScreen', 'Google auth flow stage', {
+            flow: GOOGLE_AUTH_FLOW_NAME,
+            stage,
+            ...details,
+        });
+    };
+
+    const trackGoogleSuccessOnce = (metadata?: Record<string, unknown>) => {
+        if (googleSuccessMetricSentRef.current) {
+            return;
+        }
+
+        googleSuccessMetricSentRef.current = true;
+        trackGoogleLoginEvent('mobile_google_login_success', metadata);
+    };
+
+    const trackGoogleCallbackOnce = (metadata?: Record<string, unknown>) => {
+        if (googleCallbackMetricSentRef.current) {
+            return;
+        }
+
+        googleCallbackMetricSentRef.current = true;
+        trackGoogleLoginEvent('mobile_google_login_callback_received', metadata);
+    };
+
+    const getGoogleFailureReason = (error: unknown): string => {
+        const raw = error instanceof Error ? error.message : String(error);
+        const normalized = raw.toLowerCase();
+
+        if (
+            normalized.includes('network') ||
+            normalized.includes('failed to fetch') ||
+            normalized.includes('timed out')
+        ) {
+            return 'network';
+        }
+
+        if (
+            normalized.includes('redirect') ||
+            normalized.includes('redirect_uri_mismatch') ||
+            normalized.includes('callback')
+        ) {
+            return 'redirect_config';
+        }
+
+        if (normalized.includes('oauth_state_mismatch')) {
+            return 'state_mismatch';
+        }
+
+        if (
+            normalized.includes('temporarily_unavailable') ||
+            normalized.includes('provider') ||
+            normalized.includes('server_error')
+        ) {
+            return 'provider_unavailable';
+        }
+
+        return 'unknown';
+    };
+
     const handleSignIn = async () => {
         const emailError = getValidationError('email', email);
         if (emailError) {
@@ -236,18 +457,31 @@ export default function SignInScreen() {
 
     const handleGoogleSignIn = async () => {
         setGoogleLoading(true);
+        googleAuthInProgressRef.current = true;
+        googleSuccessShownRef.current = false;
+        googleExpectedStateRef.current = null;
+        googleLastProcessedCallbackRef.current = null;
+        googleSuccessMetricSentRef.current = false;
+        googleCallbackMetricSentRef.current = false;
 
         try {
-            logDebug('SignInScreen', 'Starting OAuth', {
+            const redirectTo = MOBILE_GOOGLE_NATIVE_AUTH_ENABLED
+                ? GOOGLE_NATIVE_REDIRECT
+                : MOBILE_REDIRECT;
+            trackGoogleLoginEvent('mobile_google_login_started', {
+                redirect: MOBILE_GOOGLE_NATIVE_AUTH_ENABLED ? 'native' : 'web_callback',
+            });
+            logGoogleFlowStage('started', {
                 provider: 'google',
-                redirectTo: MOBILE_REDIRECT,
+                redirectTo,
+                nativeAuthEnabled: MOBILE_GOOGLE_NATIVE_AUTH_ENABLED,
             });
 
-            const returnUrl = 'kezek://auth/callback';
+            const returnUrl = GOOGLE_NATIVE_REDIRECT;
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: MOBILE_REDIRECT,
+                    redirectTo,
                     skipBrowserRedirect: true,
                 },
             });
@@ -258,20 +492,42 @@ export default function SignInScreen() {
             }
 
             if (!data?.url) {
-                throw new Error('Не удалось получить OAuth URL');
+                throw new Error('Failed to get OAuth URL');
             }
 
+            logGoogleFlowStage('oauth_url_received', {
+                hasUrl: true,
+            });
+
+            googleExpectedStateRef.current = getUrlParam(data.url, 'state');
+
             const result = await WebBrowser.openAuthSessionAsync(data.url, returnUrl);
-            logDebug('SignInScreen', 'OAuth result', { provider: 'google', result });
+            logGoogleFlowStage('auth_session_result', {
+                resultType: result.type,
+                hasUrl: Boolean(result.type === 'success' && 'url' in result && result.url),
+            });
             WebBrowser.maybeCompleteAuthSession();
 
             if (result.type === 'success' && result.url) {
-                const restored = await ensureSessionRestored(result.url, 4);
+                trackGoogleCallbackOnce({ source: 'open_auth_session' });
+                logGoogleFlowStage('callback_received', { source: 'open_auth_session' });
+                const restored = await tryResolveGoogleSession(result.url);
                 if (restored) {
-                    showToast('Вход выполнен успешно', 'success');
+                    googleAuthInProgressRef.current = false;
+                    trackGoogleSuccessOnce({ source: 'oauth_success_result' });
+                    logGoogleFlowStage('session_established', {
+                        source: 'oauth_success_result',
+                    });
+                    showGoogleSuccessOnce();
                 } else {
+                    trackGoogleLoginEvent('mobile_google_login_failed', {
+                        reason: 'session_not_established_after_callback',
+                    });
+                    logWarn('SignInScreen', 'Google auth callback received without session', {
+                        flow: GOOGLE_AUTH_FLOW_NAME,
+                    });
                     showToast(
-                        'Авторизация обработана, но сессия еще не синхронизировалась. Повторите вход.',
+                        'Authorization callback received, but session was not established. Please try again.',
                         'info',
                     );
                 }
@@ -279,12 +535,23 @@ export default function SignInScreen() {
             }
 
             if (result.type === 'dismiss') {
-                const restored = await ensureSessionRestored(undefined, 6);
+                const restored = await tryResolveGoogleSession();
                 if (restored) {
-                    showToast('Вход выполнен успешно', 'success');
+                    googleAuthInProgressRef.current = false;
+                    trackGoogleSuccessOnce({ source: 'oauth_dismiss_recovery' });
+                    logGoogleFlowStage('session_established', {
+                        source: 'oauth_dismiss_recovery',
+                    });
+                    showGoogleSuccessOnce();
                 } else {
+                    trackGoogleLoginEvent('mobile_google_login_cancelled', {
+                        reason: 'dismiss',
+                    });
+                    logGoogleFlowStage('cancelled', {
+                        reason: 'dismiss',
+                    });
                     showToast(
-                        'Авторизация завершена на веб-сайте. Вернитесь в приложение или перезапустите его.',
+                        'Sign-in window was closed. If login completed in browser, return to app and try again.',
                         'info',
                     );
                 }
@@ -292,12 +559,24 @@ export default function SignInScreen() {
             }
 
             if (result.type === 'cancel') {
-                showToast('Вход отменен', 'info');
+                googleAuthInProgressRef.current = false;
+                trackGoogleLoginEvent('mobile_google_login_cancelled', {
+                    reason: 'cancel',
+                });
+                logGoogleFlowStage('cancelled', { reason: 'cancel' });
+                showToast('Sign-in was cancelled', 'info');
                 return;
             }
 
             if (result.type === 'locked') {
-                showToast('Браузер уже открыт. Закройте его и попробуйте снова.', 'info');
+                trackGoogleLoginEvent('mobile_google_login_failed', {
+                    reason: 'auth_browser_locked',
+                });
+                logGoogleFlowStage('failed', { reason: 'auth_browser_locked' });
+                showToast(
+                    'Authentication browser is already open. Close it and try again.',
+                    'info',
+                );
                 return;
             }
 
@@ -305,13 +584,19 @@ export default function SignInScreen() {
                 provider: 'google',
                 type: result.type,
             });
-            showToast('Не удалось завершить авторизацию. Попробуйте снова.', 'error');
+            trackGoogleLoginEvent('mobile_google_login_failed', {
+                reason: `unexpected_result_${result.type}`,
+            });
+            showToast('Failed to complete authorization. Please try again.', 'error');
         } catch (error: unknown) {
             logError('SignInScreen', 'OAuth sign in error', { provider: 'google', error });
-            const errorMessage =
-                error instanceof Error ? error.message : 'Не удалось войти через Google';
-            showToast(errorMessage, 'error');
+            const reason = getGoogleFailureReason(error);
+            trackGoogleLoginEvent('mobile_google_login_failed', { reason });
+            logGoogleFlowStage('failed', { reason });
+            showToast(mapGoogleSignInError(error), 'error');
         } finally {
+            googleAuthInProgressRef.current = false;
+            googleExpectedStateRef.current = null;
             setGoogleLoading(false);
         }
     };
@@ -359,11 +644,8 @@ export default function SignInScreen() {
                     }
 
                     await exchangeViaMobileApi(exchangeCode, apiUrl);
-                    const {
-                        data: { session },
-                    } = await supabase.auth.getSession();
-
-                    if (!session) {
+                    const restored = await ensureSessionRestored(undefined, 5);
+                    if (!restored) {
                         throw new Error('Сессия не установлена после exchange');
                     }
 
@@ -576,6 +858,21 @@ export default function SignInScreen() {
 
             if (!wasBackground || nextAppState !== 'active') {
                 return;
+            }
+
+            if (googleAuthInProgressRef.current) {
+                void (async () => {
+                    const restored = await tryResolveGoogleSession();
+                    if (restored) {
+                        googleAuthInProgressRef.current = false;
+                        setGoogleLoading(false);
+                        trackGoogleSuccessOnce({ source: 'app_state_recovery' });
+                        logGoogleFlowStage('session_established', {
+                            source: 'app_state_recovery',
+                        });
+                        showGoogleSuccessOnce();
+                    }
+                })();
             }
 
             const flow = telegramFlowRef.current;

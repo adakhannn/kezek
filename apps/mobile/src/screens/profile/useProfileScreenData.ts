@@ -15,6 +15,7 @@ export function useProfileScreenData() {
     const [phone, setPhone] = useState('');
     const [notifyEmail, setNotifyEmail] = useState(true);
     const [notifyWhatsApp, setNotifyWhatsApp] = useState(true);
+    const [isSigningOut, setIsSigningOut] = useState(false);
 
     const userQuery = useQuery({
         queryKey: ['user'],
@@ -96,7 +97,21 @@ export function useProfileScreenData() {
             return;
         }
 
-        await supabase.auth.signOut();
+        try {
+            setIsSigningOut(true);
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                throw error;
+            }
+
+            showToast('Вы вышли из аккаунта', 'success');
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : 'Не удалось выйти из аккаунта';
+            showToast(message, 'error');
+        } finally {
+            setIsSigningOut(false);
+        }
     };
 
     return {
@@ -114,6 +129,7 @@ export function useProfileScreenData() {
         saveProfile,
         confirmSignOut,
         isSaving: updateProfileMutation.isPending,
+        isSigningOut,
     };
 }
 

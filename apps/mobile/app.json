@@ -53,12 +53,13 @@
       "expo-secure-store"
     ],
     "extra": {
-      "eas": {
-        "projectId": "your-project-id"
-      },
       "supabaseUrl": "https://beulnmftzbmtbdlgurht.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJldWxubWZ0emJtdGJkbGd1cmh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5OTMwMjYsImV4cCI6MjA3MDU2OTAyNn0.3P9TqjuJv6FKviacU_yQZu8TzXFh7eqVEZilDg6rEko",
-      "apiUrl": "https://kezek.kg"
-    }
+      "apiUrl": "https://kezek.kg",
+      "eas": {
+        "projectId": "f57c6b68-5764-4273-afe5-99f2d8fd5e89"
+      }
+    },
+    "owner": "adakhann"
   }
 }

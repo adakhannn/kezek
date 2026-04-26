@@ -171,7 +171,7 @@ export default function WhatsAppScreen() {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Р’С…РѕРґ С‡РµСЂРµР· WhatsApp</Text>
+            <Text style={styles.title}>Вход через WhatsApp</Text>
             <Text style={styles.subtitle}>
                 {step === 'phone'
                     ? 'Введите номер телефона для получения кода'

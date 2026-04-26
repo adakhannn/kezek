@@ -26,6 +26,8 @@ jest.mock('expo-secure-store', () => ({
 
 jest.mock('expo-web-browser', () => ({
     openBrowserAsync: jest.fn(),
+    openAuthSessionAsync: jest.fn(),
+    maybeCompleteAuthSession: jest.fn(),
 }));
 
 jest.mock('expo-network', () => ({
@@ -70,6 +72,7 @@ jest.mock('./src/lib/supabase', () => ({
             getSession: jest.fn(),
             getUser: jest.fn(),
             signInWithOtp: jest.fn(),
+            signInWithOAuth: jest.fn(),
             signInWithPassword: jest.fn(),
             signUp: jest.fn(),
             signOut: jest.fn(),

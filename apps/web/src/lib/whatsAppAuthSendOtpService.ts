@@ -31,6 +31,22 @@ export type WhatsAppAuthSendOtpAdminLike = {
   };
 };
 
+type SendMessageParams = {
+  to: string;
+  text: string;
+  template?: {
+    name: string;
+    language: string;
+    components?: Array<{
+      type: 'body' | 'header' | 'button';
+      parameters?: Array<{
+        type: 'text';
+        text: string;
+      }>;
+    }>;
+  };
+};
+
 export type WhatsAppAuthSendOtpResult =
   | { ok: true; data: { message: string } }
   | {
@@ -45,7 +61,9 @@ export async function sendWhatsAppAuthOtp(params: {
   admin: WhatsAppAuthSendOtpAdminLike;
   phone: string | undefined;
   normalizePhone: (phone: string) => string | null;
-  sendMessage: (params: { to: string; text: string }) => Promise<void>;
+  sendMessage: (params: SendMessageParams) => Promise<void>;
+  authTemplateName?: string;
+  authTemplateLanguage?: string;
   now?: Date;
   random?: () => number;
 }): Promise<WhatsAppAuthSendOtpResult> {
@@ -94,11 +112,31 @@ export async function sendWhatsAppAuthOtp(params: {
 
   const message = `Ваш код входа в Kezek: ${otpCode}\n\nКод действителен в течение 10 минут.\n\nЕсли вы не запрашивали этот код, проигнорируйте это сообщение.`;
 
+  const authTemplateName = params.authTemplateName?.trim();
+  const authTemplateLanguage = params.authTemplateLanguage?.trim() || 'ru';
+
   try {
-    await params.sendMessage({
-      to: phoneE164,
-      text: message,
-    });
+    if (authTemplateName) {
+      await params.sendMessage({
+        to: phoneE164,
+        text: message,
+        template: {
+          name: authTemplateName,
+          language: authTemplateLanguage,
+          components: [
+            {
+              type: 'body',
+              parameters: [{ type: 'text', text: otpCode }],
+            },
+          ],
+        },
+      });
+    } else {
+      await params.sendMessage({
+        to: phoneE164,
+        text: message,
+      });
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {

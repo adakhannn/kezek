@@ -1,5 +1,7 @@
 ﻿'use client';
 
+import Link from 'next/link';
+
 import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 
@@ -211,6 +213,13 @@ export function SignInPageView({
                             >
                                 {t('auth.yandex', 'Войти через Яндекс')}
                             </button>
+
+                            <Link
+                                href={`/auth/whatsapp?redirect=${encodeURIComponent(redirectParam || '/')}`}
+                                className="block w-full px-5 py-3 bg-[#25D366] text-sm text-white font-semibold rounded-lg hover:bg-[#1fbe59] shadow-sm hover:shadow-md transition-all duration-200 text-center"
+                            >
+                                {t('auth.whatsapp', 'Войти через WhatsApp')}
+                            </Link>
 
                             <div className="w-full">
                                 <TelegramLoginWidget

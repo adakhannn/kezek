@@ -18,6 +18,7 @@ type Props = {
     onSave: () => void;
     onSignOut: () => void;
     isSaving: boolean;
+    isSigningOut: boolean;
 };
 
 export function ProfileScreenSections({
@@ -33,6 +34,7 @@ export function ProfileScreenSections({
     onSave,
     onSignOut,
     isSaving,
+    isSigningOut,
 }: Props) {
     return (
         <ScrollView style={styles.container} testID="profile-screen">
@@ -102,13 +104,15 @@ export function ProfileScreenSections({
                     title="Сохранить"
                     onPress={onSave}
                     loading={isSaving}
-                    disabled={isSaving}
+                    disabled={isSaving || isSigningOut}
                 />
                 <Button
-                    title="Выйти"
+                    title={isSigningOut ? 'Выходим...' : 'Выйти'}
                     onPress={onSignOut}
                     variant="outline"
                     style={styles.signOutButton}
+                    loading={isSigningOut}
+                    disabled={isSigningOut || isSaving}
                 />
             </View>
         </ScrollView>

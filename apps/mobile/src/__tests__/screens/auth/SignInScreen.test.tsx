@@ -5,13 +5,16 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as SecureStore from 'expo-secure-store';
+import * as WebBrowser from 'expo-web-browser';
 import { AppState, Linking } from 'react-native';
 
 import { supabase } from '../../../lib/supabase';
 import SignInScreen from '../../../screens/auth/SignInScreen';
 import {
     exchangeViaMobileApi,
+    handleDeepLinkAuth,
     getMobileApiUrl,
+    tryRestorePendingSession,
 } from '../../../navigation/useRootNavigationSession';
 
 const mockShowToast = jest.fn();
@@ -19,7 +22,10 @@ const mockExchangeViaMobileApi = jest.fn();
 const mockGetMobileApiUrl = jest.fn(() => 'https://kezek.kg');
 const mockCanOpenURL = jest.fn();
 const mockOpenURL = jest.fn();
+const mockOpenAuthSessionAsync = jest.fn();
+const mockMaybeCompleteAuthSession = jest.fn();
 const mockAppStateListeners = new Set<(state: 'active' | 'background' | 'inactive') => void>();
+const mockTrackMobileEvent = jest.fn();
 
 jest.mock('../../../contexts/ToastContext', () => ({
     useToast: () => ({
@@ -32,6 +38,10 @@ jest.mock('../../../navigation/useRootNavigationSession', () => ({
     getMobileApiUrl: () => mockGetMobileApiUrl(),
     handleDeepLinkAuth: jest.fn(),
     tryRestorePendingSession: jest.fn(),
+}));
+
+jest.mock('../../../lib/analytics', () => ({
+    trackMobileEvent: (...args: unknown[]) => mockTrackMobileEvent(...args),
 }));
 
 function createResponse(payload: unknown, ok = true, status = 200): Response {
@@ -51,8 +61,11 @@ describe('SignInScreen', () => {
     const mockedSupabase = supabase as unknown as {
         auth: {
             getSession: jest.Mock;
+            signInWithOAuth: jest.Mock;
         };
     };
+    const mockedHandleDeepLinkAuth = handleDeepLinkAuth as unknown as jest.Mock;
+    const mockedTryRestorePendingSession = tryRestorePendingSession as unknown as jest.Mock;
 
     beforeEach(() => {
         jest.useRealTimers();
@@ -65,6 +78,12 @@ describe('SignInScreen', () => {
         mockOpenURL.mockReset();
         mockOpenURL.mockResolvedValue(undefined);
         mockAppStateListeners.clear();
+        mockOpenAuthSessionAsync.mockReset();
+        mockOpenAuthSessionAsync.mockResolvedValue({
+            type: 'cancel',
+        });
+        mockMaybeCompleteAuthSession.mockReset();
+        mockTrackMobileEvent.mockReset();
 
         jest
             .spyOn(AppState, 'addEventListener')
@@ -88,6 +107,18 @@ describe('SignInScreen', () => {
             .mockImplementation((...args: Parameters<typeof Linking.openURL>) =>
                 mockOpenURL(...args),
             );
+        jest
+            .spyOn(WebBrowser, 'openAuthSessionAsync')
+            .mockImplementation(
+                (...args: Parameters<typeof WebBrowser.openAuthSessionAsync>) =>
+                    mockOpenAuthSessionAsync(...args),
+            );
+        jest
+            .spyOn(WebBrowser, 'maybeCompleteAuthSession')
+            .mockImplementation(() => {
+                mockMaybeCompleteAuthSession();
+                return undefined;
+            });
 
         (SecureStore.getItemAsync as jest.Mock).mockReset();
         (SecureStore.setItemAsync as jest.Mock).mockReset();
@@ -97,9 +128,20 @@ describe('SignInScreen', () => {
         (SecureStore.deleteItemAsync as jest.Mock).mockResolvedValue(undefined);
 
         mockedSupabase.auth.getSession.mockReset();
+        mockedSupabase.auth.signInWithOAuth.mockReset();
         mockedSupabase.auth.getSession.mockResolvedValue({
             data: { session: null },
         });
+        mockedSupabase.auth.signInWithOAuth.mockResolvedValue({
+            data: {
+                url: 'https://accounts.google.com/o/oauth2/v2/auth?state=test-state-1',
+            },
+            error: null,
+        });
+        mockedHandleDeepLinkAuth.mockReset();
+        mockedHandleDeepLinkAuth.mockResolvedValue(true);
+        mockedTryRestorePendingSession.mockReset();
+        mockedTryRestorePendingSession.mockResolvedValue(false);
 
         const fetchMock = jest.fn();
         global.fetch = fetchMock as unknown as typeof fetch;
@@ -263,6 +305,136 @@ describe('SignInScreen', () => {
                 expect.stringContaining('/auth/sign-in?redirect='),
             );
         });
+    });
+
+    test('google integration: happy-path OAuth success establishes session', async () => {
+        mockedSupabase.auth.getSession
+            .mockResolvedValueOnce({ data: { session: null } })
+            .mockResolvedValueOnce({
+                data: { session: { access_token: 'access', refresh_token: 'refresh' } },
+            });
+
+        mockOpenAuthSessionAsync.mockResolvedValueOnce({
+            type: 'success',
+            url: 'kezek://auth/callback?code=oauth-code&state=test-state-1',
+        });
+
+        render(<SignInScreen />);
+        fireEvent.press(screen.getByText(/Google/i));
+
+        await waitFor(() => {
+            expect(mockedSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+                provider: 'google',
+                options: {
+                    redirectTo: 'kezek://auth/callback',
+                    skipBrowserRedirect: true,
+                },
+            });
+        });
+
+        await waitFor(() => {
+            expect(mockedHandleDeepLinkAuth).toHaveBeenCalledWith(
+                'kezek://auth/callback?code=oauth-code&state=test-state-1',
+                'https://kezek.kg',
+            );
+        });
+
+        await waitFor(() => {
+            expect(mockShowToast).toHaveBeenCalledWith('Вход выполнен успешно', 'success');
+        });
+
+        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
+            expect.objectContaining({ eventType: 'mobile_google_login_started' }),
+        );
+        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
+            expect.objectContaining({ eventType: 'mobile_google_login_callback_received' }),
+        );
+        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
+            expect.objectContaining({ eventType: 'mobile_google_login_success' }),
+        );
+    });
+
+    test('google integration: cancel scenario shows info toast and cancelled metric', async () => {
+        mockOpenAuthSessionAsync.mockResolvedValueOnce({
+            type: 'cancel',
+        });
+
+        render(<SignInScreen />);
+        fireEvent.press(screen.getByText(/Google/i));
+
+        await waitFor(() => {
+            expect(mockShowToast).toHaveBeenCalledWith('Sign-in was cancelled', 'info');
+        });
+
+        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
+            expect.objectContaining({ eventType: 'mobile_google_login_cancelled' }),
+        );
+    });
+
+    test('google integration: network retry path restores session via pending exchange', async () => {
+        jest.useFakeTimers();
+
+        mockedSupabase.auth.getSession.mockResolvedValue({
+            data: { session: null },
+        });
+        mockedTryRestorePendingSession.mockImplementationOnce(async () => {
+            mockedSupabase.auth.getSession.mockResolvedValue({
+                data: { session: { access_token: 'a2', refresh_token: 'r2' } },
+            });
+            return true;
+        });
+
+        mockOpenAuthSessionAsync.mockResolvedValueOnce({
+            type: 'success',
+            url: 'kezek://auth/callback?code=oauth-code&state=test-state-1',
+        });
+
+        render(<SignInScreen />);
+        fireEvent.press(screen.getByText(/Google/i));
+
+        await act(async () => {
+            jest.advanceTimersByTime(700);
+        });
+
+        await waitFor(() => {
+            expect(mockedTryRestorePendingSession).toHaveBeenCalledWith('https://kezek.kg');
+        });
+
+        await waitFor(() => {
+            expect(mockShowToast).toHaveBeenCalledWith('Вход выполнен успешно', 'success');
+        });
+
+        expect(mockTrackMobileEvent).toHaveBeenCalledWith(
+            expect.objectContaining({ eventType: 'mobile_google_login_success' }),
+        );
+    });
+
+    test('google integration: repeated callback with same url is idempotent', async () => {
+        mockedSupabase.auth.getSession.mockResolvedValue({
+            data: { session: { access_token: 'access', refresh_token: 'refresh' } },
+        });
+
+        mockOpenAuthSessionAsync.mockResolvedValueOnce({
+            type: 'success',
+            url: 'kezek://auth/callback?code=oauth-code&state=test-state-1',
+        });
+
+        render(<SignInScreen />);
+        fireEvent.press(screen.getByText(/Google/i));
+
+        await waitFor(() => {
+            expect(mockedHandleDeepLinkAuth).toHaveBeenCalledTimes(1);
+        });
+
+        await waitFor(() => {
+            expect(mockShowToast).toHaveBeenCalledWith('Вход выполнен успешно', 'success');
+        });
+
+        expect(
+            mockTrackMobileEvent.mock.calls.filter(
+                ([payload]) => payload?.eventType === 'mobile_google_login_success',
+            ).length,
+        ).toBe(1);
     });
 });
 

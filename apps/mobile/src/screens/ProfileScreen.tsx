@@ -17,6 +17,7 @@ export default function ProfileScreen() {
         saveProfile,
         confirmSignOut,
         isSaving,
+        isSigningOut,
     } = useProfileScreenData();
 
     if (isLoading) {
@@ -37,6 +38,7 @@ export default function ProfileScreen() {
             onSave={saveProfile}
             onSignOut={confirmSignOut}
             isSaving={isSaving}
+            isSigningOut={isSigningOut}
         />
     );
 }

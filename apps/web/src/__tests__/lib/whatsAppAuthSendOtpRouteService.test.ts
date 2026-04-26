@@ -39,6 +39,8 @@ describe('whatsAppAuthSendOtpRouteService', () => {
             phone: '+996555123456',
             normalizePhone: normalizePhoneToE164,
             sendMessage: sendWhatsApp,
+            authTemplateName: '',
+            authTemplateLanguage: 'ru',
         });
         expect(result).toEqual({
             ok: true,

@@ -183,6 +183,26 @@ export function getWhatsAppPhoneNumberId(): string {
 }
 
 /**
+ * Получает имя template для OTP входа через WhatsApp
+ */
+export function getWhatsAppAuthTemplateName(): string {
+    return getEnvVar('WHATSAPP_AUTH_TEMPLATE_NAME', {
+        required: false,
+        defaultValue: '',
+    });
+}
+
+/**
+ * Получает language code для template OTP входа через WhatsApp
+ */
+export function getWhatsAppAuthTemplateLanguage(): string {
+    return getEnvVar('WHATSAPP_AUTH_TEMPLATE_LANGUAGE', {
+        required: false,
+        defaultValue: 'ru',
+    });
+}
+
+/**
  * Получает NEXT_PUBLIC_TZ
  */
 export function getTimezone(): string {

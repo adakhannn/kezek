@@ -35,6 +35,11 @@ const TELEGRAM_FAILURE_GROWTH_MIN_DELTA = 5;
 const TELEGRAM_FAILURE_GROWTH_MULTIPLIER = 1.5;
 const TELEGRAM_APPROVED_RATE_MIN = 0.6;
 const TELEGRAM_APPROVED_RATE_DROP_DELTA = 0.15;
+const GOOGLE_ALERT_WINDOW_HOURS = 24;
+const GOOGLE_FAILURE_GROWTH_MIN_DELTA = 5;
+const GOOGLE_FAILURE_GROWTH_MULTIPLIER = 1.5;
+const GOOGLE_SUCCESS_RATE_MIN = 0.6;
+const GOOGLE_SUCCESS_RATE_DROP_DELTA = 0.15;
 
 function toIso(date: Date) {
     return date.toISOString();
@@ -310,6 +315,99 @@ export async function runHealthCheckAlerts({
         });
     }
 
+    const googleCurrentWindowEnd = now;
+    const googleCurrentWindowStart = new Date(
+        now.getTime() - GOOGLE_ALERT_WINDOW_HOURS * 60 * 60 * 1000,
+    );
+    const googlePreviousWindowStart = new Date(
+        googleCurrentWindowStart.getTime() - GOOGLE_ALERT_WINDOW_HOURS * 60 * 60 * 1000,
+    );
+
+    const [googleCurrentFailed, googleCurrentSuccess, googlePreviousFailed, googlePreviousSuccess] =
+        await Promise.all([
+            getAnalyticsEventCount(
+                admin,
+                'mobile_google_login_failed',
+                toIso(googleCurrentWindowStart),
+                toIso(googleCurrentWindowEnd),
+            ),
+            getAnalyticsEventCount(
+                admin,
+                'mobile_google_login_success',
+                toIso(googleCurrentWindowStart),
+                toIso(googleCurrentWindowEnd),
+            ),
+            getAnalyticsEventCount(
+                admin,
+                'mobile_google_login_failed',
+                toIso(googlePreviousWindowStart),
+                toIso(googleCurrentWindowStart),
+            ),
+            getAnalyticsEventCount(
+                admin,
+                'mobile_google_login_success',
+                toIso(googlePreviousWindowStart),
+                toIso(googleCurrentWindowStart),
+            ),
+        ]);
+
+    const googleCurrentTotal = googleCurrentFailed + googleCurrentSuccess;
+    const googlePreviousTotal = googlePreviousFailed + googlePreviousSuccess;
+    const googleCurrentSuccessRate =
+        googleCurrentTotal > 0 ? googleCurrentSuccess / googleCurrentTotal : null;
+    const googlePreviousSuccessRate =
+        googlePreviousTotal > 0 ? googlePreviousSuccess / googlePreviousTotal : null;
+
+    const googleFailedGrowthTriggered =
+        googleCurrentFailed >= googlePreviousFailed * GOOGLE_FAILURE_GROWTH_MULTIPLIER &&
+        googleCurrentFailed - googlePreviousFailed >= GOOGLE_FAILURE_GROWTH_MIN_DELTA;
+
+    if (googleFailedGrowthTriggered) {
+        alerts.push({
+            type: 'warning',
+            message:
+                'Growth in mobile Google login failures: failed attempts increased in the last 24h window',
+            details: {
+                windowHours: GOOGLE_ALERT_WINDOW_HOURS,
+                current: {
+                    failed: googleCurrentFailed,
+                },
+                previous: {
+                    failed: googlePreviousFailed,
+                },
+            },
+        });
+    }
+
+    const googleSuccessRateDropTriggered =
+        googleCurrentSuccessRate !== null &&
+        googlePreviousSuccessRate !== null &&
+        googleCurrentSuccessRate < GOOGLE_SUCCESS_RATE_MIN &&
+        googlePreviousSuccessRate - googleCurrentSuccessRate >=
+            GOOGLE_SUCCESS_RATE_DROP_DELTA;
+
+    if (googleSuccessRateDropTriggered) {
+        alerts.push({
+            type: 'error',
+            message: 'Drop in mobile Google login success rate detected',
+            details: {
+                windowHours: GOOGLE_ALERT_WINDOW_HOURS,
+                currentSuccessRate: googleCurrentSuccessRate,
+                previousSuccessRate: googlePreviousSuccessRate,
+                current: {
+                    success: googleCurrentSuccess,
+                    failed: googleCurrentFailed,
+                    total: googleCurrentTotal,
+                },
+                previous: {
+                    success: googlePreviousSuccess,
+                    failed: googlePreviousFailed,
+                    total: googlePreviousTotal,
+                },
+            },
+        });
+    }
+
     const healthCheck = {
         ok: alerts.length === 0,
         alerts,
@@ -356,6 +454,20 @@ export async function runHealthCheckAlerts({
                     failed: previousFailed,
                     expired: previousExpired,
                     approvedRate: previousApprovedRate,
+                },
+            },
+            googleMobileAuth: {
+                ok: !googleFailedGrowthTriggered && !googleSuccessRateDropTriggered,
+                windowHours: GOOGLE_ALERT_WINDOW_HOURS,
+                current: {
+                    success: googleCurrentSuccess,
+                    failed: googleCurrentFailed,
+                    successRate: googleCurrentSuccessRate,
+                },
+                previous: {
+                    success: googlePreviousSuccess,
+                    failed: googlePreviousFailed,
+                    successRate: googlePreviousSuccessRate,
                 },
             },
         },

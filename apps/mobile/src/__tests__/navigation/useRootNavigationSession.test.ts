@@ -3,14 +3,19 @@ import {
     handleDeepLinkAuth,
     isAuthCallbackUrl,
     tryRestorePendingSession,
+    useRootNavigationSession,
 } from '../../navigation/useRootNavigationSession';
 import { supabase } from '../../lib/supabase';
+import { renderHook, waitFor } from '@testing-library/react-native';
+import { AppState, Linking } from 'react-native';
 
 jest.mock('../../lib/supabase', () => ({
     supabase: {
         auth: {
             setSession: jest.fn(),
             exchangeCodeForSession: jest.fn(),
+            getSession: jest.fn(),
+            onAuthStateChange: jest.fn(),
         },
     },
 }));
@@ -20,13 +25,37 @@ describe('useRootNavigationSession helpers', () => {
         auth: {
             setSession: jest.Mock;
             exchangeCodeForSession: jest.Mock;
+            getSession: jest.Mock;
+            onAuthStateChange: jest.Mock;
         };
     };
 
     beforeEach(() => {
         mockedSupabase.auth.setSession.mockResolvedValue({ error: null });
         mockedSupabase.auth.exchangeCodeForSession.mockResolvedValue({ error: null });
+        mockedSupabase.auth.getSession.mockResolvedValue({
+            data: { session: null },
+            error: null,
+        });
+        mockedSupabase.auth.onAuthStateChange.mockReturnValue({
+            data: {
+                subscription: {
+                    unsubscribe: jest.fn(),
+                },
+            },
+        });
         global.fetch = jest.fn();
+        jest.spyOn(Linking, 'getInitialURL').mockResolvedValue(null);
+        jest.spyOn(Linking, 'addEventListener').mockImplementation(
+            (_event: 'url', _handler: ({ url }: { url: string }) => void) => ({
+                remove: jest.fn(),
+            }),
+        );
+        jest.spyOn(AppState, 'addEventListener').mockImplementation(
+            (_event: 'change', _handler: (state: 'active' | 'background' | 'inactive') => void) => ({
+                remove: jest.fn(),
+            }),
+        );
     });
 
     afterEach(() => {
@@ -127,6 +156,42 @@ describe('useRootNavigationSession helpers', () => {
         expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
             access_token: 'access-3',
             refresh_token: 'refresh-3',
+        });
+    });
+
+    test('cold start deep link: restores session on bootstrap from auth callback url', async () => {
+        (Linking.getInitialURL as jest.Mock).mockResolvedValueOnce(
+            'kezek://auth/callback#access_token=cold-access&refresh_token=cold-refresh',
+        );
+
+        mockedSupabase.auth.getSession
+            .mockResolvedValueOnce({
+                data: { session: null },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    session: {
+                        access_token: 'cold-access',
+                        refresh_token: 'cold-refresh',
+                    },
+                },
+                error: null,
+            });
+
+        const { result } = renderHook(() => useRootNavigationSession());
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+
+        await waitFor(() => {
+            expect(result.current.hasSession).toBe(true);
+        });
+
+        expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
+            access_token: 'cold-access',
+            refresh_token: 'cold-refresh',
         });
     });
 });
