@@ -16,8 +16,9 @@ type SendWhatsAppOpts = {
     };
 };
 
-import { getWhatsAppAccessToken, getWhatsAppPhoneNumberId } from '../env';
 import { sanitizeObject } from '@shared-client/log';
+
+import { getWhatsAppAccessToken, getWhatsAppPhoneNumberId } from '../env';
 // Для обратной совместимости создаём обёртки
 const logDebugSafe = (scope: string, message: string, data?: unknown) => {
     if (process.env.NODE_ENV === 'production') return;
@@ -63,6 +64,11 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
         throw new Error(`Invalid phone number format: ${to} (normalized: ${phoneNumber})`);
     }
 
+    const maskedPhoneNumber =
+        phoneNumber.length <= 4
+            ? phoneNumber
+            : `${'*'.repeat(Math.max(0, phoneNumber.length - 4))}${phoneNumber.slice(-4)}`;
+
     const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
 
     // Если указан шаблон, используем его (для отправки вне 24-часового окна)
@@ -91,7 +97,7 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
 
     // Используем безопасное логирование (токены автоматически замаскируются)
     logDebugSafe('WhatsApp', 'Sending message', { 
-        to: phoneNumber, 
+        to: maskedPhoneNumber,
         url, 
         hasToken: !!accessToken, 
         hasPhoneId: !!phoneNumberId,
@@ -163,7 +169,7 @@ export async function sendWhatsApp(opts: SendWhatsAppOpts) {
     }
 
     const result = await resp.json();
-    logDebugSafe('WhatsApp', 'Message sent successfully', { messageId: result.messages?.[0]?.id, to: phoneNumber });
+    logDebugSafe('WhatsApp', 'Message sent successfully', { messageId: result.messages?.[0]?.id, to: maskedPhoneNumber });
     return result;
 }
 

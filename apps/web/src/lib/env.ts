@@ -186,6 +186,11 @@ export function getWhatsAppPhoneNumberId(): string {
  * Получает имя template для OTP входа через WhatsApp
  */
 export function getWhatsAppAuthTemplateName(): string {
+    const otpTemplateName = process.env.WHATSAPP_OTP_TEMPLATE_NAME;
+    if (otpTemplateName && otpTemplateName.trim().length > 0) {
+        return otpTemplateName.trim();
+    }
+
     return getEnvVar('WHATSAPP_AUTH_TEMPLATE_NAME', {
         required: false,
         defaultValue: '',
@@ -196,6 +201,11 @@ export function getWhatsAppAuthTemplateName(): string {
  * Получает language code для template OTP входа через WhatsApp
  */
 export function getWhatsAppAuthTemplateLanguage(): string {
+    const otpTemplateLanguage = process.env.WHATSAPP_OTP_TEMPLATE_LANG;
+    if (otpTemplateLanguage && otpTemplateLanguage.trim().length > 0) {
+        return otpTemplateLanguage.trim();
+    }
+
     return getEnvVar('WHATSAPP_AUTH_TEMPLATE_LANGUAGE', {
         required: false,
         defaultValue: 'ru',
@@ -227,6 +237,18 @@ export function getWhatsAppVerifyToken(): string {
         required: false,
         defaultValue: 'kezek_whatsapp_verify',
         validator: isNonEmpty
+    });
+}
+
+/**
+ * Секрет для хеширования WhatsApp OTP кода и номера телефона.
+ * В production рекомендуется задать WHATSAPP_OTP_HASH_SECRET.
+ */
+export function getWhatsAppOtpHashSecret(): string {
+    return getEnvVar('WHATSAPP_OTP_HASH_SECRET', {
+        required: false,
+        defaultValue: 'kezek_whatsapp_otp_dev_secret',
+        validator: isNonEmpty,
     });
 }
 
