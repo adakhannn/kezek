@@ -66,7 +66,7 @@ BEGIN
             PERFORM cron.schedule(
                 'cleanup_expired_whatsapp_otp_codes_hourly',
                 '0 * * * *',
-                $$select public.cleanup_expired_whatsapp_otp_codes(1440);$$
+                $job$select public.cleanup_expired_whatsapp_otp_codes(1440);$job$
             );
         END IF;
     END IF;

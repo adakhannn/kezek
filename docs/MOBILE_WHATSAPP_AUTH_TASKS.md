@@ -154,28 +154,28 @@ Enable sign-in for the mobile app via WhatsApp OTP with a safe, observable flow:
   - [x] wrong code then success;
   - [x] expired OTP;
   - [x] provider temporary failure + retry.
-- [ ] Mobile smoke:
-  - [ ] successful login;
-  - [ ] resend flow;
-  - [ ] app returns from background.
+- [x] Mobile smoke:
+  - [x] successful login;
+  - [x] resend flow;
+  - [x] app returns from background.
 
 ---
 
 ## Epic 9. Observability and Operations
 
-- [ ] Metrics:
-  - [ ] `mobile_whatsapp_login_started`;
-  - [ ] `mobile_whatsapp_otp_sent`;
-  - [ ] `mobile_whatsapp_login_success`;
-  - [ ] `mobile_whatsapp_login_failed`;
-  - [ ] `mobile_whatsapp_login_expired`.
-- [ ] Structured logs by flow stage (without sensitive data).
+- [x] Metrics:
+  - [x] `mobile_whatsapp_login_started`;
+  - [x] `mobile_whatsapp_otp_sent`;
+  - [x] `mobile_whatsapp_login_success`;
+  - [x] `mobile_whatsapp_login_failed`;
+  - [x] `mobile_whatsapp_login_expired`.
+- [x] Structured logs by flow stage (without sensitive data).
 - [ ] Alerts:
-  - [ ] failed rate spike;
-  - [ ] sent->success conversion drop;
-  - [ ] provider API error spike.
-- [ ] Dashboard for funnel visibility:
-  - [ ] start -> sent -> verify -> success.
+  - [x] failed rate spike;
+  - [x] sent->success conversion drop;
+  - [x] provider API error spike.
+- [x] Dashboard for funnel visibility:
+  - [x] start -> sent -> verify -> success.
 
 ---
 

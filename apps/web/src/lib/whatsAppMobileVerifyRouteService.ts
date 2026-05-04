@@ -1,9 +1,11 @@
 ﻿import { createClient } from '@supabase/supabase-js';
 
 import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
+import { logDebug, logWarn } from '@/lib/log';
 import { runMobileExchangePost } from '@/lib/mobileExchangeRouteService';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createWhatsAppSignInSession } from '@/lib/whatsAppCreateSessionService';
+import { trackWhatsAppMobileMetric } from '@/lib/whatsAppMobileMetricsService';
 import { hashWhatsappOtp, hashWhatsappPhone, secureEqualHex } from '@/lib/whatsAppOtpHash';
 
 type AuthUser = {
@@ -233,6 +235,11 @@ export async function runWhatsAppMobileVerifyRoute({
 
     if (isExpired(attempt.expires_at)) {
         await admin.from('whatsapp_otp_codes').update({ status: 'expired' }).eq('id', attempt.id);
+        await trackWhatsAppMobileMetric('mobile_whatsapp_login_expired', {
+            attemptId: attempt.id,
+            phoneHash: attempt.phone_hash,
+            metadata: { stage: 'verify' },
+        });
         return {
             ok: false,
             status: 410,
@@ -266,7 +273,21 @@ export async function runWhatsAppMobileVerifyRoute({
 
     if (!expectedHash || !secureEqualHex(inputOtpHash, expectedHash)) {
         const failedState = await markAttemptFailed(admin, attempt);
+        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
+            attemptId: attempt.id,
+            phoneHash: attempt.phone_hash,
+            metadata: {
+                stage: 'verify',
+                reason: 'invalid_code',
+                failedAttempts: failedState.nextFailedAttempts,
+            },
+        });
         if (failedState.nextFailedAttempts >= MAX_FAILED_ATTEMPTS) {
+            logWarn('WhatsAppMobileVerify', 'Attempt locked by failed OTP checks', {
+                attemptId: attempt.id,
+                failedAttempts: failedState.nextFailedAttempts,
+                lockedUntil: failedState.lockUntil,
+            });
             return {
                 ok: false,
                 status: 429,
@@ -313,6 +334,15 @@ export async function runWhatsAppMobileVerifyRoute({
     });
 
     if (!createSessionResult.ok) {
+        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
+            attemptId: attempt.id,
+            phoneHash: attempt.phone_hash,
+            metadata: {
+                stage: 'session_prepare',
+                error: createSessionResult.error,
+                status: createSessionResult.status,
+            },
+        });
         return {
             ok: false,
             status: createSessionResult.status,
@@ -332,6 +362,14 @@ export async function runWhatsAppMobileVerifyRoute({
     const refreshToken = signInData.session?.refresh_token;
 
     if (signInError || !accessToken || !refreshToken) {
+        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
+            attemptId: attempt.id,
+            phoneHash: attempt.phone_hash,
+            metadata: {
+                stage: 'sign_in_with_password',
+                reason: signInError?.message || 'missing_tokens',
+            },
+        });
         return {
             ok: false,
             status: 500,
@@ -350,6 +388,15 @@ export async function runWhatsAppMobileVerifyRoute({
     });
 
     if (!exchangeResult.ok) {
+        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
+            attemptId: attempt.id,
+            phoneHash: attempt.phone_hash,
+            metadata: {
+                stage: 'mobile_exchange',
+                error: exchangeResult.error,
+                status: exchangeResult.status,
+            },
+        });
         return {
             ok: false,
             status: exchangeResult.status,
@@ -362,6 +409,19 @@ export async function runWhatsAppMobileVerifyRoute({
         .from('whatsapp_otp_codes')
         .update({ status: 'approved' })
         .eq('id', attempt.id);
+    await trackWhatsAppMobileMetric('mobile_whatsapp_login_success', {
+        attemptId: attempt.id,
+        phoneHash: attempt.phone_hash,
+        metadata: {
+            linkage: resolvedUser.linkage,
+            userId: resolvedUser.userId,
+        },
+    });
+    logDebug('WhatsAppMobileVerify', 'Mobile WhatsApp login approved', {
+        attemptId: attempt.id,
+        userId: resolvedUser.userId,
+        linkage: resolvedUser.linkage,
+    });
 
     return {
         ok: true,

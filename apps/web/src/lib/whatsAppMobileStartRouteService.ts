@@ -1,8 +1,10 @@
 import crypto from 'crypto';
 
 import { getWhatsAppAuthTemplateLanguage, getWhatsAppAuthTemplateName } from '@/lib/env';
+import { logDebug, logWarn } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
+import { trackWhatsAppMobileMetric } from '@/lib/whatsAppMobileMetricsService';
 import { mapWhatsAppProviderError } from '@/lib/whatsAppMobileProviderErrorMapping';
 import { hashWhatsappOtp, hashWhatsappPhone } from '@/lib/whatsAppOtpHash';
 
@@ -156,7 +158,24 @@ export async function runWhatsAppMobileStartRoute({
             otpHash,
             expiresAtIso: expiresAt,
         });
+        await trackWhatsAppMobileMetric('mobile_whatsapp_login_started', {
+            attemptId: attempt.id,
+            phoneHash,
+            metadata: { flow: 'mobile_start' },
+        });
+        logDebug('WhatsAppMobileStart', 'OTP attempt created', {
+            attemptId: attempt.id,
+            phoneMasked,
+            expiresAt: attempt.expires_at,
+        });
     } catch (error) {
+        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
+            phoneHash,
+            metadata: {
+                stage: 'attempt_insert',
+                reason: error instanceof Error ? error.message : String(error),
+            },
+        });
         return {
             ok: false,
             status: 500,
@@ -190,6 +209,21 @@ export async function runWhatsAppMobileStartRoute({
             })
             .eq('id', attempt.id);
         const mapped = mapWhatsAppProviderError(error);
+        await trackWhatsAppMobileMetric('mobile_whatsapp_login_failed', {
+            attemptId: attempt.id,
+            phoneHash,
+            metadata: {
+                stage: 'provider_send',
+                error: mapped.error,
+                status: mapped.status,
+            },
+        });
+        logWarn('WhatsAppMobileStart', 'Provider send failed', {
+            attemptId: attempt.id,
+            phoneMasked,
+            error: mapped.error,
+            status: mapped.status,
+        });
         return {
             ok: false,
             status: mapped.status,
@@ -198,6 +232,19 @@ export async function runWhatsAppMobileStartRoute({
             details: mapped.details,
         };
     }
+
+    await trackWhatsAppMobileMetric('mobile_whatsapp_otp_sent', {
+        attemptId: attempt.id,
+        phoneHash,
+        metadata: {
+            template: authTemplateName,
+            language: authTemplateLanguage,
+        },
+    });
+    logDebug('WhatsAppMobileStart', 'OTP sent', {
+        attemptId: attempt.id,
+        phoneMasked,
+    });
 
     return {
         ok: true,
