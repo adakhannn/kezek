@@ -170,7 +170,7 @@ Enable sign-in for the mobile app via WhatsApp OTP with a safe, observable flow:
   - [x] `mobile_whatsapp_login_failed`;
   - [x] `mobile_whatsapp_login_expired`.
 - [x] Structured logs by flow stage (without sensitive data).
-- [ ] Alerts:
+- [x] Alerts:
   - [x] failed rate spike;
   - [x] sent->success conversion drop;
   - [x] provider API error spike.
@@ -181,19 +181,19 @@ Enable sign-in for the mobile app via WhatsApp OTP with a safe, observable flow:
 
 ## Epic 10. Rollout and Rollback
 
-- [ ] Add feature flag `mobile_whatsapp_auth`.
+- [x] Add feature flag `mobile_whatsapp_auth`.
 - [ ] Staged rollout:
   - [ ] internal;
   - [ ] staging;
   - [ ] % production;
   - [ ] 100%.
-- [ ] Rollback plan:
-  - [ ] immediate disable via flag;
-  - [ ] fallback to existing login methods.
-- [ ] On-call runbook:
-  - [ ] common errors;
-  - [ ] emergency actions;
-  - [ ] verification checklist.
+- [x] Rollback plan:
+  - [x] immediate disable via flag;
+  - [x] fallback to existing login methods.
+- [x] On-call runbook:
+  - [x] common errors;
+  - [x] emergency actions;
+  - [x] verification checklist.
 
 ---
 
@@ -226,4 +226,94 @@ Enable sign-in for the mobile app via WhatsApp OTP with a safe, observable flow:
 - [ ] Sensitive data is masked in logs and traces.
 - [ ] Negative scenarios (invalid/expired/retry/failure) are covered.
 - [ ] Feature flag, staged rollout, and rollback are operational.
+
+---
+
+## Rollout Plan (Operational)
+
+1. Internal (team only)
+- Set `MOBILE_WHATSAPP_AUTH=true`
+- Set `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=0`
+- Allow internal testers only via rollout key header (`x-mobile-rollout-key`) or temporary percent bump to 1-5%.
+- Verify:
+  - `/api/auth/whatsapp/mobile/start` returns `ok: true` for allowed testers;
+  - non-allowed users get `503 service_unavailable`;
+  - events appear in `analytics_events` with `source='mobile_auth_whatsapp'`.
+
+2. Staging
+- `MOBILE_WHATSAPP_AUTH=true`
+- `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=100`
+- Run smoke:
+  - start -> verify -> mobile exchange success;
+  - invalid code;
+  - expired code;
+  - provider failure mapping.
+
+3. Production phased rollout
+- Phase A: `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=10` for 24h
+- Phase B: `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=30` for 24h
+- Phase C: `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=50` for 24h
+- Phase D: `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=100`
+- Gates between phases:
+  - no sustained alert `failed_spike_15m`;
+  - `success_rate_drop_1h` remains normal;
+  - no unresolved P1/P0 incidents in auth path.
+
+4. Mobile app toggle
+- `EXPO_PUBLIC_MOBILE_WHATSAPP_AUTH=true` only when backend flag is enabled.
+- If backend is disabled, set mobile flag to `false` to hide the button in SignIn UI.
+
+---
+
+## Rollback Runbook (Operational)
+
+Trigger conditions:
+- sustained failures in WhatsApp provider/API;
+- abnormal increase in `mobile_whatsapp_login_failed`;
+- conversion drop (`success_rate_drop_1h`) for > 10 minutes;
+- critical incident in OTP/session exchange path.
+
+Immediate actions (<= 5 min):
+1. Backend kill switch:
+- Set `MOBILE_WHATSAPP_AUTH=false` and redeploy.
+2. UI kill switch:
+- Set `EXPO_PUBLIC_MOBILE_WHATSAPP_AUTH=false` for next mobile build/release channel.
+3. Keep fallback methods active:
+- Telegram and Google login remain available.
+
+Verification checklist after rollback:
+1. API check:
+- `/api/auth/whatsapp/mobile/start` returns `503 service_unavailable`.
+2. UI check:
+- WhatsApp login button hidden/disabled in mobile sign-in.
+3. Auth continuity:
+- Telegram login works.
+- Google login works.
+4. Metrics check:
+- No new `mobile_auth_whatsapp` start/success events after rollback timestamp.
+
+SQL quick checks:
+```sql
+-- recent whatsapp mobile auth events
+select created_at, source, event_type
+from analytics_events
+where source = 'mobile_auth_whatsapp'
+  and created_at >= now() - interval '60 minutes'
+order by created_at desc;
+```
+
+```sql
+-- auth channel continuity (example)
+select event_type, count(*) as cnt
+from analytics_events
+where created_at >= now() - interval '60 minutes'
+  and event_type in (
+    'mobile_whatsapp_login_started',
+    'mobile_whatsapp_login_success',
+    'telegram_mobile_login_started',
+    'mobile_google_login_started'
+  )
+group by event_type
+order by cnt desc;
+```
 

@@ -72,3 +72,31 @@ export function isMobileTelegramDeepLinkAuthEnabledForRequest(
     const fingerprint = buildRolloutFingerprint(request);
     return rolloutBucket(fingerprint) < percent;
 }
+
+export function isMobileWhatsAppAuthEnabled(): boolean {
+    const raw =
+        process.env.MOBILE_WHATSAPP_AUTH ??
+        process.env.NEXT_PUBLIC_MOBILE_WHATSAPP_AUTH;
+    return parseBooleanFlag(raw, true);
+}
+
+export function isMobileWhatsAppAuthEnabledForRequest(
+    request: Request,
+): boolean {
+    if (!isMobileWhatsAppAuthEnabled()) {
+        return false;
+    }
+
+    const percent = parsePercent(
+        process.env.MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT,
+    );
+    if (percent == null || percent >= 100) {
+        return true;
+    }
+    if (percent <= 0) {
+        return false;
+    }
+
+    const fingerprint = buildRolloutFingerprint(request);
+    return rolloutBucket(fingerprint) < percent;
+}

@@ -74,6 +74,22 @@ const TELEGRAM_DEEPLINK_AUTH_ENABLED = (() => {
 
     return true;
 })();
+const WHATSAPP_MOBILE_AUTH_ENABLED = (() => {
+    const raw = process.env.EXPO_PUBLIC_MOBILE_WHATSAPP_AUTH;
+    if (raw == null) {
+        return true;
+    }
+
+    const normalized = raw.trim().toLowerCase();
+    if (['1', 'true', 'yes', 'on', 'enabled'].includes(normalized)) {
+        return true;
+    }
+    if (['0', 'false', 'no', 'off', 'disabled'].includes(normalized)) {
+        return false;
+    }
+
+    return true;
+})();
 
 type TelegramLoginUiStatus = 'idle' | 'pending' | 'approved' | 'expired';
 type TelegramFlowState = {
@@ -980,15 +996,17 @@ export default function SignInScreen() {
                 </View>
             )}
 
-            <Button
-                title="Войти через WhatsApp"
-                onPress={() => navigation.navigate('WhatsApp')}
-                disabled={loading || anySocialLoading}
-                variant="secondary"
-                style={styles.whatsAppButton}
-                textStyle={styles.whatsAppButtonText}
-                fullWidth
-            />
+            {WHATSAPP_MOBILE_AUTH_ENABLED && (
+                <Button
+                    title="Войти через WhatsApp"
+                    onPress={() => navigation.navigate('WhatsApp')}
+                    disabled={loading || anySocialLoading}
+                    variant="secondary"
+                    style={styles.whatsAppButton}
+                    textStyle={styles.whatsAppButtonText}
+                    fullWidth
+                />
+            )}
 
             <Button
                 title="Регистрация"

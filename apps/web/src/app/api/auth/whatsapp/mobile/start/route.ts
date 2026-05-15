@@ -1,7 +1,8 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-import { withErrorHandler } from '@/lib/apiErrorHandler';
+import { createErrorResponse, withErrorHandler } from '@/lib/apiErrorHandler';
+import { isMobileWhatsAppAuthEnabledForRequest } from '@/lib/featureFlags';
 import { RateLimitConfigs, routeRateLimit, withRateLimit } from '@/lib/rateLimit';
 import { runWhatsAppMobileStartHttp } from '@/lib/whatsAppMobileStartHttpService';
 
@@ -15,6 +16,15 @@ const whatsAppMobileStartRateLimit = routeRateLimit(
 );
 
 export async function POST(req: Request) {
+    if (!isMobileWhatsAppAuthEnabledForRequest(req)) {
+        return createErrorResponse(
+            'service_unavailable',
+            'WhatsApp mobile auth is disabled by feature flag/rollout',
+            undefined,
+            503,
+        );
+    }
+
     return withRateLimit(req, whatsAppMobileStartRateLimit, () =>
         withErrorHandler('WhatsAppMobileStart', () => runWhatsAppMobileStartHttp(req)),
     );
