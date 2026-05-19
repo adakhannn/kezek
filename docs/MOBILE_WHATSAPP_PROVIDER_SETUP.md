@@ -55,6 +55,10 @@ WHATSAPP_VERIFY_TOKEN=<webhook-verify-token>
 # Preferred names for OTP template
 WHATSAPP_OTP_TEMPLATE_NAME=<approved-template-name>
 WHATSAPP_OTP_TEMPLATE_LANG=<template-language-code>
+WHATSAPP_OTP_TEMPLATE_TYPE=<utility|authentication>
+
+# Optional: explicit template components (JSON array), supports {{OTP_CODE}} placeholder
+WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON=<json-array>
 
 # Backward compatibility (still supported)
 WHATSAPP_AUTH_TEMPLATE_NAME=<approved-template-name>
@@ -64,6 +68,8 @@ WHATSAPP_AUTH_TEMPLATE_LANGUAGE=<template-language-code>
 Notes:
 - `WHATSAPP_OTP_TEMPLATE_*` is preferred.
 - Code fallback supports legacy `WHATSAPP_AUTH_TEMPLATE_*`.
+- `WHATSAPP_OTP_TEMPLATE_TYPE` controls migration semantics (`utility` by default, `authentication` when switched).
+- `WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON` lets you align payload with provider schema without code changes.
 - Never store raw tokens in git/docs/screenshots.
 
 ---
@@ -128,6 +134,9 @@ Current implementation details:
 - Preferred env:
   - `WHATSAPP_OTP_TEMPLATE_NAME`
   - `WHATSAPP_OTP_TEMPLATE_LANG`
+  - `WHATSAPP_OTP_TEMPLATE_TYPE`
+  - `WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON` (optional)
 - Backward compatible fallback:
   - `WHATSAPP_AUTH_TEMPLATE_NAME`
   - `WHATSAPP_AUTH_TEMPLATE_LANGUAGE`
+- OTP placeholder token for custom components JSON: `{{OTP_CODE}}`.

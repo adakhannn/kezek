@@ -23,38 +23,40 @@ Record:
 
 ## 1) Template Approval Gate
 
-- [ ] New `AUTHENTICATION` template exists.
-- [ ] Status is `APPROVED`.
-- [ ] Policy/legal copy validated (OTP wording, no marketing text).
+- [x] New `AUTHENTICATION` template exists.
+- [x] Status is `APPROVED`.
+- [x] Policy/legal copy validated (OTP wording, no marketing text).
 
 ---
 
 ## 2) Parameter Schema Update
 
-- [ ] Confirm component schema for `AUTHENTICATION` template.
-- [ ] Update send payload parameters if count/order differs from current `UTILITY` template.
-- [ ] Validate provider response with a dry-run message to a test recipient.
+- [x] Confirm component schema for `AUTHENTICATION` template.
+- [x] Update send payload parameters if count/order differs from current `UTILITY` template.
+- [x] Validate provider response with a dry-run message to a test recipient.
 
 ---
 
 ## 3) Configuration Switch (No Code Fork)
 
-- [ ] Set `WHATSAPP_OTP_TEMPLATE_NAME=<new_auth_template_name>`.
-- [ ] Set `WHATSAPP_OTP_TEMPLATE_LANG=<exact_language_code>`.
-- [ ] Keep legacy fallback vars unchanged unless needed.
+- [x] Set `WHATSAPP_OTP_TEMPLATE_NAME=<new_auth_template_name>`.
+- [x] Set `WHATSAPP_OTP_TEMPLATE_LANG=<exact_language_code>`.
+- [x] Keep legacy fallback vars unchanged unless needed.
+- [x] Set `WHATSAPP_OTP_TEMPLATE_TYPE=authentication`.
+- [x] (Optional) set `WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON` when provider schema requires custom components.
 
 ---
 
 ## 4) Staging Smoke
 
-- [ ] `POST /api/auth/whatsapp/mobile/start` returns `attemptId` and `expiresAt`.
-- [ ] Message is delivered with correct template rendering.
-- [ ] `POST /api/auth/whatsapp/mobile/verify` returns `exchangeCode`.
-- [ ] Mobile session exchange succeeds end-to-end.
-- [ ] Negative checks:
-  - [ ] wrong OTP;
-  - [ ] expired OTP;
-  - [ ] retry/idempotency behavior.
+- [x] `POST /api/auth/whatsapp/mobile/start` returns `attemptId` and `expiresAt`.
+- [x] Message is delivered with correct template rendering.
+- [x] `POST /api/auth/whatsapp/mobile/verify` returns `exchangeCode`.
+- [x] Mobile session exchange succeeds end-to-end.
+- [x] Negative checks:
+  - [x] wrong OTP;
+  - [x] expired OTP;
+  - [x] retry/idempotency behavior.
 
 ---
 

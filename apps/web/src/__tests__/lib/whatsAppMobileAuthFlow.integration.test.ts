@@ -140,6 +140,8 @@ describe('whatsApp mobile auth integration', () => {
 
         process.env.WHATSAPP_OTP_TEMPLATE_NAME = 'kezek_test';
         process.env.WHATSAPP_OTP_TEMPLATE_LANG = 'ru';
+        process.env.WHATSAPP_OTP_TEMPLATE_TYPE = 'utility';
+        delete process.env.WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON;
 
         (sendWhatsApp as jest.Mock).mockResolvedValue(undefined);
         (createWhatsAppSignInSession as jest.Mock).mockResolvedValue({
@@ -280,5 +282,32 @@ describe('whatsApp mobile auth integration', () => {
             phone: '+996500574029',
         });
         expect(second.ok).toBe(true);
+    });
+
+    test('supports configurable template components with OTP placeholder replacement', async () => {
+        const admin = createInMemoryAdmin();
+        process.env.WHATSAPP_OTP_TEMPLATE_TYPE = 'authentication';
+        process.env.WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON = JSON.stringify([
+            {
+                type: 'body',
+                parameters: [{ type: 'text', text: '{{OTP_CODE}}' }],
+            },
+            {
+                type: 'button',
+                sub_type: 'url',
+                index: '0',
+                parameters: [{ type: 'text', text: '{{OTP_CODE}}' }],
+            },
+        ]);
+
+        const start = await runWhatsAppMobileStartRoute({
+            admin: admin as never,
+            phone: '+996500574029',
+        });
+        expect(start.ok).toBe(true);
+
+        const sendArgs = (sendWhatsApp as jest.Mock).mock.calls.at(-1)?.[0];
+        expect(sendArgs?.template?.components?.[0]?.parameters?.[0]?.text).toMatch(/^\d{6}$/);
+        expect(sendArgs?.template?.components?.[1]?.parameters?.[0]?.text).toMatch(/^\d{6}$/);
     });
 });

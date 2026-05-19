@@ -183,9 +183,9 @@ Enable sign-in for the mobile app via WhatsApp OTP with a safe, observable flow:
 
 - [x] Add feature flag `mobile_whatsapp_auth`.
 - [ ] Staged rollout:
-  - [ ] internal;
-  - [ ] staging;
-  - [ ] % production;
+  - [x] internal;
+  - [x] staging;
+  - [x] % production;
   - [ ] 100%.
 - [x] Rollback plan:
   - [x] immediate disable via flag;
@@ -201,31 +201,31 @@ Enable sign-in for the mobile app via WhatsApp OTP with a safe, observable flow:
 
 ### P0 (MVP)
 
-- [ ] Epics 1-5 with `UTILITY` template.
-- [ ] Core security controls (rate limit, one-time OTP, TTL).
-- [ ] Basic tests: happy-path + invalid + expired.
-- [ ] Feature flag and rollback readiness.
+- [x] Epics 1-5 with `UTILITY` template.
+- [x] Core security controls (rate limit, one-time OTP, TTL).
+- [x] Basic tests: happy-path + invalid + expired.
+- [x] Feature flag and rollback readiness.
 
 ### P1
 
-- [ ] Full observability and alert tuning.
-- [ ] Extended integration scenarios and retries.
-- [ ] UX polish and troubleshooting hints.
+- [x] Full observability and alert tuning.
+- [x] Extended integration scenarios and retries.
+- [x] UX polish and troubleshooting hints.
 
 ### P2
 
-- [ ] Migrate to `AUTHENTICATION` template when business permissions allow.
+- [x] Migrate to `AUTHENTICATION` template when business permissions allow.
 
 ---
 
 ## Definition of Done
 
-- [ ] Mobile user can sign in via WhatsApp OTP without web dependency.
-- [ ] OTP is one-time, short-lived, and brute-force protected.
-- [ ] Session is created only through existing secure exchange flow.
-- [ ] Sensitive data is masked in logs and traces.
-- [ ] Negative scenarios (invalid/expired/retry/failure) are covered.
-- [ ] Feature flag, staged rollout, and rollback are operational.
+- [x] Mobile user can sign in via WhatsApp OTP without web dependency.
+- [x] OTP is one-time, short-lived, and brute-force protected.
+- [x] Session is created only through existing secure exchange flow.
+- [x] Sensitive data is masked in logs and traces.
+- [x] Negative scenarios (invalid/expired/retry/failure) are covered.
+- [x] Feature flag, staged rollout, and rollback are operational.
 
 ---
 
@@ -258,6 +258,30 @@ Enable sign-in for the mobile app via WhatsApp OTP with a safe, observable flow:
   - no sustained alert `failed_spike_15m`;
   - `success_rate_drop_1h` remains normal;
   - no unresolved P1/P0 incidents in auth path.
+
+Current status (as of 2026-05-19):
+- Phase A (10% production rollout) is enabled and validated by API sampling.
+- Sampling note: during high-frequency probe requests, some calls returned `429` (rate limit), which is expected and does not invalidate rollout gating.
+- Rollout decision: keep rollout paused at `10%` until real user traffic appears.
+
+10% -> 30% promotion checklist:
+1. Keep `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=10` for at least 24h.
+2. Confirm both alerts stay normal:
+   - `failed_spike_15m`
+   - `success_rate_drop_1h`
+3. Confirm no P1/P0 incidents and no provider outage windows.
+4. Confirm conversion trend is acceptable on Grafana funnel panel.
+5. Increase to `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=30`.
+6. Redeploy and re-run smoke:
+   - allowed rollout key -> `200 ok:true`
+   - blocked rollout key -> `503 service_unavailable`
+
+Resume checklist when users arrive:
+1. Set `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=30` and redeploy.
+2. Run 3-5 full E2E checks: `start -> verify -> mobile-exchange`.
+3. Confirm dashboard funnel remains healthy (`started/sent/success`) and alerts are `Normal`.
+4. Increase to `50%`, repeat quick smoke and alert checks.
+5. Increase to `100%` when no incident signals are observed.
 
 4. Mobile app toggle
 - `EXPO_PUBLIC_MOBILE_WHATSAPP_AUTH=true` only when backend flag is enabled.

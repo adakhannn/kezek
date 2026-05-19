@@ -1,6 +1,11 @@
 import crypto from 'crypto';
 
-import { getWhatsAppAuthTemplateLanguage, getWhatsAppAuthTemplateName } from '@/lib/env';
+import {
+    getWhatsAppAuthTemplateLanguage,
+    getWhatsAppAuthTemplateName,
+    getWhatsAppOtpTemplateComponentsJson,
+    getWhatsAppOtpTemplateType,
+} from '@/lib/env';
 import { logDebug, logWarn } from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
@@ -60,6 +65,61 @@ function generateOtpCode() {
     const min = 10 ** (OTP_LENGTH - 1);
     const max = 10 ** OTP_LENGTH - 1;
     return String(crypto.randomInt(min, max + 1));
+}
+
+function deepReplaceOtpToken(value: unknown, otpCode: string): unknown {
+    if (typeof value === 'string') {
+        return value.replaceAll('{{OTP_CODE}}', otpCode);
+    }
+
+    if (Array.isArray(value)) {
+        return value.map((item) => deepReplaceOtpToken(item, otpCode));
+    }
+
+    if (value && typeof value === 'object') {
+        const output: Record<string, unknown> = {};
+        for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+            output[key] = deepReplaceOtpToken(nested, otpCode);
+        }
+        return output;
+    }
+
+    return value;
+}
+
+function getDefaultTemplateComponents(otpCode: string) {
+    return [
+        {
+            type: 'body',
+            parameters: [{ type: 'text', text: otpCode }],
+        },
+    ];
+}
+
+function buildOtpTemplateComponents(otpCode: string): Array<Record<string, unknown>> {
+    const componentsJson = getWhatsAppOtpTemplateComponentsJson();
+    if (!componentsJson) {
+        return getDefaultTemplateComponents(otpCode);
+    }
+
+    try {
+        const parsed = JSON.parse(componentsJson) as unknown;
+        if (!Array.isArray(parsed)) {
+            throw new Error('WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON must be a JSON array');
+        }
+
+        const replaced = deepReplaceOtpToken(parsed, otpCode);
+        if (!Array.isArray(replaced)) {
+            throw new Error('WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON replacement produced invalid shape');
+        }
+
+        return replaced as Array<Record<string, unknown>>;
+    } catch (error) {
+        logWarn('WhatsAppMobileStart', 'Invalid WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON, fallback to default', {
+            reason: error instanceof Error ? error.message : String(error),
+        });
+        return getDefaultTemplateComponents(otpCode);
+    }
 }
 
 async function insertOtpAttempt({
@@ -132,6 +192,7 @@ export async function runWhatsAppMobileStartRoute({
 
     const authTemplateName = getWhatsAppAuthTemplateName();
     const authTemplateLanguage = getWhatsAppAuthTemplateLanguage();
+    const templateType = getWhatsAppOtpTemplateType();
     if (!authTemplateName) {
         return {
             ok: false,
@@ -142,6 +203,7 @@ export async function runWhatsAppMobileStartRoute({
     }
 
     const otpCode = generateOtpCode();
+    const templateComponents = buildOtpTemplateComponents(otpCode);
     const otpHash = hashWhatsappOtp(otpCode);
     const phoneHash = hashWhatsappPhone(phoneE164);
     const phoneMasked = maskPhoneE164(phoneE164);
@@ -191,12 +253,7 @@ export async function runWhatsAppMobileStartRoute({
             template: {
                 name: authTemplateName,
                 language: authTemplateLanguage,
-                components: [
-                    {
-                        type: 'body',
-                        parameters: [{ type: 'text', text: otpCode }],
-                    },
-                ],
+                components: templateComponents,
             },
         });
     } catch (error) {
@@ -239,6 +296,7 @@ export async function runWhatsAppMobileStartRoute({
         metadata: {
             template: authTemplateName,
             language: authTemplateLanguage,
+            templateType,
         },
     });
     logDebug('WhatsAppMobileStart', 'OTP sent', {

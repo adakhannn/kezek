@@ -213,6 +213,36 @@ export function getWhatsAppAuthTemplateLanguage(): string {
 }
 
 /**
+ * Получает стратегию шаблона OTP для WhatsApp mobile auth.
+ * Поддерживаемые значения:
+ * - `utility` (по умолчанию)
+ * - `authentication`
+ */
+export function getWhatsAppOtpTemplateType(): 'utility' | 'authentication' {
+    const raw = getEnvVar('WHATSAPP_OTP_TEMPLATE_TYPE', {
+        required: false,
+        defaultValue: 'utility',
+    })
+        .trim()
+        .toLowerCase();
+
+    return raw === 'authentication' ? 'authentication' : 'utility';
+}
+
+/**
+ * Опциональный JSON-компонентов шаблона OTP.
+ * Используется для гибкой миграции между UTILITY и AUTHENTICATION без правок кода.
+ *
+ * В JSON можно использовать плейсхолдер `{{OTP_CODE}}`, он будет заменен фактическим кодом.
+ */
+export function getWhatsAppOtpTemplateComponentsJson(): string {
+    return getEnvVar('WHATSAPP_OTP_TEMPLATE_COMPONENTS_JSON', {
+        required: false,
+        defaultValue: '',
+    }).trim();
+}
+
+/**
  * Получает NEXT_PUBLIC_TZ
  */
 export function getTimezone(): string {

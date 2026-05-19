@@ -6,13 +6,7 @@ type SendWhatsAppOpts = {
     template?: {
         name: string;      // имя шаблона
         language: string;  // код языка (например, 'ru')
-        components?: Array<{
-            type: 'body' | 'header' | 'button';
-            parameters?: Array<{
-                type: 'text';
-                text: string;
-            }>;
-        }>;
+        components?: Array<Record<string, unknown>>;
     };
 };
 
