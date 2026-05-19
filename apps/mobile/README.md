@@ -42,8 +42,14 @@ pnpm -C apps/mobile ios
 pnpm -C apps/mobile web
 pnpm -C apps/mobile typecheck
 pnpm -C apps/mobile test
+pnpm -C apps/mobile test --runInBand
+pnpm -C apps/mobile test:runInBand
 pnpm -C apps/mobile test:coverage
 ```
+
+Note:
+- Correct run-in-band form is `pnpm -C apps/mobile test --runInBand`.
+- Do not use `pnpm -C apps/mobile test -- --runInBand` because Jest may interpret it as a test pattern and report `No tests found`.
 
 ## Quality Baseline
 

@@ -14,7 +14,6 @@ export function logEnvVars() {
         supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET',
         apiUrl: process.env.EXPO_PUBLIC_API_URL ? 'SET' : 'NOT SET',
         expoConfigExtra: Constants.expoConfig?.extra,
-        manifestExtra: Constants.manifest?.extra,
     });
 }
 
@@ -26,7 +25,6 @@ export function getEnvVar(key: string, fallback?: string): string | undefined {
     return (
         process.env[envKey] ||
         Constants.expoConfig?.extra?.[key] ||
-        Constants.manifest?.extra?.[key] ||
         fallback
     );
 }

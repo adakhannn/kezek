@@ -1,24 +1,21 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
+import { getMobileApiUrl } from '../../lib/apiUrl';
+import { AUTH_TIMEOUT_MESSAGE, fetchWithTimeout, isTimeoutError } from '../../lib/fetchWithTimeout';
 import { logDebug } from '../../lib/log';
 import { AuthStackParamList } from '../../navigation/types';
 import { exchangeViaMobileApi } from '../../navigation/useRootNavigationSession';
 import { getValidationError, normalizePhone } from '../../utils/validation';
 
-const API_URL =
-    process.env.EXPO_PUBLIC_API_URL ||
-    Constants.expoConfig?.extra?.apiUrl ||
-    Constants.manifest?.extra?.apiUrl ||
-    'https://kezek.kg';
+const API_URL = getMobileApiUrl();
 
 const WHATSAPP_ACTIVE_ATTEMPT_KEY = 'whatsapp_mobile_active_attempt_v1';
 const RESEND_COOLDOWN_SEC = 60;
@@ -63,6 +60,9 @@ function mapWhatsAppAuthError(error: unknown): string {
     if (message.includes('too many') || message.includes('rate limit') || message.includes('429')) return WHATSAPP_COPY.tooManyAttempts;
     if (message.includes('provider') || message.includes('unavailable') || message.includes('503')) return WHATSAPP_COPY.providerUnavailable;
     if (message.includes('network') || message.includes('failed to fetch')) return WHATSAPP_COPY.networkFailure;
+    if (isTimeoutError(error) || message.includes('timed out') || message.includes('timeout')) {
+        return AUTH_TIMEOUT_MESSAGE;
+    }
     if (message.includes('send')) return WHATSAPP_COPY.sendCodeFailed;
 
     return error.message || WHATSAPP_COPY.signInFailed;
@@ -192,7 +192,7 @@ export default function WhatsAppScreen() {
         setSending(true);
         try {
             const normalizedPhone = normalizePhone(phone);
-            const response = await fetch(`${API_URL}/api/auth/whatsapp/mobile/start`, {
+            const response = await fetchWithTimeout(`${API_URL}/api/auth/whatsapp/mobile/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -257,7 +257,7 @@ export default function WhatsAppScreen() {
 
         setVerifying(true);
         try {
-            const response = await fetch(`${API_URL}/api/auth/whatsapp/mobile/verify`, {
+            const response = await fetchWithTimeout(`${API_URL}/api/auth/whatsapp/mobile/verify`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -475,3 +475,4 @@ const styles = StyleSheet.create({
         marginTop: colors.layout.space5,
     },
 });
+

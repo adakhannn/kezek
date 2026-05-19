@@ -1,5 +1,4 @@
 import { LinkingOptions } from '@react-navigation/native';
-import { Linking } from 'react-native';
 import { RootStackParamList } from './types';
 
 /**
@@ -42,25 +41,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
             // Обработка callback URL для OAuth
             // Это позволит обрабатывать https://kezek.kg/auth/callback-mobile как deep link
         },
-    },
-    // Обработка deep links с токенами авторизации
-    async getInitialURL() {
-        // Проверяем, есть ли deep link при запуске приложения
-        const url = await Linking.getInitialURL();
-        return url || undefined;
-    },
-    subscribe(listener) {
-        // Обрабатываем deep links во время работы приложения
-        const onReceiveURL = ({ url }: { url: string }) => {
-            listener(url);
-        };
-
-        // Слушаем входящие ссылки
-        const subscription = Linking.addEventListener('url', onReceiveURL);
-
-        return () => {
-            subscription.remove();
-        };
     },
 };
 

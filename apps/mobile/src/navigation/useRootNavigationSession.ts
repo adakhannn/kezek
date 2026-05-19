@@ -1,22 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus, Linking } from 'react-native';
-import Constants from 'expo-constants';
 import type { Session } from '@supabase/supabase-js';
 
+import { getMobileApiUrl } from '../lib/apiUrl';
+import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 import { supabase } from '../lib/supabase';
 import { logDebug, logError, logWarn } from '../lib/log';
 
-const DEFAULT_API_URL = 'https://kezek.kg';
 const AUTH_CALLBACK_RE =
     /auth\/callback|callback-mobile|access_token=|refresh_token=|\?code=|exchange_code=/i;
+const AUTH_CALLBACK_DEDUP_TTL_MS = 2 * 60 * 1000;
+export { getMobileApiUrl };
 
-export function getMobileApiUrl() {
-    return (
-        process.env.EXPO_PUBLIC_API_URL ||
-        Constants.expoConfig?.extra?.apiUrl ||
-        Constants.manifest?.extra?.apiUrl ||
-        DEFAULT_API_URL
-    );
+const processedAuthCallbacks = new Map<string, number>();
+
+function markAuthCallbackProcessed(url: string) {
+    const now = Date.now();
+
+    for (const [processedUrl, processedAt] of processedAuthCallbacks.entries()) {
+        if (now - processedAt > AUTH_CALLBACK_DEDUP_TTL_MS) {
+            processedAuthCallbacks.delete(processedUrl);
+        }
+    }
+
+    processedAuthCallbacks.set(url, now);
+}
+
+function isAuthCallbackAlreadyProcessed(url: string) {
+    const processedAt = processedAuthCallbacks.get(url);
+    if (!processedAt) {
+        return false;
+    }
+
+    if (Date.now() - processedAt > AUTH_CALLBACK_DEDUP_TTL_MS) {
+        processedAuthCallbacks.delete(url);
+        return false;
+    }
+
+    return true;
 }
 
 export function isAuthCallbackUrl(url: string) {
@@ -48,7 +69,7 @@ export function extractHashTokens(url: string) {
 }
 
 export async function exchangeViaMobileApi(exchangeCode: string, apiUrl: string) {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
         `${apiUrl}/api/auth/mobile-exchange?code=${encodeURIComponent(exchangeCode)}`,
     );
 
@@ -76,6 +97,11 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
         return false;
     }
 
+    if (isAuthCallbackAlreadyProcessed(url)) {
+        logDebug('RootNavigatorSession', 'Skipping already processed auth callback URL', { url });
+        return true;
+    }
+
     logDebug('RootNavigatorSession', 'Handling auth callback URL', { url });
 
     try {
@@ -88,6 +114,7 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
 
             if (tokens) {
                 await setSessionFromTokens(tokens.accessToken, tokens.refreshToken);
+                markAuthCallbackProcessed(url);
                 return true;
             }
 
@@ -105,11 +132,13 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
 
         if (exchangeCode) {
             await exchangeViaMobileApi(exchangeCode, apiUrl);
+            markAuthCallbackProcessed(url);
             return true;
         }
 
         if (accessToken && refreshToken) {
             await setSessionFromTokens(accessToken, refreshToken);
+            markAuthCallbackProcessed(url);
             return true;
         }
 
@@ -120,6 +149,7 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
                 throw error;
             }
 
+            markAuthCallbackProcessed(url);
             return true;
         }
 
@@ -132,7 +162,7 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
 }
 
 export async function tryRestorePendingSession(apiUrl: string) {
-    const response = await fetch(`${apiUrl}/api/auth/mobile-exchange?check=true`);
+    const response = await fetchWithTimeout(`${apiUrl}/api/auth/mobile-exchange?check=true`);
 
     if (!response.ok) {
         return false;

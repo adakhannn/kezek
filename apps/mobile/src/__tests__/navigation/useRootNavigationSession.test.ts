@@ -46,16 +46,18 @@ describe('useRootNavigationSession helpers', () => {
         });
         global.fetch = jest.fn();
         jest.spyOn(Linking, 'getInitialURL').mockResolvedValue(null);
-        jest.spyOn(Linking, 'addEventListener').mockImplementation(
-            (_event: 'url', _handler: ({ url }: { url: string }) => void) => ({
-                remove: jest.fn(),
-            }),
-        );
-        jest.spyOn(AppState, 'addEventListener').mockImplementation(
-            (_event: 'change', _handler: (state: 'active' | 'background' | 'inactive') => void) => ({
-                remove: jest.fn(),
-            }),
-        );
+        jest
+            .spyOn(Linking, 'addEventListener')
+            .mockImplementation(
+                (..._args: Parameters<typeof Linking.addEventListener>) =>
+                    ({ remove: jest.fn() } as unknown as ReturnType<typeof Linking.addEventListener>),
+            );
+        jest
+            .spyOn(AppState, 'addEventListener')
+            .mockImplementation(
+                (..._args: Parameters<typeof AppState.addEventListener>) =>
+                    ({ remove: jest.fn() }) as ReturnType<typeof AppState.addEventListener>,
+            );
     });
 
     afterEach(() => {
@@ -91,6 +93,21 @@ describe('useRootNavigationSession helpers', () => {
         });
     });
 
+    test('does not process the same callback url twice', async () => {
+        const callbackUrl = 'kezek://auth/callback#access_token=once-access&refresh_token=once-refresh';
+
+        const firstHandled = await handleDeepLinkAuth(callbackUrl, 'https://kezek.kg');
+        const secondHandled = await handleDeepLinkAuth(callbackUrl, 'https://kezek.kg');
+
+        expect(firstHandled).toBe(true);
+        expect(secondHandled).toBe(true);
+        expect(mockedSupabase.auth.setSession).toHaveBeenCalledTimes(1);
+        expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
+            access_token: 'once-access',
+            refresh_token: 'once-refresh',
+        });
+    });
+
     test('handles callback urls with exchange_code via mobile api', async () => {
         (global.fetch as jest.Mock).mockResolvedValue({
             ok: true,
@@ -108,6 +125,7 @@ describe('useRootNavigationSession helpers', () => {
         expect(handled).toBe(true);
         expect(global.fetch).toHaveBeenCalledWith(
             'https://kezek.kg/api/auth/mobile-exchange?code=code-123',
+            expect.objectContaining({ signal: expect.any(Object) }),
         );
         expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
             access_token: 'access-2',
@@ -148,10 +166,12 @@ describe('useRootNavigationSession helpers', () => {
         expect(global.fetch).toHaveBeenNthCalledWith(
             1,
             'https://kezek.kg/api/auth/mobile-exchange?check=true',
+            expect.objectContaining({ signal: expect.any(Object) }),
         );
         expect(global.fetch).toHaveBeenNthCalledWith(
             2,
             'https://kezek.kg/api/auth/mobile-exchange?code=pending-123',
+            expect.objectContaining({ signal: expect.any(Object) }),
         );
         expect(mockedSupabase.auth.setSession).toHaveBeenCalledWith({
             access_token: 'access-3',

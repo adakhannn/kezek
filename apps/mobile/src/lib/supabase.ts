@@ -7,15 +7,13 @@ import { logError, logDebug } from './log';
 
 // В Expo переменные окружения доступны через process.env.EXPO_PUBLIC_*
 // Также можно получить через Constants.expoConfig.extra (если настроено в app.json)
-// Приоритет: process.env > Constants.expoConfig.extra > Constants.manifest.extra
+// Приоритет: process.env > Constants.expoConfig.extra
 const supabaseUrl = 
     process.env.EXPO_PUBLIC_SUPABASE_URL || 
-    Constants.expoConfig?.extra?.supabaseUrl ||
-    Constants.manifest?.extra?.supabaseUrl;
+    Constants.expoConfig?.extra?.supabaseUrl;
 const supabaseAnonKey = 
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 
-    Constants.expoConfig?.extra?.supabaseAnonKey ||
-    Constants.manifest?.extra?.supabaseAnonKey;
+    Constants.expoConfig?.extra?.supabaseAnonKey;
 
 // Детальное логирование для отладки
 logEnvVars();

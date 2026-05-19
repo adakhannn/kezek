@@ -24,7 +24,7 @@ const mockCanOpenURL = jest.fn();
 const mockOpenURL = jest.fn();
 const mockOpenAuthSessionAsync = jest.fn();
 const mockMaybeCompleteAuthSession = jest.fn();
-const mockAppStateListeners = new Set<(state: 'active' | 'background' | 'inactive') => void>();
+const mockAppStateListeners = new Set<(state: string) => void>();
 const mockTrackMobileEvent = jest.fn();
 
 jest.mock('../../../contexts/ToastContext', () => ({
@@ -88,13 +88,14 @@ describe('SignInScreen', () => {
         jest
             .spyOn(AppState, 'addEventListener')
             .mockImplementation(
-                (_event: 'change', handler: (state: 'active' | 'background' | 'inactive') => void) => {
+                (...args: Parameters<typeof AppState.addEventListener>) => {
+                    const handler = args[1] as (state: string) => void;
                     mockAppStateListeners.add(handler);
                     return {
                         remove: () => {
                             mockAppStateListeners.delete(handler);
                         },
-                    };
+                    } as ReturnType<typeof AppState.addEventListener>;
                 },
             );
         jest
@@ -117,7 +118,7 @@ describe('SignInScreen', () => {
             .spyOn(WebBrowser, 'maybeCompleteAuthSession')
             .mockImplementation(() => {
                 mockMaybeCompleteAuthSession();
-                return undefined;
+                return { type: 'failed' } as ReturnType<typeof WebBrowser.maybeCompleteAuthSession>;
             });
 
         (SecureStore.getItemAsync as jest.Mock).mockReset();
@@ -260,6 +261,7 @@ describe('SignInScreen', () => {
         await waitFor(() => {
             expect(fetchMock).toHaveBeenCalledWith(
                 'https://kezek.kg/api/auth/telegram/mobile/status?nonce=nonce-3',
+                expect.objectContaining({ signal: expect.any(Object) }),
             );
         });
 

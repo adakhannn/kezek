@@ -319,7 +319,7 @@ jobs:
         working-directory: apps/mobile
 
       - name: Run mobile smoke tests
-        run: pnpm test -- --runInBand --watchAll=false
+        run: pnpm test:runInBand
         working-directory: apps/mobile
 
       - name: Check smoke tests status

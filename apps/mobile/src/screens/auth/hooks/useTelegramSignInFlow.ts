@@ -3,6 +3,7 @@ import { Linking, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
+import { AUTH_TIMEOUT_MESSAGE, fetchWithTimeout, isTimeoutError } from '../../../lib/fetchWithTimeout';
 import { logError, logWarn } from '../../../lib/log';
 import { exchangeViaMobileApi } from '../../../navigation/useRootNavigationSession';
 import { TELEGRAM_DEEPLINK_AUTH_ENABLED } from './authFeatureFlags';
@@ -75,6 +76,13 @@ async function openTelegramLink(botDeepLink: string) {
     await Linking.openURL(botDeepLink);
 }
 
+function mapTelegramError(error: unknown): string {
+    if (isTimeoutError(error)) {
+        return AUTH_TIMEOUT_MESSAGE;
+    }
+    return error instanceof Error ? error.message : 'Не удалось завершить вход через Telegram';
+}
+
 export function useTelegramSignInFlow({
     apiUrl,
     showToast,
@@ -144,7 +152,7 @@ export function useTelegramSignInFlow({
                     return;
                 }
 
-                const response = await fetch(
+                const response = await fetchWithTimeout(
                     `${apiUrl}/api/auth/telegram/mobile/status?nonce=${encodeURIComponent(nonce)}`,
                 );
 
@@ -216,10 +224,7 @@ export function useTelegramSignInFlow({
             setTelegramDeepLink(null);
             await clearPersistedTelegramFlow();
             setTelegramState((prev) => transitionAuthUiState(prev, 'fail'));
-            const errorMessage =
-                error instanceof Error
-                    ? error.message
-                    : 'Не удалось завершить вход через Telegram';
+            const errorMessage = mapTelegramError(error);
             showToast(errorMessage, 'error');
         } finally {
             if (telegramPollingInFlightRef.current === nonce) {
@@ -244,7 +249,7 @@ export function useTelegramSignInFlow({
         await clearPersistedTelegramFlow();
 
         try {
-            const response = await fetch(`${apiUrl}/api/auth/telegram/mobile/start`, {
+            const response = await fetchWithTimeout(`${apiUrl}/api/auth/telegram/mobile/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -304,10 +309,7 @@ export function useTelegramSignInFlow({
             void pollTelegramStatus(nonce, startedAt);
         } catch (error: unknown) {
             logError('SignInScreen', 'Telegram mobile start error', { error });
-            const errorMessage =
-                error instanceof Error
-                    ? error.message
-                    : 'Не удалось запустить вход через Telegram';
+            const errorMessage = mapTelegramError(error);
             showToast(errorMessage, 'error');
             setTelegramState((prev) => transitionAuthUiState(prev, 'fail'));
             setTelegramNonce(null);

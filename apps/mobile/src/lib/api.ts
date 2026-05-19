@@ -1,14 +1,9 @@
-﻿import Constants from 'expo-constants';
-
 import { createApiClient } from '@shared-client/api';
+import { getMobileApiUrl } from './apiUrl';
 import { logDebug, logWarn } from './log';
 import { supabase } from './supabase';
 
-const API_URL =
-    process.env.EXPO_PUBLIC_API_URL ||
-    Constants.expoConfig?.extra?.apiUrl ||
-    Constants.manifest?.extra?.apiUrl ||
-    'https://kezek.kg';
+const API_URL = getMobileApiUrl();
 
 function normalizeApiEndpoint(endpoint: string): string {
     if (!endpoint) {
@@ -93,3 +88,4 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
         throw error;
     }
 }
+

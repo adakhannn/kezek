@@ -22,11 +22,12 @@ export function useNetworkStatus(): NetworkStatus {
     const networkState = useNetworkState();
     const isConnected = networkState?.isConnected ?? false;
     const isInternetReachable = networkState?.isInternetReachable ?? false;
+    const isOffline = !isConnected || !isInternetReachable;
 
     return {
         isConnected,
         isInternetReachable,
-        isOffline: !isConnected,
+        isOffline,
         isPoorConnection: false, // expo-network не даёт качества связи; при необходимости подключить NetInfo
     };
 }
