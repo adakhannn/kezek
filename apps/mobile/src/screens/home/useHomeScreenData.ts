@@ -233,8 +233,10 @@ export function useHomeScreenData() {
         recentPlaces,
         availableCategories,
         isBusinessesLoading,
+        businessesError,
         showOfflineBanner: isOffline || hasNetworkError,
         onRefresh,
+        retryBusinesses: refetchBusinesses,
         clearSearch,
     };
 }

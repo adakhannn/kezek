@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Input from '../../components/ui/Input';
 import MotionPressable from '../../components/ui/MotionPressable';
+import { colors } from '../../constants/colors';
 
 import { styles } from './homeScreenStyles';
 
@@ -28,11 +29,11 @@ export function SearchSection({
                 placeholder="Поиск по названию или адресу..."
                 value={search}
                 onChangeText={onSearchChange}
-                leadingIcon={<Ionicons name="search" size={20} color="#9ca3af" />}
+                leadingIcon={<Ionicons name="search" size={20} color={colors.text.secondary} />}
                 trailingIcon={
                     search ? (
                         <MotionPressable onPress={onClear} style={styles.clearButton}>
-                            <Ionicons name="close-circle" size={20} color="#9ca3af" />
+                            <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
                         </MotionPressable>
                     ) : null
                 }

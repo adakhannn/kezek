@@ -1,14 +1,13 @@
-/**
+﻿/**
  * Smoke test: WhatsAppScreen
- * 
- * Проверяет базовый рендеринг экрана WhatsApp авторизации
+ *
+ * Проверяет базовый рендеринг экрана WhatsApp авторизации.
  */
 
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import WhatsAppScreen from '../../../screens/auth/WhatsAppScreen';
 
-// Mock navigation
 jest.mock('@react-navigation/native', () => {
     return {
         NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
@@ -22,9 +21,8 @@ jest.mock('@react-navigation/native', () => {
 describe('WhatsAppScreen', () => {
     test('должен отрендериться без ошибок', () => {
         render(<WhatsAppScreen />);
-        
-        // Проверяем наличие основных элементов
-        expect(screen.getByText(/whatsapp|вацап/i)).toBeTruthy();
+
+        expect(screen.getByText('Вход через WhatsApp')).toBeTruthy();
     });
 
     test('должен отображать поле ввода телефона на первом шаге', () => {
@@ -36,10 +34,8 @@ describe('WhatsAppScreen', () => {
 
     test('должен отображать кнопку отправки OTP', () => {
         render(<WhatsAppScreen />);
-        
-        // Ищем кнопку отправки
-        const sendButton = screen.queryByText(/отправить|send|получить код/i);
+
+        const sendButton = screen.queryByText('Отправить код');
         expect(sendButton).toBeTruthy();
     });
 });
-

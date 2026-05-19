@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -99,10 +99,17 @@ export default function VerifyScreen() {
                 label="Код подтверждения"
                 placeholder="000000"
                 value={code}
-                onChangeText={(text) => setCode(text.replace(/\D/g, '').slice(0, 6))}
+                onChangeText={(text) => {
+                    setCode(text.replace(/\D/g, '').slice(0, 6));
+                    if (codeError) {
+                        setCodeError(null);
+                    }
+                }}
                 keyboardType="number-pad"
                 maxLength={6}
                 error={codeError ?? undefined}
+                helperText="Введите 6-значный код из сообщения."
+                accessibilityHint="Поле для ввода 6-значного кода подтверждения."
                 containerStyle={styles.field}
                 style={styles.codeInput}
                 inputContainerStyle={styles.codeInputContainer}
@@ -113,6 +120,7 @@ export default function VerifyScreen() {
                 onPress={handleVerify}
                 loading={loading}
                 disabled={loading || code.length !== 6}
+                accessibilityHint="Проверяет код и выполняет вход."
                 fullWidth
             />
 
@@ -122,6 +130,7 @@ export default function VerifyScreen() {
                 variant="ghost"
                 style={styles.resendButton}
                 disabled={loading}
+                accessibilityHint="Повторно отправляет код подтверждения."
                 fullWidth
             />
 
@@ -130,6 +139,8 @@ export default function VerifyScreen() {
                 onPress={() => navigation.goBack()}
                 variant="secondary"
                 style={styles.backButton}
+                disabled={loading}
+                accessibilityHint="Возврат на предыдущий экран."
                 fullWidth
             />
         </View>
@@ -150,6 +161,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 16,
+        lineHeight: 22,
         color: colors.text.secondary,
         marginBottom: colors.layout.space5,
     },
@@ -171,4 +183,3 @@ const styles = StyleSheet.create({
         marginTop: colors.layout.space2,
     },
 });
-

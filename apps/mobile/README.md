@@ -50,12 +50,23 @@ pnpm -C apps/mobile test:coverage
 Minimum local health check after mobile changes:
 
 ```bash
+pnpm check:mobile-utf8
 pnpm -C apps/mobile typecheck
 pnpm -C apps/mobile test
 ```
 
 Use `typecheck` as the first compile-health gate.
 Use `test` as the smoke suite for key screens and navigation flows.
+
+### Encoding Rule (Important)
+
+- Use UTF-8 encoding for all files under `apps/mobile/src`.
+- Do not save mobile source files in ANSI/Windows-1251 or other legacy encodings.
+- Before commit, run:
+
+```bash
+pnpm check:mobile-utf8
+```
 
 ## Structure
 

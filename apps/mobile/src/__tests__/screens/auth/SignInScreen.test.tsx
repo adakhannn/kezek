@@ -363,7 +363,7 @@ describe('SignInScreen', () => {
         fireEvent.press(screen.getByText(/Google/i));
 
         await waitFor(() => {
-            expect(mockShowToast).toHaveBeenCalledWith('Sign-in was cancelled', 'info');
+            expect(mockShowToast).toHaveBeenCalledWith('Вход отменен', 'info');
         });
 
         expect(mockTrackMobileEvent).toHaveBeenCalledWith(
@@ -435,6 +435,34 @@ describe('SignInScreen', () => {
                 ([payload]) => payload?.eventType === 'mobile_google_login_success',
             ).length,
         ).toBe(1);
+    });
+
+    test('ui-level: telegram pending status is announced for accessibility', async () => {
+        const fetchMock = global.fetch as unknown as jest.Mock;
+        fetchMock
+            .mockResolvedValueOnce(
+                createResponse({
+                    data: {
+                        nonce: 'nonce-a11y',
+                        botDeepLink: 'https://t.me/kezek_auth_bot?start=km1_nonce-a11y',
+                    },
+                }),
+            )
+            .mockResolvedValueOnce(
+                createResponse({
+                    data: {
+                        status: 'pending',
+                    },
+                }),
+            );
+
+        render(<SignInScreen />);
+        fireEvent.press(screen.getByText(/Telegram/i));
+
+        await waitFor(() => {
+            const status = screen.getByText('Ожидаем подтверждение');
+            expect(status.props.accessibilityLiveRegion).toBe('polite');
+        });
     });
 });
 

@@ -3,6 +3,7 @@ import { ScrollView, Switch, Text, View } from 'react-native';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
+import { colors } from '../../constants/colors';
 import { styles } from './profileScreenStyles';
 
 type Props = {
@@ -80,8 +81,8 @@ export function ProfileScreenSections({
                     <Switch
                         value={notifyEmail}
                         onValueChange={onNotifyEmailChange}
-                        trackColor={{ false: '#d1d5db', true: '#6366f1' }}
-                        thumbColor="#fff"
+                        trackColor={{ false: colors.border.strong, true: colors.accent.indigo }}
+                        thumbColor={colors.text.light}
                     />
                 </View>
 
@@ -93,8 +94,8 @@ export function ProfileScreenSections({
                     <Switch
                         value={notifyWhatsApp}
                         onValueChange={onNotifyWhatsAppChange}
-                        trackColor={{ false: '#d1d5db', true: '#6366f1' }}
-                        thumbColor="#fff"
+                        trackColor={{ false: colors.border.strong, true: colors.accent.indigo }}
+                        thumbColor={colors.text.light}
                     />
                 </View>
             </Card>

@@ -96,6 +96,8 @@ export default function WhatsAppScreen() {
     const [verifying, setVerifying] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const [errorText, setErrorText] = useState<string | null>(null);
+    const [phoneError, setPhoneError] = useState<string | null>(null);
+    const [otpError, setOtpError] = useState<string | null>(null);
 
     const activeAttemptRef = useRef<WhatsAppActiveAttempt | null>(null);
 
@@ -176,14 +178,17 @@ export default function WhatsAppScreen() {
 
     const handleSendOtp = async () => {
         setErrorText(null);
+        setOtpError(null);
 
-        const phoneError = getValidationError('phone', phone);
-        if (phoneError) {
-            showToast(phoneError, 'error');
-            setErrorText(phoneError);
+        const phoneValidationError = getValidationError('phone', phone);
+        if (phoneValidationError) {
+            showToast(phoneValidationError, 'error');
+            setPhoneError(phoneValidationError);
+            setErrorText(phoneValidationError);
             return;
         }
 
+        setPhoneError(null);
         setSending(true);
         try {
             const normalizedPhone = normalizePhone(phone);
@@ -232,13 +237,16 @@ export default function WhatsAppScreen() {
 
     const handleVerifyOtp = async () => {
         setErrorText(null);
+        setPhoneError(null);
 
         if (otp.length !== 6) {
             showToast(WHATSAPP_COPY.invalidCode, 'error');
             setErrorText(WHATSAPP_COPY.invalidCode);
+            setOtpError(WHATSAPP_COPY.invalidCode);
             return;
         }
 
+        setOtpError(null);
         const activeAttempt = activeAttemptRef.current;
         if (!activeAttempt) {
             setErrorText(WHATSAPP_COPY.expiredCode);
@@ -307,9 +315,13 @@ export default function WhatsAppScreen() {
                         value={phone}
                         onChangeText={(value) => {
                             setPhone(value);
+                            if (phoneError) setPhoneError(null);
                             if (errorText) setErrorText(null);
                         }}
                         keyboardType="phone-pad"
+                        error={phoneError ?? undefined}
+                        helperText="Формат: +996XXXXXXXXX"
+                        accessibilityHint="Введите номер телефона в международном формате."
                         containerStyle={styles.field}
                     />
                     <Button
@@ -317,6 +329,7 @@ export default function WhatsAppScreen() {
                         onPress={() => void handleSendOtp()}
                         loading={sending}
                         disabled={sending}
+                        accessibilityHint="Отправляет одноразовый код в WhatsApp."
                         fullWidth
                     />
                 </>
@@ -328,16 +341,20 @@ export default function WhatsAppScreen() {
                             value={otp}
                             onChangeText={(text) => {
                                 setOtp(text.replace(/\D/g, '').slice(0, 6));
+                                if (otpError) setOtpError(null);
                                 if (errorText) setErrorText(null);
                             }}
                             keyboardType="number-pad"
                             maxLength={6}
                             autoFocus
+                            error={otpError ?? undefined}
+                            helperText="Введите 6-значный код из сообщения."
+                            accessibilityHint="Поле для ввода кода из WhatsApp."
                             containerStyle={styles.field}
                             style={styles.otpInput}
                             inputContainerStyle={styles.otpInputContainer}
                         />
-                        <Text style={styles.otpHint}>
+                        <Text accessibilityLiveRegion="polite" style={styles.otpHint}>
                             {WHATSAPP_COPY.codeHint} {phone}
                         </Text>
                     </View>
@@ -349,11 +366,14 @@ export default function WhatsAppScreen() {
                                 setStep('phone');
                                 setOtp('');
                                 setCountdown(0);
+                                setOtpError(null);
                                 void clearActiveAttempt();
                             }}
                             variant="ghost"
                             size="sm"
                             style={styles.otpActionButton}
+                            disabled={sending || verifying}
+                            accessibilityHint="Возврат к шагу ввода номера телефона."
                         />
                         <Button
                             title={countdown > 0 ? `Отправить снова (${countdown}с)` : 'Отправить код снова'}
@@ -362,6 +382,7 @@ export default function WhatsAppScreen() {
                             variant="ghost"
                             size="sm"
                             style={styles.otpActionButton}
+                            accessibilityHint="Повторно отправляет код после окончания таймера."
                         />
                     </View>
 
@@ -369,19 +390,26 @@ export default function WhatsAppScreen() {
                         title={verifying ? 'Проверка...' : 'Войти'}
                         onPress={() => void handleVerifyOtp()}
                         loading={verifying}
-                        disabled={verifying || otp.length !== 6}
+                        disabled={verifying || sending || otp.length !== 6}
+                        accessibilityHint="Проверяет код и выполняет вход."
                         fullWidth
                     />
                 </>
             )}
 
-            {errorText ? <Text style={styles.errorText}>{errorText}</Text> : null}
+            {errorText ? (
+                <Text accessibilityLiveRegion="assertive" style={styles.errorText}>
+                    {errorText}
+                </Text>
+            ) : null}
 
             <Button
                 title="Вернуться к другим способам входа"
                 onPress={() => navigation.goBack()}
                 variant="ghost"
                 style={styles.backButton}
+                disabled={sending || verifying}
+                accessibilityHint="Возврат на экран выбора способа входа."
                 fullWidth
             />
         </ScrollView>
@@ -404,6 +432,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 16,
+        lineHeight: 22,
         color: colors.text.secondary,
         marginBottom: colors.layout.space6,
     },
@@ -423,6 +452,7 @@ const styles = StyleSheet.create({
     },
     otpHint: {
         fontSize: 14,
+        lineHeight: 20,
         color: colors.text.secondary,
         textAlign: 'center',
     },
@@ -437,8 +467,9 @@ const styles = StyleSheet.create({
     },
     errorText: {
         marginTop: colors.layout.space4,
-        color: '#DC2626',
+        color: colors.status.danger,
         fontSize: 14,
+        lineHeight: 20,
     },
     backButton: {
         marginTop: colors.layout.space5,

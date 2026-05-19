@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +9,7 @@ import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
+import { getValidationError } from '../../utils/validation';
 
 type SignUpScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignUp'>;
 
@@ -17,13 +18,17 @@ export default function SignUpScreen() {
     const { showToast } = useToast();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState<string | null>(null);
 
     const handleSignUp = async () => {
-        if (!email) {
-            showToast('Введите email', 'error');
+        const validationError = getValidationError('email', email);
+        if (validationError) {
+            setEmailError(validationError);
+            showToast(validationError, 'error');
             return;
         }
 
+        setEmailError(null);
         setLoading(true);
         try {
             const { error } = await supabase.auth.signInWithOtp({
@@ -53,10 +58,18 @@ export default function SignUpScreen() {
                 label="Email"
                 placeholder="example@mail.com"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(value) => {
+                    setEmail(value);
+                    if (emailError) {
+                        setEmailError(null);
+                    }
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                error={emailError ?? undefined}
+                helperText="Используйте рабочий email для регистрации."
+                accessibilityHint="Введите email для регистрации и получения кода."
                 containerStyle={styles.field}
             />
 
@@ -64,7 +77,8 @@ export default function SignUpScreen() {
                 title="Зарегистрироваться"
                 onPress={handleSignUp}
                 loading={loading}
-                disabled={loading}
+                disabled={loading || !email.trim()}
+                accessibilityHint="Отправляет код подтверждения на email."
                 fullWidth
             />
 
@@ -73,6 +87,8 @@ export default function SignUpScreen() {
                 onPress={() => navigation.navigate('SignIn')}
                 variant="ghost"
                 style={styles.secondaryButton}
+                disabled={loading}
+                accessibilityHint="Переход на экран входа."
                 fullWidth
             />
         </ScrollView>
@@ -95,6 +111,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 16,
+        lineHeight: 22,
         color: colors.text.secondary,
         marginBottom: colors.layout.space5,
     },
@@ -105,4 +122,3 @@ const styles = StyleSheet.create({
         marginTop: colors.layout.space3,
     },
 });
-

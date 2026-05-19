@@ -4,6 +4,8 @@ export const colors = {
         primaryTo: '#db2777',
         primaryFromStrong: '#4338ca',
         primaryToStrong: '#be185d',
+        telegram: '#229ED9',
+        whatsapp: '#25D366',
     },
 
     accent: {

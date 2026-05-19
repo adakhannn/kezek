@@ -41,8 +41,10 @@ export default function HomeScreen() {
         recentPlaces,
         availableCategories,
         isBusinessesLoading,
+        businessesError,
         showOfflineBanner,
         onRefresh,
+        retryBusinesses,
         clearSearch,
     } = useHomeScreenData();
 
@@ -110,8 +112,11 @@ export default function HomeScreen() {
                     businesses={businesses}
                     isLoading={isBusinessesLoading}
                     isRefreshing={refreshing}
+                    error={businessesError}
                     search={search}
                     selectedCategory={selectedCategory}
+                    onRetry={retryBusinesses}
+                    onClearFilters={clearSearch}
                     onOpenBusiness={handleBusinessPress}
                 />
             </ScrollView>

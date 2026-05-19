@@ -118,6 +118,10 @@ export function useProfileScreenData() {
         user: userQuery.data,
         profile: profileQuery.data,
         isLoading: profileQuery.isLoading,
+        loadError: (userQuery.error as Error | null) ?? (profileQuery.error as Error | null),
+        retryLoad: async () => {
+            await Promise.all([userQuery.refetch(), profileQuery.refetch()]);
+        },
         fullName,
         setFullName,
         phone,

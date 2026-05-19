@@ -1,77 +1,77 @@
 import { StyleSheet } from 'react-native';
+import { colors } from '../../constants/colors';
+import { typography } from '../../constants/typography';
 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.surface.page,
     },
     header: {
-        padding: 20,
-        backgroundColor: '#fff',
+        padding: colors.layout.space5,
+        backgroundColor: colors.surface.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border.subtle,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#111827',
+        ...typography.pageTitle,
+        color: colors.text.primary,
     },
     card: {
-        margin: 20,
+        margin: colors.layout.space5,
         marginBottom: 0,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#111827',
-        marginBottom: 16,
+        ...typography.sectionTitle,
+        color: colors.text.primary,
+        marginBottom: colors.layout.space4,
     },
     emailContainer: {
-        marginTop: 8,
+        marginTop: colors.layout.space2,
     },
     label: {
-        fontSize: 14,
+        ...typography.caption,
         fontWeight: '500',
-        color: '#374151',
-        marginBottom: 8,
+        color: colors.text.secondary,
+        marginBottom: colors.layout.space2,
     },
     emailValue: {
-        fontSize: 16,
-        color: '#111827',
-        marginBottom: 4,
+        ...typography.body,
+        color: colors.text.primary,
+        marginBottom: colors.layout.space1,
     },
     emailHint: {
-        fontSize: 12,
-        color: '#6b7280',
+        ...typography.label,
+        color: colors.text.secondary,
     },
     switchRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 12,
+        paddingVertical: colors.layout.space3,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border.subtle,
     },
     switchLabelContainer: {
         flex: 1,
-        marginRight: 12,
+        marginRight: colors.layout.space3,
     },
     switchLabel: {
-        fontSize: 16,
+        ...typography.body,
         fontWeight: '500',
-        color: '#111827',
-        marginBottom: 4,
+        color: colors.text.primary,
+        marginBottom: colors.layout.space1,
     },
     switchHint: {
-        fontSize: 14,
-        color: '#6b7280',
+        ...typography.caption,
+        color: colors.text.secondary,
     },
     actions: {
-        padding: 20,
-        paddingBottom: 40,
+        padding: colors.layout.space5,
+        paddingBottom: colors.layout.space8,
     },
     signOutButton: {
-        marginTop: 12,
-        borderColor: '#ef4444',
+        marginTop: colors.layout.space3,
+        borderColor: colors.status.danger,
     },
 });
