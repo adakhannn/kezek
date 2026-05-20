@@ -40,22 +40,23 @@
 - [x] Add smoke checklist for web manual validation.
 
 ## Manual Smoke (web)
-- [ ] Open `/auth/whatsapp`, request code, verify code, confirm redirect with active session.
+- [x] Open `/auth/whatsapp`, request code, verify code, confirm redirect with active session.
   - Expected: after verify, user is redirected to `redirect` target and appears authenticated.
-- [ ] Retry wrong code then valid code.
+- [x] Retry wrong code then valid code.
   - Expected: wrong code shows inline error; valid code in next attempt succeeds.
-- [ ] Validate resend cooldown.
+- [x] Validate resend cooldown.
   - Expected: resend disabled for ~60s; counter decrements every second; resend re-enabled at 0.
-- [ ] Validate `503` state copy when rollout blocks request.
+- [x] Validate `503` state copy when rollout blocks request.
   - Setup: set `MOBILE_WHATSAPP_AUTH_ROLLOUT_PERCENT=0` (or blocked key path).
   - Expected: `Вход через WhatsApp временно недоступен для вашего профиля. Попробуйте позже.`
 
 ## Exit Criteria
-- [ ] Web WhatsApp login uses only new mobile-style start/verify/exchange flow.
-- [ ] No mojibake in user-visible strings on WhatsApp web auth screen.
-- [ ] Legacy `create-session` is not used by web auth page.
-- [ ] Basic web smoke passes.
+- [x] Web WhatsApp login uses only new mobile-style start/verify/exchange flow.
+- [x] No mojibake in user-visible strings on WhatsApp web auth screen.
+- [x] Legacy `create-session` is not used by web auth page.
+- [x] Basic web smoke passes.
 
 ## Change Log
 - 2026-05-20: Initial parity plan created.
 - 2026-05-20: Epic 1 core migration started and implemented on web page.
+- 2026-05-20: Manual smoke checklist completed on production-like web flow.
