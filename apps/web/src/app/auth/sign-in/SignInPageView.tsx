@@ -21,6 +21,7 @@ type SignInPageViewProps = {
     signInWithGoogle: () => Promise<void>;
     signInWithYandex: () => Promise<void>;
     handleTelegramError: (err: string) => void;
+    whatsAppSignInEnabled: boolean;
 };
 
 function SignInBenefits({
@@ -108,6 +109,7 @@ export function SignInPageView({
     signInWithGoogle,
     signInWithYandex,
     handleTelegramError,
+    whatsAppSignInEnabled,
 }: SignInPageViewProps) {
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30 flex items-center justify-center px-3 py-4">
@@ -214,12 +216,14 @@ export function SignInPageView({
                                 {t('auth.yandex', 'Войти через Яндекс')}
                             </button>
 
-                            <Link
-                                href={`/auth/whatsapp?redirect=${encodeURIComponent(redirectParam || '/')}`}
-                                className="block w-full px-5 py-3 bg-[#25D366] text-sm text-white font-semibold rounded-lg hover:bg-[#1fbe59] shadow-sm hover:shadow-md transition-all duration-200 text-center"
-                            >
-                                {t('auth.whatsapp', 'Войти через WhatsApp')}
-                            </Link>
+                            {whatsAppSignInEnabled ? (
+                                <Link
+                                    href={`/auth/whatsapp?redirect=${encodeURIComponent(redirectParam || '/')}`}
+                                    className="block w-full px-5 py-3 bg-[#25D366] text-sm text-white font-semibold rounded-lg hover:bg-[#1fbe59] shadow-sm hover:shadow-md transition-all duration-200 text-center"
+                                >
+                                    {t('auth.whatsapp', 'Войти через WhatsApp')}
+                                </Link>
+                            ) : null}
 
                             <div className="w-full">
                                 <TelegramLoginWidget

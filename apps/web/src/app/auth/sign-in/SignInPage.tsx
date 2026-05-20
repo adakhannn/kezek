@@ -13,6 +13,14 @@ import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
 
 type Mode = 'phone' | 'email';
 
+function isWhatsAppWebSignInEnabled(): boolean {
+    const raw = process.env.NEXT_PUBLIC_MOBILE_WHATSAPP_AUTH;
+    if (!raw) return true;
+    const normalized = raw.trim().toLowerCase();
+    if (['0', 'false', 'no', 'off', 'disabled'].includes(normalized)) return false;
+    return true;
+}
+
 export default function SignInPage() {
     const sp = useSearchParams();
     const router = useRouter();
@@ -27,6 +35,7 @@ export default function SignInPage() {
     const [email, setEmail] = useState('');
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const whatsAppSignInEnabled = isWhatsAppWebSignInEnabled();
 
     const { decideAndGo } = useSignInRedirectDecision({ router });
 
@@ -62,6 +71,7 @@ export default function SignInPage() {
             signInWithGoogle={signInWithGoogle}
             signInWithYandex={signInWithYandex}
             handleTelegramError={handleTelegramError}
+            whatsAppSignInEnabled={whatsAppSignInEnabled}
         />
     );
 }
