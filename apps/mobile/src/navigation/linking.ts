@@ -1,4 +1,4 @@
-import { LinkingOptions } from '@react-navigation/native';
+﻿import { LinkingOptions } from '@react-navigation/native';
 import { RootStackParamList } from './types';
 
 /**
@@ -11,7 +11,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
             Auth: {
                 screens: {
                     SignIn: 'auth/sign-in',
-                    SignUp: 'auth/sign-up',
                     Verify: 'auth/verify',
                     WhatsApp: 'auth/whatsapp',
                 },
@@ -43,4 +42,3 @@ export const linking: LinkingOptions<RootStackParamList> = {
         },
     },
 };
-

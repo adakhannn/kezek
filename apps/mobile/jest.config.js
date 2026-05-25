@@ -1,8 +1,8 @@
-/**
+﻿/**
  * Jest configuration for React Native / Expo mobile app
  * 
  * Smoke tests for key screens:
- * - Auth screens (SignIn, SignUp, Verify, WhatsApp)
+ * - Auth screens (SignIn, Verify, WhatsApp)
  * - Shift list (StaffScreen)
  * - Booking details (BookingDetailsScreen, CabinetScreen)
  * - Navigation between booking steps
@@ -39,4 +39,5 @@ module.exports = {
         },
     },
 };
+
 

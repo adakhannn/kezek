@@ -1,4 +1,4 @@
-# UI/UX Redesign Roadmap
+﻿# UI/UX Redesign Roadmap
 
 **Status:** active  
 **Created:** 2026-04-01  
@@ -285,7 +285,6 @@ Progress:
   [shiftQuickStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/shiftQuickStyles.ts),
   [ShiftQuickScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftQuickScreen.tsx),
   [SignInScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/auth/SignInScreen.tsx),
-  [SignUpScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/auth/SignUpScreen.tsx),
   [VerifyScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/auth/VerifyScreen.tsx),
   and [WhatsAppScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/auth/WhatsAppScreen.tsx)
 - extended the rollout into cabinet, staff, dashboard, navigation-shell, and shift reporting surfaces:
@@ -1072,5 +1071,6 @@ Why:
 - web and mobile primitive rollouts are now broad enough to serve as the base layer for later redesign work
 - the biggest remaining UX inconsistency now sits in feedback behavior: alerts, retry logic, destructive confirmation, and success/error presentation still vary by screen
 - standardizing feedback next will let later navigation and screen redesign tasks build on one consistent cross-platform state model
+
 
 

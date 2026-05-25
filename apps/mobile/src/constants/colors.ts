@@ -1,4 +1,4 @@
-export const colors = {
+﻿export const colors = {
     brand: {
         primaryFrom: '#4f46e5',
         primaryTo: '#db2777',
@@ -7,7 +7,21 @@ export const colors = {
         telegram: '#229ED9',
         whatsapp: '#25D366',
     },
-
+    auth: {
+        shellBackground: '#030712',
+        shellCardBackground: '#111827',
+        shellCardBorder: '#243047',
+        methodsDivider: '#243047',
+        googleButtonBackground: '#1a2235',
+        googleButtonBorder: '#374151',
+        telegramButtonBackground: 'rgba(96, 165, 250, 0.16)',
+        telegramButtonBorder: '#229ED9',
+        telegramButtonText: '#229ED9',
+        telegramStateCardBackground: '#1a2235',
+        telegramStateCardBorder: '#243047',
+        whatsAppButtonBackground: '#25D366',
+        whatsAppButtonBorder: '#25D366',
+    },
     accent: {
         primary: '#4f46e5',
         primaryStrong: '#4338ca',
@@ -141,3 +155,4 @@ export const colors = {
         },
     },
 };
+

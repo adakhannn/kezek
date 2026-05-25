@@ -1,10 +1,9 @@
-import fs from 'node:fs';
+﻿import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '../..');
 const CORE_FILES = [
     path.join(ROOT, 'screens/auth/SignInScreen.tsx'),
-    path.join(ROOT, 'screens/auth/SignUpScreen.tsx'),
     path.join(ROOT, 'screens/auth/VerifyScreen.tsx'),
     path.join(ROOT, 'screens/auth/WhatsAppScreen.tsx'),
     path.join(ROOT, 'screens/home/homeScreenStyles.ts'),

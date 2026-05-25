@@ -31,7 +31,7 @@ Stabilize and unify mobile UI/UX quality across auth, home, profile, and shared 
 - Conclusion: currently observed text corruption is likely environment/runtime-path related (terminal/editor/font/source-of-string), not persistent file encoding damage in mobile source.
 
 #### 1.1 Priority paths for manual visual verification
-- P0: Auth path (`SignInScreen`, `SignUpScreen`, auth navigation titles, error banners).
+- P0: Auth path (`SignInScreen`, auth navigation titles, error banners).
 - P0: Main navigation labels and root screen titles.
 - P1: Home/Profile/Cabinet visible copy and placeholders.
 - P1: Booking/Shift secondary labels and helper text.
@@ -96,7 +96,7 @@ P0: `auth`
 - `apps/mobile/src/screens/auth/WhatsAppScreen.tsx`
   - Hardcoded error color `#DC2626`.
   - Typography literals (`fontSize: 32/28/16/14`).
-- `apps/mobile/src/screens/auth/VerifyScreen.tsx` and `SignUpScreen.tsx`
+- `apps/mobile/src/screens/auth/VerifyScreen.tsx`
   - Mostly tokenized colors, but typography still partially literal.
 
 P1: `home`
@@ -237,3 +237,4 @@ P1: shared UI touched by core flows
 ## Change log
 - 2026-05-19: Initial deep-analysis task plan created.
 - 2026-05-19: Epics 1-6 completed, DoD checklist closed.
+

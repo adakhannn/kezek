@@ -157,6 +157,19 @@ describe('SignInScreen', () => {
         expect(screen.getByText(/Kezek/i)).toBeTruthy();
     });
 
+    test('ui-level: отображает новую иерархию auth-хедера и секции быстрых способов', () => {
+        render(<SignInScreen />);
+
+        expect(screen.getByText('Вход в Kezek')).toBeTruthy();
+        expect(screen.getByText('Быстрый вход без пароля')).toBeTruthy();
+        expect(
+            screen.getByText(
+                /Выберите удобный способ авторизации\. Мы восстановим сессию автоматически/i,
+            ),
+        ).toBeTruthy();
+        expect(screen.getByText('Быстрые способы входа')).toBeTruthy();
+    });
+
     test('mobile smoke: успешный вход через Telegram', async () => {
         const fetchMock = global.fetch as unknown as jest.Mock;
         fetchMock

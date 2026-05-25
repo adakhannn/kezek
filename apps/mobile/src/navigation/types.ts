@@ -1,4 +1,4 @@
-import type { NavigatorScreenParams } from '@react-navigation/native';
+﻿import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type RootStackParamList = {
     Auth: undefined;
@@ -29,8 +29,6 @@ export type CabinetStackParamList = {
 
 export type AuthStackParamList = {
     SignIn: undefined;
-    SignUp: undefined;
     Verify: { phone?: string; email?: string };
     WhatsApp: undefined;
 };
-

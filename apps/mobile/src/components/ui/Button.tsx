@@ -8,7 +8,15 @@ import MotionPressable from './MotionPressable';
 type ButtonProps = {
     title: string;
     onPress: () => void;
-    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+    variant?:
+        | 'primary'
+        | 'secondary'
+        | 'outline'
+        | 'ghost'
+        | 'danger'
+        | 'authNeutral'
+        | 'authTelegram'
+        | 'authWhatsApp';
     size?: 'sm' | 'md' | 'lg';
     loading?: boolean;
     disabled?: boolean;
@@ -48,13 +56,26 @@ export default function Button({
         variant === 'outline' && styles.outlineText,
         variant === 'ghost' && styles.ghostText,
         variant === 'danger' && styles.dangerText,
+        variant === 'authNeutral' && styles.authNeutralText,
+        variant === 'authTelegram' && styles.authTelegramText,
+        variant === 'authWhatsApp' && styles.authWhatsAppText,
         textStyle,
     ];
 
     const content = (
         <View style={styles.content}>
             {loading ? (
-                <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? colors.text.light : colors.accent.primary} />
+                <ActivityIndicator
+                    color={
+                        variant === 'primary' ||
+                        variant === 'danger' ||
+                        variant === 'authWhatsApp'
+                            ? colors.text.light
+                            : variant === 'authTelegram'
+                              ? colors.auth.telegramButtonText
+                              : colors.accent.primary
+                    }
+                />
             ) : leadingIcon ? (
                 <View style={styles.iconWrap}>{leadingIcon}</View>
             ) : null}
@@ -99,6 +120,9 @@ export default function Button({
         variant === 'outline' && styles.outline,
         variant === 'ghost' && styles.ghost,
         variant === 'danger' && styles.danger,
+        variant === 'authNeutral' && styles.authNeutral,
+        variant === 'authTelegram' && styles.authTelegram,
+        variant === 'authWhatsApp' && styles.authWhatsApp,
         isDisabled && styles.disabled,
         style,
     ];
@@ -166,6 +190,22 @@ const styles = StyleSheet.create({
         backgroundColor: colors.status.danger,
         ...colors.shadow.sm,
     },
+    authNeutral: {
+        backgroundColor: colors.auth.googleButtonBackground,
+        borderWidth: 1,
+        borderColor: colors.auth.googleButtonBorder,
+    },
+    authTelegram: {
+        backgroundColor: colors.auth.telegramButtonBackground,
+        borderWidth: 1,
+        borderColor: colors.auth.telegramButtonBorder,
+    },
+    authWhatsApp: {
+        backgroundColor: colors.auth.whatsAppButtonBackground,
+        borderWidth: 1,
+        borderColor: colors.auth.whatsAppButtonBorder,
+        ...colors.shadow.md,
+    },
     disabled: {
         opacity: colors.interactive.disabledOpacity,
     },
@@ -204,6 +244,15 @@ const styles = StyleSheet.create({
         color: colors.text.secondary,
     },
     dangerText: {
+        color: colors.text.light,
+    },
+    authNeutralText: {
+        color: colors.text.primary,
+    },
+    authTelegramText: {
+        color: colors.auth.telegramButtonText,
+    },
+    authWhatsAppText: {
         color: colors.text.light,
     },
 });
