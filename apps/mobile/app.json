@@ -36,6 +36,20 @@
               "pathPrefix": "/"
             },
             {
+              "scheme": "https",
+              "host": "www.kezek.kg",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
               "scheme": "kezek"
             }
           ],

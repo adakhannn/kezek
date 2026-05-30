@@ -7,6 +7,29 @@ import { useEffect, Suspense } from 'react';
 import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
+function isAndroidDevice() {
+    if (typeof navigator === 'undefined') {
+        return false;
+    }
+    return /Android/i.test(navigator.userAgent);
+}
+
+function toAndroidIntentUrl(deepLink: string) {
+    try {
+        const parsed = new URL(deepLink);
+        if (parsed.protocol !== 'kezek:') {
+            return null;
+        }
+
+        const path = `${parsed.host}${parsed.pathname}`;
+        const query = parsed.search || '';
+        const hash = parsed.hash || '';
+        return `intent://${path}${query}${hash}#Intent;scheme=kezek;package=kg.kezek.app;end`;
+    } catch {
+        return null;
+    }
+}
+
 /**
  * Промежуточная страница для редиректа с веб-сайта на мобильное приложение
  * Извлекает токены из URL и редиректит на deep link
@@ -125,6 +148,7 @@ function CallbackMobileContent() {
 
             // Пытаемся открыть deep link несколькими способами
             let redirectAttempted = false;
+            const intentUrl = toAndroidIntentUrl(deepLink);
             
             // Функция для попытки редиректа
             const attemptRedirect = (method: string, fn: () => void) => {
@@ -146,6 +170,15 @@ function CallbackMobileContent() {
                 link.click();
                 document.body.removeChild(link);
             });
+
+            // Способ 1.1: Для Android Chrome пробуем intent://, который лучше возвращает в приложение
+            if (isAndroidDevice() && intentUrl) {
+                setTimeout(() => {
+                    attemptRedirect('android.intent', () => {
+                        window.location.href = intentUrl;
+                    });
+                }, 50);
+            }
 
             // Способ 2: Пробуем через window.location.replace
             setTimeout(() => {
@@ -262,6 +295,21 @@ function CallbackMobileContent() {
                                     💡 Переключитесь на приложение вручную
                                 </p>
                             </div>
+                            <a
+                                href="${intentUrl ?? deepLink}"
+                                style="
+                                    margin-top: 18px;
+                                    display: inline-block;
+                                    background: #ffffff;
+                                    color: #111827;
+                                    text-decoration: none;
+                                    font-weight: 700;
+                                    border-radius: 10px;
+                                    padding: 12px 18px;
+                                "
+                            >
+                                Открыть приложение
+                            </a>
                         </div>
                         <style>
                             @keyframes spin {

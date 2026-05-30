@@ -56,4 +56,20 @@ describe('apiUrl resolver', () => {
             );
         });
     });
+
+    test('throws when EXPO_PUBLIC_API_URL is malformed', () => {
+        process.env.EXPO_PUBLIC_API_URL = 'ht!tp://bad';
+        process.env.NODE_ENV = 'production';
+        (global as { __DEV__?: boolean }).__DEV__ = false;
+
+        jest.doMock('expo-constants', () => ({
+            default: { expoConfig: { extra: {} } },
+        }));
+
+        jest.isolateModules(() => {
+            const { resolveMobileApiUrl } = require('../../lib/apiUrl');
+            expect(() => resolveMobileApiUrl()).toThrow('Invalid API URL config');
+        });
+    });
+
 });

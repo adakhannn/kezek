@@ -18,7 +18,12 @@ export const linking: LinkingOptions<RootStackParamList> = {
             Main: {
                 screens: {
                     Home: '',
-                    Cabinet: 'cabinet',
+                    Cabinet: {
+                        screens: {
+                            CabinetMain: 'cabinet',
+                            Profile: 'cabinet/profile',
+                        },
+                    },
                     Dashboard: 'dashboard',
                     Staff: 'staff',
                 },
@@ -37,8 +42,9 @@ export const linking: LinkingOptions<RootStackParamList> = {
             },
             ShiftQuick: 'staff/shift-quick',
             Shifts: 'staff/shifts',
-            // Обработка callback URL для OAuth
-            // Это позволит обрабатывать https://kezek.kg/auth/callback-mobile как deep link
+            // OAuth callback URL handling (e.g. /auth/callback-mobile) is performed
+            // by useRootNavigationSession.handleDeepLinkAuth as a side-effect flow,
+            // not by direct screen route mapping.
         },
     },
 };

@@ -6,6 +6,15 @@ function normalizeApiUrl(value: string): string {
     return value.trim().replace(/\/+$/, '');
 }
 
+function isValidApiUrl(value: string): boolean {
+    try {
+        const parsed = new URL(value);
+        return (parsed.protocol === 'https:' || parsed.protocol === 'http:') && !!parsed.host;
+    } catch {
+        return false;
+    }
+}
+
 function isNonProdAppEnv(envValue: string | undefined): boolean {
     if (!envValue) {
         return false;
@@ -29,7 +38,13 @@ export function resolveMobileApiUrl(): string {
 
     const configured = fromPublicEnv || fromExpoExtra;
     if (configured && String(configured).trim()) {
-        return normalizeApiUrl(String(configured));
+        const normalized = normalizeApiUrl(String(configured));
+        if (!isValidApiUrl(normalized)) {
+            throw new Error(
+                'Invalid API URL config. Set EXPO_PUBLIC_API_URL or expo.extra.apiUrl to a valid http(s) URL.',
+            );
+        }
+        return normalized;
     }
 
     if (fromNodeEnv === 'test') {
