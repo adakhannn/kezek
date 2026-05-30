@@ -226,6 +226,8 @@ function CallbackMobileContent() {
             const fallbackTimer = setTimeout(() => {
                 // Проверяем, остались ли мы на этой странице
                 if (window.location.pathname.includes('callback-mobile')) {
+                    const manualOpenUrl =
+                        isAndroidDevice() ? toAndroidIntentUrl(deepLink) ?? deepLink : deepLink;
                     // Скрываем весь контент страницы
                     const originalContent = document.body.innerHTML;
                     document.body.style.overflow = 'hidden';
@@ -296,7 +298,7 @@ function CallbackMobileContent() {
                                 </p>
                             </div>
                             <a
-                                href="${intentUrl ?? deepLink}"
+                                href="${manualOpenUrl}"
                                 style="
                                     margin-top: 18px;
                                     display: inline-block;
