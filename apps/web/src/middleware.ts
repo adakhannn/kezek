@@ -12,8 +12,48 @@ import {
 } from '@/lib/authContext';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 
+function isAndroidUserAgent(userAgent: string | null) {
+    return Boolean(userAgent && /Android/i.test(userAgent));
+}
+
+function toAndroidIntentUrl(deepLink: string) {
+    try {
+        const parsed = new URL(deepLink);
+        if (parsed.protocol !== 'kezek:') {
+            return null;
+        }
+
+        const path = `${parsed.host}${parsed.pathname}`;
+        const query = parsed.search || '';
+        const hash = parsed.hash || '';
+        return `intent://${path}${query}${hash}#Intent;scheme=kezek;package=kg.kezek.app;end`;
+    } catch {
+        return null;
+    }
+}
+
 export async function middleware(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
+    const userAgent = req.headers.get('user-agent');
+
+    if (pathname === '/auth/callback-mobile' && isAndroidUserAgent(userAgent)) {
+        const redirectParam = req.nextUrl.searchParams.get('redirect');
+        if (redirectParam && redirectParam.startsWith('kezek://')) {
+            const deepLink = new URL(redirectParam);
+            const passthroughParams = ['exchange_code', 'code', 'access_token', 'refresh_token', 'type'];
+            for (const key of passthroughParams) {
+                const value = req.nextUrl.searchParams.get(key);
+                if (value) {
+                    deepLink.searchParams.set(key, value);
+                }
+            }
+
+            const intentUrl = toAndroidIntentUrl(deepLink.toString());
+            if (intentUrl) {
+                return NextResponse.redirect(intentUrl, 302);
+            }
+        }
+    }
 
     if (
         pathname.startsWith('/_next') ||

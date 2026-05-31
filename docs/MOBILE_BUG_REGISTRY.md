@@ -101,6 +101,17 @@ Resolution note (2026-05-30):
   - kept custom-scheme redirect attempts and added explicit manual CTA button ("Открыть приложение")
     that points to `intent://` on Android (or `kezek://...` otherwise).
   - goal: make callback return deterministic from Chrome when HTTPS callback page is opened first.
+- Retest after web deploy (2026-05-31):
+  - command: `adb -s emulator-5554 shell am start -W -a android.intent.action.VIEW -d "https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback"`
+  - observed activity: `com.android.chrome/org.chromium.chrome.browser.ChromeTabbedActivity`
+  - delayed `dumpsys` check (~3s) still shows Chrome as `topResumedActivity`.
+  - result: issue persists, status remains `in_progress`.
+- Additional fix (2026-05-31, pending deploy + retest):
+  - added Android-specific server-side redirect in [web middleware](/C:/projects/kezek/apps/web/src/middleware.ts):
+    - intercept `/auth/callback-mobile` requests for Android user-agent;
+    - transform `redirect=kezek://...` into `intent://...#Intent;scheme=kezek;package=kg.kezek.app;end`;
+    - passthrough auth params (`exchange_code`, `code`, `access_token`, `refresh_token`, `type`) into deep link query.
+  - goal: avoid dependency on client-side JS redirect inside Chrome and force deterministic app handoff at HTTP layer.
 
 ### MB-003
 - id: `MB-003`
