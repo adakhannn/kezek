@@ -517,3 +517,45 @@ Resolution note (2026-06-02):
   - `corepack pnpm -C apps/web test -- --runInBand src/__tests__/lib/mobileBookingsService.test.ts src/__tests__/lib/mobileBookingsHttpService.test.ts src/__tests__/api/mobile/bookings.test.ts`
 - Remaining:
   - deploy web API/mobile bundle or point emulator at local web API, then rerun live cancel success and mark `verified`.
+
+MB-012 final verification (2026-06-02, post-deploy live recheck):
+- status: `verified`.
+- production mobile cancel endpoint is live and used by the app:
+  - `POST https://kezek.kg/api/mobile/bookings/c881a2b7-9115-4ab1-9549-794d27c39927`
+- observed result:
+  - success toast `Бронирование отменено`.
+  - app returned to Cabinet.
+  - Cabinet counters updated to `Предстоящие: 0`, `История: 2`.
+- evidence:
+  - [d3_post_deploy_cancel_dialog.png](/C:/projects/kezek/apps/mobile/d3_post_deploy_cancel_dialog.png)
+  - [d3_post_deploy_after_cancel_confirm.png](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_confirm.png)
+  - [d3_post_deploy_after_cancel_logcat.txt](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_logcat.txt)
+
+### MB-013
+- id: `MB-013`
+- date: `2026-06-02`
+- area: `D3`
+- severity: `P2`
+- title: Offline bookings storage failure is surfaced as a dev error toast after successful cancel refresh
+- build: Android dev build (`kg.kezek.app`), post-deploy D3 live recheck
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated mobile session
+- steps:
+  1. Open details for an upcoming booking.
+  2. Cancel the booking successfully.
+  3. Observe Cabinet refresh after returning from details.
+- expected:
+  - Cabinet refresh should stay clean after successful network operation.
+  - Offline cache write failures should be handled silently or surfaced in a user-friendly non-blocking way, depending on product policy.
+- actual:
+  - cancellation succeeds, but a dev-style error toast/log appears:
+    - `[offlineBookingsStorage] Failed to save offline bookings {}`
+- evidence:
+  - [d3_post_deploy_after_cancel_confirm.png](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_confirm.png)
+  - [d3_post_deploy_after_cancel_confirm.xml](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_confirm.xml)
+  - [d3_post_deploy_after_cancel_logcat.txt](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_logcat.txt)
+  - [offlineBookingsStorage.ts](/C:/projects/kezek/apps/mobile/src/lib/offlineBookingsStorage.ts)
+- status: `open`
+- owner: `Codex + User`
+
+Note:
+- This did not block D3 cancel success, but it is visible in the live dev build and should be cleaned up before treating offline/cache UX as polished.

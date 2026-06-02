@@ -21,7 +21,7 @@ Status: Active baseline
 - [x] C6 Sign-out and post-logout state (live verified after UX fix)
 - [x] D1 Booking entry and branch selection (live + targeted tests)
 - [x] D2 Service/staff/date/time steps (100% live verified + targeted tests)
-- [~] D3 Booking confirmation and details (confirmation/details live verified; cancel fix ready, pending deployed live recheck)
+- [x] D3 Booking confirmation and details (100% live verified after deployed cancel recheck)
 
 ## Purpose
 This document defines all testing areas for the mobile app (`apps/mobile`) so testing is not limited to one feature at a time.
@@ -227,8 +227,14 @@ Verification status (2026-06-02):
 - cancel action was hidden for `confirmed` bookings; fixed and live-rechecked visible.
 - cancel confirmation dialog opens correctly, but production API returned `403 Доступ запрещен` for mobile Bearer session when calling legacy `/api/bookings/:id/cancel`.
 - implemented mobile-owner cancel endpoint (`POST /api/mobile/bookings/:id`) and switched mobile client to it.
-- remaining live step:
-  - deploy web API/mobile bundle or point emulator at local web API, then re-run final cancel success and verify booking status/list update.
+- post-deploy live cancel recheck passed:
+  - confirmation dialog opened from details.
+  - `POST https://kezek.kg/api/mobile/bookings/:id` succeeded with mobile Bearer session.
+  - app returned to Cabinet.
+  - success toast `Бронирование отменено` was visible.
+  - Cabinet counters updated to `Предстоящие: 0`, `История: 2`.
+- residual bug observed during this successful path:
+  - `MB-013` (`offlineBookingsStorage` dev error toast after list refresh).
 - targeted verification:
   - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/hooks/useConfirmBooking.test.tsx`
   - `corepack pnpm -C apps/web test -- --runInBand src/__tests__/lib/mobileBookingsService.test.ts src/__tests__/lib/mobileBookingsHttpService.test.ts src/__tests__/api/mobile/bookings.test.ts`
@@ -242,11 +248,15 @@ Verification status (2026-06-02):
   - `apps/mobile/d3_cancel_attempt2_dialog.png`
   - `apps/mobile/d3_cancel_attempt2_after_confirm.png`
   - `apps/mobile/d3_cancel_attempt2_logcat.txt`
+  - `apps/mobile/d3_post_deploy_cancel_dialog.png`
+  - `apps/mobile/d3_post_deploy_after_cancel_confirm.png`
+  - `apps/mobile/d3_post_deploy_after_cancel_logcat.txt`
 - bugs found:
   - `MB-009`
   - `MB-010`
   - `MB-011`
   - `MB-012`
+  - `MB-013`
 
 ### D4. Deep-linked booking screens (`P2`)
 - direct open by booking slug/id
