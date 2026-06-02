@@ -79,4 +79,14 @@ describe('offlineBookingsStorage', () => {
         const loaded = await loadOfflineBookings('fallback-user');
         expect(loaded).toEqual(fallbackPayload);
     });
+
+    test('does not surface save failures as console errors', async () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+        (SecureStore.setItemAsync as jest.Mock).mockRejectedValueOnce(new Error('secure store unavailable'));
+
+        await expect(saveOfflineBookings(createLargePayload('error-user'))).resolves.toBeUndefined();
+
+        expect(consoleErrorSpy).not.toHaveBeenCalled();
+        consoleErrorSpy.mockRestore();
+    });
 });

@@ -1,0 +1,6 @@
+﻿06-02 11:06:42.740 23229 23285 I ReactNativeJS: '[apiRequest] API success', { endpoint: '/mobile/bookings',
+06-02 11:06:42.740 23229 23285 I ReactNativeJS:   normalizedEndpoint: '/api/mobile/bookings',
+06-02 11:06:42.740 23229 23285 I ReactNativeJS:   url: 'https://kezek.kg/api/mobile/bookings',
+06-02 11:06:42.740 23229 23285 I ReactNativeJS:   method: 'GET' }
+06-02 11:06:42.741 23229 23285 I ReactNativeJS: '[offlineBookingsStorage] Failed to save offline bookings', {}
+06-02 11:06:42.758 23229 23285 I ReactNativeJS: '[CabinetScreen] Bookings loaded', { count: 2 }

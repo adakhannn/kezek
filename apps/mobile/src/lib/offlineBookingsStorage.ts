@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-import { logDebug, logError, logWarn } from './log';
+import { logDebug, logWarn } from './log';
 
 const BOOKINGS_KEY_PREFIX = 'offline:bookings:';
 const SECURE_STORE_CHUNK_SIZE = 1800;
@@ -109,7 +109,8 @@ export async function saveOfflineBookings(payload: OfflineBookingsPayload): Prom
             count: payload.items.length,
         });
     } catch (error) {
-        logError('offlineBookingsStorage', 'Failed to save offline bookings', error);
+        // Offline cache is best-effort; network data is already loaded, so do not surface a dev ErrorBox.
+        logDebug('offlineBookingsStorage', 'Failed to save offline bookings', error);
     }
 }
 

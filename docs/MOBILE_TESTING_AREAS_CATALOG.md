@@ -234,7 +234,7 @@ Verification status (2026-06-02):
   - success toast `Бронирование отменено` was visible.
   - Cabinet counters updated to `Предстоящие: 0`, `История: 2`.
 - residual bug observed during this successful path:
-  - `MB-013` (`offlineBookingsStorage` dev error toast after list refresh).
+  - `MB-013` (`offlineBookingsStorage` dev error toast after list refresh) -> verified fixed on 2026-06-02.
 - targeted verification:
   - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/hooks/useConfirmBooking.test.tsx`
   - `corepack pnpm -C apps/web test -- --runInBand src/__tests__/lib/mobileBookingsService.test.ts src/__tests__/lib/mobileBookingsHttpService.test.ts src/__tests__/api/mobile/bookings.test.ts`

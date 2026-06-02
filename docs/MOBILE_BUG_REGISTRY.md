@@ -559,3 +559,18 @@ MB-012 final verification (2026-06-02, post-deploy live recheck):
 
 Note:
 - This did not block D3 cancel success, but it is visible in the live dev build and should be cleaned up before treating offline/cache UX as polished.
+
+MB-013 verification (2026-06-02):
+- status: `verified`.
+- fix:
+  - `saveOfflineBookings` now treats SecureStore write failures as best-effort debug events instead of `console.error`/dev ErrorBox events.
+  - added regression coverage to ensure save failures do not call `console.error`.
+- verification:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/lib/offlineBookingsStorage.test.ts src/__tests__/screens/CabinetScreen.test.tsx` -> PASS (`2 suites / 6 tests`).
+  - `corepack pnpm -C apps/mobile typecheck` -> PASS.
+  - live refresh on Android emulator Cabinet -> no visible `Console Error` / `Failed to save offline bookings` toast.
+  - logcat now reports the event as info/debug (`I ReactNativeJS`), not error (`E ReactNativeJS`).
+- evidence:
+  - [mb013_live_after_refresh.png](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh.png)
+  - [mb013_live_after_refresh.xml](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh.xml)
+  - [mb013_live_after_refresh_logcat.txt](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh_logcat.txt)
