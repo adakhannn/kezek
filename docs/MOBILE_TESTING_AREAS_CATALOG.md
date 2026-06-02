@@ -1,20 +1,27 @@
 ﻿# MOBILE TESTING AREAS CATALOG
 
-Last updated: 2026-05-30  
+Last updated: 2026-06-02  
 Owner: QA flow (User + Codex)  
 Status: Active baseline
 
-## Progress snapshot (2026-05-30)
+## Progress snapshot (2026-06-02)
 - [x] A1 App launch and bootstrapping
 - [x] A2 Environment and config wiring
-- [x] A3 Deep links and app scheme (fix applied for `MB-002`, rebuild verification pending)
+- [x] A3 Deep links and app scheme (post-fix live verify completed, `MB-002` verified)
 - [x] A4 Network/offline baseline
 - [x] B1 Root navigation
-- [ ] B2 Tab and stack navigation (manual auth-gated part pending)
+- [x] B2 Tab and stack navigation (live test completed, bug logged: `MB-005`)
 - [x] B3 Header and back actions
 - [x] B4 Linking config consistency (fix applied for `MB-003`)
 - [x] C1 Sign-in UI/UX
-- [x] C2 Google sign-in flow
+- [x] C2 Google sign-in flow (live rerun completed; see `MB-006` environment caveat)
+- [~] C3 Telegram sign-in flow (live partial: start/pending/cancel/retry/timeout passed; native return via installed Telegram app pending, see `MB-007`)
+- [x] C4 WhatsApp sign-in entry flow (100% live verified + targeted test suite)
+- [x] C5 Session restoration (verified via live dev-build resume checks + session recovery test suite)
+- [x] C6 Sign-out and post-logout state (live verified after UX fix)
+- [x] D1 Booking entry and branch selection (live + targeted tests)
+- [x] D2 Service/staff/date/time steps (100% live verified + targeted tests)
+- [~] D3 Booking confirmation and details (confirmation/details live verified; cancel fix ready, pending deployed live recheck)
 
 ## Purpose
 This document defines all testing areas for the mobile app (`apps/mobile`) so testing is not limited to one feature at a time.
@@ -73,6 +80,11 @@ Use it as:
 - nested stack back behavior
 - preserving screen state when switching tabs
 
+Live status (2026-06-01):
+- tab switching `Главная <-> Кабинет`: verified.
+- state preservation on tab switch: verified (`home-search-input` retained `b2state`).
+- Android hardware back on root `Home`: exits app to launcher (logged as `MB-005`, expected behavior policy to be confirmed).
+
 ### B3. Header and back actions (`P1`)
 - header titles correctness
 - hardware back button behavior (Android)
@@ -97,21 +109,50 @@ Use it as:
 - callback handling and session establishment
 - retry/idempotency behavior
 
+Live status (2026-06-01):
+- cancel path: verified (Back from external Google auth returned to sign-in card).
+- retry/idempotency: verified (repeat tap reopens auth flow consistently).
+- callback/session establishment: verified (manual Google completion returned to app session).
+- happy path login: verified (user completed real Google auth; app opened authenticated `Main`).
+
 ### C3. Telegram sign-in flow (`P0`)
 - start flow and external handoff
 - pending status behavior
 - return-from-external-app behavior
 - timeout/cancel/failure handling
 
+Live status (2026-06-01):
+- start flow + external handoff: verified (opens external Telegram auth URL; emulator routed via Chrome surface).
+- pending state block: verified (`Ожидаем подтверждение` + `Открыть Telegram снова` + `Отменить вход`).
+- cancel and retry: verified (cancel returns to base sign-in state, retry reopens external handoff).
+- native return-from-Telegram-app: pending on emulator (Telegram app not installed/configured; degraded browser path only).
+- timeout expiration message: verified (`Срок подтверждения истек` after extended wait in pending state).
+
 ### C4. WhatsApp sign-in entry flow (`P1`)
 - entry point visibility by feature flag
 - navigation to WhatsApp auth screen
 - send/retry interactions and guardrails
 
+Verification status (2026-06-01):
+- feature-flag entry visibility: verified (`authFeatureFlags.test.ts`, `useWhatsAppSignInFlow.test.tsx`).
+- navigation from Sign-in to WhatsApp auth route: verified (`useWhatsAppSignInFlow.test.tsx` + `SignInScreen.test.tsx`).
+- send/retry guardrails baseline: verified (`WhatsAppScreen.test.tsx` + auth screen integration smoke in `SignInScreen.test.tsx`).
+- runtime note: Telegram/Google/WhatsApp auth shell runs on emulator; Compose UI dump intermittently omits text nodes in Dev Client shell, so source-of-truth for C4 assertions is test suite + route-level runtime checks.
+- manual live completion: verified on emulator OTP step (`Код отправлен в WhatsApp`, code-entry screen, resend cooldown visible).
+
 ### C5. Session restoration (`P0`)
 - app resume restores valid session
 - pending exchange recovery path
 - stale session cleanup behavior
+
+Verification status (2026-06-01):
+- app resume restores active auth flow state: verified in live run (`WhatsApp` OTP step persisted across resume/cold relaunch flow under Dev Launcher shell).
+- pending exchange recovery path: verified by `useRootNavigationSession.test.ts` and `SignInScreen.test.tsx` integration scenarios.
+- stale session cleanup behavior: verified by root-session callback handling tests (invalid/duplicate/expired-like transitions handled, no stale session promotion).
+- evidence:
+  - [c5_start.xml](/C:/projects/kezek/apps/mobile/c5_start.xml)
+  - [c5_resume_warm.xml](/C:/projects/kezek/apps/mobile/c5_resume_warm.xml)
+  - [c5_resume_cold.xml](/C:/projects/kezek/apps/mobile/c5_resume_cold.xml)
 
 ### C6. Sign-out and post-logout state (`P1`)
 - sign-out correctness
@@ -125,15 +166,87 @@ Use it as:
 - branch list rendering and selection
 - empty/error/loading states
 
+Verification status (2026-06-01):
+- live entry and branch-selection path verified from authenticated `Main` flow.
+- targeted tests pass for loading/empty/list states and branch selection action:
+  - `src/__tests__/screens/BookingStep1Branch.test.tsx`
+  - `src/__tests__/screens/BookingScreen.test.tsx`
+- evidence:
+  - `apps/mobile/d1_main.xml`
+  - `apps/mobile/d1_step1_branch.xml`
+
 ### D2. Service/staff/date/time steps (`P1`)
 - step transitions
 - disabled/invalid state handling
 - summary consistency between steps
 
+Verification status (2026-06-02):
+- live step transitions verified on Android emulator:
+  - `Step 1 Branch -> Step 2 Service -> Step 3 Staff -> Step 4 Date -> Step 5 Time -> Step 6 Summary`.
+- disabled/enabled guardrails verified:
+  - Service `Дальше` is disabled before selecting a service and enabled after selection.
+  - Staff `Дальше` is disabled before selecting a staff member and enabled after selection.
+  - Date `Дальше` is disabled until the date is explicitly selected; `Сегодня` highlight alone is not treated as selected.
+- time step empty state verified against live backend data:
+  - `Нет доступного времени`
+  - `Попробуйте выбрать другую дату.`
+- after adding live slots, time-slot selection and summary consistency were verified manually:
+  - selected slot: `13:00`
+  - summary shows `Low Fade`, `Взрослая стрижка`, `Adakhan`, `2 июнь`, `13:00`.
+- targeted tests passed:
+  - `src/__tests__/navigation/BookingNavigation.test.tsx`
+  - `src/__tests__/screens/BookingStep1Branch.test.tsx`
+  - `src/__tests__/screens/BookingStep6Summary.test.tsx`
+- evidence:
+  - `apps/mobile/d2_step2_service.png`
+  - `apps/mobile/d2_step2_selected2.png`
+  - `apps/mobile/d2_step3_staff.png`
+  - `apps/mobile/d2_after_user_ready.png`
+  - `apps/mobile/d2_step4_selected_live.png`
+  - `apps/mobile/d2_step5_time_live.png`
+  - `apps/mobile/d2_slots_live_time_refreshed.png`
+  - `apps/mobile/d2_slots_live_selected.png`
+  - `apps/mobile/d2_slots_live_summary.png`
+
 ### D3. Booking confirmation and details (`P1`)
 - final confirmation path
 - detail screen integrity
 - cancellation/repeat actions
+
+Verification status (2026-06-02):
+- live final confirmation path initially failed after success toast because mobile read `booking_id` from the wrong response shape; fixed and covered by `src/__tests__/hooks/useConfirmBooking.test.tsx`.
+- live details screen initially crashed with `Invalid time value` because mobile did not unwrap `/api/mobile/bookings/:id` response envelopes; fixed for details and cabinet list.
+- live detail integrity recheck passed after fix:
+  - service: `Взрослая стрижка`
+  - business: `Low Fade`
+  - staff: `Adakhan`
+  - branch: `Low Fade Юго-Восток`
+  - date/time: `02 июня 2026`, `14:00 - 14:30`
+  - price: `300 - 350 сом`
+- repeat action is visible on details screen.
+- cancel action was hidden for `confirmed` bookings; fixed and live-rechecked visible.
+- cancel confirmation dialog opens correctly, but production API returned `403 Доступ запрещен` for mobile Bearer session when calling legacy `/api/bookings/:id/cancel`.
+- implemented mobile-owner cancel endpoint (`POST /api/mobile/bookings/:id`) and switched mobile client to it.
+- remaining live step:
+  - deploy web API/mobile bundle or point emulator at local web API, then re-run final cancel success and verify booking status/list update.
+- targeted verification:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/hooks/useConfirmBooking.test.tsx`
+  - `corepack pnpm -C apps/web test -- --runInBand src/__tests__/lib/mobileBookingsService.test.ts src/__tests__/lib/mobileBookingsHttpService.test.ts src/__tests__/api/mobile/bookings.test.ts`
+- evidence:
+  - `apps/mobile/d3_create_confirm_dialog.png`
+  - `apps/mobile/d3_after_create.png`
+  - `apps/mobile/d3_details_wait.png`
+  - `apps/mobile/d3_retest_after_create_wait.png`
+  - `apps/mobile/d3_retest_details_after_unwrap_fix.png`
+  - `apps/mobile/d3_retest_actions_cancel_visible.png`
+  - `apps/mobile/d3_cancel_attempt2_dialog.png`
+  - `apps/mobile/d3_cancel_attempt2_after_confirm.png`
+  - `apps/mobile/d3_cancel_attempt2_logcat.txt`
+- bugs found:
+  - `MB-009`
+  - `MB-010`
+  - `MB-011`
+  - `MB-012`
 
 ### D4. Deep-linked booking screens (`P2`)
 - direct open by booking slug/id
@@ -593,3 +706,46 @@ Use it as:
 - Conclusion:
   - A3 remains failing on currently installed app build for HTTPS callback handoff.
   - `MB-002` fix is manifest-level and must be verified on a rebuilt/reinstalled app binary.
+
+### 2026-05-31 - A3 Deep links and app scheme (`P0`) - ✅ Post-fix live verify (PASS)
+- Scope:
+  - `kezek://` deep links
+  - auth callback deep links
+  - links from external browser/app back into mobile app
+- Environment:
+  - Android Emulator `Pixel_7_Pro` (`emulator-5554`)
+  - app package: `kg.kezek.app`
+  - deployed web callback endpoint with server-side Android redirect
+- Validation steps:
+  - verified production response for Android user-agent:
+    - `https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback`
+    - response: `302` with `Location: intent://auth/callback#Intent;scheme=kezek;package=kg.kezek.app;end`
+  - checked app-links state:
+    - initial: `Selection state -> Disabled: kezek.kg`
+    - enabled via:
+      - `adb -s emulator-5554 shell cmd package set-app-links-user-selection --user 0 --package kg.kezek.app true kezek.kg`
+  - reran deep-link intent test:
+    - `adb -s emulator-5554 shell am start -W -a android.intent.action.VIEW -d "https://kezek.kg/auth/callback-mobile?redirect=kezek://auth/callback"`
+- Result:
+  - PASS: resolved activity switched to `kg.kezek.app/expo.modules.devlauncher.launcher.DevLauncherActivity`
+  - PASS: `topResumedActivity` and `ResumedActivity` show `kg.kezek.app/...`
+- Conclusion:
+  - A3 is now live-verified after fix.
+  - `MB-002` can be treated as closed (`verified`) with noted Android app-links selection precondition.
+
+C3 live update (2026-06-01):
+- after installing Telegram APK on emulator, external handoff now opens Telegram app activity instead of Chrome.
+- remaining item for full closure: complete Telegram in-app auth confirmation and verify callback return into Kezek session.
+
+C3 callback simulation note (2026-06-01):
+- return-from-external deep link mechanism verified technically (callback intent brings app to foreground and reaches auth callback handler).
+- full success completion still requires valid Telegram-issued exchange code from real bot confirmation flow.
+
+C6 preliminary note (2026-06-01):
+- Functional sign-out path exists and is covered by screen tests.
+- UX discoverability risk logged as `MB-008` (logout perceived as missing by user in primary flow).
+
+C6 live completion (2026-06-01):
+- User-confirmed live result: `Выйти из аккаунта` works in emulator flow.
+- Post-logout route reset to Auth confirmed in manual run.
+- C6 can be treated as live verified.

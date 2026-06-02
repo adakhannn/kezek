@@ -8,6 +8,23 @@ import { supabase } from '../../lib/supabase';
 import type { ClientBookingListItemDto } from '@shared-client/types';
 import { mapClientBookingListItemToBooking, type Booking } from './types';
 
+type ApiEnvelope<T> = {
+    ok?: boolean;
+    data?: T;
+};
+
+function unwrapBookings(payload: ClientBookingListItemDto[] | ApiEnvelope<ClientBookingListItemDto[]>): ClientBookingListItemDto[] {
+    if (Array.isArray(payload)) {
+        return payload;
+    }
+
+    if (payload && typeof payload === 'object' && Array.isArray(payload.data)) {
+        return payload.data;
+    }
+
+    return [];
+}
+
 export function useCabinetScreenData() {
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
@@ -35,8 +52,10 @@ export function useCabinetScreenData() {
             }
 
             try {
-                const data = await apiRequest<ClientBookingListItemDto[]>('/mobile/bookings');
-                const rows = (data ?? []) as ClientBookingListItemDto[];
+                const data = await apiRequest<ClientBookingListItemDto[] | ApiEnvelope<ClientBookingListItemDto[]>>(
+                    '/mobile/bookings',
+                );
+                const rows = unwrapBookings(data);
                 const nowIso = new Date().toISOString();
                 const offlineItems: OfflineBooking[] = rows.map((b) => ({
                     id: String(b.id),

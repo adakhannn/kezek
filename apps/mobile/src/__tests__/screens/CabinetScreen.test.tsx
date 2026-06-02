@@ -56,5 +56,38 @@ describe('CabinetScreen', () => {
 
         expect(await screen.findByText('test@example.com')).toBeTruthy();
     });
+
+    test('renders bookings from API envelope', async () => {
+        mockedApiRequest.mockResolvedValueOnce({
+            ok: true,
+            data: [
+                {
+                    id: 'booking-1',
+                    start_at: '2026-06-02T14:00:00Z',
+                    end_at: '2026-06-02T14:30:00Z',
+                    status: 'confirmed',
+                    service: {
+                        name_ru: 'Adult Cut',
+                    },
+                    staff: {
+                        full_name: 'Adakhan',
+                    },
+                    branch: {
+                        name: 'Low Fade South',
+                        address: 'Some street',
+                    },
+                    business: {
+                        name: 'Low Fade',
+                    },
+                },
+            ],
+        } as never);
+
+        renderWithProviders(<CabinetScreen />);
+
+        expect(await screen.findAllByText('Adult Cut')).toHaveLength(2);
+        expect(await screen.findByText('Adakhan')).toBeTruthy();
+    });
+
 });
 

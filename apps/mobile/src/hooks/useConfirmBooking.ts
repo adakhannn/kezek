@@ -15,16 +15,40 @@ export type ConfirmBookingParams = {
 };
 
 export type ConfirmBookingResponse = {
-    ok: boolean;
     booking_id: string;
+    confirmed?: boolean;
+};
+
+type QuickHoldApiResponse = {
+    booking_id?: string;
+    confirmed?: boolean;
+    data?: {
+        booking_id?: string;
+        confirmed?: boolean;
+    };
 };
 
 async function createBooking(params: ConfirmBookingParams): Promise<ConfirmBookingResponse> {
-    return apiRequest<ConfirmBookingResponse>('/api/quick-hold', {
+    const response = await apiRequest<QuickHoldApiResponse>('/api/quick-hold', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
     });
+
+    return normalizeConfirmBookingResponse(response);
+}
+
+function normalizeConfirmBookingResponse(response: QuickHoldApiResponse): ConfirmBookingResponse {
+    const bookingId = response.data?.booking_id ?? response.booking_id;
+
+    if (!bookingId) {
+        throw new Error('Не удалось получить номер созданной записи');
+    }
+
+    return {
+        booking_id: bookingId,
+        confirmed: response.data?.confirmed ?? response.confirmed,
+    };
 }
 
 export type UseConfirmBookingOptions = {

@@ -1,5 +1,5 @@
 import { GET as GET_LIST } from '@/app/api/mobile/bookings/route';
-import { GET as GET_DETAILS } from '@/app/api/mobile/bookings/[id]/route';
+import { GET as GET_DETAILS, POST as POST_CANCEL } from '@/app/api/mobile/bookings/[id]/route';
 import {
     createMockRequest,
     expectErrorResponse,
@@ -16,6 +16,7 @@ jest.mock('@/lib/mobileBookingAuthService', () => ({
 jest.mock('@/lib/mobileBookingsService', () => ({
     listMobileBookings: jest.fn(),
     getMobileBookingDetails: jest.fn(),
+    cancelMobileBooking: jest.fn(),
 }));
 
 jest.mock('@/lib/routeParams', () => ({
@@ -23,7 +24,7 @@ jest.mock('@/lib/routeParams', () => ({
 }));
 
 import { resolveMobileBookingAuth } from '@/lib/mobileBookingAuthService';
-import { getMobileBookingDetails, listMobileBookings } from '@/lib/mobileBookingsService';
+import { cancelMobileBooking, getMobileBookingDetails, listMobileBookings } from '@/lib/mobileBookingsService';
 import { getRouteParamUuid } from '@/lib/routeParams';
 
 describe('/api/mobile/bookings', () => {
@@ -83,5 +84,24 @@ describe('/api/mobile/bookings/[id]', () => {
         );
         const body = await expectSuccessResponse(res, 200);
         expect(body.data).toEqual({ id: 'booking-1' });
+    });
+
+    test('cancels booking for mobile owner', async () => {
+        (resolveMobileBookingAuth as jest.Mock).mockResolvedValue({
+            ok: true,
+            client: { from: jest.fn() },
+            user: { id: 'user-1' },
+        });
+        (getRouteParamUuid as jest.Mock).mockResolvedValue('booking-1');
+        (cancelMobileBooking as jest.Mock).mockResolvedValue({
+            ok: true,
+        });
+
+        const res = await POST_CANCEL(
+            createMockRequest('http://localhost/api/mobile/bookings/booking-1', { method: 'POST' }),
+            { params: { id: 'booking-1' } },
+        );
+        const body = await expectSuccessResponse(res, 200);
+        expect(body.data).toEqual({ alreadyCancelled: false });
     });
 });

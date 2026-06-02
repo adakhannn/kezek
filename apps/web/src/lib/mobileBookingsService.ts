@@ -1,4 +1,5 @@
 import type { ClientBookingDetailsDto, ClientBookingListItemDto } from '@shared-client/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 type BookingListService = {
     name_ru: string | null;
@@ -62,9 +63,7 @@ type BookingDetailsRow = {
     business: BookingDetailsBusiness | BookingDetailsBusiness[] | null;
 };
 
-type MobileBookingsClientLike = {
-    from: (table: string) => any;
-};
+type MobileBookingsClientLike = Pick<SupabaseClient, 'from'>;
 
 type ServiceFailure = {
     ok: false;
@@ -249,4 +248,65 @@ export async function getMobileBookingDetails({
                 : null,
         },
     };
+}
+
+export async function cancelMobileBooking({
+    client,
+    userId,
+    bookingId,
+}: {
+    client: MobileBookingsClientLike;
+    userId: string;
+    bookingId: string;
+}): Promise<{ ok: true; alreadyCancelled?: boolean } | ServiceFailure> {
+    const { data: booking, error: readError } = await client
+        .from('bookings')
+        .select('id, status')
+        .eq('id', bookingId)
+        .eq('client_id', userId)
+        .maybeSingle();
+
+    if (readError) {
+        return {
+            ok: false,
+            error: 'internal',
+            message: 'Не удалось загрузить бронирование',
+            details: readError.message,
+            status: 500,
+        };
+    }
+
+    if (!booking) {
+        return {
+            ok: false,
+            error: 'not_found',
+            message: 'Бронирование не найдено',
+            status: 404,
+        };
+    }
+
+    if (booking.status === 'cancelled') {
+        return {
+            ok: true,
+            alreadyCancelled: true,
+        };
+    }
+
+    const { error: updateError } = await client
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId)
+        .eq('client_id', userId);
+
+    if (updateError) {
+        return {
+            ok: false,
+            error: 'internal',
+            message: 'Не удалось отменить бронирование',
+            details: updateError.message,
+            status: 500,
+        };
+    }
+
+    return { ok: true };
 }

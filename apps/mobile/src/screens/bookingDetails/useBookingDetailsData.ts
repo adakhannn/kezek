@@ -7,10 +7,23 @@ import { apiRequest } from '../../lib/api';
 import { logError } from '../../lib/log';
 import { buildTimelineSteps, type BookingDetails } from './types';
 
+type ApiEnvelope<T> = {
+    ok?: boolean;
+    data?: T;
+};
+
 type Options = {
     bookingId?: string;
     onCancelled?: () => void;
 };
+
+function unwrapBookingDetails(payload: BookingDetails | ApiEnvelope<BookingDetails>): BookingDetails {
+    if (payload && typeof payload === 'object' && 'data' in payload && payload.data) {
+        return payload.data;
+    }
+
+    return payload as BookingDetails;
+}
 
 export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
     const queryClient = useQueryClient();
@@ -24,9 +37,10 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
             }
 
             try {
-                return await apiRequest<BookingDetails>(`/mobile/bookings/${bookingId}`, {
+                const payload = await apiRequest<BookingDetails | ApiEnvelope<BookingDetails>>(`/mobile/bookings/${bookingId}`, {
                     method: 'GET',
                 });
+                return unwrapBookingDetails(payload);
             } catch (error: unknown) {
                 logError('BookingDetailsScreen', 'Error fetching booking via API', error);
                 throw error;
@@ -37,7 +51,7 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
 
     const cancelMutation = useMutation({
         mutationFn: async () => {
-            return apiRequest(`/bookings/${bookingId}/cancel`, {
+            return apiRequest(`/mobile/bookings/${bookingId}`, {
                 method: 'POST',
             });
         },
@@ -56,7 +70,8 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
     const canCancel =
         !!bookingQuery.data &&
         bookingQuery.data.status !== 'cancelled' &&
-        bookingQuery.data.status !== 'confirmed';
+        bookingQuery.data.status !== 'paid' &&
+        bookingQuery.data.status !== 'no_show';
     const timelineSteps = useMemo(
         () => buildTimelineSteps(bookingQuery.data?.status ?? 'created'),
         [bookingQuery.data?.status],

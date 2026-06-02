@@ -36,27 +36,30 @@ describe('BookingDetailsScreen', () => {
 
     beforeEach(() => {
         mockedApiRequest.mockResolvedValue({
-            id: 'test-booking-id',
-            start_at: '2024-01-01T10:00:00Z',
-            end_at: '2024-01-01T11:00:00Z',
-            status: 'confirmed',
-            service: {
-                name_ru: 'Тестовая услуга',
-                duration_min: 60,
-                price_from: 1000,
-                price_to: 1500,
-            },
-            staff: {
-                full_name: 'Тестовый мастер',
-            },
-            business: {
-                name: 'Тестовый бизнес',
-                slug: 'test-business',
-                phones: ['+996555000111'],
-            },
-            branch: {
-                name: 'Главный филиал',
-                address: 'Some street',
+            ok: true,
+            data: {
+                id: 'test-booking-id',
+                start_at: '2024-01-01T10:00:00Z',
+                end_at: '2024-01-01T11:00:00Z',
+                status: 'confirmed',
+                service: {
+                    name_ru: 'Тестовая услуга',
+                    duration_min: 60,
+                    price_from: 1000,
+                    price_to: 1500,
+                },
+                staff: {
+                    full_name: 'Тестовый мастер',
+                },
+                business: {
+                    name: 'Тестовый бизнес',
+                    slug: 'test-business',
+                    phones: ['+996555000111'],
+                },
+                branch: {
+                    name: 'Главный филиал',
+                    address: 'Some street',
+                },
             },
         } as never);
     });
@@ -77,5 +80,11 @@ describe('BookingDetailsScreen', () => {
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByText('Повторить запись')).toBeTruthy();
+    });
+
+    test('allows cancelling confirmed upcoming booking', async () => {
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Отменить бронирование')).toBeTruthy();
     });
 });

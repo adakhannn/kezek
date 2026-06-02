@@ -1,4 +1,4 @@
-import { getMobileBookingDetails, listMobileBookings } from '@/lib/mobileBookingsService';
+import { cancelMobileBooking, getMobileBookingDetails, listMobileBookings } from '@/lib/mobileBookingsService';
 
 describe('mobileBookingsService', () => {
     test('maps booking list rows to client dto items', async () => {
@@ -109,5 +109,33 @@ describe('mobileBookingsService', () => {
                 business: { name: 'Biz', slug: 'biz', phones: ['+996555123456'] },
             },
         });
+    });
+
+    test('cancels booking owned by mobile user', async () => {
+        const maybeSingle = jest.fn().mockResolvedValue({
+            data: { id: 'booking-1', status: 'confirmed' },
+            error: null,
+        });
+        const readEqClient = { eq: jest.fn().mockReturnValue({ maybeSingle }) };
+        const readEqBooking = jest.fn().mockReturnValue(readEqClient);
+        const select = jest.fn().mockReturnValue({ eq: readEqBooking });
+
+        const updateEqClient = jest.fn().mockResolvedValue({ error: null });
+        const updateEqBooking = jest.fn().mockReturnValue({ eq: updateEqClient });
+        const update = jest.fn().mockReturnValue({ eq: updateEqBooking });
+        const from = jest.fn().mockReturnValue({ select, update });
+
+        const result = await cancelMobileBooking({
+            client: { from } as never,
+            userId: 'user-1',
+            bookingId: 'booking-1',
+        });
+
+        expect(result).toEqual({ ok: true });
+        expect(readEqBooking).toHaveBeenCalledWith('id', 'booking-1');
+        expect(readEqClient.eq).toHaveBeenCalledWith('client_id', 'user-1');
+        expect(update).toHaveBeenCalledWith({ status: 'cancelled' });
+        expect(updateEqBooking).toHaveBeenCalledWith('id', 'booking-1');
+        expect(updateEqClient).toHaveBeenCalledWith('client_id', 'user-1');
     });
 });
