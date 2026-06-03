@@ -1,7 +1,7 @@
 import { POST } from '@/app/api/staff/shift/open/route';
 
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
@@ -18,7 +18,7 @@ jest.mock('@/lib/time', () => ({
     TZ: 'Asia/Bishkek',
 }));
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 
 type QueryResult = { data: unknown; error: unknown };
 
@@ -54,7 +54,7 @@ describe('/api/staff/shift/open', () => {
             },
         });
 
-        (getStaffContext as jest.Mock).mockResolvedValue({
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
             staffId: 'test-staff-id',
             bizId: 'test-biz-id',
@@ -235,7 +235,7 @@ describe('/api/staff/shift/open', () => {
     });
 
     test('returns 401 when auth context loading fails', async () => {
-        (getStaffContext as jest.Mock).mockRejectedValue(new Error('UNAUTHORIZED'));
+        (getStaffContextForRequest as jest.Mock).mockRejectedValue(new Error('UNAUTHORIZED'));
 
         const response = await POST(new Request('http://localhost/api/staff/shift/open', { method: 'POST' }));
         const data = await response.json();

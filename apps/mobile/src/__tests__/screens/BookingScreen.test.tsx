@@ -33,6 +33,7 @@ jest.mock('../../contexts/BookingContext', () => ({
             business: {
                 id: 'biz-1',
                 name: 'Test Salon',
+                slug: 'test-salon',
             },
         },
         setBusiness: jest.fn(),
@@ -41,6 +42,7 @@ jest.mock('../../contexts/BookingContext', () => ({
         setStaff: jest.fn(),
         setPromotions: jest.fn(),
         setBranchId: jest.fn(),
+        reset: jest.fn(),
     }),
 }));
 

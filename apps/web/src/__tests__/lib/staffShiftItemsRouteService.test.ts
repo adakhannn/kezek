@@ -1,5 +1,5 @@
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
     getBizContextForManagers: jest.fn(),
 }));
 
@@ -15,7 +15,7 @@ jest.mock('@/lib/staffShiftItemsService', () => ({
     runSaveStaffShiftItems: jest.fn(),
 }));
 
-import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
+import { getBizContextForManagers, getStaffContextForRequest } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
 import { runSaveStaffShiftItems } from '@/lib/staffShiftItemsService';
 import { getServiceClient } from '@/lib/supabaseService';
@@ -41,7 +41,7 @@ describe('staffShiftItemsRouteService', () => {
     });
 
     test('resolves staff context and delegates save flow', async () => {
-        (getStaffContext as jest.Mock).mockResolvedValue({
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({
             supabase: { auth: { getUser: jest.fn() } },
             staffId: 'staff-1',
             bizId: 'biz-1',

@@ -7,7 +7,7 @@ import { GET } from '@/app/api/staff/finance/route';
 
 // Мокируем зависимости
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
     getBizContextForManagers: jest.fn(),
 }));
 
@@ -53,7 +53,7 @@ jest.mock('@/lib/apiMetrics', () => ({
     determineErrorType: jest.fn(() => null),
 }));
 
-import { getStaffContext, getBizContextForManagers } from '@/lib/authBiz';
+import { getStaffContextForRequest, getBizContextForManagers } from '@/lib/authBiz';
 import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
 
 describe('/api/staff/finance', () => {
@@ -76,7 +76,7 @@ describe('/api/staff/finance', () => {
 
     describe('Для сотрудника (без staffId)', () => {
         test('должен вернуть данные смены для текущего сотрудника', async () => {
-            (getStaffContext as jest.Mock).mockResolvedValue({
+            (getStaffContextForRequest as jest.Mock).mockResolvedValue({
                 supabase: mockSupabase,
                 staffId: 'test-staff-id',
                 bizId: 'test-biz-id',
@@ -119,11 +119,11 @@ describe('/api/staff/finance', () => {
             expect(data.ok).toBe(true);
             expect(data.data).toBeDefined();
             expect(data.data.today.shift).toBeDefined();
-            expect(getStaffContext).toHaveBeenCalled();
+            expect(getStaffContextForRequest).toHaveBeenCalledWith(req, expect.any(String));
         });
 
         test('должен использовать сегодняшнюю дату, если date не указан', async () => {
-            (getStaffContext as jest.Mock).mockResolvedValue({
+            (getStaffContextForRequest as jest.Mock).mockResolvedValue({
                 supabase: mockSupabase,
                 staffId: 'test-staff-id',
                 bizId: 'test-biz-id',
@@ -161,7 +161,7 @@ describe('/api/staff/finance', () => {
         });
 
         test('должен вернуть ошибку при невалидном формате даты', async () => {
-            (getStaffContext as jest.Mock).mockResolvedValue({
+            (getStaffContextForRequest as jest.Mock).mockResolvedValue({
                 supabase: mockSupabase,
                 staffId: 'test-staff-id',
                 bizId: 'test-biz-id',
@@ -244,7 +244,7 @@ describe('/api/staff/finance', () => {
 
     describe('Обработка ошибок', () => {
         test('должен вернуть ошибку при отсутствии авторизации', async () => {
-            (getStaffContext as jest.Mock).mockRejectedValue(new Error('UNAUTHORIZED'));
+            (getStaffContextForRequest as jest.Mock).mockRejectedValue(new Error('UNAUTHORIZED'));
 
             const req = new Request('http://localhost/api/staff/finance', {
                 method: 'GET',
@@ -258,7 +258,7 @@ describe('/api/staff/finance', () => {
         });
 
         test('должен вернуть ошибку при ошибке получения данных', async () => {
-            (getStaffContext as jest.Mock).mockResolvedValue({
+            (getStaffContextForRequest as jest.Mock).mockResolvedValue({
                 supabase: mockSupabase,
                 staffId: 'test-staff-id',
                 bizId: 'test-biz-id',

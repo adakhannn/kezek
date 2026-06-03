@@ -6,6 +6,8 @@ import BookingDetailsScreen from '../../screens/BookingDetailsScreen';
 import { apiRequest } from '../../lib/api';
 import { createTestQueryClient } from '../testQueryClient';
 
+let mockRouteId = 'test-booking-id';
+
 jest.mock('@react-navigation/native', () => ({
     NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
     useNavigation: () => ({
@@ -14,7 +16,7 @@ jest.mock('@react-navigation/native', () => ({
     }),
     useRoute: () => ({
         params: {
-            id: 'test-booking-id',
+            id: mockRouteId,
         },
     }),
 }));
@@ -35,6 +37,7 @@ describe('BookingDetailsScreen', () => {
     };
 
     beforeEach(() => {
+        mockRouteId = 'test-booking-id';
         mockedApiRequest.mockResolvedValue({
             ok: true,
             data: {
@@ -86,5 +89,15 @@ describe('BookingDetailsScreen', () => {
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByText('Отменить бронирование')).toBeTruthy();
+    });
+
+    test('shows not-found state when deep-linked booking id cannot be loaded', async () => {
+        mockRouteId = 'missing-booking-id';
+        mockedApiRequest.mockRejectedValue(new Error('booking not found'));
+
+        renderWithProviders(<BookingDetailsScreen />);
+
+        expect(await screen.findByText('Бронирование не найдено')).toBeTruthy();
+        expect(screen.queryByText('Тестовая услуга')).toBeNull();
     });
 });

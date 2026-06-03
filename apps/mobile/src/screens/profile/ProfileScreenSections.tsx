@@ -61,13 +61,13 @@ export function ProfileScreenSections({
                     keyboardType="phone-pad"
                 />
 
-                {email && (
+                {email ? (
                     <View style={styles.emailContainer}>
                         <Text style={styles.label}>Email</Text>
                         <Text style={styles.emailValue}>{email}</Text>
                         <Text style={styles.emailHint}>Email нельзя изменить</Text>
                     </View>
-                )}
+                ) : null}
             </Card>
 
             <Card style={styles.card}>

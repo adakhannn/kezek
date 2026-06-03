@@ -275,7 +275,7 @@ Live note (2026-06-01):
 - build: Android debug (`kg.kezek.app`), live `C3` session
 - environment: `Pixel 7 Pro GApis35` (`emulator-5554`)
 - steps:
-  1. Open sign-in screen and tap `¬ÓÈÚË ˜ÂÂÁ Telegram`.
+  1. Open sign-in screen and tap `ÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩ Telegram`.
   2. Observe external auth handoff target.
   3. Return to app and inspect pending/cancel/retry states.
 - expected:
@@ -305,7 +305,7 @@ Live note (2026-06-01):
   - explicit timeout-expired UI state confirmation.
 
 MB-007 update (2026-06-01, live rerun):
-- timeout-expired state: PASS (`—ÓÍ ÔÓ‰Ú‚ÂÊ‰ÂÌËˇ ËÒÚÂÍ` observed after extended wait in pending state).
+- timeout-expired state: PASS (`ÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩ` observed after extended wait in pending state).
 - remaining open item: native Telegram app return-path verification (requires environment with installed Telegram app).
 - additional evidence:
   - [c3_tg_external_now.xml](/C:/projects/kezek/apps/mobile/c3_tg_external_now.xml)
@@ -362,7 +362,7 @@ C4 live completion note (2026-06-01):
   1. Open authenticated app on main tabs.
   2. Try to find account logout from obvious top-level actions.
 - expected:
-  - `¬˚ÈÚË` action should be clearly discoverable in primary account surfaces (Cabinet/header/menu) without deep hunt.
+  - `ÔøΩÔøΩÔøΩÔøΩÔøΩ` action should be clearly discoverable in primary account surfaces (Cabinet/header/menu) without deep hunt.
 - actual:
   - logout exists only on `Profile` screen; users may not find it quickly and report missing logout.
 - evidence:
@@ -378,7 +378,7 @@ Note:
 
 MB-008 update (2026-06-01):
 - status: fixed.
-- implemented quick logout action in Cabinet footer (`¬˚ÈÚË ËÁ ‡ÍÍ‡ÛÌÚ‡`) so users can sign out without opening Profile.
+- implemented quick logout action in Cabinet footer (`ÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ`) so users can sign out without opening Profile.
 - files:
   - [CabinetScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/CabinetScreen.tsx)
   - [CabinetScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/cabinet/CabinetScreenSections.tsx)
@@ -388,7 +388,7 @@ MB-008 update (2026-06-01):
 
 MB-008 final verification (2026-06-01):
 - status: verified.
-- user confirmed live that quick logout (`¬˚ÈÚË ËÁ ‡ÍÍ‡ÛÌÚ‡`) works after fix.
+- user confirmed live that quick logout (`ÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ`) works after fix.
 
 ### MB-009
 - id: `MB-009`
@@ -448,7 +448,7 @@ Resolution note (2026-06-02):
 
 Resolution note (2026-06-02):
 - Mobile now unwraps `/api/mobile/bookings` and `/api/mobile/bookings/:id` success envelopes.
-- Live recheck rendered details correctly for `Low Fade / ¬ÁÓÒÎ‡ˇ ÒÚËÊÍ‡ / Adakhan / 02 Ë˛Ìˇ 2026 / 14:00 - 14:30`.
+- Live recheck rendered details correctly for `Low Fade / ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ / Adakhan / 02 ÔøΩÔøΩÔøΩÔøΩ 2026 / 14:00 - 14:30`.
 - Targeted tests pass:
   - `BookingDetailsScreen.test.tsx`
   - `CabinetScreen.test.tsx`
@@ -477,7 +477,7 @@ Resolution note (2026-06-02):
 
 Resolution note (2026-06-02):
 - `canCancel` now allows `hold` and `confirmed`, and rejects only terminal/non-cancellable statuses (`cancelled`, `paid`, `no_show`).
-- Live recheck confirmed both `œÓ‚ÚÓËÚ¸ Á‡ÔËÒ¸` and `ŒÚÏÂÌËÚ¸ ·ÓÌËÓ‚‡ÌËÂ` are visible.
+- Live recheck confirmed both `ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ` and `ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ` are visible.
 - Targeted test added in `BookingDetailsScreen.test.tsx`.
 
 ### MB-012
@@ -490,13 +490,13 @@ Resolution note (2026-06-02):
 - environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated mobile Bearer session
 - steps:
   1. Open details for an upcoming confirmed booking.
-  2. Tap `ŒÚÏÂÌËÚ¸ ·ÓÌËÓ‚‡ÌËÂ`.
-  3. Confirm dialog with `ƒ‡, ÓÚÏÂÌËÚ¸`.
+  2. Tap `ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ`.
+  3. Confirm dialog with `ÔøΩÔøΩ, ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ`.
 - expected:
   - authenticated mobile owner can cancel their booking and details/list update accordingly.
 - actual:
   - request goes to `/api/bookings/:id/cancel`.
-  - production API returns `403` with `ƒÓÒÚÛÔ Á‡ÔÂ˘ÂÌ` because that route uses web/cookie-manager authorization path, not mobile Bearer ownership auth.
+  - production API returns `403` with `ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ` because that route uses web/cookie-manager authorization path, not mobile Bearer ownership auth.
 - evidence:
   - [d3_cancel_attempt2_dialog.png](/C:/projects/kezek/apps/mobile/d3_cancel_attempt2_dialog.png)
   - [d3_cancel_attempt2_after_confirm.png](/C:/projects/kezek/apps/mobile/d3_cancel_attempt2_after_confirm.png)
@@ -523,9 +523,9 @@ MB-012 final verification (2026-06-02, post-deploy live recheck):
 - production mobile cancel endpoint is live and used by the app:
   - `POST https://kezek.kg/api/mobile/bookings/c881a2b7-9115-4ab1-9549-794d27c39927`
 - observed result:
-  - success toast `¡ÓÌËÓ‚‡ÌËÂ ÓÚÏÂÌÂÌÓ`.
+  - success toast `ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ`.
   - app returned to Cabinet.
-  - Cabinet counters updated to `œÂ‰ÒÚÓˇ˘ËÂ: 0`, `»ÒÚÓËˇ: 2`.
+  - Cabinet counters updated to `ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ: 0`, `ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ: 2`.
 - evidence:
   - [d3_post_deploy_cancel_dialog.png](/C:/projects/kezek/apps/mobile/d3_post_deploy_cancel_dialog.png)
   - [d3_post_deploy_after_cancel_confirm.png](/C:/projects/kezek/apps/mobile/d3_post_deploy_after_cancel_confirm.png)
@@ -574,3 +574,339 @@ MB-013 verification (2026-06-02):
   - [mb013_live_after_refresh.png](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh.png)
   - [mb013_live_after_refresh.xml](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh.xml)
   - [mb013_live_after_refresh_logcat.txt](/C:/projects/kezek/apps/mobile/mb013_live_after_refresh_logcat.txt)
+
+### MB-014
+- id: `MB-014`
+- date: `2026-06-02`
+- area: `D4`
+- severity: `P2`
+- title: Invalid booking slug deep link can show stale previous business flow
+- build: Android dev build (`kg.kezek.app`), live D4 session
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated mobile session
+- steps:
+  1. Open a valid booking slug deep link, for example `kezek://booking/low-fade`.
+  2. Open an invalid booking slug deep link, for example `kezek://booking/__missing_live_d4_slug__`.
+- expected:
+  - invalid slug renders a graceful not-found/empty state.
+  - previous business data is cleared and not shown as if the invalid link were valid.
+- actual:
+  - before fix, invalid slug could continue showing `Low Fade` Step 1 content from the previous valid booking flow.
+- evidence:
+  - [d4_valid_slug.png](/C:/projects/kezek/apps/mobile/d4_valid_slug.png)
+  - [d4_invalid_slug.png](/C:/projects/kezek/apps/mobile/d4_invalid_slug.png)
+  - [d4_postfix_invalid_slug.png](/C:/projects/kezek/apps/mobile/d4_postfix_invalid_slug.png)
+  - [useBookingScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingFlow/useBookingScreenData.ts)
+  - [useBookingStep1Business.ts](/C:/projects/kezek/apps/mobile/src/screens/booking/useBookingStep1Business.ts)
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-02):
+- Booking flow now resets stale context when the active business slug differs from the incoming deep-link slug.
+- Step 1 only exposes loaded business data when its slug matches the current route slug.
+- Live recheck:
+  - `kezek://booking/low-fade` -> `Low Fade` Step 1.
+  - `kezek://booking/__missing_live_d4_slug__` -> `–ë–∏–∑–Ω–µ—Å –Ω–µ –Ω–∞–π–¥–µ–Ω`.
+- Targeted checks pass:
+  - `BookingScreen.test.tsx`
+  - `BookingStep1Branch.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+
+### MB-015
+- id: `MB-015`
+- date: `2026-06-02`
+- area: `D4`
+- severity: `P2`
+- title: Invalid booking detail deep link can show stale previous booking details
+- build: Android dev build (`kg.kezek.app`), live D4 session
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated mobile session
+- steps:
+  1. Open a valid details deep link, for example `kezek://booking-detail/c881a2b7-9115-4ab1-9549-794d27c39927`.
+  2. Open an invalid details deep link, for example `kezek://booking-detail/00000000-0000-0000-0000-000000000000`.
+- expected:
+  - invalid id renders a graceful not-found/empty state.
+  - previous booking details are not displayed for the invalid id.
+- actual:
+  - before fix, invalid id could keep showing the previously opened booking details.
+- evidence:
+  - [d4_valid_booking_detail.png](/C:/projects/kezek/apps/mobile/d4_valid_booking_detail.png)
+  - [d4_invalid_booking_detail.png](/C:/projects/kezek/apps/mobile/d4_invalid_booking_detail.png)
+  - [d4_postfix_invalid_booking_detail.png](/C:/projects/kezek/apps/mobile/d4_postfix_invalid_booking_detail.png)
+  - [useBookingDetailsData.ts](/C:/projects/kezek/apps/mobile/src/screens/bookingDetails/useBookingDetailsData.ts)
+  - [BookingDetailsScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/BookingDetailsScreen.test.tsx)
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-02):
+- Booking details hook now returns details only when the loaded booking id matches the current route id.
+- Added regression coverage for invalid deep-linked booking id.
+- Live recheck:
+  - valid booking detail id -> details screen.
+  - invalid booking detail id -> `–ë—Ä–æ–Ω–∏—Ä–æ–≤–∞–Ω–∏–µ –Ω–µ –Ω–∞–π–¥–µ–Ω–æ`.
+- Targeted checks pass:
+  - `BookingDetailsScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+
+### MB-016
+- id: `MB-016`
+- date: `2026-06-02`
+- area: `E1`
+- severity: `P1`
+- title: Cabinet bookings network failure without offline cache is not shown as an explicit error state
+- build: Android dev build (`kg.kezek.app`) + targeted screen tests
+- environment: Cabinet bookings data flow (`apps/mobile/src/screens/cabinet/useCabinetScreenData.ts`)
+- steps:
+  1. Open Cabinet with an authenticated user.
+  2. Make `/mobile/bookings` fail while no offline bookings cache is available.
+  3. Observe the bookings area.
+- expected:
+  - Cabinet keeps profile/navigation available.
+  - bookings area clearly shows that records could not be loaded.
+  - user has a retry action.
+- actual:
+  - before fix, the flow exposed no dedicated `bookingsQuery.isError` state to the UI.
+  - this could make a no-cache network failure look too close to an empty/sync-pending cabinet instead of an actionable error.
+- evidence:
+  - [CabinetScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/CabinetScreen.tsx)
+  - [CabinetScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/cabinet/CabinetScreenSections.tsx)
+  - [useCabinetScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/cabinet/useCabinetScreenData.ts)
+  - [CabinetScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/CabinetScreen.test.tsx)
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-02):
+- Cabinet data hook now exposes `hasBookingsError` when network loading fails and no cached booking data is available.
+- Cabinet UI now renders:
+  - error data mode label (`–û—à–∏–±–∫–∞`),
+  - error banner (`–ù–µ —É–¥–∞–ª–æ—Å—å –∑–∞–≥—Ä—É–∑–∏—Ç—å –∑–∞–ø–∏—Å–∏`),
+  - empty/error block with `–ü–æ–≤—Ç–æ—Ä–∏—Ç—å` retry action.
+- Live E1 verification passed for normal Cabinet flow:
+  - authenticated Cabinet shell,
+  - upcoming empty state,
+  - history booking cards,
+  - card tap opening booking details.
+- Targeted checks pass:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/CabinetScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+- evidence:
+  - [e1_cabinet_current.png](/C:/projects/kezek/apps/mobile/e1_cabinet_current.png)
+  - [e1_scrolled.xml](/C:/projects/kezek/apps/mobile/e1_scrolled.xml)
+  - [e1_history_cards.png](/C:/projects/kezek/apps/mobile/e1_history_cards.png)
+  - [e1_history_card_action_details.png](/C:/projects/kezek/apps/mobile/e1_history_card_action_details.png)
+
+### MB-017
+- id: `MB-017`
+- date: `2026-06-02`
+- area: `E2`
+- severity: `P1`
+- title: Profile screen fails to load because mobile selects non-existent `profiles.email` column
+- build: Android dev build (`kg.kezek.app`), live E2 session
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated mobile session
+- steps:
+  1. Open Cabinet.
+  2. Tap `–ü—Ä–æ—Ñ–∏–ª—å`.
+  3. Observe profile loading result.
+- expected:
+  - Profile form loads current user profile data and auth email.
+- actual:
+  - before fix, profile screen showed `–ù–µ —É–¥–∞–ª–æ—Å—å –∑–∞–≥—Ä—É–∑–∏—Ç—å –ø—Ä–æ—Ñ–∏–ª—å`.
+  - mobile query selected `email` from `public.profiles`, but schema does not include that column; email belongs to auth user data.
+- evidence:
+  - [e2_profile_current.png](/C:/projects/kezek/apps/mobile/e2_profile_current.png)
+  - [e2_profile_load_error_logcat.txt](/C:/projects/kezek/apps/mobile/e2_profile_load_error_logcat.txt)
+  - [useProfileScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/profile/useProfileScreenData.ts)
+  - [types.ts](/C:/projects/kezek/apps/mobile/src/screens/profile/types.ts)
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-02):
+- Removed `email` from `profiles` select and profile DTO type.
+- Profile email is rendered from authenticated user data instead.
+- Live recheck shows profile form loaded successfully after schema fix.
+- Targeted checks pass:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/ProfileScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+- evidence:
+  - [e2_profile_after_schema_fix.png](/C:/projects/kezek/apps/mobile/e2_profile_after_schema_fix.png)
+  - [e2_profile_after_reload.png](/C:/projects/kezek/apps/mobile/e2_profile_after_reload.png)
+
+### MB-018
+- id: `MB-018`
+- date: `2026-06-02`
+- area: `E2`
+- severity: `P2`
+- title: Profile screen labels are mojibake instead of readable Russian text
+- build: mobile source-level + live E2 session
+- environment: [ProfileScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/profile/ProfileScreenSections.tsx)
+- steps:
+  1. Open Profile screen.
+  2. Review form labels, section titles, helper text and actions.
+- expected:
+  - Russian UI labels render cleanly and match product language.
+- actual:
+  - before fix, labels were stored as mojibake strings such as `–†—ü–°–Ç–†—ï–°‚Äû–†—ë–†¬ª–°–ä`.
+- evidence:
+  - [ProfileScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/profile/ProfileScreenSections.tsx)
+  - [ProfileScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/ProfileScreen.test.tsx)
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-02):
+- Replaced profile screen mojibake strings with readable Russian labels/actions.
+- Added regression coverage for localized labels and profile values.
+- Live recheck confirms clean labels:
+  - `–ü—Ä–æ—Ñ–∏–ª—å`
+  - `–õ–∏—á–Ω–∞—è –∏–Ω—Ñ–æ—Ä–º–∞—Ü–∏—è`
+  - `–ò–º—è`
+  - `–¢–µ–ª–µ—Ñ–æ–Ω`
+  - `–£–≤–µ–¥–æ–º–ª–µ–Ω–∏—è`
+  - `–°–æ—Ö—Ä–∞–Ω–∏—Ç—å`
+- evidence:
+  - [e2_profile_after_schema_fix.png](/C:/projects/kezek/apps/mobile/e2_profile_after_schema_fix.png)
+
+### MB-019
+- id: `MB-019`
+- date: `2026-06-03`
+- area: `F1`
+- severity: `P1`
+- title: Staff screen can show non-staff empty state when staff query fails
+- build: mobile source-level + targeted F1 test suite
+- environment: [StaffScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/StaffScreen.tsx), [useStaffScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/staff/useStaffScreenData.ts)
+- steps:
+  1. Open Staff screen for an authenticated user.
+  2. Make the staff lookup query fail because of network/server/RLS error.
+  3. Observe the screen state.
+- expected:
+  - Staff screen shows an explicit load error with retry.
+  - It must not tell the user they are not a staff member when the app simply failed to load staff status.
+- actual:
+  - before fix, `staffInfo` was falsy on query error and the screen could render `–í—ã –Ω–µ —è–≤–ª—è–µ—Ç–µ—Å—å —Å–æ—Ç—Ä—É–¥–Ω–∏–∫–æ–º`.
+- evidence:
+  - [StaffScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/StaffScreen.tsx)
+  - [useStaffScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/staff/useStaffScreenData.ts)
+  - [StaffScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/StaffScreen.test.tsx)
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-03):
+- Staff data hook now exposes `loadError` from staff/bookings queries.
+- Staff screen now renders `–ù–µ —É–¥–∞–ª–æ—Å—å –∑–∞–≥—Ä—É–∑–∏—Ç—å —Ä–∞–±–æ—á—É—é –∑–æ–Ω—É` with `–ü–æ–≤—Ç–æ—Ä–∏—Ç—å` on query failure.
+- Refresh now resets `refreshing` in `finally`, so failed refresh cannot leave the UI stuck.
+- Targeted checks pass:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/StaffScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+- Live role-gating check:
+  - current authenticated account does not expose Staff tab; visible tabs are `–ì–ª–∞–≤–Ω–∞—è`, `–ö–∞–±–∏–Ω–µ—Ç`, `–ë–∏–∑–Ω–µ—Å`.
+- evidence:
+  - [f1_live_tabs_current_user.png](/C:/projects/kezek/apps/mobile/f1_live_tabs_current_user.png)
+  - [f1_live_tabs_current_user.xml](/C:/projects/kezek/apps/mobile/f1_live_tabs_current_user.xml)
+
+
+### MB-020
+- id: `MB-020`
+- date: `2026-06-03`
+- area: `F1`
+- severity: `P1`
+- title: Staff dashboard action buttons are obscured by bottom tab bar
+- build: Android dev build (`kg.kezek.app`), live F1 staff-role session
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated staff account `telegram_634038083@telegram.local`
+- steps:
+  1. Log in as a staff user.
+  2. Open the `–†–∞–±–æ—Ç–∞` tab.
+  3. Scroll/review the staff dashboard key action buttons.
+  4. Try tapping `–°—Ç–∞—Ç–∏—Å—Ç–∏–∫–∞`.
+- expected:
+  - `–ú–æ—è —Å–º–µ–Ω–∞` and `–°—Ç–∞—Ç–∏—Å—Ç–∏–∫–∞` are fully visible and tappable.
+  - Bottom tab bar does not overlap key staff actions.
+- actual:
+  - before fix, `–°—Ç–∞—Ç–∏—Å—Ç–∏–∫–∞` was placed under the bottom tab bar.
+  - UI bounds showed `–°—Ç–∞—Ç–∏—Å—Ç–∏–∫–∞` at `[70,2827][1370,3050]`, while bottom tabs started around `[0,2819][1440,3078]`.
+  - Taps could miss the intended action or hit the wrong area.
+- evidence:
+  - [f1_staff_dashboard_live.png](/C:/projects/kezek/apps/mobile/f1_staff_dashboard_live.png)
+  - [f1_staff_actions_revealed.xml](/C:/projects/kezek/apps/mobile/f1_staff_actions_revealed.xml)
+  - [StaffScreenSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/staff/StaffScreenSections.tsx)
+  - [staffScreenStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/staff/staffScreenStyles.ts)
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-03):
+- Moved staff key actions above the upcoming bookings section.
+- Added explicit ScrollView content bottom padding to keep lower content clear of the bottom tab bar.
+- Rebuilt and installed fresh Android dev APK from the short `C:\kz` build mirror because `C:\projects\kezek` still hits Windows CMake path-limit errors.
+- Live recheck confirmed action bounds are now above the tab bar:
+  - `–ú–æ—è —Å–º–µ–Ω–∞`: `[70,1761][1370,2033]`
+  - `–°—Ç–∞—Ç–∏—Å—Ç–∏–∫–∞`: `[70,2033][1370,2256]`
+  - bottom tab bar starts around `[32,2861]...`
+- Live navigation passed:
+  - `–ú–æ—è —Å–º–µ–Ω–∞` opens `ShiftQuick`.
+  - `–°—Ç–∞—Ç–∏—Å—Ç–∏–∫–∞` opens `–°–º–µ–Ω—ã –∏ —Å—Ç–∞—Ç–∏—Å—Ç–∏–∫–∞`.
+- Targeted checks pass:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/StaffScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+- evidence:
+  - [f1_staff_dashboard_after_reinstall.png](/C:/projects/kezek/apps/mobile/f1_staff_dashboard_after_reinstall.png)
+  - [f1_staff_dashboard_after_reinstall.xml](/C:/projects/kezek/apps/mobile/f1_staff_dashboard_after_reinstall.xml)
+  - [f1_staff_action_shiftquick_final.png](/C:/projects/kezek/apps/mobile/f1_staff_action_shiftquick_final.png)
+  - [f1_staff_action_shifts_final.png](/C:/projects/kezek/apps/mobile/f1_staff_action_shifts_final.png)
+
+
+### MB-021
+- id: `MB-021`
+- date: `2026-06-03`
+- area: `F2`
+- severity: `P0`
+- title: Mobile staff shift workspace cannot load because staff finance API rejects Bearer auth
+- build: Android dev build (`kg.kezek.app`), live F2 staff-role session
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated staff account `telegram_634038083@telegram.local`, production API `https://kezek.kg`
+- steps:
+  1. Log in as a staff user in the mobile app.
+  2. Open `–†–∞–±–æ—Ç–∞`.
+  3. Tap `–ú–æ—è —Å–º–µ–Ω–∞`.
+  4. Observe network/logcat for `GET /api/staff/finance`.
+- expected:
+  - Mobile Bearer session authenticates the staff user.
+  - Shift workspace loads today finance/shift data.
+- actual:
+  - Production API returns `401 UNAUTHORIZED` with `{ ok: false, error: 'auth', message: 'UNAUTHORIZED' }`.
+  - Shift workspace falls back to cache and then shows load error when no cache exists.
+- evidence:
+  - logcat output captured during F2 live session for `/api/staff/finance`.
+  - [staffFinanceRouteService.ts](/C:/projects/kezek/apps/web/src/lib/staffFinanceRouteService.ts)
+  - [staffShiftOpenHttpService.ts](/C:/projects/kezek/apps/web/src/lib/staffShiftOpenHttpService.ts)
+  - [staffShiftCloseHttpService.ts](/C:/projects/kezek/apps/web/src/lib/staffShiftCloseHttpService.ts)
+  - [staffShiftItemsRouteService.ts](/C:/projects/kezek/apps/web/src/lib/staffShiftItemsRouteService.ts)
+- status: `fixed-pending-deploy`
+- owner: `Codex + User`
+
+Resolution note (2026-06-03):
+- Added request-aware staff context via `getStaffContextForRequest(req, scope)` / `resolveStaffContextForRequest(req, scope)`.
+- Staff finance and shift endpoints now preserve web cookie auth and also accept mobile Bearer auth for self-staff mode.
+- Targeted API tests pass for staff finance/open/close/items.
+- Live production verification is pending deploy.
+
+
+### MB-022
+- id: `MB-022`
+- date: `2026-06-03`
+- area: `F2`
+- severity: `P1`
+- title: ShiftQuick screen contains mojibake/question-mark Russian UI strings
+- build: mobile source-level F2 audit
+- environment: [ShiftQuickScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftQuickScreen.tsx), [useShiftQuickScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/useShiftQuickScreenData.ts)
+- steps:
+  1. Review ShiftQuick visible strings and toast messages.
+  2. Render load-error/non-staff states in tests.
+- expected:
+  - Russian labels and messages are readable.
+- actual:
+  - Some strings were stored as question marks or mojibake, including non-staff/load-error/cancel/add-client messages.
+- evidence:
+  - [ShiftQuickScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftQuickScreen.tsx)
+  - [ShiftQuickScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/ShiftQuickScreen.test.tsx)
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-03):
+- Replaced corrupted ShiftQuick visible strings with readable Russian text.
+- Added regression coverage for idle, active add-client, load-error and non-staff states.
+- Targeted mobile ShiftQuick tests and mobile typecheck pass.

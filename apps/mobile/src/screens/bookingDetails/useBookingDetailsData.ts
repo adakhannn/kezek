@@ -66,15 +66,16 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
         },
     });
 
-    const primaryPhone = bookingQuery.data?.business?.phones?.[0] || null;
+    const booking = bookingQuery.data?.id === bookingId ? bookingQuery.data : undefined;
+    const primaryPhone = booking?.business?.phones?.[0] || null;
     const canCancel =
-        !!bookingQuery.data &&
-        bookingQuery.data.status !== 'cancelled' &&
-        bookingQuery.data.status !== 'paid' &&
-        bookingQuery.data.status !== 'no_show';
+        !!booking &&
+        booking.status !== 'cancelled' &&
+        booking.status !== 'paid' &&
+        booking.status !== 'no_show';
     const timelineSteps = useMemo(
-        () => buildTimelineSteps(bookingQuery.data?.status ?? 'created'),
-        [bookingQuery.data?.status],
+        () => buildTimelineSteps(booking?.status ?? 'created'),
+        [booking?.status],
     );
 
     const openPhoneUrl = async (url: string, errorMessage: string) => {
@@ -86,8 +87,8 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
     };
 
     return {
-        booking: bookingQuery.data,
-        isLoading: bookingQuery.isLoading,
+        booking,
+        isLoading: bookingQuery.isLoading || (!booking && bookingQuery.isFetching),
         cancelBooking: () => cancelMutation.mutate(),
         isCancelling: cancelMutation.isPending,
         primaryPhone,

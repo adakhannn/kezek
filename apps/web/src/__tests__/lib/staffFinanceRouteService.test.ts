@@ -1,5 +1,5 @@
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
     getBizContextForManagers: jest.fn(),
 }));
 
@@ -20,7 +20,7 @@ jest.mock('@/app/staff/finance/services/shiftDataService', () => ({
     })),
 }));
 
-import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
+import { getBizContextForManagers, getStaffContextForRequest } from '@/lib/authBiz';
 import { getShiftData } from '@/app/staff/finance/services/shiftDataService';
 import { runStaffFinanceRoute } from '@/lib/staffFinanceRouteService';
 
@@ -59,7 +59,7 @@ describe('staffFinanceRouteService', () => {
     });
 
     test('returns success for staff self request', async () => {
-        (getStaffContext as jest.Mock).mockResolvedValue({
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
             staffId: 'staff-id',
             bizId: 'biz-id',

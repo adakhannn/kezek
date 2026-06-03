@@ -16,6 +16,7 @@ type Props = {
     userLabel: string;
     activeTab: 'upcoming' | 'history';
     isOfflineData: boolean;
+    hasBookingsError: boolean;
     lastSyncAt: string | null;
     upcomingBookings: Booking[];
     pastBookings: Booking[];
@@ -24,12 +25,15 @@ type Props = {
     onRefresh: () => Promise<void>;
     onBookingPress: (bookingId: string) => void;
     onProfilePress: () => void;
+    onSignOut: () => void;
+    isSigningOut: boolean;
 };
 
 export function CabinetScreenSections({
     userLabel,
     activeTab,
     isOfflineData,
+    hasBookingsError,
     lastSyncAt,
     upcomingBookings,
     pastBookings,
@@ -38,11 +42,14 @@ export function CabinetScreenSections({
     onRefresh,
     onBookingPress,
     onProfilePress,
+    onSignOut,
+    isSigningOut,
 }: Props) {
     const isHistory = activeTab === 'history';
     const visibleBookings = isHistory ? pastBookings : upcomingBookings;
     const featuredBooking = upcomingBookings[0] ?? null;
     const syncLabel = lastSyncAt ? `${formatDate(lastSyncAt)} • ${formatTime(lastSyncAt)}` : 'Синхронизация ожидается';
+    const dataModeLabel = hasBookingsError ? 'Ошибка' : isOfflineData ? 'Кэш' : 'Live';
 
     return (
         <ScrollView
@@ -81,7 +88,9 @@ export function CabinetScreenSections({
                     </View>
                     <View style={styles.overviewMetaPill}>
                         <Ionicons name="sync-outline" size={14} color={colors.text.secondary} />
-                        <Text style={styles.overviewMetaText}>{isOfflineData ? 'Оффлайн' : 'Актуально'}</Text>
+                        <Text style={styles.overviewMetaText}>
+                            {hasBookingsError ? 'Ошибка' : isOfflineData ? 'Оффлайн' : 'Актуально'}
+                        </Text>
                     </View>
                 </View>
 
@@ -95,13 +104,20 @@ export function CabinetScreenSections({
                         <Text style={styles.statLabel}>История</Text>
                     </View>
                     <View style={styles.statCard}>
-                        <Text style={styles.statValue}>{isOfflineData ? 'Кэш' : 'Live'}</Text>
+                        <Text style={styles.statValue}>{dataModeLabel}</Text>
                         <Text style={styles.statLabel}>Режим данных</Text>
                     </View>
                 </View>
             </Card>
 
-            {isOfflineData ? (
+            {hasBookingsError ? (
+                <OfflineBanner
+                    title="Не удалось загрузить записи"
+                    message="Проверьте соединение и попробуйте обновить кабинет. Если проблема повторится, мы сохраним профиль доступным, но список записей может быть неполным."
+                    onRetry={() => void onRefresh()}
+                    style={styles.offlineBanner}
+                />
+            ) : isOfflineData ? (
                 <OfflineBanner
                     title="Показываем сохраненные записи"
                     message={`Нет подключения к интернету. Вы видите последние доступные данные${lastSyncAt ? ` от ${syncLabel}` : ''}. Потяните экран или нажмите «Обновить», когда сеть вернется.`}
@@ -158,7 +174,16 @@ export function CabinetScreenSections({
                 </MotionPressable>
             </View>
 
-            {visibleBookings.length > 0 ? (
+            {hasBookingsError ? (
+                <EmptyState
+                    compact
+                    icon="cloud-offline-outline"
+                    title="Не удалось загрузить записи"
+                    message="Список записей временно недоступен. Нажмите «Повторить», когда соединение восстановится."
+                    action={<Button title="Повторить" onPress={() => void onRefresh()} variant="outline" fullWidth />}
+                    style={styles.empty}
+                />
+            ) : visibleBookings.length > 0 ? (
                 <View style={styles.bookingsList}>
                     {visibleBookings.map((booking) => (
                         <MotionPressable
@@ -193,6 +218,15 @@ export function CabinetScreenSections({
                     variant="outline"
                     fullWidth
                     trailingIcon={<Ionicons name="chevron-forward" size={16} color={colors.text.primary} />}
+                />
+                <Button
+                    title={isSigningOut ? 'Выходим...' : 'Выйти из аккаунта'}
+                    onPress={onSignOut}
+                    variant="outline"
+                    fullWidth
+                    loading={isSigningOut}
+                    disabled={isSigningOut}
+                    style={styles.signOutQuickButton}
                 />
             </View>
         </ScrollView>
@@ -243,9 +277,13 @@ function BookingCard({ booking, isHistory }: { booking: Booking; isHistory: bool
 
             <View style={styles.bookingFooter}>
                 <Text style={styles.footerHint}>
-                    {isHistory ? 'Откройте, чтобы посмотреть детали и статус визита.' : 'Откройте карточку, чтобы посмотреть детали и подготовиться к визиту.'}
+                    {isHistory
+                        ? 'Откройте, чтобы посмотреть детали и статус визита.'
+                        : 'Откройте карточку, чтобы посмотреть детали и подготовиться к визиту.'}
                 </Text>
             </View>
         </Card>
     );
 }
+
+

@@ -134,6 +134,7 @@ export function useCabinetScreenData() {
     return {
         user: userQuery.data,
         bookings: bookingsQuery.data,
+        hasBookingsError: bookingsQuery.isError && !bookingsQuery.data,
         isLoading: bookingsQuery.isLoading,
         refreshing,
         activeTab,

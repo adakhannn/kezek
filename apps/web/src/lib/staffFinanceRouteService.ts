@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { getShiftData, buildFinanceResponsePayload } from '@/app/staff/finance/services/shiftDataService';
-import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
+import { getBizContextForManagers, getStaffContextForRequest } from '@/lib/authBiz';
 import { logDebug, logError } from '@/lib/log';
 import { validateQuery } from '@/lib/validation/apiValidation';
 import { staffFinanceQuerySchema } from '@/lib/validation/schemas';
@@ -123,7 +123,7 @@ export async function runStaffFinanceRoute(req: Request): Promise<StaffFinanceRo
 
         staffId = staffIdParam;
     } else {
-        const context = await getStaffContext();
+        const context = await getStaffContextForRequest(req, 'StaffFinanceRouteService');
         supabase = context.supabase;
         staffId = context.staffId;
         bizId = context.bizId;

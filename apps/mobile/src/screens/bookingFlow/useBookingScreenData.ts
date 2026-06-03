@@ -18,7 +18,20 @@ export function useBookingScreenData({ slug }: Options) {
         setStaff,
         setPromotions,
         setBranchId,
+        reset,
     } = useBooking();
+    const activeBusinessSlug = bookingData.business?.slug;
+
+    useEffect(() => {
+        if (!slug) {
+            reset();
+            return;
+        }
+
+        if (activeBusinessSlug && activeBusinessSlug !== slug) {
+            reset();
+        }
+    }, [activeBusinessSlug, reset, slug]);
 
     useEffect(() => {
         if (bookingData.business?.id) {
@@ -98,8 +111,14 @@ export function useBookingScreenData({ slug }: Options) {
                 promotions,
             };
         },
-        enabled: !!slug && !bookingData.business,
+        enabled: !!slug && activeBusinessSlug !== slug,
     });
+
+    useEffect(() => {
+        if (businessQuery.isError) {
+            reset();
+        }
+    }, [businessQuery.isError, reset]);
 
     useEffect(() => {
         if (!businessQuery.data) return;

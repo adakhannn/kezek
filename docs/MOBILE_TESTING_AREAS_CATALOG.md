@@ -1,10 +1,10 @@
-﻿# MOBILE TESTING AREAS CATALOG
+# MOBILE TESTING AREAS CATALOG
 
-Last updated: 2026-06-02  
+Last updated: 2026-06-03  
 Owner: QA flow (User + Codex)  
 Status: Active baseline
 
-## Progress snapshot (2026-06-02)
+## Progress snapshot (2026-06-03)
 - [x] A1 App launch and bootstrapping
 - [x] A2 Environment and config wiring
 - [x] A3 Deep links and app scheme (post-fix live verify completed, `MB-002` verified)
@@ -22,6 +22,10 @@ Status: Active baseline
 - [x] D1 Booking entry and branch selection (live + targeted tests)
 - [x] D2 Service/staff/date/time steps (100% live verified + targeted tests)
 - [x] D3 Booking confirmation and details (100% live verified after deployed cancel recheck)
+- [x] D4 Deep-linked booking screens (100% live verified after stale-state fix; `MB-014`, `MB-015`)
+- [x] E1 Cabinet home and bookings list (live + targeted tests; `MB-016`)
+- [x] E2 Profile data and edits (live + targeted tests; `MB-017`, `MB-018`)
+- [x] F1 Staff screen baseline (100% live staff-role check + targeted tests; `MB-019`, `MB-020`)
 
 ## Purpose
 This document defines all testing areas for the mobile app (`apps/mobile`) so testing is not limited to one feature at a time.
@@ -261,6 +265,23 @@ Verification status (2026-06-02):
 ### D4. Deep-linked booking screens (`P2`)
 - direct open by booking slug/id
 - graceful handling for invalid ids
+- status: `verified`
+- live result (2026-06-02):
+  - PASS: `kezek://booking/low-fade` opens booking Step 1 with `Low Fade`.
+  - PASS: invalid booking slug opens graceful empty state `Бизнес не найден`.
+  - PASS: `kezek://booking-detail/c881a2b7-9115-4ab1-9549-794d27c39927` opens booking details.
+  - PASS: invalid booking id opens graceful empty state `Бронирование не найдено`.
+- automated checks:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/BookingScreen.test.tsx src/__tests__/screens/BookingDetailsScreen.test.tsx src/__tests__/screens/BookingStep1Branch.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+- evidence:
+  - `apps/mobile/d4_postfix_valid_slug.png`
+  - `apps/mobile/d4_postfix_invalid_slug.png`
+  - `apps/mobile/d4_postfix_valid_booking_detail.png`
+  - `apps/mobile/d4_postfix_invalid_booking_detail.png`
+- bugs found and verified:
+  - `MB-014`
+  - `MB-015`
 
 ---
 
@@ -269,11 +290,55 @@ Verification status (2026-06-02):
 ### E1. Cabinet home and bookings list (`P1`)
 - list loading/empty/error states
 - card readability and action buttons
+- status: `verified`
+- live result (2026-06-02):
+  - PASS: Cabinet opens for authenticated user and shows profile label.
+  - PASS: upcoming empty state renders when there are no upcoming bookings.
+  - PASS: history tab renders booking cards with service, business, status, date/time, staff and address.
+  - PASS: tapping a history booking card opens booking details.
+- automated checks:
+  - PASS: loading/root render smoke.
+  - PASS: empty upcoming list state.
+  - PASS: API envelope booking list render.
+  - PASS: network error with no offline cache renders explicit retry/error state.
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/CabinetScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+- evidence:
+  - `apps/mobile/e1_cabinet_current.png`
+  - `apps/mobile/e1_scrolled.xml`
+  - `apps/mobile/e1_history_cards.png`
+  - `apps/mobile/e1_history_card_action_details.png`
+- bugs found and verified:
+  - `MB-016`
 
 ### E2. Profile data and edits (`P1`)
 - profile form updates
 - validation and server error handling
 - persistence after app restart
+- status: `verified`
+- live result (2026-06-02):
+  - PASS: Profile opens from Cabinet after schema fix.
+  - PASS: localized labels render cleanly (`???????`, `?????? ??????????`, `???`, `???????`, `???????????`).
+  - PASS: current profile values render (`Anonymized`, phone, auth email).
+  - PASS: saving current values succeeds without breaking the screen.
+  - PASS: profile values persist after JS reload/reopen.
+- automated checks:
+  - PASS: profile root and localized data render.
+  - PASS: update payload is sent with trimmed values.
+  - PASS: empty name validation blocks save.
+  - PASS: invalid phone validation blocks save.
+  - PASS: server update error is surfaced via toast.
+  - PASS: profile load error state renders retry UI.
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/ProfileScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+- evidence:
+  - `apps/mobile/e2_profile_current.png`
+  - `apps/mobile/e2_profile_after_schema_fix.png`
+  - `apps/mobile/e2_profile_save_same_values.png`
+  - `apps/mobile/e2_profile_after_reload.png`
+- bugs found and verified:
+  - `MB-017`
+  - `MB-018`
 
 ### E3. Preferences and notifications (`P2`)
 - toggle behavior
@@ -286,11 +351,66 @@ Verification status (2026-06-02):
 ### F1. Staff screen baseline (`P1`)
 - staff dashboard rendering
 - availability and key actions
+- status: `verified`
+- live result (2026-06-03):
+  - PASS: authenticated staff account exposes the `Работа` tab after login.
+  - PASS: staff dashboard renders with real staff context: `Adakhan`, `Low Fade Юго-Восток`, `Low Fade`.
+  - PASS: upcoming bookings empty state renders clearly when there are no upcoming staff bookings.
+  - PASS: action buttons are visible above the bottom tab bar after layout fix.
+  - PASS: `Моя смена` opens `ShiftQuick`.
+  - PASS: `Статистика` opens `Shifts` / `Смены и статистика`.
+  - Note: `ShiftQuick` and `Shifts` currently show their own load/error states for shift data; those are covered by F2/F3, not F1 baseline.
+- automated checks:
+  - PASS: non-staff empty state renders.
+  - PASS: staff dashboard renders staff name, branch, business and upcoming booking card.
+  - PASS: key actions navigate to `ShiftQuick` and `Shifts`.
+  - PASS: staff query error renders explicit retry/error state instead of misleading non-staff state.
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/StaffScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+- evidence:
+  - `apps/mobile/f1_staff_role_tabs.png`
+  - `apps/mobile/f1_staff_dashboard_after_reinstall.png`
+  - `apps/mobile/f1_staff_dashboard_after_reinstall.xml`
+  - `apps/mobile/f1_staff_action_shiftquick_final.png`
+  - `apps/mobile/f1_staff_action_shiftquick_final.xml`
+  - `apps/mobile/f1_staff_action_shifts_final.png`
+  - `apps/mobile/f1_staff_action_shifts_final.xml`
+- bugs found and verified:
+  - `MB-019`
+  - `MB-020`
 
 ### F2. Shift quick workspace (`P0`)
 - open/close shift
 - add/edit shift clients/items
 - offline queue visibility and sync/retry behavior
+- status: `blocked-pending-deploy`
+- live result (2026-06-03):
+  - BLOCKED: `Моя смена` opens from the staff dashboard, but production `GET /api/staff/finance` returns `401 UNAUTHORIZED` for the mobile Bearer session.
+  - Evidence from logcat: `/api/staff/finance` -> `{ ok: false, error: 'auth', message: 'UNAUTHORIZED' }`.
+  - This blocks real open/close shift, add-client, and offline queue live verification against production until web API fix is deployed.
+- source/API fix prepared (2026-06-03):
+  - Added request-aware staff context so staff finance and shift APIs can authenticate both web cookie sessions and mobile Bearer sessions.
+  - Updated `/api/staff/finance`, `/api/staff/shift/open`, `/api/staff/shift/close`, and `/api/staff/shift/items` paths to use request-aware staff auth for self-staff mode.
+  - Cleaned visible `ShiftQuickScreen` Russian strings that were stored as question marks/mojibake.
+- automated checks:
+  - PASS: web staff finance/open/close/items targeted API tests.
+  - PASS: mobile ShiftQuick idle state, open action, active add-client flow, load-error state, non-staff state.
+  - PASS: `corepack pnpm -C apps/mobile typecheck`.
+  - PASS: `corepack pnpm -C apps/web typecheck`.
+- commands:
+  - `corepack pnpm -C apps/web test -- --runInBand src/__tests__/api/staff/finance.test.ts src/__tests__/api/staff/shift/open.test.ts src/__tests__/api/staff/shift/close.test.ts src/__tests__/api/staff/shift/items.test.ts src/__tests__/lib/staffFinanceRouteService.test.ts src/__tests__/lib/staffShiftOpenHttpService.test.ts src/__tests__/lib/staffShiftCloseHttpService.test.ts src/__tests__/lib/staffShiftItemsRouteService.test.ts`
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/ShiftQuickScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+  - `corepack pnpm -C apps/web typecheck`
+- evidence:
+  - `apps/mobile/f1_staff_action_shiftquick_final.png`
+  - `apps/mobile/f1_staff_action_shiftquick_final.xml`
+- bugs found:
+  - `MB-021`
+  - `MB-022`
+- next live step after deploy:
+  - Open `Работа` -> `Моя смена` and verify `/api/staff/finance` loads real shift data.
+  - Execute open shift -> add client -> close shift -> reconnect/offline queue scenarios.
 
 ### F3. Shift history screen (`P1`)
 - period filters

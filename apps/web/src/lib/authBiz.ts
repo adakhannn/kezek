@@ -22,3 +22,8 @@ export async function getStaffContext() {
     return resolveStaffContext();
 }
 
+export async function getStaffContextForRequest(req: Request, scope?: string) {
+    const { resolveStaffContextForRequest } = await import('./staffRoleSync');
+    return resolveStaffContextForRequest(req, scope);
+}
+

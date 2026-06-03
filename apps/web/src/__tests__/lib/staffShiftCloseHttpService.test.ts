@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { runStaffShiftCloseHttp } from '@/lib/staffShiftCloseHttpService';
 
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
 }));
 
 jest.mock('@/lib/validation/apiValidation', () => ({
@@ -20,7 +20,7 @@ jest.mock('@/lib/apiMetrics', () => ({
     logApiMetric: jest.fn(() => Promise.resolve()),
 }));
 
-const { getStaffContext } = require('@/lib/authBiz');
+const { getStaffContextForRequest } = require('@/lib/authBiz');
 const { validateRequest } = require('@/lib/validation/apiValidation');
 const { runStaffShiftClose } = require('@/lib/staffShiftCloseService');
 
@@ -30,7 +30,7 @@ describe('staffShiftCloseHttpService', () => {
     });
 
     test('returns validation error response from request validation', async () => {
-        getStaffContext.mockResolvedValue({
+        getStaffContextForRequest.mockResolvedValue({
             supabase: { mocked: true },
             userId: 'user-id',
             staffId: 'staff-id',
@@ -59,7 +59,7 @@ describe('staffShiftCloseHttpService', () => {
     });
 
     test('returns success payload from shift close service', async () => {
-        getStaffContext.mockResolvedValue({
+        getStaffContextForRequest.mockResolvedValue({
             supabase: { mocked: true },
             userId: 'user-id',
             staffId: 'staff-id',
@@ -106,7 +106,7 @@ describe('staffShiftCloseHttpService', () => {
     });
 
     test('returns internal error on unexpected exception', async () => {
-        getStaffContext.mockRejectedValue(new Error('boom'));
+        getStaffContextForRequest.mockRejectedValue(new Error('boom'));
 
         const res = await runStaffShiftCloseHttp(
             new Request('http://localhost/api/staff/shift/close', { method: 'POST' }),

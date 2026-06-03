@@ -27,6 +27,7 @@ export function StaffScreenSections({
     return (
         <ScrollView
             style={styles.container}
+            contentContainerStyle={styles.content}
             testID="staff-screen"
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         >
@@ -48,6 +49,17 @@ export function StaffScreenSections({
                     <Text style={styles.businessName}>{staffInfo.business.name}</Text>
                 </Card>
             )}
+
+            <View style={styles.section}>
+                <Button title="Моя смена" onPress={onOpenShiftQuick} fullWidth />
+                <Button
+                    title="Статистика"
+                    onPress={onOpenShifts}
+                    variant="outline"
+                    fullWidth
+                    style={styles.secondaryAction}
+                />
+            </View>
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Предстоящие записи</Text>
@@ -81,17 +93,6 @@ export function StaffScreenSections({
                         message="Записи появятся здесь, когда клиенты запишутся к вам"
                     />
                 )}
-            </View>
-
-            <View style={styles.section}>
-                <Button title="Моя смена" onPress={onOpenShiftQuick} fullWidth />
-                <Button
-                    title="Статистика"
-                    onPress={onOpenShifts}
-                    variant="outline"
-                    fullWidth
-                    style={styles.secondaryAction}
-                />
             </View>
         </ScrollView>
     );

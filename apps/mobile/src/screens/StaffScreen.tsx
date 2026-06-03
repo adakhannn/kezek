@@ -2,6 +2,7 @@ import { ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { RootStackParamList } from '../navigation/types';
@@ -13,10 +14,23 @@ type StaffScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, '
 
 export default function StaffScreen() {
     const navigation = useNavigation<StaffScreenNavigationProp>();
-    const { staffInfo, upcomingBookings, isLoading, refreshing, onRefresh } = useStaffScreenData();
+    const { staffInfo, upcomingBookings, loadError, isLoading, refreshing, onRefresh } = useStaffScreenData();
 
     if (isLoading) {
         return <LoadingSpinner message="Загрузка..." />;
+    }
+
+    if (loadError) {
+        return (
+            <ScrollView style={styles.container}>
+                <EmptyState
+                    icon="alert-circle"
+                    title="Не удалось загрузить рабочую зону"
+                    message="Проверьте соединение и попробуйте снова."
+                    action={<Button title="Повторить" onPress={() => void onRefresh()} variant="outline" fullWidth />}
+                />
+            </ScrollView>
+        );
     }
 
     if (!staffInfo) {

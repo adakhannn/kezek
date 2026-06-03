@@ -33,25 +33,26 @@ export function useBookingStep1Business({
     setBranches,
     setBranchId,
 }: UseBookingStep1BusinessParams) {
-    const { data: businessData, isLoading } = useBusinessWithBranches(
+    const { data: businessData, isFetching, isLoading } = useBusinessWithBranches(
         slug,
-    ) as { data: BusinessWithBranchesResult | undefined; isLoading: boolean };
+    ) as { data: BusinessWithBranchesResult | undefined; isFetching: boolean; isLoading: boolean };
+    const currentBusinessData = businessData?.business.slug === slug ? businessData : undefined;
 
     useEffect(() => {
-        if (!businessData) {
+        if (!currentBusinessData) {
             return;
         }
 
-        setBusiness(businessData.business);
-        setBranches(businessData.branches);
+        setBusiness(currentBusinessData.business);
+        setBranches(currentBusinessData.branches);
 
-        if (businessData.branches.length === 1) {
-            setBranchId(businessData.branches[0].id);
+        if (currentBusinessData.branches.length === 1) {
+            setBranchId(currentBusinessData.branches[0].id);
         }
-    }, [businessData, setBranchId, setBranches, setBusiness]);
+    }, [currentBusinessData, setBranchId, setBranches, setBusiness]);
 
     return {
-        businessData,
-        isLoading,
+        businessData: currentBusinessData,
+        isLoading: isLoading || (!currentBusinessData && isFetching),
     };
 }

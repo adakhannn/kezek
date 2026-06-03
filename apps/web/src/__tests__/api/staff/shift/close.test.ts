@@ -1,7 +1,7 @@
 import { POST } from '@/app/api/staff/shift/close/route';
 
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
 }));
 
 jest.mock('@/lib/supabaseService', () => ({
@@ -29,7 +29,7 @@ jest.mock('@/lib/time', () => ({
     dateAtTz: jest.fn((date: string, time: string) => new Date(`${date}T${time}:00Z`)),
 }));
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
 function createDoubleEqUpdateResult() {
@@ -129,7 +129,7 @@ describe('/api/staff/shift/close', () => {
             },
         };
 
-        (getStaffContext as jest.Mock).mockResolvedValue({
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
             staffId: 'test-staff-id',
             bizId: 'test-biz-id',

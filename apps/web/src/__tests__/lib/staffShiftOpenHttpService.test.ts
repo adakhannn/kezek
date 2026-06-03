@@ -1,7 +1,7 @@
 import { runStaffShiftOpenHttp } from '@/lib/staffShiftOpenHttpService';
 
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
 }));
 
 jest.mock('@/lib/staffShiftOpenService', () => ({
@@ -14,7 +14,7 @@ jest.mock('@/lib/apiMetrics', () => ({
     logApiMetric: jest.fn(() => Promise.resolve()),
 }));
 
-const { getStaffContext } = require('@/lib/authBiz');
+const { getStaffContextForRequest } = require('@/lib/authBiz');
 const { runOpenStaffShift } = require('@/lib/staffShiftOpenService');
 
 describe('staffShiftOpenHttpService', () => {
@@ -32,7 +32,7 @@ describe('staffShiftOpenHttpService', () => {
     });
 
     test('returns success payload from open shift service', async () => {
-        getStaffContext.mockResolvedValue({
+        getStaffContextForRequest.mockResolvedValue({
             supabase,
             staffId: 'staff-id',
             bizId: 'biz-id',
@@ -54,7 +54,7 @@ describe('staffShiftOpenHttpService', () => {
     });
 
     test('maps service failure to api error response', async () => {
-        getStaffContext.mockResolvedValue({
+        getStaffContextForRequest.mockResolvedValue({
             supabase,
             staffId: 'staff-id',
             bizId: 'biz-id',
@@ -78,7 +78,7 @@ describe('staffShiftOpenHttpService', () => {
     });
 
     test('returns internal response on unexpected exception', async () => {
-        getStaffContext.mockRejectedValue(new Error('boom'));
+        getStaffContextForRequest.mockRejectedValue(new Error('boom'));
 
         const res = await runStaffShiftOpenHttp(
             new Request('http://localhost/api/staff/shift/open', { method: 'POST' }),

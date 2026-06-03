@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
 import { determineErrorType, getIpAddress, logApiMetric } from '@/lib/apiMetrics';
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 import { logError } from '@/lib/log';
 import { runOpenStaffShift } from '@/lib/staffShiftOpenService';
 
@@ -16,7 +16,7 @@ export async function runStaffShiftOpenHttp(req: Request): Promise<NextResponse>
     let errorMessage: string | undefined;
 
     try {
-        const context = await getStaffContext();
+        const context = await getStaffContextForRequest(req, 'StaffShiftOpen');
         const { supabase, staffId: contextStaffId, bizId: contextBizId, branchId } = context;
 
         staffId = contextStaffId;

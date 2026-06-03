@@ -115,8 +115,9 @@ export async function saveOfflineBookings(payload: OfflineBookingsPayload): Prom
 }
 
 export async function loadOfflineBookings(userId: string): Promise<OfflineBookingsPayload | null> {
+    const key = getBookingsKey(userId);
+
     try {
-        const key = getBookingsKey(userId);
         const chunkedRaw = await readChunkedValue(key);
         const raw = chunkedRaw ?? (await SecureStore.getItemAsync(key));
         if (!raw) {
@@ -124,13 +125,29 @@ export async function loadOfflineBookings(userId: string): Promise<OfflineBookin
         }
 
         const parsed = JSON.parse(raw) as OfflineBookingsPayload;
+        if (!parsed || parsed.userId !== userId || !Array.isArray(parsed.items)) {
+            logWarn('offlineBookingsStorage', 'Invalid offline bookings payload shape, clearing cache', {
+                userId,
+            });
+            const staleMetaRaw = await SecureStore.getItemAsync(getMetaKey(key));
+            const staleChunkCount = Number(staleMetaRaw || 0);
+            await clearChunkEntries(key, staleChunkCount);
+            await SecureStore.deleteItemAsync(key);
+            return null;
+        }
+
         logDebug('offlineBookingsStorage', 'Loaded offline bookings', {
             userId,
             count: parsed.items?.length ?? 0,
         });
         return parsed;
     } catch (error) {
-        logError('offlineBookingsStorage', 'Failed to load offline bookings', error);
+        // Corrupted secure-store cache should not surface as a fatal dev RedBox.
+        logWarn('offlineBookingsStorage', 'Failed to load offline bookings, clearing cache', error);
+        const staleMetaRaw = await SecureStore.getItemAsync(getMetaKey(key));
+        const staleChunkCount = Number(staleMetaRaw || 0);
+        await clearChunkEntries(key, staleChunkCount);
+        await SecureStore.deleteItemAsync(key);
         return null;
     }
 }

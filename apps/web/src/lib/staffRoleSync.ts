@@ -1,6 +1,7 @@
 import { BizAccessError } from './authDiagnostics';
 import { createServiceRoleClientWithFallback } from './bizContextRuntimeHelpers';
 import { logWarn } from './log';
+import { resolveRequestAuthContext } from './requestAuthContext';
 import { createSupabaseServerClient } from './supabaseHelpers';
 
 type StaffRecord = {
@@ -102,6 +103,43 @@ export async function resolveStaffContext(): Promise<StaffContext> {
         scope: 'AuthBiz',
         serverClient: supabase,
         missingKeyMessage: 'SUPABASE_SERVICE_ROLE_KEY not set, using server client (RLS)',
+    });
+
+    await ensureStaffRoleAssignment({
+        serviceClient,
+        userId,
+        bizId,
+    });
+
+    return {
+        supabase,
+        userId,
+        staffId: staff.id,
+        bizId,
+        branchId: staff.branch_id ?? null,
+    };
+}
+
+export async function resolveStaffContextForRequest(req: Request, scope = 'AuthBiz'): Promise<StaffContext> {
+    const authContext = await resolveRequestAuthContext(req, scope);
+
+    if (!('user' in authContext)) {
+        throw new BizAccessError('NOT_AUTHENTICATED', 'UNAUTHORIZED');
+    }
+
+    const { supabase, user } = authContext;
+    const userId = user.id;
+    const staff = await loadActiveStaffRecord({ supabase, userId });
+
+    if (!staff) {
+        throw new BizAccessError('NO_STAFF_RECORD');
+    }
+
+    const bizId = String(staff.biz_id);
+    const serviceClient = createServiceRoleClientWithFallback({
+        scope,
+        serverClient: supabase,
+        missingKeyMessage: 'SUPABASE_SERVICE_ROLE_KEY not set, using request client (RLS)',
     });
 
     await ensureStaffRoleAssignment({

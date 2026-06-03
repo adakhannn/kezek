@@ -1,5 +1,6 @@
-import { getBizContextForManagers, getStaffContext } from '@/lib/authBiz';
+import { getBizContextForManagers, getStaffContextForRequest } from '@/lib/authBiz';
 import { checkResourceBelongsToBiz } from '@/lib/dbHelpers';
+import type { StaffContext } from '@/lib/staffRoleSync';
 import { runSaveStaffShiftItems } from '@/lib/staffShiftItemsService';
 import { getServiceClient } from '@/lib/supabaseService';
 import { validateRequest } from '@/lib/validation/apiValidation';
@@ -47,7 +48,7 @@ export async function runStaffShiftItemsRoute(req: Request): Promise<StaffShiftI
     }
 
     const { items, staffId: targetStaffId, shiftDate: targetShiftDate } = validationResult.data;
-    let supabase: any;
+    let supabase: StaffContext['supabase'];
     let staffId: string;
     let bizId: string;
     let userId: string | undefined;
@@ -104,7 +105,7 @@ export async function runStaffShiftItemsRoute(req: Request): Promise<StaffShiftI
         staffId = targetStaffId;
         isOwnerMode = true;
     } else {
-        const context = await getStaffContext();
+        const context = await getStaffContextForRequest(req, 'StaffShiftItems');
         supabase = context.supabase;
         staffId = context.staffId;
         bizId = context.bizId;

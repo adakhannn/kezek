@@ -18,7 +18,7 @@ export default function MainNavigator() {
     const { isOwner, isStaff } = useUserRole();
 
     return (
-        <Tab.Navigator screenOptions={mainTabScreenOptions}>
+        <Tab.Navigator backBehavior="history" screenOptions={mainTabScreenOptions}>
             <Tab.Screen
                 name="Home"
                 component={HomeScreen}

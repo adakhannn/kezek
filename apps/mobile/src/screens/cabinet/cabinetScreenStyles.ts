@@ -9,7 +9,8 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.background.primary,
     },
     content: {
-        paddingBottom: colors.layout.space8,
+        // Keep footer actions fully above bottom tab bar on smaller screens.
+        paddingBottom: 140,
     },
     header: {
         paddingHorizontal: colors.layout.space6,
@@ -284,5 +285,9 @@ export const styles = StyleSheet.create({
         paddingHorizontal: colors.layout.space6,
         paddingTop: colors.layout.space5,
         paddingBottom: colors.layout.space6,
+        gap: colors.layout.space3,
+    },
+    signOutQuickButton: {
+        borderColor: colors.status.danger,
     },
 });

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -9,6 +9,11 @@ import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../lib/api', () => ({
     apiRequest: jest.fn(),
+}));
+
+jest.mock('../../lib/offlineBookingsStorage', () => ({
+    loadOfflineBookings: jest.fn(async () => null),
+    saveOfflineBookings: jest.fn(async () => undefined),
 }));
 
 describe('CabinetScreen', () => {
@@ -57,6 +62,13 @@ describe('CabinetScreen', () => {
         expect(await screen.findByText('test@example.com')).toBeTruthy();
     });
 
+    test('renders empty upcoming bookings state', async () => {
+        renderWithProviders(<CabinetScreen />);
+
+        expect(await screen.findByText('Пока нет предстоящих записей')).toBeTruthy();
+        expect(await screen.findByText('Запишитесь на услугу, и ближайший визит сразу появится в кабинете.')).toBeTruthy();
+    });
+
     test('renders bookings from API envelope', async () => {
         mockedApiRequest.mockResolvedValueOnce({
             ok: true,
@@ -89,5 +101,13 @@ describe('CabinetScreen', () => {
         expect(await screen.findByText('Adakhan')).toBeTruthy();
     });
 
+    test('renders bookings error state when network and cache are unavailable', async () => {
+        mockedApiRequest.mockRejectedValueOnce(new Error('network unavailable'));
+
+        renderWithProviders(<CabinetScreen />);
+
+        expect(await screen.findAllByText('Не удалось загрузить записи')).toHaveLength(2);
+        expect(await screen.findByText('Повторить')).toBeTruthy();
+    });
 });
 

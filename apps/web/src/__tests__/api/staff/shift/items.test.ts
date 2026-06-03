@@ -1,7 +1,7 @@
 import { POST } from '@/app/api/staff/shift/items/route';
 
 jest.mock('@/lib/authBiz', () => ({
-    getStaffContext: jest.fn(),
+    getStaffContextForRequest: jest.fn(),
     getBizContextForManagers: jest.fn(),
 }));
 
@@ -25,7 +25,7 @@ jest.mock('@/lib/time', () => ({
     formatDateInTz: jest.fn(() => '2024-01-26'),
 }));
 
-import { getStaffContext } from '@/lib/authBiz';
+import { getStaffContextForRequest } from '@/lib/authBiz';
 import { getServiceClient } from '@/lib/supabaseService';
 
 type QueryResult = { data: unknown; error: unknown };
@@ -98,7 +98,7 @@ describe('/api/staff/shift/items', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        (getStaffContext as jest.Mock).mockResolvedValue({
+        (getStaffContextForRequest as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
             staffId: 'staff-1',
             bizId: 'biz-1',

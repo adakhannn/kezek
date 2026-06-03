@@ -74,13 +74,17 @@ export function useStaffScreenData() {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await Promise.all([staffQuery.refetch(), bookingsQuery.refetch()]);
-        setRefreshing(false);
+        try {
+            await Promise.all([staffQuery.refetch(), bookingsQuery.refetch()]);
+        } finally {
+            setRefreshing(false);
+        }
     };
 
     return {
         staffInfo: staffQuery.data,
         upcomingBookings: bookingsQuery.data ?? [],
+        loadError: (staffQuery.error as Error | null) ?? (bookingsQuery.error as Error | null),
         isLoading: (staffQuery.isLoading || bookingsQuery.isLoading) && !refreshing,
         refreshing,
         onRefresh,

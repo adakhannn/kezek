@@ -17,9 +17,21 @@ jest.mock('@react-navigation/bottom-tabs', () => ({
     createBottomTabNavigator: () => {
         const React = require('react');
         const { Text } = require('react-native');
+        const mockNavigatorSpy =
+            (globalThis as { __mockNavigatorSpy?: jest.Mock }).__mockNavigatorSpy ?? jest.fn();
+        (globalThis as { __mockNavigatorSpy?: jest.Mock }).__mockNavigatorSpy = mockNavigatorSpy;
 
         return {
-            Navigator: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+            Navigator: ({
+                children,
+                ...props
+            }: {
+                children: React.ReactNode;
+                backBehavior?: string;
+            }) => {
+                mockNavigatorSpy(props);
+                return <>{children}</>;
+            },
             Screen: ({ name }: { name: string }) => <Text>{name}</Text>,
         };
     },
@@ -38,6 +50,12 @@ jest.mock('@react-navigation/native-stack', () => ({
 }));
 
 describe('MainNavigator', () => {
+    const mockNavigatorSpy = (globalThis as { __mockNavigatorSpy?: jest.Mock }).__mockNavigatorSpy;
+
+    beforeEach(() => {
+        mockNavigatorSpy?.mockClear();
+    });
+
     const renderWithProviders = (component: React.ReactElement) => {
         const queryClient = createTestQueryClient();
 
@@ -51,5 +69,15 @@ describe('MainNavigator', () => {
         expect(screen.getByText('Cabinet')).toBeTruthy();
         expect(screen.getByText('Dashboard')).toBeTruthy();
         expect(screen.getByText('Staff')).toBeTruthy();
+    });
+
+    test('uses history back behavior for Android tab navigation', () => {
+        renderWithProviders(<MainNavigator />);
+
+        expect(mockNavigatorSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                backBehavior: 'history',
+            }),
+        );
     });
 });
