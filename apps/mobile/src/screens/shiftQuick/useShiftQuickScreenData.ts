@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useToast } from '../../contexts/ToastContext';
@@ -8,9 +8,9 @@ import { logDebug, logError } from '../../lib/log';
 import { supabase } from '../../lib/supabase';
 import {
     addToOfflineQueue,
-    clearOfflineQueue,
     getOfflineQueue,
     getShiftCache,
+    saveOfflineQueue,
     saveShiftCache,
 } from './offlineStorage';
 import type { FinanceData, ShiftItem, ShiftQuickMetrics } from './types';
@@ -24,10 +24,24 @@ type MutationResult = {
     queued: boolean;
 };
 
+type ShiftItemInput = Omit<ShiftItem, 'id' | 'createdAt'>;
+
+function serializeShiftItems(items: ShiftItem[]) {
+    return items.map((item) => ({
+        id: item.id,
+        clientName: item.clientName,
+        serviceName: item.serviceName,
+        serviceAmount: item.serviceAmount,
+        consumablesAmount: item.consumablesAmount,
+        bookingId: item.bookingId,
+    }));
+}
+
 export function useShiftQuickScreenData() {
     const [refreshing, setRefreshing] = useState(false);
     const [isProcessingQueue, setIsProcessingQueue] = useState(false);
     const [pendingQueueCount, setPendingQueueCount] = useState(0);
+    const isProcessingQueueRef = useRef(false);
     const { user } = useAuth();
     const { showToast } = useToast();
     const queryClient = useQueryClient();
@@ -81,9 +95,11 @@ export function useShiftQuickScreenData() {
         retry: 1,
         staleTime: 5 * 1000,
     });
+    const refetchFinance = financeQuery.refetch;
 
     const processOfflineQueue = useCallback(async () => {
-        if (isProcessingQueue) return;
+        if (isProcessingQueueRef.current) return;
+        isProcessingQueueRef.current = true;
         setIsProcessingQueue(true);
 
         try {
@@ -94,8 +110,9 @@ export function useShiftQuickScreenData() {
             }
 
             logDebug('ShiftQuickScreen', 'Processing offline queue', { count: queue.length });
+            const failedOperations: typeof queue = [];
 
-            for (const operation of queue) {
+            for (const [index, operation] of queue.entries()) {
                 try {
                     if (operation.type === 'open') {
                         await apiRequest('/api/staff/shift/open', { method: 'POST' });
@@ -113,20 +130,25 @@ export function useShiftQuickScreenData() {
                         });
                     }
                 } catch (error) {
-                    logError('ShiftQuickScreen', `Failed to process operation ${operation.type}`, error);
+                    failedOperations.push(...queue.slice(index));
+                    logDebug('ShiftQuickScreen', `Offline operation remains queued: ${operation.type}`, error);
+                    break;
                 }
             }
 
-            await clearOfflineQueue();
-            setPendingQueueCount(0);
-            await financeQuery.refetch();
+            await saveOfflineQueue(failedOperations);
+            setPendingQueueCount(failedOperations.length);
+            if (failedOperations.length < queue.length) {
+                await refetchFinance();
+            }
         } catch (error) {
             logError('ShiftQuickScreen', 'Error processing offline queue', error);
             await refreshQueueCount();
         } finally {
+            isProcessingQueueRef.current = false;
             setIsProcessingQueue(false);
         }
-    }, [financeQuery, isProcessingQueue, refreshQueueCount]);
+    }, [refetchFinance, refreshQueueCount]);
 
     useEffect(() => {
         void refreshQueueCount();
@@ -179,14 +201,7 @@ export function useShiftQuickScreenData() {
             const consumablesAmount = items.reduce((sum, item) => sum + (item.consumablesAmount || 0), 0);
 
             const payload = {
-                items: items.map((item) => ({
-                    id: item.id,
-                    clientName: item.clientName,
-                    serviceName: item.serviceName,
-                    serviceAmount: item.serviceAmount,
-                    consumablesAmount: item.consumablesAmount,
-                    bookingId: item.bookingId,
-                })),
+                items: serializeShiftItems(items),
                 totalAmount,
                 consumablesAmount,
             };
@@ -229,19 +244,12 @@ export function useShiftQuickScreenData() {
     });
 
     const addClientMutation = useMutation({
-        mutationFn: async (newItem: Omit<ShiftItem, 'id' | 'createdAt'>): Promise<MutationResult> => {
+        mutationFn: async (newItem: ShiftItemInput): Promise<MutationResult> => {
             const currentItems = financeQuery.data?.today.items || [];
             const updatedItems = [...currentItems, { ...newItem, id: undefined }];
 
             const payload = {
-                items: updatedItems.map((item) => ({
-                    id: item.id,
-                    clientName: item.clientName,
-                    serviceName: item.serviceName,
-                    serviceAmount: item.serviceAmount,
-                    consumablesAmount: item.consumablesAmount,
-                    bookingId: item.bookingId,
-                })),
+                items: serializeShiftItems(updatedItems),
             };
 
             try {
@@ -257,6 +265,62 @@ export function useShiftQuickScreenData() {
             } catch (error) {
                 await addToOfflineQueue({
                     type: 'addItem',
+                    data: payload,
+                    timestamp: new Date().toISOString(),
+                });
+                return { queued: true };
+            }
+        },
+        onSuccess: (result) => {
+            queryClient.invalidateQueries({ queryKey: ['staff-finance'] });
+            if (result.queued) {
+                void refreshQueueCount();
+            }
+        },
+    });
+
+    const updateClientMutation = useMutation({
+        mutationFn: async ({
+            itemIndex,
+            item,
+        }: {
+            itemIndex: number;
+            item: ShiftItemInput;
+        }): Promise<MutationResult> => {
+            const currentItems = financeQuery.data?.today.items || [];
+            const existingItem = currentItems[itemIndex];
+            if (!existingItem) {
+                throw new Error('Shift item not found');
+            }
+
+            const updatedItems = currentItems.map((currentItem, index) =>
+                index === itemIndex
+                    ? {
+                          ...currentItem,
+                          ...item,
+                          id: currentItem.id,
+                          createdAt: currentItem.createdAt,
+                      }
+                    : currentItem,
+            );
+
+            const payload = {
+                items: serializeShiftItems(updatedItems),
+            };
+
+            try {
+                const response = await apiRequest<{ ok: boolean }>('/api/staff/shift/items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to update client');
+                }
+                return { queued: false };
+            } catch (error) {
+                await addToOfflineQueue({
+                    type: 'updateItem',
                     data: payload,
                     timestamp: new Date().toISOString(),
                 });
@@ -315,6 +379,7 @@ export function useShiftQuickScreenData() {
         openShiftMutation,
         closeShiftMutation,
         addClientMutation,
+        updateClientMutation,
         onRefresh,
     };
 }

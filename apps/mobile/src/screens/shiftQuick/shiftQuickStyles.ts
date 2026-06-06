@@ -269,6 +269,15 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: colors.layout.space3,
     },
+    clientEditButton: {
+        alignSelf: 'flex-start',
+        marginTop: colors.layout.space3,
+        paddingHorizontal: colors.layout.space3,
+        borderColor: colors.accent.primary,
+    },
+    clientEditButtonText: {
+        color: colors.accent.primary,
+    },
     sourceChip: {
         flexDirection: 'row',
         alignItems: 'center',

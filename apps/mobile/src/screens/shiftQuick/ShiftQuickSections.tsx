@@ -14,6 +14,7 @@ import type { FinanceData, ShiftItem, ShiftQuickMetrics } from './types';
 
 type AddClientFormState = {
     showAddClient: boolean;
+    editingItemIndex?: number | null;
     newClientName: string;
     newServiceName: string;
     newServiceAmount: string;
@@ -45,6 +46,7 @@ type ShiftQuickSectionsProps = {
     onRefresh: () => Promise<void>;
     onOpenShift: () => void;
     onCloseShift: () => void;
+    onEditClient: (item: ShiftItem, itemIndex: number) => void;
 };
 
 type ShiftStatusMeta = {
@@ -52,6 +54,15 @@ type ShiftStatusMeta = {
     description: string;
     state: 'open' | 'closed' | 'idle';
 };
+
+const EDIT_CLIENT_LABEL = '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c';
+const EDIT_CLIENT_TITLE =
+    '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u043a\u043b\u0438\u0435\u043d\u0442\u0430';
+const ADD_CLIENT_TITLE =
+    '\u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043a\u043b\u0438\u0435\u043d\u0442\u0430';
+const SAVE_CLIENT_LABEL = '\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c';
+const SAVE_CHANGES_LABEL =
+    '\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f';
 
 export function ShiftQuickSections({
     financeData,
@@ -67,11 +78,13 @@ export function ShiftQuickSections({
     onRefresh,
     onOpenShift,
     onCloseShift,
+    onEditClient,
 }: ShiftQuickSectionsProps) {
     const shift = financeData.today.shift;
     const items = financeData.today.items || [];
     const isOpen = shift?.status === 'open';
     const shiftMeta = getShiftStatusMeta(isOpen, !!shift);
+    const isEditingClient = addClientForm.editingItemIndex != null;
 
     return (
         <ScrollView
@@ -220,7 +233,9 @@ export function ShiftQuickSections({
                 {isOpen ? (
                     <Card style={styles.addClientCard} variant="elevated" padding="md">
                         <View style={styles.addClientHeader}>
-                            <Text style={styles.addClientTitle}>Добавление клиента</Text>
+                            <Text style={styles.addClientTitle}>
+                                {isEditingClient ? EDIT_CLIENT_TITLE : ADD_CLIENT_TITLE}
+                            </Text>
                             <Text style={styles.addClientSubtitle}>Быстро зафиксируйте услугу и сумму без лишних шагов.</Text>
                         </View>
 
@@ -281,7 +296,7 @@ export function ShiftQuickSections({
                                         style={styles.addClientActionButton}
                                     />
                                     <Button
-                                        title="Сохранить"
+                                        title={isEditingClient ? SAVE_CHANGES_LABEL : SAVE_CLIENT_LABEL}
                                         onPress={addClientActions.submit}
                                         disabled={isAddingClient || !addClientForm.newClientName.trim()}
                                         loading={isAddingClient}
@@ -298,7 +313,13 @@ export function ShiftQuickSections({
                     <View style={styles.clientsSection}>
                         <Text style={styles.sectionTitle}>Клиенты ({items.length})</Text>
                         {items.map((item, index) => (
-                            <ClientCard key={item.id || `${item.clientName}-${index}`} item={item} />
+                            <ClientCard
+                                key={item.id || `${item.clientName}-${index}`}
+                                item={item}
+                                itemIndex={index}
+                                canEdit={isOpen}
+                                onEditClient={onEditClient}
+                            />
                         ))}
                     </View>
                 ) : null}
@@ -366,7 +387,19 @@ function MetricCard({
     );
 }
 
-function ClientCard({ item }: { item: ShiftItem }) {
+function ClientCard({
+    item,
+    itemIndex,
+    canEdit,
+    onEditClient,
+}: {
+    item: ShiftItem;
+    itemIndex: number;
+    canEdit: boolean;
+    onEditClient: (item: ShiftItem, itemIndex: number) => void;
+}) {
+    const canEditItem = canEdit && !item.bookingId;
+
     return (
         <Card style={styles.clientCard} variant="elevated" padding="md">
             <View style={styles.clientHeader}>
@@ -392,6 +425,18 @@ function ClientCard({ item }: { item: ShiftItem }) {
                 </View>
                 {item.createdAt ? <Text style={styles.clientTime}>{formatTime(item.createdAt)}</Text> : null}
             </View>
+            {canEditItem ? (
+                <Button
+                    title={EDIT_CLIENT_LABEL}
+                    onPress={() => onEditClient(item, itemIndex)}
+                    variant="outline"
+                    size="sm"
+                    leadingIcon={<Ionicons name="create-outline" size={14} color={colors.accent.primary} />}
+                    style={styles.clientEditButton}
+                    textStyle={styles.clientEditButtonText}
+                    accessibilityLabel={EDIT_CLIENT_LABEL}
+                />
+            ) : null}
         </Card>
     );
 }

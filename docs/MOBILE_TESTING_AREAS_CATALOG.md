@@ -383,15 +383,22 @@ Verification status (2026-06-02):
 - open/close shift
 - add/edit shift clients/items
 - offline queue visibility and sync/retry behavior
-- status: `blocked-pending-deploy`
-- live result (2026-06-03):
-  - BLOCKED: `Моя смена` opens from the staff dashboard, but production `GET /api/staff/finance` returns `401 UNAUTHORIZED` for the mobile Bearer session.
-  - Evidence from logcat: `/api/staff/finance` -> `{ ok: false, error: 'auth', message: 'UNAUTHORIZED' }`.
-  - This blocks real open/close shift, add-client, and offline queue live verification against production until web API fix is deployed.
-- source/API fix prepared (2026-06-03):
-  - Added request-aware staff context so staff finance and shift APIs can authenticate both web cookie sessions and mobile Bearer sessions.
-  - Updated `/api/staff/finance`, `/api/staff/shift/open`, `/api/staff/shift/close`, and `/api/staff/shift/items` paths to use request-aware staff auth for self-staff mode.
-  - Cleaned visible `ShiftQuickScreen` Russian strings that were stored as question marks/mojibake.
+- status: `verified`
+- live result (2026-06-03, post-deploy):
+  - PASS: `GET /api/staff/finance` succeeds on production with the mobile Bearer staff session.
+  - PASS: staff user can open Staff tab -> My shift; ShiftQuick renders active/closed shift states with readable Russian text.
+  - PASS: open shift flow works; `POST /api/staff/shift/open` returns success and the UI switches to active shift state.
+  - PASS: manual client/item add works; `POST /api/staff/shift/items` returns success and persisted metrics show turnover `500`, master `300`, salon `300`, clients `1`.
+  - PASS: close shift flow works; confirmation dialog appears, `POST /api/staff/shift/close` returns success, and the UI switches to closed shift state while preserving the client item.
+  - PASS: manual shift client/item cards expose edit while the shift is open.
+  - PASS: edit mode reuses the client form, validates required fields, saves through `/api/staff/shift/items`, and refreshes the visible card.
+  - PASS: test shift cleanup works after edit verification; `POST /api/staff/shift/close` returns success.
+  - PASS: offline add persists an `addItem` operation and displays `1 операций в очереди`.
+  - PASS: a failed retry while still offline retains the operation instead of clearing it.
+  - PASS: reconnect plus pull-to-refresh sends `/api/staff/shift/items`, clears the queue after success, refreshes finance data, and renders the synced client.
+- earlier live blocker (2026-06-03):
+  - BEFORE FIX: production `GET /api/staff/finance` returned `401 UNAUTHORIZED` for the mobile Bearer session and blocked F2 live verification.
+  - AFTER DEPLOY: verified fixed in production via logcat success for `/api/staff/finance`, `/api/staff/shift/open`, `/api/staff/shift/items`, and `/api/staff/shift/close`.
 - automated checks:
   - PASS: web staff finance/open/close/items targeted API tests.
   - PASS: mobile ShiftQuick idle state, open action, active add-client flow, load-error state, non-staff state.
@@ -403,19 +410,54 @@ Verification status (2026-06-02):
   - `corepack pnpm -C apps/mobile typecheck`
   - `corepack pnpm -C apps/web typecheck`
 - evidence:
-  - `apps/mobile/f1_staff_action_shiftquick_final.png`
-  - `apps/mobile/f1_staff_action_shiftquick_final.xml`
+  - `apps/mobile/f2_post_deploy_finance_success.png`
+  - `apps/mobile/f2_open_shift_after_toast_dismiss.png`
+  - `apps/mobile/f2_add_client_filled.png`
+  - `apps/mobile/f2_after_add_client.png`
+  - `apps/mobile/f2_client_list_after_add.png`
+  - `apps/mobile/f2_after_close_shift_wait.png`
+  - `apps/mobile/mb023_current.png`
+  - `apps/mobile/mb023_edit_form2.png`
+  - `apps/mobile/mb023_edit_form_prefilled.png`
+  - `apps/mobile/mb023_after_back_hide_keyboard.png`
+  - `apps/mobile/mb023_after_close_wait.png`
+  - `apps/mobile/f2_fix_queue_banner.png`
+  - `apps/mobile/f2_fix_after_reconnect.png`
+  - `apps/mobile/f2_fix_synced_client.png`
+  - `apps/mobile/f2_fix_shift_closed_final.png`
 - bugs found:
   - `MB-021`
   - `MB-022`
-- next live step after deploy:
-  - Open `Работа` -> `Моя смена` and verify `/api/staff/finance` loads real shift data.
-  - Execute open shift -> add client -> close shift -> reconnect/offline queue scenarios.
+  - `MB-023`
+  - `MB-024`
 
 ### F3. Shift history screen (`P1`)
 - period filters
 - totals and item integrity
 - empty/error states
+- status: `partial-pass-pending-deploy`
+- live verification (2026-06-06):
+  - PASS: authenticated staff can open `Смены и статистика`.
+  - PASS: production API failure is rendered as a dedicated error state with a visible `Повторить` action.
+  - PASS: tapping `Повторить` sends a new request and keeps the screen stable when the request fails again.
+  - BLOCKED: production happy-path checks for day/month/year periods, real totals/items, and a successful empty period are blocked by the deployed endpoint returning `401` for mobile Bearer auth.
+- automated verification:
+  - PASS: `День`, `Месяц`, and `Год` select the expected API period.
+  - PASS: totals, staff/business shares, client count, shift card, expanded client/service, and consumables remain consistent with the API response.
+  - PASS: successful empty response renders `Нет смен`.
+  - PASS: failed response renders the dedicated retry state.
+  - PASS: mobile ShiftsScreen tests (`5/5`).
+  - PASS: web finance stats route/service tests (`6/6`).
+- evidence:
+  - `apps/mobile/f3_stats_open.png`
+  - `apps/mobile/f3_initial_logcat.txt`
+  - `apps/mobile/f3_error_retry_after_tap.png`
+  - `apps/mobile/f3_retry_logcat.txt`
+- bugs found:
+  - `MB-025`
+  - `MB-026`
+- completion requirement:
+  - deploy `MB-025`, then repeat live day/month/year, totals/item expansion, and successful empty-period checks.
 
 ### F4. Shift calculations integrity (`P1`)
 - totals, percentages, rates, and rounding correctness

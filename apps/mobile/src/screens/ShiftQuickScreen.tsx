@@ -7,9 +7,24 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useToast } from '../contexts/ToastContext';
 import { ShiftQuickSections } from './shiftQuick/ShiftQuickSections';
 import { useShiftQuickScreenData } from './shiftQuick/useShiftQuickScreenData';
+import type { ShiftItem } from './shiftQuick/types';
+
+const EDIT_CLIENT_SUCCESS = '\u041a\u043b\u0438\u0435\u043d\u0442 \u043e\u0431\u043d\u043e\u0432\u043b\u0451\u043d.';
+const EDIT_CLIENT_QUEUED =
+    '\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 \u043a\u043b\u0438\u0435\u043d\u0442\u0430 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u043e \u0432 \u043e\u0447\u0435\u0440\u0435\u0434\u044c \u0438 \u0431\u0443\u0434\u0435\u0442 \u0441\u0438\u043d\u0445\u0440\u043e\u043d\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u043f\u043e\u0441\u043b\u0435 \u0432\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u0441\u0432\u044f\u0437\u0438.';
+const EDIT_CLIENT_ERROR =
+    '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043a\u043b\u0438\u0435\u043d\u0442\u0430';
+const CLIENT_NAME_REQUIRED =
+    '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0438\u043c\u044f \u043a\u043b\u0438\u0435\u043d\u0442\u0430';
+const ADD_CLIENT_SUCCESS = '\u041a\u043b\u0438\u0435\u043d\u0442 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d.';
+const ADD_CLIENT_QUEUED =
+    '\u041a\u043b\u0438\u0435\u043d\u0442 \u0441\u043e\u0445\u0440\u0430\u043d\u0451\u043d \u0432 \u043e\u0447\u0435\u0440\u0435\u0434\u044c \u0438 \u0431\u0443\u0434\u0435\u0442 \u0441\u0438\u043d\u0445\u0440\u043e\u043d\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d \u043f\u043e\u0441\u043b\u0435 \u0432\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u0441\u0432\u044f\u0437\u0438.';
+const ADD_CLIENT_ERROR =
+    '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043a\u043b\u0438\u0435\u043d\u0442\u0430';
 
 export default function ShiftQuickScreen() {
     const [showAddClient, setShowAddClient] = useState(false);
+    const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
     const [newClientName, setNewClientName] = useState('');
     const [newServiceName, setNewServiceName] = useState('');
     const [newServiceAmount, setNewServiceAmount] = useState('');
@@ -30,6 +45,7 @@ export default function ShiftQuickScreen() {
         openShiftMutation,
         closeShiftMutation,
         addClientMutation,
+        updateClientMutation,
         onRefresh,
     } = useShiftQuickScreenData();
 
@@ -39,6 +55,21 @@ export default function ShiftQuickScreen() {
         setNewServiceName('');
         setNewServiceAmount('');
         setNewConsumablesAmount('');
+        setAddClientError(null);
+        setEditingItemIndex(null);
+    };
+
+    const startEditClient = (item: ShiftItem, itemIndex: number) => {
+        if (item.bookingId) {
+            return;
+        }
+
+        setEditingItemIndex(itemIndex);
+        setShowAddClient(true);
+        setNewClientName(item.clientName);
+        setNewServiceName(item.serviceName);
+        setNewServiceAmount(item.serviceAmount ? String(item.serviceAmount) : '');
+        setNewConsumablesAmount(item.consumablesAmount ? String(item.consumablesAmount) : '');
         setAddClientError(null);
     };
 
@@ -70,34 +101,53 @@ export default function ShiftQuickScreen() {
         closeShiftMutation.mutate();
     };
 
-    const handleAddClient = () => {
+    const handleSaveClient = () => {
         if (!newClientName.trim()) {
-            setAddClientError('Введите имя клиента');
+            setAddClientError(CLIENT_NAME_REQUIRED);
             return;
         }
 
+        const item = {
+            clientName: newClientName.trim(),
+            serviceName: newServiceName.trim(),
+            serviceAmount: Number(newServiceAmount) || 0,
+            consumablesAmount: Number(newConsumablesAmount) || 0,
+            bookingId: null,
+        };
+
         setAddClientError(null);
+        if (editingItemIndex != null) {
+            updateClientMutation.mutate(
+                {
+                    itemIndex: editingItemIndex,
+                    item,
+                },
+                {
+                    onSuccess: (result) => {
+                        resetAddClientForm();
+                        showToast(result.queued ? EDIT_CLIENT_QUEUED : EDIT_CLIENT_SUCCESS, result.queued ? 'warning' : 'success');
+                    },
+                    onError: (mutationError) => {
+                        const message = mutationError instanceof Error ? mutationError.message : EDIT_CLIENT_ERROR;
+                        setAddClientError(message);
+                    },
+                },
+            );
+            return;
+        }
+
         addClientMutation.mutate(
-            {
-                clientName: newClientName.trim(),
-                serviceName: newServiceName.trim(),
-                serviceAmount: Number(newServiceAmount) || 0,
-                consumablesAmount: Number(newConsumablesAmount) || 0,
-                bookingId: null,
-            },
+            item,
             {
                 onSuccess: (result) => {
                     resetAddClientForm();
                     showToast(
-                        result.queued
-                            ? 'Клиент сохранён в очередь и будет синхронизирован после восстановления связи.'
-                            : 'Клиент добавлен.',
+                        result.queued ? ADD_CLIENT_QUEUED : ADD_CLIENT_SUCCESS,
                         result.queued ? 'warning' : 'success',
                     );
                 },
                 onError: (mutationError) => {
-                    const message =
-                        mutationError instanceof Error ? mutationError.message : 'Не удалось добавить клиента';
+                    const message = mutationError instanceof Error ? mutationError.message : ADD_CLIENT_ERROR;
                     setAddClientError(message);
                 },
             },
@@ -141,10 +191,11 @@ export default function ShiftQuickScreen() {
             pendingQueueCount={pendingQueueCount}
             isOpening={openShiftMutation.isPending}
             isClosing={closeShiftMutation.isPending}
-            isAddingClient={addClientMutation.isPending}
+            isAddingClient={addClientMutation.isPending || updateClientMutation.isPending}
             metrics={metrics}
             addClientForm={{
                 showAddClient,
+                editingItemIndex,
                 newClientName,
                 newServiceName,
                 newServiceAmount,
@@ -170,8 +221,9 @@ export default function ShiftQuickScreen() {
                     setNewConsumablesAmount(value);
                 },
                 resetForm: resetAddClientForm,
-                submit: handleAddClient,
+                submit: handleSaveClient,
             }}
+            onEditClient={startEditClient}
             onRefresh={onRefresh}
             onOpenShift={handleOpenShift}
             onCloseShift={handleCloseShift}

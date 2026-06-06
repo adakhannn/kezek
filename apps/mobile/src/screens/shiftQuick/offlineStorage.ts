@@ -33,12 +33,22 @@ export async function getOfflineQueue(): Promise<ShiftOfflineOperation[]> {
     }
 }
 
-export async function clearOfflineQueue() {
+export async function saveOfflineQueue(queue: ShiftOfflineOperation[]) {
     try {
-        await SecureStore.deleteItemAsync(OFFLINE_QUEUE_KEY);
+        if (queue.length === 0) {
+            await SecureStore.deleteItemAsync(OFFLINE_QUEUE_KEY);
+            return;
+        }
+
+        await SecureStore.setItemAsync(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
     } catch (error) {
-        logError('ShiftQuickScreen', 'Failed to clear offline queue', error);
+        logError('ShiftQuickScreen', 'Failed to save offline queue', error);
+        throw error;
     }
+}
+
+export async function clearOfflineQueue() {
+    await saveOfflineQueue([]);
 }
 
 export async function saveShiftCache(data: FinanceData) {

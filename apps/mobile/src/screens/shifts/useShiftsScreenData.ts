@@ -67,6 +67,7 @@ export function useShiftsScreenData() {
         staffLoading: staffQuery.isLoading,
         stats: statsQuery.data,
         statsLoading: statsQuery.isLoading,
+        statsError: statsQuery.error,
         onRefresh,
     };
 }

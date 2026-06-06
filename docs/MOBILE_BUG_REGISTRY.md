@@ -875,14 +875,18 @@ Resolution note (2026-06-03):
   - [staffShiftOpenHttpService.ts](/C:/projects/kezek/apps/web/src/lib/staffShiftOpenHttpService.ts)
   - [staffShiftCloseHttpService.ts](/C:/projects/kezek/apps/web/src/lib/staffShiftCloseHttpService.ts)
   - [staffShiftItemsRouteService.ts](/C:/projects/kezek/apps/web/src/lib/staffShiftItemsRouteService.ts)
-- status: `fixed-pending-deploy`
+- status: `verified`
 - owner: `Codex + User`
 
 Resolution note (2026-06-03):
 - Added request-aware staff context via `getStaffContextForRequest(req, scope)` / `resolveStaffContextForRequest(req, scope)`.
 - Staff finance and shift endpoints now preserve web cookie auth and also accept mobile Bearer auth for self-staff mode.
 - Targeted API tests pass for staff finance/open/close/items.
-- Live production verification is pending deploy.
+- Post-deploy live production verification passed: `/api/staff/finance`, `/api/staff/shift/open`, `/api/staff/shift/items`, and `/api/staff/shift/close` all returned success from the Android staff session.
+- evidence:
+  - [f2_post_deploy_finance_success.png](/C:/projects/kezek/apps/mobile/f2_post_deploy_finance_success.png)
+  - [f2_open_shift_after_toast_dismiss.png](/C:/projects/kezek/apps/mobile/f2_open_shift_after_toast_dismiss.png)
+  - [f2_after_close_shift_wait.png](/C:/projects/kezek/apps/mobile/f2_after_close_shift_wait.png)
 
 
 ### MB-022
@@ -910,3 +914,164 @@ Resolution note (2026-06-03):
 - Replaced corrupted ShiftQuick visible strings with readable Russian text.
 - Added regression coverage for idle, active add-client, load-error and non-staff states.
 - Targeted mobile ShiftQuick tests and mobile typecheck pass.
+
+
+### MB-023
+- id: `MB-023`
+- date: `2026-06-03`
+- area: `F2`
+- severity: `P1`
+- title: ShiftQuick manual client items cannot be edited after creation
+- build: Android dev build (`kg.kezek.app`), live F2 staff-role session after production deploy
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated staff account `telegram_634038083@telegram.local`, production API `https://kezek.kg`
+- steps:
+  1. Open Staff tab -> My shift as a staff user.
+  2. Open a shift.
+  3. Add a manual client/item (example: `F2Client`, `TestCut`, amount `500`, consumables `100`).
+  4. Wait until `/api/staff/shift/items` returns success and the item appears in the clients list.
+  5. Tap the client card and the manual-source chip.
+- expected:
+  - Existing manual shift client/item can be edited, or there is a visible edit action if editing is part of F2 acceptance.
+  - User can correct client name/service/amount/consumables without closing/recreating the shift.
+- actual:
+  - Client card is static; tapping it does not open edit mode.
+  - No visible edit or remove action is exposed for the created manual item.
+  - Source audit shows item rendering in `ShiftQuickSections.tsx` without an item-level edit action.
+- evidence:
+  - [f2_client_list_after_add.png](/C:/projects/kezek/apps/mobile/f2_client_list_after_add.png)
+  - [f2_after_tap_client_card.png](/C:/projects/kezek/apps/mobile/f2_after_tap_client_card.png)
+  - [ShiftQuickSections.tsx](/C:/projects/kezek/apps/mobile/src/screens/shiftQuick/ShiftQuickSections.tsx)
+- status: `verified`
+- owner: `Codex + User`
+
+
+Resolution note (2026-06-04):
+- Added an edit action for manual ShiftQuick client items while the shift is open.
+- Reused the existing add-client form for edit mode and saves updated items through `/api/staff/shift/items`.
+- Booking-linked items remain read-only to avoid breaking booking integrity.
+- Added regression coverage for editing a manual item and preserving its id in the save payload.
+- Live verification on Android emulator confirmed:
+  - Staff tab -> My shift opens an active shift workspace.
+  - Manual item appears with the new `Редактировать` action.
+  - Edit mode reuses the form with `Редактирование клиента` and `Сохранить изменения`.
+  - Saved edit updates the card text from `MB23LiveeTestCuts500h100` to `MB23LiveeTestCuts500h100Z`.
+  - logcat shows successful `/api/staff/shift/items` followed by `/api/staff/finance`.
+  - Test shift was closed after verification; logcat shows successful `/api/staff/shift/close`.
+- Live evidence:
+  - [mb023_current.png](/C:/projects/kezek/apps/mobile/mb023_current.png)
+  - [mb023_edit_form2.png](/C:/projects/kezek/apps/mobile/mb023_edit_form2.png)
+  - [mb023_edit_form_prefilled.png](/C:/projects/kezek/apps/mobile/mb023_edit_form_prefilled.png)
+  - [mb023_after_back_hide_keyboard.png](/C:/projects/kezek/apps/mobile/mb023_after_back_hide_keyboard.png)
+  - [mb023_after_close_wait.png](/C:/projects/kezek/apps/mobile/mb023_after_close_wait.png)
+- Targeted checks pass:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/ShiftQuickScreen.test.tsx`
+  - `corepack pnpm -C apps/mobile typecheck`
+
+
+### MB-024
+- id: `MB-024`
+- date: `2026-06-06`
+- area: `F2`
+- severity: `P0`
+- title: Failed ShiftQuick offline retry clears unsent operations
+- build: Android dev build (`kg.kezek.app`), live F2 offline/reconnect session
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated staff account, production API `https://kezek.kg`
+- steps:
+  1. Open a staff shift while online.
+  2. Disable Wi-Fi and mobile data in the Android emulator.
+  3. Add a manual client item.
+  4. Allow the automatic queue processor to retry while the device is still offline.
+- expected:
+  - Failed operations remain persisted in the offline queue.
+  - Queue count and retry UI remain visible until a successful server response.
+- actual before fix:
+  - `addItem` was stored, immediately retried, failed, and then the whole queue was cleared unconditionally.
+  - The offline banner disappeared and the client item was lost.
+  - Expected offline failure was logged as an error and surfaced as a dev error toast.
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Queue processing now retains failed operations and removes only operations confirmed by the server.
+- Added an in-flight ref guard so queue processing cannot overlap.
+- Expected offline request failures are logged as debug events instead of app-level errors.
+- Added regression coverage for failed add persistence followed by successful manual retry.
+- Live verification:
+  - Offline `F2OfflineFix / RetryCut / 800 / 120` add produced `1 операций в очереди`.
+  - A retry while offline kept the operation queued.
+  - After reconnect and pull-to-refresh, `/api/staff/shift/items` and `/api/staff/finance` returned success.
+  - Queue banner disappeared, metrics became turnover `800`, master `480`, salon `440`, clients `1`.
+  - Synced client card rendered with the expected values.
+  - Test shift cleanup succeeded through `/api/staff/shift/close`.
+- evidence:
+  - [f2_fix_queue_banner.png](/C:/projects/kezek/apps/mobile/f2_fix_queue_banner.png)
+  - [f2_fix_after_reconnect.png](/C:/projects/kezek/apps/mobile/f2_fix_after_reconnect.png)
+  - [f2_fix_synced_client.png](/C:/projects/kezek/apps/mobile/f2_fix_synced_client.png)
+  - [f2_fix_shift_closed_final.png](/C:/projects/kezek/apps/mobile/f2_fix_shift_closed_final.png)
+- targeted checks:
+  - `corepack pnpm -C apps/mobile test -- --runInBand src/__tests__/screens/ShiftQuickScreen.test.tsx` -> PASS (`7/7`)
+  - `corepack pnpm -C apps/mobile typecheck` -> PASS
+
+
+### MB-025
+- id: `MB-025`
+- date: `2026-06-06`
+- area: `F3`
+- severity: `P1`
+- title: Shift history endpoint rejects authenticated mobile staff Bearer session
+- build: Android dev build (`kg.kezek.app`), production API `https://kezek.kg`
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`), authenticated staff session
+- steps:
+  1. Open Staff workspace.
+  2. Open `Статистика`.
+  3. Wait for `/api/dashboard/staff/{staffId}/finance/stats?period=day&date=2026-06-06`.
+- expected:
+  - The authenticated staff member can load their own shift history and statistics.
+- actual before fix:
+  - The endpoint returns `401 auth / Требуется авторизация`.
+  - The route uses manager/cookie-oriented context and does not accept the mobile Bearer session.
+- status: `fixed-pending-deploy`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Added a request-aware Bearer path for self-staff access while preserving the existing manager cookie path.
+- Bearer staff may request only their own staff id; cross-staff access returns `403`.
+- Route/service tests pass (`6/6`) and web typecheck passes.
+- Production live happy-path verification remains pending until deployment.
+- evidence:
+  - [f3_stats_open.png](/C:/projects/kezek/apps/mobile/f3_stats_open.png)
+  - [f3_initial_logcat.txt](/C:/projects/kezek/apps/mobile/f3_initial_logcat.txt)
+  - [staffFinanceStatsHttpService.ts](/C:/projects/kezek/apps/web/src/lib/staffFinanceStatsHttpService.ts)
+  - [staffFinanceStatsHttpService.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/staffFinanceStatsHttpService.test.ts)
+
+
+### MB-026
+- id: `MB-026`
+- date: `2026-06-06`
+- area: `F3`
+- severity: `P1`
+- title: Shift history API failure is presented as an empty state without retry
+- build: Android dev build (`kg.kezek.app`)
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`)
+- steps:
+  1. Open Staff workspace.
+  2. Open `Статистика` while the stats API returns an error.
+- expected:
+  - The screen distinguishes request failure from a successful empty period.
+  - A visible retry action lets the user repeat the request.
+- actual before fix:
+  - The screen showed `Нет данных` / `Не удалось загрузить статистику смен`.
+  - There was no retry action.
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Added a dedicated `Не удалось загрузить историю смен` state with a full-width `Повторить` action.
+- A successful response with no shifts continues to render the separate `Нет смен` state.
+- Live Android verification confirmed that retry sends a new production request and the error UI remains stable after repeated `401` responses.
+- Mobile ShiftsScreen tests pass (`5/5`).
+- evidence:
+  - [f3_error_retry_after_tap.png](/C:/projects/kezek/apps/mobile/f3_error_retry_after_tap.png)
+  - [f3_retry_logcat.txt](/C:/projects/kezek/apps/mobile/f3_retry_logcat.txt)
+  - [ShiftsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftsScreen.tsx)
+  - [ShiftsScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/ShiftsScreen.test.tsx)
