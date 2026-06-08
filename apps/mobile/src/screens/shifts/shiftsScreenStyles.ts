@@ -1,31 +1,33 @@
 import { StyleSheet } from 'react-native';
 
+import { colors } from '../../constants/colors';
+
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.surface.page,
     },
     header: {
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface.canvas,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border.subtle,
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     filters: {
         padding: 16,
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface.canvas,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border.subtle,
     },
     periodButtons: {
         flexDirection: 'row',
@@ -35,21 +37,21 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surface.elevated,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border.light,
     },
     periodButtonActive: {
-        backgroundColor: '#4f46e5',
-        borderColor: '#4f46e5',
+        backgroundColor: colors.accent.primary,
+        borderColor: colors.accent.primary,
     },
     periodButtonText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#374151',
+        color: colors.text.primary,
     },
     periodButtonTextActive: {
-        color: '#fff',
+        color: colors.text.light,
     },
     statsGrid: {
         flexDirection: 'row',
@@ -65,24 +67,24 @@ export const styles = StyleSheet.create({
     statLabel: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#6b7280',
+        color: colors.text.secondary,
         textTransform: 'uppercase',
         marginBottom: 8,
     },
     statValue: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.text.primary,
     },
     statValueEmployee: {
-        color: '#059669',
+        color: colors.status.success,
     },
     statValueBusiness: {
-        color: '#4f46e5',
+        color: colors.accent.indigo,
     },
     statPercent: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginTop: 4,
     },
     additionalStats: {
@@ -98,13 +100,13 @@ export const styles = StyleSheet.create({
     },
     additionalStatLabel: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginBottom: 4,
     },
     additionalStatValue: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
     },
     shiftsSection: {
         padding: 16,
@@ -112,7 +114,7 @@ export const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 16,
     },
     emptySection: {
@@ -138,7 +140,7 @@ export const styles = StyleSheet.create({
     shiftDate: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
     },
     shiftStatusBadge: {
         paddingHorizontal: 8,
@@ -146,28 +148,28 @@ export const styles = StyleSheet.create({
         borderRadius: 12,
     },
     shiftStatusOpen: {
-        backgroundColor: '#d1fae5',
+        backgroundColor: colors.feedback.successSurface,
     },
     shiftStatusClosed: {
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surface.elevated,
     },
     shiftStatusText: {
         fontSize: 12,
         fontWeight: '500',
     },
     shiftStatusTextOpen: {
-        color: '#059669',
+        color: colors.status.success,
     },
     shiftStatusTextClosed: {
-        color: '#374151',
+        color: colors.text.secondary,
     },
     shiftClientsCount: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     shiftTime: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginTop: 4,
     },
     shiftHeaderRight: {
@@ -177,12 +179,12 @@ export const styles = StyleSheet.create({
     shiftTotalAmount: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     shiftConsumables: {
         fontSize: 10,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginBottom: 4,
     },
     shiftFinancials: {
@@ -190,52 +192,52 @@ export const styles = StyleSheet.create({
     },
     shiftMasterShare: {
         fontSize: 10,
-        color: '#374151',
+        color: colors.text.primary,
         marginBottom: 2,
     },
     shiftMasterShareGuaranteed: {
         fontSize: 10,
-        color: '#059669',
+        color: colors.status.success,
         fontWeight: '600',
         marginBottom: 2,
     },
     shiftBaseShareStriked: {
         fontSize: 10,
-        color: '#9ca3af',
+        color: colors.text.secondary,
         textDecorationLine: 'line-through',
         marginBottom: 2,
     },
     shiftGuaranteed: {
         fontSize: 10,
-        color: '#6b7280',
+        color: colors.text.secondary,
         marginBottom: 2,
     },
     shiftHours: {
         fontSize: 10,
-        color: '#d97706',
+        color: colors.status.warning,
         marginBottom: 2,
     },
     shiftSalonShare: {
         fontSize: 10,
-        color: '#374151',
+        color: colors.text.primary,
     },
     shiftItems: {
         marginTop: 16,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: colors.border.subtle,
     },
     shiftItemsTitle: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 12,
     },
     shiftItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         padding: 12,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.surface.elevated,
         borderRadius: 8,
         marginBottom: 8,
     },
@@ -249,7 +251,7 @@ export const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#10b981',
+        backgroundColor: colors.status.success,
     },
     shiftItemInfo: {
         flex: 1,
@@ -257,12 +259,12 @@ export const styles = StyleSheet.create({
     shiftItemClient: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     shiftItemService: {
         fontSize: 12,
-        color: '#374151',
+        color: colors.text.secondary,
     },
     shiftItemRight: {
         alignItems: 'flex-end',
@@ -271,26 +273,26 @@ export const styles = StyleSheet.create({
     shiftItemAmount: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 4,
     },
     shiftItemConsumables: {
         fontSize: 10,
-        color: '#d97706',
+        color: colors.status.warning,
         marginBottom: 4,
     },
     shiftItemTime: {
         fontSize: 10,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
     shiftItemsEmpty: {
         marginTop: 16,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: colors.border.subtle,
     },
     shiftItemsEmptyText: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.text.secondary,
     },
 });

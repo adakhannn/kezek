@@ -51,6 +51,7 @@ export type StaffFinanceStatsPayload = {
     totalLateMinutes: number;
     totalClients: number;
     totalBaseMasterShare: number;
+    totalBaseSalonShare: number;
     totalGuaranteedAmount: number;
     hasGuaranteedPayment: boolean;
     shifts: StaffFinanceStatsShift[];

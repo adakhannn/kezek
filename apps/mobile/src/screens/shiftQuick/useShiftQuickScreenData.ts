@@ -353,7 +353,7 @@ export function useShiftQuickScreenData() {
         const currentGuaranteed = financeQuery.data?.currentGuaranteedAmount || 0;
         const finalMasterShare = currentGuaranteed > baseMasterShare ? currentGuaranteed : baseMasterShare;
         const topupAmount = Math.max(0, currentGuaranteed - baseMasterShare);
-        const baseSalonShare = Math.round((totalAmount * (100 - normalizedMaster)) / 100) + totalConsumables;
+        const baseSalonShare = totalAmount - baseMasterShare + totalConsumables;
         const finalSalonShare = Math.max(0, baseSalonShare - topupAmount);
 
         return {

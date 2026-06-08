@@ -30,9 +30,12 @@ export function calculateBaseShares(
     percentMaster: number,
     percentSalon: number,
 ): { masterShare: number; salonShare: number } {
+    const masterShare = calculateBaseMasterShare(totalAmount, percentMaster, percentSalon);
+
     return {
-        masterShare: calculateBaseMasterShare(totalAmount, percentMaster, percentSalon),
-        salonShare: calculateBaseSalonShare(totalAmount, totalConsumables, percentMaster, percentSalon),
+        masterShare,
+        // Assign the rounding remainder to the salon so the revenue split is conserved.
+        salonShare: totalAmount - masterShare + totalConsumables,
     };
 }
 

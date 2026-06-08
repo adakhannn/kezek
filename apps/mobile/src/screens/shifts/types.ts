@@ -17,6 +17,8 @@ export type Shift = {
     closed_at: string | null;
     total_amount: number;
     consumables_amount: number;
+    base_master_share: number;
+    base_salon_share: number;
     master_share: number;
     salon_share: number;
     late_minutes: number;
@@ -41,6 +43,7 @@ export type ShiftStats = {
     totalLateMinutes: number;
     totalClients: number;
     totalBaseMasterShare?: number;
+    totalBaseSalonShare?: number;
     totalGuaranteedAmount?: number;
     hasGuaranteedPayment?: boolean;
     shifts: Shift[];

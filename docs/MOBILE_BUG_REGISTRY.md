@@ -1030,19 +1030,21 @@ Resolution note (2026-06-06):
 - actual before fix:
   - The endpoint returns `401 auth / Требуется авторизация`.
   - The route uses manager/cookie-oriented context and does not accept the mobile Bearer session.
-- status: `fixed-pending-deploy`
+- status: `verified`
 - owner: `Codex + User`
 
 Resolution note (2026-06-06):
 - Added a request-aware Bearer path for self-staff access while preserving the existing manager cookie path.
 - Bearer staff may request only their own staff id; cross-staff access returns `403`.
 - Route/service tests pass (`6/6`) and web typecheck passes.
-- Production live happy-path verification remains pending until deployment.
+- Post-deploy live verification confirmed production success for day, month, and year requests from the Android staff session.
 - evidence:
   - [f3_stats_open.png](/C:/projects/kezek/apps/mobile/f3_stats_open.png)
   - [f3_initial_logcat.txt](/C:/projects/kezek/apps/mobile/f3_initial_logcat.txt)
   - [staffFinanceStatsHttpService.ts](/C:/projects/kezek/apps/web/src/lib/staffFinanceStatsHttpService.ts)
   - [staffFinanceStatsHttpService.test.ts](/C:/projects/kezek/apps/web/src/__tests__/lib/staffFinanceStatsHttpService.test.ts)
+  - [f3_day_contrast.png](/C:/projects/kezek/apps/mobile/f3_day_contrast.png)
+  - [f3_year_logcat.txt](/C:/projects/kezek/apps/mobile/f3_year_logcat.txt)
 
 
 ### MB-026
@@ -1075,3 +1077,167 @@ Resolution note (2026-06-06):
   - [f3_retry_logcat.txt](/C:/projects/kezek/apps/mobile/f3_retry_logcat.txt)
   - [ShiftsScreen.tsx](/C:/projects/kezek/apps/mobile/src/screens/ShiftsScreen.tsx)
   - [ShiftsScreen.test.tsx](/C:/projects/kezek/apps/mobile/src/__tests__/screens/ShiftsScreen.test.tsx)
+
+
+### MB-027
+- id: `MB-027`
+- date: `2026-06-06`
+- area: `F3`
+- severity: `P1`
+- title: Shift history ignores successful API response because the client reads the wrong response envelope
+- build: Android dev build (`kg.kezek.app`), post-deploy production API
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`)
+- steps:
+  1. Open Staff workspace -> `Статистика`.
+  2. Retry after deploying `MB-025`.
+- expected:
+  - Successful `{ ok, data: { stats } }` response renders shift history.
+- actual before fix:
+  - Production returned success, but the query returned `undefined`.
+  - React Query reported `Query data cannot be undefined` because the client read `response.stats` instead of `response.data.stats`.
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Updated the mobile query to consume the standard API response envelope.
+- Updated tests to model the production response contract.
+- Live retry rendered real day statistics immediately.
+- evidence:
+  - [f3_postdeploy_day_logcat.txt](/C:/projects/kezek/apps/mobile/f3_postdeploy_day_logcat.txt)
+  - [f3_day_contrast.png](/C:/projects/kezek/apps/mobile/f3_day_contrast.png)
+  - [useShiftsScreenData.ts](/C:/projects/kezek/apps/mobile/src/screens/shifts/useShiftsScreenData.ts)
+
+
+### MB-028
+- id: `MB-028`
+- date: `2026-06-06`
+- area: `F3`
+- severity: `P1`
+- title: Month and year shift filters send an invalid daily date format
+- build: Android dev build (`kg.kezek.app`), production API
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`)
+- steps:
+  1. Open shift statistics.
+  2. Select `Месяц` or `Год`.
+- expected:
+  - Month sends `YYYY-MM`; year sends `YYYY`.
+- actual before fix:
+  - Both filters sent `YYYY-MM-DD`.
+  - Month returned `400 validation` with `Ожидается YYYY-MM`.
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Added period-specific query date formatting.
+- Added regression assertions for exact month/year endpoint formats.
+- Live production checks passed for `period=month&date=2026-06` and `period=year&date=2026`.
+- evidence:
+  - [f3_month_logcat_full.txt](/C:/projects/kezek/apps/mobile/f3_month_logcat_full.txt)
+  - [f3_month_fixed.png](/C:/projects/kezek/apps/mobile/f3_month_fixed.png)
+  - [f3_year_logcat.txt](/C:/projects/kezek/apps/mobile/f3_year_logcat.txt)
+
+
+### MB-029
+- id: `MB-029`
+- date: `2026-06-06`
+- area: `F3`
+- severity: `P1`
+- title: Shift history values are visually hidden by light-theme text colors on dark cards
+- build: Android dev build (`kg.kezek.app`)
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`)
+- steps:
+  1. Open a successful shift history response.
+  2. Inspect turnover, additional totals, and shift cards.
+- expected:
+  - All totals and item text have readable contrast against dark semantic cards.
+- actual before fix:
+  - Values existed in the accessibility tree but several used `#111827` on `#111827` cards.
+  - Turnover and additional totals were visually absent.
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Replaced legacy light-screen hardcoded colors with existing semantic surface, text, border, accent, and status tokens.
+- Live verification confirmed readable day/month/year totals and expanded shift items.
+- evidence:
+  - [f3_postfix_day.png](/C:/projects/kezek/apps/mobile/f3_postfix_day.png)
+  - [f3_day_contrast.png](/C:/projects/kezek/apps/mobile/f3_day_contrast.png)
+  - [f3_year_item_expanded.png](/C:/projects/kezek/apps/mobile/f3_year_item_expanded.png)
+  - [shiftsScreenStyles.ts](/C:/projects/kezek/apps/mobile/src/screens/shifts/shiftsScreenStyles.ts)
+
+
+### MB-030
+- id: `MB-030`
+- date: `2026-06-06`
+- area: `F4`
+- severity: `P1`
+- title: Business percentage includes consumables and makes displayed percentages exceed 100%
+- build: Android dev build (`kg.kezek.app`), production shift stats
+- environment: `Pixel 7 Pro GApis35` (`emulator-5554`)
+- steps:
+  1. Open shift statistics for a period with consumables.
+  2. Compare employee and business percentages.
+- expected:
+  - Percentages describe the base revenue split and total 100%.
+  - Consumables remain visible as a separate business reimbursement.
+- actual before fix:
+  - Day displayed `60.0% + 55.0% = 115%`.
+  - Month displayed `60.0% + 56.9% = 116.9%`.
+- status: `verified`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Percentages now use base revenue shares and explicitly say `от выручки`.
+- Business percentage excludes consumables while the business amount continues to include them.
+- Legacy deployed response envelopes are handled until the explicit base-share contract is deployed.
+- Live day/month/year verification shows `60.0% / 40.0%`.
+
+
+### MB-031
+- id: `MB-031`
+- date: `2026-06-06`
+- area: `F4`
+- severity: `P1`
+- title: Shift history cannot reliably distinguish base employee share from guaranteed payout
+- build: mobile shift history and staff finance stats API
+- environment: source-level and automated finance audit
+- steps:
+  1. Load a shift where guaranteed payout exceeds the base employee percentage share.
+  2. Inspect the mobile shift card.
+- expected:
+  - Card shows final guaranteed payout, base percentage share, hours, and business remainder.
+- actual before fix:
+  - API exposed only final `master_share`.
+  - UI compared `guaranteed_amount > master_share`, which is false once `master_share` already equals the guarantee.
+  - The displayed `Базовая` value incorrectly reused the final share.
+- status: `fixed-pending-deploy`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Stats API now returns `base_master_share` and `base_salon_share` per shift and aggregate base-share totals.
+- Mobile guarantee detection compares guarantee against `base_master_share`.
+- Regression test verifies guarantee `500`, base share `60`, one hour, and final business share `0`.
+
+
+### MB-032
+- id: `MB-032`
+- date: `2026-06-06`
+- area: `F4`
+- severity: `P1`
+- title: Independent share rounding can create or lose one som
+- build: shared finance domain and shift calculation consumers
+- environment: source-level finance-domain audit
+- steps:
+  1. Calculate a turnover of `1` with a `50/50` split.
+- expected:
+  - Employee and business revenue shares sum exactly to turnover.
+- actual before fix:
+  - Both independently rounded to `1`, producing `2` from a turnover of `1`.
+- status: `fixed-pending-deploy`
+- owner: `Codex + User`
+
+Resolution note (2026-06-06):
+- Employee share remains the primary rounded value.
+- Business share receives the exact turnover remainder plus consumables.
+- Synchronized the shared finance domain, stats service, ShiftQuick, and automatic close-shift cron.
+- Regression coverage verifies `1 @ 50/50 -> 1/0` and full revenue conservation.

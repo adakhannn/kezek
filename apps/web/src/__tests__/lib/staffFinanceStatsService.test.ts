@@ -100,5 +100,100 @@ describe('staffFinanceStatsService', () => {
             });
         }
     });
+
+    test('normalizes percentages, rounds base shares, and applies guarantee consistently', async () => {
+        admin.from
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                gte: jest.fn().mockReturnThis(),
+                lte: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({
+                    data: [
+                        {
+                            id: 'closed-shift',
+                            shift_date: '2024-01-15',
+                            status: 'closed',
+                            percent_master: 30,
+                            percent_salon: 20,
+                            master_share: 700,
+                            salon_share: 400,
+                            late_minutes: 5,
+                            hourly_rate: 700,
+                            guaranteed_amount: 700,
+                            hours_worked: 1,
+                            opened_at: '2024-01-15T09:00:00.000Z',
+                            closed_at: '2024-01-15T10:00:00.000Z',
+                            staff: {
+                                hourly_rate: 700,
+                                percent_master: 30,
+                                percent_salon: 20,
+                            },
+                        },
+                    ],
+                    error: null,
+                }),
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnThis(),
+                in: jest.fn().mockReturnThis(),
+                order: jest.fn().mockResolvedValue({
+                    data: [
+                        {
+                            id: 'item-1',
+                            shift_id: 'closed-shift',
+                            client_name: 'Client',
+                            service_name: 'Service',
+                            service_amount: 1001,
+                            consumables_amount: 99,
+                            note: null,
+                            booking_id: null,
+                            created_at: '2024-01-15T09:30:00.000Z',
+                        },
+                    ],
+                    error: null,
+                }),
+            });
+
+        const result = await runStaffFinanceStats({
+            req: new Request('http://localhost/api/dashboard/staff/staff-id/finance/stats?period=day&date=2024-01-15'),
+            admin,
+            bizId: 'biz-id',
+            staffId: 'staff-id',
+            staff: { full_name: 'Test Staff' },
+        });
+
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+            expect(result.stats).toMatchObject({
+                totalAmount: 1001,
+                totalConsumables: 99,
+                totalBaseMasterShare: 601,
+                totalBaseSalonShare: 499,
+                totalMaster: 700,
+                totalSalon: 400,
+                totalGuaranteedAmount: 700,
+                hasGuaranteedPayment: true,
+                totalLateMinutes: 5,
+                totalClients: 1,
+                shifts: [
+                    expect.objectContaining({
+                        total_amount: 1001,
+                        consumables_amount: 99,
+                        base_master_share: 601,
+                        base_salon_share: 499,
+                        master_share: 700,
+                        salon_share: 400,
+                        guaranteed_amount: 700,
+                    }),
+                ],
+            });
+        }
+    });
 });
 

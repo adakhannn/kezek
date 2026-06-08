@@ -15,6 +15,7 @@ export function useShiftsScreenData() {
     });
 
     const { user } = useAuth();
+    const queryDate = period === 'day' ? date : period === 'month' ? date.slice(0, 7) : date.slice(0, 4);
 
     const staffQuery = useQuery({
         queryKey: ['staff-info', user?.id],
@@ -35,19 +36,19 @@ export function useShiftsScreenData() {
     });
 
     const statsQuery = useQuery({
-        queryKey: ['staff-shifts-stats', staffQuery.data?.id, period, date],
+        queryKey: ['staff-shifts-stats', staffQuery.data?.id, period, queryDate],
         queryFn: async () => {
             if (!staffQuery.data?.id) return null;
 
-            const response = await apiRequest<{ ok: boolean; stats: ShiftStats }>(
-                `/api/dashboard/staff/${staffQuery.data.id}/finance/stats?period=${period}&date=${date}`,
+            const response = await apiRequest<{ ok: boolean; data: { stats: ShiftStats } }>(
+                `/api/dashboard/staff/${staffQuery.data.id}/finance/stats?period=${period}&date=${queryDate}`,
             );
 
             if (!response.ok) {
                 throw new Error('Failed to load shifts stats');
             }
 
-            return response.stats;
+            return response.data.stats;
         },
         enabled: !!staffQuery.data?.id,
     });

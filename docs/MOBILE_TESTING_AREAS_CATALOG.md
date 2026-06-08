@@ -435,12 +435,17 @@ Verification status (2026-06-02):
 - period filters
 - totals and item integrity
 - empty/error states
-- status: `partial-pass-pending-deploy`
+- status: `verified`
 - live verification (2026-06-06):
   - PASS: authenticated staff can open `Смены и статистика`.
+  - PASS: production Bearer request succeeds after deployment (`MB-025`).
+  - PASS: `День` loads `2026-06-06` data: turnover `800`, staff `480`, business `440`, consumables `120`, shifts `1`.
+  - PASS: `Месяц` sends `date=2026-06` and loads turnover `1 300`, staff `780`, business `740`, consumables `220`, shifts `3`.
+  - PASS: `Год` sends `date=2026` and loads turnover `4 455`, staff `2 673`, business `2 036`, consumables `254`, shifts `10`.
+  - PASS: a real shift with six clients expands; client names, services, amounts, consumables, and card totals render consistently.
+  - PASS: production success for empty day `2026-06-07` renders zero totals and `Нет смен`.
   - PASS: production API failure is rendered as a dedicated error state with a visible `Повторить` action.
   - PASS: tapping `Повторить` sends a new request and keeps the screen stable when the request fails again.
-  - BLOCKED: production happy-path checks for day/month/year periods, real totals/items, and a successful empty period are blocked by the deployed endpoint returning `401` for mobile Bearer auth.
 - automated verification:
   - PASS: `День`, `Месяц`, and `Год` select the expected API period.
   - PASS: totals, staff/business shares, client count, shift card, expanded client/service, and consumables remain consistent with the API response.
@@ -453,15 +458,43 @@ Verification status (2026-06-02):
   - `apps/mobile/f3_initial_logcat.txt`
   - `apps/mobile/f3_error_retry_after_tap.png`
   - `apps/mobile/f3_retry_logcat.txt`
+  - `apps/mobile/f3_day_contrast.png`
+  - `apps/mobile/f3_month_fixed.png`
+  - `apps/mobile/f3_year.png`
+  - `apps/mobile/f3_year_item_expanded.png`
+  - `apps/mobile/f3_empty_state.png`
+  - `apps/mobile/f3_empty_live_logcat.txt`
 - bugs found:
   - `MB-025`
   - `MB-026`
-- completion requirement:
-  - deploy `MB-025`, then repeat live day/month/year, totals/item expansion, and successful empty-period checks.
+  - `MB-027`
+  - `MB-028`
+  - `MB-029`
 
 ### F4. Shift calculations integrity (`P1`)
 - totals, percentages, rates, and rounding correctness
 - consistency between UI sections and backend response
+- status: `partial-pass-pending-deploy`
+- live verification (2026-06-06):
+  - PASS: day values satisfy `480 + 440 = 800 turnover + 120 consumables`.
+  - PASS: month values satisfy `780 + 740 = 1 300 turnover + 220 consumables`.
+  - PASS: year values satisfy `2 673 + 2 036 = 4 455 turnover + 254 consumables`.
+  - PASS: revenue split is displayed as `60.0% / 40.0%` for day, month, and year; consumables no longer inflate the business percentage.
+  - PASS: compatibility path works with the currently deployed stats contract.
+  - PENDING DEPLOY: live verification of explicit per-shift base shares and guaranteed-payment presentation.
+  - PENDING DEPLOY: live verification of the conserved rounding rule on a fractional/odd turnover case.
+- automated verification:
+  - PASS: percentages `30/20` normalize to `60/40`.
+  - PASS: turnover `1001` and consumables `99` produce base shares `601/499`.
+  - PASS: guarantee `700` replaces base employee share `601` and reduces business share to `400`.
+  - PASS: `1` turnover at `50/50` is conserved as `1/0`, not `1/1`.
+  - PASS: mobile ShiftsScreen + ShiftQuick tests (`14/14`).
+  - PASS: web finance domain/stats tests (`29/29`).
+  - PASS: mobile and web typecheck.
+- bugs found:
+  - `MB-030`
+  - `MB-031`
+  - `MB-032`
 
 ---
 

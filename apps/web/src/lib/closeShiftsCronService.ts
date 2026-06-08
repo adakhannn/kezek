@@ -1,9 +1,11 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { logDebug, logError } from '@/lib/log';
 import { TZ, dateAtTz, formatDateInTz } from '@/lib/time';
 
 type SupabaseClientLike = {
-    from: (table: string) => any;
-    rpc: (fn: string, args?: Record<string, unknown>) => any;
+    from: SupabaseClient['from'];
+    rpc: SupabaseClient['rpc'];
 };
 
 type ShiftRow = {
@@ -309,10 +311,10 @@ async function calculateShiftFinancials({
     const safePercentSalon = Number.isFinite(percentSalon) ? percentSalon : 40;
     const percentSum = safePercentMaster + safePercentSalon || 100;
     const normalizedMaster = (safePercentMaster / percentSum) * 100;
-    const normalizedSalon = (safePercentSalon / percentSum) * 100;
+    const normalizedSalon = 100 - normalizedMaster;
 
     const masterShare = Math.round((totalAmount * normalizedMaster) / 100);
-    const salonShareFromAmount = Math.round((totalAmount * normalizedSalon) / 100);
+    const salonShareFromAmount = totalAmount - masterShare;
     const salonShare = salonShareFromAmount + finalConsumablesAmount;
 
     let hoursWorked: number | null = null;

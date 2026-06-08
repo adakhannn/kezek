@@ -25,6 +25,18 @@ export function ShiftsScreenSections({
     onPeriodChange,
     onRefresh,
 }: Props) {
+    const hasBaseShareTotals =
+        typeof stats.totalBaseMasterShare === 'number' &&
+        typeof stats.totalBaseSalonShare === 'number';
+    const baseSalonShare = Math.max(
+        0,
+        (hasBaseShareTotals ? stats.totalBaseSalonShare! : stats.totalSalon) -
+            stats.totalConsumables,
+    );
+    const baseMasterShare = hasBaseShareTotals
+        ? stats.totalBaseMasterShare!
+        : Math.max(0, stats.totalAmount - baseSalonShare);
+
     return (
         <ScrollView
             style={styles.container}
@@ -69,7 +81,7 @@ export function ShiftsScreenSections({
                     </Text>
                     {stats.totalAmount > 0 ? (
                         <Text style={styles.statPercent}>
-                            {((stats.totalMaster / stats.totalAmount) * 100).toFixed(1)}%
+                            {((baseMasterShare / stats.totalAmount) * 100).toFixed(1)}% от выручки
                         </Text>
                     ) : null}
                 </Card>
@@ -81,7 +93,7 @@ export function ShiftsScreenSections({
                     </Text>
                     {stats.totalAmount > 0 ? (
                         <Text style={styles.statPercent}>
-                            {((stats.totalSalon / stats.totalAmount) * 100).toFixed(1)}%
+                            {((baseSalonShare / stats.totalAmount) * 100).toFixed(1)}% от выручки
                         </Text>
                     ) : null}
                 </Card>
@@ -129,7 +141,9 @@ export function ShiftsScreenSections({
 function ShiftCard({ shift }: { shift: Shift }) {
     const [expanded, setExpanded] = useState(shift.status === 'open');
     const hasGuaranteed =
-        shift.guaranteed_amount > 0 && !!shift.hourly_rate && shift.guaranteed_amount > shift.master_share;
+        shift.guaranteed_amount > 0 &&
+        !!shift.hourly_rate &&
+        shift.guaranteed_amount > shift.base_master_share;
 
     return (
         <Card style={styles.shiftCard}>
@@ -184,7 +198,7 @@ function ShiftCard({ shift }: { shift: Shift }) {
                                 </Text>
                             ) : null}
                             <Text style={styles.shiftBaseShareStriked}>
-                                Базовая: {formatPrice(shift.master_share)}
+                                Базовая: {formatPrice(shift.base_master_share)}
                             </Text>
                             <Text style={styles.shiftSalonShare}>
                                 Бизнесу: {formatPrice(shift.salon_share)}

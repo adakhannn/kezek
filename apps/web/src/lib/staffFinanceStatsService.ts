@@ -1,10 +1,35 @@
-﻿import type { StaffFinanceStatsPeriod, StaffFinanceStatsShiftItem } from '@/lib/finance/types';
+﻿import type { SupabaseClient } from '@supabase/supabase-js';
+
+import type { StaffFinanceStatsPeriod, StaffFinanceStatsShiftItem } from '@/lib/finance/types';
 import { logDebug, logError } from '@/lib/log';
 import { TZ, todayStringInTz } from '@/lib/time';
 
+type StaffFinanceStatsClient = Pick<SupabaseClient, 'from'>;
+
+type StaffFinanceStatsShiftRow = {
+    id: string;
+    shift_date: string;
+    status: 'open' | 'closed';
+    opened_at: string | null;
+    closed_at: string | null;
+    percent_master?: number | null;
+    percent_salon?: number | null;
+    master_share?: number | null;
+    salon_share?: number | null;
+    late_minutes?: number | null;
+    hours_worked?: number | null;
+    hourly_rate?: number | null;
+    guaranteed_amount?: number | null;
+    staff?: {
+        hourly_rate?: number | null;
+        percent_master?: number | null;
+        percent_salon?: number | null;
+    } | null;
+};
+
 type StaffFinanceStatsContext = {
     req: Request;
-    admin: any;
+    admin: StaffFinanceStatsClient;
     bizId: string;
     staffId: string;
     staff: {
@@ -92,8 +117,6 @@ export async function runStaffFinanceStats({
         shiftIds: finalShifts.map((shift) => shift.id),
     });
 
-    const openShiftSummary = summarizeOpenShifts({ openShifts: finalShifts.filter((shift) => shift.status === 'open'), shiftItemsMap });
-
     const mappedShifts = finalShifts.map((shift) => mapShiftForStats({ shift, shiftItemsMap }));
 
     const stats = {
@@ -110,9 +133,10 @@ export async function runStaffFinanceStats({
         totalConsumables: 0,
         totalLateMinutes: 0,
         totalClients: Object.values(shiftItemsMap).reduce((sum, items) => sum + items.length, 0),
-        totalBaseMasterShare: openShiftSummary.totalBaseMasterShare,
-        totalGuaranteedAmount: openShiftSummary.totalGuaranteedAmount,
-        hasGuaranteedPayment: openShiftSummary.hasGuaranteedPayment,
+        totalBaseMasterShare: 0,
+        totalBaseSalonShare: 0,
+        totalGuaranteedAmount: 0,
+        hasGuaranteedPayment: false,
         shifts: mappedShifts,
     };
 
@@ -122,6 +146,10 @@ export async function runStaffFinanceStats({
         stats.totalSalon += shift.salon_share;
         stats.totalConsumables += shift.consumables_amount;
         stats.totalLateMinutes += shift.late_minutes;
+        stats.totalBaseMasterShare += shift.base_master_share;
+        stats.totalBaseSalonShare += shift.base_salon_share;
+        stats.totalGuaranteedAmount += shift.guaranteed_amount;
+        stats.hasGuaranteedPayment ||= shift.guaranteed_amount > shift.base_master_share;
     }
 
     return {
@@ -254,7 +282,7 @@ async function loadShiftItemsMap({
     admin,
     shiftIds,
 }: {
-    admin: any;
+    admin: StaffFinanceStatsClient;
     shiftIds: string[];
 }): Promise<Record<string, StaffFinanceStatsShiftItem[]>> {
     const shiftItemsMap: Record<string, StaffFinanceStatsShiftItem[]> = {};
@@ -296,57 +324,11 @@ async function loadShiftItemsMap({
     return shiftItemsMap;
 }
 
-function summarizeOpenShifts({
-    openShifts,
-    shiftItemsMap,
-}: {
-    openShifts: any[];
-    shiftItemsMap: Record<string, StaffFinanceStatsShiftItem[]>;
-}) {
-    let totalBaseMasterShare = 0;
-    let totalGuaranteedAmount = 0;
-    let hasGuaranteedPayment = false;
-
-    for (const shift of openShifts) {
-        const shiftItems = shiftItemsMap[shift.id] || [];
-        const shiftTotalAmount = shiftItems.reduce((sum, item) => sum + item.service_amount, 0);
-        const shiftPercentMaster = Number(shift.percent_master ?? 60);
-        const shiftPercentSalon = Number(shift.percent_salon ?? 40);
-        const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
-        const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
-        const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
-        totalBaseMasterShare += baseMasterShare;
-
-        const staffData = (shift as { staff?: { hourly_rate?: number | null } | null }).staff;
-        const hourlyRate = shift.hourly_rate
-            ? Number(shift.hourly_rate)
-            : staffData?.hourly_rate
-              ? Number(staffData.hourly_rate)
-              : null;
-
-        if (hourlyRate && shift.opened_at) {
-            const openedAt = new Date(shift.opened_at);
-            const diffMs = new Date().getTime() - openedAt.getTime();
-            const guaranteedAmount = Math.round((Math.max(0, diffMs / (1000 * 60 * 60)) * hourlyRate) * 100) / 100;
-            totalGuaranteedAmount += guaranteedAmount;
-            if (guaranteedAmount > baseMasterShare) {
-                hasGuaranteedPayment = true;
-            }
-        }
-    }
-
-    return {
-        totalBaseMasterShare,
-        totalGuaranteedAmount,
-        hasGuaranteedPayment,
-    };
-}
-
 function mapShiftForStats({
     shift,
     shiftItemsMap,
 }: {
-    shift: any;
+    shift: StaffFinanceStatsShiftRow;
     shiftItemsMap: Record<string, StaffFinanceStatsShiftItem[]>;
 }) {
     const shiftItems = shiftItemsMap[shift.id] || [];
@@ -366,9 +348,8 @@ function mapShiftForStats({
     const shiftPercentSalon = Number(shift.percent_salon ?? staffPercentSalon ?? 40);
     const percentSum = shiftPercentMaster + shiftPercentSalon || 100;
     const normalizedMaster = (shiftPercentMaster / percentSum) * 100;
-    const normalizedSalon = (shiftPercentSalon / percentSum) * 100;
     const baseMasterShare = Math.round((shiftTotalAmount * normalizedMaster) / 100);
-    const baseSalonShare = Math.round((shiftTotalAmount * normalizedSalon) / 100) + shiftConsumables;
+    const baseSalonShare = shiftTotalAmount - baseMasterShare + shiftConsumables;
 
     let displayMasterShare = Number(shift.master_share ?? 0);
     let displaySalonShare = Number(shift.salon_share ?? 0);
@@ -418,6 +399,8 @@ function mapShiftForStats({
         closed_at: shift.closed_at,
         total_amount: shiftTotalAmount,
         consumables_amount: shiftConsumables,
+        base_master_share: baseMasterShare,
+        base_salon_share: baseSalonShare,
         master_share: displayMasterShare,
         salon_share: displaySalonShare,
         late_minutes: Number(shift.late_minutes ?? 0),

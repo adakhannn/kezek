@@ -28,6 +28,15 @@ describe('calculateBaseMasterShare', () => {
         // 30 + 20 = 50, нормализуется до 60/40
         expect(calculateBaseMasterShare(1000, 30, 20)).toBe(600);
     });
+    test('preserves the full revenue when both percentage shares round up', () => {
+        const result = calculateBaseShares(1, 0, 50, 50);
+
+        expect(result).toEqual({
+            masterShare: 1,
+            salonShare: 0,
+        });
+        expect(result.masterShare + result.salonShare).toBe(1);
+    });
 });
 
 describe('calculateBaseSalonShare', () => {
