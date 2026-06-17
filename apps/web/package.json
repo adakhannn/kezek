@@ -45,7 +45,7 @@
     "react-window": "^2.2.7",
     "resend": "^6.0.1",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-react": "^5.31.0",
+    "swagger-ui-react": "^5.32.1",
     "web-vitals": "^5.1.0",
     "zod": "^4.0.17"
   },
