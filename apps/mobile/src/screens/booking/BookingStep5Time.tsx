@@ -8,6 +8,7 @@ import type { Slot } from '@shared-client/types';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import Button from '../../components/ui/Button';
 import EmptyState from '../../components/ui/EmptyState';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -165,6 +166,7 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     slotButton: {
+        minHeight: MIN_TOUCH_TARGET,
         paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 10,

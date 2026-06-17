@@ -1,5 +1,8 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+import { colors } from '../constants/colors';
+import { getErrorMessage } from '../lib/errors';
 import Button from './ui/Button';
 
 type ErrorDisplayProps = {
@@ -10,12 +13,13 @@ type ErrorDisplayProps = {
 export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
     const isEnvError = error.message.includes('environment variables') || 
                       error.message.includes('EXPO_PUBLIC');
+    const visibleMessage = isEnvError ? error.message : getErrorMessage(error);
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Ionicons name="alert-circle" size={64} color="#ef4444" />
+            <Ionicons name="alert-circle" size={64} color={colors.status.danger} />
             <Text style={styles.title}>Что-то пошло не так</Text>
-            <Text style={styles.message}>{error.message}</Text>
+            <Text style={styles.message}>{visibleMessage}</Text>
             
             {isEnvError && (
                 <View style={styles.envHelp}>
@@ -51,7 +55,7 @@ export default function ErrorDisplay({ error, onRetry }: ErrorDisplayProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface.canvas,
     },
     content: {
         flex: 1,
@@ -62,19 +66,21 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.text.primary,
         marginTop: 16,
         marginBottom: 8,
         textAlign: 'center',
     },
     message: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.text.secondary,
         textAlign: 'center',
         marginBottom: 24,
     },
     envHelp: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.surface.card,
+        borderWidth: 1,
+        borderColor: colors.border.subtle,
         padding: 20,
         borderRadius: 12,
         marginTop: 16,
@@ -84,22 +90,22 @@ const styles = StyleSheet.create({
     envTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text.primary,
         marginBottom: 12,
     },
     envText: {
         fontSize: 14,
-        color: '#374151',
+        color: colors.text.secondary,
         marginBottom: 8,
         lineHeight: 20,
     },
     envCode: {
         fontSize: 12,
         fontFamily: 'monospace',
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface.elevated,
         padding: 12,
         borderRadius: 8,
-        color: '#111827',
+        color: colors.text.primary,
         marginVertical: 8,
     },
     button: {

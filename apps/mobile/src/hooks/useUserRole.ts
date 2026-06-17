@@ -11,7 +11,7 @@ type UserRole = {
  * Хук для проверки роли пользователя
  */
 export function useUserRole() {
-    const { data: user } = useQuery({
+    const userQuery = useQuery({
         queryKey: ['user'],
         queryFn: async () => {
             const { data: { user }, error } = await supabase.auth.getUser();
@@ -19,8 +19,9 @@ export function useUserRole() {
             return user;
         },
     });
+    const user = userQuery.data;
 
-    const { data: role, isLoading } = useQuery({
+    const roleQuery = useQuery({
         queryKey: ['user-role', user?.id],
         queryFn: async (): Promise<UserRole> => {
             if (!user?.id) {
@@ -58,8 +59,9 @@ export function useUserRole() {
     });
 
     return {
-        ...(role || { isOwner: false, isStaff: false, isSuperAdmin: false }),
-        isLoading,
+        ...(roleQuery.data || { isOwner: false, isStaff: false, isSuperAdmin: false }),
+        isLoading: userQuery.isLoading || (!!user?.id && roleQuery.isLoading),
+        loadError: userQuery.error ?? roleQuery.error,
     };
 }
 

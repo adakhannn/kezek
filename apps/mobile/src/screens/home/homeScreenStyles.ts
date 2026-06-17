@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../../constants/colors';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import { typography } from '../../constants/typography';
 
 export const styles = StyleSheet.create({
@@ -9,6 +10,16 @@ export const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
+    },
+    listContent: {
+        paddingBottom: colors.layout.space8,
+    },
+    businessListItem: {
+        paddingHorizontal: colors.layout.space5,
+        paddingBottom: colors.layout.space4,
+    },
+    listFooter: {
+        paddingVertical: colors.layout.space4,
     },
     header: {
         padding: colors.layout.space6,
@@ -67,7 +78,10 @@ export const styles = StyleSheet.create({
         paddingVertical: colors.layout.space3,
     },
     clearButton: {
-        padding: colors.layout.space1,
+        width: MIN_TOUCH_TARGET,
+        height: MIN_TOUCH_TARGET,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     categoriesContainer: {
         paddingHorizontal: colors.layout.space5,
@@ -84,6 +98,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     categoryChip: {
+        minHeight: MIN_TOUCH_TARGET,
         marginRight: colors.layout.space2,
         borderRadius: colors.layout.radiusLg,
         borderWidth: 1,
@@ -95,17 +110,20 @@ export const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     categoryChipGradient: {
+        minHeight: MIN_TOUCH_TARGET,
         paddingHorizontal: 16,
         paddingVertical: colors.layout.space2,
         alignItems: 'center',
         justifyContent: 'center',
     },
     categoryChipText: {
+        minHeight: MIN_TOUCH_TARGET,
         fontSize: 12,
         fontWeight: '500',
         color: colors.text.secondary,
         paddingHorizontal: 16,
         paddingVertical: colors.layout.space2,
+        textAlignVertical: 'center',
     },
     categoryChipTextActive: {
         fontSize: 12,
@@ -123,7 +141,9 @@ export const styles = StyleSheet.create({
         marginBottom: colors.layout.space2,
     },
     sectionLinkPressable: {
+        minHeight: MIN_TOUCH_TARGET,
         borderRadius: colors.layout.radiusSm,
+        justifyContent: 'center',
     },
     sectionTitle: {
         ...typography.sectionTitle,
@@ -190,6 +210,7 @@ export const styles = StyleSheet.create({
         gap: colors.layout.space2,
     },
     recentPlaceChip: {
+        minHeight: MIN_TOUCH_TARGET,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: colors.layout.space3,
@@ -204,6 +225,93 @@ export const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '500',
         color: colors.text.primary,
+    },
+    nearbyFallbackContainer: {
+        paddingHorizontal: colors.layout.space5,
+        paddingBottom: colors.layout.space4,
+    },
+    nearbyFallbackCard: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: colors.layout.space3,
+        borderColor: colors.border.light,
+    },
+    nearbyFallbackIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.background.tertiary,
+    },
+    nearbyFallbackIconWarning: {
+        backgroundColor: colors.background.secondary,
+        borderWidth: 1,
+        borderColor: colors.border.light,
+    },
+    nearbyFallbackContent: {
+        flex: 1,
+    },
+    nearbyFallbackTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: colors.text.primary,
+        marginBottom: colors.layout.space1,
+    },
+    nearbyFallbackText: {
+        fontSize: 13,
+        lineHeight: 18,
+        color: colors.text.secondary,
+    },
+    nearbyFallbackHint: {
+        marginTop: colors.layout.space3,
+        fontSize: 12,
+        lineHeight: 17,
+        color: colors.text.muted,
+    },
+    nearbyAction: {
+        marginTop: colors.layout.space3,
+    },
+    nearbyMapAction: {
+        marginTop: colors.layout.space2,
+    },
+    nearbyBranchList: {
+        marginTop: colors.layout.space3,
+        gap: colors.layout.space2,
+    },
+    nearbyBranchRow: {
+        minHeight: MIN_TOUCH_TARGET,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: colors.layout.space3,
+        paddingHorizontal: colors.layout.space3,
+        paddingVertical: colors.layout.space2,
+        borderRadius: colors.layout.radiusMd,
+        borderWidth: 1,
+        borderColor: colors.border.light,
+        backgroundColor: colors.background.secondary,
+    },
+    nearbyBranchRowDisabled: {
+        opacity: 0.55,
+    },
+    nearbyBranchMain: {
+        flex: 1,
+    },
+    nearbyBranchName: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: colors.text.primary,
+        marginBottom: 2,
+    },
+    nearbyBranchMeta: {
+        fontSize: 12,
+        lineHeight: 16,
+        color: colors.text.secondary,
+    },
+    nearbyBranchDistance: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: colors.accent.primary,
     },
     businessList: {
         padding: colors.layout.space5,
@@ -268,6 +376,7 @@ export const styles = StyleSheet.create({
         borderTopColor: colors.border.dark,
     },
     bookButton: {
+        minHeight: MIN_TOUCH_TARGET,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',

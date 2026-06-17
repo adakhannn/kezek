@@ -6,6 +6,7 @@ import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirmBooking } from '../../hooks/useConfirmBooking';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { getErrorMessage, isNetworkError } from '../../lib/errors';
 import { logError } from '../../lib/log';
 import { RootStackParamList } from '../../navigation/types';
 
@@ -31,22 +32,25 @@ export function useBookingStep6Confirm(navigation: NavigationProp) {
             }, 500);
         },
         onError: (error: Error) => {
-            const isNetworkError = isOffline || /network request failed|failed to fetch|network/i.test(error.message);
+            const hasNetworkError = isOffline || isNetworkError(error);
 
             logError('BookingStep6Confirm', 'Create booking failed', {
                 message: error.message,
-                isNetworkError,
+                isNetworkError: hasNetworkError,
             });
 
-            if (isNetworkError) {
+            if (hasNetworkError) {
                 showToast(
-                    'Нет сети или ошибка сервера. Запись не создана, попробуйте ещё раз, когда соединение восстановится.',
+                    'Нет подключения к интернету. Запись не создана. Проверьте соединение и попробуйте снова.',
                     'error',
                 );
                 return;
             }
 
-            showToast(error.message || 'Не удалось создать запись', 'error');
+            showToast(
+                getErrorMessage(error, 'Не удалось создать запись. Попробуйте снова.'),
+                'error',
+            );
         },
     });
 

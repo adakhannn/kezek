@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { colors } from '../../constants/colors';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import MotionPressable from './MotionPressable';
 
 export type FeedbackBannerVariant = 'info' | 'success' | 'warning' | 'danger';
@@ -66,10 +67,18 @@ export default function FeedbackBanner({
     const config = variantConfig[variant];
 
     return (
-        <View style={[styles.banner, compact && styles.bannerCompact, {
-            backgroundColor: config.backgroundColor,
-            borderColor: config.borderColor,
-        }, style]}>
+        <View
+            accessibilityLiveRegion={variant === 'danger' ? 'assertive' : 'polite'}
+            style={[
+                styles.banner,
+                compact && styles.bannerCompact,
+                {
+                    backgroundColor: config.backgroundColor,
+                    borderColor: config.borderColor,
+                },
+                style,
+            ]}
+        >
             <View style={styles.row}>
                 <View style={[styles.iconWrap, { backgroundColor: config.backgroundColor }]}>
                     {icon ?? <Ionicons name={config.icon} size={18} color={config.iconColor} />}
@@ -80,7 +89,12 @@ export default function FeedbackBanner({
                     {action ? <View style={styles.action}>{action}</View> : null}
                 </View>
                 {onClose ? (
-                    <MotionPressable onPress={onClose} style={styles.closeButton}>
+                    <MotionPressable
+                        onPress={onClose}
+                        style={styles.closeButton}
+                        accessibilityLabel="Закрыть уведомление"
+                        accessibilityHint="Скрывает это сообщение"
+                    >
                         <Ionicons name="close" size={16} color={colors.text.secondary} />
                     </MotionPressable>
                 ) : null}
@@ -132,7 +146,10 @@ const styles = StyleSheet.create({
         marginTop: colors.layout.space3,
     },
     closeButton: {
-        padding: colors.layout.space1,
+        width: MIN_TOUCH_TARGET,
+        height: MIN_TOUCH_TARGET,
         borderRadius: colors.layout.radiusSm,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });

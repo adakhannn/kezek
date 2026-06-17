@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { forwardRef, type ReactNode } from 'react';
 import {
     StyleSheet,
     Text,
@@ -24,7 +24,7 @@ type InputProps = TextInputProps & {
     trailingIcon?: ReactNode;
 };
 
-export default function Input({
+const Input = forwardRef<TextInput, InputProps>(function Input({
     label,
     error,
     helperText,
@@ -35,9 +35,14 @@ export default function Input({
     trailingIcon,
     style,
     ...props
-}: InputProps) {
+}: InputProps, ref) {
     const sizeStyle = size === 'sm' ? styles.inputSm : size === 'lg' ? styles.inputLg : styles.inputMd;
     const editable = props.editable !== false;
+    const accessibilityState = {
+        ...props.accessibilityState,
+        disabled: !editable,
+        invalid: Boolean(error),
+    };
 
     return (
         <View style={[styles.container, containerStyle]}>
@@ -53,21 +58,28 @@ export default function Input({
             >
                 {leadingIcon ? <View style={styles.iconWrap}>{leadingIcon}</View> : null}
                 <TextInput
+                    ref={ref}
+                    {...props}
                     style={[styles.input, style]}
                     placeholderTextColor={colors.text.tertiary}
                     selectionColor={colors.interactive.focusRing}
                     accessibilityLabel={props.accessibilityLabel ?? label ?? props.placeholder}
-                    accessibilityHint={props.accessibilityHint ?? helperText}
-                    accessibilityState={{ disabled: !editable }}
-                    {...props}
+                    accessibilityHint={props.accessibilityHint ?? error ?? helperText}
+                    accessibilityState={accessibilityState}
                 />
                 {trailingIcon ? <View style={styles.iconWrap}>{trailingIcon}</View> : null}
             </View>
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? (
+                <Text style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
+                    {error}
+                </Text>
+            ) : null}
             {helperText && !error ? <Text style={styles.helperText}>{helperText}</Text> : null}
         </View>
     );
-}
+});
+
+export default Input;
 
 const styles = StyleSheet.create({
     container: {

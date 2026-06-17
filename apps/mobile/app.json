@@ -5,12 +5,12 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "scheme": "kezek",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#030712"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -20,9 +20,10 @@
       "bundleIdentifier": "kg.kezek.app"
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#030712"
       },
       "package": "kg.kezek.app",
       "intentFilters": [
@@ -64,7 +65,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Kezek использует геолокацию, чтобы показать ближайшие филиалы."
+        }
+      ]
     ],
     "extra": {
       "supabaseUrl": "https://beulnmftzbmtbdlgurht.supabase.co",

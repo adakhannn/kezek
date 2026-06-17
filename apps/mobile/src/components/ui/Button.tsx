@@ -46,6 +46,12 @@ export default function Button({
 }: ButtonProps) {
     const isDisabled = disabled || loading;
     const sizeStyle = size === 'sm' ? styles.buttonSm : size === 'lg' ? styles.buttonLg : styles.buttonMd;
+    const primarySizeStyle =
+        size === 'sm'
+            ? styles.primaryButtonSm
+            : size === 'lg'
+              ? styles.primaryButtonLg
+              : styles.primaryButtonMd;
     const textSizeStyle = size === 'sm' ? styles.textSm : size === 'lg' ? styles.textLg : styles.textMd;
 
     const textStyles = [
@@ -67,20 +73,36 @@ export default function Button({
             {loading ? (
                 <ActivityIndicator
                     color={
-                        variant === 'primary' ||
-                        variant === 'danger' ||
-                        variant === 'authWhatsApp'
+                        variant === 'primary'
                             ? colors.text.light
-                            : variant === 'authTelegram'
-                              ? colors.auth.telegramButtonText
-                              : colors.accent.primary
+                            : variant === 'danger'
+                              ? colors.text.dangerButton
+                              : variant === 'authWhatsApp'
+                                ? colors.auth.whatsAppButtonText
+                                : variant === 'authTelegram'
+                                  ? colors.auth.telegramButtonText
+                                  : colors.accent.primary
                     }
                 />
             ) : leadingIcon ? (
-                <View style={styles.iconWrap}>{leadingIcon}</View>
+                <View
+                    style={styles.iconWrap}
+                    accessible={false}
+                    importantForAccessibility="no-hide-descendants"
+                >
+                    {leadingIcon}
+                </View>
             ) : null}
             <Text style={textStyles}>{title}</Text>
-            {!loading && trailingIcon ? <View style={styles.iconWrap}>{trailingIcon}</View> : null}
+            {!loading && trailingIcon ? (
+                <View
+                    style={styles.iconWrap}
+                    accessible={false}
+                    importantForAccessibility="no-hide-descendants"
+                >
+                    {trailingIcon}
+                </View>
+            ) : null}
         </View>
     );
 
@@ -94,7 +116,7 @@ export default function Button({
                 accessibilityState={{ disabled: isDisabled, busy: loading }}
                 style={[
                     styles.primaryContainer,
-                    sizeStyle,
+                    primarySizeStyle,
                     fullWidth && styles.fullWidth,
                     isDisabled && styles.disabled,
                     style,
@@ -168,7 +190,17 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         ...colors.shadow.md,
     },
+    primaryButtonSm: {
+        minHeight: 44,
+    },
+    primaryButtonMd: {
+        minHeight: 48,
+    },
+    primaryButtonLg: {
+        minHeight: 54,
+    },
     gradient: {
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: colors.layout.space6,
@@ -244,7 +276,7 @@ const styles = StyleSheet.create({
         color: colors.text.secondary,
     },
     dangerText: {
-        color: colors.text.light,
+        color: colors.text.dangerButton,
     },
     authNeutralText: {
         color: colors.text.primary,
@@ -253,6 +285,6 @@ const styles = StyleSheet.create({
         color: colors.auth.telegramButtonText,
     },
     authWhatsAppText: {
-        color: colors.text.light,
+        color: colors.auth.whatsAppButtonText,
     },
 });

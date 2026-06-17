@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import EmptyState from '../../components/ui/EmptyState';
@@ -178,6 +179,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     chip: {
+        minHeight: MIN_TOUCH_TARGET,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
@@ -186,6 +188,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background.secondary,
     },
     chipSelected: {
+        minHeight: MIN_TOUCH_TARGET,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,

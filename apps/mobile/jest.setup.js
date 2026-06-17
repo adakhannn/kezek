@@ -38,12 +38,53 @@ jest.mock('expo-network', () => ({
     })),
 }));
 
+jest.mock('expo-location', () => ({
+    Accuracy: {
+        Balanced: 3,
+    },
+    hasServicesEnabledAsync: jest.fn(async () => true),
+    requestForegroundPermissionsAsync: jest.fn(async () => ({
+        status: 'granted',
+        granted: true,
+        canAskAgain: true,
+    })),
+    getCurrentPositionAsync: jest.fn(async () => ({
+        coords: {
+            latitude: 42.8746,
+            longitude: 74.5698,
+        },
+    })),
+    getLastKnownPositionAsync: jest.fn(async () => ({
+        coords: {
+            latitude: 42.8746,
+            longitude: 74.5698,
+        },
+    })),
+}), { virtual: true });
+
 jest.mock('expo-linear-gradient', () => {
     const React = require('react');
     const { View } = require('react-native');
     return {
         LinearGradient: ({ children, ...props }) =>
             React.createElement(View, props, children),
+    };
+});
+
+jest.mock('react-native-webview', () => {
+    const React = require('react');
+    const { View } = require('react-native');
+
+    const WebView = React.forwardRef((props, ref) => {
+        React.useImperativeHandle(ref, () => ({
+            reload: jest.fn(),
+            stopLoading: jest.fn(),
+        }));
+        return React.createElement(View, props, props.children);
+    });
+
+    return {
+        WebView,
     };
 });
 
@@ -75,6 +116,7 @@ jest.mock('./src/lib/supabase', () => ({
             signInWithOAuth: jest.fn(),
             signInWithPassword: jest.fn(),
             signUp: jest.fn(),
+            updateUser: jest.fn(),
             signOut: jest.fn(),
             onAuthStateChange: jest.fn(() => ({
                 data: { subscription: null },
@@ -84,6 +126,10 @@ jest.mock('./src/lib/supabase', () => ({
         from: jest.fn(() => ({
             select: jest.fn().mockReturnThis(),
             insert: jest.fn().mockReturnThis(),
+            upsert: jest.fn().mockResolvedValue({
+                data: null,
+                error: null,
+            }),
             update: jest.fn().mockReturnThis(),
             delete: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
@@ -187,6 +233,7 @@ jest.mock('./src/contexts/BookingContext', () => ({
                 end_at: '2026-03-21T11:00:00.000Z',
             },
         },
+        hydrateInitialData: jest.fn(),
         setBusiness: jest.fn(),
         setBranches: jest.fn(),
         setServices: jest.fn(),

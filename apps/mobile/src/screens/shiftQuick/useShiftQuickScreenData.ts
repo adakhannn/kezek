@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../hooks/useAuth';
 import { apiRequest } from '../../lib/api';
+import { getErrorMessage } from '../../lib/errors';
 import { logDebug, logError } from '../../lib/log';
 import { supabase } from '../../lib/supabase';
 import {
@@ -189,8 +190,10 @@ export function useShiftQuickScreenData() {
             );
         },
         onError: (error) => {
-            const message = error instanceof Error ? error.message : 'Не удалось открыть смену';
-            showToast(message, 'error');
+            showToast(
+                getErrorMessage(error, 'Не удалось открыть смену. Попробуйте снова.'),
+                'error',
+            );
         },
     });
 
@@ -238,8 +241,10 @@ export function useShiftQuickScreenData() {
             );
         },
         onError: (error) => {
-            const message = error instanceof Error ? error.message : 'Не удалось закрыть смену';
-            showToast(message, 'error');
+            showToast(
+                getErrorMessage(error, 'Не удалось закрыть смену. Попробуйте снова.'),
+                'error',
+            );
         },
     });
 

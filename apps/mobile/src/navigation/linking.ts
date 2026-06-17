@@ -28,6 +28,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
                     Staff: 'staff',
                 },
             },
+            Map: 'map',
             Booking: {
                 path: 'booking/:slug',
                 parse: {

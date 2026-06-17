@@ -3,6 +3,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 
 import { trackMobileEvent } from '../../../lib/analytics';
+import { GOOGLE_ACTIVE_FLOW_STORAGE_KEY } from '../../../lib/authStorageKeys';
 import { logDebug, logError, logWarn } from '../../../lib/log';
 import { supabase } from '../../../lib/supabase';
 import {
@@ -16,7 +17,6 @@ const MOBILE_REDIRECT = 'https://kezek.kg/auth/callback-mobile?redirect=kezek://
 const GOOGLE_NATIVE_REDIRECT = 'kezek://auth/callback';
 const GOOGLE_SESSION_SYNC_DELAY_MS = 500;
 const GOOGLE_AUTH_FLOW_NAME = 'mobile_google_oauth';
-const GOOGLE_ACTIVE_FLOW_STORAGE_KEY = 'google_mobile_active_login_v1';
 const GOOGLE_ACTIVE_FLOW_TTL_MS = 10 * 60 * 1000;
 
 function getUrlParam(url: string, key: string) {

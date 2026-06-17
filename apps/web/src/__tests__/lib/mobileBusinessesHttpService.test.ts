@@ -31,6 +31,8 @@ describe('mobileBusinessesHttpService', () => {
             supabase: expect.any(Object),
             search: 'kez',
             category: 'spa',
+            page: 1,
+            limit: 20,
         });
         expect(response.status).toBe(200);
         expect(body.data).toHaveLength(1);

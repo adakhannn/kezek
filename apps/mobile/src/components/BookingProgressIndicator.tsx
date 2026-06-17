@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { colors } from '../constants/colors';
+import { MIN_TOUCH_TARGET } from '../constants/accessibility';
 import { useBooking } from '../contexts/BookingContext';
 import { RootStackParamList } from '../navigation/types';
 import MotionPressable from './ui/MotionPressable';
@@ -84,6 +85,8 @@ export default function BookingProgressIndicator({ currentStep }: BookingProgres
                                 onPress={() => handleStepPress(step)}
                                 disabled={!isClickable}
                                 style={styles.stepPressable}
+                                accessibilityLabel={`${step.number}. ${step.title}`}
+                                accessibilityHint={isClickable ? 'Возвращает к этому шагу бронирования' : undefined}
                             >
                                 <View
                                     style={[
@@ -154,7 +157,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     stepPressable: {
-        padding: 2,
+        width: MIN_TOUCH_TARGET,
+        height: MIN_TOUCH_TARGET,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     stepDot: {
         width: 12,

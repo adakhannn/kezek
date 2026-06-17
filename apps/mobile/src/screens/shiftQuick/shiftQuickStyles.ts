@@ -7,6 +7,9 @@ export const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.surface.page,
     },
+    scrollContent: {
+        paddingBottom: colors.layout.space8,
+    },
     header: {
         paddingHorizontal: colors.layout.space5,
         paddingTop: colors.layout.space5,

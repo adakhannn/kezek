@@ -42,6 +42,7 @@ export default function MotionPressable({
 
     return (
         <Pressable
+            {...props}
             disabled={disabled}
             accessibilityRole={props.accessibilityRole ?? 'button'}
             accessibilityState={accessibilityState}
@@ -55,7 +56,6 @@ export default function MotionPressable({
                 runScale(1);
                 onPressOut?.(event);
             }}
-            {...props}
         >
             <Animated.View style={[style, { transform: [{ scale: animatedScale }] }]}>
                 {children}

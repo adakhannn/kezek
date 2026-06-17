@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Keyboard, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import Input from '../../components/ui/Input';
@@ -29,10 +29,17 @@ export function SearchSection({
                 placeholder="Поиск по названию или адресу..."
                 value={search}
                 onChangeText={onSearchChange}
+                returnKeyType="search"
+                blurOnSubmit
+                onSubmitEditing={Keyboard.dismiss}
                 leadingIcon={<Ionicons name="search" size={20} color={colors.text.secondary} />}
                 trailingIcon={
                     search ? (
-                        <MotionPressable onPress={onClear} style={styles.clearButton}>
+                        <MotionPressable
+                            onPress={onClear}
+                            style={styles.clearButton}
+                            accessibilityLabel="Очистить поиск"
+                        >
                             <Ionicons name="close-circle" size={20} color={colors.text.secondary} />
                         </MotionPressable>
                     ) : null

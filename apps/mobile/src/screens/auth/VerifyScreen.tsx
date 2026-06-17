@@ -1,5 +1,11 @@
 ﻿import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+} from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -7,6 +13,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
+import { getErrorMessage } from '../../lib/errors';
 import { supabase } from '../../lib/supabase';
 import { AuthStackParamList } from '../../navigation/types';
 import { getValidationError } from '../../utils/validation';
@@ -54,8 +61,10 @@ export default function VerifyScreen() {
             }
             showToast('Вход выполнен успешно', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Неверный код';
-            showToast(errorMessage, 'error');
+            showToast(
+                getErrorMessage(error, 'Не удалось подтвердить код. Проверьте его и попробуйте снова.'),
+                'error',
+            );
         } finally {
             setLoading(false);
         }
@@ -83,15 +92,26 @@ export default function VerifyScreen() {
             }
             showToast('Код отправлен повторно', 'success');
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Не удалось отправить код';
-            showToast(errorMessage, 'error');
+            showToast(
+                getErrorMessage(error, 'Не удалось отправить код. Попробуйте снова.'),
+                'error',
+            );
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <View style={styles.container}>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+        <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets
+        >
             <Text style={styles.title}>Подтверждение</Text>
             <Text style={styles.subtitle}>Введите код, отправленный на {email || phone}</Text>
 
@@ -113,6 +133,13 @@ export default function VerifyScreen() {
                 containerStyle={styles.field}
                 style={styles.codeInput}
                 inputContainerStyle={styles.codeInputContainer}
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                    if (code.length === 6 && !loading) {
+                        void handleVerify();
+                    }
+                }}
             />
 
             <Button
@@ -143,15 +170,20 @@ export default function VerifyScreen() {
                 accessibilityHint="Возврат на предыдущий экран."
                 fullWidth
             />
-        </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: colors.layout.space5,
         backgroundColor: colors.surface.page,
+    },
+    content: {
+        flexGrow: 1,
+        padding: colors.layout.space5,
+        paddingBottom: colors.layout.space8,
     },
     title: {
         fontSize: 28,

@@ -35,7 +35,18 @@ export default function BookingDetailsScreen() {
     } = useBookingDetailsData({
         bookingId,
         onCancelled: () => {
-            setTimeout(() => navigation.goBack(), 500);
+            navigation.reset({
+                index: 0,
+                routes: [
+                    {
+                        name: 'Main',
+                        params: {
+                            screen: 'Cabinet',
+                            params: { screen: 'CabinetMain' },
+                        },
+                    },
+                ],
+            });
         },
     });
 

@@ -29,6 +29,16 @@ const TELEGRAM_STATUS_LABEL: Record<AuthUiState, string | null> = {
   expired: 'Срок подтверждения истек',
 };
 
+const GOOGLE_STATUS_LABEL: Record<AuthUiState, string | null> = {
+  idle: null,
+  loading: 'Открываем вход через Google',
+  pending: 'Ожидаем подтверждение входа через Google',
+  success: 'Вход через Google подтвержден',
+  error: 'Не удалось выполнить вход через Google',
+  cancel: 'Вход через Google отменен',
+  expired: 'Срок входа через Google истек',
+};
+
 export default function SignInScreen() {
   const { showToast } = useToast();
   const apiUrl = getMobileApiUrl();
@@ -93,6 +103,7 @@ export default function SignInScreen() {
   });
 
   const anyBusyAuth = isBusyAuthState(googleState) || isBusyAuthState(telegramState);
+  const googleStatusLabel = GOOGLE_STATUS_LABEL[googleState];
   const telegramStatusLabel = TELEGRAM_STATUS_LABEL[telegramState];
   const hasTelegramStateCard = telegramState !== 'idle' && (Boolean(telegramStatusLabel) || Boolean(telegramNonce));
 
@@ -121,6 +132,16 @@ export default function SignInScreen() {
             </View>
 
             <View style={styles.methodsSection}>
+              {googleStatusLabel ? (
+                <Text
+                  accessibilityLiveRegion={googleState === 'error' ? 'assertive' : 'polite'}
+                  accessibilityRole={googleState === 'error' ? 'alert' : 'text'}
+                  style={styles.screenReaderStatus}
+                >
+                  {googleStatusLabel}
+                </Text>
+              ) : null}
+
               <View style={styles.methodsCaptionWrap}>
                 <View style={styles.methodsCaptionLine} />
                 <Text style={styles.methodsCaptionText}>Быстрые способы входа</Text>
@@ -153,7 +174,19 @@ export default function SignInScreen() {
                 {hasTelegramStateCard && (
                   <View style={styles.telegramStateCard}>
                     {telegramStatusLabel && (
-                      <Text accessibilityLiveRegion="polite" style={styles.telegramStatusText}>
+                      <Text
+                        accessibilityLiveRegion={
+                          telegramState === 'error' || telegramState === 'expired'
+                            ? 'assertive'
+                            : 'polite'
+                        }
+                        accessibilityRole={
+                          telegramState === 'error' || telegramState === 'expired'
+                            ? 'alert'
+                            : 'text'
+                        }
+                        style={styles.telegramStatusText}
+                      >
                         {telegramStatusLabel}
                       </Text>
                     )}

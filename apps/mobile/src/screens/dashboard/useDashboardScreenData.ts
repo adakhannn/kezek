@@ -32,12 +32,13 @@ export function useDashboardScreenData() {
         queryFn: async () => {
             if (!user?.id) return false;
 
-            const { count } = await supabase
+            const { count, error } = await supabase
                 .from('businesses')
                 .select('id', { count: 'exact', head: true })
                 .eq('owner_id', user.id)
                 .eq('is_approved', true);
 
+            if (error) throw error;
             return (count ?? 0) > 0;
         },
         enabled: !!user?.id,
@@ -45,14 +46,18 @@ export function useDashboardScreenData() {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await Promise.all([businessesQuery.refetch(), ownerQuery.refetch()]);
-        setRefreshing(false);
+        try {
+            await Promise.all([businessesQuery.refetch(), ownerQuery.refetch()]);
+        } finally {
+            setRefreshing(false);
+        }
     };
 
     return {
         businesses: businessesQuery.data ?? [],
         isOwner: ownerQuery.data ?? false,
         isLoading: (businessesQuery.isLoading || ownerQuery.isLoading) && !refreshing,
+        loadError: businessesQuery.error ?? ownerQuery.error,
         refreshing,
         onRefresh,
     };

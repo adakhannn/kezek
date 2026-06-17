@@ -308,6 +308,63 @@ describe('ShiftQuickScreen', () => {
         );
     });
 
+    test('does not report an offline operation as queued when secure storage fails', async () => {
+        mockedApiRequest.mockImplementation(async (endpoint: string) => {
+            if (endpoint === '/api/staff/finance') {
+                return {
+                    ok: true,
+                    data: financeData({
+                        today: {
+                            exists: true,
+                            status: 'open',
+                            shift: {
+                                id: 'shift-1',
+                                shift_date: '2026-06-09',
+                                status: 'open',
+                                opened_at: '2026-06-09T08:00:00.000Z',
+                                total_amount: 0,
+                                consumables_amount: 0,
+                                master_share: 0,
+                                salon_share: 0,
+                                hours_worked: null,
+                                hourly_rate: null,
+                                guaranteed_amount: 0,
+                            },
+                            items: [],
+                        },
+                    }),
+                };
+            }
+
+            if (endpoint === '/api/staff/shift/items') {
+                throw new Error('Network request failed');
+            }
+
+            return { ok: true };
+        });
+        (SecureStore.setItemAsync as jest.Mock).mockImplementation(
+            async (key: string, value: string) => {
+                if (key === 'shift_offline_queue') {
+                    throw new Error('secure store unavailable');
+                }
+                secureStorage.set(key, value);
+            },
+        );
+
+        renderWithProviders(<ShiftQuickScreen />);
+
+        expect(await screen.findByText(TEXT.activeStatus)).toBeTruthy();
+        fireEvent.press(await screen.findByText(TEXT.addClient));
+        fireEvent.changeText(await screen.findByPlaceholderText(TEXT.clientName), 'Offline Client');
+        fireEvent.press(await screen.findByText(TEXT.save));
+
+        expect(
+            await screen.findAllByText('Не удалось добавить клиента. Попробуйте снова.'),
+        ).not.toHaveLength(0);
+        expect(await getOfflineQueue()).toEqual([]);
+        expect(screen.queryByText(/сохранён в очередь/i)).toBeNull();
+    });
+
     test('renders explicit load error when finance API fails without cache', async () => {
         mockedApiRequest.mockRejectedValue(new Error('UNAUTHORIZED'));
 

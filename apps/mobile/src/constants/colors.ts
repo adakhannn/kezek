@@ -16,11 +16,12 @@
         googleButtonBorder: '#374151',
         telegramButtonBackground: 'rgba(96, 165, 250, 0.16)',
         telegramButtonBorder: '#229ED9',
-        telegramButtonText: '#229ED9',
+        telegramButtonText: '#38bdf8',
         telegramStateCardBackground: '#1a2235',
         telegramStateCardBorder: '#243047',
         whatsAppButtonBackground: '#25D366',
         whatsAppButtonBorder: '#25D366',
+        whatsAppButtonText: '#0f1522',
     },
     accent: {
         primary: '#4f46e5',
@@ -43,11 +44,12 @@
     text: {
         primary: '#f3f4f6',
         secondary: '#9ca3af',
-        tertiary: '#6b7280',
+        tertiary: '#8692a6',
         muted: '#8692a6',
         light: '#ffffff',
         dark: '#111827',
         inverse: '#0f1522',
+        dangerButton: '#111827',
     },
 
     border: {
@@ -83,7 +85,7 @@
 
     interactive: {
         focusRing: '#7c78ff',
-        disabledOpacity: 0.5,
+        disabledOpacity: 0.7,
         pressedOpacity: 0.85,
     },
 

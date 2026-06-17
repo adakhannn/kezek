@@ -3,15 +3,14 @@ import { render, screen } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 
 import MainNavigator from '../../navigation/MainNavigator';
+import { useUserRole } from '../../hooks/useUserRole';
 import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../hooks/useUserRole', () => ({
-    useUserRole: () => ({
-        isOwner: true,
-        isStaff: true,
-        isLoading: false,
-    }),
+    useUserRole: jest.fn(),
 }));
+
+const mockedUseUserRole = useUserRole as jest.MockedFunction<typeof useUserRole>;
 
 jest.mock('@react-navigation/bottom-tabs', () => ({
     createBottomTabNavigator: () => {
@@ -54,6 +53,13 @@ describe('MainNavigator', () => {
 
     beforeEach(() => {
         mockNavigatorSpy?.mockClear();
+        mockedUseUserRole.mockReturnValue({
+            isOwner: true,
+            isStaff: true,
+            isSuperAdmin: false,
+            isLoading: false,
+            loadError: null,
+        });
     });
 
     const renderWithProviders = (component: React.ReactElement) => {
@@ -79,5 +85,52 @@ describe('MainNavigator', () => {
                 backBehavior: 'history',
             }),
         );
+    });
+
+    test('hides role-specific tabs for a client-only user', () => {
+        mockedUseUserRole.mockReturnValue({
+            isOwner: false,
+            isStaff: false,
+            isSuperAdmin: false,
+            isLoading: false,
+            loadError: null,
+        });
+
+        renderWithProviders(<MainNavigator />);
+
+        expect(screen.getByText('Home')).toBeTruthy();
+        expect(screen.getByText('Cabinet')).toBeTruthy();
+        expect(screen.queryByText('Dashboard')).toBeNull();
+        expect(screen.queryByText('Staff')).toBeNull();
+    });
+
+    test('shows only the owner tab for an owner-only user', () => {
+        mockedUseUserRole.mockReturnValue({
+            isOwner: true,
+            isStaff: false,
+            isSuperAdmin: false,
+            isLoading: false,
+            loadError: null,
+        });
+
+        renderWithProviders(<MainNavigator />);
+
+        expect(screen.getByText('Dashboard')).toBeTruthy();
+        expect(screen.queryByText('Staff')).toBeNull();
+    });
+
+    test('shows only the staff tab for a staff-only user', () => {
+        mockedUseUserRole.mockReturnValue({
+            isOwner: false,
+            isStaff: true,
+            isSuperAdmin: false,
+            isLoading: false,
+            loadError: null,
+        });
+
+        renderWithProviders(<MainNavigator />);
+
+        expect(screen.queryByText('Dashboard')).toBeNull();
+        expect(screen.getByText('Staff')).toBeTruthy();
     });
 });

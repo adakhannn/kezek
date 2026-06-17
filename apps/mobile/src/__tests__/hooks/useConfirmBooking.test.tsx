@@ -1,9 +1,10 @@
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { apiRequest } from '../../lib/api';
 import { useConfirmBooking } from '../../hooks/useConfirmBooking';
+import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../lib/api', () => ({
     apiRequest: jest.fn(),
@@ -12,12 +13,7 @@ jest.mock('../../lib/api', () => ({
 const mockApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
 
 function createWrapper() {
-    const queryClient = new QueryClient({
-        defaultOptions: {
-            queries: { retry: false },
-            mutations: { retry: false },
-        },
-    });
+    const queryClient = createTestQueryClient();
 
     return function Wrapper({ children }: { children: React.ReactNode }) {
         return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;

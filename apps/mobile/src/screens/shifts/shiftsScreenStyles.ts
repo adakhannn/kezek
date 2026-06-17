@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { colors } from '../../constants/colors';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 
 export const styles = StyleSheet.create({
     container: {
@@ -34,12 +35,14 @@ export const styles = StyleSheet.create({
         gap: 8,
     },
     periodButton: {
+        minHeight: MIN_TOUCH_TARGET,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,
         backgroundColor: colors.surface.elevated,
         borderWidth: 1,
         borderColor: colors.border.light,
+        justifyContent: 'center',
     },
     periodButtonActive: {
         backgroundColor: colors.accent.primary,

@@ -21,17 +21,13 @@ type BusinessWithBranchesResult = {
 };
 
 type UseBookingStep1BusinessParams = {
-    slug: string;
-    setBusiness: (business: Business) => void;
-    setBranches: (branches: Branch[]) => void;
-    setBranchId: (branchId: string) => void;
+    slug?: string;
+    hydrateInitialData: (data: BusinessWithBranchesResult) => void;
 };
 
 export function useBookingStep1Business({
     slug,
-    setBusiness,
-    setBranches,
-    setBranchId,
+    hydrateInitialData,
 }: UseBookingStep1BusinessParams) {
     const { data: businessData, isFetching, isLoading } = useBusinessWithBranches(
         slug,
@@ -43,13 +39,8 @@ export function useBookingStep1Business({
             return;
         }
 
-        setBusiness(currentBusinessData.business);
-        setBranches(currentBusinessData.branches);
-
-        if (currentBusinessData.branches.length === 1) {
-            setBranchId(currentBusinessData.branches[0].id);
-        }
-    }, [currentBusinessData, setBranchId, setBranches, setBusiness]);
+        hydrateInitialData(currentBusinessData);
+    }, [currentBusinessData, hydrateInitialData]);
 
     return {
         businessData: currentBusinessData,

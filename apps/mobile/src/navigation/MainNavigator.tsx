@@ -26,6 +26,7 @@ export default function MainNavigator() {
                     title: 'Главная',
                     headerTitle: createNavigationHeaderTitle('Главная'),
                     tabBarLabel: 'Главная',
+                    tabBarAccessibilityLabel: 'Главная вкладка',
                     tabBarIcon: renderTabIcon('home'),
                 }}
             />
@@ -35,6 +36,7 @@ export default function MainNavigator() {
                 options={{
                     headerShown: false,
                     tabBarLabel: 'Кабинет',
+                    tabBarAccessibilityLabel: 'Кабинет',
                     tabBarIcon: renderTabIcon('person'),
                 }}
             />
@@ -46,6 +48,7 @@ export default function MainNavigator() {
                         title: 'Мой бизнес',
                         headerTitle: createNavigationHeaderTitle('Мой бизнес'),
                         tabBarLabel: 'Бизнес',
+                        tabBarAccessibilityLabel: 'Бизнес',
                         tabBarIcon: renderTabIcon('business'),
                     }}
                 />
@@ -58,6 +61,7 @@ export default function MainNavigator() {
                         title: 'Рабочая зона',
                         headerTitle: createNavigationHeaderTitle('Рабочая зона'),
                         tabBarLabel: 'Работа',
+                        tabBarAccessibilityLabel: 'Работа',
                         tabBarIcon: renderTabIcon('briefcase'),
                     }}
                 />

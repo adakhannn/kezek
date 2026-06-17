@@ -4,6 +4,12 @@ import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
 
 export const authSignInStyles = StyleSheet.create({
+  screenReaderStatus: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    overflow: 'hidden',
+  },
   page: {
     flex: 1,
     backgroundColor: colors.auth.shellBackground,

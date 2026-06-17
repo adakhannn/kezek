@@ -386,6 +386,21 @@ describe('SignInScreen', () => {
         );
     });
 
+    test('ui-level: Google auth status is announced while the external flow opens', async () => {
+        mockOpenAuthSessionAsync.mockImplementationOnce(
+            () => new Promise(() => undefined),
+        );
+
+        render(<SignInScreen />);
+        fireEvent.press(screen.getByText(/Google/i));
+
+        await waitFor(() => {
+            const status = screen.getByText('Открываем вход через Google');
+            expect(status.props.accessibilityLiveRegion).toBe('polite');
+            expect(status.props.accessibilityRole).toBe('text');
+        });
+    });
+
     test('google integration: network retry path restores session via pending exchange', async () => {
         jest.useFakeTimers();
 
@@ -477,6 +492,7 @@ describe('SignInScreen', () => {
         await waitFor(() => {
             const status = screen.getByText('Ожидаем подтверждение');
             expect(status.props.accessibilityLiveRegion).toBe('polite');
+            expect(status.props.accessibilityRole).toBe('text');
         });
     });
 });

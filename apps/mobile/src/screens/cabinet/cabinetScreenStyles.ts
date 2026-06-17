@@ -21,6 +21,10 @@ export const styles = StyleSheet.create({
         justifyContent: 'space-between',
         gap: colors.layout.space4,
     },
+    headerCompact: {
+        flexDirection: 'column',
+        alignItems: 'stretch',
+    },
     headerTextWrap: {
         flex: 1,
     },
@@ -51,6 +55,9 @@ export const styles = StyleSheet.create({
         gap: colors.layout.space4,
         marginBottom: colors.layout.space4,
     },
+    overviewTopRowCompact: {
+        flexDirection: 'column',
+    },
     overviewCopy: {
         flex: 1,
     },
@@ -79,6 +86,9 @@ export const styles = StyleSheet.create({
         borderColor: colors.border.subtle,
         backgroundColor: colors.surface.card,
     },
+    overviewMetaPillCompact: {
+        alignSelf: 'flex-start',
+    },
     overviewMetaText: {
         ...typography.label,
         color: colors.text.secondary,
@@ -86,6 +96,9 @@ export const styles = StyleSheet.create({
     statsRow: {
         flexDirection: 'row',
         gap: colors.layout.space3,
+    },
+    statsRowCompact: {
+        flexWrap: 'wrap',
     },
     statCard: {
         flex: 1,
@@ -95,6 +108,13 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.surface.card,
         borderWidth: 1,
         borderColor: colors.border.subtle,
+    },
+    statCardCompact: {
+        flexBasis: '45%',
+        minWidth: 0,
+    },
+    statCardWide: {
+        flexBasis: '100%',
     },
     statValue: {
         ...typography.sectionTitle,
@@ -222,7 +242,7 @@ export const styles = StyleSheet.create({
     },
     statusText: {
         ...typography.label,
-        color: colors.text.light,
+        color: colors.text.inverse,
     },
     timelineCard: {
         flexDirection: 'row',

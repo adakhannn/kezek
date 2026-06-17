@@ -7,6 +7,9 @@ export const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.surface.page,
     },
+    content: {
+        flexGrow: 1,
+    },
     header: {
         padding: colors.layout.space5,
         backgroundColor: colors.surface.card,

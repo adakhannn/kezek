@@ -1,8 +1,8 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
 import { colors } from '../../constants/colors';
 
-type CardProps = {
+type CardProps = Omit<ViewProps, 'style'> & {
     children: React.ReactNode;
     style?: StyleProp<ViewStyle>;
     variant?: 'elevated' | 'muted' | 'outlined';
@@ -14,9 +14,11 @@ export default function Card({
     style,
     variant = 'elevated',
     padding = 'lg',
+    ...props
 }: CardProps) {
     return (
         <View
+            {...props}
             style={[
                 styles.card,
                 variant === 'muted' && styles.cardMuted,

@@ -60,6 +60,7 @@ type BookingData = {
 
 type BookingContextType = {
     bookingData: BookingData;
+    hydrateInitialData: (data: Pick<BookingData, 'business' | 'branches'>) => void;
     setBusiness: (business: Business) => void;
     setBranches: (branches: Branch[]) => void;
     setServices: (services: Service[]) => void;
@@ -90,6 +91,18 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
 export function BookingProvider({ children }: { children: ReactNode }) {
     const [bookingData, setBookingData] = useState<BookingData>(initialState);
+
+    const hydrateInitialData = useCallback(
+        ({ business, branches }: Pick<BookingData, 'business' | 'branches'>) => {
+            setBookingData({
+                ...initialState,
+                business,
+                branches,
+                branchId: branches.length === 1 ? branches[0].id : '',
+            });
+        },
+        [],
+    );
 
     const setBusiness = useCallback((business: Business) => {
         setBookingData((prev) => ({ ...prev, business }));
@@ -139,6 +152,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         <BookingContext.Provider
             value={{
                 bookingData,
+                hydrateInitialData,
                 setBusiness,
                 setBranches,
                 setServices,

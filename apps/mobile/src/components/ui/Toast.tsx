@@ -18,6 +18,7 @@ export default function Toast({ message, type = 'info', visible, onHide, duratio
 
     useEffect(() => {
         if (visible) {
+            fadeAnim.stopAnimation();
             Animated.timing(fadeAnim, {
                 toValue: 1,
                 duration: motion.durations.base,
@@ -38,7 +39,7 @@ export default function Toast({ message, type = 'info', visible, onHide, duratio
 
             return () => clearTimeout(timer);
         }
-    }, [visible, duration, fadeAnim, onHide]);
+    }, [visible, message, type, duration, fadeAnim, onHide]);
 
     if (!visible) return null;
 

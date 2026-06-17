@@ -10,10 +10,27 @@ type BusinessRow = {
     rating_score: number | null;
 };
 
+type BusinessesQueryLike = {
+    or: (filter: string) => BusinessesQueryLike;
+    contains: (column: string, value: string[]) => BusinessesQueryLike;
+    order: (
+        column: string,
+        options: { ascending: boolean },
+    ) => {
+        range: (
+            from: number,
+            to: number,
+        ) => Promise<{
+            data: unknown[] | null;
+            error: { message: string } | null;
+        }>;
+    };
+};
+
 type BusinessesAnonLike = {
     from: (table: string) => {
         select: (columns: string) => {
-            eq: (column: string, value: boolean) => any;
+            eq: (column: string, value: boolean) => BusinessesQueryLike;
         };
     };
 };
@@ -35,13 +52,21 @@ export async function listMobileBusinesses({
     supabase,
     search,
     category,
+    page = 1,
+    limit = 20,
 }: {
     supabase: BusinessesAnonLike;
     search?: string;
     category?: string;
+    page?: number;
+    limit?: number;
 }): Promise<MobileBusinessesResult> {
     const rawSearch = (search ?? '').trim();
     const rawCategory = (category ?? '').trim();
+    const safePage = Math.max(1, Math.floor(page));
+    const safeLimit = Math.max(1, Math.min(50, Math.floor(limit)));
+    const from = (safePage - 1) * safeLimit;
+    const to = from + safeLimit - 1;
 
     let query = supabase
         .from('businesses')
@@ -58,7 +83,9 @@ export async function listMobileBusinesses({
         query = query.contains('categories', [rawCategory]);
     }
 
-    const { data, error } = await query.order('name', { ascending: true }).limit(50);
+    const { data, error } = await query
+        .order('name', { ascending: true })
+        .range(from, to);
 
     if (error) {
         return {

@@ -103,7 +103,26 @@ function maskSensitiveValue(value: string, showLength = true): string {
  */
 function isSensitiveKey(key: string): boolean {
     const lowerKey = key.toLowerCase();
-    return SENSITIVE_FIELDS.some(field => lowerKey.includes(field.toLowerCase()));
+    return (
+        lowerKey === 'code' ||
+        SENSITIVE_FIELDS.some(field => lowerKey.includes(field.toLowerCase()))
+    );
+}
+
+const SENSITIVE_ASSIGNMENT_RE =
+    /((?:access_token|refresh_token|bearer_token|api[_-]?key|apikey|secret(?:_key)?|password|authorization|anon[_-]?key|exchange_code|exchangecode|nonce|otp|code)=)([^&#\s]+)/gi;
+const BEARER_RE = /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi;
+const JWT_RE = /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g;
+
+function sanitizeString(value: string): string {
+    if (!value) {
+        return value;
+    }
+
+    return value
+        .replace(BEARER_RE, 'Bearer [REDACTED]')
+        .replace(SENSITIVE_ASSIGNMENT_RE, (_match, prefix: string) => `${prefix}[REDACTED]`)
+        .replace(JWT_RE, '[REDACTED_JWT]');
 }
 
 /**
@@ -125,7 +144,7 @@ export function sanitizeObject(obj: unknown, depth = 0): unknown {
     }
     
     if (typeof obj === 'string') {
-        return obj;
+        return sanitizeString(obj);
     }
     
     if (typeof obj === 'number' || typeof obj === 'boolean') {
@@ -186,20 +205,23 @@ export function maskToken(token: string | null | undefined): string {
 export function maskUrl(url: string | URL): string {
     try {
         const urlObj = typeof url === 'string' ? new URL(url) : url;
-        const sanitized = new URL(urlObj.origin + urlObj.pathname);
-        
-        // Копируем только безопасные query параметры
+        const base =
+            urlObj.origin === 'null'
+                ? `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`
+                : `${urlObj.origin}${urlObj.pathname}`;
+        const sanitizedParams = new URLSearchParams();
+
         urlObj.searchParams.forEach((value, key) => {
             if (!isSensitiveKey(key)) {
-                sanitized.searchParams.set(key, value);
+                sanitizedParams.set(key, sanitizeString(value));
             } else {
-                sanitized.searchParams.set(key, maskSensitiveValue(value, false));
+                sanitizedParams.set(key, '[REDACTED]');
             }
         });
-        
-        return sanitized.toString();
+
+        const query = sanitizedParams.toString();
+        return query ? `${base}?${query}` : base;
     } catch {
-        return '[INVALID_URL]';
+        return sanitizeString(String(url));
     }
 }
-

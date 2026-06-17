@@ -5,6 +5,7 @@ import EmptyState from '../components/ui/EmptyState';
 import { useConfirm } from '../contexts/ConfirmContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useToast } from '../contexts/ToastContext';
+import { getErrorMessage } from '../lib/errors';
 import { ShiftQuickSections } from './shiftQuick/ShiftQuickSections';
 import { useShiftQuickScreenData } from './shiftQuick/useShiftQuickScreenData';
 import type { ShiftItem } from './shiftQuick/types';
@@ -128,8 +129,9 @@ export default function ShiftQuickScreen() {
                         showToast(result.queued ? EDIT_CLIENT_QUEUED : EDIT_CLIENT_SUCCESS, result.queued ? 'warning' : 'success');
                     },
                     onError: (mutationError) => {
-                        const message = mutationError instanceof Error ? mutationError.message : EDIT_CLIENT_ERROR;
-                        setAddClientError(message);
+                        setAddClientError(
+                            getErrorMessage(mutationError, `${EDIT_CLIENT_ERROR}. Попробуйте снова.`),
+                        );
                     },
                 },
             );
@@ -147,8 +149,9 @@ export default function ShiftQuickScreen() {
                     );
                 },
                 onError: (mutationError) => {
-                    const message = mutationError instanceof Error ? mutationError.message : ADD_CLIENT_ERROR;
-                    setAddClientError(message);
+                    setAddClientError(
+                        getErrorMessage(mutationError, `${ADD_CLIENT_ERROR}. Попробуйте снова.`),
+                    );
                 },
             },
         );

@@ -130,6 +130,8 @@ export function useBookingStep5Slots(bookingData: BookingDataShape) {
             !!bookingData.staffId &&
             !!bookingData.branchId &&
             !!bookingData.selectedDate,
+        staleTime: 0,
+        refetchOnWindowFocus: true,
     });
 
     useEffect(() => {

@@ -23,11 +23,23 @@ export default function EmptyState({
 }: EmptyStateProps) {
     return (
         <View style={[styles.container, compact && styles.containerCompact, style]}>
-            <View style={[styles.iconWrap, compact && styles.iconWrapCompact]}>
-                <Ionicons name={icon} size={compact ? 28 : 32} color={colors.text.secondary} />
+            <View
+                accessible
+                accessibilityRole="text"
+                accessibilityLabel={[title, message].filter(Boolean).join('. ')}
+                style={styles.summary}
+            >
+                <View
+                    importantForAccessibility="no"
+                    style={[styles.iconWrap, compact && styles.iconWrapCompact]}
+                >
+                    <Ionicons name={icon} size={compact ? 28 : 32} color={colors.text.secondary} />
+                </View>
+                <Text importantForAccessibility="no" style={[styles.title, compact && styles.titleCompact]}>
+                    {title}
+                </Text>
+                {message ? <Text importantForAccessibility="no" style={styles.message}>{message}</Text> : null}
             </View>
-            <Text style={[styles.title, compact && styles.titleCompact]}>{title}</Text>
-            {message ? <Text style={styles.message}>{message}</Text> : null}
             {action ? <View style={styles.action}>{action}</View> : null}
         </View>
     );
@@ -42,6 +54,9 @@ const styles = StyleSheet.create({
     containerCompact: {
         paddingVertical: colors.layout.space6,
         paddingHorizontal: colors.layout.space5,
+    },
+    summary: {
+        alignItems: 'center',
     },
     iconWrap: {
         width: 72,

@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { colors } from '../../constants/colors';
+import { MIN_TOUCH_TARGET } from '../../constants/accessibility';
 import Button from '../../components/ui/Button';
 import BookingProgressIndicator from '../../components/BookingProgressIndicator';
 import EmptyState from '../../components/ui/EmptyState';
@@ -15,6 +16,7 @@ import RatingBadge from '../../components/ui/RatingBadge';
 import { RootStackParamList } from '../../navigation/types';
 import { trackMobileEvent } from '../../lib/analytics';
 import { useBookingStep1Business } from './useBookingStep1Business';
+import type { BookingInitialData } from '../bookingFlow/useBookingScreenData';
 
 type RouteParams = {
     slug: string;
@@ -23,17 +25,21 @@ type RouteParams = {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type BookingStep1RouteProp = NavigationRouteProp<{ params: RouteParams }, 'params'>;
 
-export default function BookingStep1Branch() {
+type BookingStep1BranchProps = {
+    initialData?: BookingInitialData;
+};
+
+export default function BookingStep1Branch({ initialData }: BookingStep1BranchProps) {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<BookingStep1RouteProp>();
     const { slug } = route.params || {};
-    const { bookingData, setBusiness, setBranches, setBranchId } = useBooking();
-    const { businessData, isLoading } = useBookingStep1Business({
-        slug,
-        setBusiness,
-        setBranches,
-        setBranchId,
+    const { bookingData, hydrateInitialData, setBranchId } = useBooking();
+    const preparedData = initialData?.business.slug === slug ? initialData : undefined;
+    const { businessData: fallbackData, isLoading } = useBookingStep1Business({
+        slug: preparedData ? undefined : slug,
+        hydrateInitialData,
     });
+    const businessData = preparedData ?? fallbackData;
 
     const handleSelectBranch = (branchId: string) => {
         setBranchId(branchId);
@@ -207,6 +213,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     chip: {
+        minHeight: MIN_TOUCH_TARGET,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
@@ -215,6 +222,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background.secondary,
     },
     chipSelected: {
+        minHeight: MIN_TOUCH_TARGET,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,

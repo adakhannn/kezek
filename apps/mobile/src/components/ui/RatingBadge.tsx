@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
 
 type RatingBadgeProps = {
-    /** Рейтинг 0–100 или null (не инициализирован). */
+    /** Rating 0-100 or null when it has not been initialized yet. */
     rating: number | null;
     size?: 'small' | 'medium';
 };
@@ -16,8 +16,12 @@ export default function RatingBadge({ rating, size = 'medium' }: RatingBadgeProp
 
     if (isNull) {
         return (
-            <View style={[styles.containerNoRating, { paddingHorizontal: padding, paddingVertical: padding / 2 }]}>
-                <Text style={[styles.ratingNoRating, { fontSize }]}>—</Text>
+            <View
+                style={[styles.containerNoRating, { paddingHorizontal: padding, paddingVertical: padding / 2 }]}
+                accessible={false}
+                importantForAccessibility="no-hide-descendants"
+            >
+                <Text style={[styles.ratingNoRating, { fontSize }]}>-</Text>
             </View>
         );
     }
@@ -30,8 +34,16 @@ export default function RatingBadge({ rating, size = 'medium' }: RatingBadgeProp
                 isLow && styles.containerLow,
                 { paddingHorizontal: padding, paddingVertical: padding / 2 },
             ]}
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
         >
-            <Ionicons name="star" size={iconSize} color={isLow ? '#b45309' : '#f59e0b'} />
+            <Ionicons
+                name="star"
+                size={iconSize}
+                color={isLow ? '#b45309' : '#f59e0b'}
+                accessible={false}
+                importantForAccessibility="no"
+            />
             <Text style={[styles.rating, isLow && styles.ratingLow, { fontSize }]}>{value.toFixed(1)}</Text>
         </View>
     );
@@ -71,4 +83,3 @@ const styles = StyleSheet.create({
         color: '#6b7280',
     },
 });
-

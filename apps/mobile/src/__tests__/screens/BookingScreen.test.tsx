@@ -36,6 +36,7 @@ jest.mock('../../contexts/BookingContext', () => ({
                 slug: 'test-salon',
             },
         },
+        hydrateInitialData: jest.fn(),
         setBusiness: jest.fn(),
         setBranches: jest.fn(),
         setServices: jest.fn(),

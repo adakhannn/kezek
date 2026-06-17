@@ -21,6 +21,8 @@ jest.mock('../../lib/supabase', () => ({
 }));
 
 describe('useRootNavigationSession helpers', () => {
+    let appStateHandler: ((state: 'active' | 'background' | 'inactive') => void) | null;
+
     const mockedSupabase = supabase as unknown as {
         auth: {
             setSession: jest.Mock;
@@ -31,6 +33,7 @@ describe('useRootNavigationSession helpers', () => {
     };
 
     beforeEach(() => {
+        appStateHandler = null;
         mockedSupabase.auth.setSession.mockResolvedValue({ error: null });
         mockedSupabase.auth.exchangeCodeForSession.mockResolvedValue({ error: null });
         mockedSupabase.auth.getSession.mockResolvedValue({
@@ -55,8 +58,10 @@ describe('useRootNavigationSession helpers', () => {
         jest
             .spyOn(AppState, 'addEventListener')
             .mockImplementation(
-                (..._args: Parameters<typeof AppState.addEventListener>) =>
-                    ({ remove: jest.fn() }) as ReturnType<typeof AppState.addEventListener>,
+                (_event, handler) => {
+                    appStateHandler = handler as typeof appStateHandler;
+                    return { remove: jest.fn() } as ReturnType<typeof AppState.addEventListener>;
+                },
             );
     });
 
@@ -213,5 +218,38 @@ describe('useRootNavigationSession helpers', () => {
             access_token: 'cold-access',
             refresh_token: 'cold-refresh',
         });
+    });
+
+    test('syncs the current auth session when the app returns to foreground', async () => {
+        mockedSupabase.auth.getSession
+            .mockResolvedValueOnce({
+                data: { session: null },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    session: {
+                        access_token: 'resume-access',
+                        refresh_token: 'resume-refresh',
+                    },
+                },
+                error: null,
+            });
+
+        const { result } = renderHook(() => useRootNavigationSession());
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+
+        appStateHandler?.('background');
+        expect(mockedSupabase.auth.getSession).toHaveBeenCalledTimes(1);
+
+        appStateHandler?.('active');
+
+        await waitFor(() => {
+            expect(result.current.hasSession).toBe(true);
+        });
+        expect(mockedSupabase.auth.getSession).toHaveBeenCalledTimes(2);
     });
 });

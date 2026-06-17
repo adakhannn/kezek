@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { InteractionManager } from 'react-native';
 
 import { useBooking } from '../../contexts/BookingContext';
 import { supabase } from '../../lib/supabase';
@@ -9,17 +10,28 @@ type Options = {
     slug?: string;
 };
 
+export type BookingInitialData = {
+    business: {
+        id: string;
+        name: string;
+        slug: string;
+        rating_score: number | null;
+    };
+    branches: Array<{
+        id: string;
+        name: string;
+        rating_score: number | null;
+    }>;
+};
+
 export function useBookingScreenData({ slug }: Options) {
     const {
         bookingData,
-        setBusiness,
-        setBranches,
-        setServices,
-        setStaff,
+        hydrateInitialData,
         setPromotions,
-        setBranchId,
         reset,
     } = useBooking();
+    const [canLoadPromotions, setCanLoadPromotions] = useState(false);
     const activeBusinessSlug = bookingData.business?.slug;
 
     useEffect(() => {
@@ -57,61 +69,56 @@ export function useBookingScreenData({ slug }: Options) {
             if (error) throw error;
             if (!biz) throw new Error('Бизнес не найден');
 
-            const [branches, services, staff] = await Promise.all([
-                supabase
-                    .from('branches')
-                    .select('id, name, rating_score')
-                    .eq('biz_id', biz.id)
-                    .eq('is_active', true)
-                    .order('rating_score', { ascending: false, nullsFirst: false })
-                    .order('name'),
-                supabase
-                    .from('services')
-                    .select('id, name_ru, duration_min, price_from, price_to, branch_id')
-                    .eq('biz_id', biz.id)
-                    .eq('active', true)
-                    .order('name_ru'),
-                supabase
-                    .from('staff')
-                    .select('id, full_name, branch_id, rating_score, avatar_url')
-                    .eq('biz_id', biz.id)
-                    .eq('is_active', true)
-                    .order('rating_score', { ascending: false, nullsFirst: false })
-                    .order('full_name'),
-            ]);
+            const branches = await supabase
+                .from('branches')
+                .select('id, name, rating_score')
+                .eq('biz_id', biz.id)
+                .eq('is_active', true)
+                .order('rating_score', { ascending: false, nullsFirst: false })
+                .order('name');
 
-            const branchIds = (branches.data || []).map((branch) => branch.id);
-
-            let promotions: Array<{
-                id: string;
-                branch_id: string;
-                promotion_type: string;
-                title_ru: string | null;
-                params: Record<string, unknown>;
-            }> = [];
-
-            if (branchIds.length > 0) {
-                const { data: promotionsData, error: promotionsError } = await supabase
-                    .from('branch_promotions')
-                    .select('id, branch_id, promotion_type, title_ru, params')
-                    .in('branch_id', branchIds)
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false });
-
-                if (!promotionsError && promotionsData) {
-                    promotions = promotionsData;
-                }
-            }
+            if (branches.error) throw branches.error;
 
             return {
                 business: biz,
                 branches: branches.data || [],
-                services: services.data || [],
-                staff: staff.data || [],
-                promotions,
-            };
+            } satisfies BookingInitialData;
         },
         enabled: !!slug && activeBusinessSlug !== slug,
+    });
+
+    const branchIds = businessQuery.data?.branches.map((branch) => branch.id) ?? [];
+
+    useEffect(() => {
+        setCanLoadPromotions(false);
+
+        if (!businessQuery.data?.business.id) {
+            return;
+        }
+
+        const task = InteractionManager.runAfterInteractions(() => {
+            setCanLoadPromotions(true);
+        });
+
+        return () => task.cancel();
+    }, [businessQuery.data?.business.id]);
+
+    const promotionsQuery = useQuery({
+        queryKey: ['booking-promotions', businessQuery.data?.business.id, branchIds],
+        queryFn: async () => {
+            if (branchIds.length === 0) return [];
+
+            const { data, error } = await supabase
+                .from('branch_promotions')
+                .select('id, branch_id, promotion_type, title_ru, params')
+                .in('branch_id', branchIds)
+                .eq('is_active', true)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        },
+        enabled: canLoadPromotions && branchIds.length > 0,
     });
 
     useEffect(() => {
@@ -123,26 +130,25 @@ export function useBookingScreenData({ slug }: Options) {
     useEffect(() => {
         if (!businessQuery.data) return;
 
-        setBusiness(businessQuery.data.business);
-        setBranches(businessQuery.data.branches);
-        setServices(businessQuery.data.services);
-        setStaff(businessQuery.data.staff);
-        setPromotions(businessQuery.data.promotions);
+        hydrateInitialData(businessQuery.data);
+    }, [businessQuery.data, hydrateInitialData]);
 
-        if (businessQuery.data.branches.length === 1) {
-            setBranchId(businessQuery.data.branches[0].id);
+    useEffect(() => {
+        if (promotionsQuery.data) {
+            setPromotions(promotionsQuery.data);
         }
-    }, [
-        businessQuery.data,
-        setBranchId,
-        setBranches,
-        setBusiness,
-        setPromotions,
-        setServices,
-        setStaff,
-    ]);
+    }, [promotionsQuery.data, setPromotions]);
+
+    const cachedInitialData: BookingInitialData | undefined =
+        bookingData.business && bookingData.business.slug === slug
+            ? {
+                  business: bookingData.business,
+                  branches: bookingData.branches,
+              }
+            : undefined;
 
     return {
         isLoading: businessQuery.isLoading,
+        initialData: businessQuery.data ?? cachedInitialData,
     };
 }

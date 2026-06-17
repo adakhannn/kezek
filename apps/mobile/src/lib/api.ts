@@ -3,8 +3,6 @@ import { getMobileApiUrl } from './apiUrl';
 import { logDebug, logWarn } from './log';
 import { supabase } from './supabase';
 
-const API_URL = getMobileApiUrl();
-
 function normalizeApiEndpoint(endpoint: string): string {
     if (!endpoint) {
         return '/api';
@@ -25,45 +23,49 @@ function normalizeApiEndpoint(endpoint: string): string {
     return `/api${withLeadingSlash}`;
 }
 
-const { apiRequest: sharedApiRequest } = createApiClient({
-    baseUrl: API_URL,
-    getAuthToken: async () => {
-        try {
-            const {
-                data: { session },
-                error: sessionError,
-            } = await supabase.auth.getSession();
+function createMobileApiRequest(apiUrl: string) {
+    return createApiClient({
+        baseUrl: apiUrl,
+        getAuthToken: async () => {
+            try {
+                const {
+                    data: { session },
+                    error: sessionError,
+                } = await supabase.auth.getSession();
 
-            if (sessionError) {
-                logWarn('apiRequest', 'Session error', { message: sessionError.message });
+                if (sessionError) {
+                    logWarn('apiRequest', 'Session error', { message: sessionError.message });
+                }
+
+                const token = session?.access_token || null;
+                if (!token) {
+                    logWarn('apiRequest', 'No access token in session');
+                }
+
+                return token;
+            } catch (error) {
+                logWarn('apiRequest', 'Failed to get session token', error);
+                return null;
             }
-
-            const token = session?.access_token || null;
-            if (!token) {
-                logWarn('apiRequest', 'No access token in session');
-            }
-
-            return token;
-        } catch (error) {
-            logWarn('apiRequest', 'Failed to get session token', error);
-            return null;
-        }
-    },
-    onError: (error) => {
-        logWarn('apiRequest', 'API error', {
-            message: error.message,
-            status: error.status,
-            details: error.details,
-        });
-    },
-});
+        },
+        onError: (error) => {
+            logWarn('apiRequest', 'API error', {
+                message: error.message,
+                status: error.status,
+                details: error.details,
+            });
+        },
+    }).apiRequest;
+}
 
 export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const apiUrl = getMobileApiUrl();
+    const sharedApiRequest = createMobileApiRequest(apiUrl);
     const normalizedEndpoint = normalizeApiEndpoint(endpoint);
     const fullUrl =
         /^https?:\/\//i.test(normalizedEndpoint)
             ? normalizedEndpoint
-            : `${API_URL}${normalizedEndpoint}`;
+            : `${apiUrl}${normalizedEndpoint}`;
 
     try {
         const response = await sharedApiRequest<T>(normalizedEndpoint, options);

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useToast } from '../../contexts/ToastContext';
 import { apiRequest } from '../../lib/api';
+import { getErrorMessage } from '../../lib/errors';
 import { logError } from '../../lib/log';
 import { buildTimelineSteps, type BookingDetails } from './types';
 
@@ -62,7 +63,10 @@ export function useBookingDetailsData({ bookingId, onCancelled }: Options) {
             onCancelled?.();
         },
         onError: (error: Error) => {
-            showToast(error.message, 'error');
+            showToast(
+                getErrorMessage(error, 'Не удалось отменить запись. Попробуйте снова.'),
+                'error',
+            );
         },
     });
 

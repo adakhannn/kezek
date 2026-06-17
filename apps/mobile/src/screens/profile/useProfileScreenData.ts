@@ -3,11 +3,28 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useToast } from '../../contexts/ToastContext';
-import { apiRequest } from '../../lib/api';
+import { getErrorMessage } from '../../lib/errors';
+import { TimeoutError } from '../../lib/fetchWithTimeout';
+import { signOutSafely } from '../../lib/signOut';
 import { supabase } from '../../lib/supabase';
 import type { Profile } from './types';
 
 const PHONE_PATTERN = /^\+?[0-9\s()-]{7,20}$/;
+const PROFILE_QUERY_TIMEOUT_MS = 10000;
+
+function withProfileTimeout<T>(operation: PromiseLike<T>, message: string): Promise<T> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new TimeoutError(message)), PROFILE_QUERY_TIMEOUT_MS);
+    });
+
+    return Promise.race([Promise.resolve(operation), timeout]).finally(() => {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+    });
+}
 
 export function useProfileScreenData() {
     const queryClient = useQueryClient();
@@ -25,7 +42,10 @@ export function useProfileScreenData() {
             const {
                 data: { user },
                 error,
-            } = await supabase.auth.getUser();
+            } = await withProfileTimeout(
+                supabase.auth.getUser(),
+                'Profile user request timed out',
+            );
             if (error) throw error;
             return user;
         },
@@ -36,11 +56,14 @@ export function useProfileScreenData() {
         queryFn: async () => {
             if (!userQuery.data?.id) return null;
 
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('id, full_name, phone, notify_email, notify_whatsapp')
-                .eq('id', userQuery.data.id)
-                .maybeSingle();
+            const { data, error } = await withProfileTimeout(
+                supabase
+                    .from('profiles')
+                    .select('id, full_name, phone, notify_email, notify_whatsapp')
+                    .eq('id', userQuery.data.id)
+                    .maybeSingle(),
+                'Profile data request timed out',
+            );
 
             if (error) throw error;
 
@@ -73,22 +96,61 @@ export function useProfileScreenData() {
 
     const updateProfileMutation = useMutation({
         mutationFn: async () => {
-            return apiRequest('/profile/update', {
-                method: 'POST',
-                body: JSON.stringify({
+            if (!userQuery.data?.id) {
+                throw new Error('Profile user is not loaded');
+            }
+
+            const { error } = await withProfileTimeout(
+                supabase.from('profiles').upsert(
+                    {
+                        id: userQuery.data.id,
+                        full_name: fullName.trim() || null,
+                        phone: phone.trim() || null,
+                        notify_email: notifyEmail,
+                        notify_whatsapp: notifyWhatsApp,
+                    },
+                    { onConflict: 'id' },
+                ),
+                'Profile update request timed out',
+            );
+
+            if (error) {
+                throw error;
+            }
+
+            const { error: metadataError } = await withProfileTimeout(
+                supabase.auth.updateUser({
+                    data: {
+                        ...(userQuery.data.user_metadata ?? {}),
+                        full_name: fullName.trim() || null,
+                    },
+                }),
+                'Profile metadata update request timed out',
+            );
+
+            if (metadataError) {
+                throw metadataError;
+            }
+
+            return {
+                ok: true,
+                data: {
                     full_name: fullName.trim() || null,
                     phone: phone.trim() || null,
                     notify_email: notifyEmail,
                     notify_whatsapp: notifyWhatsApp,
-                }),
-            });
+                },
+            };
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['profile', userQuery.data?.id] });
             showToast('Профиль обновлен', 'success');
         },
         onError: (error: Error) => {
-            showToast(error.message || 'Не удалось обновить профиль', 'error');
+            showToast(
+                getErrorMessage(error, 'Не удалось обновить профиль. Попробуйте снова.'),
+                'error',
+            );
         },
     });
 
@@ -122,16 +184,14 @@ export function useProfileScreenData() {
 
         try {
             setIsSigningOut(true);
-            const { error } = await supabase.auth.signOut();
-            if (error) {
-                throw error;
-            }
+            await signOutSafely();
 
             showToast('Вы вышли из аккаунта', 'success');
         } catch (error: unknown) {
-            const message =
-                error instanceof Error ? error.message : 'Не удалось выйти из аккаунта';
-            showToast(message, 'error');
+            showToast(
+                getErrorMessage(error, 'Не удалось выйти из аккаунта. Попробуйте снова.'),
+                'error',
+            );
         } finally {
             setIsSigningOut(false);
         }

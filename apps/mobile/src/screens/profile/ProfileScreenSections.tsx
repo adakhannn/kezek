@@ -1,4 +1,13 @@
-import { ScrollView, Switch, Text, View } from 'react-native';
+import { useRef } from 'react';
+import {
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    View,
+} from 'react-native';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -37,8 +46,21 @@ export function ProfileScreenSections({
     isSaving,
     isSigningOut,
 }: Props) {
+    const phoneInputRef = useRef<TextInput>(null);
+
     return (
-        <ScrollView style={styles.container} testID="profile-screen">
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.content}
+            testID="profile-screen"
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets
+        >
             <View style={styles.header}>
                 <Text style={styles.title}>Профиль</Text>
             </View>
@@ -51,14 +73,20 @@ export function ProfileScreenSections({
                     placeholder="Введите ваше имя"
                     value={fullName}
                     onChangeText={onFullNameChange}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => phoneInputRef.current?.focus()}
                 />
 
                 <Input
+                    ref={phoneInputRef}
                     label="Телефон"
-                    placeholder="+996500574029"
+                    placeholder="+996 XXX XX XX XX"
                     value={phone}
                     onChangeText={onPhoneChange}
                     keyboardType="phone-pad"
+                    returnKeyType="done"
+                    onSubmitEditing={onSave}
                 />
 
                 {email ? (
@@ -117,5 +145,6 @@ export function ProfileScreenSections({
                 />
             </View>
         </ScrollView>
+        </KeyboardAvoidingView>
     );
 }

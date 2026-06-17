@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState, type AppStateStatus, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+    AppState,
+    type AppStateStatus,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as SecureStore from 'expo-secure-store';
@@ -9,15 +18,18 @@ import Input from '../../components/ui/Input';
 import { colors } from '../../constants/colors';
 import { useToast } from '../../contexts/ToastContext';
 import { getMobileApiUrl } from '../../lib/apiUrl';
+import { WHATSAPP_ACTIVE_ATTEMPT_KEY } from '../../lib/authStorageKeys';
 import { AUTH_TIMEOUT_MESSAGE, fetchWithTimeout, isTimeoutError } from '../../lib/fetchWithTimeout';
+import { getErrorMessage } from '../../lib/errors';
+import {
+    getStableIdempotencyKey,
+    type StableIdempotencyEntry,
+} from '../../lib/idempotency';
 import { logDebug } from '../../lib/log';
 import { AuthStackParamList } from '../../navigation/types';
 import { exchangeViaMobileApi } from '../../navigation/useRootNavigationSession';
 import { getValidationError, normalizePhone } from '../../utils/validation';
 
-const API_URL = getMobileApiUrl();
-
-const WHATSAPP_ACTIVE_ATTEMPT_KEY = 'whatsapp_mobile_active_attempt_v1';
 const RESEND_COOLDOWN_SEC = 60;
 
 type WhatsAppScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'WhatsApp'>;
@@ -65,11 +77,7 @@ function mapWhatsAppAuthError(error: unknown): string {
     }
     if (message.includes('send')) return WHATSAPP_COPY.sendCodeFailed;
 
-    return error.message || WHATSAPP_COPY.signInFailed;
-}
-
-function buildIdempotencyKey(prefix: string) {
-    return `${prefix}:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
+    return getErrorMessage(error, WHATSAPP_COPY.signInFailed);
 }
 
 function parseApiError(payload: unknown, fallback: string) {
@@ -88,6 +96,7 @@ function secondsUntil(timestampMs: number) {
 export default function WhatsAppScreen() {
     const navigation = useNavigation<WhatsAppScreenNavigationProp>();
     const { showToast } = useToast();
+    const apiUrl = getMobileApiUrl();
 
     const [step, setStep] = useState<WhatsAppStep>('phone');
     const [phone, setPhone] = useState('');
@@ -100,6 +109,8 @@ export default function WhatsAppScreen() {
     const [otpError, setOtpError] = useState<string | null>(null);
 
     const activeAttemptRef = useRef<WhatsAppActiveAttempt | null>(null);
+    const sendIdempotencyRef = useRef<StableIdempotencyEntry | null>(null);
+    const verifyIdempotencyRef = useRef<StableIdempotencyEntry | null>(null);
 
     const persistActiveAttempt = async (attempt: WhatsAppActiveAttempt) => {
         activeAttemptRef.current = attempt;
@@ -184,7 +195,6 @@ export default function WhatsAppScreen() {
         if (phoneValidationError) {
             showToast(phoneValidationError, 'error');
             setPhoneError(phoneValidationError);
-            setErrorText(phoneValidationError);
             return;
         }
 
@@ -192,11 +202,17 @@ export default function WhatsAppScreen() {
         setSending(true);
         try {
             const normalizedPhone = normalizePhone(phone);
-            const response = await fetchWithTimeout(`${API_URL}/api/auth/whatsapp/mobile/start`, {
+            const idempotency = getStableIdempotencyKey(
+                sendIdempotencyRef.current,
+                normalizedPhone,
+                'wa-start',
+            );
+            sendIdempotencyRef.current = idempotency;
+            const response = await fetchWithTimeout(`${apiUrl}/api/auth/whatsapp/mobile/start`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-idempotency-key': buildIdempotencyKey('wa-start'),
+                    'x-idempotency-key': idempotency.key,
                     'x-client-timestamp': String(Date.now()),
                 },
                 body: JSON.stringify({ phone: normalizedPhone }),
@@ -221,6 +237,7 @@ export default function WhatsAppScreen() {
             };
 
             await persistActiveAttempt(attempt);
+            sendIdempotencyRef.current = null;
 
             setStep('otp');
             setOtp('');
@@ -241,7 +258,6 @@ export default function WhatsAppScreen() {
 
         if (otp.length !== 6) {
             showToast(WHATSAPP_COPY.invalidCode, 'error');
-            setErrorText(WHATSAPP_COPY.invalidCode);
             setOtpError(WHATSAPP_COPY.invalidCode);
             return;
         }
@@ -257,11 +273,17 @@ export default function WhatsAppScreen() {
 
         setVerifying(true);
         try {
-            const response = await fetchWithTimeout(`${API_URL}/api/auth/whatsapp/mobile/verify`, {
+            const idempotency = getStableIdempotencyKey(
+                verifyIdempotencyRef.current,
+                `${activeAttempt.attemptId}:${otp}`,
+                'wa-verify',
+            );
+            verifyIdempotencyRef.current = idempotency;
+            const response = await fetchWithTimeout(`${apiUrl}/api/auth/whatsapp/mobile/verify`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-idempotency-key': buildIdempotencyKey('wa-verify'),
+                    'x-idempotency-key': idempotency.key,
                     'x-client-timestamp': String(Date.now()),
                 },
                 body: JSON.stringify({
@@ -285,8 +307,9 @@ export default function WhatsAppScreen() {
                 attemptId: activeAttempt.attemptId,
             });
 
-            await exchangeViaMobileApi(data.exchangeCode, API_URL);
+            await exchangeViaMobileApi(data.exchangeCode, apiUrl);
             await clearActiveAttempt();
+            verifyIdempotencyRef.current = null;
             showToast(WHATSAPP_COPY.signInSuccess, 'success');
         } catch (error: unknown) {
             const mapped = mapWhatsAppAuthError(error);
@@ -303,7 +326,17 @@ export default function WhatsAppScreen() {
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets
+        >
             <Text style={styles.title}>{WHATSAPP_COPY.title}</Text>
             <Text style={styles.subtitle}>{step === 'phone' ? WHATSAPP_COPY.phoneStepSubtitle : WHATSAPP_COPY.otpStepSubtitle}</Text>
 
@@ -311,10 +344,11 @@ export default function WhatsAppScreen() {
                 <>
                     <Input
                         label="Номер телефона"
-                        placeholder="+996500574029"
+                        placeholder="+996 XXX XX XX XX"
                         value={phone}
                         onChangeText={(value) => {
                             setPhone(value);
+                            sendIdempotencyRef.current = null;
                             if (phoneError) setPhoneError(null);
                             if (errorText) setErrorText(null);
                         }}
@@ -323,6 +357,12 @@ export default function WhatsAppScreen() {
                         helperText="Формат: +996XXXXXXXXX"
                         accessibilityHint="Введите номер телефона в международном формате."
                         containerStyle={styles.field}
+                        returnKeyType="done"
+                        onSubmitEditing={() => {
+                            if (!sending) {
+                                void handleSendOtp();
+                            }
+                        }}
                     />
                     <Button
                         title={sending ? 'Отправка...' : 'Отправить код'}
@@ -337,10 +377,12 @@ export default function WhatsAppScreen() {
                 <>
                     <View style={styles.otpContainer}>
                         <Input
+                            accessibilityLabel="Код из WhatsApp"
                             placeholder="000000"
                             value={otp}
                             onChangeText={(text) => {
                                 setOtp(text.replace(/\D/g, '').slice(0, 6));
+                                verifyIdempotencyRef.current = null;
                                 if (otpError) setOtpError(null);
                                 if (errorText) setErrorText(null);
                             }}
@@ -353,6 +395,12 @@ export default function WhatsAppScreen() {
                             containerStyle={styles.field}
                             style={styles.otpInput}
                             inputContainerStyle={styles.otpInputContainer}
+                            returnKeyType="done"
+                            onSubmitEditing={() => {
+                                if (otp.length === 6 && !sending && !verifying) {
+                                    void handleVerifyOtp();
+                                }
+                            }}
                         />
                         <Text accessibilityLiveRegion="polite" style={styles.otpHint}>
                             {WHATSAPP_COPY.codeHint} {phone}
@@ -367,6 +415,7 @@ export default function WhatsAppScreen() {
                                 setOtp('');
                                 setCountdown(0);
                                 setOtpError(null);
+                                verifyIdempotencyRef.current = null;
                                 void clearActiveAttempt();
                             }}
                             variant="ghost"
@@ -398,7 +447,11 @@ export default function WhatsAppScreen() {
             )}
 
             {errorText ? (
-                <Text accessibilityLiveRegion="assertive" style={styles.errorText}>
+                <Text
+                    accessibilityLiveRegion="assertive"
+                    accessibilityRole="alert"
+                    style={styles.errorText}
+                >
                     {errorText}
                 </Text>
             ) : null}
@@ -413,6 +466,7 @@ export default function WhatsAppScreen() {
                 fullWidth
             />
         </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -422,7 +476,9 @@ const styles = StyleSheet.create({
         backgroundColor: colors.surface.page,
     },
     content: {
+        flexGrow: 1,
         padding: colors.layout.space5,
+        paddingBottom: colors.layout.space8,
     },
     title: {
         fontSize: 28,

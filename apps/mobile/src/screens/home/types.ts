@@ -29,3 +29,22 @@ export type RecentPlace = {
     slug: string;
     name: string;
 };
+
+export type NearbyBranch = {
+    id: string;
+    businessId: string;
+    businessName: string;
+    businessSlug: string | null;
+    branchName: string;
+    address: string | null;
+    distanceKm: number;
+};
+
+export type NearbyStatus =
+    | 'idle'
+    | 'locating'
+    | 'loading'
+    | 'ready'
+    | 'denied'
+    | 'unavailable'
+    | 'error';

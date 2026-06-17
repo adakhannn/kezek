@@ -3,7 +3,9 @@ import { Linking, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
+import { TELEGRAM_ACTIVE_FLOW_STORAGE_KEY } from '../../../lib/authStorageKeys';
 import { AUTH_TIMEOUT_MESSAGE, fetchWithTimeout, isTimeoutError } from '../../../lib/fetchWithTimeout';
+import { getErrorMessage } from '../../../lib/errors';
 import { logError, logWarn } from '../../../lib/log';
 import { exchangeViaMobileApi } from '../../../navigation/useRootNavigationSession';
 import { TELEGRAM_DEEPLINK_AUTH_ENABLED } from './authFeatureFlags';
@@ -11,7 +13,6 @@ import { type AuthUiState, transitionAuthUiState } from './authUiState';
 
 const TELEGRAM_POLL_INTERVAL_MS = 2500;
 const TELEGRAM_POLL_TIMEOUT_MS = 3 * 60 * 1000;
-const TELEGRAM_ACTIVE_FLOW_STORAGE_KEY = 'telegram_mobile_active_login_v1';
 const TELEGRAM_WEB_WIDGET_FALLBACK_REDIRECT =
     '/auth/callback-mobile?redirect=kezek://auth/callback';
 
@@ -80,7 +81,7 @@ function mapTelegramError(error: unknown): string {
     if (isTimeoutError(error)) {
         return AUTH_TIMEOUT_MESSAGE;
     }
-    return error instanceof Error ? error.message : 'Не удалось завершить вход через Telegram';
+    return getErrorMessage(error, 'Не удалось завершить вход через Telegram. Попробуйте снова.');
 }
 
 export function useTelegramSignInFlow({
@@ -329,8 +330,10 @@ export function useTelegramSignInFlow({
         try {
             await openTelegramLink(telegramDeepLink);
         } catch (error: unknown) {
-            const message =
-                error instanceof Error ? error.message : 'Не удалось открыть Telegram';
+            const message = getErrorMessage(
+                error,
+                'Не удалось открыть Telegram. Проверьте, что приложение установлено.',
+            );
             showToast(message, 'error');
         }
     };

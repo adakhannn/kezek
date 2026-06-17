@@ -24,7 +24,9 @@ export function DashboardScreenSections({
         <ScrollView
             style={styles.container}
             testID="dashboard-screen"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+            }
         >
             <View style={styles.header}>
                 <Text style={styles.title}>Кабинет бизнеса</Text>
@@ -47,12 +49,12 @@ export function DashboardScreenSections({
                                 {business.address ? (
                                     <Text style={styles.businessAddress}>{business.address}</Text>
                                 ) : null}
-                                {business.phones && business.phones.length > 0 ? (
+                                {business.phones?.length ? (
                                     <Text style={styles.businessPhone}>{business.phones[0]}</Text>
                                 ) : null}
                                 <View style={styles.businessActions}>
                                     <Button
-                                        title="Управление"
+                                        title="Открыть веб-кабинет"
                                         onPress={() => onBusinessPress(business.id)}
                                         variant="outline"
                                         fullWidth

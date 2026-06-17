@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import CabinetScreen from '../../screens/CabinetScreen';
 import { apiRequest } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import { shouldStackCabinetHeader } from '../../screens/cabinet/CabinetScreenSections';
 import { createTestQueryClient } from '../testQueryClient';
 
 jest.mock('../../lib/api', () => ({
@@ -62,6 +63,31 @@ describe('CabinetScreen', () => {
         expect(await screen.findByText('test@example.com')).toBeTruthy();
     });
 
+    test('stacks the hero through the 412dp mobile profile', () => {
+        expect(shouldStackCabinetHeader(360)).toBe(true);
+        expect(shouldStackCabinetHeader(412)).toBe(true);
+        expect(shouldStackCabinetHeader(421)).toBe(false);
+    });
+
+    test('exposes localized semantic labels for booking tabs', async () => {
+        renderWithProviders(<CabinetScreen />);
+
+        expect(await screen.findByRole('tab', { name: 'Предстоящие записи' })).toBeTruthy();
+        expect(await screen.findByRole('tab', { name: 'История записей' })).toBeTruthy();
+    });
+
+    test('offers sign-out recovery when the session user is unavailable', async () => {
+        mockedSupabase.auth.getUser.mockResolvedValueOnce({
+            data: { user: null },
+            error: new Error('network unavailable'),
+        });
+
+        renderWithProviders(<CabinetScreen />);
+
+        expect(await screen.findByText('Пользователь не найден')).toBeTruthy();
+        expect(await screen.findByText('Выйти и войти снова')).toBeTruthy();
+    });
+
     test('renders empty upcoming bookings state', async () => {
         renderWithProviders(<CabinetScreen />);
 
@@ -75,8 +101,8 @@ describe('CabinetScreen', () => {
             data: [
                 {
                     id: 'booking-1',
-                    start_at: '2026-06-02T14:00:00Z',
-                    end_at: '2026-06-02T14:30:00Z',
+                    start_at: '2026-12-02T14:00:00Z',
+                    end_at: '2026-12-02T14:30:00Z',
                     status: 'confirmed',
                     service: {
                         name_ru: 'Adult Cut',

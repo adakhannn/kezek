@@ -3,8 +3,9 @@
 export type RootStackParamList = {
     Auth: undefined;
     Main: NavigatorScreenParams<MainTabParamList>;
+    Map: undefined;
     BookingDetails: { id: string };
-    Booking: { slug: string };
+    Booking: { slug: string; previewName?: string };
     BookingStep1Branch: { slug: string };
     BookingStep2Service: undefined;
     BookingStep3Staff: undefined;

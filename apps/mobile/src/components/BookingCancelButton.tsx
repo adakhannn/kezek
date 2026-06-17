@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '../constants/colors';
+import { MIN_TOUCH_TARGET } from '../constants/accessibility';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useBooking } from '../contexts/BookingContext';
 import { RootStackParamList } from '../navigation/types';
@@ -35,7 +36,12 @@ export default function BookingCancelButton() {
     };
 
     return (
-        <MotionPressable style={styles.button} onPress={handleCancel}>
+        <MotionPressable
+            style={styles.button}
+            onPress={handleCancel}
+            accessibilityLabel="Закрыть бронирование"
+            accessibilityHint="Открывает подтверждение отмены бронирования"
+        >
             <Ionicons name="close" size={24} color={colors.text.primary} />
         </MotionPressable>
     );
@@ -43,9 +49,12 @@ export default function BookingCancelButton() {
 
 const styles = StyleSheet.create({
     button: {
-        padding: 8,
+        minWidth: MIN_TOUCH_TARGET,
+        minHeight: MIN_TOUCH_TARGET,
         marginRight: 8,
         borderRadius: colors.layout.radiusSm,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
 

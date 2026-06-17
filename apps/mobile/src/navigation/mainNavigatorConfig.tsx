@@ -114,11 +114,17 @@ export function createFlowScreenOptions(
 
 export function renderTabIcon(name: React.ComponentProps<typeof Ionicons>['name']) {
     return ({ color, focused }: { color: string; size: number; focused: boolean }) => (
-        <View style={[styles.tabIconWrap, focused ? styles.tabIconWrapActive : null]}>
+        <View
+            style={[styles.tabIconWrap, focused ? styles.tabIconWrapActive : null]}
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+        >
             <Ionicons
                 name={name}
                 size={focused ? 20 : 19}
                 color={focused ? colors.text.light : color}
+                accessible={false}
+                importantForAccessibility="no"
             />
         </View>
     );

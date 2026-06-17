@@ -4,4 +4,9 @@ export {
     RecentPlacesSection,
     UpcomingBookingsSection,
 } from './BookingActivitySections';
-export { BusinessListSection, CategoriesSection } from './DiscoverySections';
+export {
+    BusinessCard,
+    BusinessListSection,
+    CategoriesSection,
+    NearbySection,
+} from './DiscoverySections';

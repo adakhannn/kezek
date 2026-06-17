@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -11,6 +11,12 @@ import { formatDate, formatTime } from '../../utils/format';
 import { getStatusColor, getStatusText } from '../../utils/i18n';
 import { styles } from './cabinetScreenStyles';
 import type { Booking } from './types';
+
+export const CABINET_STACKED_HEADER_MAX_WIDTH = 420;
+
+export function shouldStackCabinetHeader(width: number) {
+    return width <= CABINET_STACKED_HEADER_MAX_WIDTH;
+}
 
 type Props = {
     userLabel: string;
@@ -45,6 +51,10 @@ export function CabinetScreenSections({
     onSignOut,
     isSigningOut,
 }: Props) {
+    const { width } = useWindowDimensions();
+    const isCompact = width <= 380;
+    const usesStackedHeader = shouldStackCabinetHeader(width);
+    const usesStackedStats = width <= 420;
     const isHistory = activeTab === 'history';
     const visibleBookings = isHistory ? pastBookings : upcomingBookings;
     const featuredBooking = upcomingBookings[0] ?? null;
@@ -58,23 +68,26 @@ export function CabinetScreenSections({
             testID="cabinet-screen"
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.accent.primary} />}
         >
-            <View style={styles.header}>
+            <View style={[styles.header, usesStackedHeader && styles.headerCompact]}>
                 <View style={styles.headerTextWrap}>
                     <Text style={styles.eyebrow}>Кабинет клиента</Text>
                     <Text style={styles.title}>Ваши записи и профиль</Text>
-                    <Text style={styles.subtitle}>{userLabel}</Text>
+                    <Text style={styles.subtitle} numberOfLines={2} ellipsizeMode="middle">
+                        {userLabel}
+                    </Text>
                 </View>
                 <Button
                     title="Профиль"
                     onPress={onProfilePress}
                     variant="secondary"
                     size="sm"
+                    fullWidth={usesStackedHeader}
                     leadingIcon={<Ionicons name="person-circle-outline" size={16} color={colors.text.primary} />}
                 />
             </View>
 
             <Card style={styles.overviewCard}>
-                <View style={styles.overviewTopRow}>
+                <View style={[styles.overviewTopRow, isCompact && styles.overviewTopRowCompact]}>
                     <View style={styles.overviewCopy}>
                         <Text style={styles.overviewLabel}>Ближайший фокус</Text>
                         <Text style={styles.overviewTitle}>
@@ -86,7 +99,7 @@ export function CabinetScreenSections({
                                 : 'Когда появится новая запись, здесь будет быстрый ориентир по следующему визиту.'}
                         </Text>
                     </View>
-                    <View style={styles.overviewMetaPill}>
+                    <View style={[styles.overviewMetaPill, isCompact && styles.overviewMetaPillCompact]}>
                         <Ionicons name="sync-outline" size={14} color={colors.text.secondary} />
                         <Text style={styles.overviewMetaText}>
                             {hasBookingsError ? 'Ошибка' : isOfflineData ? 'Оффлайн' : 'Актуально'}
@@ -94,16 +107,22 @@ export function CabinetScreenSections({
                     </View>
                 </View>
 
-                <View style={styles.statsRow}>
-                    <View style={styles.statCard}>
+                <View style={[styles.statsRow, usesStackedStats && styles.statsRowCompact]}>
+                    <View style={[styles.statCard, usesStackedStats && styles.statCardCompact]}>
                         <Text style={styles.statValue}>{upcomingBookings.length}</Text>
                         <Text style={styles.statLabel}>Предстоящие</Text>
                     </View>
-                    <View style={styles.statCard}>
+                    <View style={[styles.statCard, usesStackedStats && styles.statCardCompact]}>
                         <Text style={styles.statValue}>{pastBookings.length}</Text>
                         <Text style={styles.statLabel}>История</Text>
                     </View>
-                    <View style={styles.statCard}>
+                    <View
+                        style={[
+                            styles.statCard,
+                            usesStackedStats && styles.statCardCompact,
+                            usesStackedStats && styles.statCardWide,
+                        ]}
+                    >
                         <Text style={styles.statValue}>{dataModeLabel}</Text>
                         <Text style={styles.statLabel}>Режим данных</Text>
                     </View>
@@ -156,7 +175,7 @@ export function CabinetScreenSections({
                     scale="subtle"
                     accessibilityRole="tab"
                     accessibilityState={{ selected: activeTab === 'upcoming' }}
-                    accessibilityLabel="Upcoming bookings"
+                    accessibilityLabel="Предстоящие записи"
                 >
                     <Text style={[styles.tabLabel, activeTab === 'upcoming' && styles.tabLabelActive]}>Предстоящие</Text>
                     <Text style={[styles.tabCount, activeTab === 'upcoming' && styles.tabCountActive]}>{upcomingBookings.length}</Text>
@@ -167,7 +186,7 @@ export function CabinetScreenSections({
                     scale="subtle"
                     accessibilityRole="tab"
                     accessibilityState={{ selected: activeTab === 'history' }}
-                    accessibilityLabel="Booking history"
+                    accessibilityLabel="История записей"
                 >
                     <Text style={[styles.tabLabel, activeTab === 'history' && styles.tabLabelActive]}>История</Text>
                     <Text style={[styles.tabCount, activeTab === 'history' && styles.tabCountActive]}>{pastBookings.length}</Text>
@@ -191,8 +210,8 @@ export function CabinetScreenSections({
                             onPress={() => onBookingPress(booking.id)}
                             style={styles.bookingPressable}
                             scale="firm"
-                            accessibilityLabel={`${booking.service?.name_ru || 'Service'}, ${formatDate(booking.start_at)} ${formatTime(booking.start_at)}`}
-                            accessibilityHint="Opens booking details"
+                            accessibilityLabel={`${booking.service?.name_ru || 'Услуга'}, ${formatDate(booking.start_at)} ${formatTime(booking.start_at)}`}
+                            accessibilityHint="Открывает детали записи"
                         >
                             <BookingCard booking={booking} isHistory={isHistory} />
                         </MotionPressable>

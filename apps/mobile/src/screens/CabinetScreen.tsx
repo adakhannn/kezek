@@ -3,9 +3,10 @@ import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { supabase } from '../lib/supabase';
+import { signOutSafely } from '../lib/signOut';
 import type { CabinetStackParamList, RootStackParamList } from '../navigation/types';
 import { CabinetScreenSections } from './cabinet/CabinetScreenSections';
 import { useCabinetScreenData } from './cabinet/useCabinetScreenData';
@@ -33,14 +34,6 @@ export default function CabinetScreen() {
         onRefresh,
     } = useCabinetScreenData();
 
-    if (isLoading && !bookings) {
-        return <LoadingSpinner message="Загрузка кабинета..." />;
-    }
-
-    if (!user) {
-        return <EmptyState title="Пользователь не найден" message="Попробуйте обновить экран или войти снова." />;
-    }
-
     const handleSignOut = () => {
         Alert.alert('Выход из аккаунта', 'Вы уверены, что хотите выйти?', [
             { text: 'Отмена', style: 'cancel' },
@@ -50,7 +43,7 @@ export default function CabinetScreen() {
                 onPress: async () => {
                     setIsSigningOut(true);
                     try {
-                        await supabase.auth.signOut();
+                        await signOutSafely();
                     } finally {
                         setIsSigningOut(false);
                     }
@@ -58,6 +51,28 @@ export default function CabinetScreen() {
             },
         ]);
     };
+
+    if (isLoading && !bookings) {
+        return <LoadingSpinner message="Загрузка кабинета..." />;
+    }
+
+    if (!user) {
+        return (
+            <EmptyState
+                title="Пользователь не найден"
+                message="Сессия могла устареть. Выйдите и авторизуйтесь снова."
+                action={
+                    <Button
+                        title={isSigningOut ? 'Выходим...' : 'Выйти и войти снова'}
+                        onPress={handleSignOut}
+                        variant="danger"
+                        loading={isSigningOut}
+                        fullWidth
+                    />
+                }
+            />
+        );
+    }
 
     return (
         <CabinetScreenSections

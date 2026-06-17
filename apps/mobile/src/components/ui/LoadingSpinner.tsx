@@ -8,11 +8,18 @@ type LoadingSpinnerProps = {
 
 export default function LoadingSpinner({ message, size = 'large' }: LoadingSpinnerProps) {
     return (
-        <View style={styles.container}>
+        <View
+            style={styles.container}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={message || 'Загрузка'}
+            accessibilityLiveRegion="polite"
+            accessibilityState={{ busy: true }}
+        >
             <View style={styles.indicatorWrap}>
                 <ActivityIndicator size={size} color={colors.accent.primary} />
             </View>
-            {message ? <Text style={styles.message}>{message}</Text> : null}
+            {message ? <Text style={styles.message} importantForAccessibility="no">{message}</Text> : null}
         </View>
     );
 }

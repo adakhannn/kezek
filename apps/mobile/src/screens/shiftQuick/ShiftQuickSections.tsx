@@ -1,4 +1,13 @@
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useRef } from 'react';
+import {
+    KeyboardAvoidingView,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import Button from '../../components/ui/Button';
@@ -85,11 +94,32 @@ export function ShiftQuickSections({
     const isOpen = shift?.status === 'open';
     const shiftMeta = getShiftStatusMeta(isOpen, !!shift);
     const isEditingClient = addClientForm.editingItemIndex != null;
+    const scrollRef = useRef<ScrollView>(null);
+    const serviceInputRef = useRef<TextInput>(null);
+    const amountInputRef = useRef<TextInput>(null);
+    const consumablesInputRef = useRef<TextInput>(null);
+    const revealActiveField = () => {
+        requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    };
 
     return (
-        <ScrollView
+        <KeyboardAvoidingView
             style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+        <ScrollView
+            ref={scrollRef}
+            style={styles.container}
+            contentContainerStyle={styles.scrollContent}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets
+            onContentSizeChange={() => {
+                if (addClientForm.showAddClient) {
+                    revealActiveField();
+                }
+            }}
         >
             <View style={styles.header}>
                 <Text style={styles.title}>Моя смена</Text>
@@ -265,26 +295,48 @@ export function ShiftQuickSections({
                                     onChangeText={addClientActions.setNewClientName}
                                     autoFocus
                                     error={addClientForm.error ?? undefined}
+                                    returnKeyType="next"
+                                    blurOnSubmit={false}
+                                    onFocus={revealActiveField}
+                                    onSubmitEditing={() => serviceInputRef.current?.focus()}
                                 />
                                 <Input
+                                    ref={serviceInputRef}
                                     placeholder="Услуга"
                                     value={addClientForm.newServiceName}
                                     onChangeText={addClientActions.setNewServiceName}
+                                    returnKeyType="next"
+                                    blurOnSubmit={false}
+                                    onFocus={revealActiveField}
+                                    onSubmitEditing={() => amountInputRef.current?.focus()}
                                 />
                                 <View style={styles.amountRow}>
                                     <Input
+                                        ref={amountInputRef}
                                         containerStyle={styles.amountInputContainer}
                                         placeholder="Сумма"
                                         value={addClientForm.newServiceAmount}
                                         onChangeText={addClientActions.setNewServiceAmount}
                                         keyboardType="numeric"
+                                        returnKeyType="next"
+                                        blurOnSubmit={false}
+                                        onFocus={revealActiveField}
+                                        onSubmitEditing={() => consumablesInputRef.current?.focus()}
                                     />
                                     <Input
+                                        ref={consumablesInputRef}
                                         containerStyle={styles.amountInputContainer}
                                         placeholder="Расходники"
                                         value={addClientForm.newConsumablesAmount}
                                         onChangeText={addClientActions.setNewConsumablesAmount}
                                         keyboardType="numeric"
+                                        returnKeyType="done"
+                                        onFocus={revealActiveField}
+                                        onSubmitEditing={() => {
+                                            if (!isAddingClient && addClientForm.newClientName.trim()) {
+                                                addClientActions.submit();
+                                            }
+                                        }}
                                     />
                                 </View>
                                 <View style={styles.addClientActions}>
@@ -355,6 +407,7 @@ export function ShiftQuickSections({
                 ) : null}
             </View>
         </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 

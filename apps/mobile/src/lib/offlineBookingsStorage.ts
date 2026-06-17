@@ -152,3 +152,12 @@ export async function loadOfflineBookings(userId: string): Promise<OfflineBookin
     }
 }
 
+export async function clearOfflineBookings(userId: string): Promise<void> {
+    const key = getBookingsKey(userId);
+    const metaRaw = await SecureStore.getItemAsync(getMetaKey(key));
+    const chunkCount = Number(metaRaw || 0);
+
+    await clearChunkEntries(key, chunkCount);
+    await SecureStore.deleteItemAsync(key);
+}
+

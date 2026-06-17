@@ -10,6 +10,7 @@ import BookingStep3Staff from '../screens/booking/BookingStep3Staff';
 import BookingStep4Date from '../screens/booking/BookingStep4Date';
 import BookingStep5Time from '../screens/booking/BookingStep5Time';
 import BookingStep6Confirm from '../screens/booking/BookingStep6Confirm';
+import MapScreen from '../screens/MapScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import ShiftQuickScreen from '../screens/ShiftQuickScreen';
 import AuthNavigator from './AuthNavigator';
@@ -19,6 +20,10 @@ import {
     createNavigationHeaderTitle,
     detailStackScreenOptions,
 } from './mainNavigatorConfig';
+import { withStaffRouteGuard } from './StaffRouteGuard';
+
+const GuardedShiftsScreen = withStaffRouteGuard(ShiftsScreen);
+const GuardedShiftQuickScreen = withStaffRouteGuard(ShiftQuickScreen);
 
 export const rootStackScreenOptions: NativeStackNavigationOptions =
     detailStackScreenOptions;
@@ -59,9 +64,22 @@ export function SignedInStackScreens(Stack: any) {
                 }}
             />
             <Stack.Screen
+                name="Map"
+                component={MapScreen}
+                options={{
+                    ...detailStackScreenOptions,
+                    title: 'Карта филиалов',
+                    headerTitle: createNavigationHeaderTitle('Карта филиалов', 'Discovery'),
+                }}
+            />
+            <Stack.Screen
                 name="Booking"
                 component={BookingScreen}
-                options={{ title: 'Запись', headerShown: false }}
+                options={{
+                    title: 'Запись',
+                    headerShown: false,
+                    animation: 'none',
+                }}
             />
             <Stack.Screen
                 name="BookingStep1Branch"
@@ -95,7 +113,7 @@ export function SignedInStackScreens(Stack: any) {
             />
             <Stack.Screen
                 name="Shifts"
-                component={ShiftsScreen}
+                component={GuardedShiftsScreen}
                 options={{
                     ...detailStackScreenOptions,
                     title: 'Смены и статистика',
@@ -104,7 +122,7 @@ export function SignedInStackScreens(Stack: any) {
             />
             <Stack.Screen
                 name="ShiftQuick"
-                component={ShiftQuickScreen}
+                component={GuardedShiftQuickScreen}
                 options={{
                     ...detailStackScreenOptions,
                     title: 'Моя смена',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 
 import BookingDetailsScreen from '../../screens/BookingDetailsScreen';
@@ -7,12 +7,14 @@ import { apiRequest } from '../../lib/api';
 import { createTestQueryClient } from '../testQueryClient';
 
 let mockRouteId = 'test-booking-id';
+const mockNavigationReset = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
     NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
     useNavigation: () => ({
         navigate: jest.fn(),
         goBack: jest.fn(),
+        reset: mockNavigationReset,
     }),
     useRoute: () => ({
         params: {
@@ -38,6 +40,7 @@ describe('BookingDetailsScreen', () => {
 
     beforeEach(() => {
         mockRouteId = 'test-booking-id';
+        mockNavigationReset.mockReset();
         mockedApiRequest.mockResolvedValue({
             ok: true,
             data: {
@@ -89,6 +92,27 @@ describe('BookingDetailsScreen', () => {
         renderWithProviders(<BookingDetailsScreen />);
 
         expect(await screen.findByText('Отменить бронирование')).toBeTruthy();
+    });
+
+    test('returns to Cabinet after cancelling instead of an emptied booking flow', async () => {
+        renderWithProviders(<BookingDetailsScreen />);
+
+        fireEvent.press(await screen.findByText('Отменить бронирование'));
+
+        await waitFor(() => {
+            expect(mockNavigationReset).toHaveBeenCalledWith({
+                index: 0,
+                routes: [
+                    {
+                        name: 'Main',
+                        params: {
+                            screen: 'Cabinet',
+                            params: { screen: 'CabinetMain' },
+                        },
+                    },
+                ],
+            });
+        });
     });
 
     test('shows not-found state when deep-linked booking id cannot be loaded', async () => {

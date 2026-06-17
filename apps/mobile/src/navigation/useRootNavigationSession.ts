@@ -5,7 +5,7 @@ import type { Session } from '@supabase/supabase-js';
 import { getMobileApiUrl } from '../lib/apiUrl';
 import { fetchWithTimeout } from '../lib/fetchWithTimeout';
 import { supabase } from '../lib/supabase';
-import { logDebug, logError, logWarn } from '../lib/log';
+import { logDebug, logError, logWarn, maskUrl } from '../lib/log';
 
 const AUTH_CALLBACK_RE =
     /auth\/callback|callback-mobile|access_token=|refresh_token=|\?code=|exchange_code=/i;
@@ -98,11 +98,13 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
     }
 
     if (isAuthCallbackAlreadyProcessed(url)) {
-        logDebug('RootNavigatorSession', 'Skipping already processed auth callback URL', { url });
+        logDebug('RootNavigatorSession', 'Skipping already processed auth callback URL', {
+            url: maskUrl(url),
+        });
         return true;
     }
 
-    logDebug('RootNavigatorSession', 'Handling auth callback URL', { url });
+    logDebug('RootNavigatorSession', 'Handling auth callback URL', { url: maskUrl(url) });
 
     try {
         let urlObject: URL;
@@ -153,7 +155,9 @@ export async function handleDeepLinkAuth(url: string, apiUrl: string) {
             return true;
         }
 
-        logWarn('RootNavigatorSession', 'No auth payload found in callback URL', { url });
+        logWarn('RootNavigatorSession', 'No auth payload found in callback URL', {
+            url: maskUrl(url),
+        });
         return false;
     } catch (error) {
         logError('RootNavigatorSession', 'Failed to process auth callback URL', error);
