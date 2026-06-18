@@ -9,10 +9,11 @@ import ReviewDialog from './ReviewDialog';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { Badge } from '@/components/ui/Badge';
-import { Button, buttonStyles } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { ToastContainer } from '@/components/ui/Toast';
+import { buttonStyles } from '@/components/ui/buttonStyles';
 import { useToast } from '@/hooks/useToast';
 import { getTimezone } from '@/lib/env';
 import {logError} from '@/lib/log';

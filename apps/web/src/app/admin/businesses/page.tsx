@@ -8,11 +8,12 @@ import { AdminEntityFlowTabs } from '../_components/AdminEntityFlowTabs';
 
 import { getT } from '@/app/_components/i18n/server';
 import { Badge } from '@/components/ui/Badge';
-import { Button, buttonStyles } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
+import { buttonStyles } from '@/components/ui/buttonStyles';
 
 type Biz = {
     id: string;

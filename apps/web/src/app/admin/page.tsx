@@ -2,16 +2,22 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
 import { getT } from '@/app/_components/i18n/server';
-import { Button, buttonStyles } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { StatusChip } from '@/components/ui/StatusChip';
+import { buttonStyles } from '@/components/ui/buttonStyles';
 
 export const dynamic = 'force-dynamic';
 
 type BizRow = { id: string; name: string; slug: string; created_at: string };
+
+type DashboardWarning = {
+    title: string;
+    description: string;
+};
 
 type BookingRel = {
     id: string;
@@ -55,50 +61,109 @@ function normRel<T>(rel: T | T[] | null | undefined): T | null {
 
 export default async function AdminHomePage() {
     const t = getT('ru');
-    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const admin = createClient(SUPABASE_URL, SERVICE);
-
-    const [
-        { count: bizCount },
-        { count: branchCount },
-        { count: staffCount },
-        { count: serviceCount },
-        { count: bookingCount },
-        { count: catCount },
-    ] = await Promise.all([
-        admin.from('businesses').select('*', { count: 'exact', head: true }),
-        admin.from('branches').select('*', { count: 'exact', head: true }),
-        admin.from('staff').select('*', { count: 'exact', head: true }),
-        admin.from('services').select('*', { count: 'exact', head: true }),
-        admin.from('bookings').select('*', { count: 'exact', head: true }),
-        admin.from('categories').select('*', { count: 'exact', head: true }),
-    ]);
-
-    const { data: latestBiz } = await admin
-        .from('businesses')
-        .select('id,name,slug,created_at')
-        .order('created_at', { ascending: false })
-        .limit(5)
-        .returns<BizRow[]>();
-
     const { startISO, endISO, label } = bishkekDayRange();
+    const warnings: DashboardWarning[] = [];
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    const { data: todayBookingsRaw } = await admin
-        .from('bookings')
-        .select(
-            'id,start_at,end_at,status,client_name,client_phone,' +
-                'services(name_ru),' +
-                'staff(full_name),' +
-                'businesses(id,name,slug),' +
-                'branches(name)',
-        )
-        .gte('start_at', startISO)
-        .lt('start_at', endISO)
-        .order('start_at', { ascending: true })
-        .limit(20)
-        .returns<BookingRel[]>()
-        .throwOnError();
+    let bizCount = 0;
+    let branchCount = 0;
+    let staffCount = 0;
+    let serviceCount = 0;
+    let bookingCount = 0;
+    let catCount = 0;
+    let latestBiz: BizRow[] = [];
+    let todayBookingsRaw: BookingRel[] = [];
+
+    if (!SUPABASE_URL || !SERVICE) {
+        warnings.push({
+            title: t('admin.home.warnings.env.title', 'Админка открылась без подключения к данным'),
+            description: t(
+                'admin.home.warnings.env.description',
+                'Проверьте NEXT_PUBLIC_SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в окружении деплоя.',
+            ),
+        });
+    } else {
+        try {
+            const admin = createClient(SUPABASE_URL, SERVICE);
+            const countQueries = [
+                { key: 'bizCount', label: t('admin.home.stats.businesses', 'Бизнесы'), query: admin.from('businesses').select('*', { count: 'exact', head: true }) },
+                { key: 'branchCount', label: t('admin.home.stats.branches', 'Филиалы'), query: admin.from('branches').select('*', { count: 'exact', head: true }) },
+                { key: 'staffCount', label: t('admin.home.stats.staff', 'Сотрудники'), query: admin.from('staff').select('*', { count: 'exact', head: true }) },
+                { key: 'serviceCount', label: t('admin.home.stats.services', 'Услуги'), query: admin.from('services').select('*', { count: 'exact', head: true }) },
+                { key: 'bookingCount', label: t('admin.home.stats.bookings', 'Брони (всего)'), query: admin.from('bookings').select('*', { count: 'exact', head: true }) },
+                { key: 'catCount', label: t('admin.home.stats.categories', 'Категории'), query: admin.from('categories').select('*', { count: 'exact', head: true }) },
+            ] as const;
+
+            const countResults = await Promise.all(countQueries.map(({ query }) => query));
+            countResults.forEach((result, index) => {
+                const item = countQueries[index];
+                if (result.error) {
+                    warnings.push({
+                        title: t('admin.home.warnings.counts.title', 'Не удалось загрузить часть статистики'),
+                        description: `${item.label}: ${result.error.message}`,
+                    });
+                    return;
+                }
+
+                const value = result.count ?? 0;
+                if (item.key === 'bizCount') bizCount = value;
+                if (item.key === 'branchCount') branchCount = value;
+                if (item.key === 'staffCount') staffCount = value;
+                if (item.key === 'serviceCount') serviceCount = value;
+                if (item.key === 'bookingCount') bookingCount = value;
+                if (item.key === 'catCount') catCount = value;
+            });
+
+            const latestBizResponse = await admin
+                .from('businesses')
+                .select('id,name,slug,created_at')
+                .order('created_at', { ascending: false })
+                .limit(5)
+                .returns<BizRow[]>();
+
+            if (latestBizResponse.error) {
+                warnings.push({
+                    title: t('admin.home.warnings.latestBusinesses.title', 'Не удалось загрузить последние бизнесы'),
+                    description: latestBizResponse.error.message,
+                });
+            } else {
+                latestBiz = latestBizResponse.data ?? [];
+            }
+
+            const todayBookingsResponse = await admin
+                .from('bookings')
+                .select(
+                    'id,start_at,end_at,status,client_name,client_phone,' +
+                        'services(name_ru),' +
+                        'staff(full_name),' +
+                        'businesses(id,name,slug),' +
+                        'branches(name)',
+                )
+                .gte('start_at', startISO)
+                .lt('start_at', endISO)
+                .order('start_at', { ascending: true })
+                .limit(20)
+                .returns<BookingRel[]>();
+
+            if (todayBookingsResponse.error) {
+                warnings.push({
+                    title: t('admin.home.warnings.todayBookings.title', 'Не удалось загрузить брони за сегодня'),
+                    description: todayBookingsResponse.error.message,
+                });
+            } else {
+                todayBookingsRaw = todayBookingsResponse.data ?? [];
+            }
+        } catch (error) {
+            warnings.push({
+                title: t('admin.home.warnings.unexpected.title', 'Админка открылась в ограниченном режиме'),
+                description:
+                    error instanceof Error
+                        ? error.message
+                        : t('admin.home.warnings.unexpected.description', 'Не удалось загрузить часть данных. Попробуйте обновить страницу.'),
+            });
+        }
+    }
 
     const todayBookings = (todayBookingsRaw ?? []).map((r) => {
         const svc = normRel(r.services);
@@ -161,6 +226,27 @@ export default async function AdminHomePage() {
                         </div>
                     }
                 />
+
+                {warnings.length > 0 ? (
+                    <section className="space-y-3">
+                        {warnings.map((warning, index) => (
+                            <div
+                                key={`${warning.title}-${index}`}
+                                className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"
+                            >
+                                <div className="flex gap-3">
+                                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+                                        !
+                                    </div>
+                                    <div>
+                                        <h2 className="font-semibold">{warning.title}</h2>
+                                        <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">{warning.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </section>
+                ) : null}
 
                 <section>
                     <SectionHeader title={t('admin.home.stats.title', 'Общая статистика')} className="mb-4" />
@@ -323,7 +409,7 @@ export default async function AdminHomePage() {
                             }
                             className="mb-4"
                         />
-                        {latestBiz && latestBiz.length > 0 ? (
+                        {latestBiz.length > 0 ? (
                             <div className="space-y-3">
                                 {latestBiz.map((b) => (
                                     <Link
@@ -387,10 +473,10 @@ export default async function AdminHomePage() {
                 <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-900">
                     <SectionHeader title={t('admin.home.quickLinks.title', 'Быстрые ссылки')} className="mb-4" />
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        <QuickLink href="/admin/businesses" icon="??" label={t('admin.home.quickLinks.allBusinesses', 'Все бизнесы')} />
-                        <QuickLink href="/admin/categories" icon="??" label={t('admin.home.quickLinks.categories', 'Категории')} />
-                        <QuickLink href="/admin/users" icon="??" label={t('admin.home.quickLinks.users', 'Пользователи')} />
-                        <QuickLink href="/" icon="??" label={t('admin.home.quickLinks.publicSite', 'Публичный сайт')} />
+                        <QuickLink href="/admin/businesses" icon="BIZ" label={t('admin.home.quickLinks.allBusinesses', 'Все бизнесы')} />
+                        <QuickLink href="/admin/categories" icon="CAT" label={t('admin.home.quickLinks.categories', 'Категории')} />
+                        <QuickLink href="/admin/users" icon="USR" label={t('admin.home.quickLinks.users', 'Пользователи')} />
+                        <QuickLink href="/" icon="WEB" label={t('admin.home.quickLinks.publicSite', 'Публичный сайт')} />
                     </div>
                 </section>
             </div>
@@ -466,7 +552,9 @@ function QuickLink({ href, icon, label }: { href: string; icon: string; label: s
                 padding="md"
                 className="group flex flex-col items-center justify-center gap-2 border-gray-200 bg-gray-50 text-center transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-indigo-600 dark:hover:bg-indigo-900/20"
             >
-                <span className="text-2xl transition-transform duration-200 group-hover:scale-110">{icon}</span>
+                <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold tracking-wide text-indigo-700 transition-transform duration-200 group-hover:scale-110 dark:bg-indigo-950 dark:text-indigo-300">
+                    {icon}
+                </span>
                 <span className="text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400">
                     {label}
                 </span>

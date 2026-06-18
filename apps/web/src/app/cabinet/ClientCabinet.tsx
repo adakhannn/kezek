@@ -7,10 +7,10 @@ import BookingCard from './components/BookingCard';
 import MyVisitPackagesBlock from './components/MyVisitPackagesBlock';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { buttonStyles } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Tabs } from '@/components/ui/Tabs';
+import { buttonStyles } from '@/components/ui/buttonStyles';
 
 type Booking = {
     id: string;

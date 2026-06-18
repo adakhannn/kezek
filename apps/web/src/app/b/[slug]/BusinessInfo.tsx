@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 import { RatingDisplay } from '@/components/RatingDisplay';
 import { Badge } from '@/components/ui/Badge';
-import { buttonStyles } from '@/components/ui/Button';
 import { Card, cardStyles } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { buttonStyles } from '@/components/ui/buttonStyles';
 import { formatStaffName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
 
