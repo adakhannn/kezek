@@ -2087,6 +2087,25 @@ Live verification (2026-06-10):
 - Stress memory remained bounded at approximately `129.0-144.2 MB` PSS with one Activity and zero WebViews.
 - Emulator jank under aggressive command-driven swipes remained `26-29%`; this is recorded as an AVD limitation rather than hidden as a pass-quality production frame metric.
 
+Supplemental emulator live verification (`LG-010`, 2026-06-19):
+- Rebuilt a standalone `x86_64` release and installed it on Pixel 7 Pro API 35 (`emulator-5554`, `1440x3120 @ 560dpi`).
+- A controlled local API fixture served `200` rows in pages of `20`; Home fetched pages `1-10`, displayed `Load 198-200`, requested empty page `11`, and stopped pagination.
+- The UIAutomator tree remained bounded at `92` nodes near the start and `104` nodes at the final rows, confirming that all `200` cards were not mounted together.
+- PSS moved from `111472 KB` before the heavy scroll to `152898 KB` after all rows were accumulated; Android reported `1` Activity and `0` WebViews.
+- Frame timeline reported `1064` rendered frames, `9` modern janky frames (`0.85%`), with p50/p90/p95/p99 of `20/23/24/29 ms`.
+- No crash, ANR, OOM, duplicate-page loop, blank list, or stuck loading state occurred.
+- The emulator rerun is accepted as supplemental evidence; the preferred low/mid-range physical-device smoothness gate was subsequently closed below.
+
+Physical-device live verification (`LG-010`, 2026-06-19):
+- Installed a controlled ARM64 release on Xiaomi Mi A3 (`8231be4e2ca4`), Android 11, `720x1560 @ 320dpi`, with `adb reverse` access to the 200-row fixture.
+- Home fetched pages `1-10`, displayed `Load 198-200`, requested empty page `11`, and stopped without duplicates or a stuck loading footer.
+- The active UI tree stayed bounded at `97` nodes near the first cards and `95` nodes at the final rows.
+- PSS moved from `141928 KB` to `153935 KB` during the full load and returned to `142448 KB` after a repeat 20+20 swipe cycle, showing cache reclamation instead of a sustained upward slope.
+- First-pass frame stats: `2832` frames, `97` janky (`3.43%`), p50/p90/p95/p99 `6/11/14/20 ms`.
+- Repeat-pass frame stats: `2862` frames, `76` janky (`2.66%`), p50/p90/p95/p99 `6/12/14/20 ms`.
+- No crash, ANR, OOM, process death, blank list, duplicate-page loop, or stuck pagination state occurred.
+- Conclusion: PASS; `LG-010` is closed for the current Android baseline.
+
 Automated verification (2026-06-10):
 - Mobile Home tests cover `FlatList` usage and page-2 loading.
 - Web service/HTTP tests cover pagination range and request delegation.
@@ -2126,6 +2145,13 @@ Live verification (2026-06-11):
 - Cold-started `kg.kezek.app` with a `kezek://auth/callback` intent containing unique query, access-token, and refresh-token sentinels.
 - App-process `logcat`, the UIAutomator hierarchy, and the visible Sign-in screen contained none of the sentinels or raw auth values.
 - The app remained resumed and displayed no debug/error overlay.
+
+Provider live verification (`LG-009`, 2026-06-18):
+- Rebuilt a clean ARM64 release APK for the physical Mi A3 after the previously cached APK was missing `arm64-v8a/libexpo-modules-core.so` and crashed before UI.
+- Installed on Android device `8231be4e2ca4` and completed Google account auth, native Telegram bot confirmation, and WhatsApp auth/session restoration.
+- Collected app-process `logcat` and UIAutomator dumps for each provider completion.
+- Local scans found no JWT-like values, OAuth codes, access/refresh/id tokens, callback fragments, OTPs, UUID session keys, or token-bearing key assignments.
+- No visible UI state exposed codes, tokens, or auth callback values.
 
 Automated verification (2026-06-11):
 - Log safety and root callback suites pass (`2/2` suites, `14/14` tests).
@@ -2275,6 +2301,12 @@ Live post-fix verification (2026-06-15):
 - At 412dp, the complete Telegram label renders on one line above the full-width Profile action.
 - At 360dp, the existing stacked layout remains unchanged and no horizontal text overflow is present.
 - Home, staff workspace, shift workspace, and Cabinet were visually checked at both target profiles.
+
+Expanded device-matrix verification (`LG-011`, 2026-06-19):
+- Physical Xiaomi Mi A3 (`8231be4e2ca4`), Android 11, provided a real `360dp`-wide authenticated Home/Cabinet pass with zero UIAutomator bounds outside the viewport.
+- Pixel 7 Pro API 35 covered a compact `320dp` Sign-in profile and a tablet-like `640dp` Sign-in profile; both displayed all provider actions with zero viewport overflow.
+- A landscape rotation request was exercised against the declared portrait-only app contract. MainActivity remained resumed, Sign-in remained complete and readable in portrait, and no crash, ANR, OOM, or blank surface occurred.
+- No new layout bug was found. `LG-011` is closed for the current Android release scope; iOS coverage remains deferred until iOS becomes a release target.
 
 Automated verification (2026-06-15):
 - Cabinet suite passes (`1/1` suite, `8/8` tests).

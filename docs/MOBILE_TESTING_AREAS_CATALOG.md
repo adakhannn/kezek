@@ -1,6 +1,6 @@
 # MOBILE TESTING AREAS CATALOG
 
-Last updated: 2026-06-17
+Last updated: 2026-06-19
 Owner: QA flow (User + Codex)  
 Status: Active baseline
 
@@ -61,9 +61,9 @@ Meaning:
 | `LG-006` | `A4`, `J1`, `J2` True network loss states | `P1` | Mostly verified on 2026-06-17, with explicit scope limits. | True network loss was verified with `svc wifi/data disable` for authenticated startup, Home error/recovery, Profile save failure/recovery, and auth/WhatsApp failure messaging. `MB-062` fixes Home auto-retry after reconnect. Booking reached only branch/service empty-state data, and Shift live sync was not reachable with the current non-staff session. | After rebuilding the APK, run post-fix Home reconnect live verification for `MB-062`; run Shift sync only with a native staff session that exposes the Shift workspace. |
 | `LG-007` | `G3` Real nearby/GPS discovery | `P2` | Verified on 2026-06-17. | Physical Android device `8231be4e2ca4` completed foreground location permission, real GPS coordinate lookup, `/api/branches/nearby` success, distance-ranked branch rendering, branch-to-booking navigation, and mobile map parity after `MB-064`: `kezek://map` opens the native map shell with category filter, nearest CTA, branch list, visible map markers, and native booking navigation from map items. | Closed. |
 | `LG-008` | `K2` Real screen reader operation | `P2` | Verified for auth + owner Home/Cabinet/Business on 2026-06-18; remaining staff shift traversal is still open. | Android TalkBack was enabled on `emulator-5554`. Auth and WhatsApp flows were checked earlier; owner session was then checked on Home, Business, and Cabinet. Live QA found duplicate WhatsApp validation announcements (`MB-065`) and Home/tab glyph/mojibake labels (`MB-066`); both were fixed and verified by post-fix accessibility dumps. | Complete only the staff Shift workspace TalkBack traversal once a staff session is active. Booking flow is partially covered through Home booking entry labels but still deserves a dedicated step-by-step TalkBack pass. |
-| `LG-009` | `M1` Secret exposure across complete real auth providers | `P1` | Sentinel callback log/UI leakage is live-verified; complete Google/Telegram/WhatsApp provider runs were not each inspected with logcat for token/code leakage in one release audit. | Shared sanitizer, callback sentinel, production log policy, and root callback tests are verified. | During real Google, Telegram, and WhatsApp auth completions, collect app-process logcat and UI dumps; assert no codes, tokens, OTPs, or JWT-like values appear. |
-| `LG-010` | `L3` Heavy-list smoothness on physical device | `P2` | 200-row virtualization/pagination was live-verified on emulator; physical-device frame smoothness for heavy lists remains a preferred but not completed gate. | Emulator stability, pagination completion, bounded PSS, and virtualization behavior are verified. | Run the 200-row fixture on a representative low/mid-range Android physical device and collect scroll frame stats + memory. |
-| `LG-011` | `N3` Broader device matrix | `P2` | 360dp and 412dp Android emulator profiles are verified; tablet, very small Android, landscape, iOS, and physical-device visual profiles are not covered. | Pixel 7 Pro API 35 emulator with controlled width/density passed after `MB-058`. | Add at least one low-end physical Android, one compact profile below 360dp if supported, one landscape smoke, and iOS/simulator only if iOS becomes release scope. |
+| `LG-009` | `M1` Secret exposure across complete real auth providers | `P1` | Verified on 2026-06-18. | Physical Mi A3 `8231be4e2ca4` completed Google account auth, native Telegram bot confirmation, and WhatsApp auth/session restoration while collecting app-process `logcat` and UIAutomator dumps. Local scans found no JWT-like values, OAuth codes, access/refresh/id tokens, callback fragments, OTPs, or token-bearing key assignments. | Closed. |
+| `LG-010` | `L3` Heavy-list smoothness on physical device | `P2` | Verified on physical Android on 2026-06-19. | Mi A3 Android 11 release run loaded all 200 rows, stopped on empty page 11, retained a 95-node virtualized UI tree, reported 3.43% jank on the first pass and 2.66% on a repeat pass, and returned PSS from 153935 KB to 142448 KB without crash/ANR/OOM. | Closed. |
+| `LG-011` | `N3` Broader device matrix | `P2` | Verified for the current Android release scope on 2026-06-19. | Physical Mi A3 covered authenticated Home/Cabinet at real 360dp; Pixel 7 Pro API 35 covered compact 320dp auth, tablet-like 640dp auth, and a safe rotation request under the declared portrait-only contract. Every accepted UI tree had zero viewport overflow and no crash/ANR/OOM occurred. | Closed for Android. Add iOS/simulator coverage only if iOS enters release scope. |
 
 ### Gap Policy
 
@@ -1209,7 +1209,24 @@ Status: `verified` (2026-06-09)
 - smoothness note:
   - aggressive ADB-generated continuous swipes on the high-resolution emulator reported `26-29%` janky frames;
   - this synthetic value is not used as a production frame budget because the same AVD was CPU/GPU-bound during command-driven input;
-  - acceptance is based on bounded rendering/memory, complete pagination, no visible blank/stuck states, and no stability failures; physical-device frame profiling remains the preferred absolute smoothness gate.
+  - acceptance is based on bounded rendering/memory, complete pagination, no visible blank/stuck states, and no stability failures; the preferred physical-device frame gate was completed on 2026-06-19.
+- supplemental emulator rerun (`LG-010`, 2026-06-19):
+  - rebuilt and installed a standalone `x86_64` release on Pixel 7 Pro API 35 (`emulator-5554`, `1440x3120 @ 560dpi`);
+  - a controlled local fixture served exactly `200` rows in pages of `20`; the app requested pages `1-10`, reached `Load 198-200`, requested empty page `11`, and stopped;
+  - the active UIAutomator tree remained bounded at `92` nodes near the start and `104` nodes at the final rows instead of mounting all `200` cards;
+  - PSS moved from `111472 KB` before the heavy scroll to `152898 KB` after all rows were accumulated, with `1` Activity and `0` WebViews;
+  - Android frame timeline reported `1064` rendered frames, `9` modern janky frames (`0.85%`), and `20/23/24/29 ms` at p50/p90/p95/p99;
+  - no `FATAL EXCEPTION`, ANR, `OutOfMemoryError`, duplicate-page loop, blank list, or stuck pagination state was observed;
+  - an optional second shell-driven cycle was not accepted as evidence because the Windows ADB daemon stopped responding; this did not invalidate the completed first run, and the physical-device gate was subsequently closed below.
+- physical-device completion (`LG-010`, 2026-06-19):
+  - installed a controlled ARM64 release on Xiaomi Mi A3 (`8231be4e2ca4`), Android 11, `720x1560 @ 320dpi`, using `adb reverse` to reach the local fixture without depending on Wi-Fi;
+  - Home fetched pages `1-10` with `20` rows each, displayed `Load 198-200`, requested empty page `11`, and stopped without duplicates or a stuck footer;
+  - the UIAutomator tree stayed bounded at `97` nodes near the start and `95` nodes at the final rows;
+  - PSS moved from `141928 KB` before the full scroll to `153935 KB` after accumulating all rows, then returned to `142448 KB` after a second 20+20 swipe cycle;
+  - the first pass rendered `2832` frames with `97` janky frames (`3.43%`) and p50/p90/p95/p99 of `6/11/14/20 ms`;
+  - the repeat pass rendered `2862` frames with `76` janky frames (`2.66%`) and p50/p90/p95/p99 of `6/12/14/20 ms`;
+  - no crash, ANR, `OutOfMemoryError`, process death, blank list, or pagination loop was observed;
+  - conclusion: PASS; the physical heavy-list performance gate is closed for the current Android baseline.
 - automated verification:
   - Home screen tests cover virtualized rendering and next-page loading;
   - mobile Home suite, mobile typecheck, web pagination service/HTTP tests, web typecheck, and `git diff --check` pass.
@@ -1238,6 +1255,12 @@ Status: `verified` (2026-06-09)
   - none of the sentinels, token parameter names, or bearer values appeared in app-process `logcat`;
   - none appeared in the UIAutomator tree or visible Sign-in screen;
   - app remained foregrounded with no debug overlay or secret-bearing error surface.
+- provider live verification (`LG-009`, 2026-06-18):
+  - rebuilt a clean ARM64 release APK for physical Android after the previously cached APK was missing `arm64-v8a/libexpo-modules-core.so`;
+  - installed on Mi A3 `8231be4e2ca4` and completed Google account auth, native Telegram bot confirmation, and WhatsApp auth/session restoration;
+  - collected app-process `logcat` and UIAutomator dumps for each provider;
+  - local scans found no JWT-like values, OAuth codes, access/refresh/id tokens, callback fragments, OTPs, UUID session keys, or token-bearing key assignments;
+  - no visible UI state exposed codes, tokens, or auth callback values.
 - automated verification:
   - shared log safety and root navigation callback suites pass (`2/2` suites, `14/14` tests);
   - mobile and web TypeScript typechecks pass;
@@ -1367,6 +1390,15 @@ Status: `verified` (2026-06-09)
   - repeated Cabinet visual checks at both 360dp and 412dp;
   - the long Telegram label now receives full width at 412dp without the broken `telegram` / `_...` wrap;
   - no regression appeared at 360dp.
+- expanded live device matrix (`LG-011`, 2026-06-19):
+  - physical Xiaomi Mi A3, Android 11, `720x1560 @ 320dpi` (real `360dp` width): authenticated Home and Cabinet rendered with zero UIAutomator bounds outside the viewport;
+  - the Home hero, search, nearby card, map CTA, and bottom navigation remained readable and horizontally contained;
+  - Cabinet kept the long WhatsApp account identifier readable, retained the full-width Profile action, and rendered its focus/metrics cards without horizontal clipping;
+  - compact Pixel 7 Pro API 35 profile at `640x1280 @ 320dpi` (`320dp` width): the Sign-in shell displayed all three provider CTAs at once with zero viewport overflow;
+  - tablet-like profile at `1280x1600 @ 320dpi` (`640dp` width): the centered Sign-in card retained controlled margins and all three CTA bounds stayed inside the viewport;
+  - landscape rotation was requested while the app declares `orientation: portrait`; MainActivity stayed resumed, the complete Sign-in UI remained visible in portrait, and no blank screen, crash, ANR, or OOM occurred;
+  - the emulator DNS failure that initially left Root on `Загрузка...` reproduced at default size too, so it was classified as an AVD network condition rather than a compact-layout failure; emulator app data was cleared to run the deterministic unauthenticated visual profiles;
+  - conclusion: PASS for the current Android release scope; iOS remains explicitly deferred until it becomes a release target.
 - automated verification:
   - Cabinet suite passes (`1/1` suite, `8/8` tests);
   - breakpoint regression covers `360`, `412`, and `421` dp;
