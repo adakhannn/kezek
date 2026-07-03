@@ -985,9 +985,17 @@ Latest live run: `2026-07-03`
   - web typecheck: passed
   - production build: passed
 - remaining gaps:
-  - deploy the callback-history and Google return-path fixes to `kezek.kg`;
-  - repeat real Google and Yandex callbacks after deployment and confirm Back cannot reopen callback code/auth fragments;
-  - confirm exactly one persisted session after the post-deploy replay test.
+  - deploy the follow-up Google server-callback and Yandex history-replace fixes to `kezek.kg`;
+  - repeat real Google callback and confirm one persisted session reaches the requested destination;
+  - repeat Yandex Back/replay and confirm no callback code or auth fragment is restored from history.
+
+Post-deploy continuation (`2026-07-03`, commit `0f57fd8d`):
+
+- deployment marker confirmed: social-only UI and safe cancellation feedback are live;
+- real Yandex OAuth completed at `/cabinet/bookings`, survived reload, and replay returned safely to `/cabinet`;
+- generic sensitive auth fragment no longer remained after completion;
+- Google preserved `next=/cabinet` but reproducibly failed on the deployed client callback (`WB-027`);
+- Yandex Back still briefly exposed the one-time callback code before replay (`WB-025` follow-up).
 
 ### C4. Telegram authentication and linking (`P0`)
 

@@ -54,6 +54,36 @@ The web testing scope and execution status are maintained in
 
 ## Open bugs
 
+### WB-027
+- id: `WB-027`
+- date: `2026-07-03`
+- area: `C3`
+- severity: `P0`
+- title: Real Google OAuth reaches the deployed callback but ends on the authorization error surface
+- build: deployed commit `0f57fd8d` at `https://kezek.kg`
+- environment: in-app Chromium, Windows, real Google identity, clean Kezek production session
+- steps:
+  1. Open `/auth/sign-in?next=%2Fcabinet` on production.
+  2. Click `Продолжить с Google` and complete the provider flow.
+  3. Wait on `/auth/callback`.
+- expected:
+  - the callback establishes one session and replaces itself with `/cabinet` or the role-policy destination.
+- actual:
+  - callback receives `code`, `from`, and `next`, then renders `Не удалось завершить авторизацию`;
+  - no redirect loop occurs and no raw provider error is exposed.
+- evidence:
+  - post-deploy live browser run on `2026-07-03`; authorization code intentionally omitted
+- suspected cause:
+  - automatic Supabase PKCE handling and explicit `exchangeCodeForSession` can race; an already-created session is not accepted when the explicit exchange reports an error.
+- fix:
+  - Google now returns to a dedicated server Route Handler that exchanges the PKCE code and writes auth cookies before redirecting to the existing role-routing callback;
+  - the browser callback no longer owns the initial Google code exchange.
+- verification:
+  - typecheck and production build passed locally;
+  - production post-fix live verification requires deploying the follow-up candidate.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
+
 ### WB-026
 - id: `WB-026`
 - date: `2026-07-03`
@@ -104,7 +134,11 @@ The web testing scope and execution status are maintained in
   - `apps/web/test-results/live-c3-oauth-2026-07-03/c3-yandex-postfix-live.json` (all sensitive values redacted)
 - fix:
   - local production candidate now completes all generic auth callback branches with `window.location.replace(targetPath)` instead of adding a history entry.
-- status: `fixed in local candidate; production post-fix live verification required`
+  - follow-up candidate also replaces `/auth/callback-yandex` with its API callback instead of adding the Yandex authorization code to browser history.
+- post-deploy observation for commit `0f57fd8d`:
+  - sensitive auth fragments no longer remain after generic callback completion;
+  - session persists and replay is idempotent, but Back can still briefly reopen `/auth/callback-yandex` with a one-time code.
+- status: `follow-up fix ready locally; production post-fix live verification required`
 - owner: `Codex + User`
 
 ### WB-024

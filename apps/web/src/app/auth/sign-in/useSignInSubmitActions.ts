@@ -25,7 +25,7 @@ export function useSignInSubmitActions({
         setError(null);
         try {
             const origin = process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://kezek.kg';
-            const redirectTo = `${origin}/auth/callback?from=google&next=${encodeURIComponent(redirectParam)}`;
+            const redirectTo = `${origin}/auth/callback/google?next=${encodeURIComponent(redirectParam)}`;
 
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
