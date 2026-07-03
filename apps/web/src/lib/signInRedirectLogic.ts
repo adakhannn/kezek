@@ -1,4 +1,6 @@
-﻿export type CurrentBusinessState = {
+import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
+
+export type CurrentBusinessState = {
     currentBizId: string | null;
     businesses: { id: string }[];
 };
@@ -20,6 +22,8 @@ export async function decideSignInRedirect(
     if (fallback?.startsWith('/auth/callback-mobile')) {
         return fallback;
     }
+
+    const safeFallback = sanitizeAuthReturnPath(fallback);
 
     if (await deps.fetchIsSuper()) {
         return '/admin';
@@ -66,5 +70,5 @@ export async function decideSignInRedirect(
     if (roles.includes('owner')) return '/dashboard';
     if (roles.includes('staff')) return '/staff';
     if (roles.some((role) => ['admin', 'manager'].includes(role))) return '/dashboard';
-    return fallback || '/';
+    return safeFallback;
 }

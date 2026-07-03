@@ -10,8 +10,8 @@ import { useSignInRedirectDecision } from './useSignInRedirectDecision';
 import { useSignInSubmitActions } from './useSignInSubmitActions';
 
 import {useLanguage} from '@/app/_components/i18n/LanguageProvider';
-
-type Mode = 'phone' | 'email';
+import { getAuthReturnPath } from '@/lib/authReturnUrl';
+import { getOAuthErrorMessage } from '@/lib/oauthErrorMessage';
 
 function isWhatsAppWebSignInEnabled(): boolean {
     const raw = process.env.NEXT_PUBLIC_MOBILE_WHATSAPP_AUTH;
@@ -25,16 +25,12 @@ export default function SignInPage() {
     const sp = useSearchParams();
     const router = useRouter();
 
-    const redirectParam = sp.get('redirect') || '/';
+    const redirectParam = getAuthReturnPath(new URLSearchParams(sp.toString()));
     const {t} = useLanguage();
-    // Временно отключен вход по телефону - используем только email
-    const initialMode: Mode = 'email';
-
-    const [mode] = useState<Mode>(initialMode); // Убрали setMode - режим фиксирован
-    const [phone, setPhone] = useState('');
-    const [email, setEmail] = useState('');
     const [sending, setSending] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(() =>
+        getOAuthErrorMessage(sp.get('error')),
+    );
     const whatsAppSignInEnabled = isWhatsAppWebSignInEnabled();
 
     const { decideAndGo } = useSignInRedirectDecision({ router });
@@ -45,13 +41,8 @@ export default function SignInPage() {
         handleTelegramError,
         signInWithGoogle,
         signInWithYandex,
-        sendOtp,
     } = useSignInSubmitActions({
-        mode,
-        phone,
-        email,
         redirectParam,
-        router,
         setSending,
         setError,
     });
@@ -59,15 +50,9 @@ export default function SignInPage() {
     return (
         <SignInPageView
             t={t}
-            mode={mode}
-            phone={phone}
-            email={email}
             sending={sending}
             error={error}
             redirectParam={redirectParam}
-            setPhone={setPhone}
-            setEmail={setEmail}
-            sendOtp={sendOtp}
             signInWithGoogle={signInWithGoogle}
             signInWithYandex={signInWithYandex}
             handleTelegramError={handleTelegramError}

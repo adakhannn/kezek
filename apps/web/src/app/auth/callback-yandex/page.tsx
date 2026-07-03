@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
 
 function YandexCallbackContent() {
     const router = useRouter();
@@ -16,7 +17,7 @@ function YandexCallbackContent() {
         
         // Получаем redirect из sessionStorage или используем дефолтный
         const redirect = typeof window !== 'undefined' 
-            ? (sessionStorage.getItem('yandex_redirect') || '/')
+            ? sanitizeAuthReturnPath(sessionStorage.getItem('yandex_redirect'))
             : '/';
 
         if (error) {

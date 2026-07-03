@@ -148,6 +148,7 @@ export default function BookingForm({ data }: { data: Data }) {
         totalPriceToStep4,
     } = useBookingFlowDerived({
         branchId,
+        businessTz,
         day,
         dayStr,
         dateLocale,

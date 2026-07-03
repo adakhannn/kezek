@@ -7,6 +7,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
+import { toSafeAuthMessage } from '@/lib/authUserMessages';
 import {logWarn} from '@/lib/log';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { supabase } from '@/lib/supabaseClient';
@@ -20,7 +22,7 @@ export default function VerifyPage() {
     const mode: Mode = (sp.get('mode') as Mode) || 'phone';
     const phone = sp.get('phone') || '';
     const email = sp.get('email') || '';
-    const redirect = sp.get('redirect') || '/';
+    const redirect = sanitizeAuthReturnPath(sp.get('redirect'));
     const isSignUp = redirect.includes('post-signup');
 
     const [code, setCode] = useState('');
@@ -111,7 +113,7 @@ export default function VerifyPage() {
                     email: emailToUse,
                     options: {
                         shouldCreateUser: isSignUp,
-                        emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
+                        emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback?next=${encodeURIComponent(redirect)}`,
                     },
                 });
                 if (error) throw error;
@@ -124,7 +126,7 @@ export default function VerifyPage() {
             }
             setResendCooldown(60); // 60 секунд до следующей отправки
         } catch (err) {
-            setError(err instanceof Error ? err.message : String(err));
+            setError(toSafeAuthMessage(err));
         } finally {
             setResending(false);
         }
@@ -174,7 +176,7 @@ export default function VerifyPage() {
             // Решаем редирект по ролям/владению бизнесом
             await decideAndGo(redirect);
         } catch (err) {
-            setError(err instanceof Error ? err.message : String(err));
+            setError(toSafeAuthMessage(err));
         } finally {
             setVerifying(false);
         }

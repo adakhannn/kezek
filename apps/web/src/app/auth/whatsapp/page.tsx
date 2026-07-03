@@ -12,6 +12,7 @@ import {
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AlertBanner } from '@/components/ui/AlertBanner';
+import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
 import { supabase } from '@/lib/supabaseClient';
 
 type Step = 'phone' | 'otp';
@@ -19,7 +20,7 @@ type Step = 'phone' | 'otp';
 function WhatsAppAuthContent() {
   const router = useRouter();
   const sp = useSearchParams();
-  const redirect = sp.get('redirect') || '/';
+  const redirect = sanitizeAuthReturnPath(sp.get('redirect'));
 
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('');

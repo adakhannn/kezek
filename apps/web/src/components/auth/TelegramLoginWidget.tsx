@@ -49,9 +49,7 @@ function TelegramLoginWidgetComponent({
     const [currentHostname, setCurrentHostname] = useState<string | null>(null);
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            setCurrentHostname(window.location.hostname);
-        }
+        setCurrentHostname(window.location.hostname);
     }, []);
     
     // Храним последние версии callback'ов в ref, чтобы не перезапускать useEffect
@@ -66,7 +64,10 @@ function TelegramLoginWidgetComponent({
     }, [onSuccess, onError, redirectTo]);
 
     useEffect(() => {
-        if (!containerRef.current) return;
+        const isLocalHostname =
+            currentHostname === 'localhost' || currentHostname === '127.0.0.1';
+
+        if (!containerRef.current || !currentHostname || isLocalHostname) return;
 
         // Уникальное имя callback'а для этого маунта
         const callbackName = `onTelegramAuth_${Math.random().toString(36).slice(2)}`;
@@ -196,11 +197,10 @@ function TelegramLoginWidgetComponent({
             }
             delete w[callbackName];
         };
-    }, [size, cornerRadius, requestAccess, router]); // Убрали onSuccess, onError, redirectTo из зависимостей
+    }, [size, cornerRadius, requestAccess, router, currentHostname]); // Убрали onSuccess, onError, redirectTo из зависимостей
 
     const isLocalhost =
-        typeof window !== 'undefined' &&
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        currentHostname === 'localhost' || currentHostname === '127.0.0.1';
 
     return (
         <div className="relative w-full">
@@ -209,7 +209,7 @@ function TelegramLoginWidgetComponent({
                     Telegram не поддерживает <code className="bg-black/5 dark:bg-white/10 px-1 rounded">localhost</code> в @BotFather. Чтобы тестировать вход локально: запустите туннель (ngrok, localhost.run), откройте сайт по выданному URL и добавьте этот домен в @BotFather → <code className="bg-black/5 dark:bg-white/10 px-1 rounded">/setdomain</code>. Или проверяйте вход на проде.
                 </p>
             )}
-            {!isLocalhost && currentHostname && (
+            {currentHostname && !isLocalhost && (
                 <div className="mb-2 text-xs text-gray-500 dark:text-gray-400 text-center space-y-1">
                     <p>
                         Если видите «Bot domain invalid» — в @BotFather выберите бота <strong>@{TELEGRAM_BOT_USERNAME}</strong>, отправьте <code className="bg-black/5 dark:bg-white/10 px-1 rounded">/setdomain</code> и введите <strong>точно</strong> этот домен (как в адресной строке, без https://):

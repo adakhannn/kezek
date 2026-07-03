@@ -14,6 +14,9 @@ type AnalyticsEventParams = {
 
 export async function trackEvent(params: AnalyticsEventParams): Promise<void> {
   if (typeof window === 'undefined') return;
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return;
+  }
 
   try {
     const body = {
@@ -26,7 +29,7 @@ export async function trackEvent(params: AnalyticsEventParams): Promise<void> {
       metadata: params.metadata ?? {},
     };
 
-    void fetch('/api/admin/analytics/track', {
+    void fetch('/admin/api/analytics/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

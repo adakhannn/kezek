@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
+import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
 
 export default function VerifyEmailPage() {
     const searchParams = useSearchParams();
     const email = searchParams.get('email') || '';
-    const redirect = searchParams.get('redirect') || '/';
+    const redirect = sanitizeAuthReturnPath(searchParams.get('redirect'));
 
     return (
         <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30 flex items-center justify-center p-4">

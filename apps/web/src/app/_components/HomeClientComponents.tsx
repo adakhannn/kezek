@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useState } from 'react';
 
 import {useLanguage} from './i18n/LanguageProvider';
 
@@ -120,6 +122,31 @@ export function HomeHero({ totalBusinesses, ratedBusinesses, categoriesCount }: 
 
 export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) {
     const {t} = useLanguage();
+    const router = useRouter();
+    const [query, setQuery] = useState(q);
+
+    useEffect(() => {
+        setQuery(q);
+    }, [q]);
+
+    useEffect(() => {
+        const normalizedQuery = query.trim();
+
+        if (normalizedQuery === q) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            router.replace(buildMarketplaceHref(normalizedQuery, cat));
+        }, 500);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [cat, q, query, router]);
+
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        router.push(buildMarketplaceHref(query.trim(), cat));
+    };
 
     return (
         <section
@@ -146,7 +173,7 @@ export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) 
             />
 
             <div className="mt-5 space-y-4">
-                <form className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <form className="flex flex-col gap-3 lg:flex-row lg:items-center" onSubmit={handleSubmit}>
                     <div className="relative flex-1">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                             <svg className="h-5 w-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,7 +187,8 @@ export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) 
                         </div>
                         <input
                             name="q"
-                            defaultValue={q}
+                            value={query}
+                            onChange={(event) => setQuery(event.target.value)}
                             placeholder={t('home.search.placeholder', 'Поиск по названию, адресу или району')}
                             className="w-full rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-base)] py-4 pl-12 pr-4 text-[var(--text-primary)] shadow-[var(--shadow-xs)] transition-all duration-[var(--motion-base)] placeholder:text-[var(--text-muted)] focus:border-[var(--focus-ring)] focus:outline-none"
                         />
@@ -190,7 +218,7 @@ export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) 
                             {t('home.cats.title', 'Категории')}
                         </span>
                         <Link
-                            href={q ? `/?q=${encodeURIComponent(q)}` : '/'}
+                                href={buildMarketplaceHref(query.trim(), '')}
                             className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
                                 !cat
                                     ? 'border-transparent bg-[var(--text-primary)] text-[var(--text-inverse)] shadow-[var(--shadow-xs)]'
@@ -202,7 +230,7 @@ export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) 
                         {categories.map((category) => (
                             <Link
                                 key={category}
-                                href={`/?cat=${encodeURIComponent(category)}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+                                href={buildMarketplaceHref(query.trim(), category)}
                                 className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
                                     cat === category
                                         ? 'border-transparent bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-[var(--text-inverse)] shadow-[var(--shadow-xs)]'
@@ -217,6 +245,21 @@ export function HomeHeader({q, cat, categories, totalResults}: HomeHeaderProps) 
             </div>
         </section>
     );
+}
+
+function buildMarketplaceHref(query: string, category: string): string {
+    const params = new URLSearchParams();
+
+    if (query) {
+        params.set('q', query);
+    }
+
+    if (category) {
+        params.set('cat', category);
+    }
+
+    const search = params.toString();
+    return search ? `/?${search}` : '/';
 }
 
 export function HomeResultsHeader({ totalResults, q, cat }: HomeResultsHeaderProps) {

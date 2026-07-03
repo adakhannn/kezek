@@ -5,19 +5,11 @@ import Link from 'next/link';
 import { TelegramLoginWidget } from '@/components/auth/TelegramLoginWidget';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 
-type Mode = 'phone' | 'email';
-
 type SignInPageViewProps = {
     t: (key: string, fallback?: string) => string;
-    mode: Mode;
-    phone: string;
-    email: string;
     sending: boolean;
     error: string | null;
     redirectParam: string;
-    setPhone: (value: string) => void;
-    setEmail: (value: string) => void;
-    sendOtp: (e: React.FormEvent) => Promise<void>;
     signInWithGoogle: () => Promise<void>;
     signInWithYandex: () => Promise<void>;
     handleTelegramError: (err: string) => void;
@@ -37,7 +29,7 @@ function SignInBenefits({
                         {t('auth.benefits.title', 'Быстро и безопасно')}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {t('auth.benefits.subtitle', 'Войдите без пароля — используйте e‑mail, Google или Telegram')}
+                        {t('auth.benefits.subtitle', 'Войдите через удобный социальный аккаунт')}
                     </p>
                 </div>
 
@@ -97,15 +89,9 @@ function SignInBenefits({
 
 export function SignInPageView({
     t,
-    mode,
-    phone,
-    email,
     sending,
     error,
     redirectParam,
-    setPhone,
-    setEmail,
-    sendOtp,
     signInWithGoogle,
     signInWithYandex,
     handleTelegramError,
@@ -130,73 +116,11 @@ export function SignInPageView({
                                     {t('auth.subtitle', 'Войдите или создайте аккаунт за пару кликов — без пароля и сложных форм')}
                                 </p>
                                 <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                                    {t('auth.stepsHint', '1) Выберите способ входа · 2) Подтвердите e‑mail или аккаунт · 3) Мы автоматически создадим профиль')}
+                                    {t('auth.stepsHint', '1) Выберите соцсеть · 2) Подтвердите аккаунт · 3) Мы автоматически создадим профиль')}
                                 </p>
                             </div>
 
-                            <form onSubmit={sendOtp} className="space-y-3.5">
-                                <div className="space-y-1">
-                                    <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
-                                        <span className="inline-flex h-1 w-1 rounded-full bg-indigo-500" />
-                                        <span>{t('auth.variantEmail', 'Вариант 1 — вход по e‑mail')}</span>
-                                    </div>
-                                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                                        {t('auth.variantEmailHint', 'Укажите почту, мы пришлём на неё безопасную ссылку/код для входа. Пароль придумывать не нужно.')}
-                                    </p>
-                                </div>
-
-                                {mode === 'phone' ? (
-                                    <div>
-                                        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300 sm:text-sm">
-                                            {t('auth.phone.label', 'Номер телефона')}
-                                        </label>
-                                        <input
-                                            className="w-full px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                                            placeholder={t('auth.phone.placeholder', '+996555123456')}
-                                            value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300 sm:text-sm">
-                                            {t('auth.email.label', 'E-mail адрес')}
-                                        </label>
-                                        <input
-                                            className="w-full px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                                            placeholder={t('auth.email.placeholder', 'you@example.com')}
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                )}
-
-                                {error ? <AlertBanner variant="danger" message={error} compact /> : null}
-
-                                <button
-                                    className="w-full px-5 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white text-sm font-bold rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={sending}
-                                    type="submit"
-                                >
-                                    {sending
-                                        ? t('auth.submit.sending', 'Отправляю...')
-                                        : t('auth.submit.idle', 'Отправить код')}
-                                </button>
-                            </form>
-
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-xs sm:text-sm">
-                                    <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                                        {t('auth.otherMethodsTitle', 'или выберите быстрый вход')}
-                                    </span>
-                                </div>
-                            </div>
+                            {error ? <AlertBanner variant="danger" message={error} compact /> : null}
 
                             <button
                                 type="button"

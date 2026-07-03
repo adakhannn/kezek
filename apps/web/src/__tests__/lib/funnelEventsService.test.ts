@@ -53,8 +53,6 @@ describe('funnelEventsService', () => {
             biz_id: '123e4567-e89b-42d3-a456-426614174000',
             branch_id: null,
             service_id: null,
-            service_ids: null,
-            services_count: null,
             staff_id: '123e4567-e89b-42d3-a456-426614174003',
             slot_start_at: '2026-03-27T10:00:00.000Z',
             booking_id: null,
@@ -64,6 +62,25 @@ describe('funnelEventsService', () => {
             created_at: '2026-03-27T10:00:00.000Z',
             metadata: null,
         });
+    });
+
+    test('stores service array details in metadata instead of non-schema columns', async () => {
+        const admin = createAdmin();
+
+        const result = await saveFunnelEvent(admin, createEvent());
+
+        expect(result).toEqual({ ok: true });
+        const insert = admin.from.mock.results[0]?.value.insert as jest.Mock;
+        expect(insert).toHaveBeenCalledWith(
+            expect.objectContaining({
+                service_id: '123e4567-e89b-42d3-a456-426614174002',
+                metadata: {
+                    sourceStep: 'booking',
+                    service_ids: ['123e4567-e89b-42d3-a456-426614174002'],
+                    services_count: 1,
+                },
+            }),
+        );
     });
 
     test('returns internal error when insert fails', async () => {

@@ -10,11 +10,21 @@ import { Card, cardStyles } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { buttonStyles } from '@/components/ui/buttonStyles';
-import { formatStaffName } from '@/lib/i18nHelpers';
+import { formatStaffName, getServiceName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
 type Branch = { id: string; name: string; address?: string | null; rating_score: number | null };
+type Service = {
+    id: string;
+    name_ru: string;
+    name_ky?: string | null;
+    name_en?: string | null;
+    duration_min: number;
+    price_from?: number | null;
+    price_to?: number | null;
+    branch_id: string;
+};
 type Staff = { id: string; full_name: string; branch_id: string; avatar_url?: string | null; rating_score: number | null };
 type Promotion = {
     id: string;
@@ -28,12 +38,13 @@ type Promotion = {
 type Data = {
     biz: Biz;
     branches: Branch[];
+    services: Service[];
     staff: Staff[];
     promotions?: Promotion[];
 };
 
 export default function BusinessInfo({ data }: { data: Data }) {
-    const { biz, branches, staff, promotions = [] } = data;
+    const { biz, branches, services, staff, promotions = [] } = data;
     const { t, locale } = useLanguage();
     const queryClient = useQueryClient();
 
@@ -164,6 +175,10 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                     label={t('business.metrics.branches', 'активных филиалов')}
                                 />
                                 <BusinessMetric
+                                    value={services.length}
+                                    label={t('business.metrics.services', 'активных услуг')}
+                                />
+                                <BusinessMetric
                                     value={staff.length}
                                     label={t('business.metrics.staff', 'сотрудников в записи')}
                                 />
@@ -258,6 +273,71 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                             </p>
                                         </div>
                                     ))}
+                                </div>
+                            </Card>
+                        ) : null}
+
+                        {services.length > 0 ? (
+                            <Card variant="elevated" padding="lg" data-testid="services-section">
+                                <SectionHeader
+                                    title={t('business.info.services', 'Услуги')}
+                                    description={t(
+                                        'business.info.servicesDescription',
+                                        'Активные услуги и их базовые условия видны до перехода к записи.',
+                                    )}
+                                    action={
+                                        <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
+                                            {services.length} {t('business.info.servicesCount', 'услуг')}
+                                        </span>
+                                    }
+                                />
+                                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                    {services.slice(0, 8).map((service) => {
+                                        const branch = branches.find((branchItem) => branchItem.id === service.branch_id);
+
+                                        return (
+                                            <div
+                                                key={service.id}
+                                                className={cardStyles({
+                                                    variant: 'outlined',
+                                                    padding: 'md',
+                                                    className: 'rounded-[24px] bg-[var(--surface-card)]',
+                                                })}
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <h3 className="type-label text-[var(--text-primary)]">
+                                                            {getServiceName(service, locale)}
+                                                        </h3>
+                                                        {branch ? (
+                                                            <p className="type-caption mt-1 text-[var(--text-secondary)]">
+                                                                {formatName(branch.name)}
+                                                            </p>
+                                                        ) : null}
+                                                    </div>
+                                                    <span className="type-caption shrink-0 rounded-full bg-[var(--surface-emphasis)] px-2.5 py-1 text-[var(--text-secondary)]">
+                                                        {service.duration_min} {t('booking.duration.min', 'мин')}
+                                                    </span>
+                                                </div>
+                                                <p className="type-body mt-4 font-semibold text-[var(--text-primary)]">
+                                                    {formatServicePrice(service, locale, t)}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                    {services.length > 8 ? (
+                                        <div
+                                            className={cardStyles({
+                                                variant: 'outlined',
+                                                padding: 'md',
+                                                className: 'flex min-h-[7rem] items-center justify-center rounded-[24px] border-dashed text-center text-[var(--text-muted)]',
+                                            })}
+                                        >
+                                            <span className="type-caption">
+                                                +{services.length - 8} {t('business.info.more', 'ещё')}
+                                            </span>
+                                        </div>
+                                    ) : null}
                                 </div>
                             </Card>
                         ) : null}
@@ -482,4 +562,24 @@ function getPromotionDescription(
     }
 
     return promotion.title_ru || t('business.info.promotionFallback', 'Доступно специальное предложение');
+}
+
+function formatServicePrice(
+    service: Service,
+    locale: string,
+    t: (key: string, fallback?: string) => string,
+): string {
+    const from = typeof service.price_from === 'number' ? service.price_from : null;
+    const to = typeof service.price_to === 'number' ? service.price_to : null;
+    const formatter = new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'ru-RU');
+    const currency = t('booking.currency', 'сом');
+
+    if (from !== null && to !== null && from !== to) {
+        return `${formatter.format(from)}–${formatter.format(to)} ${currency}`;
+    }
+
+    const value = from ?? to;
+    return value === null
+        ? t('business.info.priceOnRequest', 'Цена по запросу')
+        : `${formatter.format(value)} ${currency}`;
 }

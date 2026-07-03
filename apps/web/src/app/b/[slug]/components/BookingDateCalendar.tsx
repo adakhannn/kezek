@@ -3,12 +3,14 @@ import { ru, enGB } from 'date-fns/locale';
 import type { JSX } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
+import { fromBookingCalendarDate, toBookingCalendarDate } from '@/lib/bookingCalendarDate';
 
 type BookingDateCalendarProps = {
     value: Date;
     onChange: (date: Date) => void;
     min?: Date;
     max?: Date;
+    timezone: string;
     /** Вариант оформления: public (страница записи) или dashboard (кабинет/финансы) */
     variant?: 'public' | 'dashboard';
     className?: string;
@@ -26,12 +28,15 @@ const DATE_LOCALES = {
     ky: ru,
 } as const;
 
-export function BookingDateCalendar({ value, onChange, min, max, variant = 'public', className = '' }: BookingDateCalendarProps): JSX.Element {
+export function BookingDateCalendar({ value, onChange, min, max, timezone, variant = 'public', className = '' }: BookingDateCalendarProps): JSX.Element {
     const { locale, t } = useLanguage();
     const dateLocale = DATE_LOCALES[locale] ?? ru;
     const weekdayLabels = WEEKDAYS_LABELS[locale] ?? WEEKDAYS_LABELS.ru;
 
-    const monthStart = startOfMonth(value);
+    const calendarValue = toBookingCalendarDate(value, timezone);
+    const calendarMin = min ? toBookingCalendarDate(min, timezone) : undefined;
+    const calendarMax = max ? toBookingCalendarDate(max, timezone) : undefined;
+    const monthStart = startOfMonth(calendarValue);
     const monthEnd = endOfMonth(value);
     const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
     const calendarEnd = endOfMonth(monthEnd);
@@ -39,27 +44,27 @@ export function BookingDateCalendar({ value, onChange, min, max, variant = 'publ
     const days = eachDayOfInterval({ start: calendarStart, end: endOfMonth(addMonths(monthStart, 0)) });
 
     const canGoPrev =
-        !min || !isBefore(startOfMonth(addMonths(monthStart, -1)), startOfMonth(min));
+        !calendarMin || !isBefore(startOfMonth(addMonths(monthStart, -1)), startOfMonth(calendarMin));
     const canGoNext =
-        !max || !isAfter(endOfMonth(addMonths(monthStart, 1)), endOfMonth(max));
+        !calendarMax || !isAfter(endOfMonth(addMonths(monthStart, 1)), endOfMonth(calendarMax));
 
     const handleMonthChange = (direction: -1 | 1) => {
         const nextMonth = addMonths(monthStart, direction);
         if (direction === -1 && !canGoPrev) return;
         if (direction === 1 && !canGoNext) return;
         const safeDate = new Date(nextMonth);
-        onChange(safeDate);
+        onChange(fromBookingCalendarDate(safeDate, timezone));
     };
 
     const isDisabled = (day: Date) => {
-        if (min && isBefore(day, min)) return true;
-        if (max && isAfter(day, max)) return true;
+        if (calendarMin && isBefore(day, calendarMin)) return true;
+        if (calendarMax && isAfter(day, calendarMax)) return true;
         return false;
     };
 
     const handleSelect = (day: Date) => {
         if (isDisabled(day)) return;
-        onChange(day);
+        onChange(fromBookingCalendarDate(day, timezone));
     };
 
     const monthLabel = format(monthStart, 'LLLL yyyy', { locale: dateLocale });
@@ -85,7 +90,7 @@ export function BookingDateCalendar({ value, onChange, min, max, variant = 'publ
                 </p>
                 <div className="inline-flex items-center gap-1 rounded-full border border-[color:color-mix(in_srgb,var(--accent-primary)_24%,transparent)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--accent-primary)]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-primary)]" />
-                    {format(value, 'dd.MM.yyyy', { locale: dateLocale })}
+                    {format(calendarValue, 'dd.MM.yyyy', { locale: dateLocale })}
                 </div>
             </div>
 
@@ -122,7 +127,7 @@ export function BookingDateCalendar({ value, onChange, min, max, variant = 'publ
             <div className="grid grid-cols-7 gap-1 px-1 pb-1 text-sm">
                 {days.map((day) => {
                     const disabled = isDisabled(day) || !isSameMonth(day, monthStart);
-                    const selected = isSameDay(day, value);
+                    const selected = isSameDay(day, calendarValue);
 
                     return (
                         <button

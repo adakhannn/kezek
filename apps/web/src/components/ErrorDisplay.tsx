@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import Link from 'next/link';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
 
@@ -19,7 +19,7 @@ export function ErrorDisplay({
     error, 
     onRetry, 
     title,
-    showDetails = process.env.NODE_ENV === 'development'
+    showDetails = false
 }: ErrorDisplayProps) {
     const { t } = useLanguage();
     

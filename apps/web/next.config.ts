@@ -43,7 +43,7 @@ const securityHeaders = [
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "img-src 'self' data: https: blob:",
             "font-src 'self' data: https://fonts.gstatic.com",
-            "connect-src 'self' https://*.supabase.co https://graph.facebook.com https://api.telegram.org wss://*.supabase.co https://*.ingest.sentry.io https://*.sentry.io",
+            "connect-src 'self' https://*.supabase.co https://graph.facebook.com https://api.telegram.org https://log.api-maps.yandex.ru wss://*.supabase.co https://*.ingest.sentry.io https://*.sentry.io",
             "frame-src 'self' https://www.google.com https://yandex.ru https://oauth.telegram.org",
             "object-src 'none'",
             "base-uri 'self'",

@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, useCallback } from 'react';
 
 import { FullScreenStatus } from '@/app/_components/FullScreenStatus';
+import { sanitizeAuthReturnPath } from '@/lib/authReturnUrl';
 import {logDebug, logError, logWarn} from '@/lib/log';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -114,7 +115,7 @@ function AuthCallbackContent() {
 
     useEffect(() => {
         (async () => {
-            const nextParam = searchParams.get('next');
+            const nextParam = sanitizeAuthReturnPath(searchParams.get('next'));
             let attempts = 0;
             const maxAttempts = 10;
 
@@ -163,14 +164,14 @@ function AuthCallbackContent() {
                         
                         // Теперь используем постоянный баннер вместо модального окна
                         
-                        const targetPath = await decideRedirect(nextParam || '/', user?.id);
+                        const targetPath = await decideRedirect(nextParam, user?.id);
                         logDebug('Callback', 'Session set from hash, redirecting', { targetPath });
                         setStatus('success');
                         // Принудительно обновляем страницу для обновления хедера
                         router.refresh();
                         // Небольшая задержка для установки cookies
                         await new Promise(resolve => setTimeout(resolve, 200));
-                        window.location.href = targetPath;
+                        window.location.replace(targetPath);
                         return;
                     }
 
@@ -185,22 +186,24 @@ function AuthCallbackContent() {
                                 
                                 // Теперь используем постоянный баннер вместо модального окна
                                 
-                                const targetPath = await decideRedirect(nextParam || '/', user?.id);
+                                const targetPath = await decideRedirect(nextParam, user?.id);
                                 logDebug('Callback', 'Code exchanged successfully, redirecting', { targetPath });
                                 setStatus('success');
                                 // Принудительно обновляем страницу для обновления хедера
                                 router.refresh();
                                 // Небольшая задержка для установки cookies
                                 await new Promise(resolve => setTimeout(resolve, 100));
-                                window.location.href = targetPath;
+                                window.location.replace(targetPath);
                                 return;
                             } else {
                                 logWarn('Callback', 'exchangeCodeForSession error', exchangeError);
-                                // Продолжаем - возможно Supabase обработал на сервере
+                                setStatus('error');
+                                return;
                             }
                         } catch (e) {
                             logWarn('Callback', 'exchangeCodeForSession exception', e);
-                            // Продолжаем проверку
+                            setStatus('error');
+                            return;
                         }
                     }
 
@@ -212,14 +215,14 @@ function AuthCallbackContent() {
                         
                         // Теперь используем постоянный баннер вместо модального окна
                         
-                        const targetPath = await decideRedirect(nextParam || '/', user?.id);
+                        const targetPath = await decideRedirect(nextParam, user?.id);
                         logDebug('Callback', 'Session found, redirecting', { targetPath });
                         setStatus('success');
                         // Принудительно обновляем страницу для обновления хедера
                         router.refresh();
                         // Небольшая задержка для установки cookies
                         await new Promise(resolve => setTimeout(resolve, 100));
-                        window.location.href = targetPath;
+                        window.location.replace(targetPath);
                         return;
                     }
 
@@ -229,13 +232,8 @@ function AuthCallbackContent() {
                         logDebug('Callback', 'No session yet, waiting', { attempt: attempts, maxAttempts });
                         setTimeout(checkSession, 1000); // Увеличил до 1 секунды
                     } else {
-                        // После всех попыток редиректим - если авторизация произошла, middleware перенаправит
-                        const { data: { user } } = await supabase.auth.getUser();
-                        const targetPath = await decideRedirect(nextParam || '/', user?.id);
-                        logWarn('Callback', 'Max attempts reached, redirecting anyway', { targetPath });
-                        setStatus('success');
-                        router.refresh();
-                        router.replace(targetPath);
+                        logWarn('Callback', 'Max attempts reached without a session');
+                        setStatus('error');
                     }
                 } catch (e) {
                     logError('Callback', 'Error in checkSession', e);
@@ -243,12 +241,8 @@ function AuthCallbackContent() {
                     if (attempts < maxAttempts) {
                         setTimeout(checkSession, 1000);
                     } else {
-                        const { data: { user } } = await supabase.auth.getUser();
-                        const targetPath = await decideRedirect(nextParam || '/', user?.id);
-                        logWarn('Callback', 'Max attempts reached after error, redirecting', { targetPath });
-                        setStatus('success');
-                        router.refresh();
-                        router.replace(targetPath);
+                        logWarn('Callback', 'Max attempts reached after error');
+                        setStatus('error');
                     }
                 }
             };
@@ -264,6 +258,8 @@ function AuthCallbackContent() {
                 subtitle="Попробуйте перезагрузить страницу или войти ещё раз"
                 message="Если проблема повторяется, закройте вкладку, откройте сайт заново и выполните вход ещё раз. 
 Мы автоматически восстановим ваш сеанс, когда это возможно."
+                actionHref="/auth/sign-in"
+                actionLabel="Вернуться ко входу"
                 loading={false}
             />
         );

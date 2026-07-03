@@ -1,10 +1,11 @@
 'use client';
 
-import { format, type Locale } from 'date-fns';
+import type { Locale } from 'date-fns';
 import { useEffect, useMemo } from 'react';
 
 import type { Service, Staff } from '../types';
 
+import { formatBookingDayLabel } from '@/lib/bookingCalendarDate';
 import { logDebug, logWarn } from '@/lib/log';
 
 type TransferRow = {
@@ -15,6 +16,7 @@ type TransferRow = {
 
 type UseBookingFlowDerivedParams = {
     branchId: string;
+    businessTz: string;
     day: Date;
     dayStr: string;
     dateLocale: Locale;
@@ -32,6 +34,7 @@ type UseBookingFlowDerivedParams = {
 
 export function useBookingFlowDerived({
     branchId,
+    businessTz,
     day,
     dayStr,
     dateLocale,
@@ -152,10 +155,8 @@ export function useBookingFlowDerived({
     );
 
     const dayLabel = useMemo(() => {
-        const dateStr = format(day, 'dd.MM.yyyy', { locale: dateLocale });
-        const weekdayStr = format(day, 'EEEE', { locale: dateLocale });
-        return `${dateStr} (${weekdayStr})`;
-    }, [dateLocale, day]);
+        return formatBookingDayLabel(day, businessTz, dateLocale);
+    }, [businessTz, dateLocale, day]);
 
     return {
         dayLabel,

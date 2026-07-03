@@ -65,4 +65,11 @@ describe('signInRedirectLogic', () => {
         const deps = createDeps();
         await expect(decideSignInRedirect(deps, '/custom', 'user-1')).resolves.toBe('/custom');
     });
+
+    test('sanitizes unsafe external fallback when no role rule matches', async () => {
+        const deps = createDeps();
+        await expect(
+            decideSignInRedirect(deps, 'https://evil.example/after-login', 'user-1'),
+        ).resolves.toBe('/');
+    });
 });

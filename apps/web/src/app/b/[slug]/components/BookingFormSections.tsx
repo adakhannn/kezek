@@ -179,6 +179,7 @@ export function BookingFormSections({
                                 value={day}
                                 min={todayTz(businessTz)}
                                 max={addDays(todayTz(businessTz), 60)}
+                                timezone={businessTz}
                                 onChange={onDayChange}
                             />
                             {dayStr ? (

@@ -34,9 +34,12 @@ async function getData(slug: string) {
         return null;
     }
 
-    const [branches, staff] = await Promise.all([
+    const [branches, services, staff] = await Promise.all([
         q(
             `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`,
+        ),
+        q(
+            `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`,
         ),
         q(
             `staff?select=id,full_name,branch_id,avatar_url,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=full_name.asc`,
@@ -60,7 +63,7 @@ async function getData(slug: string) {
         );
     }
 
-    return { biz, branches, staff, promotions };
+    return { biz, branches, services, staff, promotions };
 }
 
 export async function generateMetadata({

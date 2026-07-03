@@ -66,6 +66,13 @@ function getRating(name: string, value: number): 'good' | 'needs-improvement' | 
  */
 async function sendMetric(metric: WebVitalsMetric | PageLoadMetric | RenderMetric): Promise<void> {
     try {
+        if (
+            typeof window !== 'undefined' &&
+            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ) {
+            return;
+        }
+
         // Используем sendBeacon для надежной доставки метрик
         // даже если страница закрывается
         const blob = new Blob([JSON.stringify(metric)], {

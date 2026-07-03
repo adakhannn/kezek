@@ -47,6 +47,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
     const [categories, setCategories] = useState<{ id: string; label: string }[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [mapLoadFailed, setMapLoadFailed] = useState(false);
     const [mapReady, setMapReady] = useState(false);
     const [mapError, setMapError] = useState<string | null>(null);
     const [geoError, setGeoError] = useState<string | null>(null);
@@ -68,11 +69,14 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
             setBranches(data);
             setNearbyList(null);
             setUserPosition(null);
+            setMapLoadFailed(false);
             const ids = Array.from(new Set(data.map((b) => b.categoryId).filter(Boolean))) as string[];
             setCategories(ids.map((id) => ({ id: id!, label: id })));
         } catch (e) {
             logError('MapPage', 'Fetch map failed', e);
             setBranches([]);
+            setNearbyList(null);
+            setMapLoadFailed(true);
         } finally {
             setLoading(false);
         }
@@ -259,6 +263,19 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                 <div ref={listContainerRef} className="flex-1 overflow-y-auto min-h-0">
                     {loading ? (
                         <p className="p-4 text-sm text-gray-500">{t('common.loading', 'Загрузка...')}</p>
+                    ) : mapLoadFailed ? (
+                        <div className="p-4" role="alert">
+                            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                                {t('common.map.branchesFetchError', 'Не удалось загрузить филиалы. Попробуйте обновить список.')}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => fetchMap(categoryId)}
+                                className="mt-3 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500"
+                            >
+                                {t('common.map.retryBranches', 'Попробовать снова')}
+                            </button>
+                        </div>
                     ) : displayList.length === 0 ? (
                         <p className="p-4 text-sm text-gray-500">{t('common.noData', 'нет данных')}</p>
                     ) : (
@@ -315,16 +332,14 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                 {!mapReady && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 p-4">
                         {mapError ? (
-                            <>
+                            <div role="alert" data-testid="map-provider-unavailable" className="flex flex-col items-center gap-2">
                                 <p className="font-medium text-amber-700 dark:text-amber-400">
                                     {t('common.map.loadingMap', 'Загрузка карты...')} — ошибка
                                 </p>
-                                <p className="text-sm max-w-lg text-center break-words" title={mapError}>
-                                    {mapError.includes('NEXT_PUBLIC_YANDEX_MAPS_API_KEY is not set')
-                                        ? 'Задайте NEXT_PUBLIC_YANDEX_MAPS_API_KEY в apps/web/.env.local. Ключ: https://developer.tech.yandex.ru/'
-                                        : mapError}
+                                <p className="text-sm max-w-lg text-center break-words">
+                                    Карта временно недоступна. Выберите филиал из списка.
                                 </p>
-                            </>
+                            </div>
                         ) : (
                             <p>{t('common.map.loadingMap', 'Загрузка карты...')}</p>
                         )}

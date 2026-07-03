@@ -46,14 +46,18 @@ export async function saveFunnelEvent(
     admin: FunnelEventsAdminLike,
     event: FunnelEventInput,
 ): Promise<FunnelEventsResult> {
+    const metadata = {
+        ...(event.metadata ?? {}),
+        ...(event.service_ids ? { service_ids: event.service_ids } : {}),
+        ...(typeof event.services_count === 'number' ? { services_count: event.services_count } : {}),
+    };
+
     const { error } = await admin.from('funnel_events').insert({
         event_type: event.event_type,
         source: event.source,
         biz_id: event.biz_id,
         branch_id: event.branch_id || null,
         service_id: event.service_id || null,
-        service_ids: event.service_ids ?? null,
-        services_count: event.services_count ?? null,
         staff_id: event.staff_id || null,
         slot_start_at: event.slot_start_at || null,
         booking_id: event.booking_id || null,
@@ -61,7 +65,7 @@ export async function saveFunnelEvent(
         user_agent: event.user_agent || null,
         referrer: event.referrer || null,
         created_at: event.timestamp,
-        metadata: event.metadata || null,
+        metadata: Object.keys(metadata).length > 0 ? metadata : null,
     });
 
     if (error) {

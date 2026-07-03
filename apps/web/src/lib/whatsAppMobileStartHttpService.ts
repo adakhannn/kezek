@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { createErrorResponse, createSuccessResponse } from '@/lib/apiErrorHandler';
+import { logWarn } from '@/lib/log';
 import { getRateLimitIdentifier } from '@/lib/rateLimit';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
@@ -71,6 +72,16 @@ export async function runWhatsAppMobileStartHttp(req: Request): Promise<NextResp
         if (cached?.ok) {
             return createSuccessResponse(cached.payload);
         }
+    }
+
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        logWarn('WhatsAppMobileStart', 'WhatsApp auth start unavailable because service role key is not configured');
+        return createErrorResponse(
+            'service_unavailable',
+            'Вход через WhatsApp временно недоступен. Попробуйте другой способ входа или повторите позже.',
+            undefined,
+            503,
+        );
     }
 
     const result = await runWhatsAppMobileStartRoute({

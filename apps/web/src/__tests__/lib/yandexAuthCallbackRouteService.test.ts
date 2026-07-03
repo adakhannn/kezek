@@ -69,6 +69,7 @@ describe('yandexAuthCallbackRouteService', () => {
             requestUrl: 'http://localhost/api/auth/yandex/callback?code=oauth-code',
             env: {
                 NEXT_PUBLIC_SITE_ORIGIN: 'http://localhost',
+                NEXT_PUBLIC_YANDEX_REDIRECT_URI: 'https://kezek.kg/auth/callback-yandex',
                 YANDEX_OAUTH_CLIENT_ID: 'client-id',
                 YANDEX_OAUTH_CLIENT_SECRET: 'client-secret',
                 NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321',
@@ -88,9 +89,39 @@ describe('yandexAuthCallbackRouteService', () => {
                 redirectTo: '/',
             }),
         );
+        const tokenRequest = (fetchImpl as jest.Mock).mock.calls[0];
+        expect(String(tokenRequest[1].body)).toContain(
+            'redirect_uri=https%3A%2F%2Fkezek.kg%2Fauth%2Fcallback-yandex',
+        );
         expect(result).toEqual({
             ok: true,
             redirectUrl: 'https://kezek.kg/auth/callback#token',
+        });
+    });
+
+    test('redirects safely when token exchange fails', async () => {
+        const fetchImpl = jest.fn().mockResolvedValueOnce({
+            ok: false,
+            status: 400,
+            json: async () => ({ error: 'invalid_grant' }),
+        });
+
+        const result = await runYandexAuthCallbackRoute({
+            requestUrl: 'http://localhost/api/auth/yandex/callback?code=bad-code',
+            env: {
+                NEXT_PUBLIC_SITE_ORIGIN: 'http://localhost',
+                NEXT_PUBLIC_YANDEX_REDIRECT_URI: 'https://kezek.kg/auth/callback-yandex',
+                YANDEX_OAUTH_CLIENT_ID: 'client-id',
+                YANDEX_OAUTH_CLIENT_SECRET: 'client-secret',
+            },
+            fetchImpl: fetchImpl as never,
+        });
+
+        expect(createClient).not.toHaveBeenCalled();
+        expect(runYandexOAuthCallback).not.toHaveBeenCalled();
+        expect(result).toEqual({
+            ok: false,
+            redirectUrl: 'http://localhost/auth/sign-in?error=yandex_exchange_failed',
         });
     });
 });

@@ -1,11 +1,15 @@
 'use client';
 
+import Link from 'next/link';
+
 import { Logo } from './Logo';
 
 type FullScreenStatusProps = {
     title: string;
     subtitle?: string;
     message?: string;
+    actionHref?: string;
+    actionLabel?: string;
     /** Показывать ли спиннер */
     loading?: boolean;
 };
@@ -14,6 +18,8 @@ export function FullScreenStatus({
     title,
     subtitle,
     message,
+    actionHref,
+    actionLabel,
     loading = true,
 }: FullScreenStatusProps) {
     return (
@@ -42,6 +48,14 @@ export function FullScreenStatus({
                             <p className="text-xs text-gray-500 dark:text-gray-500 max-w-sm">
                                 {message}
                             </p>
+                        )}
+                        {actionHref && actionLabel && (
+                            <Link
+                                href={actionHref}
+                                className="inline-flex items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-2 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)]"
+                            >
+                                {actionLabel}
+                            </Link>
                         )}
                     </div>
                 </div>

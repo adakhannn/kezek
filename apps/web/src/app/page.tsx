@@ -13,12 +13,20 @@ import { getT, getServerLocale, type I18nKey } from './_components/i18n/server';
 
 import { Badge } from '@/components/ui/Badge';
 import { HomeViewTracker } from '@/lib/analyticsTrackEvent';
+import { logWarn } from '@/lib/log';
 import { generateAlternates } from '@/lib/seo';
 import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 const PAGE_SIZE = 9;
 
 type SearchParams = { q?: string; cat?: string; page?: string };
+
+function formatPublicRatingScore(score: number): string {
+    const normalizedScore = score > 5 ? score / 20 : score;
+    const safeScore = Math.min(5, Math.max(0, normalizedScore));
+
+    return safeScore.toFixed(1);
+}
 
 export async function generateMetadata(): Promise<Metadata> {
     const locale = await getServerLocale();
@@ -59,88 +67,112 @@ export default async function Home({
     const locale = await getServerLocale();
     const t = getT(locale);
 
-    const supabase = await createSupabaseServerClient();
+    let total = 0;
+    let pages = 1;
+    let typedBusinesses: Business[] = [];
+    let categoriesAvailable: string[] = [];
+    let ratedBusinesses = 0;
+    let serviceUnavailable = false;
 
-    let query = supabase
-        .from('businesses')
-        .select('id,slug,name,address,phones,categories,rating_score', { count: 'exact' })
-        .eq('is_approved', true);
+    try {
+        const supabase = await createSupabaseServerClient();
 
-    if (q) {
-        const safeQ = q.trim().slice(0, 100).replace(/[%_\\]/g, (char) => `\\${char}`);
-        const searchPattern = `%${safeQ}%`;
-        query = query.or(`name.ilike.${searchPattern},address.ilike.${searchPattern}`);
-    }
+        let query = supabase
+            .from('businesses')
+            .select('id,slug,name,address,phones,categories,rating_score', { count: 'exact' })
+            .eq('is_approved', true);
 
-    if (cat) {
-        query = query.contains('categories', [cat]);
-    }
+        if (q) {
+            const safeQ = q.trim().slice(0, 100).replace(/[%_\\]/g, (char) => `\\${char}`);
+            const searchPattern = `%${safeQ}%`;
+            query = query.or(`name.ilike.${searchPattern},address.ilike.${searchPattern}`);
+        }
 
-    const from = (pageNum - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+        if (cat) {
+            query = query.contains('categories', [cat]);
+        }
 
-    query = query
-        .range(from, to)
-        .order('rating_score', { ascending: false, nullsFirst: false })
-        .order('name', { ascending: true });
+        const from = (pageNum - 1) * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
 
-    const { data: businesses, count } = await query;
+        query = query
+            .range(from, to)
+            .order('rating_score', { ascending: false, nullsFirst: false })
+            .order('name', { ascending: true });
 
-    const total = count ?? 0;
-    const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-    const typedBusinesses: Business[] = (businesses as Business[] | null) ?? [];
+        const { data: businesses, count, error: businessesError } = await query;
 
-    if (typedBusinesses.length > 0) {
-        const bizIds = typedBusinesses.map((business) => business.id);
+        if (businessesError) {
+            throw businessesError;
+        }
 
-        const { data: branchesData } = await supabase
-            .from('branches')
-            .select('id, biz_id')
-            .in('biz_id', bizIds)
-            .eq('is_active', true);
+        total = count ?? 0;
+        pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        typedBusinesses = (businesses as Business[] | null) ?? [];
 
-        const branches = (branchesData ?? []) as BranchSummary[];
+        if (typedBusinesses.length > 0) {
+            const bizIds = typedBusinesses.map((business) => business.id);
 
-        if (branches.length > 0) {
-            const branchIds = branches.map((branch) => branch.id);
+            const { data: branchesData, error: branchesError } = await supabase
+                .from('branches')
+                .select('id, biz_id')
+                .in('biz_id', bizIds)
+                .eq('is_active', true);
 
-            const { data: promotionsCounts } = await supabase
-                .from('branch_promotions')
-                .select('branch_id')
-                .eq('is_active', true)
-                .in('branch_id', branchIds);
-
-            const promoCountMap = new Map<string, number>();
-            const branchToBizMap = new Map<string, string>();
-
-            branches.forEach((branch) => {
-                branchToBizMap.set(branch.id, branch.biz_id);
-            });
-
-            if (promotionsCounts) {
-                for (const promo of promotionsCounts) {
-                    const bizId = branchToBizMap.get(promo.branch_id);
-                    if (bizId) {
-                        promoCountMap.set(bizId, (promoCountMap.get(bizId) || 0) + 1);
-                    }
-                }
+            if (branchesError) {
+                throw branchesError;
             }
 
-            typedBusinesses.forEach((business) => {
-                business.promotions_count = promoCountMap.get(business.id) || 0;
-            });
+            const branches = (branchesData ?? []) as BranchSummary[];
+
+            if (branches.length > 0) {
+                const branchIds = branches.map((branch) => branch.id);
+
+                const { data: promotionsCounts, error: promotionsError } = await supabase
+                    .from('branch_promotions')
+                    .select('branch_id')
+                    .eq('is_active', true)
+                    .in('branch_id', branchIds);
+
+                if (promotionsError) {
+                    throw promotionsError;
+                }
+
+                const promoCountMap = new Map<string, number>();
+                const branchToBizMap = new Map<string, string>();
+
+                branches.forEach((branch) => {
+                    branchToBizMap.set(branch.id, branch.biz_id);
+                });
+
+                if (promotionsCounts) {
+                    for (const promo of promotionsCounts) {
+                        const bizId = branchToBizMap.get(promo.branch_id);
+                        if (bizId) {
+                            promoCountMap.set(bizId, (promoCountMap.get(bizId) || 0) + 1);
+                        }
+                    }
+                }
+
+                typedBusinesses.forEach((business) => {
+                    business.promotions_count = promoCountMap.get(business.id) || 0;
+                });
+            }
         }
+
+        categoriesAvailable = Array.from(
+            new Set(
+                typedBusinesses
+                    .flatMap((business) => business.categories ?? [])
+                    .filter(Boolean),
+            ),
+        ).sort();
+
+        ratedBusinesses = typedBusinesses.filter((business) => typeof business.rating_score === 'number').length;
+    } catch (error) {
+        serviceUnavailable = true;
+        logWarn('Home', 'Marketplace data is unavailable', error);
     }
-
-    const categoriesAvailable = Array.from(
-        new Set(
-            typedBusinesses
-                .flatMap((business) => business.categories ?? [])
-                .filter(Boolean),
-        ),
-    ).sort();
-
-    const ratedBusinesses = typedBusinesses.filter((business) => typeof business.rating_score === 'number').length;
 
     return (
         <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_28%),radial-gradient(circle_at_top_right,rgba(244,114,182,0.07),transparent_26%),linear-gradient(180deg,var(--surface-canvas),color-mix(in_srgb,var(--surface-muted)_72%,var(--surface-canvas)))]">
@@ -175,6 +207,17 @@ export default async function Home({
                                         t={t}
                                     />
                                 ))}
+                            </section>
+                        ) : serviceUnavailable ? (
+                            <section
+                                role="alert"
+                                data-testid="marketplace-service-unavailable"
+                                className="rounded-[24px] border border-amber-300 bg-amber-50 px-5 py-5 text-amber-900 shadow-[var(--shadow-sm)] dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+                            >
+                                <h3 className="type-section-title">Каталог временно недоступен</h3>
+                                <p className="type-body mt-2">
+                                    Не удалось загрузить данные. Обновите страницу или попробуйте ещё раз позже.
+                                </p>
                             </section>
                         ) : (
                             <HomeEmptyState q={q} cat={cat} />
@@ -313,7 +356,7 @@ function MarketplaceBusinessCard({
                 >
                     <span aria-hidden="true">{hasRating ? '★' : '•'}</span>
                     {hasRating
-                        ? Number(business.rating_score).toFixed(1)
+                        ? formatPublicRatingScore(Number(business.rating_score))
                         : t('common.rating.noRating', 'Нет рейтинга')}
                 </div>
             </div>

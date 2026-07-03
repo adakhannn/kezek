@@ -10,6 +10,8 @@ import { StaffCabinetButton } from './StaffCabinetButton';
 import { getT } from './i18n/server';
 
 import { getUserRoleProfile, resolveDefaultDashboard } from '@/lib/authContext';
+import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/env';
+import { logWarn } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,17 +19,29 @@ export async function AuthStatusServer() {
     noStore();
 
     const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value;
+    let supabase: ReturnType<typeof createServerClient>;
+    try {
+        supabase = createServerClient(
+            getSupabaseUrl(),
+            getSupabaseAnonKey(),
+            {
+                cookies: {
+                    get(name: string) {
+                        return cookieStore.get(name)?.value;
+                    },
                 },
-            },
-        }
-    );
+            }
+        );
+    } catch (error) {
+        logWarn('AuthStatusServer', 'Supabase runtime configuration is invalid', error);
+        return (
+            <div className="hidden md:flex items-center gap-3">
+                <span className="rounded-[var(--radius-md)] border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                    Сервис временно недоступен
+                </span>
+            </div>
+        );
+    }
 
     const { data: auth } = await supabase.auth.getUser();
     const user = auth.user;

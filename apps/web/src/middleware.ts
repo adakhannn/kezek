@@ -78,23 +78,38 @@ export async function middleware(req: NextRequest) {
     // geolocation=(self) — для страницы карты «Ближайший ко мне»
     res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
 
-    const supabase = createServerClient(
-        getSupabaseUrl(),
-        getSupabaseAnonKey(),
-        {
-            cookies: {
-                get: (name: string) => req.cookies.get(name)?.value,
-                set: (name: string, value: string, options?: { path?: string; domain?: string; maxAge?: number; expires?: Date; httpOnly?: boolean; secure?: boolean; sameSite?: 'lax' | 'strict' | 'none' | boolean }) => {
-                    res.cookies.set({ name, value, ...options });
+    let supabase: ReturnType<typeof createServerClient>;
+    try {
+        supabase = createServerClient(
+            getSupabaseUrl(),
+            getSupabaseAnonKey(),
+            {
+                cookies: {
+                    get: (name: string) => req.cookies.get(name)?.value,
+                    set: (name: string, value: string, options?: { path?: string; domain?: string; maxAge?: number; expires?: Date; httpOnly?: boolean; secure?: boolean; sameSite?: 'lax' | 'strict' | 'none' | boolean }) => {
+                        res.cookies.set({ name, value, ...options });
+                    },
+                    remove: (name: string, options?: { path?: string; domain?: string }) => {
+                        res.cookies.set({ name, value: '', ...options });
+                    },
                 },
-                remove: (name: string, options?: { path?: string; domain?: string }) => {
-                    res.cookies.set({ name, value: '', ...options });
-                },
-            },
-        }
-    );
+            }
+        );
+    } catch (e) {
+        const { logWarn } = await import('@/lib/log');
+        logWarn('middleware', 'Supabase runtime configuration is invalid', e);
+        return res;
+    }
 
-    const { data: userRes } = await supabase.auth.getUser();
+    let userRes: { user: unknown };
+    try {
+        const authResult = await supabase.auth.getUser();
+        userRes = authResult.data;
+    } catch (e) {
+        const { logWarn } = await import('@/lib/log');
+        logWarn('middleware', 'Supabase user lookup failed', e);
+        return res;
+    }
     if (!userRes.user) return res;
 
     if (pathname === '/') {

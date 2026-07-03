@@ -29,10 +29,21 @@ jest.mock('@/lib/whatsAppMobileStartRouteService', () => ({
 import { runWhatsAppMobileStartRoute } from '@/lib/whatsAppMobileStartRouteService';
 
 describe('runWhatsAppMobileStartHttp', () => {
+    const originalServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
     beforeEach(() => {
         jest.clearAllMocks();
+        process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
         __resetWhatsAppMobileIdempotencyForTests();
         __resetWhatsAppMobileAbuseProtectionForTests();
+    });
+
+    afterAll(() => {
+        if (originalServiceRoleKey === undefined) {
+            delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+        } else {
+            process.env.SUPABASE_SERVICE_ROLE_KEY = originalServiceRoleKey;
+        }
     });
 
     test('returns start payload on success', async () => {
@@ -100,6 +111,21 @@ describe('runWhatsAppMobileStartHttp', () => {
         await expectSuccessResponse(res1, 200);
         await expectSuccessResponse(res2, 200);
         expect(runWhatsAppMobileStartRoute).toHaveBeenCalledTimes(1);
+    });
+
+    test('returns safe service unavailable when service role key is missing', async () => {
+        delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        const req = createMockRequest('http://localhost/api/auth/whatsapp/mobile/start', {
+            method: 'POST',
+            body: { phone: '+996500574029' },
+        });
+
+        const res = await runWhatsAppMobileStartHttp(req);
+        const data = await expectErrorResponse(res, 503, 'service_unavailable');
+
+        expect(String(data.message)).not.toContain('SUPABASE_SERVICE_ROLE_KEY');
+        expect(runWhatsAppMobileStartRoute).not.toHaveBeenCalled();
     });
 });
 
