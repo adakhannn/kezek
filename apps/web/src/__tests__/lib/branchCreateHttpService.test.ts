@@ -19,6 +19,7 @@ import { getServiceClient } from '@/lib/supabaseService';
 describe('branchCreateHttpService', () => {
   const mockSupabase = {
     rpc: jest.fn(),
+    from: jest.fn(),
   };
   const mockServiceClient = { from: jest.fn() };
 
@@ -26,9 +27,15 @@ describe('branchCreateHttpService', () => {
     jest.clearAllMocks();
     (getBizContextForManagers as jest.Mock).mockResolvedValue({
       supabase: mockSupabase,
+      userId: 'user-id',
       bizId: 'biz-id',
     });
     (getServiceClient as jest.Mock).mockReturnValue(mockServiceClient);
+    mockSupabase.from.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+    });
   });
 
   test('returns forbidden when user is not super admin', async () => {
@@ -75,5 +82,32 @@ describe('branchCreateHttpService', () => {
     });
     expect(response.status).toBe(200);
     expect(body.data.id).toBe('branch-id');
+  });
+
+  test('allows the owner of the selected business to create a branch', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: false, error: null });
+    mockSupabase.from.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'biz-id' }, error: null }),
+    });
+    (createBranch as jest.Mock).mockResolvedValue({
+      ok: true,
+      data: { id: 'owner-branch-id' },
+    });
+
+    const response = await runBranchCreateHttp(
+      new Request('http://localhost/api/branches/create', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: 'Owner Branch', address: 'Manual address' }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(createBranch).toHaveBeenCalledWith(expect.objectContaining({
+      bizId: 'biz-id',
+      body: { name: 'Owner Branch', address: 'Manual address' },
+    }));
   });
 });

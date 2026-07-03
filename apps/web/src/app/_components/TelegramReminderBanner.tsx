@@ -104,7 +104,7 @@ export function TelegramReminderBanner() {
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                         <button
                             onClick={() =>
-                                router.push('/auth/sign-in?redirect=/cabinet')
+                                router.push('/cabinet/profile')
                             }
                             className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white text-sky-600 font-medium rounded-lg hover:bg-gray-100 transition-colors text-xs sm:text-sm whitespace-nowrap"
                         >

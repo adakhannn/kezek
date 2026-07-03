@@ -13,7 +13,7 @@ type Branch = {
 };
 
 export default async function BranchesListPage() {
-    const { supabase, bizId } = await getBizContextForManagers();
+    const { supabase, userId, bizId } = await getBizContextForManagers();
 
     // Проверяем, является ли пользователь суперадмином
     const { data: isSuper } = await supabase.rpc('is_super_admin');
@@ -30,10 +30,12 @@ export default async function BranchesListPage() {
             .order('name'),
         supabase
             .from('businesses')
-            .select('slug,name')
+            .select('slug,name,owner_id')
             .eq('id', bizId)
             .maybeSingle(),
     ]);
+
+    const canCreateBranch = isSuperAdmin || business?.owner_id === userId;
 
     if (error) {
         return <main className="p-6 text-red-600">Ошибка: {error.message}</main>;
@@ -42,7 +44,7 @@ export default async function BranchesListPage() {
     return (
         <BranchesListClient
             branches={(branches ?? []) as Branch[]}
-            isSuperAdmin={isSuperAdmin}
+            canCreateBranch={canCreateBranch}
             businessSlug={business?.slug || null}
             businessName={business?.name || null}
         />

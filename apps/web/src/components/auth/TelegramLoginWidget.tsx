@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { memo, useEffect, useRef, useState } from 'react';
 
+import { clearTelegramAuthFragment } from '@/lib/clearTelegramAuthFragment';
 import {logError} from '@/lib/log';
 import type { TelegramAuthData } from '@/lib/telegram/verify';
 
@@ -78,6 +79,7 @@ function TelegramLoginWidgetComponent({
         // Регистрируем callback в window с типом
         const w = window as typeof window & Record<string, TelegramCallback>;
         w[callbackName] = async (user: TelegramUser) => {
+            clearTelegramAuthFragment();
             setLoading(true);
             try {
                 // Отправляем данные Telegram на наш API

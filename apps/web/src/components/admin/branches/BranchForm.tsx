@@ -15,6 +15,7 @@ type Props = {
     mode: 'create' | 'edit';
     bizId: string;
     branchId?: string;
+    yandexMapsApiKey?: string;
     initial?: { name: string; address: string; is_active: boolean; lat?: number | null; lon?: number | null };
 };
 
@@ -22,7 +23,7 @@ type ApiOk = { ok: true; id?: string };
 type ApiErr = { ok: false; error?: string };
 type ApiResp = ApiOk | ApiErr;
 
-export function BranchForm({ mode, bizId, branchId, initial }: Props) {
+export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }: Props) {
     const router = useRouter();
 
     const [name, setName] = useState<string>(initial?.name ?? '');
@@ -118,6 +119,7 @@ export function BranchForm({ mode, bizId, branchId, initial }: Props) {
                 </label>
                 <Card className="p-4">
                     <BranchMapPickerYandex
+                        yandexMapsApiKey={yandexMapsApiKey}
                         lat={lat ?? undefined}
                         lon={lon ?? undefined}
                         onPick={(la, lo, addr) => {
@@ -139,10 +141,9 @@ export function BranchForm({ mode, bizId, branchId, initial }: Props) {
                 label="Адрес"
                 placeholder="Адрес будет заполнен автоматически при выборе на карте"
                 value={address}
-                readOnly
                 name="branch_address"
                 autoComplete="street-address"
-                helperText="Адрес заполняется автоматически при выборе точки на карте"
+                helperText="Адрес можно выбрать на карте или ввести вручную"
             />
 
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">

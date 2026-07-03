@@ -21,9 +21,11 @@ type Initial = {
 export default function BranchForm({
                                        initial,
                                        apiBase,
+                                       yandexMapsApiKey,
                                    }: {
     initial: Initial;
     apiBase: string; // '/api/branches'
+    yandexMapsApiKey?: string;
 }) {
     const r = useRouter();
     const { t } = useLanguage();
@@ -94,6 +96,7 @@ export default function BranchForm({
                     </ul>
                 </div>
                 <BranchMapPickerYandex
+                    yandexMapsApiKey={yandexMapsApiKey}
                     lat={lat ?? undefined}
                     lon={lon ?? undefined}
                     onPick={(la, lo, addr) => {
@@ -114,8 +117,7 @@ export default function BranchForm({
                 value={form.address ?? ''}
                 onChange={(e)=>setForm(f=>({...f, address: e.target.value || null }))}
                 placeholder={t('branches.form.addressPlaceholder', 'Адрес будет определен автоматически при выборе на карте')}
-                readOnly
-                className="bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                helperText={t('branches.form.addressManualHint', 'Адрес можно выбрать на карте или ввести вручную')}
             />
 
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">

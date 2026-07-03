@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { clearTelegramAuthFragment } from '@/lib/clearTelegramAuthFragment';
 import {logError} from '@/lib/log';
 
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'kezek_auth_bot';
@@ -59,6 +60,7 @@ export function TelegramLinkWidget({
         // Регистрируем callback в window
         const w = window as typeof window & Record<string, TelegramCallback>;
         w[callbackName] = async (user: TelegramUser) => {
+            clearTelegramAuthFragment();
             setLoading(true);
             try {
                 // Отправляем данные Telegram на API для связывания

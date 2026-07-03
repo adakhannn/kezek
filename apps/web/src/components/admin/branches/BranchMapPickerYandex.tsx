@@ -85,10 +85,11 @@ interface IYMaps {
 type Props = {
     lat?: number | null;
     lon?: number | null;
+    yandexMapsApiKey?: string;
     onPick: (lat: number, lon: number, addr?: string) => void;
 };
 
-export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
+export default function BranchMapPickerYandex({ lat, lon, yandexMapsApiKey, onPick }: Props) {
     const boxRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<IMap | null>(null);
     const placemarkRef = useRef<IPlacemark | null>(null);
@@ -105,7 +106,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
 
         (async () => {
             try {
-            const ymaps = (await loadYandexMaps()) as unknown as IYMaps;
+            const ymaps = (await loadYandexMaps(yandexMapsApiKey)) as unknown as IYMaps;
                 if (destroyed || !boxRef.current) return;
 
             // Yandex Maps использует формат [lat, lon] для center и Placemark
@@ -220,7 +221,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
                         <div class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800 rounded border">
                             <div class="text-center p-4">
                                 <p class="text-red-600 dark:text-red-400 font-medium mb-2">Ошибка загрузки карты</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">${error instanceof Error ? error.message : 'Неизвестная ошибка'}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Карта временно недоступна. Введите адрес филиала вручную.</p>
                             </div>
                         </div>
                     `;
@@ -236,7 +237,7 @@ export default function BranchMapPickerYandex({ lat, lon, onPick }: Props) {
             }
             placemarkRef.current = null;
         };
-    }, [lat, lon]); // onPick не включаем в зависимости, чтобы карта не пересоздавалась при каждом рендере
+    }, [lat, lon, yandexMapsApiKey]); // onPick не включаем в зависимости, чтобы карта не пересоздавалась при каждом рендере
 
     return (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">

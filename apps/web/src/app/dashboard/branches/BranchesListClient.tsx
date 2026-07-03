@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
-import { ToastContainer } from '@/components/ui/Toast';
 import QRCodeGenerator from '@/components/QRCodeGenerator';
+import { ToastContainer } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { transliterate } from '@/lib/transliterate';
 
@@ -18,12 +18,12 @@ type Branch = {
 
 export default function BranchesListClient({
     branches,
-    isSuperAdmin,
+    canCreateBranch,
     businessSlug,
     businessName,
 }: {
     branches: Branch[];
-    isSuperAdmin: boolean;
+    canCreateBranch: boolean;
     businessSlug: string | null;
     businessName: string | null;
 }) {
@@ -86,7 +86,7 @@ export default function BranchesListClient({
                             {t('branches.subtitle', 'Управление филиалами бизнеса')}
                         </p>
                     </div>
-                    {isSuperAdmin && (
+                    {canCreateBranch && (
                         <Link
                             href="/dashboard/branches/new"
                             className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-pink-700 shadow-md hover:shadow-lg transition-all duration-200 text-sm"

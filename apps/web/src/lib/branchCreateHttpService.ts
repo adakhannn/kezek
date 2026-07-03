@@ -10,13 +10,20 @@ import {
 import { getServiceClient } from '@/lib/supabaseService';
 
 export async function runBranchCreateHttp(req: Request): Promise<NextResponse> {
-  const { supabase, bizId } = await getBizContextForManagers();
+  const { supabase, userId, bizId } = await getBizContextForManagers();
 
   const { data: isSuper } = await supabase.rpc('is_super_admin');
-  if (!isSuper) {
+  const { data: ownedBusiness } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('id', bizId)
+    .eq('owner_id', userId)
+    .maybeSingle();
+
+  if (!isSuper && !ownedBusiness) {
     return createErrorResponse(
       'forbidden',
-      'Только суперадмин может создавать филиалы',
+      'Только владелец бизнеса или суперадминистратор может создавать филиалы',
       undefined,
       403,
     );

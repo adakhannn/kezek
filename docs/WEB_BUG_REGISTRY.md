@@ -54,6 +54,102 @@ The web testing scope and execution status are maintained in
 
 ## Open bugs
 
+### WB-030
+- id: `WB-030`
+- date: `2026-07-04`
+- area: `I1 / emergency branch creation`
+- severity: `P1`
+- title: Branch creation is blocked when Yandex Maps key is unavailable and owners are denied create access
+- build: deployed production `https://kezek.kg` at commit `fb7b5ef9`
+- environment: Chromium on Windows; super-admin screenshot and authenticated business-owner flow
+- preconditions:
+  - open a branch creation form
+- steps:
+  1. Open `/admin/businesses/[id]/branches/new` on production.
+  2. Observe the map initialization failure when the public Yandex Maps key is unavailable.
+  3. Attempt to enter an address or submit without map coordinates.
+  4. Open `/dashboard/branches` and `/dashboard/branches/new` as a business owner.
+- expected:
+  - map receives runtime configuration when available;
+  - branch can still be created with a manual address when map/coordinates are unavailable;
+  - an owner can create a branch only for their own selected business.
+- actual:
+  - map exposes an internal missing-env message;
+  - address is read-only and admin create API requires coordinates, blocking submission;
+  - dashboard create UI and API allow only super-admin, denying the owner.
+- evidence:
+  - screenshot: `C:/Users/osoro/AppData/Local/Temp/codex-clipboard-046bdd3e-42be-44d0-bfd5-ad924616f8a1.png`
+- fix:
+  - branch forms now receive the runtime Yandex Maps key when available;
+  - map failures show safe user guidance instead of internal environment details;
+  - address is editable manually and branch creation accepts missing coordinates;
+  - dashboard list, create page, and create API allow the authenticated owner of the selected business while continuing to deny unrelated managers.
+- verification:
+  - owner/super-admin/forbidden authorization and coordinate-optional service tests passed;
+  - web typecheck and production build passed;
+  - production post-fix live verification requires deployment.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
+
+### WB-029
+- id: `WB-029`
+- date: `2026-07-03`
+- area: `C4`
+- severity: `P0`
+- title: Telegram linking payload remains in the profile URL fragment when the link request is rate-limited
+- build: deployed commit `fb7b5ef9` at `https://kezek.kg`
+- environment: in-app Chromium, Windows, authenticated Yandex user, real Telegram identity
+- preconditions:
+  - open the Telegram linking widget from `/cabinet/profile`
+- steps:
+  1. Authenticate with Telegram and click the final `Войти как …` action.
+  2. Trigger the link request while the auth rate limit is active.
+  3. Observe the profile address bar and retry feedback.
+- expected:
+  - Telegram callback data is removed from the URL immediately, regardless of API success or failure;
+  - rate-limit feedback is safe and the identity is not partially linked.
+- actual:
+  - the API shows a localized retry countdown, but the signed Telegram payload remains in `#tgAuthResult`;
+  - profile and reminder continue to show Telegram as unlinked.
+- evidence:
+  - real production browser reproduction on `2026-07-03`; payload values intentionally omitted
+- fix:
+  - both Telegram login and linking widgets now remove `#tgAuthResult` with `history.replaceState` before making any API request.
+- verification:
+  - focused fragment/link/login tests, typecheck, and production build passed locally;
+  - production post-fix live verification requires deployment.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
+
+### WB-028
+- id: `WB-028`
+- date: `2026-07-03`
+- area: `C4`
+- severity: `P0`
+- title: Telegram reminder cannot link an already authenticated account because sign-in immediately redirects away
+- build: deployed commit `fb7b5ef9` at `https://kezek.kg`
+- environment: in-app Chromium, Windows, authenticated Yandex session
+- preconditions:
+  - user is authenticated and the Telegram reminder banner is visible
+- steps:
+  1. Open `/cabinet/bookings`.
+  2. Click reminder action `Подключить`.
+  3. Observe `/auth/sign-in?redirect=/cabinet` and wait for the Telegram widget.
+- expected:
+  - Telegram confirmation remains available and links the identity to the current Kezek user exactly once.
+- actual:
+  - the widget appears briefly, then existing-session routing returns to `/cabinet/bookings` before it can be used;
+  - reminder remains visible and no linking occurs.
+- evidence:
+  - real production browser reproduction on `2026-07-03`; console clean
+- fix:
+  - reminder action now opens `/cabinet/profile`, where the authenticated linking widget calls `/api/auth/telegram/link`.
+- verification:
+  - focused Telegram link/login tests, typecheck, and production build passed locally;
+  - production post-fix live verification requires deployment.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
+
 ### WB-027
 - id: `WB-027`
 - date: `2026-07-03`
@@ -80,8 +176,11 @@ The web testing scope and execution status are maintained in
   - the browser callback no longer owns the initial Google code exchange.
 - verification:
   - typecheck and production build passed locally;
-  - production post-fix live verification requires deploying the follow-up candidate.
-- status: `fixed locally; production post-fix live verification required`
+  - deployed commit `fb7b5ef9` completed real Google OAuth through the server callback;
+  - role policy sent the multi-business owner to `/select-business`, reload preserved the session, and Back did not restore callback data.
+- post-fix evidence:
+  - `apps/web/test-results/live-c3-oauth-2026-07-03/c3-postdeploy-final-sanitized.json`
+- status: `verified`
 - owner: `Codex + User`
 
 ### WB-026
@@ -138,7 +237,13 @@ The web testing scope and execution status are maintained in
 - post-deploy observation for commit `0f57fd8d`:
   - sensitive auth fragments no longer remain after generic callback completion;
   - session persists and replay is idempotent, but Back can still briefly reopen `/auth/callback-yandex` with a one-time code.
-- status: `follow-up fix ready locally; production post-fix live verification required`
+- final post-fix live verification:
+  - deployed commit `fb7b5ef9` completed real Yandex OAuth at `/cabinet/bookings`;
+  - reload preserved the session;
+  - Back returned to the clean sign-in history entry without callback code or auth fragment, then session routing restored `/cabinet/bookings`.
+- post-fix evidence:
+  - `apps/web/test-results/live-c3-oauth-2026-07-03/c3-postdeploy-final-sanitized.json`
+- status: `verified`
 - owner: `Codex + User`
 
 ### WB-024
@@ -200,7 +305,13 @@ The web testing scope and execution status are maintained in
 - fix:
   - Google authorization now includes the sanitized return path in its callback URL;
   - generic callback completion now uses `window.location.replace` so transient callback URLs are removed from browser history.
-- status: `fixed in local candidate; production post-fix live verification required`
+- post-fix live verification:
+  - deployed commit `fb7b5ef9` preserved the safe return intent through the dedicated Google callback;
+  - final destination followed role policy (`/select-business` for the tested multi-business owner);
+  - no callback code remained in the destination or Back history.
+- post-fix evidence:
+  - `apps/web/test-results/live-c3-oauth-2026-07-03/c3-postdeploy-final-sanitized.json`
+- status: `verified`
 - owner: `Codex + User`
 
 ### WB-022

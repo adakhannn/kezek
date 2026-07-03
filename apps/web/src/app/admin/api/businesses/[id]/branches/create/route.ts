@@ -49,13 +49,15 @@ export async function POST(req: Request, context: unknown) {
         const name = norm(body.name);
         if (!name) return NextResponse.json({ ok: false, error: 'Название обязательно' }, { status: 400 });
 
-        // Координаты обязательны при создании (для карты филиалов). Только coords (EWKT); lat/lon заполнит БД/триггер.
-        if (body.lat == null || body.lon == null) {
-            return NextResponse.json({ ok: false, error: 'Координаты филиала обязательны (укажите на карте)' }, { status: 400 });
+        let coordsWkt: string | null = null;
+        if (body.lat != null || body.lon != null) {
+            if (body.lat == null || body.lon == null) {
+                return NextResponse.json({ ok: false, error: 'Укажите обе координаты филиала' }, { status: 400 });
+            }
+            const v = validateLatLon(body.lat, body.lon);
+            if (!v.ok) return NextResponse.json({ ok: false, error: 'Некорректные координаты' }, { status: 400 });
+            coordsWkt = `SRID=4326;POINT(${v.lon} ${v.lat})`;
         }
-        const v = validateLatLon(body.lat, body.lon);
-        if (!v.ok) return NextResponse.json({ ok: false, error: 'Некорректные координаты' }, { status: 400 });
-        const coordsWkt = `SRID=4326;POINT(${v.lon} ${v.lat})`;
 
         const { data, error } = await admin
             .from('branches')

@@ -50,7 +50,7 @@ Each completed live area should record:
 | --- | --- | --- | --- |
 | `A1-A4` | Runtime, deployment, configuration | `P0-P1` | `A1-A4 verified` |
 | `B1-B4` | Public discovery and business pages | `P0-P2` | `B1-B4 verified` |
-| `C1-C6` | Authentication and session | `P0-P1` | `C1 verified; C2 not applicable (social-only); C3 in progress; C4-C6 not started` |
+| `C1-C6` | Authentication and session | `P0-P1` | `C1 and C3 verified; C2 not applicable (social-only); C4 in progress; C5-C6 not started` |
 | `D1-D6` | Public and authenticated booking | `P0-P1` | `not started` |
 | `E1-E5` | Client cabinet | `P0-P2` | `not started` |
 | `F1-F4` | Roles, guards, business selection | `P0-P1` | `not started` |
@@ -953,7 +953,7 @@ Done when:
 
 - provider callback establishes exactly one valid session and never gets stuck.
 
-Status: `in progress`
+Status: `verified`
 
 Latest live run: `2026-07-03`
 
@@ -974,7 +974,7 @@ Latest live run: `2026-07-03`
   - `apps/web/test-results/live-c3-oauth-2026-07-03/c3-yandex-postfix-live.json`
   - `apps/web/test-results/live-c3-oauth-2026-07-03/c3-yandex-cancellation.json`
   - `apps/web/test-results/live-c3-oauth-2026-07-03/c3-yandex-cancellation-postfix.json`
-- result: `PARTIAL PASS`
+- result: `PASS`
 - related bugs:
   - `WB-023`: fixed locally; production post-fix live pending
   - `WB-024`: verified
@@ -985,9 +985,7 @@ Latest live run: `2026-07-03`
   - web typecheck: passed
   - production build: passed
 - remaining gaps:
-  - deploy the follow-up Google server-callback and Yandex history-replace fixes to `kezek.kg`;
-  - repeat real Google callback and confirm one persisted session reaches the requested destination;
-  - repeat Yandex Back/replay and confirm no callback code or auth fragment is restored from history.
+  - none for C3 on deployed commit `fb7b5ef9`.
 
 Post-deploy continuation (`2026-07-03`, commit `0f57fd8d`):
 
@@ -996,6 +994,15 @@ Post-deploy continuation (`2026-07-03`, commit `0f57fd8d`):
 - generic sensitive auth fragment no longer remained after completion;
 - Google preserved `next=/cabinet` but reproducibly failed on the deployed client callback (`WB-027`);
 - Yandex Back still briefly exposed the one-time callback code before replay (`WB-025` follow-up).
+
+Final post-deploy verification (`2026-07-03`, commit `fb7b5ef9`):
+
+- real Google OAuth completed through the server PKCE callback and reached `/select-business` for the tested multi-business owner;
+- real Yandex OAuth completed at `/cabinet/bookings`;
+- both sessions survived direct reload;
+- browser Back restored no callback code or auth fragment and session routing remained stable;
+- browser console warnings/errors were empty for both final runs;
+- sanitized evidence: `apps/web/test-results/live-c3-oauth-2026-07-03/c3-postdeploy-final-sanitized.json`.
 
 ### C4. Telegram authentication and linking (`P0`)
 
@@ -1011,7 +1018,35 @@ Done when:
 
 - Telegram identity is linked or authenticated once with correct user ownership.
 
-Status: `not started`
+Status: `in progress`
+
+Latest live run: `2026-07-03`
+
+- environment:
+  - deployed production `https://kezek.kg` at commit `fb7b5ef9`
+  - in-app Chromium on Windows
+  - authenticated Yandex user for linking and existing Telegram owner for standalone login
+- live steps completed:
+  - verified reminder visibility for an unlinked authenticated profile;
+  - attempted real linking and confirmed ownership conflict prevents attaching a Telegram identity owned by another Kezek user;
+  - completed real standalone Telegram login for the existing owner;
+  - verified role choice, `/cabinet/bookings` destination, reload persistence, clean Back history, and reminder suppression for the linked owner;
+  - verified safe rate-limit feedback;
+  - sent controlled expired and repeated invalid payloads to production; all returned HTTP 400 without session promotion.
+- evidence:
+  - `apps/web/test-results/live-c4-telegram-2026-07-03/c4-live-sanitized.json`
+- result: `PARTIAL PASS`
+- related bugs:
+  - `WB-028`: fixed locally; production post-fix live pending
+  - `WB-029`: fixed locally; production post-fix live pending
+- supporting automated checks:
+  - focused Telegram fragment/link/login suites: `11 passed`
+  - web typecheck: passed
+  - production build: passed
+- remaining gaps:
+  - deploy and live-verify reminder navigation to `/cabinet/profile`;
+  - deploy and live-verify immediate `#tgAuthResult` removal on both success and API error;
+  - successful linking to the current Yandex user requires a Telegram identity not already owned by another Kezek user; ownership safety was verified with the available identity.
 
 ### C5. WhatsApp authentication (`P0`)
 

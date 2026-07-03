@@ -56,7 +56,11 @@ export default async function BranchNewPage({ params }: { params: Promise<RouteP
 
             {/* Форма */}
             <Card className="p-6">
-                <BranchForm mode="create" bizId={biz.id} />
+                <BranchForm
+                    mode="create"
+                    bizId={biz.id}
+                    yandexMapsApiKey={process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY}
+                />
             </Card>
         </div>
     );
