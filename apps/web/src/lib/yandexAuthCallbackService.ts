@@ -14,9 +14,12 @@ export type YandexUserInfo = {
 type AuthUserLike = {
     id: string;
     email?: string | null;
+    user_metadata?: Record<string, unknown> | null;
 };
 
 export type YandexAuthAdminClientLike = {
+    // Supabase query builders vary by operation in this service boundary.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     from: (table: string) => any;
     auth: {
         admin: {
@@ -38,6 +41,7 @@ type RunYandexOAuthCallbackInput = {
     origin: string;
     redirectTo: string;
     randomHex?: (size: number) => string;
+    linkUserId?: string;
 };
 
 function defaultRandomHex(size: number) {
@@ -229,9 +233,34 @@ export async function runYandexOAuthCallback({
     origin,
     redirectTo,
     randomHex = defaultRandomHex,
+    linkUserId,
 }: RunYandexOAuthCallbackInput): Promise<{ redirectUrl: string }> {
     const existingProfile = await findExistingProfile(admin, yandexUser);
     let userId: string;
+
+    if (linkUserId) {
+        if (existingProfile?.id && existingProfile.id !== linkUserId) {
+            return {
+                redirectUrl: `${origin}/cabinet/profile?error=yandex_identity_already_linked`,
+            };
+        }
+
+        await ensureProfile(admin, linkUserId, yandexUser);
+        const { data: linkedUser, error: linkedUserError } = await admin.auth.admin.getUserById(linkUserId);
+        if (linkedUserError || !linkedUser?.user) {
+            return {
+                redirectUrl: `${origin}/cabinet/profile?error=yandex_link_failed`,
+            };
+        }
+        await admin.auth.admin.updateUserById(linkUserId, {
+            user_metadata: {
+                ...(linkedUser.user.user_metadata ?? {}),
+                yandex_id: String(yandexUser.id),
+                yandex_username: yandexUser.login ?? null,
+            },
+        });
+        return { redirectUrl: `${origin}/cabinet/profile?linked=yandex` };
+    }
 
     if (existingProfile?.id) {
         userId = existingProfile.id;

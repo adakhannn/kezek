@@ -60,9 +60,23 @@ export default function ProfileForm() {
         google: false,
         yandex: false,
     });
+    const [linkingProvider, setLinkingProvider] = useState<'google' | 'yandex' | null>(null);
 
     useEffect(() => {
         loadProfile();
+        const params = new URLSearchParams(window.location.search);
+        const linked = params.get('linked');
+        const linkError = params.get('error');
+        if (linked) {
+            setMessage(`${linked === 'yandex' ? 'Яндекс' : 'Google'} успешно подключён`);
+            window.history.replaceState(null, '', window.location.pathname);
+        } else if (linkError) {
+            const safeMessage = linkError === 'yandex_identity_already_linked'
+                ? 'Этот Яндекс-аккаунт уже подключён к другому пользователю.'
+                : 'Не удалось подключить способ входа. Попробуйте ещё раз.';
+            setError(safeMessage);
+            window.history.replaceState(null, '', window.location.pathname);
+        }
     }, []);
 
     useEffect(() => {
@@ -119,15 +133,17 @@ export default function ProfileForm() {
             ]);
             const telegramFromProfile = !!data?.telegram_id && !!data?.telegram_verified;
             const telegramFromMeta = !!meta.telegram_id;
+            const telegramConnected = telegramFromProfile || telegramFromMeta;
+            const whatsappConnected = data?.whatsapp_verified ?? false;
 
             const nextProfile = {
                 full_name: data?.full_name ?? null,
                 phone: data?.phone ?? null,
                 notify_email: data?.notify_email ?? true,
-                notify_whatsapp: data?.notify_whatsapp ?? true,
-                whatsapp_verified: data?.whatsapp_verified ?? false,
-                notify_telegram: data?.notify_telegram ?? true,
-                telegram_connected: telegramFromProfile || telegramFromMeta,
+                notify_whatsapp: whatsappConnected ? (data?.notify_whatsapp ?? true) : false,
+                whatsapp_verified: whatsappConnected,
+                notify_telegram: telegramConnected ? (data?.notify_telegram ?? true) : false,
+                telegram_connected: telegramConnected,
             };
 
             setProfile(nextProfile);
@@ -259,6 +275,36 @@ export default function ProfileForm() {
         }
     }
 
+    async function handleGoogleLink() {
+        setLinkingProvider('google');
+        setError(null);
+        const redirectTo = `${window.location.origin}/auth/callback/google?next=${encodeURIComponent('/cabinet/profile?linked=google')}`;
+        const { error: linkError } = await supabase.auth.linkIdentity({
+            provider: 'google',
+            options: { redirectTo },
+        });
+        if (linkError) {
+            setError(linkError.message || 'Не удалось подключить Google');
+            setLinkingProvider(null);
+        }
+    }
+
+    async function handleYandexLink() {
+        setLinkingProvider('yandex');
+        setError(null);
+        try {
+            const response = await fetch('/api/auth/yandex/link/start', { method: 'POST' });
+            const data = (await response.json()) as { ok?: boolean; authUrl?: string; message?: string };
+            if (!response.ok || !data.ok || !data.authUrl) {
+                throw new Error(data.message || 'Не удалось подключить Яндекс');
+            }
+            window.location.assign(data.authUrl);
+        } catch (linkError) {
+            setError(linkError instanceof Error ? linkError.message : 'Не удалось подключить Яндекс');
+            setLinkingProvider(null);
+        }
+    }
+
     function resetChanges() {
         setProfile(initialProfile);
         setError(null);
@@ -361,38 +407,96 @@ export default function ProfileForm() {
                     </p>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                    {[
-                        { name: 'Google', connected: loginConnections.google },
-                        { name: 'Яндекс', connected: loginConnections.yandex },
-                        { name: 'Telegram', connected: profile.telegram_connected },
-                        { name: 'WhatsApp', connected: profile.whatsapp_verified },
-                    ].map((connection) => (
-                        <div
-                            key={connection.name}
-                            className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3"
-                        >
-                            <span className="type-body font-medium text-gray-700 dark:text-gray-300">
-                                {connection.name}
-                            </span>
-                            <span
-                                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                    connection.connected
-                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
-                                        : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                                }`}
-                            >
-                                {connection.connected
-                                    ? t('cabinet.profile.connections.connected', 'Подключено')
-                                    : t('cabinet.profile.connections.notConnected', 'Не подключено')}
-                            </span>
+                <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
+                        <span className="type-body font-medium text-gray-700 dark:text-gray-300">Google</span>
+                        {loginConnections.google ? (
+                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                        ) : (
+                            <Button type="button" size="sm" onClick={handleGoogleLink} isLoading={linkingProvider === 'google'}>
+                                Подключить
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
+                        <span className="type-body font-medium text-gray-700 dark:text-gray-300">Яндекс</span>
+                        {loginConnections.yandex ? (
+                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                        ) : (
+                            <Button type="button" size="sm" onClick={handleYandexLink} isLoading={linkingProvider === 'yandex'}>
+                                Подключить
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
+                        <span className="type-body font-medium text-gray-700 dark:text-gray-300">Telegram</span>
+                        {profile.telegram_connected ? (
+                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                        ) : (
+                            <TelegramLinkWidget
+                                onSuccess={() => {
+                                    loadProfile();
+                                    setMessage('Telegram успешно подключён');
+                                }}
+                                onError={setError}
+                                size="medium"
+                            />
+                        )}
+                    </div>
+
+                    <div className="space-y-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <span className="type-body font-medium text-gray-700 dark:text-gray-300">WhatsApp</span>
+                            {profile.whatsapp_verified ? (
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                            ) : !showOtpInput ? (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={handleSendOtp}
+                                    disabled={otpSending || !profile.phone || profile.phone !== initialProfile.phone}
+                                    isLoading={otpSending}
+                                >
+                                    Подключить
+                                </Button>
+                            ) : null}
                         </div>
-                    ))}
+                        {!profile.whatsapp_verified && !profile.phone ? (
+                            <p className="type-caption text-amber-600 dark:text-amber-400">Сначала сохраните номер телефона в личных данных.</p>
+                        ) : null}
+                        {!profile.whatsapp_verified && profile.phone !== initialProfile.phone ? (
+                            <p className="type-caption text-amber-600 dark:text-amber-400">Сначала сохраните изменённый номер телефона.</p>
+                        ) : null}
+                        {showOtpInput ? (
+                            <div className="flex flex-wrap items-end gap-2">
+                                <Input
+                                    label="Код из WhatsApp"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={6}
+                                    value={otpCode}
+                                    onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, ''))}
+                                    placeholder="000000"
+                                    fieldSize="sm"
+                                    className="w-36 text-center"
+                                />
+                                <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={otpVerifying || otpCode.length !== 6} isLoading={otpVerifying}>
+                                    Подтвердить
+                                </Button>
+                                <Button type="button" size="sm" variant="ghost" onClick={() => { setShowOtpInput(false); setOtpCode(''); }}>
+                                    Отмена
+                                </Button>
+                            </div>
+                        ) : null}
+                    </div>
                 </div>
                 <p className="type-caption text-gray-500 dark:text-gray-400">
                     {t(
                         'cabinet.profile.connections.hint',
-                        'Telegram и WhatsApp подключаются ниже вместе с уведомлениями. Google и Яндекс отображаются, если вы уже входили через них в этот аккаунт.',
+                        'Все подключённые способы входа ведут в один и тот же аккаунт Kezek. Уведомления настраиваются отдельно ниже.',
                     )}
                 </p>
             </Card>
@@ -428,7 +532,21 @@ export default function ProfileForm() {
                         />
                     </label>
 
-                    {(
+                    <div className="space-y-1">
+                        <label className={`flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3 ${profile.whatsapp_verified ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
+                            <span className="type-body font-medium text-gray-700 dark:text-gray-300">WhatsApp</span>
+                            <input
+                                type="checkbox"
+                                checked={profile.whatsapp_verified && profile.notify_whatsapp}
+                                disabled={!profile.whatsapp_verified}
+                                onChange={(event) => setProfile({ ...profile, notify_whatsapp: event.target.checked })}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                        </label>
+                        {!profile.whatsapp_verified ? <p className="type-caption px-3 text-gray-500">Сначала подключите WhatsApp в разделе способов входа.</p> : null}
+                    </div>
+
+                    {false && (
                         <div className="space-y-2">
                             <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
                                 <div className="flex items-center gap-2">
@@ -520,7 +638,8 @@ export default function ProfileForm() {
                         </div>
                     )}
 
-                    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
+                    <div className="space-y-1">
+                    <label className={`flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3 ${profile.telegram_connected ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
                         <div className="flex items-center gap-2">
                             <svg className="h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 0C5.371 0 0 5.371 0 12s5.371 12 12 12 12-5.371 12-12S18.629 0 12 0zm5.496 8.246l-1.89 8.91c-.143.637-.523.793-1.059.494l-2.93-2.162-1.414 1.362c-.156.156-.287.287-.586.287l.21-3.004 5.472-4.946c.238-.21-.051-.328-.369-.118l-6.768 4.263-2.91-.909c-.633-.197-.647-.633.133-.936l11.37-4.386c.523-.189.983.118.812.935z" />
@@ -531,7 +650,8 @@ export default function ProfileForm() {
                         </div>
                         <input
                             type="checkbox"
-                            checked={profile.notify_telegram}
+                            checked={profile.telegram_connected && profile.notify_telegram}
+                            disabled={!profile.telegram_connected}
                             onChange={(e) => {
                                 setProfile({
                                     ...profile,
@@ -543,7 +663,10 @@ export default function ProfileForm() {
                         />
                     </label>
 
-                    {!profile.telegram_connected && (
+                    {!profile.telegram_connected ? <p className="type-caption px-3 text-gray-500">Сначала подключите Telegram в разделе способов входа.</p> : null}
+                    </div>
+
+                    {false && !profile.telegram_connected && (
                         <div className="ml-7 mt-2 space-y-2">
                             <p className="type-caption text-gray-500 dark:text-gray-400">
                                 {t('cabinet.profile.telegram.notConnected', 'Чтобы получать уведомления в Telegram, подключите Telegram аккаунт:')}
@@ -561,7 +684,7 @@ export default function ProfileForm() {
                                     size="medium"
                                 />
                             </div>
-                            {error && error.includes('уже привязан') && (
+                            {error?.includes('уже привязан') && (
                                 <Card
                                     variant="outlined"
                                     padding="sm"

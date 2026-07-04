@@ -126,4 +126,46 @@ describe('yandexAuthCallbackService', () => {
 
         expect(result.redirectUrl).toContain('/auth/sign-in?error=');
     });
+
+    test('links Yandex to the authenticated user without creating a second session', async () => {
+        const admin = createMockSupabase();
+        const updateUserById = jest.fn().mockResolvedValue({ data: {}, error: null });
+        (admin as any).auth.admin = {
+            createUser: jest.fn(),
+            listUsers: jest.fn(),
+            getUserById: jest.fn().mockResolvedValue({
+                data: { user: { id: 'current-user', user_metadata: { existing: true } } },
+                error: null,
+            }),
+            updateUserById,
+        };
+        (admin as any).auth.signInWithPassword = jest.fn();
+
+        let profileSelectCount = 0;
+        admin.from.mockImplementation(() => ({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockImplementation(async () => {
+                profileSelectCount += 1;
+                return profileSelectCount === 1
+                    ? { data: null, error: null }
+                    : { data: { id: 'current-user' }, error: null };
+            }),
+            update: jest.fn().mockReturnThis(),
+        }));
+
+        const result = await runYandexOAuthCallback({
+            admin: admin as any,
+            yandexUser: { id: '123', login: 'linked-user' },
+            origin: 'https://kezek.kg',
+            redirectTo: '/',
+            linkUserId: 'current-user',
+        });
+
+        expect(result.redirectUrl).toBe('https://kezek.kg/cabinet/profile?linked=yandex');
+        expect(updateUserById).toHaveBeenCalledWith('current-user', expect.objectContaining({
+            user_metadata: expect.objectContaining({ yandex_id: '123' }),
+        }));
+        expect((admin as any).auth.signInWithPassword).not.toHaveBeenCalled();
+    });
 });

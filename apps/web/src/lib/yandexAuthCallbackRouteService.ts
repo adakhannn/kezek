@@ -30,10 +30,12 @@ export async function runYandexAuthCallbackRoute({
     requestUrl,
     env,
     fetchImpl = fetch,
+    linkUserId,
 }: {
     requestUrl: string;
     env: NodeJS.ProcessEnv;
     fetchImpl?: typeof fetch;
+    linkUserId?: string;
 }): Promise<YandexAuthCallbackRouteResult> {
     const { searchParams } = new URL(requestUrl);
     const code = searchParams.get('code');
@@ -112,6 +114,7 @@ export async function runYandexAuthCallbackRoute({
         yandexUser,
         origin,
         redirectTo,
+        linkUserId,
     });
 
     return {

@@ -14,6 +14,7 @@ function YandexCallbackContent() {
     useEffect(() => {
         const code = searchParams.get('code');
         const error = searchParams.get('error');
+        const state = searchParams.get('state');
         
         // Получаем redirect из sessionStorage или используем дефолтный
         const redirect = typeof window !== 'undefined' 
@@ -34,7 +35,7 @@ function YandexCallbackContent() {
             if (typeof window !== 'undefined') {
                 sessionStorage.removeItem('yandex_redirect');
                 window.location.replace(
-                    `/api/auth/yandex/callback?code=${code}&redirect=${encodeURIComponent(redirect)}`,
+                    `/api/auth/yandex/callback?code=${encodeURIComponent(code)}&redirect=${encodeURIComponent(redirect)}${state ? `&state=${encodeURIComponent(state)}` : ''}`,
                 );
             }
         } else {

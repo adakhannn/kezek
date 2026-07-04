@@ -61,8 +61,8 @@ export async function updateProfileSettings(params: {
   const phone = params.body.phone?.trim() || null;
   const notify_email = params.body.notify_email ?? true;
   const notify_sms = params.body.notify_sms ?? true;
-  const notify_whatsapp = params.body.notify_whatsapp ?? true;
-  const notify_telegram = params.body.notify_telegram ?? true;
+  const requestedNotifyWhatsApp = params.body.notify_whatsapp ?? true;
+  const requestedNotifyTelegram = params.body.notify_telegram ?? true;
 
   const { data: currentProfile } = await (params.supabase.from('profiles') as {
     select: (...args: unknown[]) => {
@@ -74,12 +74,20 @@ export async function updateProfileSettings(params: {
       };
     };
   })
-    .select('phone, whatsapp_verified')
+    .select('phone, whatsapp_verified, telegram_id, telegram_verified')
     .eq('id', user.id)
-    .maybeSingle<{ phone: string | null; whatsapp_verified: boolean | null }>();
+    .maybeSingle<{
+      phone: string | null;
+      whatsapp_verified: boolean | null;
+      telegram_id: number | null;
+      telegram_verified: boolean | null;
+    }>();
 
   const phoneChanged = currentProfile?.phone !== phone;
   const whatsapp_verified = phoneChanged || !phone ? false : (currentProfile?.whatsapp_verified ?? false);
+  const notify_whatsapp = whatsapp_verified && requestedNotifyWhatsApp;
+  const telegramConnected = !!currentProfile?.telegram_id && !!currentProfile?.telegram_verified;
+  const notify_telegram = telegramConnected && requestedNotifyTelegram;
 
   const meta = (user.user_metadata ?? {}) as { telegram_id?: number | string | null };
   const upsertData: Record<string, unknown> = {

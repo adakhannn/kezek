@@ -54,6 +54,45 @@ The web testing scope and execution status are maintained in
 
 ## Open bugs
 
+### WB-033
+- id: `WB-033`
+- date: `2026-07-04`
+- area: `C4-C5 / cabinet social connections`
+- severity: `P0`
+- title: Social connection screen does not actually support multi-provider account linking and enables unavailable notification channels
+- build: deployed production `https://kezek.kg` at commit `11601622`
+- environment: in-app Chromium, Windows, authenticated Google user
+- steps:
+  1. Open `/cabinet/profile` after signing in with Google.
+  2. Inspect Google, Yandex, Telegram, and WhatsApp in “Способы входа”.
+  3. Try to connect another sign-in provider.
+  4. Inspect Telegram and WhatsApp notification switches while those channels are disconnected.
+- expected:
+  - every disconnected provider has a real account-link action that binds it to the current Kezek user;
+  - signing in through any linked provider returns the same profile;
+  - notification preferences are separate and cannot be enabled before their channel is connected.
+- actual:
+  - the section only displays statuses; Google and Yandex cannot be linked from the cabinet;
+  - Telegram and WhatsApp notification switches appear enabled while the corresponding identities are disconnected;
+  - the explanatory copy incorrectly mixes sign-in identity linking with notification setup.
+- evidence:
+  - production screenshot: `C:/Users/osoro/AppData/Local/Temp/codex-clipboard-0e8b3486-a883-4b72-94a9-12b1d5ec3792.png`
+- fix:
+  - added real Google identity linking through Supabase identity linking;
+  - enabled Supabase manual identity linking in project auth configuration;
+  - added authenticated Yandex linking with a short-lived HttpOnly state cookie, ownership conflict handling, and no replacement session;
+  - kept Telegram signed-payload linking and moved WhatsApp OTP verification into the sign-in connection section;
+  - separated notification preferences from login identities in the UI;
+  - disabled Telegram/WhatsApp notification switches until their identities are connected and enforced the same rule server-side;
+  - normalized verified WhatsApp phone ownership and added unique database indexes for Yandex and verified WhatsApp identities.
+- verification:
+  - focused identity/callback/profile/WhatsApp suites: `15 passed`;
+  - web typecheck, targeted lint, and production build passed;
+  - unauthenticated Yandex link start returned safe HTTP 401 on the local production server;
+  - full provider completion and same-account post-login checks require deployment because OAuth providers return to `kezek.kg`.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
+
 ### WB-032
 - id: `WB-032`
 - date: `2026-07-04`

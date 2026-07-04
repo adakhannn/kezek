@@ -1,4 +1,5 @@
 import { logError } from '@/lib/log';
+import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
 type UserLike = {
     id: string;
@@ -6,6 +7,8 @@ type UserLike = {
 };
 
 export type SupabaseServerClientLike = {
+    // Supabase query builders vary by operation in this small service boundary.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     from: (table: string) => any;
     auth: {
         getUser: () => Promise<{ data: { user: UserLike | null } }>;
@@ -87,7 +90,25 @@ export async function verifyExistingWhatsAppOtp({
         };
     }
 
-    const { error: updateError } = await supabase.from('profiles').update({ whatsapp_verified: true }).eq('id', user.id);
+    const { data: profile } = await supabase.from('profiles')
+        .select('phone')
+        .eq('id', user.id)
+        .maybeSingle();
+    const normalizedPhone = normalizePhoneToE164(profile?.phone);
+    if (!normalizedPhone) {
+        return {
+            ok: false,
+            error: 'validation',
+            message: 'Укажите корректный номер телефона перед подключением WhatsApp.',
+            details: { code: 'invalid_phone' },
+            status: 400,
+        };
+    }
+
+    const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ phone: normalizedPhone, whatsapp_verified: true })
+        .eq('id', user.id);
 
     if (updateError) {
         logError('WhatsAppVerifyOtp', 'Update profile error', updateError);

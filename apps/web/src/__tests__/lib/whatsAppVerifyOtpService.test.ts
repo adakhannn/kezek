@@ -5,6 +5,14 @@ describe('whatsAppVerifyOtpService', () => {
     test('verifies an OTP for an authenticated user', async () => {
         const supabase = createMockSupabase();
         supabase.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({
+                data: { phone: '+996555123456' },
+                error: null,
+            }),
+        });
+        supabase.from.mockReturnValueOnce({
             update: jest.fn().mockReturnThis(),
             eq: jest.fn().mockResolvedValue({
                 data: null,
