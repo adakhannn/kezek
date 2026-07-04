@@ -1,10 +1,13 @@
 import { logDebug, logError } from '@/lib/log';
 
 export type SupabaseAdminClientLike = {
+    // The service exercises several Supabase query-builder shapes; route clients provide the concrete type.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     from: (table: string) => any;
     auth: {
         admin: {
             listUsers: () => Promise<{ data?: { users: AuthUser[] }; error?: { message?: string } | null }>;
+            getUserById: (id: string) => Promise<{ data?: { user?: AuthUser }; error?: { message?: string } | null }>;
             updateUserById: (id: string, payload: unknown) => Promise<unknown>;
             createUser: (payload: unknown) => Promise<{ data?: { user?: AuthUser }; error?: { message?: string } | null }>;
         };
@@ -140,6 +143,70 @@ async function resolveOrCreateUser(admin: SupabaseAdminClientLike, phoneE164: st
 
     if (user) {
         logDebug('WhatsAppAuth', 'Found existing user', { userId: user.id });
+        return { user, isNewUser };
+    }
+
+    const { data: verifiedProfiles, error: profileLookupError } = (await admin
+        .from('profiles')
+        .select('id')
+        .eq('phone', phoneE164)
+        .eq('whatsapp_verified', true)
+        .limit(2)) as {
+        data: Array<{ id: string }> | null;
+        error: { message?: string } | null;
+    };
+
+    if (profileLookupError) {
+        logError('WhatsAppAuth', 'Verified profile lookup error', profileLookupError);
+        return {
+            error: {
+                ok: false,
+                error: 'internal',
+                message: 'Не удалось проверить владельца номера. Попробуйте позже.',
+                details: { code: 'profile_lookup_failed' },
+                status: 500,
+            },
+        };
+    }
+
+    if ((verifiedProfiles?.length ?? 0) > 1) {
+        logError('WhatsAppAuth', 'Multiple verified profiles own the same phone');
+        return {
+            error: {
+                ok: false,
+                error: 'conflict',
+                message: 'Номер связан с несколькими профилями. Обратитесь в поддержку.',
+                details: { code: 'ambiguous_phone_owner' },
+                status: 409,
+            },
+        };
+    }
+
+    const verifiedProfile = verifiedProfiles?.[0];
+    if (verifiedProfile) {
+        const { data: linkedUser, error: linkedUserError } = await admin.auth.admin.getUserById(verifiedProfile.id);
+        if (linkedUserError || !linkedUser?.user) {
+            logError('WhatsAppAuth', 'Verified profile auth user lookup failed', linkedUserError);
+            return {
+                error: {
+                    ok: false,
+                    error: 'internal',
+                    message: 'Не удалось открыть связанный аккаунт. Попробуйте позже.',
+                    details: { code: 'linked_user_not_found' },
+                    status: 500,
+                },
+            };
+        }
+
+        user = linkedUser.user;
+        await admin.auth.admin.updateUserById(user.id, {
+            user_metadata: {
+                ...(user.user_metadata ?? {}),
+                phone: phoneE164,
+                whatsapp_verified: true,
+            },
+        });
+        logDebug('WhatsAppAuth', 'Resolved user through verified profile', { userId: user.id });
         return { user, isNewUser };
     }
 

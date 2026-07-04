@@ -86,4 +86,60 @@ describe('whatsAppAuthVerifyOtpService', () => {
             status: 400,
         });
     });
+
+    test('logs into the existing owner of a WhatsApp-verified profile instead of creating a duplicate', async () => {
+        const admin = createMockSupabase();
+        const listUsers = jest.fn().mockResolvedValue({ data: { users: [] }, error: null });
+        const getUserById = jest.fn().mockResolvedValue({
+            data: { user: { id: 'social-user-id', user_metadata: { auth_provider: 'yandex' } } },
+            error: null,
+        });
+        const updateUserById = jest.fn().mockResolvedValue({ data: {}, error: null });
+        const createUser = jest.fn();
+
+        Object.assign((admin as any).auth.admin, {
+            listUsers,
+            getUserById,
+            updateUserById,
+            createUser,
+        });
+
+        admin.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            is: jest.fn().mockReturnThis(),
+            gt: jest.fn().mockReturnThis(),
+            order: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'otp-id' }, error: null }),
+        });
+        admin.from.mockReturnValueOnce({
+            update: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockResolvedValue({ data: null, error: null }),
+        });
+        admin.from.mockReturnValueOnce({
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockResolvedValue({
+                data: [{ id: 'social-user-id' }],
+                error: null,
+            }),
+        });
+        admin.from.mockReturnValueOnce({
+            upsert: jest.fn().mockResolvedValue({ data: null, error: null }),
+        });
+
+        const result = await verifyWhatsAppOtpLogin({
+            admin: admin as any,
+            phoneE164: '+996555123456',
+            code: '123456',
+        });
+
+        expect(result).toMatchObject({
+            ok: true,
+            data: { userId: 'social-user-id', isNewUser: false },
+        });
+        expect(getUserById).toHaveBeenCalledWith('social-user-id');
+        expect(createUser).not.toHaveBeenCalled();
+    });
 });

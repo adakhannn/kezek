@@ -1,6 +1,6 @@
 # WEB BUG REGISTRY
 
-Last updated: 2026-07-03  
+Last updated: 2026-07-04
 Owner: User + Codex  
 Status: Active
 
@@ -53,6 +53,73 @@ The web testing scope and execution status are maintained in
 ```
 
 ## Open bugs
+
+### WB-032
+- id: `WB-032`
+- date: `2026-07-04`
+- area: `C4 / cabinet social connections`
+- severity: `P0`
+- title: A WhatsApp-verified profile can receive a separate duplicate account on WhatsApp sign-in
+- build: deployed production `https://kezek.kg` and local source at commit `6cc2343b`
+- environment: source-confirmed against the live profile and sign-in flows; Chromium on Windows
+- preconditions:
+  - an existing Google, Yandex, or Telegram user has a phone stored and WhatsApp-verified in `profiles`
+- steps:
+  1. Verify a WhatsApp number from `/cabinet/profile`.
+  2. Sign out and authenticate through `/auth/whatsapp` with the same number.
+  3. Observe how the WhatsApp login service resolves account ownership.
+- expected:
+  - a verified phone maps WhatsApp sign-in to the same profile exactly once.
+- actual:
+  - login searches only Auth user phone/metadata and ignores the verified `profiles.phone` owner;
+  - when the social user has no Auth phone, the service can create a second user for the same person.
+- evidence:
+  - live production profile has the social notification/linking surface;
+  - `whatsAppAuthVerifyOtpService.ts` resolves users only through `auth.admin.listUsers()` before create.
+- fix:
+  - WhatsApp login now checks the unique WhatsApp-verified profile owner before creating an Auth user;
+  - the existing profile owner is reused and marked in Auth metadata for subsequent sign-ins;
+  - ambiguous duplicate ownership and lookup failures stop safely without creating another account.
+- verification:
+  - focused WhatsApp login/send/OTP tests passed, including a regression test proving no user is created for a verified social profile;
+  - typecheck and production build passed;
+  - production post-fix live verification requires deployment.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
+
+### WB-031
+- id: `WB-031`
+- date: `2026-07-04`
+- area: `C4 / cabinet social connections`
+- severity: `P1`
+- title: WhatsApp notification connection is implemented but permanently hidden in the profile UI
+- build: deployed production `https://kezek.kg` at commit `6cc2343b`
+- environment: in-app Chromium, Windows, authenticated user
+- preconditions:
+  - open `/cabinet/profile`
+- steps:
+  1. Open the notification settings.
+  2. Look for WhatsApp notification setup and number verification.
+- expected:
+  - the user can enable WhatsApp notifications and verify the saved phone with an OTP.
+- actual:
+  - only Email and Telegram are rendered;
+  - the complete WhatsApp toggle/OTP UI is wrapped in a constant `{false && (...)}` condition.
+- evidence:
+  - production DOM snapshot on `2026-07-04` contains Email and Telegram but no WhatsApp control;
+  - source evidence: `apps/web/src/app/cabinet/components/ProfileForm.tsx`.
+- fix:
+  - restored the WhatsApp notification toggle and OTP verification UI;
+  - added a separate login-connections overview for Google, Yandex, Telegram, and WhatsApp;
+  - provider status is derived from authenticated identities and verified profile ownership;
+  - OTP sending is blocked while a changed phone number is still unsaved, avoiding verification of stale profile data.
+- verification:
+  - production baseline reproduced with only Email and Telegram controls;
+  - typecheck, focused tests, lint, and production build passed locally;
+  - authenticated local UI could not be exercised because configured Google OAuth returned to `kezek.kg`;
+  - production post-fix live verification requires deployment.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
 
 ### WB-030
 - id: `WB-030`

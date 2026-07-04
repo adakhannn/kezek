@@ -22,6 +22,11 @@ type Profile = {
     telegram_connected: boolean;
 };
 
+type LoginConnections = {
+    google: boolean;
+    yandex: boolean;
+};
+
 export default function ProfileForm() {
     const router = useRouter();
     const { t } = useLanguage();
@@ -51,6 +56,10 @@ export default function ProfileForm() {
     const [otpSending, setOtpSending] = useState(false);
     const [otpVerifying, setOtpVerifying] = useState(false);
     const [showOtpInput, setShowOtpInput] = useState(false);
+    const [loginConnections, setLoginConnections] = useState<LoginConnections>({
+        google: false,
+        yandex: false,
+    });
 
     useEffect(() => {
         loadProfile();
@@ -84,7 +93,7 @@ export default function ProfileForm() {
 
             const { data, error: fetchError } = await supabase
                 .from('profiles')
-                .select('full_name, phone, notify_email, notify_whatsapp, whatsapp_verified, notify_telegram, telegram_id, telegram_verified')
+                .select('full_name, phone, notify_email, notify_whatsapp, whatsapp_verified, notify_telegram, telegram_id, telegram_verified, yandex_id')
                 .eq('id', user.id)
                 .maybeSingle();
 
@@ -94,7 +103,20 @@ export default function ProfileForm() {
                 return;
             }
 
-            const meta = (user.user_metadata ?? {}) as { telegram_id?: number | string | null };
+            const meta = (user.user_metadata ?? {}) as {
+                auth_provider?: string | null;
+                telegram_id?: number | string | null;
+                yandex_id?: number | string | null;
+            };
+            const appMeta = (user.app_metadata ?? {}) as {
+                provider?: string | null;
+                providers?: string[] | null;
+            };
+            const providers = new Set([
+                ...(appMeta.providers ?? []),
+                ...(appMeta.provider ? [appMeta.provider] : []),
+                ...(user.identities ?? []).map((identity) => identity.provider),
+            ]);
             const telegramFromProfile = !!data?.telegram_id && !!data?.telegram_verified;
             const telegramFromMeta = !!meta.telegram_id;
 
@@ -110,6 +132,10 @@ export default function ProfileForm() {
 
             setProfile(nextProfile);
             setInitialProfile(nextProfile);
+            setLoginConnections({
+                google: providers.has('google'),
+                yandex: !!data?.yandex_id || !!meta.yandex_id || meta.auth_provider === 'yandex',
+            });
         } catch (e) {
             const { logError } = require('@/lib/log');
             logError('ProfileForm', 'Error loading profile', e);
@@ -220,7 +246,9 @@ export default function ProfileForm() {
             }
 
             setMessage(t('cabinet.profile.whatsapp.verifiedSuccess', 'WhatsApp номер подтвержден'));
-            setProfile({ ...profile, whatsapp_verified: true });
+            const verifiedProfile = { ...profile, whatsapp_verified: true };
+            setProfile(verifiedProfile);
+            setInitialProfile((current) => ({ ...current, whatsapp_verified: true }));
             setShowOtpInput(false);
             setOtpCode('');
         } catch (e) {
@@ -326,6 +354,52 @@ export default function ProfileForm() {
             <Card variant="default" padding="lg" className="space-y-4">
                 <div>
                     <h3 className="type-section-title text-gray-900 dark:text-gray-100">
+                        {t('cabinet.profile.connections.title', 'Способы входа')}
+                    </h3>
+                    <p className="type-caption mt-1 text-gray-500 dark:text-gray-400">
+                        {t('cabinet.profile.connections.desc', 'Подключённые аккаунты можно использовать для безопасного входа без пароля.')}
+                    </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {[
+                        { name: 'Google', connected: loginConnections.google },
+                        { name: 'Яндекс', connected: loginConnections.yandex },
+                        { name: 'Telegram', connected: profile.telegram_connected },
+                        { name: 'WhatsApp', connected: profile.whatsapp_verified },
+                    ].map((connection) => (
+                        <div
+                            key={connection.name}
+                            className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3"
+                        >
+                            <span className="type-body font-medium text-gray-700 dark:text-gray-300">
+                                {connection.name}
+                            </span>
+                            <span
+                                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                    connection.connected
+                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                                        : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                                }`}
+                            >
+                                {connection.connected
+                                    ? t('cabinet.profile.connections.connected', 'Подключено')
+                                    : t('cabinet.profile.connections.notConnected', 'Не подключено')}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+                <p className="type-caption text-gray-500 dark:text-gray-400">
+                    {t(
+                        'cabinet.profile.connections.hint',
+                        'Telegram и WhatsApp подключаются ниже вместе с уведомлениями. Google и Яндекс отображаются, если вы уже входили через них в этот аккаунт.',
+                    )}
+                </p>
+            </Card>
+
+            <Card variant="default" padding="lg" className="space-y-4">
+                <div>
+                    <h3 className="type-section-title text-gray-900 dark:text-gray-100">
                         {t('cabinet.profile.notifications.title', 'Уведомления о бронированиях')}
                     </h3>
                     <p className="type-caption mt-1 text-gray-500 dark:text-gray-400">
@@ -354,7 +428,7 @@ export default function ProfileForm() {
                         />
                     </label>
 
-                    {false && (
+                    {(
                         <div className="space-y-2">
                             <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
                                 <div className="flex items-center gap-2">
@@ -398,7 +472,7 @@ export default function ProfileForm() {
                                                     type="button"
                                                     size="sm"
                                                     onClick={handleSendOtp}
-                                                    disabled={otpSending || !profile.phone}
+                                                    disabled={otpSending || !profile.phone || profile.phone !== initialProfile.phone}
                                                 >
                                                     {otpSending ? t('cabinet.profile.whatsapp.sending', 'Отправка...') : t('cabinet.profile.whatsapp.sendCode', 'Отправить код')}
                                                 </Button>
