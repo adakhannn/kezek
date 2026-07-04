@@ -54,6 +54,49 @@ The web testing scope and execution status are maintained in
 
 ## Open bugs
 
+### WB-034
+- id: `WB-034`
+- date: `2026-07-04`
+- area: `C4-C5 / cabinet social connections and notification channels`
+- severity: `P0`
+- title: Contact phone is reused as WhatsApp identity, causing misleading UI and unsafe notification/login ownership
+- build: deployed production `https://kezek.kg` after commit `95618fef`
+- environment: in-app Chromium, Windows, authenticated cabinet profile
+- preconditions:
+  - open `/cabinet/profile` with an authenticated user
+- steps:
+  1. Enter a value in the top-level `Телефон` field in personal data.
+  2. Inspect the helper and warning text.
+  3. Inspect the WhatsApp connection row in `Способы входа`.
+  4. Consider a user who already has a different Kezek account created through another provider.
+- expected:
+  - the top-level phone is only a contact phone;
+  - WhatsApp login/notifications use a separate verified WhatsApp identity phone;
+  - changing contact phone does not reset WhatsApp verification;
+  - a WhatsApp identity already linked to another Kezek account is not silently merged into the current account.
+- actual:
+  - the contact phone helper says it is needed for WhatsApp confirmation and contact;
+  - WhatsApp OTP is sent using `profiles.phone`;
+  - saving a changed contact phone resets `whatsapp_verified`;
+  - WhatsApp notification delivery also risks using the contact phone instead of a verified WhatsApp identity.
+- evidence:
+  - user screenshot: `C:/Users/osoro/AppData/Local/Temp/codex-clipboard-4e1d271f-4be4-4812-a53e-18217190cd4a.png`
+  - user screenshot: `C:/Users/osoro/AppData/Local/Temp/codex-clipboard-acd88b30-8048-478e-99b8-b923073b6235.png`
+- fix:
+  - added `profiles.whatsapp_phone` for WhatsApp identity/notifications;
+  - backfilled existing verified WhatsApp phones from legacy `profiles.phone`;
+  - moved WhatsApp OTP send/verify to use `whatsapp_phone` through short-lived OTP metadata;
+  - contact phone updates no longer reset WhatsApp verification;
+  - WhatsApp notifications use `whatsappPhone`, not contact `phone`;
+  - updated cabinet UI copy and added an explicit warning that already-linked provider identities are not auto-merged.
+- verification:
+  - `pnpm -C apps/web typecheck` passed;
+  - targeted ESLint passed;
+  - focused profile/WhatsApp send/verify/login tests passed: `28 passed`;
+  - production post-fix live verification requires deploy and database migration.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
+
 ### WB-033
 - id: `WB-033`
 - date: `2026-07-04`

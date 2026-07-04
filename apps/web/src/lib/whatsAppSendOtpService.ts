@@ -3,10 +3,11 @@ export type WhatsAppSendOtpSupabaseLike = {
     getUser: () => Promise<{
       data: { user: { id: string } | null };
     }>;
-    updateUser: (params: {
+        updateUser: (params: {
       data: {
         whatsapp_otp_code: string;
         whatsapp_otp_expires: string;
+        whatsapp_otp_phone: string;
       };
     }) => Promise<{
       error: { message: string } | null;
@@ -36,6 +37,7 @@ export type WhatsAppSendOtpResult =
 
 export async function sendProfileWhatsAppOtp(params: {
   supabase: WhatsAppSendOtpSupabaseLike;
+  phone?: string;
   normalizePhone: (phone: string) => string | null;
   sendMessage: (params: { to: string; text: string }) => Promise<void>;
   now?: Date;
@@ -55,9 +57,9 @@ export async function sendProfileWhatsAppOtp(params: {
 
   const { data: profile, error: profileError } = await params.supabase
     .from('profiles')
-    .select('phone, whatsapp_verified')
+    .select('whatsapp_phone, whatsapp_verified')
     .eq('id', user.id)
-    .maybeSingle<{ phone: string | null; whatsapp_verified: boolean | null }>();
+    .maybeSingle<{ whatsapp_phone: string | null; whatsapp_verified: boolean | null }>();
 
   if (profileError) {
     return {
@@ -69,33 +71,34 @@ export async function sendProfileWhatsAppOtp(params: {
     };
   }
 
-  if (!profile?.phone) {
+  const requestedPhone = params.phone?.trim() || profile?.whatsapp_phone;
+  if (!requestedPhone) {
     return {
       ok: false,
       error: 'validation',
-      message: 'Номер телефона не указан в профиле',
+      message: 'Номер WhatsApp не указан',
       details: { code: 'no_phone' },
       status: 400,
     };
   }
 
-  if (profile.whatsapp_verified) {
+  const phoneE164 = params.normalizePhone(requestedPhone);
+  if (!phoneE164) {
+    return {
+      ok: false,
+      error: 'validation',
+      message: 'Неверный формат номера WhatsApp',
+      details: { code: 'invalid_phone' },
+      status: 400,
+    };
+  }
+
+  if (profile?.whatsapp_verified && profile.whatsapp_phone === phoneE164) {
     return {
       ok: false,
       error: 'validation',
       message: 'WhatsApp номер уже подтвержден',
       details: { code: 'already_verified' },
-      status: 400,
-    };
-  }
-
-  const phoneE164 = params.normalizePhone(profile.phone);
-  if (!phoneE164) {
-    return {
-      ok: false,
-      error: 'validation',
-      message: 'Неверный формат номера телефона',
-      details: { code: 'invalid_phone' },
       status: 400,
     };
   }
@@ -106,6 +109,7 @@ export async function sendProfileWhatsAppOtp(params: {
     data: {
       whatsapp_otp_code: otpCode,
       whatsapp_otp_expires: new Date(now.getTime() + 10 * 60 * 1000).toISOString(),
+      whatsapp_otp_phone: phoneE164,
     },
   });
 

@@ -22,7 +22,7 @@ describe('whatsAppSendOtpService', () => {
 
     const result = await sendProfileWhatsAppOtp({
       supabase,
-      normalizePhone: jest.fn(),
+      normalizePhone: jest.fn().mockReturnValue('+996555123456'),
       sendMessage: jest.fn(),
     });
 
@@ -44,7 +44,7 @@ describe('whatsAppSendOtpService', () => {
       eq: jest.fn().mockReturnThis(),
       maybeSingle: jest.fn().mockResolvedValue({
         data: {
-          phone: '+996555123456',
+          whatsapp_phone: '+996555123456',
           whatsapp_verified: true,
         },
         error: null,
@@ -53,7 +53,7 @@ describe('whatsAppSendOtpService', () => {
 
     const result = await sendProfileWhatsAppOtp({
       supabase,
-      normalizePhone: jest.fn(),
+      normalizePhone: jest.fn().mockReturnValue('+996555123456'),
       sendMessage: jest.fn(),
     });
 
@@ -77,7 +77,7 @@ describe('whatsAppSendOtpService', () => {
       eq: jest.fn().mockReturnThis(),
       maybeSingle: jest.fn().mockResolvedValue({
         data: {
-          phone: '+996555123456',
+          whatsapp_phone: '+996555123456',
           whatsapp_verified: false,
         },
         error: null,
@@ -89,6 +89,7 @@ describe('whatsAppSendOtpService', () => {
 
     const result = await sendProfileWhatsAppOtp({
       supabase,
+      phone: '+996555123456',
       normalizePhone: jest.fn().mockReturnValue('+996555123456'),
       sendMessage,
       now: new Date('2026-03-27T10:00:00.000Z'),

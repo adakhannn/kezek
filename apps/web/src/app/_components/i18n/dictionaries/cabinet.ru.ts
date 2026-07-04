@@ -76,7 +76,7 @@ export const cabinetRu = {
     'cabinet.profile.phone.hint': '(для связи, не используется для входа)',
     'cabinet.profile.phone.label': 'Телефон',
     'cabinet.profile.phone.placeholder': '+996555123456',
-    'cabinet.profile.phone.warning.desc': 'Это нужно для подтверждения WhatsApp и связи с вами',
+    'cabinet.profile.phone.warning.desc': 'Это нужно для связи с вами',
     'cabinet.profile.phone.warning.title': 'Заполните номер телефона',
     'cabinet.profile.save': 'Сохранить',
     'cabinet.profile.saved': 'Профиль обновлен',

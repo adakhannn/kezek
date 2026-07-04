@@ -133,6 +133,7 @@ describe('/api/whatsapp/verify-otp', () => {
                         user_metadata: {
                             whatsapp_otp_code: '123456',
                             whatsapp_otp_expires: futureDate,
+                            whatsapp_otp_phone: '+996555123456',
                         },
                     },
                 },
@@ -162,6 +163,7 @@ describe('/api/whatsapp/verify-otp', () => {
                         user_metadata: {
                             whatsapp_otp_code: '123456',
                             whatsapp_otp_expires: futureDate,
+                            whatsapp_otp_phone: '+996555123456',
                         },
                     },
                 },

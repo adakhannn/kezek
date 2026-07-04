@@ -149,7 +149,7 @@ async function resolveOrCreateUser(admin: SupabaseAdminClientLike, phoneE164: st
     const { data: verifiedProfiles, error: profileLookupError } = (await admin
         .from('profiles')
         .select('id')
-        .eq('phone', phoneE164)
+        .eq('whatsapp_phone', phoneE164)
         .eq('whatsapp_verified', true)
         .limit(2)) as {
         data: Array<{ id: string }> | null;
@@ -300,7 +300,7 @@ export async function verifyWhatsAppOtpLogin({
     await admin.from('profiles').upsert(
         {
             id: user.id,
-            phone: phoneE164,
+            whatsapp_phone: phoneE164,
             whatsapp_verified: true,
         },
         {

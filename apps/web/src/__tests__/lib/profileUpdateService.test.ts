@@ -33,7 +33,7 @@ describe('profileUpdateService', () => {
     });
   });
 
-  test('resets whatsapp verification when phone changes', async () => {
+  test('keeps whatsapp verification when contact phone changes', async () => {
     const supabase = createSupabase();
     supabase.auth.getUser.mockResolvedValue({
       data: {
@@ -48,7 +48,7 @@ describe('profileUpdateService', () => {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
         maybeSingle: jest.fn().mockResolvedValue({
-          data: { phone: '+996555123456', whatsapp_verified: true },
+          data: { whatsapp_phone: '+996555123456', whatsapp_verified: true },
           error: null,
         }),
       })
@@ -90,7 +90,7 @@ describe('profileUpdateService', () => {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
         maybeSingle: jest.fn().mockResolvedValue({
-          data: { phone: '+996555123456', whatsapp_verified: false },
+          data: { whatsapp_phone: null, whatsapp_verified: false },
           error: null,
         }),
       })

@@ -56,6 +56,8 @@ export default function ProfileForm() {
     const [otpSending, setOtpSending] = useState(false);
     const [otpVerifying, setOtpVerifying] = useState(false);
     const [showOtpInput, setShowOtpInput] = useState(false);
+    const [whatsAppPhone, setWhatsAppPhone] = useState('');
+    const [initialWhatsAppPhone, setInitialWhatsAppPhone] = useState('');
     const [loginConnections, setLoginConnections] = useState<LoginConnections>({
         google: false,
         yandex: false,
@@ -90,6 +92,12 @@ export default function ProfileForm() {
         normalizedPhone && !/^\+?[0-9\s()-]{8,20}$/.test(normalizedPhone)
             ? t('cabinet.profile.phone.invalid', 'Укажите корректный номер телефона')
             : null;
+    const normalizedWhatsAppPhone = whatsAppPhone.trim();
+    const whatsAppPhoneValidationError =
+        normalizedWhatsAppPhone && !/^\+?[0-9\s()-]{8,20}$/.test(normalizedWhatsAppPhone)
+            ? t('cabinet.profile.whatsapp.phone.invalid', 'Укажите корректный номер WhatsApp')
+            : null;
+    const whatsAppPhoneChanged = normalizedWhatsAppPhone !== initialWhatsAppPhone;
 
     const isDirty = useMemo(() => {
         return JSON.stringify(profile) !== JSON.stringify(initialProfile);
@@ -107,7 +115,7 @@ export default function ProfileForm() {
 
             const { data, error: fetchError } = await supabase
                 .from('profiles')
-                .select('full_name, phone, notify_email, notify_whatsapp, whatsapp_verified, notify_telegram, telegram_id, telegram_verified, yandex_id')
+                .select('full_name, phone, whatsapp_phone, notify_email, notify_whatsapp, whatsapp_verified, notify_telegram, telegram_id, telegram_verified, yandex_id')
                 .eq('id', user.id)
                 .maybeSingle();
 
@@ -148,6 +156,8 @@ export default function ProfileForm() {
 
             setProfile(nextProfile);
             setInitialProfile(nextProfile);
+            setWhatsAppPhone(data?.whatsapp_phone ?? '');
+            setInitialWhatsAppPhone(data?.whatsapp_phone ?? '');
             setLoginConnections({
                 google: providers.has('google'),
                 yandex: !!data?.yandex_id || !!meta.yandex_id || meta.auth_provider === 'yandex',
@@ -209,8 +219,12 @@ export default function ProfileForm() {
     }
 
     async function handleSendOtp() {
-        if (!profile.phone) {
-            setError(t('cabinet.profile.error.phoneRequired', 'Сначала укажите номер телефона'));
+        if (!normalizedWhatsAppPhone) {
+            setError(t('cabinet.profile.error.whatsappPhoneRequired', 'Сначала укажите номер WhatsApp'));
+            return;
+        }
+        if (whatsAppPhoneValidationError) {
+            setError(whatsAppPhoneValidationError);
             return;
         }
 
@@ -222,6 +236,7 @@ export default function ProfileForm() {
             const res = await fetch('/api/whatsapp/send-otp', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ phone: normalizedWhatsAppPhone }),
             });
 
             const data = await res.json();
@@ -265,6 +280,8 @@ export default function ProfileForm() {
             const verifiedProfile = { ...profile, whatsapp_verified: true };
             setProfile(verifiedProfile);
             setInitialProfile((current) => ({ ...current, whatsapp_verified: true }));
+            setWhatsAppPhone(normalizedWhatsAppPhone);
+            setInitialWhatsAppPhone(normalizedWhatsAppPhone);
             setShowOtpInput(false);
             setOtpCode('');
         } catch (e) {
@@ -307,6 +324,7 @@ export default function ProfileForm() {
 
     function resetChanges() {
         setProfile(initialProfile);
+        setWhatsAppPhone(initialWhatsAppPhone);
         setError(null);
         setMessage(t('cabinet.profile.reset', 'Изменения отменены'));
         setShowOtpInput(false);
@@ -450,24 +468,54 @@ export default function ProfileForm() {
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <span className="type-body font-medium text-gray-700 dark:text-gray-300">WhatsApp</span>
                             {profile.whatsapp_verified ? (
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                    {whatsAppPhoneChanged ? (
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            onClick={handleSendOtp}
+                                            disabled={otpSending || !!whatsAppPhoneValidationError}
+                                            isLoading={otpSending}
+                                        >
+                                            Подтвердить новый номер
+                                        </Button>
+                                    ) : null}
+                                </div>
                             ) : !showOtpInput ? (
                                 <Button
                                     type="button"
                                     size="sm"
                                     onClick={handleSendOtp}
-                                    disabled={otpSending || !profile.phone || profile.phone !== initialProfile.phone}
+                                    disabled={otpSending || !normalizedWhatsAppPhone || !!whatsAppPhoneValidationError}
                                     isLoading={otpSending}
                                 >
                                     Подключить
                                 </Button>
                             ) : null}
                         </div>
-                        {!profile.whatsapp_verified && !profile.phone ? (
-                            <p className="type-caption text-amber-600 dark:text-amber-400">Сначала сохраните номер телефона в личных данных.</p>
-                        ) : null}
-                        {!profile.whatsapp_verified && profile.phone !== initialProfile.phone ? (
-                            <p className="type-caption text-amber-600 dark:text-amber-400">Сначала сохраните изменённый номер телефона.</p>
+                        <Input
+                            label="Номер WhatsApp"
+                            type="tel"
+                            value={whatsAppPhone}
+                            onChange={(event) => {
+                                setWhatsAppPhone(event.target.value);
+                                setShowOtpInput(false);
+                                setOtpCode('');
+                                setError(null);
+                            }}
+                            placeholder="+996555123456"
+                            helperText={
+                                profile.whatsapp_verified && !whatsAppPhoneChanged
+                                    ? 'Этот номер используется для входа через WhatsApp и уведомлений.'
+                                    : 'Введите номер, на который придёт код подтверждения WhatsApp.'
+                            }
+                            error={whatsAppPhoneValidationError ?? undefined}
+                        />
+                        {profile.whatsapp_verified && whatsAppPhoneChanged ? (
+                            <p className="type-caption text-amber-600 dark:text-amber-400">
+                                Чтобы сменить WhatsApp-номер, подтвердите новый номер кодом. Контактный телефон выше при этом не меняется.
+                            </p>
                         ) : null}
                         {showOtpInput ? (
                             <div className="flex flex-wrap items-end gap-2">
@@ -496,7 +544,7 @@ export default function ProfileForm() {
                 <p className="type-caption text-gray-500 dark:text-gray-400">
                     {t(
                         'cabinet.profile.connections.hint',
-                        'Все подключённые способы входа ведут в один и тот же аккаунт Kezek. Уведомления настраиваются отдельно ниже.',
+                        'Все подключённые способы входа ведут в один и тот же аккаунт Kezek. Если выбранный Google, Яндекс, Telegram или WhatsApp уже привязан к другому аккаунту Kezek, мы не объединяем аккаунты автоматически — нужно войти в тот аккаунт или обратиться в поддержку. Уведомления настраиваются отдельно ниже.',
                     )}
                 </p>
             </Card>

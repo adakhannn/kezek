@@ -55,10 +55,12 @@ export async function verifyExistingWhatsAppOtp({
     const userMeta = (user.user_metadata ?? {}) as {
         whatsapp_otp_code?: string;
         whatsapp_otp_expires?: string;
+        whatsapp_otp_phone?: string;
     };
 
     const savedCode = userMeta.whatsapp_otp_code;
     const expiresAt = userMeta.whatsapp_otp_expires;
+    const otpPhone = userMeta.whatsapp_otp_phone;
 
     if (!savedCode) {
         return {
@@ -90,16 +92,12 @@ export async function verifyExistingWhatsAppOtp({
         };
     }
 
-    const { data: profile } = await supabase.from('profiles')
-        .select('phone')
-        .eq('id', user.id)
-        .maybeSingle();
-    const normalizedPhone = normalizePhoneToE164(profile?.phone);
+    const normalizedPhone = normalizePhoneToE164(otpPhone);
     if (!normalizedPhone) {
         return {
             ok: false,
             error: 'validation',
-            message: 'Укажите корректный номер телефона перед подключением WhatsApp.',
+            message: 'Укажите корректный номер WhatsApp перед подключением.',
             details: { code: 'invalid_phone' },
             status: 400,
         };
@@ -107,7 +105,7 @@ export async function verifyExistingWhatsAppOtp({
 
     const { error: updateError } = await supabase
         .from('profiles')
-        .update({ phone: normalizedPhone, whatsapp_verified: true })
+        .update({ whatsapp_phone: normalizedPhone, whatsapp_verified: true })
         .eq('id', user.id);
 
     if (updateError) {
@@ -125,6 +123,7 @@ export async function verifyExistingWhatsAppOtp({
         data: {
             whatsapp_otp_code: null,
             whatsapp_otp_expires: null,
+            whatsapp_otp_phone: null,
         },
     });
 

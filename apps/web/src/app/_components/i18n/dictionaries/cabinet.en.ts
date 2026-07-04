@@ -71,7 +71,7 @@ export const cabinetEn = {
     'cabinet.profile.phone.hint': '(for contact, not used for login)',
     'cabinet.profile.phone.label': 'Phone',
     'cabinet.profile.phone.placeholder': '+996555123456',
-    'cabinet.profile.phone.warning.desc': 'This is needed for WhatsApp verification and contact',
+    'cabinet.profile.phone.warning.desc': 'This is needed so we can contact you',
     'cabinet.profile.phone.warning.title': 'Fill in phone number',
     'cabinet.profile.save': 'Save',
     'cabinet.profile.saved': 'Profile updated',

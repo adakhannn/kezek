@@ -57,6 +57,7 @@ export interface ParticipantData {
     email: string | null;
     name: string | null;
     phone: string | null;
+    whatsappPhone: string | null;
     telegramId: number | null;
     notifyEmail: boolean;
     notifyWhatsApp: boolean;

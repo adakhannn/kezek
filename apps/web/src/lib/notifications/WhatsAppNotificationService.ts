@@ -25,9 +25,10 @@ export class WhatsAppNotificationService {
         bookingDetails: BookingDetails,
         notifyType: NotifyType
     ): Promise<boolean> {
-        if (!this.hasConfig || !clientData.phone || !clientData.notifyWhatsApp || !clientData.whatsappVerified) {
-            if (!clientData.phone) {
-                logDebug('WhatsAppNotificationService', 'No client phone for WhatsApp');
+        const whatsappPhone = clientData.whatsappPhone;
+        if (!this.hasConfig || !whatsappPhone || !clientData.notifyWhatsApp || !clientData.whatsappVerified) {
+            if (!whatsappPhone) {
+                logDebug('WhatsAppNotificationService', 'No client WhatsApp phone');
             } else if (!clientData.notifyWhatsApp) {
                 logDebug('WhatsAppNotificationService', 'Skipping WhatsApp to client: notifications disabled');
             } else if (!clientData.whatsappVerified) {
@@ -37,9 +38,9 @@ export class WhatsAppNotificationService {
         }
 
         try {
-            const phoneE164 = normalizePhoneToE164(clientData.phone);
+            const phoneE164 = normalizePhoneToE164(whatsappPhone);
             if (!phoneE164) {
-                logWarn('WhatsAppNotificationService', 'Client phone not normalized', { phone: clientData.phone });
+                logWarn('WhatsAppNotificationService', 'Client WhatsApp phone not normalized', { phone: whatsappPhone });
                 return false;
             }
 
@@ -52,7 +53,7 @@ export class WhatsAppNotificationService {
             const errorMsg = error instanceof Error ? error.message : String(error);
             logError('WhatsAppNotificationService', 'WhatsApp to client failed', {
                 error: errorMsg,
-                phone: clientData.phone,
+                phone: whatsappPhone,
             });
             return false;
         }
@@ -66,17 +67,18 @@ export class WhatsAppNotificationService {
         bookingDetails: BookingDetails,
         notifyType: NotifyType
     ): Promise<boolean> {
-        if (!this.hasConfig || !staffData.phone) {
-            if (!staffData.phone) {
-                logDebug('WhatsAppNotificationService', 'No staff phone for WhatsApp');
+        const whatsappPhone = staffData.whatsappPhone;
+        if (!this.hasConfig || !whatsappPhone) {
+            if (!whatsappPhone) {
+                logDebug('WhatsAppNotificationService', 'No staff WhatsApp phone');
             }
             return false;
         }
 
         try {
-            const phoneE164 = normalizePhoneToE164(staffData.phone);
+            const phoneE164 = normalizePhoneToE164(whatsappPhone);
             if (!phoneE164) {
-                logWarn('WhatsAppNotificationService', 'Staff phone not normalized', { phone: staffData.phone });
+                logWarn('WhatsAppNotificationService', 'Staff WhatsApp phone not normalized', { phone: whatsappPhone });
                 return false;
             }
 
@@ -89,7 +91,7 @@ export class WhatsAppNotificationService {
             const errorMsg = error instanceof Error ? error.message : String(error);
             logError('WhatsAppNotificationService', 'WhatsApp to staff failed', {
                 error: errorMsg,
-                phone: staffData.phone,
+                phone: whatsappPhone,
             });
             return false;
         }
@@ -103,17 +105,18 @@ export class WhatsAppNotificationService {
         bookingDetails: BookingDetails,
         notifyType: NotifyType
     ): Promise<boolean> {
-        if (!this.hasConfig || !ownerData.phone) {
-            if (!ownerData.phone) {
-                logDebug('WhatsAppNotificationService', 'No owner phone for WhatsApp');
+        const whatsappPhone = ownerData.whatsappPhone;
+        if (!this.hasConfig || !whatsappPhone) {
+            if (!whatsappPhone) {
+                logDebug('WhatsAppNotificationService', 'No owner WhatsApp phone');
             }
             return false;
         }
 
         try {
-            const phoneE164 = normalizePhoneToE164(ownerData.phone);
+            const phoneE164 = normalizePhoneToE164(whatsappPhone);
             if (!phoneE164) {
-                logWarn('WhatsAppNotificationService', 'Owner phone not normalized', { phone: ownerData.phone });
+                logWarn('WhatsAppNotificationService', 'Owner WhatsApp phone not normalized', { phone: whatsappPhone });
                 return false;
             }
 
@@ -126,7 +129,7 @@ export class WhatsAppNotificationService {
             const errorMsg = error instanceof Error ? error.message : String(error);
             logError('WhatsAppNotificationService', 'WhatsApp to owner failed', {
                 error: errorMsg,
-                phone: ownerData.phone,
+                phone: whatsappPhone,
             });
             return false;
         }

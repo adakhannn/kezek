@@ -30,10 +30,12 @@ describe('whatsAppSendOtpRouteService', () => {
 
         const result = await runWhatsAppSendOtpRoute({
             supabase: supabase as never,
+            phone: '+996555123456',
         });
 
         expect(sendProfileWhatsAppOtp).toHaveBeenCalledWith({
             supabase,
+            phone: '+996555123456',
             normalizePhone: normalizePhoneToE164,
             sendMessage: sendWhatsApp,
         });

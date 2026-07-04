@@ -20,6 +20,7 @@ export class ParticipantDataService {
             email: null,
             name: null,
             phone: null,
+            whatsappPhone: null,
             telegramId: null,
             notifyEmail: true,
             notifyWhatsApp: true,
@@ -44,10 +45,11 @@ export class ParticipantDataService {
             try {
                 const { data: profile } = await this.supabase
                     .from('profiles')
-                    .select('phone, full_name, notify_email, notify_whatsapp, whatsapp_verified, telegram_id, notify_telegram, telegram_verified')
+                    .select('phone, whatsapp_phone, full_name, notify_email, notify_whatsapp, whatsapp_verified, telegram_id, notify_telegram, telegram_verified')
                     .eq('id', booking.client_id)
                     .maybeSingle<{
                         phone: string | null;
+                        whatsapp_phone: string | null;
                         full_name: string | null;
                         notify_email: boolean | null;
                         notify_whatsapp: boolean | null;
@@ -67,6 +69,7 @@ export class ParticipantDataService {
                     }
                     data.notifyEmail = profile.notify_email ?? true;
                     data.notifyWhatsApp = profile.notify_whatsapp ?? true;
+                    data.whatsappPhone = profile.whatsapp_phone ?? null;
                     data.whatsappVerified = profile.whatsapp_verified ?? false;
                     data.telegramId = profile.telegram_id ?? null;
                     data.notifyTelegram = profile.notify_telegram ?? true;
@@ -99,6 +102,7 @@ export class ParticipantDataService {
             email: null,
             name: null,
             phone: null,
+            whatsappPhone: null,
             telegramId: null,
             notifyEmail: true,
             notifyWhatsApp: true,
@@ -152,17 +156,20 @@ export class ParticipantDataService {
             }
         }
 
-        // Получаем телефон из profiles
-        if (!data.phone) {
+        // Получаем контактный телефон и WhatsApp из profiles
+        if (!data.phone || !data.whatsappPhone) {
             try {
                 const { data: profile } = await this.admin
                     .from('profiles')
-                    .select('phone')
+                    .select('phone, whatsapp_phone')
                     .eq('id', biz.owner_id)
-                    .maybeSingle<{ phone: string | null }>();
+                    .maybeSingle<{ phone: string | null; whatsapp_phone: string | null }>();
                 
-                if (profile?.phone) {
+                if (!data.phone && profile?.phone) {
                     data.phone = profile.phone;
+                }
+                if (profile?.whatsapp_phone) {
+                    data.whatsappPhone = profile.whatsapp_phone;
                 }
             } catch (e) {
                 logError('ParticipantDataService', 'Failed to get owner phone from profiles', e);
@@ -228,6 +235,7 @@ export class ParticipantDataService {
             email: staff?.email ?? null,
             name: staff?.full_name ?? null,
             phone: staff?.phone ?? null,
+            whatsappPhone: staff?.phone ?? null,
             telegramId: null,
             notifyEmail: true,
             notifyWhatsApp: true,
@@ -236,21 +244,27 @@ export class ParticipantDataService {
             telegramVerified: false,
         };
 
-        // Получаем Telegram данные мастера (если есть user_id)
+        // Получаем Telegram/WhatsApp данные мастера (если есть user_id)
         if (staff && 'user_id' in staff && staff.user_id) {
             try {
                 logDebug('ParticipantDataService', 'Getting staff telegram data', { user_id: staff.user_id });
                 const { data: profile } = await this.admin
                     .from('profiles')
-                    .select('telegram_id, notify_telegram, telegram_verified')
+                    .select('whatsapp_phone, whatsapp_verified, notify_whatsapp, telegram_id, notify_telegram, telegram_verified')
                     .eq('id', staff.user_id)
                     .maybeSingle<{ 
+                        whatsapp_phone: string | null;
+                        whatsapp_verified: boolean | null;
+                        notify_whatsapp: boolean | null;
                         telegram_id: number | null;
                         notify_telegram: boolean | null;
                         telegram_verified: boolean | null;
                     }>();
                 
                 if (profile) {
+                    data.whatsappPhone = profile.whatsapp_phone ?? data.whatsappPhone;
+                    data.whatsappVerified = profile.whatsapp_verified ?? false;
+                    data.notifyWhatsApp = profile.notify_whatsapp ?? true;
                     data.telegramId = profile.telegram_id ?? null;
                     data.notifyTelegram = profile.notify_telegram ?? true;
                     data.telegramVerified = profile.telegram_verified ?? false;

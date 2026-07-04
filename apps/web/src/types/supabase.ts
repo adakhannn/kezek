@@ -273,6 +273,7 @@ export type Database = {
           telegram_photo_url: string | null
           telegram_username: string | null
           telegram_verified: boolean | null
+          whatsapp_phone: string | null
           whatsapp_verified: boolean | null
           yandex_id: string | null
           yandex_username: string | null
@@ -289,6 +290,7 @@ export type Database = {
           telegram_photo_url?: string | null
           telegram_username?: string | null
           telegram_verified?: boolean | null
+          whatsapp_phone?: string | null
           whatsapp_verified?: boolean | null
           yandex_id?: string | null
           yandex_username?: string | null
@@ -305,6 +307,7 @@ export type Database = {
           telegram_photo_url?: string | null
           telegram_username?: string | null
           telegram_verified?: boolean | null
+          whatsapp_phone?: string | null
           whatsapp_verified?: boolean | null
           yandex_id?: string | null
           yandex_username?: string | null

@@ -75,7 +75,7 @@ describe('/api/whatsapp/send-otp', () => {
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
                     data: {
-                        phone: null,
+                        whatsapp_phone: null,
                         whatsapp_verified: false,
                     },
                     error: null,
@@ -105,15 +105,20 @@ describe('/api/whatsapp/send-otp', () => {
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
                     data: {
-                        phone: '+996555123456',
+                        whatsapp_phone: '+996555123456',
                         whatsapp_verified: true, // Уже подтвержден
                     },
                     error: null,
                 }),
             });
 
+            (normalizePhoneToE164 as jest.Mock).mockReturnValue('+996555123456');
+
             const req = createMockRequest('http://localhost/api/whatsapp/send-otp', {
                 method: 'POST',
+                body: {
+                    phone: '+996555123456',
+                },
             });
 
             const res = await POST(req);
@@ -139,7 +144,7 @@ describe('/api/whatsapp/send-otp', () => {
                 eq: jest.fn().mockReturnThis(),
                 maybeSingle: jest.fn().mockResolvedValue({
                     data: {
-                        phone: phoneE164,
+                        whatsapp_phone: null,
                         whatsapp_verified: false,
                     },
                     error: null,
@@ -161,6 +166,9 @@ describe('/api/whatsapp/send-otp', () => {
 
             const req = createMockRequest('http://localhost/api/whatsapp/send-otp', {
                 method: 'POST',
+                body: {
+                    phone: phoneE164,
+                },
             });
 
             const res = await POST(req);

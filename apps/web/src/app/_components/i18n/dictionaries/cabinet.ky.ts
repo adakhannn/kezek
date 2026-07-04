@@ -69,7 +69,7 @@ export const cabinetKy = {
     'cabinet.profile.phone.hint': '(байланыш үчүн, кирүү үчүн колдонулбайт)',
     'cabinet.profile.phone.label': 'Телефон',
     'cabinet.profile.phone.placeholder': '+996555123456',
-    'cabinet.profile.phone.warning.desc': 'Бул WhatsApp ырастоо жана сиз менен байланышуу үчүн керек',
+    'cabinet.profile.phone.warning.desc': 'Бул сиз менен байланышуу үчүн керек',
     'cabinet.profile.phone.warning.title': 'Телефон номерин толтуруңуз',
     'cabinet.profile.save': 'Сактоо',
     'cabinet.profile.saved': 'Профиль жаңыланды',

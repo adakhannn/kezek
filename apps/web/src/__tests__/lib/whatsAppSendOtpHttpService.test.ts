@@ -29,11 +29,17 @@ describe('whatsAppSendOtpHttpService', () => {
       data: { message: 'sent' },
     });
 
-    const response = await runWhatsAppSendOtpHttp();
+    const response = await runWhatsAppSendOtpHttp(
+      new Request('http://localhost/api/whatsapp/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ phone: '+996555123456' }),
+      }),
+    );
     const body = await response.json();
 
     expect(runWhatsAppSendOtpRoute).toHaveBeenCalledWith({
       supabase: mockSupabase,
+      phone: '+996555123456',
     });
     expect(response.status).toBe(200);
     expect(body.data.message).toBe('sent');
@@ -48,7 +54,9 @@ describe('whatsAppSendOtpHttpService', () => {
       details: { code: 'no_phone' },
     });
 
-    const response = await runWhatsAppSendOtpHttp();
+    const response = await runWhatsAppSendOtpHttp(
+      new Request('http://localhost/api/whatsapp/send-otp', { method: 'POST' }),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(400);

@@ -6,9 +6,18 @@ import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
 import { runWhatsAppSendOtpRoute } from '@/lib/whatsAppSendOtpRouteService';
 import type { WhatsAppSendOtpSupabaseLike } from '@/lib/whatsAppSendOtpService';
 
-export async function runWhatsAppSendOtpHttp(): Promise<NextResponse> {
+export async function runWhatsAppSendOtpHttp(req: Request): Promise<NextResponse> {
+  let phone: string | undefined;
+  try {
+    const body = (await req.json()) as { phone?: unknown };
+    phone = typeof body.phone === 'string' ? body.phone : undefined;
+  } catch {
+    phone = undefined;
+  }
+
   const result = await runWhatsAppSendOtpRoute({
     supabase: (await createSupabaseServerClient()) as unknown as WhatsAppSendOtpSupabaseLike,
+    phone,
   });
 
   if (!result.ok) {

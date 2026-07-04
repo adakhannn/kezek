@@ -74,17 +74,16 @@ export async function updateProfileSettings(params: {
       };
     };
   })
-    .select('phone, whatsapp_verified, telegram_id, telegram_verified')
+    .select('whatsapp_phone, whatsapp_verified, telegram_id, telegram_verified')
     .eq('id', user.id)
     .maybeSingle<{
-      phone: string | null;
+      whatsapp_phone: string | null;
       whatsapp_verified: boolean | null;
       telegram_id: number | null;
       telegram_verified: boolean | null;
     }>();
 
-  const phoneChanged = currentProfile?.phone !== phone;
-  const whatsapp_verified = phoneChanged || !phone ? false : (currentProfile?.whatsapp_verified ?? false);
+  const whatsapp_verified = !!currentProfile?.whatsapp_phone && (currentProfile?.whatsapp_verified ?? false);
   const notify_whatsapp = whatsapp_verified && requestedNotifyWhatsApp;
   const telegramConnected = !!currentProfile?.telegram_id && !!currentProfile?.telegram_verified;
   const notify_telegram = telegramConnected && requestedNotifyTelegram;

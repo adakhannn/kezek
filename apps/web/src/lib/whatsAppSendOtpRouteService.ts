@@ -10,11 +10,14 @@ export type WhatsAppSendOtpRouteResult = WhatsAppSendOtpResult;
 
 export async function runWhatsAppSendOtpRoute({
     supabase,
+    phone,
 }: {
     supabase: WhatsAppSendOtpSupabaseLike;
+    phone?: string;
 }): Promise<WhatsAppSendOtpRouteResult> {
     return sendProfileWhatsAppOtp({
         supabase,
+        phone,
         normalizePhone: normalizePhoneToE164,
         sendMessage: sendWhatsApp,
     });
