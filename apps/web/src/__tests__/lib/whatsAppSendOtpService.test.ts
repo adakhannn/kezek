@@ -93,6 +93,8 @@ describe('whatsAppSendOtpService', () => {
       normalizePhone: jest.fn().mockReturnValue('+996555123456'),
       sendMessage,
       now: new Date('2026-03-27T10:00:00.000Z'),
+      authTemplateName: 'kezek_otp',
+      authTemplateLanguage: 'ru',
     });
 
     expect(result).toEqual({
@@ -104,6 +106,16 @@ describe('whatsAppSendOtpService', () => {
     expect(sendMessage).toHaveBeenCalledWith({
       to: '+996555123456',
       text: expect.stringContaining('Ваш код подтверждения WhatsApp'),
+      template: {
+        name: 'kezek_otp',
+        language: 'ru',
+        components: [
+          {
+            type: 'body',
+            parameters: [{ type: 'text', text: expect.stringMatching(/^\d{6}$/) }],
+          },
+        ],
+      },
     });
   });
 });

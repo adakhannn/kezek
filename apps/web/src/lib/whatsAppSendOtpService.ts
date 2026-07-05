@@ -39,7 +39,18 @@ export async function sendProfileWhatsAppOtp(params: {
   supabase: WhatsAppSendOtpSupabaseLike;
   phone?: string;
   normalizePhone: (phone: string) => string | null;
-  sendMessage: (params: { to: string; text: string }) => Promise<void>;
+  sendMessage: (params: {
+    to: string;
+    text: string;
+    template?: {
+      name: string;
+      language: string;
+      components?: Array<Record<string, unknown>>;
+    };
+  }) => Promise<void>;
+  authTemplateName?: string;
+  authTemplateLanguage?: string;
+  requireTemplate?: boolean;
   now?: Date;
 }): Promise<WhatsAppSendOtpResult> {
   const {
@@ -103,6 +114,16 @@ export async function sendProfileWhatsAppOtp(params: {
     };
   }
 
+  if (params.requireTemplate && !params.authTemplateName?.trim()) {
+    return {
+      ok: false,
+      error: 'internal',
+      message: 'Отправка кода WhatsApp временно недоступна',
+      details: { code: 'otp_template_not_configured' },
+      status: 503,
+    };
+  }
+
   const now = params.now ?? new Date();
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
   const { error: metadataError } = await params.supabase.auth.updateUser({
@@ -129,6 +150,20 @@ export async function sendProfileWhatsAppOtp(params: {
     await params.sendMessage({
       to: phoneE164,
       text: message,
+      ...(params.authTemplateName?.trim()
+        ? {
+            template: {
+              name: params.authTemplateName.trim(),
+              language: params.authTemplateLanguage?.trim() || 'ru',
+              components: [
+                {
+                  type: 'body',
+                  parameters: [{ type: 'text', text: otpCode }],
+                },
+              ],
+            },
+          }
+        : {}),
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

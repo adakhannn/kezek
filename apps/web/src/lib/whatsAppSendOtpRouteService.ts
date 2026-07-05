@@ -1,3 +1,4 @@
+import { getWhatsAppAuthTemplateLanguage, getWhatsAppAuthTemplateName } from '@/lib/env';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 import { sendWhatsApp } from '@/lib/senders/whatsapp';
 import {
@@ -20,5 +21,8 @@ export async function runWhatsAppSendOtpRoute({
         phone,
         normalizePhone: normalizePhoneToE164,
         sendMessage: sendWhatsApp,
+        authTemplateName: getWhatsAppAuthTemplateName(),
+        authTemplateLanguage: getWhatsAppAuthTemplateLanguage(),
+        requireTemplate: true,
     });
 }

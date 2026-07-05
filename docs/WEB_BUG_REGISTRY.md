@@ -1332,3 +1332,29 @@ The web testing scope and execution status are maintained in
   - request/error log: `%TEMP%\kezek-a2-postfix-invalid-env\web.stderr.log`
 - status: `verified`
 - owner: `Codex + User`
+
+### WB-035
+- id: `WB-035`
+- date: `2026-07-05`
+- area: `C4`
+- severity: `P0`
+- title: WhatsApp linking OTP is accepted by the UI but may not be delivered outside the 24-hour messaging window
+- environment: `https://kezek.kg/cabinet/profile`, production, authenticated user
+- steps:
+  1. Open the profile and start connecting a WhatsApp number.
+  2. Request the confirmation code.
+  3. Observe that the UI opens the OTP field, but no WhatsApp message arrives.
+- expected:
+  - The OTP is sent through the approved WhatsApp authentication/utility template and is delivered outside the customer-service window.
+- actual:
+  - Profile linking used a free-form text message while the sign-in flow used the configured OTP template. Meta can accept the API request and later reject delivery outside the 24-hour window.
+- evidence:
+  - user screenshot `codex-clipboard-499ded74-4c32-4f3b-98f9-a45b3cd22927.png`
+  - source comparison: `whatsAppSendOtpRouteService.ts` did not pass template configuration used by `whatsAppAuthSendOtpRouteService.ts`
+- fix:
+  - profile WhatsApp OTP now uses the configured template name, language, and OTP body component, matching the sign-in flow
+  - if the production OTP template is missing, the API now fails explicitly instead of claiming that an undeliverable code was sent
+- post-fix verification:
+  - automated service test verifies the template payload; production delivery requires deployment and a fresh live request
+- status: `fixed, awaiting production live verification`
+- owner: `Codex + User`
