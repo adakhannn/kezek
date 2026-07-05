@@ -27,6 +27,8 @@ type LoginConnections = {
     yandex: boolean;
 };
 
+type SocialProvider = 'google' | 'yandex' | 'telegram' | 'whatsapp';
+
 export default function ProfileForm() {
     const router = useRouter();
     const { t } = useLanguage();
@@ -63,6 +65,7 @@ export default function ProfileForm() {
         yandex: false,
     });
     const [linkingProvider, setLinkingProvider] = useState<'google' | 'yandex' | null>(null);
+    const [unlinkingProvider, setUnlinkingProvider] = useState<SocialProvider | null>(null);
 
     useEffect(() => {
         loadProfile();
@@ -322,6 +325,36 @@ export default function ProfileForm() {
         }
     }
 
+    async function handleUnlink(provider: SocialProvider, label: string) {
+        if (!window.confirm(`Отвязать ${label}? После этого вход через этот способ будет недоступен.`)) return;
+
+        setUnlinkingProvider(provider);
+        setError(null);
+        setMessage(null);
+        try {
+            const response = await fetch('/api/auth/connections/unlink', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ provider }),
+            });
+            const data = (await response.json()) as { ok?: boolean; message?: string };
+            if (!response.ok || !data.ok) throw new Error(data.message || `Не удалось отвязать ${label}`);
+
+            if (provider === 'whatsapp') {
+                setWhatsAppPhone('');
+                setInitialWhatsAppPhone('');
+                setShowOtpInput(false);
+                setOtpCode('');
+            }
+            await loadProfile();
+            setMessage(`${label} успешно отвязан`);
+        } catch (unlinkError) {
+            setError(unlinkError instanceof Error ? unlinkError.message : `Не удалось отвязать ${label}`);
+        } finally {
+            setUnlinkingProvider(null);
+        }
+    }
+
     function resetChanges() {
         setProfile(initialProfile);
         setWhatsAppPhone(initialWhatsAppPhone);
@@ -451,7 +484,12 @@ export default function ProfileForm() {
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
                         <span className="type-body font-medium text-gray-700 dark:text-gray-300">Google</span>
                         {loginConnections.google ? (
-                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('google', 'Google')} isLoading={unlinkingProvider === 'google'}>
+                                    Отвязать
+                                </Button>
+                            </div>
                         ) : (
                             <Button type="button" size="sm" onClick={handleGoogleLink} isLoading={linkingProvider === 'google'}>
                                 Подключить
@@ -462,7 +500,12 @@ export default function ProfileForm() {
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
                         <span className="type-body font-medium text-gray-700 dark:text-gray-300">Яндекс</span>
                         {loginConnections.yandex ? (
-                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('yandex', 'Яндекс')} isLoading={unlinkingProvider === 'yandex'}>
+                                    Отвязать
+                                </Button>
+                            </div>
                         ) : (
                             <Button type="button" size="sm" onClick={handleYandexLink} isLoading={linkingProvider === 'yandex'}>
                                 Подключить
@@ -473,7 +516,12 @@ export default function ProfileForm() {
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3 py-3">
                         <span className="type-body font-medium text-gray-700 dark:text-gray-300">Telegram</span>
                         {profile.telegram_connected ? (
-                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('telegram', 'Telegram')} isLoading={unlinkingProvider === 'telegram'}>
+                                    Отвязать
+                                </Button>
+                            </div>
                         ) : (
                             <TelegramLinkWidget
                                 onSuccess={() => {
@@ -492,6 +540,9 @@ export default function ProfileForm() {
                             {profile.whatsapp_verified ? (
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">Подключено</span>
+                                    <Button type="button" size="sm" variant="ghost" onClick={() => handleUnlink('whatsapp', 'WhatsApp')} isLoading={unlinkingProvider === 'whatsapp'}>
+                                        Отвязать
+                                    </Button>
                                     {whatsAppPhoneChanged ? (
                                         <Button
                                             type="button"

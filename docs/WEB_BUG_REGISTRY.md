@@ -1412,3 +1412,29 @@ The web testing scope and execution status are maintained in
   - automated conflict test added; production live verification requires deployment
 - status: `fixed, awaiting production live verification`
 - owner: `Codex + User`
+
+### WB-038
+- id: `WB-038`
+- date: `2026-07-05`
+- area: `C4`
+- severity: `P1`
+- title: Connected social login methods cannot be unlinked from the profile
+- environment: web profile, authenticated user
+- steps:
+  1. Connect more than one login method.
+  2. Open the profile connection settings.
+  3. Try to remove an obsolete or incorrectly linked provider.
+- expected:
+  - Any provider can be unlinked while at least one other verified login method remains.
+  - Removing Telegram or WhatsApp also disables its notification channel.
+- actual:
+  - Connected providers only display a status badge; no unlink action exists.
+- fix:
+  - added unlink actions for Google, Yandex, Telegram, and WhatsApp
+  - server re-evaluates all connection sources and rejects removal of the final login method
+  - Google identity removal is restricted to a service-role-only database function
+  - Telegram and WhatsApp notification preferences are disabled when their identity is removed
+- post-fix verification:
+  - service tests cover last-method rejection, Google unlinking, and WhatsApp cleanup; live verification pending deployment
+- status: `fixed, awaiting live verification`
+- owner: `Codex + User`
