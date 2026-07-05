@@ -50,6 +50,7 @@ The web testing scope and execution status are maintained in
   - screenshot/snapshot/console/network trace
 - status: `open`
 - owner: `Codex + User`
+
 ```
 
 ## Open bugs
@@ -1356,5 +1357,58 @@ The web testing scope and execution status are maintained in
   - if the production OTP template is missing, the API now fails explicitly instead of claiming that an undeliverable code was sent
 - post-fix verification:
   - automated service test verifies the template payload; production delivery requires deployment and a fresh live request
+- status: `fixed, awaiting production live verification`
+- owner: `Codex + User`
+
+### WB-036
+- id: `WB-036`
+- date: `2026-07-05`
+- area: `C4`
+- severity: `P1`
+- title: Profile action errors are rendered below all settings and can be missed
+- environment: `https://kezek.kg/cabinet/profile`, production, authenticated user, desktop
+- steps:
+  1. Scroll to the connected login methods or notification settings.
+  2. Trigger a provider-linking error.
+  3. Observe the error placement near the bottom action bar.
+- expected:
+  - Action feedback remains immediately visible wherever the user is positioned in the long profile form.
+- actual:
+  - The error banner is rendered after all profile sections and is easy to miss.
+- evidence:
+  - user screenshot `codex-clipboard-665832ac-1f25-4756-a713-3f00bbff1609.png`
+- fix:
+  - error and success feedback moved to a sticky alert region at the top of the form, above the content and below the fixed header
+  - alerts now have stronger elevation, an explicit error title, and a close action
+- post-fix verification:
+  - pending local and production live verification
+- status: `fixed, awaiting live verification`
+- owner: `Codex + User`
+
+### WB-037
+- id: `WB-037`
+- date: `2026-07-05`
+- area: `C4`
+- severity: `P0`
+- title: A WhatsApp number owned by an existing Auth account can be linked to a second Kezek profile
+- environment: `https://kezek.kg/cabinet/profile`, production, authenticated user
+- steps:
+  1. Use a WhatsApp number that already has a separate Kezek Auth account.
+  2. Sign in to another Kezek account through a different provider.
+  3. Connect and verify the existing WhatsApp number in profile settings.
+- expected:
+  - Linking is rejected because one external WhatsApp identity must have exactly one Kezek owner.
+- actual:
+  - Linking succeeds when the old account owns the phone in Supabase Auth but has no corresponding verified `profiles.whatsapp_phone` value.
+  - A later WhatsApp login can still resolve to the old Auth user instead of the account where the number was newly linked.
+- evidence:
+  - user production report after successful WhatsApp linking
+  - source audit: profile OTP verification checked only the partial unique index on `profiles.whatsapp_phone`; WhatsApp login checks Supabase Auth users first
+- fix:
+  - before profile linking, the verified phone is now checked against Supabase Auth ownership
+  - linking returns `409 whatsapp_identity_already_linked` when another Auth user owns the phone
+  - Auth lookup failures fail closed without changing profile ownership
+- post-fix verification:
+  - automated conflict test added; production live verification requires deployment
 - status: `fixed, awaiting production live verification`
 - owner: `Codex + User`

@@ -23,9 +23,11 @@ export type WhatsAppVerifyOtpRouteResult = Failure | Success;
 export async function runWhatsAppVerifyOtpRoute({
     supabase,
     code,
+    findAuthOwnerByPhone,
 }: {
     supabase: SupabaseServerClientLike;
     code?: string;
+    findAuthOwnerByPhone: (phone: string) => Promise<string | null>;
 }): Promise<WhatsAppVerifyOtpRouteResult> {
     const {
         data: { user },
@@ -44,5 +46,6 @@ export async function runWhatsAppVerifyOtpRoute({
         supabase,
         user,
         code,
+        findAuthOwnerByPhone,
     });
 }

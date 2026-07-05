@@ -8,11 +8,12 @@ import { setupApiTestMocks, createMockRequest, createMockSupabase, expectSuccess
 
 setupApiTestMocks();
 
-import { createSupabaseServerClient } from '@/lib/supabaseHelpers';
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 // Мокаем зависимости
 jest.mock('@/lib/supabaseHelpers', () => ({
     createSupabaseServerClient: jest.fn(),
+    createSupabaseAdminClient: jest.fn(),
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
@@ -29,6 +30,13 @@ describe('/api/whatsapp/verify-otp', () => {
         jest.clearAllMocks();
 
         (createSupabaseServerClient as jest.Mock).mockResolvedValue(mockSupabase);
+        (createSupabaseAdminClient as jest.Mock).mockReturnValue({
+            auth: {
+                admin: {
+                    listUsers: jest.fn().mockResolvedValue({ data: { users: [] }, error: null }),
+                },
+            },
+        });
     });
 
     describe('Авторизация', () => {

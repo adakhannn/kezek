@@ -344,6 +344,28 @@ export default function ProfileForm() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
+            {message || error ? (
+                <div className="sticky top-20 z-40 space-y-2" aria-live="assertive">
+                    {message ? (
+                        <AlertBanner
+                            variant="success"
+                            message={message}
+                            className="shadow-lg backdrop-blur-sm"
+                            onClose={() => setMessage(null)}
+                        />
+                    ) : null}
+                    {error ? (
+                        <AlertBanner
+                            variant="danger"
+                            title={t('cabinet.profile.error.title', 'Не удалось выполнить действие')}
+                            message={error}
+                            className="shadow-lg backdrop-blur-sm"
+                            onClose={() => setError(null)}
+                        />
+                    ) : null}
+                </div>
+            ) : null}
+
             <Card variant="default" padding="lg" className="space-y-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
@@ -765,10 +787,6 @@ export default function ProfileForm() {
                     )}
                 </div>
             </Card>
-
-            {message ? <AlertBanner variant="success" message={message} /> : null}
-
-            {error ? <AlertBanner variant="danger" message={error} /> : null}
 
             {isDirty && !error ? (
                 <AlertBanner

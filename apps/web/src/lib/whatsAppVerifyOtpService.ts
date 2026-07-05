@@ -20,6 +20,7 @@ type VerifyExistingOtpInput = {
     supabase: SupabaseServerClientLike;
     user: UserLike;
     code?: string;
+    findAuthOwnerByPhone: (phone: string) => Promise<string | null>;
 };
 
 type VerifyExistingOtpResult =
@@ -41,6 +42,7 @@ export async function verifyExistingWhatsAppOtp({
     supabase,
     user,
     code,
+    findAuthOwnerByPhone,
 }: VerifyExistingOtpInput): Promise<VerifyExistingOtpResult> {
     if (!code || !/^\d{6}$/.test(code)) {
         return {
@@ -100,6 +102,28 @@ export async function verifyExistingWhatsAppOtp({
             message: 'Укажите корректный номер WhatsApp перед подключением.',
             details: { code: 'invalid_phone' },
             status: 400,
+        };
+    }
+
+    try {
+        const authOwnerId = await findAuthOwnerByPhone(normalizedPhone);
+        if (authOwnerId && authOwnerId !== user.id) {
+            return {
+                ok: false,
+                error: 'conflict',
+                message: 'Этот WhatsApp номер уже используется другим аккаунтом. Войдите через него или обратитесь в поддержку.',
+                details: { code: 'whatsapp_identity_already_linked' },
+                status: 409,
+            };
+        }
+    } catch (error) {
+        logError('WhatsAppVerifyOtp', 'Auth owner lookup error', error);
+        return {
+            ok: false,
+            error: 'internal',
+            message: 'Не удалось проверить владельца WhatsApp номера. Попробуйте позже.',
+            details: { code: 'auth_owner_lookup_failed' },
+            status: 500,
         };
     }
 
