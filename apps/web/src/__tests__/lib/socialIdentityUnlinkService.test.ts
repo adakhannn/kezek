@@ -77,6 +77,12 @@ describe('unlinkSocialIdentity', () => {
 
         expect(result).toEqual({ ok: true, data: { provider: 'yandex', remainingMethods: 1 } });
         expect(update).toHaveBeenCalledWith({ yandex_id: null });
-        expect(admin.auth.admin.updateUserById).toHaveBeenCalledWith('user-id', { user_metadata: {} });
+        expect(admin.auth.admin.updateUserById).toHaveBeenCalledWith('user-id', {
+            user_metadata: {
+                yandex_id: null,
+                yandex_username: null,
+                auth_provider: null,
+            },
+        });
     });
 });

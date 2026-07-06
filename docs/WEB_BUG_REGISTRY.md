@@ -1464,3 +1464,29 @@ The web testing scope and execution status are maintained in
   - automated test pending execution; production live verification requires deployment
 - status: `fixed, awaiting production live verification`
 - owner: `Codex + User`
+
+### WB-040
+- id: `WB-040`
+- date: `2026-07-06`
+- area: `C4`
+- severity: `P1`
+- title: Successful Yandex unlink leaves merged Auth metadata and the UI still shows connected
+- environment: `https://kezek.kg/cabinet/profile`, production, authenticated user
+- steps:
+  1. Unlink a legacy Yandex connection.
+  2. Observe the success message.
+  3. Inspect the Yandex connection row after profile reload.
+- expected:
+  - Yandex is shown as disconnected immediately after successful unlink.
+- actual:
+  - Success is shown, but Yandex remains connected because Auth metadata fields survive a merge update.
+- evidence:
+  - user screenshot `codex-clipboard-36ca5464-e009-49ae-99a0-81aa8a6a16ff.png`
+  - Supabase admin user metadata updates merge keys; omitting a key does not remove the stored value
+- fix:
+  - provider metadata fields are now explicitly assigned `null` during unlink instead of being omitted
+  - the same correction is applied to Yandex, Telegram, and WhatsApp metadata cleanup
+- post-fix verification:
+  - automated assertion updated; production live verification requires deployment
+- status: `fixed, awaiting production live verification`
+- owner: `Codex + User`

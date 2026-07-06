@@ -41,17 +41,17 @@ const connectionLabels: Record<SocialProvider, string> = {
 function cleanMetadata(metadata: Record<string, unknown> | null | undefined, provider: SocialProvider) {
     const next = { ...(metadata ?? {}) };
     if (provider === 'yandex') {
-        delete next.yandex_id;
-        delete next.yandex_username;
-        if (next.auth_provider === 'yandex') delete next.auth_provider;
+        next.yandex_id = null;
+        next.yandex_username = null;
+        if (next.auth_provider === 'yandex') next.auth_provider = null;
     } else if (provider === 'telegram') {
-        delete next.telegram_id;
-        delete next.telegram_username;
+        next.telegram_id = null;
+        next.telegram_username = null;
     } else if (provider === 'whatsapp') {
-        delete next.whatsapp_verified;
-        delete next.whatsapp_otp_code;
-        delete next.whatsapp_otp_expires;
-        delete next.whatsapp_otp_phone;
+        next.whatsapp_verified = null;
+        next.whatsapp_otp_code = null;
+        next.whatsapp_otp_expires = null;
+        next.whatsapp_otp_phone = null;
     }
     return next;
 }
