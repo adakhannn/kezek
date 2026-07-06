@@ -3,6 +3,7 @@ import { unlinkSocialIdentity } from '@/lib/socialIdentityUnlinkService';
 function createAdmin(options?: {
     identities?: Array<{ provider: string }>;
     profile?: Record<string, unknown>;
+    userMetadata?: Record<string, unknown>;
 }) {
     const profile = {
         yandex_id: null,
@@ -20,7 +21,7 @@ function createAdmin(options?: {
         auth: {
             admin: {
                 getUserById: jest.fn().mockResolvedValue({
-                    data: { user: { id: 'user-id', identities: options?.identities ?? [], user_metadata: {} } },
+                    data: { user: { id: 'user-id', identities: options?.identities ?? [], user_metadata: options?.userMetadata ?? {} } },
                     error: null,
                 }),
                 updateUserById: jest.fn().mockResolvedValue({ error: null }),
@@ -64,5 +65,18 @@ describe('unlinkSocialIdentity', () => {
 
         expect(result).toEqual({ ok: true, data: { provider: 'whatsapp', remainingMethods: 1 } });
         expect(update).toHaveBeenCalledWith({ whatsapp_phone: null, whatsapp_verified: false, notify_whatsapp: false });
+    });
+
+    test('unlinks a legacy Yandex connection stored only in auth metadata', async () => {
+        const { admin, update } = createAdmin({
+            identities: [{ provider: 'google' }],
+            userMetadata: { yandex_id: 'legacy-yandex-id', yandex_username: 'legacy', auth_provider: 'yandex' },
+        });
+
+        const result = await unlinkSocialIdentity({ admin: admin as never, userId: 'user-id', provider: 'yandex' });
+
+        expect(result).toEqual({ ok: true, data: { provider: 'yandex', remainingMethods: 1 } });
+        expect(update).toHaveBeenCalledWith({ yandex_id: null });
+        expect(admin.auth.admin.updateUserById).toHaveBeenCalledWith('user-id', { user_metadata: {} });
     });
 });

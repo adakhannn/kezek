@@ -76,10 +76,11 @@ export async function unlinkSocialIdentity(params: {
         return { ok: false, error: 'internal', message: 'Не удалось проверить профиль.', status: 500, details: { code: 'profile_lookup_failed' } };
     }
 
+    const metadata = authData.user.user_metadata ?? {};
     const connected: Record<SocialProvider, boolean> = {
         google: !!authData.user.identities?.some((identity) => identity.provider === 'google'),
-        yandex: !!profile?.yandex_id,
-        telegram: !!profile?.telegram_id && !!profile.telegram_verified,
+        yandex: !!profile?.yandex_id || !!metadata.yandex_id || metadata.auth_provider === 'yandex',
+        telegram: (!!profile?.telegram_id && !!profile.telegram_verified) || !!metadata.telegram_id,
         whatsapp: !!profile?.whatsapp_phone && !!profile.whatsapp_verified,
     };
     const connectedCount = Object.values(connected).filter(Boolean).length;

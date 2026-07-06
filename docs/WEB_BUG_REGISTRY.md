@@ -1438,3 +1438,29 @@ The web testing scope and execution status are maintained in
   - service tests cover last-method rejection, Google unlinking, and WhatsApp cleanup; live verification pending deployment
 - status: `fixed, awaiting live verification`
 - owner: `Codex + User`
+
+### WB-039
+- id: `WB-039`
+- date: `2026-07-06`
+- area: `C4`
+- severity: `P1`
+- title: Legacy Yandex connection is visible in profile but unlink API reports that it is not connected
+- environment: `https://kezek.kg/cabinet/profile`, production, authenticated user
+- steps:
+  1. Open a profile whose Yandex identity is stored in Auth metadata but not in `profiles.yandex_id`.
+  2. Observe the connected Yandex badge.
+  3. Click `Отвязать` and confirm.
+- expected:
+  - The server recognizes the same connection sources as the UI and removes the Yandex link.
+- actual:
+  - UI reports `Подключено`, while the API returns `Яндекс уже не подключён`.
+- evidence:
+  - user screenshot `codex-clipboard-d44a87b4-3aa3-4d7d-89d3-bc382478fddf.png`
+  - source audit confirmed UI fallback to Auth metadata was absent from unlink service
+- fix:
+  - unlink service now recognizes Yandex and Telegram legacy Auth metadata, matching profile UI detection
+  - regression test covers Yandex stored only in Auth metadata
+- post-fix verification:
+  - automated test pending execution; production live verification requires deployment
+- status: `fixed, awaiting production live verification`
+- owner: `Codex + User`
