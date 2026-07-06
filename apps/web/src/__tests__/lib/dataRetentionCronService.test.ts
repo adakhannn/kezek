@@ -9,7 +9,8 @@ describe('dataRetentionCronService', () => {
             .mockResolvedValueOnce({ data: 30, error: null })
             .mockResolvedValueOnce({ data: 40, error: null })
             .mockResolvedValueOnce({ data: 50, error: null })
-            .mockResolvedValueOnce({ data: 60, error: null });
+            .mockResolvedValueOnce({ data: 60, error: null })
+            .mockResolvedValueOnce({ data: 2, error: null });
 
         const result = await runDataRetention({
             supabase: { rpc } as never,
@@ -25,6 +26,7 @@ describe('dataRetentionCronService', () => {
                 bookings_pii_anonymized: 40,
                 profiles_pii_anonymized: 50,
                 telegram_mobile_attempts_deleted: 60,
+                accounts_deleted: 2,
             },
         });
     });
@@ -37,7 +39,8 @@ describe('dataRetentionCronService', () => {
             .mockResolvedValueOnce({ data: null, error: { message: 'funnel fail' } })
             .mockResolvedValueOnce({ data: 40, error: null })
             .mockResolvedValueOnce({ data: null, error: { message: 'profiles fail' } })
-            .mockResolvedValueOnce({ data: null, error: { message: 'telegram attempts fail' } });
+            .mockResolvedValueOnce({ data: null, error: { message: 'telegram attempts fail' } })
+            .mockResolvedValueOnce({ data: null, error: { message: 'account deletion fail' } });
 
         const result = await runDataRetention({
             supabase: { rpc } as never,
@@ -53,6 +56,7 @@ describe('dataRetentionCronService', () => {
                 bookings_pii_anonymized: 40,
                 profiles_pii_error: 'profiles fail',
                 telegram_mobile_attempts_error: 'telegram attempts fail',
+                account_deletions_error: 'account deletion fail',
             },
         });
     });

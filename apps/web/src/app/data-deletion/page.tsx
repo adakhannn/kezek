@@ -66,7 +66,7 @@ export default function DataDeletionPage() {
                                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span><strong>История бронирований:</strong> все записи о ваших бронированиях</span>
+                                    <span><strong>История бронирований:</strong> связь с аккаунтом и контактные данные удаляются; завершённые записи могут храниться только в обезличенном виде</span>
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@ export default function DataDeletionPage() {
                                         <p className="font-medium mb-1">Подтвердите удаление</p>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
                                             Внимательно прочитайте предупреждение и подтвердите удаление аккаунта. 
-                                            Вам может потребоваться ввести пароль для подтверждения.
+                                            Для подтверждения потребуется ввести слово «УДАЛИТЬ» в настройках профиля.
                                         </p>
                                     </div>
                                 </li>

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
+import { AccountDeletionPanel } from './AccountDeletionPanel';
 import { TelegramLinkWidget } from './TelegramLinkWidget';
 
 import { useLanguage } from '@/app/_components/i18n/LanguageProvider';
@@ -846,6 +847,8 @@ export default function ProfileForm() {
                     message={t('cabinet.profile.unsavedMessage', 'Проверьте данные и сохраните профиль, чтобы обновления применились к следующим записям и уведомлениям')}
                 />
             ) : null}
+
+            <AccountDeletionPanel />
 
             <Card variant="elevated" padding="md" className="sticky bottom-4 z-10 border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)] backdrop-blur">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

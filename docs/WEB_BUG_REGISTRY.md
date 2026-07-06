@@ -1517,3 +1517,28 @@ The web testing scope and execution status are maintained in
   - focused ownership and mobile integration tests pending; production live verification requires deployment
 - status: `fixed, awaiting production live verification`
 - owner: `Codex + User`
+
+### WB-042
+- id: `WB-042`
+- date: `2026-07-06`
+- area: `C5 / account lifecycle`
+- severity: `P1`
+- title: Users have no self-service account deletion lifecycle
+- environment: web profile, authenticated users of all roles
+- steps:
+  1. Open profile settings.
+  2. Look for account deletion controls.
+- expected:
+  - Eligible users can request deletion, cancel during a grace period, and receive role-specific remediation when deletion is blocked.
+- actual:
+  - The public policy describes deletion, but no functional self-service control or scheduled finalization exists.
+- fix:
+  - added seven-day deletion requests with cancellation
+  - blocks super-admins, business owners, active staff, business-role holders, and clients with future active bookings
+  - disables notifications when deletion is requested
+  - daily retention cron finalizes eligible requests, deletes reviews and Auth identity, and anonymizes retained booking history
+  - added profile danger-zone UI with explicit `УДАЛИТЬ` confirmation and actionable blockers
+- post-fix verification:
+  - automated service/type/lint checks pending; migration and production live verification required
+- status: `fixed, awaiting live verification`
+- owner: `Codex + User`

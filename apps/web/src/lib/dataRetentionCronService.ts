@@ -83,6 +83,16 @@ export async function runDataRetention({
             result.telegram_mobile_attempts_deleted =
                 typeof telegramAttemptsDeleted === 'number' ? telegramAttemptsDeleted : 0;
         }
+
+        const { data: accountsDeleted, error: e7 } = await supabase.rpc(
+            'finalize_due_account_deletions',
+            { batch_limit: 50 },
+        );
+        if (e7) {
+            result.account_deletions_error = e7.message ?? 'finalize_due_account_deletions failed';
+        } else {
+            result.accounts_deleted = typeof accountsDeleted === 'number' ? accountsDeleted : 0;
+        }
     } catch (error) {
         return {
             ok: false,
