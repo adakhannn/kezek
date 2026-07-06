@@ -36,6 +36,12 @@ describe('/api/whatsapp/verify-otp', () => {
                     listUsers: jest.fn().mockResolvedValue({ data: { users: [] }, error: null }),
                 },
             },
+            from: jest.fn().mockReturnValue({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnThis(),
+                    limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+                }),
+            }),
         });
     });
 

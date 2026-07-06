@@ -318,7 +318,7 @@ export async function runWhatsAppMobileVerifyRoute({
     await admin.from('profiles').upsert(
         {
             id: resolvedUser.userId,
-            phone: normalizedPhone,
+            whatsapp_phone: normalizedPhone,
             whatsapp_verified: true,
         },
         {

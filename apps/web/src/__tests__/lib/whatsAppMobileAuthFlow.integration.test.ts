@@ -37,7 +37,7 @@ type AttemptRow = {
 
 function createInMemoryAdmin() {
     const attempts: AttemptRow[] = [];
-    const profiles = new Map<string, { id: string; phone: string; whatsapp_verified: boolean }>();
+    const profiles = new Map<string, { id: string; whatsapp_phone: string; whatsapp_verified: boolean }>();
     const users: Array<{ id: string; phone: string; user_metadata?: Record<string, unknown> }> = [];
     let seq = 1;
 
@@ -114,7 +114,7 @@ function createInMemoryAdmin() {
 
             if (table === 'profiles') {
                 return {
-                    upsert: async (payload: { id: string; phone: string; whatsapp_verified: boolean }) => {
+                    upsert: async (payload: { id: string; whatsapp_phone: string; whatsapp_verified: boolean }) => {
                         profiles.set(payload.id, payload);
                         return { data: payload, error: null };
                     },

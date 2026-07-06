@@ -1490,3 +1490,30 @@ The web testing scope and execution status are maintained in
   - automated assertion updated; production live verification requires deployment
 - status: `fixed, awaiting production live verification`
 - owner: `Codex + User`
+
+### WB-041
+- id: `WB-041`
+- date: `2026-07-06`
+- area: `C4 / mobile WhatsApp auth`
+- severity: `P0`
+- title: WhatsApp identity created through a legacy/mobile profile path can still be linked to another account
+- environment: production, separate client and owner accounts
+- steps:
+  1. Create or use a client account entered through WhatsApp.
+  2. Sign in to a different owner account.
+  3. Add the same WhatsApp number as a second login method.
+- expected:
+  - Linking is rejected because the number already owns another Kezek account.
+- actual:
+  - Linking succeeds when ownership is stored in legacy `profiles.phone`, Auth metadata, or a differently formatted Auth phone.
+- evidence:
+  - user production report on 2026-07-06
+  - source audit: mobile verify wrote verified identity to `profiles.phone`; ownership lookup compared only exact `auth.users.phone`
+- fix:
+  - ownership lookup now normalizes and checks Auth phone, Auth metadata phone, modern `whatsapp_phone`, and legacy verified profile phone
+  - mobile WhatsApp verification now writes `whatsapp_phone`
+  - safe backfill migration added for non-conflicting legacy mobile identities
+- post-fix verification:
+  - focused ownership and mobile integration tests pending; production live verification requires deployment
+- status: `fixed, awaiting production live verification`
+- owner: `Codex + User`
