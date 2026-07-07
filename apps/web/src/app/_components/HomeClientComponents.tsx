@@ -89,6 +89,12 @@ export function HomeHero({ totalBusinesses, ratedBusinesses, categoriesCount }: 
                         >
                             {t('common.map.title', 'Карта филиалов')}
                         </Link>
+                        <Link
+                            href="/business/apply"
+                            className="inline-flex min-h-[46px] items-center justify-center rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--accent-primary)]"
+                        >
+                            Подключить свой бизнес
+                        </Link>
                     </div>
 
                     <div className="flex flex-wrap gap-2 pt-1">

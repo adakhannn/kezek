@@ -21,11 +21,13 @@ export default function BranchesListClient({
     canCreateBranch,
     businessSlug,
     businessName,
+    branchLimit,
 }: {
     branches: Branch[];
     canCreateBranch: boolean;
     businessSlug: string | null;
     businessName: string | null;
+    branchLimit: number;
 }) {
     const { t, locale } = useLanguage();
     const toast = useToast();
@@ -85,6 +87,9 @@ export default function BranchesListClient({
                         <p className="text-gray-600 dark:text-gray-400">
                             {t('branches.subtitle', 'Управление филиалами бизнеса')}
                         </p>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Использовано филиалов: {branches.length} из {branchLimit}
+                        </p>
                     </div>
                     {canCreateBranch && (
                         <Link
@@ -107,6 +112,11 @@ export default function BranchesListClient({
                             {t('branches.addBranch', 'Добавить филиал')}
                         </Link>
                     )}
+                    {!canCreateBranch && branches.length >= branchLimit ? (
+                        <span className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                            Лимит филиалов достигнут
+                        </span>
+                    ) : null}
                 </div>
             </div>
 

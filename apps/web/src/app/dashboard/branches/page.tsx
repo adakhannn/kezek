@@ -30,12 +30,14 @@ export default async function BranchesListPage() {
             .order('name'),
         supabase
             .from('businesses')
-            .select('slug,name,owner_id')
+            .select('slug,name,owner_id,branch_limit')
             .eq('id', bizId)
             .maybeSingle(),
     ]);
 
-    const canCreateBranch = isSuperAdmin || business?.owner_id === userId;
+    const branchLimit = business?.branch_limit ?? 1;
+    const canManageBranches = isSuperAdmin || business?.owner_id === userId;
+    const canCreateBranch = canManageBranches && (branches?.length ?? 0) < branchLimit;
 
     if (error) {
         return <main className="p-6 text-red-600">Ошибка: {error.message}</main>;
@@ -47,6 +49,7 @@ export default async function BranchesListPage() {
             canCreateBranch={canCreateBranch}
             businessSlug={business?.slug || null}
             businessName={business?.name || null}
+            branchLimit={branchLimit}
         />
     );
 }

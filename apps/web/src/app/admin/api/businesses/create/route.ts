@@ -11,6 +11,7 @@ type Body = {
     name?: string;
     slug?: string;
     categories?: string[]; // массив slug'ов из справочника
+    branch_limit?: number;
 };
 
 function validSlug(s: string): boolean {
@@ -19,7 +20,7 @@ function validSlug(s: string): boolean {
 
 export async function POST(req: Request) {
     try {
-        const { name, slug, categories }: Body = await req.json();
+        const { name, slug, categories, branch_limit }: Body = await req.json();
 
         if (!name || !name.trim()) {
             return NextResponse.json({ ok: false, error: 'name is required' }, { status: 400 });
@@ -29,6 +30,9 @@ export async function POST(req: Request) {
         }
         if (!Array.isArray(categories) || categories.length === 0) {
             return NextResponse.json({ ok: false, error: 'at least one category is required' }, { status: 400 });
+        }
+        if (!Number.isInteger(branch_limit) || (branch_limit ?? 0) < 1 || (branch_limit ?? 0) > 1000) {
+            return NextResponse.json({ ok: false, error: 'branch_limit must be an integer between 1 and 1000' }, { status: 400 });
         }
 
         const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -109,6 +113,7 @@ export async function POST(req: Request) {
                 address: null,      // адресов на этом шаге нет
                 owner_id: null,     // владельца назначаем отдельно
                 categories,         // text[] со slug'ами
+                branch_limit,
             })
             .select('id')
             .maybeSingle();

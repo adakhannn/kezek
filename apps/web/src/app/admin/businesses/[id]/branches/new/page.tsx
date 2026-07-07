@@ -25,9 +25,15 @@ export default async function BranchNewPage({ params }: { params: Promise<RouteP
     if (!isSuper) return <div className="p-4">Нет доступа</div>;
 
     const admin = createClient(URL, SERVICE);
-    const { data: biz } = await admin.from('businesses').select('id,name').eq('id', id).maybeSingle();
+    const [{ data: biz }, { count: branchCount }] = await Promise.all([
+        admin.from('businesses').select('id,name,branch_limit').eq('id', id).maybeSingle(),
+        admin.from('branches').select('id', { count: 'exact', head: true }).eq('biz_id', id),
+    ]);
 
     if (!biz) return <div className="p-4">Бизнес не найден</div>;
+    if ((branchCount ?? 0) >= biz.branch_limit) {
+        return <div className="p-4 text-amber-700">Лимит филиалов достигнут: {branchCount ?? 0} из {biz.branch_limit}</div>;
+    }
 
     return (
         <div className="space-y-6">

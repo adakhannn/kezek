@@ -32,7 +32,7 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
     const admin = createClient(URL, SERVICE);
 
     const [{ data: biz }, { data: branches }] = await Promise.all([
-        admin.from('businesses').select('id,name').eq('id', id).maybeSingle(),
+        admin.from('businesses').select('id,name,branch_limit').eq('id', id).maybeSingle(),
         admin
             .from('branches')
             .select('id,name,address,is_active,created_at')
@@ -54,6 +54,9 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             Бизнес: <span className="font-medium text-gray-900 dark:text-gray-100">{biz.name}</span>
                         </p>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Использовано филиалов: {branches?.length ?? 0} из {biz.branch_limit}
+                        </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Link
@@ -65,7 +68,7 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
                             </svg>
                             К бизнесу
                         </Link>
-                        <Link
+                        {(branches?.length ?? 0) < biz.branch_limit ? <Link
                             href={`/admin/businesses/${biz.id}/branches/new`}
                             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-r from-indigo-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-200"
                         >
@@ -73,7 +76,7 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
                             Новый филиал
-                        </Link>
+                        </Link> : <span className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">Лимит достигнут</span>}
                     </div>
                 </div>
             </div>
@@ -153,7 +156,7 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                         Создайте первый филиал для бизнеса «{biz.name}»
                     </p>
-                    <Link
+                    {(branches?.length ?? 0) < biz.branch_limit ? <Link
                         href={`/admin/businesses/${biz.id}/branches/new`}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 text-sm font-medium"
                     >
@@ -161,7 +164,7 @@ export default async function BranchesPage({ params }: { params: Promise<RoutePa
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                         Создать филиал
-                    </Link>
+                    </Link> : null}
                 </div>
             )}
         </div>

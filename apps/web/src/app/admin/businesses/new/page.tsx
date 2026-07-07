@@ -39,6 +39,7 @@ export default function NewBizPage() {
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
     const [slugDirty, setSlugDirty] = useState(false); // пользователь редактировал slug вручную
+    const [branchLimit, setBranchLimit] = useState(1);
 
     // Категории из справочника
     const [allCats, setAllCats] = useState<CatRow[]>([]);
@@ -126,6 +127,7 @@ export default function NewBizPage() {
                 name: name.trim(),
                 slug: makeSlug(slug), // на всякий, нормализуем перед отправкой
                 categories: selected, // массив SLUG'ов из справочника
+                branch_limit: branchLimit,
             };
 
             const resp = await fetch('/admin/api/businesses/create', {
@@ -242,6 +244,17 @@ export default function NewBizPage() {
                                 </div>
                             )}
                         </div>
+
+                        <Input
+                            label="Лимит филиалов"
+                            type="number"
+                            min={1}
+                            max={1000}
+                            value={String(branchLimit)}
+                            onChange={(event) => setBranchLimit(Math.max(1, Math.min(1000, Number.parseInt(event.target.value || '1', 10))))}
+                            required
+                            helperText="Максимальное количество филиалов, которое владелец сможет создать для этого бизнеса"
+                        />
                     </div>
                 </div>
 

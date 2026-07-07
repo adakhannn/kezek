@@ -39,7 +39,9 @@ describe('/api/branches/create', () => {
         (getBizContextForManagers as jest.Mock).mockResolvedValue({
             supabase: mockSupabase,
             bizId: 'biz-id',
+            userId: 'user-id',
         });
+        mockSupabase.maybeSingle.mockResolvedValue({ data: null, error: null });
 
         (getServiceClient as jest.Mock).mockReturnValue(mockServiceClient);
     });

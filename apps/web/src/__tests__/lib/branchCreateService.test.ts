@@ -71,4 +71,29 @@ describe('branchCreateService', () => {
       data: { id: 'branch-id' },
     });
   });
+
+  test('returns a clear conflict when the business branch limit is reached', async () => {
+    const admin = createAdmin();
+    admin.from.mockReturnValueOnce({
+      insert: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'BRANCH_LIMIT_REACHED:2:2' },
+      }),
+    });
+
+    const result = await createBranch({
+      admin,
+      bizId: 'biz-id',
+      body: { name: 'Third Branch' },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: 'conflict',
+      message: 'Достигнут лимит филиалов: 2 из 2. Обратитесь к суперадминистратору для увеличения лимита.',
+      status: 409,
+    });
+  });
 });

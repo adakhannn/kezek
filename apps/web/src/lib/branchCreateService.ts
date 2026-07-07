@@ -25,10 +25,22 @@ export type BranchCreateResult =
   | { ok: true; data: { id: string | null | undefined } }
   | {
       ok: false;
-      error: 'validation';
+      error: 'validation' | 'conflict';
       message: string;
       status: number;
     };
+
+export function branchCreateError(error: { message: string }) {
+  const match = error.message.match(/BRANCH_LIMIT_REACHED:(\d+):(\d+)/);
+  if (match) {
+    return {
+      error: 'conflict' as const,
+      message: `Достигнут лимит филиалов: ${match[1]} из ${match[2]}. Обратитесь к суперадминистратору для увеличения лимита.`,
+      status: 409,
+    };
+  }
+  return { error: 'validation' as const, message: error.message, status: 400 };
+}
 
 export async function createBranch(params: {
   admin: BranchCreateAdminLike;
@@ -74,12 +86,7 @@ export async function createBranch(params: {
     .single();
 
   if (error) {
-    return {
-      ok: false,
-      error: 'validation',
-      message: error.message,
-      status: 400,
-    };
+    return { ok: false, ...branchCreateError(error) };
   }
 
   return {

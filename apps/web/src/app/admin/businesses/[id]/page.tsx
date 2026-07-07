@@ -3,10 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
-import { BusinessCardEdit } from './BusinessCardEdit';
-
 import { AdminDangerZone } from '../../_components/AdminDangerZone';
 import { AdminEntityFlowTabs } from '../../_components/AdminEntityFlowTabs';
+
+import { BranchLimitEditor } from './BranchLimitEditor';
+import { BusinessCardEdit } from './BusinessCardEdit';
+
 import { DeleteBizButton } from '@/components/admin/DeleteBizButton';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +23,7 @@ type BizRow = {
     created_at: string | null;
     address: string | null;
     phones: string[] | null;
+    branch_limit: number;
 };
 
 type OwnerMini = {
@@ -65,7 +68,7 @@ export default async function BizPage({ params }: { params: Promise<RouteParams>
     // 4) бизнес с дополнительными полями
     const { data: biz, error: eBiz } = await admin
         .from('businesses')
-        .select('id,name,slug,categories,owner_id,is_approved,created_at,address,phones')
+        .select('id,name,slug,categories,owner_id,is_approved,created_at,address,phones,branch_limit')
         .eq('id', id)
         .maybeSingle<BizRow>();
 
@@ -200,6 +203,8 @@ export default async function BizPage({ params }: { params: Promise<RouteParams>
 
             {/* Статистика */}
             <AdminEntityFlowTabs entity="businesses" detailHref={`/admin/businesses/${biz.id}`} className="max-w-3xl" />
+
+            <BranchLimitEditor businessId={biz.id} initialLimit={biz.branch_limit} currentCount={branchesCount} />
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">

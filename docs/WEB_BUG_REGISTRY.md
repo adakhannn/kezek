@@ -1542,3 +1542,53 @@ The web testing scope and execution status are maintained in
   - automated service/type/lint checks pending; migration and production live verification required
 - status: `fixed, awaiting live verification`
 - owner: `Codex + User`
+
+### WB-043
+- id: `WB-043`
+- date: `2026-07-07`
+- area: `E / business and branch administration`
+- severity: `P1`
+- title: Business owners can create an unlimited number of branches
+- environment: owner dashboard and super-admin business management
+- steps:
+  1. Open branch management for a business.
+  2. Repeatedly create branches.
+- expected:
+  - Every business has an explicit branch allowance controlled by super-admin.
+  - Existing businesses are limited to their current branch count, or one branch when they currently have none.
+- actual:
+  - No business-level limit exists and owners can create branches indefinitely.
+- fix:
+  - added mandatory `businesses.branch_limit`
+  - existing businesses are backfilled to `max(current branch count, 1)`
+  - new business creation requires super-admin to specify a limit from 1 to 1000
+  - database trigger atomically rejects inserts over the limit across all API paths
+  - owner and admin branch screens display usage and hide creation actions at the limit
+- post-fix verification:
+  - focused service test added; migration and live verification pending
+- status: `fixed, awaiting live verification`
+- owner: `Codex + User`
+
+### WB-044
+- id: `WB-044`
+- date: `2026-07-07`
+- area: `B / business onboarding`
+- severity: `P1`
+- title: Guests and non-owner users cannot submit a business registration application
+- environment: public web and authenticated sessions of any role
+- steps:
+  1. Visit the public site as a guest or non-owner user.
+  2. Try to request registration of a business.
+- expected:
+  - Anyone can submit contact and business details without changing their current role or creating an account first.
+- actual:
+  - Business creation is available only inside super-admin tooling and no public application flow exists.
+- fix:
+  - added public `/business/apply` form for guests and every authenticated role
+  - authenticated applications retain optional user ownership context
+  - added validation, phone normalization, honeypot, hourly rate limiting, and 24-hour duplicate suppression
+  - added super-admin application queue with contacted/approved/rejected statuses
+- post-fix verification:
+  - focused service tests added; migration and live verification pending
+- status: `fixed, awaiting live verification`
+- owner: `Codex + User`

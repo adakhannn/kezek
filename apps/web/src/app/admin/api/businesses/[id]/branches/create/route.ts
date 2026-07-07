@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { branchCreateError } from '@/lib/branchCreateService';
 import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { validateLatLon } from '@/lib/validation';
@@ -72,8 +73,8 @@ export async function POST(req: Request, context: unknown) {
             .maybeSingle();
 
         if (error) {
-            const code = (error as { code?: string }).code;
-            return NextResponse.json({ ok: false, error: `${error.message}${code ? ` (code ${code})` : ''}` }, { status: 400 });
+            const mapped = branchCreateError(error);
+            return NextResponse.json({ ok: false, error: mapped.message }, { status: mapped.status });
         }
 
         return NextResponse.json({ ok: true, id: data?.id });

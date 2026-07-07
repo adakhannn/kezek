@@ -180,6 +180,7 @@ export type Database = {
       businesses: {
         Row: {
           address: string | null
+          branch_limit: number
           categories: string[] | null
           city_id: string | null
           coords: unknown
@@ -196,6 +197,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          branch_limit?: number
           categories?: string[] | null
           city_id?: string | null
           coords?: unknown
@@ -212,6 +214,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          branch_limit?: number
           categories?: string[] | null
           city_id?: string | null
           coords?: unknown

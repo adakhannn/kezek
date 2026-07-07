@@ -18,6 +18,12 @@ export function Footer() {
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-end">
                             <Link
+                                href="/business/apply"
+                                className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
+                            >
+                                Подключить бизнес
+                            </Link>
+                            <Link
                                 href="/map"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
