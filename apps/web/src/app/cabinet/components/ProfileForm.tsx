@@ -302,7 +302,12 @@ export default function ProfileForm() {
         const redirectTo = `${window.location.origin}/auth/callback/google?next=${encodeURIComponent('/cabinet/profile?linked=google')}`;
         const { error: linkError } = await supabase.auth.linkIdentity({
             provider: 'google',
-            options: { redirectTo },
+            options: {
+                redirectTo,
+                queryParams: {
+                    prompt: 'select_account',
+                },
+            },
         });
         if (linkError) {
             setError(linkError.message || 'Не удалось подключить Google');

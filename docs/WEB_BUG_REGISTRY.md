@@ -88,8 +88,14 @@ The web testing scope and execution status are maintained in
   - changed admin layout super-admin guard to scope the `user_roles_with_user` lookup by current `user.id`;
   - added regression helper/test to assert the super-admin lookup includes `eq('user_id', currentUserId)`.
 - verification:
+  - 2026-07-14 live production post-fix check on `https://kezek.kg/admin/business-applications` as `osorovadahan04@gmail.com` shows the no-access page:
+    - `ДОСТУП ОГРАНИЧЕН`
+    - `Нужны права супер-админа`
+    - current account displayed as `osorovadahan04@gmail.com`
+    - required role displayed as `global super_admin`
+  - Browser console errors during post-fix check: none observed.
   - local Jest execution is currently blocked because `pnpm` reports a frozen lockfile/overrides mismatch and direct Jest execution fails with missing `apps/web/node_modules/jest/bin/jest.js` after the interrupted dependency install.
-- status: `in progress`
+- status: `verified`
 - owner: `Codex + User`
 
 ### WB-034

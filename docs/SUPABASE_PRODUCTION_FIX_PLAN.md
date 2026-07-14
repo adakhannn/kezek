@@ -145,14 +145,17 @@ Evidence:
   - `/cabinet/profile` loads profile/social login/notification/account deletion sections, no console errors observed.
   - `/dashboard/branches` denies dashboard access with an understandable no-business/no-role page, no console errors observed.
   - `/admin/business-applications` unexpectedly renders admin applications UI for a user with no `global_roles`, no `business_roles`, and no profile row. Logged as `WB-045`.
+- 2026-07-14 local: Post-fix live production smoke after deploying `WB-045` fix:
+  - `/admin/business-applications` as `osorovadahan04@gmail.com` now renders the intended no-access screen.
+  - Visible UI includes `ДОСТУП ОГРАНИЧЕН`, `Нужны права супер-админа`, current account `osorovadahan04@gmail.com`, and required role `global super_admin`.
+  - Browser console errors: none observed.
+  - `WB-045` marked `verified`.
 
 Remaining gaps:
 
 - Stage 1 DB sync is fixed and verified.
-- Protected smoke for ordinary authenticated client is partially verified.
-- Admin protected smoke is blocked by `WB-045`: `/admin/business-applications` lacks proper role guard in the deployed build.
-- Code fix for `WB-045` is prepared locally but is not deployed yet.
-- Need repeat admin smoke after deploying `WB-045` fix.
+- Protected smoke for ordinary authenticated client is verified for the checked paths.
+- Negative admin protected smoke is verified after `WB-045` fix.
 - Need a separate intended superadmin account/role before validating the positive admin path.
 
 ## Stage 2. Branch limit functional verification
