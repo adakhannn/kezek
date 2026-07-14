@@ -24,6 +24,12 @@ export function Footer() {
                                 Подключить бизнес
                             </Link>
                             <Link
+                                href="/business/role-apply"
+                                className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
+                            >
+                                Заявка в бизнес
+                            </Link>
+                            <Link
                                 href="/map"
                                 className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--accent-primary)] sm:text-sm"
                             >
