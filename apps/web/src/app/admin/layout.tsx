@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { AdminNav } from './_components/AdminNav';
 
-import { getT } from '@/app/_components/i18n/server';
+import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 
 
@@ -23,22 +23,78 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     if (!user) redirect('/auth/sign-in?redirect=/admin');
 
     // 2) проверка роли super_admin глобально (biz_id IS NULL)
-    const { data: superRow, error: roleErr } = await supabase
-        .from('user_roles_with_user')
-        .select('role_key,biz_id')
-        .eq('role_key', 'super_admin')
-        .is('biz_id', null)
-        .limit(1)
-        .maybeSingle();
-
-    const isSuper = !!superRow;
+    const { isSuperAdmin: isSuper, error: roleErr } = await checkCurrentUserIsSuperAdmin(
+        supabase as unknown as SuperAdminRoleClient,
+        user.id,
+    );
 
     if (roleErr || !isSuper) {
-        const t = getT('ru');
         return (
-            <main className="p-6">
-                <h1 className="text-xl font-semibold">403</h1>
-                <p className="text-gray-600">{t('admin.noAccess.title', 'Нет доступа (нужен супер-админ)')}</p>
+            <main className="min-h-[calc(100vh-9rem)] bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.22),transparent_30%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.18),transparent_32%)] px-4 py-10 sm:px-6 lg:px-8">
+                <section className="mx-auto max-w-3xl overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/80 shadow-2xl shadow-purple-950/30 ring-1 ring-purple-500/20 backdrop-blur">
+                    <div className="relative p-6 sm:p-10">
+                        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-fuchsia-500/10 blur-3xl" />
+                        <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-indigo-500/10 blur-3xl" />
+
+                        <div className="relative space-y-8">
+                            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 shadow-lg shadow-pink-500/25">
+                                    <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11V7m0 8h.01M5.07 19h13.86a2 2 0 0 0 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.34 16a2 2 0 0 0 1.73 3Z" />
+                                    </svg>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="inline-flex items-center rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
+                                        Доступ ограничен
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+                                            Нужны права супер-админа
+                                        </h1>
+                                        <p className="max-w-2xl text-base leading-7 text-slate-300">
+                                            Этот раздел доступен только супер-администраторам Kezek. Ваш аккаунт авторизован,
+                                            но у него нет нужной роли для просмотра админки.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-3 rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm text-slate-300 sm:grid-cols-[auto_1fr]">
+                                <span className="font-semibold text-slate-100">Текущий аккаунт</span>
+                                <span className="break-all">{user.email ?? 'Email не указан'}</span>
+                                <span className="font-semibold text-slate-100">Требуется роль</span>
+                                <span>global `super_admin`</span>
+                            </div>
+
+                            <div className="rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-6 text-sky-100">
+                                Если вы должны видеть админку, попросите действующего супер-админа выдать роль этому аккаунту.
+                                Если вошли не под тем пользователем — выйдите и авторизуйтесь заново.
+                            </div>
+
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <Link
+                                    href="/cabinet/profile"
+                                    className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-violet-500 to-pink-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-500/20 transition hover:scale-[1.01] hover:shadow-pink-500/30"
+                                >
+                                    Перейти в личный кабинет
+                                </Link>
+                                <Link
+                                    href="/auth/sign-in"
+                                    className="inline-flex items-center justify-center rounded-2xl border border-slate-600 bg-slate-900 px-5 py-3 text-sm font-bold text-slate-100 transition hover:border-slate-400 hover:bg-slate-800"
+                                >
+                                    Войти под другим аккаунтом
+                                </Link>
+                                <Link
+                                    href="/"
+                                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-slate-300 transition hover:text-white"
+                                >
+                                    На главную
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
         );
     }

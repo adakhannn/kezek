@@ -1,6 +1,6 @@
 # WEB BUG REGISTRY
 
-Last updated: 2026-07-04
+Last updated: 2026-07-14
 Owner: User + Codex  
 Status: Active
 
@@ -54,6 +54,43 @@ The web testing scope and execution status are maintained in
 ```
 
 ## Open bugs
+
+### WB-045
+- id: `WB-045`
+- date: `2026-07-14`
+- area: `Supabase production hardening / admin authorization`
+- severity: `P0`
+- title: Admin business applications page is accessible to a user without any admin/global/business roles
+- build: `kezek.kg` production after Stage 1 Supabase schema sync
+- environment: production `https://kezek.kg`, authenticated Google user `osorovadahan04@gmail.com`
+- preconditions:
+  - User is authenticated.
+  - Production DB role check for `osorovadahan04@gmail.com` returns:
+    - `global_roles: []`
+    - `business_roles: []`
+    - `profile_exists: false`
+    - `is_super_admin_function: false`
+- steps:
+  1. Log in to production as `osorovadahan04@gmail.com`.
+  2. Open `https://kezek.kg/admin/business-applications` directly.
+  3. Observe the rendered admin page.
+- expected:
+  - User without superadmin/admin role is denied or redirected to a safe no-access page.
+  - Business application admin surfaces are not rendered to unprivileged users.
+- actual:
+  - Page renders `Админка` and `Заявки на регистрацию бизнеса`.
+  - It shows the empty applications state instead of denying access.
+- evidence:
+  - Live browser text: `Админка`, `Заявки на регистрацию бизнеса`, `Заявок пока нет.`
+  - Production DB read-only role check: `global_roles=[]`, `business_roles=[]`, `profile_exists=false`.
+  - Browser console errors: none observed.
+- fix:
+  - changed admin layout super-admin guard to scope the `user_roles_with_user` lookup by current `user.id`;
+  - added regression helper/test to assert the super-admin lookup includes `eq('user_id', currentUserId)`.
+- verification:
+  - local Jest execution is currently blocked because `pnpm` reports a frozen lockfile/overrides mismatch and direct Jest execution fails with missing `apps/web/node_modules/jest/bin/jest.js` after the interrupted dependency install.
+- status: `in progress`
+- owner: `Codex + User`
 
 ### WB-034
 - id: `WB-034`
