@@ -24,15 +24,9 @@ export async function POST(req: Request, context: unknown) {
         const { data: { user } } = await supa.auth.getUser();
         if (!user) return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
 
-        const { data: superRow } = await supa
-            .from('user_roles_with_user')
-            .select('user_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { data: isSuper } = await supa.rpc('is_super_admin');
 
-        let allowed = !!superRow;
+        let allowed = !!isSuper;
         if (!allowed) {
             const { data: isOwner } = await supa.rpc('has_role', { p_role: 'owner', p_biz_id: biz_id });
             const { data: isAdmin } = await supa.rpc('has_role', { p_role: 'admin', p_biz_id: biz_id });

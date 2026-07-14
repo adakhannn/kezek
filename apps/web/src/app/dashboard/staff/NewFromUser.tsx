@@ -102,6 +102,11 @@ export default function NewFromUser({ branches }: { branches: Branch[] }) {
 
     return (
         <div className="space-y-6">
+            <AlertBanner
+                variant="warning"
+                title={t('staff.new.manualOverride.title', 'Ручное добавление сотрудника')}
+                message={t('staff.new.manualOverride.message', 'Основной безопасный сценарий — человек сам отправляет заявку на доступ к бизнесу. Этот поиск используйте, когда точно знаете, какой аккаунт нужно связать с карточкой сотрудника.')}
+            />
             {err ? <AlertBanner variant="danger" message={err} /> : null}
 
             <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">

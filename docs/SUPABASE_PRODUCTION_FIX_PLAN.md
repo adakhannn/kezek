@@ -349,6 +349,50 @@ Remaining gaps:
 
 - Pending.
 
+## Stage 8. Business role applications
+
+Status: `implemented locally`
+
+Goal:
+
+- Let signed-in users request owner/admin/manager/staff access to an existing approved business.
+- Let business owners/admins review staff/manager/admin applications for their own business.
+- Let super-admins review all applications, including owner applications.
+- Keep manual user search as an explicit admin override, not the primary flow.
+
+Scope:
+
+- Create `business_role_applications`.
+- Add `/business/role-apply` as a chooser.
+- Add `/business/owner-apply`.
+- Add `/business/staff-apply`.
+- Add `/dashboard/role-applications`.
+- Add `/admin/role-applications`.
+- Add submit/list/review API routes.
+- Harden touched business member APIs to check the current user's `is_super_admin`, not the existence of any super-admin row.
+
+Verification:
+
+- `pnpm -C apps/web exec tsc --noEmit --pretty false`: passed.
+- `pnpm -C apps/web test -- src/__tests__/lib/adminAccess.test.ts --watchAll=false`: passed.
+- `pnpm -C apps/web run build`: passed.
+
+Evidence:
+
+- Pending production migration and live smoke.
+
+Remaining gaps:
+
+- Apply `supabase/migrations/20260708010000_business_role_applications.sql` to production Supabase.
+- Deploy the web code.
+- Live smoke:
+  - `/business/role-apply` chooser as guest.
+  - `/business/owner-apply` as guest and authenticated user.
+  - `/business/staff-apply` as guest and authenticated user.
+  - `/dashboard/role-applications` as business owner/admin.
+  - `/admin/role-applications` as super-admin.
+  - Approve/reject one safe test application.
+
 ## Execution log
 
 ### 2026-07-08 local / 2026-07-07 UTC
@@ -361,3 +405,4 @@ Remaining gaps:
 - 2026-07-14 local: Fresh authenticated client smoke performed.
 - 2026-07-14 local: Found `WB-045` P0 admin authorization bug on `/admin/business-applications`.
 - 2026-07-14 local: Prepared local code fix for `WB-045` by scoping admin layout super-admin lookup to current `user.id`.
+- 2026-07-14 local: Implemented Stage 8 business role applications locally; TypeScript, targeted Jest, and production build passed. Production migration/deploy/live smoke still pending.

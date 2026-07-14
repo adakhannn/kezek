@@ -107,6 +107,11 @@ export default function NewMemberExisting({ baseURL, bizId }: { baseURL: string;
 
     return (
         <div className="space-y-6">
+            <AlertBanner
+                variant="warning"
+                title="Ручное добавление"
+                message="Основной безопасный сценарий — пользователь сам входит в Kezek и оставляет заявку на роль. Этот поиск используйте как админский override, когда точно знаете, какой аккаунт нужно добавить."
+            />
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
                 <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row gap-4">

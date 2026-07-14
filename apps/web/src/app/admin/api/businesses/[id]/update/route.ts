@@ -45,15 +45,9 @@ export async function PATCH(req: Request, context: unknown) {
             return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
         }
 
-        const { data: superRow, error: superErr } = await supa
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { data: isSuper, error: superErr } = await supa.rpc('is_super_admin');
 
-        if (superErr || !superRow) {
+        if (superErr || !isSuper) {
             return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
         }
 

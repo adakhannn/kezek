@@ -37,15 +37,9 @@ export async function POST(req: Request, context: unknown) {
         if (!user) return NextResponse.json({ok: false, error: 'auth'}, {status: 401});
 
         // доступ: super_admin глобально ИЛИ owner/admin этого бизнеса
-        const {data: superRow} = await supa
-            .from('user_roles_with_user')
-            .select('user_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const {data: isSuper} = await supa.rpc('is_super_admin');
 
-        let allowed = !!superRow;
+        let allowed = !!isSuper;
         if (!allowed) {
             const {data: isOwner} = await supa.rpc('has_role', {p_role: 'owner', p_biz_id: biz_id});
             const {data: isAdmin} = await supa.rpc('has_role', {p_role: 'admin', p_biz_id: biz_id});

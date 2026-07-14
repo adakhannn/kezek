@@ -56,18 +56,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, error: 'auth' }, { status: 401 });
         }
 
-        const { data: superRow, error: superErr } = await supa
-            .from('user_roles_with_user')
-            .select('role_key,biz_id')
-            .eq('role_key', 'super_admin')
-            .is('biz_id', null)
-            .limit(1)
-            .maybeSingle();
+        const { data: isSuper, error: superErr } = await supa.rpc('is_super_admin');
 
         if (superErr) {
             return NextResponse.json({ ok: false, error: superErr.message }, { status: 400 });
         }
-        if (!superRow) {
+        if (!isSuper) {
             return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
         }
 
