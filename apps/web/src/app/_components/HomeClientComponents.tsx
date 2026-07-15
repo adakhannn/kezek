@@ -96,7 +96,7 @@ export function HomeHero({ totalBusinesses, ratedBusinesses, categoriesCount }: 
                             Подключить свой бизнес
                         </Link>
                         <Link
-                            href="/business/role-apply"
+                            href="/auth/sign-in?redirect=/business/role-apply"
                             className="inline-flex min-h-[46px] items-center justify-center rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--accent-primary)]"
                         >
                             Присоединиться к бизнесу
