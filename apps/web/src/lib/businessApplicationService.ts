@@ -8,6 +8,7 @@ type AdminLike = {
 
 type BusinessRegistrationApplicationRow = {
     id: string;
+    applicant_user_id: string | null;
     phone: string | null;
     business_name: string | null;
     city: string | null;
@@ -37,7 +38,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
 }) {
     const { data: application, error: applicationError } = await params.admin
         .from('business_registration_applications')
-        .select('id,phone,business_name,city,category,created_business_id')
+        .select('id,applicant_user_id,phone,business_name,city,category,created_business_id')
         .eq('id', params.applicationId)
         .maybeSingle();
 
@@ -74,6 +75,23 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
     const slug = await makeUniqueBusinessSlug(params.admin, businessName);
     const category = await resolveBusinessCategory(params.admin, row.category);
     const phone = normalizePhoneToE164(row.phone ?? '');
+    let ownerRoleId: string | null = null;
+
+    if (row.applicant_user_id) {
+        const { data: ownerRole, error: ownerRoleError } = await params.admin
+            .from('roles')
+            .select('id')
+            .eq('key', 'owner')
+            .maybeSingle();
+
+        if (ownerRoleError) {
+            return { ok: false as const, status: 400, message: ownerRoleError.message };
+        }
+        if (!ownerRole?.id) {
+            return { ok: false as const, status: 400, message: 'РћСЃРЅРѕРІРЅР°СЏ СЂРѕР»СЊ РІР»Р°РґРµР»СЊС†Р° РЅРµ РЅР°Р№РґРµРЅР°.' };
+        }
+        ownerRoleId = ownerRole.id;
+    }
 
     const { data: createdBusiness, error: createError } = await params.admin
         .from('businesses')
@@ -81,7 +99,7 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
             name: businessName,
             slug,
             address: row.city ? row.city.trim() : null,
-            owner_id: null,
+            owner_id: row.applicant_user_id,
             categories: [category],
             phones: phone ? [phone] : null,
             branch_limit: 1,
@@ -98,6 +116,21 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
         };
     }
 
+    if (row.applicant_user_id && ownerRoleId) {
+        const { error: ownerRoleError } = await params.admin
+            .from('user_roles')
+            .insert({
+                user_id: row.applicant_user_id,
+                role_id: ownerRoleId,
+                biz_id: createdBusiness.id,
+            });
+
+        if (ownerRoleError && ownerRoleError.code !== '23505') {
+            await params.admin.from('businesses').delete().eq('id', createdBusiness.id);
+            return { ok: false as const, status: 400, message: ownerRoleError.message };
+        }
+    }
+
     const { error: updateApplicationError } = await params.admin
         .from('business_registration_applications')
         .update({
@@ -110,6 +143,8 @@ export async function approveBusinessApplicationAndCreateBusiness(params: {
         .eq('id', row.id);
 
     if (updateApplicationError) {
+        await params.admin.from('user_roles').delete().eq('biz_id', createdBusiness.id);
+        await params.admin.from('businesses').delete().eq('id', createdBusiness.id);
         return { ok: false as const, status: 400, message: updateApplicationError.message };
     }
 

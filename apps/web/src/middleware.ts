@@ -2,14 +2,6 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-import {
-    countAvailableCabinetTypes,
-    getPathForPreferredCabinet,
-    getUserRoleProfile,
-    PREFERRED_CABINET_COOKIE_NAME,
-    resolveDefaultDashboard,
-    shouldRedirectToSelectBusiness,
-} from '@/lib/authContext';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env';
 
 function isAndroidUserAgent(userAgent: string | null) {
@@ -78,6 +70,10 @@ export async function middleware(req: NextRequest) {
     // geolocation=(self) — для страницы карты «Ближайший ко мне»
     res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
 
+    // Главная — публичный каталог. Авторизованные пользователи также должны
+    // открывать её напрямую, а не автоматически попадать в свой кабинет.
+    if (pathname === '/') return res;
+
     let supabase: ReturnType<typeof createServerClient>;
     try {
         supabase = createServerClient(
@@ -111,63 +107,6 @@ export async function middleware(req: NextRequest) {
         return res;
     }
     if (!userRes.user) return res;
-
-    if (pathname === '/') {
-        try {
-            const profile = await getUserRoleProfile(supabase);
-            if (!profile) return res;
-
-            const cabinetCount = countAvailableCabinetTypes(profile);
-
-            if (cabinetCount >= 2) {
-                const preferred = req.cookies.get(PREFERRED_CABINET_COOKIE_NAME)?.value;
-                const path = getPathForPreferredCabinet(profile, preferred);
-                if (path) {
-                    if (path === '/dashboard') {
-                        const { data: current } = await supabase
-                            .from('user_current_business')
-                            .select('biz_id')
-                            .eq('user_id', profile.userId)
-                            .maybeSingle<{ biz_id: string }>();
-                        if (shouldRedirectToSelectBusiness(profile, !!current?.biz_id)) {
-                            const url = req.nextUrl.clone();
-                            url.pathname = '/select-business';
-                            return NextResponse.redirect(url, 302);
-                        }
-                    }
-                    const url = req.nextUrl.clone();
-                    url.pathname = path;
-                    return NextResponse.redirect(url, 302);
-                }
-                const url = req.nextUrl.clone();
-                url.pathname = '/select-cabinet';
-                return NextResponse.redirect(url, 302);
-            }
-
-            const result = resolveDefaultDashboard(profile);
-            if (result.path === '/dashboard') {
-                const { data: current } = await supabase
-                    .from('user_current_business')
-                    .select('biz_id')
-                    .eq('user_id', profile.userId)
-                    .maybeSingle<{ biz_id: string }>();
-
-                if (shouldRedirectToSelectBusiness(profile, !!current?.biz_id)) {
-                    const url = req.nextUrl.clone();
-                    url.pathname = '/select-business';
-                    return NextResponse.redirect(url, 302);
-                }
-            }
-
-            const url = req.nextUrl.clone();
-            url.pathname = result.path;
-            return NextResponse.redirect(url, 302);
-        } catch (e) {
-            const { logWarn } = await import('@/lib/log');
-            logWarn('middleware', 'Redirect from / failed', e);
-            return res;
-        }
-    }
 
     return res;
 }

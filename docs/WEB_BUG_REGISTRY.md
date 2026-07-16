@@ -98,8 +98,13 @@ The web testing scope and execution status are maintained in
 - verification:
   - local TypeScript check passed;
   - local production build passed;
-  - production migration, deploy, and post-fix live verification are still required.
-- status: `fixed locally; production post-fix live verification required`
+  - migration `20260716010000_link_business_registration_applications.sql` applied to production Supabase;
+  - production post-fix live test on `https://kezek.kg` completed 2026-07-16;
+  - super-admin approved the existing safe test application using `Одобрить и создать бизнес`;
+  - the application showed `Открыть созданный бизнес` and linked to business `3d71f584-ef14-4bcd-aecd-cd7041e82622`;
+  - `/admin/businesses` showed `LIVE TEST Business 20260715111633` with slug `live-test-business-20260715111633`;
+  - browser console errors: none observed.
+- status: `verified`
 - owner: `Codex + User`
 
 ### WB-045
