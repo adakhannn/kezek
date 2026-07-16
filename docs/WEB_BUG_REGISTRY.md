@@ -1756,7 +1756,8 @@ The web testing scope and execution status are maintained in
   - targeted `branchCreateService` tests: 5 passed;
   - TypeScript check passed;
   - production build passed;
-  - production post-fix live verification pending deployment.
+  - production post-fix application form and admin queue are live after commit `b0b64646`;
+  - full branch/public verification is blocked because the authenticated test applicant already owns a business and approval is rejected by `businesses_one_owner_per_user`.
 - status: `fixed, awaiting live verification`
 - owner: `Codex + User`
 
@@ -1778,6 +1779,32 @@ The web testing scope and execution status are maintained in
   - Production browser console at `2026-07-16T14:21:24.802Z`: `Minified React error #418` from `/_next/static/chunks/51c21aac98c1a553.js`.
   - The page remained visible and showed the created business and first branch, but the hydration error indicates server/client markup divergence.
 - status: `open`
+- owner: `Codex + User`
+
+### WB-050
+- id: `WB-050`
+- date: `2026-07-16`
+- area: `B / business onboarding and owner assignment`
+- severity: `P1`
+- title: Approving a business application fails with an unhandled duplicate-owner database error
+- environment: production `https://kezek.kg/admin/business-applications`
+- steps:
+  1. Submit an authenticated business registration application from a user who already owns a business.
+  2. Open the application in the super-admin queue.
+  3. Click `Одобрить и создать бизнес`.
+- expected:
+  - The system either applies the documented ownership policy or presents a clear actionable explanation and a safe alternative for the administrator.
+- actual:
+  - Business creation fails with raw database text `duplicate key value violates unique constraint "businesses_one_owner_per_user"` in the application card; no business or first branch is created.
+- evidence:
+  - Production synthetic application `POSTFIX LINKS 12398389` reached the admin queue with all four directory links visible.
+  - Approval at `2026-07-16` failed before branch creation with the duplicate-owner constraint error.
+- fix:
+  - added migration `20260716030000_allow_owner_multiple_businesses.sql` to remove the incorrect global owner uniqueness constraint;
+  - kept ownership uniqueness scoped to the business membership relation, so one user can own multiple businesses without duplicate roles inside one business.
+- post-fix verification:
+  - migration and production approval smoke test pending deployment.
+- status: `fixed, awaiting live verification`
 - owner: `Codex + User`
 
 ### WB-049
