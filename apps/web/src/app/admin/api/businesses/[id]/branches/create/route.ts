@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { branchCreateError } from '@/lib/branchCreateService';
+import { branchCreateError, resolveInitialDirectoryLinks } from '@/lib/branchCreateService';
 import {logError} from '@/lib/log';
 import { getRouteParamRequired } from '@/lib/routeParams';
 import { validateLatLon } from '@/lib/validation';
@@ -69,7 +69,11 @@ export async function POST(req: Request, context: unknown) {
                 address: norm(body.address),
                 is_active: body.is_active ?? true,
                 coords: coordsWkt, // ← только это поле
-                directory_links: body.directory_links && typeof body.directory_links === 'object' ? body.directory_links : {},
+                directory_links: await resolveInitialDirectoryLinks(
+                    admin,
+                    bizId,
+                    body.directory_links && typeof body.directory_links === 'object' ? body.directory_links : {},
+                ),
             })
             .select('id')
             .maybeSingle();

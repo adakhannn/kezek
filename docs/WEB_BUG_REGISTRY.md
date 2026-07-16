@@ -1727,3 +1727,75 @@ The web testing scope and execution status are maintained in
   - focused service tests added; migration and live verification pending
 - status: `fixed, awaiting live verification`
 - owner: `Codex + User`
+
+### WB-045
+- id: `WB-045`
+- date: `2026-07-16`
+- area: `B / business onboarding and public business links`
+- severity: `P1`
+- title: Registration directory links are not copied to the first created branch
+- environment: production `https://kezek.kg`
+- steps:
+  1. Submit a business registration application with Instagram, 2GIS, Google Maps, and Yandex Maps links.
+  2. Approve the application in `/admin/business-applications` and create the first branch for the created business without entering links manually.
+  3. Open the created branch edit page in admin.
+- expected:
+  - The four submitted directory links are copied to the first branch of the newly created business and are available for public display.
+- actual:
+  - The application queue displayed all four submitted links, but all four directory-link fields were empty on the first branch edit page after creation.
+- evidence:
+  - Production application: `LIVE LINKS Business 11412753`; queue showed all four submitted links.
+  - Production created business: `458193de-4cc5-4654-871e-760f1b73b825`; first branch `LIVE LINKS First Branch`; branch usage showed `1 из 1`.
+  - Production branch edit page: all Instagram, 2GIS, Google Maps, and Yandex Maps inputs had no value.
+- fix:
+  - centralized first-branch link resolution in `branchCreateService` for owner and admin creation paths;
+  - explicit branch links always win, while empty first-branch input loads links from the linked registration application;
+  - database trigger remains as a defensive fallback for direct inserts;
+  - branch edit form now treats link changes as unsaved changes.
+- verification:
+  - targeted `branchCreateService` tests: 5 passed;
+  - TypeScript check passed;
+  - production build passed;
+  - production post-fix live verification pending deployment.
+- status: `fixed, awaiting live verification`
+- owner: `Codex + User`
+
+### WB-048
+- id: `WB-048`
+- date: `2026-07-16`
+- area: `B2 / public business page`
+- severity: `P1`
+- title: Public business page emits a React hydration error in production
+- environment: production `https://kezek.kg/b/live-links-business-11412753`
+- steps:
+  1. Open the valid business slug directly in a fresh production tab.
+  2. Inspect browser console after the page finishes loading.
+- expected:
+  - The public business page hydrates without React errors.
+- actual:
+  - Browser console emitted minified React error `#418` from the production Next.js chunk while the page was loading.
+- evidence:
+  - Production browser console at `2026-07-16T14:21:24.802Z`: `Minified React error #418` from `/_next/static/chunks/51c21aac98c1a553.js`.
+  - The page remained visible and showed the created business and first branch, but the hydration error indicates server/client markup divergence.
+- status: `open`
+- owner: `Codex + User`
+
+### WB-049
+- id: `WB-049`
+- date: `2026-07-16`
+- area: `A2 / environment and service wiring; branch management`
+- severity: `P1`
+- title: Production branch map cannot initialize because the Yandex Maps API key is missing
+- environment: production `https://kezek.kg/admin/businesses/458193de-4cc5-4654-871e-760f1b73b825/branches/556d4e57-853c-4fc5-b32a-b53ab5ac65b6`
+- steps:
+  1. Open the branch edit page in production.
+  2. Inspect the map area and browser console.
+- expected:
+  - The map initializes and allows the administrator to select or adjust branch coordinates.
+- actual:
+  - The UI shows `Ошибка загрузки карты` and falls back to manual address entry; console reports `[BranchMapPicker] Failed to initialize Yandex Maps`.
+- evidence:
+  - Production DOM displayed `Карта временно недоступна. Введите адрес филиала вручную.`
+  - Production console reported the map initialization error from `/_next/static/chunks/84daa0763d770a94.js`.
+- status: `open`
+- owner: `Codex + User`

@@ -48,9 +48,13 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
             address !== (initial?.address ?? '') ||
             isActive !== (initial?.is_active ?? true) ||
             lat !== (initial?.lat ?? null) ||
-            lon !== (initial?.lon ?? null)
+            lon !== (initial?.lon ?? null) ||
+            links.instagram !== (initial?.directory_links?.instagram ?? '') ||
+            links.two_gis !== (initial?.directory_links?.two_gis ?? '') ||
+            links.google_maps !== (initial?.directory_links?.google_maps ?? '') ||
+            links.yandex_maps !== (initial?.directory_links?.yandex_maps ?? '')
         );
-    }, [mode, name, address, isActive, lat, lon, initial]);
+    }, [mode, name, address, isActive, lat, lon, links, initial]);
 
     function extractError(e: unknown): string {
         return e instanceof Error ? e.message : String(e);

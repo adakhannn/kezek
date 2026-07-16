@@ -6,19 +6,14 @@ export type BranchCreateBody = {
   is_active?: boolean;
   lat?: number | null;
   lon?: number | null;
+  directory_links?: Record<string, string | null>;
 };
 
 export type BranchCreateAdminLike = {
-  from: (table: string) => {
-    insert: (...args: unknown[]) => {
-      select: (...args: unknown[]) => {
-        single: () => Promise<{
-          data: { id?: string } | null;
-          error: { message: string } | null;
-        }>;
-      };
-    };
-  };
+  // Supabase's generated PostgREST types are intentionally not coupled to this
+  // small service: the service is shared by admin and owner API clients.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from: (table: string) => any;
 };
 
 export type BranchCreateResult =
@@ -73,6 +68,9 @@ export async function createBranch(params: {
     coordsWkt = coordsToEWKT(v.lat, v.lon);
   }
 
+  const explicitLinks = normalizeDirectoryLinks(body.directory_links);
+  const directoryLinks = await resolveInitialDirectoryLinks(admin, bizId, explicitLinks);
+
   const { data, error } = await admin
     .from('branches')
     .insert({
@@ -81,6 +79,7 @@ export async function createBranch(params: {
       address: body.address ?? null,
       is_active: body.is_active ?? true,
       coords: coordsWkt,
+      directory_links: directoryLinks,
     })
     .select('id')
     .single();
@@ -93,4 +92,42 @@ export async function createBranch(params: {
     ok: true,
     data: { id: data?.id },
   };
+}
+
+function normalizeDirectoryLinks(input?: Record<string, string | null>) {
+  const keys = ['instagram', 'two_gis', 'google_maps', 'yandex_maps'] as const;
+  return Object.fromEntries(keys.map((key) => [key, typeof input?.[key] === 'string' && input[key]?.trim() ? input[key]!.trim() : null]));
+}
+
+function hasDirectoryLinks(input: Record<string, string | null>) {
+  return Object.values(input).some(Boolean);
+}
+
+export async function resolveInitialDirectoryLinks(
+  admin: BranchCreateAdminLike,
+  bizId: string,
+  explicitLinks: Record<string, string | null>,
+) {
+  if (hasDirectoryLinks(explicitLinks)) return explicitLinks;
+
+  const { data: existingBranch, error: branchError } = await admin
+    .from('branches')
+    .select('id')
+    .eq('biz_id', bizId)
+    .limit(1)
+    .maybeSingle();
+  if (branchError || existingBranch) return explicitLinks;
+
+  const { data: application, error: applicationError } = await admin
+    .from('business_registration_applications')
+    .select('directory_links,created_at')
+    .eq('created_business_id', bizId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (applicationError || !application?.directory_links || typeof application.directory_links !== 'object') {
+    return explicitLinks;
+  }
+
+  return normalizeDirectoryLinks(application.directory_links as Record<string, string | null>);
 }
