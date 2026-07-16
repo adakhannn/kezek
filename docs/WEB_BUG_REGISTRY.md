@@ -1,6 +1,6 @@
 # WEB BUG REGISTRY
 
-Last updated: 2026-07-14
+Last updated: 2026-07-16
 Owner: User + Codex  
 Status: Active
 
@@ -54,6 +54,53 @@ The web testing scope and execution status are maintained in
 ```
 
 ## Open bugs
+
+### WB-046
+- id: `WB-046`
+- date: `2026-07-16`
+- area: `Admin / business registration applications`
+- severity: `P0`
+- title: Approving a business registration application does not create a business
+- build: production `https://kezek.kg` after commit `3dd62fee`
+- environment: in-app Chromium, production `https://kezek.kg`, super-admin session, desktop viewport
+- preconditions:
+  - Production site is deployed.
+  - Super-admin can open `/admin/business-applications`.
+  - Public business application form is available at `/business/apply`.
+- steps:
+  1. Open `https://kezek.kg/business/apply` as a guest.
+  2. Submit a test application with business name `LIVE TEST Business 20260715111633`.
+  3. Open `https://kezek.kg/admin/business-applications` as super-admin.
+  4. Find the test application.
+  5. Click `Одобрить`.
+  6. Open `https://kezek.kg/admin/businesses`.
+  7. Search/inspect whether the approved business exists.
+- expected:
+  - Approving the application either creates a draft/approved business record from the application data or clearly routes the admin through the required business creation flow.
+  - The application approval state and created business state remain linked and understandable.
+- actual:
+  - The application status changes from `new` to `approved`.
+  - No business named `LIVE TEST Business 20260715111633` appears in `/admin/businesses`.
+  - Public search API for the same name returns `{"ok":true,"items":[]}`.
+- evidence:
+  - Live browser success after public submit: `Заявка отправлена`.
+  - Live admin page before approval: application `LIVE TEST Business 20260715111633`, status `new`, buttons `Связались`, `Одобрить`, `Отклонить`.
+  - Live admin page after approval: same application status `approved`, browser console errors: none observed.
+  - Live admin businesses page after approval: total still `4`, test business absent.
+  - HTTP check: `GET https://kezek.kg/api/businesses/search?q=LIVE%20TEST%20Business%2020260715111633` returned `{"ok":true,"items":[]}`.
+- fix:
+  - added `business_registration_applications.created_business_id`;
+  - changed super-admin `approved` action to create an approved business from the application data;
+  - generated a unique business slug from the application business name;
+  - copied city to business address, phone to business phones, category to a matching active category with safe fallback;
+  - linked the application to the created business and made repeat approval idempotent;
+  - updated the admin UI to show `Одобрить и создать бизнес` and a link to the created business.
+- verification:
+  - local TypeScript check passed;
+  - local production build passed;
+  - production migration, deploy, and post-fix live verification are still required.
+- status: `fixed locally; production post-fix live verification required`
+- owner: `Codex + User`
 
 ### WB-045
 - id: `WB-045`
