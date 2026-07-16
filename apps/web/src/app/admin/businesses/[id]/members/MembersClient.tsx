@@ -37,23 +37,21 @@ const ROLE_LABELS: Record<RoleKey, string> = {
 };
 
 export default function MembersClient({
-    baseURL,
     bizId,
     canManage,
 }: {
-    baseURL: string;
     bizId: string;
     canManage: boolean;
 }) {
     const api = useMemo(() => {
-        const root = `${baseURL}/admin/api/businesses/${encodeURIComponent(bizId)}/members`;
+        const root = `/admin/api/businesses/${encodeURIComponent(bizId)}/members`;
         return {
             list: `${root}/list`,
             grant: `${root}/grant`,
             revoke: `${root}/revoke`,
             demote: `${root}/demote`,
         };
-    }, [baseURL, bizId]);
+    }, [bizId]);
 
     const [items, setItems] = useState<MemberRow[]>([]);
     const [loading, setLoading] = useState(true);

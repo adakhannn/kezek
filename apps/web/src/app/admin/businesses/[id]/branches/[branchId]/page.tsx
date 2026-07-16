@@ -32,7 +32,7 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
     const admin = createClient(URL, SERVICE);
     const { data: branch, error } = await admin
         .from('branches')
-        .select('id,biz_id,name,address,is_active,lat,lon')
+        .select('id,biz_id,name,address,is_active,lat,lon,directory_links')
         .eq('biz_id', id)
         .eq('id', branchId)
         .maybeSingle();
@@ -93,6 +93,7 @@ export default async function BranchEditPage({ params }: { params: Promise<Route
                         is_active: !!branch.is_active,
                         lat: branch.lat ?? null,
                         lon: branch.lon ?? null,
+                        directory_links: (branch.directory_links ?? {}) as Record<string, string | null>,
                     }}
                 />
             </Card>

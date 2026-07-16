@@ -20,13 +20,14 @@ type BusinessRegistrationApplication = {
     applicant_user_id: string | null;
     created_at: string;
     created_business_id: string | null;
+    directory_links: Record<string, string | null> | null;
 };
 
 export default async function BusinessApplicationsPage() {
     const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const { data: applications, error } = await admin
         .from('business_registration_applications')
-        .select('id,contact_name,phone,email,business_name,city,category,comment,status,applicant_user_id,created_at,created_business_id')
+        .select('id,contact_name,phone,email,business_name,city,category,comment,status,applicant_user_id,created_at,created_business_id,directory_links')
         .order('created_at', { ascending: false })
         .limit(200);
 
@@ -60,6 +61,21 @@ export default async function BusinessApplicationsPage() {
                         </div>
 
                         {application.comment ? <p className="rounded-lg bg-[var(--surface-emphasis)] p-3 text-sm">{application.comment}</p> : null}
+
+                        {application.directory_links && Object.values(application.directory_links).some(Boolean) ? (
+                            <div className="flex flex-wrap gap-2 text-sm">
+                                {([
+                                    ['instagram', 'Instagram'],
+                                    ['two_gis', '2ГИС'],
+                                    ['google_maps', 'Google Карты'],
+                                    ['yandex_maps', 'Яндекс Карты'],
+                                ] as const).map(([key, label]) => application.directory_links?.[key] ? (
+                                    <a key={key} href={application.directory_links[key] ?? '#'} target="_blank" rel="noreferrer" className="text-[var(--accent-primary)] underline">
+                                        {label}
+                                    </a>
+                                ) : null)}
+                            </div>
+                        ) : null}
 
                         <p className="text-xs text-gray-500">{new Date(application.created_at).toLocaleString('ru-RU')}</p>
 

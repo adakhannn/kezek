@@ -16,7 +16,7 @@ type Props = {
     bizId: string;
     branchId?: string;
     yandexMapsApiKey?: string;
-    initial?: { name: string; address: string; is_active: boolean; lat?: number | null; lon?: number | null };
+    initial?: { name: string; address: string; is_active: boolean; lat?: number | null; lon?: number | null; directory_links?: Record<string, string | null> };
 };
 
 type ApiOk = { ok: true; id?: string };
@@ -31,6 +31,12 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
     const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
     const [lat, setLat] = useState<number | null>(initial?.lat ?? null);
     const [lon, setLon] = useState<number | null>(initial?.lon ?? null);
+    const [links, setLinks] = useState({
+        instagram: initial?.directory_links?.instagram ?? '',
+        two_gis: initial?.directory_links?.two_gis ?? '',
+        google_maps: initial?.directory_links?.google_maps ?? '',
+        yandex_maps: initial?.directory_links?.yandex_maps ?? '',
+    });
 
     const [err, setErr] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -67,7 +73,8 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                 name: trimmedName,
                 address: address.trim() || null,
                 is_active: isActive,
-                lat, lon, // если в БД ещё нет — просто игнорируй на бэке
+                lat, lon,
+                directory_links: links,
             };
 
             const resp = await fetch(url, {
@@ -145,6 +152,23 @@ export function BranchForm({ mode, bizId, branchId, yandexMapsApiKey, initial }:
                 autoComplete="street-address"
                 helperText="Адрес можно выбрать на карте или ввести вручную"
             />
+
+            <div className="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Ссылки филиала</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Эти ссылки будут видны клиентам на публичной странице бизнеса.</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {([
+                        ['instagram', 'Instagram', 'https://instagram.com/...'],
+                        ['two_gis', '2ГИС', 'https://2gis.ru/...'],
+                        ['google_maps', 'Google Карты', 'https://maps.google.com/...'],
+                        ['yandex_maps', 'Яндекс Карты', 'https://yandex.ru/maps/...'],
+                    ] as const).map(([key, label, placeholder]) => (
+                        <Input key={key} label={label} type="url" placeholder={placeholder} value={links[key]} onChange={(e) => setLinks((current) => ({ ...current, [key]: e.target.value }))} />
+                    ))}
+                </div>
+            </div>
 
             <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                 <input

@@ -17,6 +17,12 @@ export type Branch = {
     name: string;
     address?: string | null;
     rating_score: number | null;
+    directory_links?: {
+        instagram?: string | null;
+        two_gis?: string | null;
+        google_maps?: string | null;
+        yandex_maps?: string | null;
+    } | null;
 };
 
 export type Service = {

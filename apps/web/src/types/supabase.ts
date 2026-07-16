@@ -139,6 +139,7 @@ export type Database = {
           biz_id: string
           coords: unknown
           created_at: string | null
+          directory_links: Json
           id: string
           is_active: boolean | null
           lat: number | null
@@ -150,6 +151,7 @@ export type Database = {
           biz_id: string
           coords?: unknown
           created_at?: string | null
+          directory_links?: Json
           id?: string
           is_active?: boolean | null
           lat?: number | null
@@ -161,6 +163,7 @@ export type Database = {
           biz_id?: string
           coords?: unknown
           created_at?: string | null
+          directory_links?: Json
           id?: string
           is_active?: boolean | null
           lat?: number | null

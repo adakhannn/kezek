@@ -1,6 +1,6 @@
 // apps/web/src/app/admin/businesses/[id]/members/page.tsx
 import { createServerClient } from '@supabase/ssr';
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import MembersClient from './MembersClient';
@@ -65,11 +65,6 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
     // право на управление: только владелец/админ (без супера)
     const canManage = !!isOwner || !!isAdmin;
 
-    const h = await headers();
-    const proto = h.get('x-forwarded-proto') ?? 'http';
-    const host = h.get('x-forwarded-host') ?? h.get('host')!;
-    const baseURL = `${proto}://${host}`;
-
     // Получаем информацию о бизнесе для заголовка
     const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     const { createClient } = await import('@supabase/supabase-js');
@@ -121,7 +116,7 @@ export default async function MembersPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Список участников */}
-            <MembersClient baseURL={baseURL} bizId={id} canManage={canManage} />
+            <MembersClient bizId={id} canManage={canManage} />
         </div>
     );
 }

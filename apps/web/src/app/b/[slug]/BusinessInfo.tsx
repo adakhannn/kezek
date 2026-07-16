@@ -14,7 +14,7 @@ import { formatStaffName, getServiceName } from '@/lib/i18nHelpers';
 import { supabase } from '@/lib/supabaseClient';
 
 type Biz = { id: string; slug: string; name: string; address: string; phones: string[]; rating_score: number | null };
-type Branch = { id: string; name: string; address?: string | null; rating_score: number | null };
+type Branch = { id: string; name: string; address?: string | null; rating_score: number | null; directory_links?: Record<string, string | null> | null };
 type Service = {
     id: string;
     name_ru: string;
@@ -271,6 +271,20 @@ export default function BusinessInfo({ data }: { data: Data }) {
                                                     'Филиал будет доступен в потоке записи при выборе удобной локации.',
                                                 )}
                                             </p>
+                                            {branch.directory_links && Object.values(branch.directory_links).some(Boolean) ? (
+                                                <div className="mt-4 flex flex-wrap gap-2">
+                                                    {([
+                                                        ['instagram', 'Instagram'],
+                                                        ['two_gis', '2ГИС'],
+                                                        ['google_maps', 'Google Карты'],
+                                                        ['yandex_maps', 'Яндекс Карты'],
+                                                    ] as const).map(([key, label]) => branch.directory_links?.[key] ? (
+                                                        <a key={key} href={branch.directory_links[key] ?? '#'} target="_blank" rel="noreferrer" className="rounded-full border border-[var(--border-subtle)] px-3 py-1 text-xs text-[var(--accent-primary)] hover:bg-[var(--surface-emphasis)]">
+                                                            {label}
+                                                        </a>
+                                                    ) : null)}
+                                                </div>
+                                            ) : null}
                                         </div>
                                     ))}
                                 </div>

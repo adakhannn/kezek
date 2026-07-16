@@ -36,7 +36,7 @@ async function getData(slug: string) {
 
     const [branches, services, staff] = await Promise.all([
         q(
-            `branches?select=id,name,address,rating_score&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`,
+            `branches?select=id,name,address,rating_score,directory_links&biz_id=eq.${biz.id}&is_active=eq.true&order=rating_score.desc.nullslast&order=name.asc`,
         ),
         q(
             `services?select=id,name_ru,name_ky,name_en,duration_min,price_from,price_to,branch_id&biz_id=eq.${biz.id}&active=eq.true&order=name_ru.asc`,

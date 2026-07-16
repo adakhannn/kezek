@@ -55,6 +55,41 @@ The web testing scope and execution status are maintained in
 
 ## Open bugs
 
+### WB-047
+- id: `WB-047`
+- date: `2026-07-16`
+- area: `Admin / business members`
+- severity: `P1`
+- title: Admin business members page remains stuck loading and throws a React hydration error
+- build: production `https://kezek.kg` after commit `f291f309`
+- environment: in-app Chromium, production `https://kezek.kg`, authenticated super-admin session, desktop viewport
+- preconditions:
+  - An authenticated business application has been approved and its business was created.
+  - Super-admin can open the created business in admin.
+- steps:
+  1. Open the created business detail in `/admin/businesses`.
+  2. Open its `members` page.
+  3. Wait for the participants list to load.
+- expected:
+  - The participants list loads and displays the automatically assigned owner.
+  - The page has no hydration or Server Component errors.
+- actual:
+  - The page remains on `Загрузка участников...` and does not render the participants list.
+  - Browser console reports `Minified React error #418` from a production Next.js chunk.
+- evidence:
+  - Live DOM snapshot from `https://kezek.kg/admin/businesses/481ec1e2-287c-435a-9f98-d5b003dec4a7/members`.
+  - Browser console error: `Minified React error #418`.
+  - The application approval page and business detail page had no console errors; the failure reproduces on the members page.
+- fix:
+  - removed server-derived absolute API origin from the client component;
+  - members requests now use same-origin relative URLs, avoiding incorrect `x-forwarded-proto`/host combinations and mixed-origin client requests.
+- verification:
+  - local `pnpm --filter web exec tsc --noEmit` passed;
+  - local `pnpm -C apps/web build` passed;
+  - production post-fix live verification pending deployment.
+- status: `fixed`
+- owner: `Codex + User`
+
 ### WB-046
 - id: `WB-046`
 - date: `2026-07-16`
@@ -104,6 +139,11 @@ The web testing scope and execution status are maintained in
   - the application showed `Открыть созданный бизнес` and linked to business `3d71f584-ef14-4bcd-aecd-cd7041e82622`;
   - `/admin/businesses` showed `LIVE TEST Business 20260715111633` with slug `live-test-business-20260715111633`;
   - browser console errors: none observed.
+  - additional authenticated-applicant live test completed 2026-07-16;
+  - super-admin approved `LIVE AUTH Business 2026071618045` using `Одобрить и создать бизнес`;
+  - the created business detail displayed a populated owner matching the authenticated applicant, confirming automatic owner assignment;
+  - browser console errors: none observed on the application approval and business detail pages;
+  - the separate members-page loading/hydration failure is tracked as `WB-047`.
 - status: `verified`
 - owner: `Codex + User`
 

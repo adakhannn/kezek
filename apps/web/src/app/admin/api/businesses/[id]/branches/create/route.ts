@@ -18,6 +18,7 @@ type Body = {
     is_active?: boolean;
     lat?: number | null;
     lon?: number | null;
+    directory_links?: Record<string, string | null>;
 };
 
 const norm = (s?: string | null) => {
@@ -68,6 +69,7 @@ export async function POST(req: Request, context: unknown) {
                 address: norm(body.address),
                 is_active: body.is_active ?? true,
                 coords: coordsWkt, // ← только это поле
+                directory_links: body.directory_links && typeof body.directory_links === 'object' ? body.directory_links : {},
             })
             .select('id')
             .maybeSingle();

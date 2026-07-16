@@ -16,6 +16,13 @@ type BusinessRegistrationApplicationRow = {
     created_business_id?: string | null;
 };
 
+export type DirectoryLinks = {
+    instagram?: string | null;
+    two_gis?: string | null;
+    google_maps?: string | null;
+    yandex_maps?: string | null;
+};
+
 export type BusinessApplicationInput = {
     contact_name?: unknown;
     phone?: unknown;
@@ -25,10 +32,34 @@ export type BusinessApplicationInput = {
     category?: unknown;
     comment?: unknown;
     website?: unknown;
+    instagram?: unknown;
+    two_gis?: unknown;
+    google_maps?: unknown;
+    yandex_maps?: unknown;
 };
 
 function text(value: unknown, max: number) {
     return typeof value === 'string' ? value.trim().slice(0, max) : '';
+}
+
+function safeUrl(value: unknown): string | null {
+    const raw = text(value, 500);
+    if (!raw) return null;
+    try {
+        const parsed = new URL(raw);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.toString() : null;
+    } catch {
+        return null;
+    }
+}
+
+function directoryLinks(input: BusinessApplicationInput): DirectoryLinks {
+    return {
+        instagram: safeUrl(input.instagram),
+        two_gis: safeUrl(input.two_gis),
+        google_maps: safeUrl(input.google_maps),
+        yandex_maps: safeUrl(input.yandex_maps),
+    };
 }
 
 export async function approveBusinessApplicationAndCreateBusiness(params: {
@@ -259,6 +290,7 @@ export async function submitBusinessApplication(params: {
             city: text(params.input.city, 120) || null,
             category: text(params.input.category, 120) || null,
             comment: text(params.input.comment, 2000) || null,
+            directory_links: directoryLinks(params.input),
             source: 'web',
         })
         .select('id')

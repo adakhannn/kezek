@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 
-const initial = { contact_name: '', phone: '', email: '', business_name: '', city: '', category: '', comment: '', website: '' };
+const initial = {
+    contact_name: '', phone: '', email: '', business_name: '', city: '', category: '', comment: '', website: '',
+    instagram: '', two_gis: '', google_maps: '', yandex_maps: '',
+};
 
 export default function BusinessApplicationPage() {
     const [form, setForm] = useState(initial);
@@ -64,6 +67,18 @@ export default function BusinessApplicationPage() {
                             <span className="type-label text-[var(--text-primary)]">Комментарий</span>
                             <textarea className="mt-2 min-h-28 w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-[var(--text-primary)]" maxLength={2000} {...field('comment')} />
                         </label>
+                        <div className="space-y-3 rounded-xl border border-[var(--border-subtle)] p-4">
+                            <div>
+                                <p className="type-label text-[var(--text-primary)]">Ссылки филиала</p>
+                                <p className="type-caption mt-1 text-[var(--text-muted)]">Укажите страницы именно этой локации. После одобрения они будут привязаны к первому созданному филиалу и показаны клиентам.</p>
+                            </div>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <Input label="Instagram" type="url" placeholder="https://instagram.com/..." {...field('instagram')} />
+                                <Input label="2ГИС" type="url" placeholder="https://2gis.ru/..." {...field('two_gis')} />
+                                <Input label="Google Карты" type="url" placeholder="https://maps.google.com/..." {...field('google_maps')} />
+                                <Input label="Яндекс Карты" type="url" placeholder="https://yandex.ru/maps/..." {...field('yandex_maps')} />
+                            </div>
+                        </div>
                         <div className="hidden" aria-hidden="true">
                             <Input label="Website" tabIndex={-1} autoComplete="off" {...field('website')} />
                         </div>
