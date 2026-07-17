@@ -11,7 +11,7 @@ export async function GET() {
     const [applicationsResult, branchesResult] = await Promise.all([
         admin
             .from('business_role_applications')
-            .select('id,applicant_user_id,biz_id,requested_role,status,applicant_name,applicant_email,applicant_phone,message,created_at,reviewed_at,review_note')
+            .select('id,applicant_user_id,biz_id,requested_role,status,applicant_name,applicant_email,applicant_phone,message,evidence_links,prior_submission_count,risk_flags,created_at,reviewed_at,review_note')
             .eq('biz_id', bizId)
             .eq('requested_role', 'staff')
             .order('created_at', { ascending: false })

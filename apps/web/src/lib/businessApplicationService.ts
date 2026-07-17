@@ -1,3 +1,4 @@
+import { mapApplicationPolicyError } from '@/lib/applicationPolicy';
 import { normalizePhoneToE164 } from '@/lib/senders/sms';
 
 type AdminLike = {
@@ -295,6 +296,18 @@ export async function submitBusinessApplication(params: {
         })
         .select('id')
         .single();
-    if (error) throw new Error(error.message || 'Не удалось сохранить заявку');
+    if (error) {
+        const policyFailure = mapApplicationPolicyError(error);
+        if (policyFailure) return policyFailure;
+        if (error.code === '23505') {
+            return {
+                ok: false as const,
+                status: 409,
+                code: 'pending_duplicate',
+                message: 'Такая заявка уже ожидает рассмотрения.',
+            };
+        }
+        throw new Error(error.message || 'Не удалось сохранить заявку');
+    }
     return { ok: true as const, id: data?.id ?? null };
 }

@@ -15,6 +15,8 @@ type DbClient = {
     // Supabase generated types are not stable in this repo yet.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     from: (table: string) => any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rpc: (name: string, args: Record<string, unknown>) => any;
 };
 
 type AuthUser = {
@@ -41,6 +43,24 @@ export function getUserDisplayName(user: AuthUser) {
     return fullName || name || user.email || user.phone || 'Пользователь Kezek';
 }
 
+function safeEvidenceLinks(value: unknown) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    const input = value as Record<string, unknown>;
+    const result: Record<string, string> = {};
+    for (const key of ['instagram', 'two_gis', 'google_maps', 'yandex_maps']) {
+        const raw = typeof input[key] === 'string' ? input[key].trim().slice(0, 500) : '';
+        if (!raw) continue;
+        try {
+            const url = new URL(raw);
+            if (url.protocol === 'http:' || url.protocol === 'https:') result[key] = url.toString();
+        } catch {
+            // Invalid evidence URLs are ignored and the owner proof rule below
+            // still requires a meaningful explanation or another valid link.
+        }
+    }
+    return result;
+}
+
 export async function submitBusinessRoleApplication(params: {
     admin: DbClient;
     user: AuthUser;
@@ -48,6 +68,7 @@ export async function submitBusinessRoleApplication(params: {
         biz_id?: unknown;
         requested_role?: unknown;
         message?: unknown;
+        evidence_links?: unknown;
     };
 }) {
     const bizId = typeof params.input.biz_id === 'string' ? params.input.biz_id.trim() : '';
@@ -55,6 +76,7 @@ export async function submitBusinessRoleApplication(params: {
     const message = typeof params.input.message === 'string'
         ? params.input.message.trim().slice(0, 2000)
         : null;
+    const evidenceLinks = safeEvidenceLinks(params.input.evidence_links);
 
     if (!bizId || !requestedRole) {
         return {
@@ -71,6 +93,15 @@ export async function submitBusinessRoleApplication(params: {
             status: 400,
             code: 'unsupported_role',
             message: 'Сейчас можно отправить заявку только на роль владельца или сотрудника.',
+        };
+    }
+
+    if (requestedRole === 'owner' && (message?.length ?? 0) < 20 && !Object.keys(evidenceLinks).length) {
+        return {
+            ok: false as const,
+            status: 400,
+            code: 'owner_evidence_required',
+            message: 'Для заявки владельца добавьте пояснение не короче 20 символов или ссылку, подтверждающую связь с бизнесом.',
         };
     }
 
@@ -150,11 +181,25 @@ export async function submitBusinessRoleApplication(params: {
             applicant_email: params.user.email ?? null,
             applicant_phone: params.user.phone ?? null,
             message,
+            evidence_links: evidenceLinks,
+            policy_version: 1,
             source: 'web',
         })
         .select('id')
         .single();
-    if (error) throw new Error(error.message);
+    if (error) {
+        const policyFailure = mapApplicationPolicyError(error);
+        if (policyFailure) return policyFailure;
+        if (error.code === '23505') {
+            return {
+                ok: false as const,
+                status: 409,
+                code: 'pending_duplicate',
+                message: 'Такая заявка уже ожидает рассмотрения.',
+            };
+        }
+        throw new Error(error.message);
+    }
 
     return { ok: true as const, id: data?.id ?? null };
 }
@@ -231,10 +276,11 @@ export async function rejectBusinessRoleApplication(params: {
     applicationId: string;
     reviewerUserId: string;
     note?: string | null;
+    blockDays?: number;
 }) {
     const { data: application, error: applicationError } = await params.admin
         .from('business_role_applications')
-        .select('id,status')
+        .select('id,status,requested_role')
         .eq('id', params.applicationId)
         .maybeSingle();
     if (applicationError) throw new Error(applicationError.message);
@@ -245,17 +291,21 @@ export async function rejectBusinessRoleApplication(params: {
         return { ok: false as const, status: 409, message: 'Заявка уже обработана.' };
     }
 
-    const { error: updateError } = await params.admin
-        .from('business_role_applications')
-        .update({
-            status: 'rejected',
-            reviewed_at: new Date().toISOString(),
-            reviewed_by: params.reviewerUserId,
-            review_note: params.note || null,
-            updated_at: new Date().toISOString(),
-        })
-        .eq('id', params.applicationId);
-    if (updateError) throw new Error(updateError.message);
+    const role = normalizeBusinessRole(application.requested_role);
+    if (role !== 'owner' && role !== 'staff') {
+        return { ok: false as const, status: 400, message: 'Некорректный тип заявки.' };
+    }
 
-    return { ok: true as const };
+    return rejectApplicationWithPolicy({
+        admin: params.admin,
+        kind: role,
+        applicationId: params.applicationId,
+        reviewerUserId: params.reviewerUserId,
+        note: params.note,
+        blockDays: params.blockDays,
+    });
 }
+import {
+    mapApplicationPolicyError,
+    rejectApplicationWithPolicy,
+} from '@/lib/applicationPolicy';

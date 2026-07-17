@@ -18,6 +18,7 @@ type Body = {
     note?: string | null;
     branch_id?: unknown;
     is_active?: unknown;
+    block_days?: unknown;
 };
 
 export async function POST(request: Request, context: unknown) {
@@ -65,12 +66,16 @@ export async function POST(request: Request, context: unknown) {
     }
 
     const note = typeof body.note === 'string' ? body.note.trim().slice(0, 1000) : null;
+    const blockDays = typeof body.block_days === 'number' && [0, 7, 30, 90].includes(body.block_days)
+        ? body.block_days
+        : 0;
     if (body.action === 'reject') {
         const result = await rejectBusinessRoleApplication({
             admin,
             applicationId,
             reviewerUserId: userId,
             note,
+            blockDays,
         });
         if (!result.ok) {
             return Response.json({ ok: false, message: result.message }, { status: result.status });

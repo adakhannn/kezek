@@ -10,12 +10,15 @@ type ApplicationStatusButtonProps = {
     status: string;
     label: string;
     disabled?: boolean;
+    blockDays?: number;
 };
 
-export function ApplicationStatusButton({ id, status, label, disabled = false }: ApplicationStatusButtonProps) {
+export function ApplicationStatusButton({ id, status, label, disabled = false, blockDays = 0 }: ApplicationStatusButtonProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [editing, setEditing] = useState(false);
+    const [note, setNote] = useState('');
 
     async function update() {
         setLoading(true);
@@ -24,11 +27,13 @@ export function ApplicationStatusButton({ id, status, label, disabled = false }:
             const response = await fetch(`/admin/api/business-applications/${id}/status`, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ status }),
+                body: JSON.stringify({ status, note, block_days: blockDays }),
             });
             const payload = await response.json().catch(() => ({})) as { ok?: boolean; error?: string };
             if (!response.ok || !payload.ok) throw new Error(payload.error || 'Не удалось обновить заявку');
             router.refresh();
+            setEditing(false);
+            setNote('');
         } catch (updateError) {
             setError(updateError instanceof Error ? updateError.message : 'Не удалось обновить заявку');
         } finally {
@@ -38,9 +43,35 @@ export function ApplicationStatusButton({ id, status, label, disabled = false }:
 
     return (
         <span className="inline-flex flex-col gap-1">
-            <Button type="button" size="sm" variant="outline" onClick={update} isLoading={loading} disabled={disabled || loading}>
+            <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => status === 'rejected' ? setEditing(true) : void update()}
+                isLoading={loading}
+                disabled={disabled || loading}
+            >
                 {label}
             </Button>
+            {editing ? (
+                <span className="flex min-w-72 flex-col gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-3">
+                    <textarea
+                        value={note}
+                        onChange={(event) => setNote(event.target.value)}
+                        maxLength={1000}
+                        placeholder="Причина для истории модерации"
+                        className="min-h-20 rounded-md border border-[var(--border-default)] bg-transparent p-2 text-sm"
+                    />
+                    <span className="flex gap-2">
+                        <Button type="button" size="sm" onClick={update} isLoading={loading} disabled={!note.trim()}>
+                            Подтвердить
+                        </Button>
+                        <Button type="button" size="sm" variant="outline" onClick={() => setEditing(false)} disabled={loading}>
+                            Отмена
+                        </Button>
+                    </span>
+                </span>
+            ) : null}
             {error ? <span className="max-w-64 text-xs text-red-600">{error}</span> : null}
         </span>
     );

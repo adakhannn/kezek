@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
     let query = admin
         .from('business_role_applications')
-        .select('id,applicant_user_id,biz_id,requested_role,status,applicant_name,applicant_email,applicant_phone,message,created_at,reviewed_at,review_note,businesses(name,slug)')
+        .select('id,applicant_user_id,biz_id,requested_role,status,applicant_name,applicant_email,applicant_phone,message,evidence_links,prior_submission_count,risk_flags,created_at,reviewed_at,review_note,businesses(name,slug)')
         .order('created_at', { ascending: false })
         .limit(200);
 

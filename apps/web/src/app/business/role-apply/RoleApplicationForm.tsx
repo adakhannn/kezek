@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +17,15 @@ type BusinessOption = {
 
 type SearchResponse = { ok: true; items: BusinessOption[] } | { ok: false; message?: string };
 type SubmitResponse = { ok: true; id: string | null } | { ok: false; message?: string; code?: string };
+type MyApplication = {
+    id: string;
+    biz_id: string;
+    requested_role: 'owner' | 'staff';
+    status: 'pending';
+    created_at: string;
+    businesses: { name: string | null; slug: string | null } | Array<{ name: string | null; slug: string | null }> | null;
+};
+type MyApplicationsResponse = { ok: true; items: MyApplication[] } | { ok: false; message?: string };
 
 type RoleApplicationMode = 'owner' | 'staff';
 
@@ -76,19 +85,52 @@ export function RoleApplicationForm({
     const [bizId, setBizId] = useState('');
     const [role, setRole] = useState<BusinessRoleKey>(copy.defaultRole);
     const [message, setMessage] = useState('');
+    const [evidenceLinks, setEvidenceLinks] = useState({
+        instagram: '',
+        two_gis: '',
+        google_maps: '',
+        yandex_maps: '',
+    });
     const [loadingBusinesses, setLoadingBusinesses] = useState(true);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [myApplications, setMyApplications] = useState<MyApplication[]>([]);
+    const [cancellingId, setCancellingId] = useState<string | null>(null);
 
     const selectedBusiness = useMemo(
         () => businesses.find((business) => business.id === bizId) ?? null,
         [businesses, bizId],
     );
 
+    const loadMyApplications = useCallback(async () => {
+        if (!isAuthenticated) {
+            setMyApplications([]);
+            return;
+        }
+        try {
+            const response = await fetch(`/api/business-role-applications?requested_role=${mode}`, { cache: 'no-store' });
+            const raw = await response.text();
+            const payload = raw
+                ? JSON.parse(raw) as MyApplicationsResponse
+                : { ok: false as const, message: 'Сервис заявок вернул пустой ответ.' };
+            if (response.ok && payload.ok) {
+                setMyApplications(payload.items);
+            } else if (!payload.ok) {
+                setError(payload.message || 'Не удалось загрузить активные заявки.');
+            }
+        } catch {
+            setError('Не удалось загрузить активные заявки. Попробуйте обновить страницу.');
+        }
+    }, [isAuthenticated, mode]);
+
     useEffect(() => {
         setRole(copy.defaultRole);
     }, [copy.defaultRole]);
+
+    useEffect(() => {
+        void loadMyApplications();
+    }, [loadMyApplications]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -141,6 +183,14 @@ export function RoleApplicationForm({
             setError('Выберите корректную роль для этой заявки.');
             return;
         }
+        if (
+            mode === 'owner'
+            && message.trim().length < 20
+            && !Object.values(evidenceLinks).some((value) => value.trim())
+        ) {
+            setError('Для заявки владельца добавьте подробное пояснение или хотя бы одну подтверждающую ссылку.');
+            return;
+        }
 
         setSending(true);
         try {
@@ -151,6 +201,7 @@ export function RoleApplicationForm({
                     biz_id: bizId,
                     requested_role: role,
                     message,
+                    evidence_links: evidenceLinks,
                 }),
             });
             const payload = (await response.json()) as SubmitResponse;
@@ -159,10 +210,28 @@ export function RoleApplicationForm({
             }
             setSuccess(`${copy.successPrefix}${selectedBusiness ? ` в ${selectedBusiness.name}` : ''}.`);
             setMessage('');
+            setEvidenceLinks({ instagram: '', two_gis: '', google_maps: '', yandex_maps: '' });
+            await loadMyApplications();
         } catch (submitError) {
             setError(submitError instanceof Error ? submitError.message : 'Не удалось отправить заявку');
         } finally {
             setSending(false);
+        }
+    }
+
+    async function cancelApplication(applicationId: string) {
+        setCancellingId(applicationId);
+        setError(null);
+        try {
+            const response = await fetch(`/api/business-role-applications/${applicationId}`, { method: 'DELETE' });
+            const payload = (await response.json()) as { ok?: boolean; message?: string };
+            if (!response.ok || !payload.ok) throw new Error(payload.message || 'Не удалось отозвать заявку.');
+            setMyApplications((current) => current.filter((application) => application.id !== applicationId));
+            setSuccess('Заявка отозвана. Теперь вы можете отправить другую.');
+        } catch (cancelError) {
+            setError(cancelError instanceof Error ? cancelError.message : 'Не удалось отозвать заявку.');
+        } finally {
+            setCancellingId(null);
         }
     }
 
@@ -179,6 +248,33 @@ export function RoleApplicationForm({
 
                 {error ? <AlertBanner variant="danger" message={error} onClose={() => setError(null)} /> : null}
                 {success ? <AlertBanner variant="success" title="Заявка отправлена" message={success} onClose={() => setSuccess(null)} /> : null}
+
+                {myApplications.length ? (
+                    <div className="space-y-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+                        <p className="font-semibold text-[var(--text-primary)]">Ваши активные заявки</p>
+                        {myApplications.map((application) => {
+                            const relation = Array.isArray(application.businesses)
+                                ? application.businesses[0] ?? null
+                                : application.businesses;
+                            return (
+                                <div key={application.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[var(--surface-card)] p-3 text-sm">
+                                    <span>
+                                        {relation?.name || application.biz_id} · {new Date(application.created_at).toLocaleDateString('ru-RU')}
+                                    </span>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => cancelApplication(application.id)}
+                                        isLoading={cancellingId === application.id}
+                                    >
+                                        Отозвать
+                                    </Button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : null}
 
                 <Input
                     label="Найти бизнес"
@@ -204,6 +300,37 @@ export function RoleApplicationForm({
                         {!businesses.length ? <option value="">Бизнесы не найдены</option> : null}
                     </select>
                 </label>
+
+                {mode === 'owner' ? (
+                    <div className="space-y-3 rounded-xl border border-[var(--border-subtle)] p-4">
+                        <div>
+                            <p className="type-label text-[var(--text-primary)]">Ссылки для подтверждения</p>
+                            <p className="mt-1 text-sm text-[var(--text-muted)]">
+                                Добавьте хотя бы одну страницу бизнеса или подробно опишите вашу связь с ним в комментарии.
+                            </p>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            {([
+                                ['instagram', 'Instagram'],
+                                ['two_gis', '2ГИС'],
+                                ['google_maps', 'Google Карты'],
+                                ['yandex_maps', 'Яндекс Карты'],
+                            ] as const).map(([key, label]) => (
+                                <Input
+                                    key={key}
+                                    type="url"
+                                    label={label}
+                                    value={evidenceLinks[key]}
+                                    onChange={(event) => setEvidenceLinks((current) => ({
+                                        ...current,
+                                        [key]: event.target.value,
+                                    }))}
+                                    placeholder="https://..."
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ) : null}
 
                 <label className="block">
                     <span className="type-label text-[var(--text-primary)]">{copy.roleLabel}</span>

@@ -23,6 +23,9 @@ type ApplicationRow = {
     created_at: string;
     reviewed_at: string | null;
     review_note: string | null;
+    evidence_links: Record<string, string | null>;
+    prior_submission_count: number;
+    risk_flags: string[];
     businesses: BusinessRelation | BusinessRelation[];
 };
 
@@ -46,6 +49,8 @@ export function RoleApplicationsAdminClient() {
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [rejectingId, setRejectingId] = useState<string | null>(null);
+    const [rejectNote, setRejectNote] = useState('');
 
     async function load(nextStatus = status) {
         setLoading(true);
@@ -70,20 +75,22 @@ export function RoleApplicationsAdminClient() {
         void load(status);
     }, [status]);
 
-    async function decide(id: string, action: 'approve' | 'reject') {
+    async function decide(id: string, action: 'approve' | 'reject', blockDays = 0) {
         setActionId(`${id}:${action}`);
         setError(null);
         try {
             const response = await fetch(`/admin/api/role-applications/${id}/status`, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ action }),
+                body: JSON.stringify({ action, note: rejectNote, block_days: blockDays }),
             });
             const payload = (await response.json()) as MutationResponse;
             if (!response.ok || !payload.ok) {
                 throw new Error(!payload.ok ? payload.message || 'Не удалось выполнить действие' : 'Не удалось выполнить действие');
             }
             await load();
+            setRejectingId(null);
+            setRejectNote('');
         } catch (actionError) {
             setError(actionError instanceof Error ? actionError.message : 'Не удалось выполнить действие');
         } finally {
@@ -166,6 +173,27 @@ export function RoleApplicationsAdminClient() {
                             </p>
                         ) : null}
 
+                        {Object.values(application.evidence_links ?? {}).some(Boolean) ? (
+                            <div className="flex flex-wrap gap-2 text-sm">
+                                {Object.entries(application.evidence_links).map(([key, value]) => value ? (
+                                    <a key={key} href={value} target="_blank" rel="noreferrer" className="text-[var(--accent-primary)] underline">
+                                        {key}
+                                    </a>
+                                ) : null)}
+                            </div>
+                        ) : null}
+
+                        {application.prior_submission_count > 0 || application.risk_flags.length ? (
+                            <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-700 dark:text-amber-300">
+                                    Предыдущих заявок: {application.prior_submission_count}
+                                </span>
+                                {application.risk_flags.map((flag) => (
+                                    <span key={flag} className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">{flag}</span>
+                                ))}
+                            </div>
+                        ) : null}
+
                         {isPending && isStaffRequest ? (
                             <AlertBanner
                                 variant="info"
@@ -187,11 +215,37 @@ export function RoleApplicationsAdminClient() {
                                     type="button"
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => decide(application.id, 'reject')}
+                                    onClick={() => {
+                                        setRejectingId(application.id);
+                                        setRejectNote('');
+                                    }}
                                     isLoading={actionId === `${application.id}:reject`}
                                 >
                                     Отклонить
                                 </Button>
+                            </div>
+                        ) : null}
+
+                        {isPending && !isStaffRequest && rejectingId === application.id ? (
+                            <div className="space-y-3 rounded-xl border border-[var(--border-default)] bg-[var(--surface-emphasis)] p-4">
+                                <textarea
+                                    value={rejectNote}
+                                    onChange={(event) => setRejectNote(event.target.value)}
+                                    maxLength={1000}
+                                    placeholder="Укажите причину отклонения"
+                                    className="min-h-24 w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-3 text-sm"
+                                />
+                                <div className="flex flex-wrap gap-2">
+                                    <Button type="button" size="sm" variant="outline" disabled={!rejectNote.trim()} onClick={() => decide(application.id, 'reject')}>
+                                        Отклонить
+                                    </Button>
+                                    <Button type="button" size="sm" variant="outline" disabled={!rejectNote.trim()} onClick={() => decide(application.id, 'reject', 30)}>
+                                        Отклонить и блокировать 30 дней
+                                    </Button>
+                                    <Button type="button" size="sm" variant="outline" onClick={() => setRejectingId(null)}>
+                                        Отмена
+                                    </Button>
+                                </div>
                             </div>
                         ) : null}
                     </Card>

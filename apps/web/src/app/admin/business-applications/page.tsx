@@ -21,13 +21,15 @@ type BusinessRegistrationApplication = {
     created_at: string;
     created_business_id: string | null;
     directory_links: Record<string, string | null> | null;
+    prior_submission_count: number;
+    risk_flags: string[];
 };
 
 export default async function BusinessApplicationsPage() {
     const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const { data: applications, error } = await admin
         .from('business_registration_applications')
-        .select('id,contact_name,phone,email,business_name,city,category,comment,status,applicant_user_id,created_at,created_business_id,directory_links')
+        .select('id,contact_name,phone,email,business_name,city,category,comment,status,applicant_user_id,created_at,created_business_id,directory_links,prior_submission_count,risk_flags')
         .order('created_at', { ascending: false })
         .limit(200);
 
@@ -79,6 +81,19 @@ export default async function BusinessApplicationsPage() {
 
                         <p className="text-xs text-gray-500">{new Date(application.created_at).toLocaleString('ru-RU')}</p>
 
+                        {application.prior_submission_count > 0 || application.risk_flags.length ? (
+                            <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-700 dark:text-amber-300">
+                                    Предыдущих заявок: {application.prior_submission_count}
+                                </span>
+                                {application.risk_flags.map((flag) => (
+                                    <span key={flag} className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">
+                                        {flag}
+                                    </span>
+                                ))}
+                            </div>
+                        ) : null}
+
                         {application.created_business_id ? (
                             <Link
                                 href={`/admin/businesses/${application.created_business_id}`}
@@ -97,6 +112,7 @@ export default async function BusinessApplicationsPage() {
                                 disabled={Boolean(application.created_business_id)}
                             />
                             <ApplicationStatusButton id={application.id} status="rejected" label="Отклонить" />
+                            <ApplicationStatusButton id={application.id} status="rejected" label="Отклонить и блокировать 30 дней" blockDays={30} />
                         </div>
                     </Card>
                 ))}

@@ -20,6 +20,8 @@ type ApplicationRow = {
     created_at: string;
     reviewed_at: string | null;
     review_note: string | null;
+    prior_submission_count: number;
+    risk_flags: string[];
 };
 
 type BranchRow = {
@@ -59,6 +61,8 @@ export function RoleApplicationsClient() {
     const [isActive, setIsActive] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
+    const [rejectingId, setRejectingId] = useState<string | null>(null);
+    const [rejectNote, setRejectNote] = useState('');
 
     async function load() {
         setLoading(true);
@@ -91,7 +95,7 @@ export function RoleApplicationsClient() {
         setIsActive(true);
     }
 
-    async function decide(id: string, action: 'approve' | 'reject') {
+    async function decide(id: string, action: 'approve' | 'reject', blockDays = 0) {
         if (action === 'approve' && !branchId) {
             setError('Сначала создайте активный филиал и выберите его для сотрудника.');
             return;
@@ -106,6 +110,8 @@ export function RoleApplicationsClient() {
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
                     action,
+                    note: action === 'reject' ? rejectNote : undefined,
+                    block_days: action === 'reject' ? blockDays : undefined,
                     ...(action === 'approve' ? { branch_id: branchId, is_active: isActive } : {}),
                 }),
             });
@@ -123,6 +129,8 @@ export function RoleApplicationsClient() {
                 setNotice('Заявка сотрудника отклонена.');
             }
             setEditingId(null);
+            setRejectingId(null);
+            setRejectNote('');
             await load();
         } catch (actionError) {
             setError(actionError instanceof Error ? actionError.message : 'Не удалось выполнить действие');
@@ -196,6 +204,17 @@ export function RoleApplicationsClient() {
                             {application.reviewed_at ? ` · Рассмотрена: ${new Date(application.reviewed_at).toLocaleString('ru-RU')}` : ''}
                         </div>
 
+                        {application.prior_submission_count > 0 || application.risk_flags.length ? (
+                            <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-700 dark:text-amber-300">
+                                    Предыдущих заявок: {application.prior_submission_count}
+                                </span>
+                                {application.risk_flags.map((flag) => (
+                                    <span key={flag} className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">{flag}</span>
+                                ))}
+                            </div>
+                        ) : null}
+
                         {isPending && !isEditing ? (
                             <div className="flex flex-wrap gap-2">
                                 <Button
@@ -210,11 +229,37 @@ export function RoleApplicationsClient() {
                                     type="button"
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => decide(application.id, 'reject')}
+                                    onClick={() => {
+                                        setRejectingId(application.id);
+                                        setRejectNote('');
+                                    }}
                                     isLoading={actionId === `${application.id}:reject`}
                                 >
                                     Отклонить
                                 </Button>
+                            </div>
+                        ) : null}
+
+                        {isPending && rejectingId === application.id ? (
+                            <div className="space-y-3 rounded-xl border border-[var(--border-default)] bg-[var(--surface-emphasis)] p-4">
+                                <textarea
+                                    value={rejectNote}
+                                    onChange={(event) => setRejectNote(event.target.value)}
+                                    maxLength={1000}
+                                    placeholder="Укажите причину отклонения"
+                                    className="min-h-24 w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-3 text-sm"
+                                />
+                                <div className="flex flex-wrap gap-2">
+                                    <Button type="button" size="sm" variant="outline" disabled={!rejectNote.trim()} onClick={() => decide(application.id, 'reject')}>
+                                        Отклонить
+                                    </Button>
+                                    <Button type="button" size="sm" variant="outline" disabled={!rejectNote.trim()} onClick={() => decide(application.id, 'reject', 30)}>
+                                        Отклонить и блокировать 30 дней
+                                    </Button>
+                                    <Button type="button" size="sm" variant="outline" onClick={() => setRejectingId(null)}>
+                                        Отмена
+                                    </Button>
+                                </div>
                             </div>
                         ) : null}
 

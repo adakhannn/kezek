@@ -2036,3 +2036,32 @@ The web testing scope and execution status are maintained in
   - Authenticated production smoke on `/dashboard/staff` showed active business and page label both equal to `LIVE TEST Business 20260715111633`; the generic fallback was absent and browser console errors were `0`.
 - status: `verified`
 - owner: `Codex + User`
+
+### WB-057
+- id: `WB-057`
+- date: `2026-07-17`
+- area: `business role applications / applicant self-service`
+- severity: `P1`
+- title: Owner application page logs a JSON parse error while loading the applicant's pending applications
+- build: local worktree based on `10d9d2d4`, anti-abuse implementation before deployment
+- environment: in-app Chromium, authenticated user, `http://127.0.0.1:3000/business/owner-apply`
+- steps:
+  1. Open `/business/owner-apply` as an authenticated user.
+  2. Wait for the page to load the user's active owner applications from `GET /api/business-role-applications`.
+  3. Inspect the browser console.
+- expected:
+  - The active-application panel loads or remains empty without a console error.
+- actual:
+  - The endpoint returns an empty/non-JSON response in the current local runtime and `response.json()` throws `Unexpected end of JSON input`.
+- evidence:
+  - Live DOM contained all four new proof fields and rendered the page, while browser console recorded the exception in `RoleApplicationForm.useCallback[loadMyApplications]`.
+- root cause:
+  - The applicant client assumed every response contained JSON; the local environment has no service-role key, so the new server route failed before producing the expected payload.
+- fix:
+  - The server route now converts missing service configuration into an explicit JSON `503` response.
+  - The client parses the response defensively and presents safe feedback instead of creating an unhandled promise rejection.
+- post-fix evidence:
+  - Fresh authenticated local load rendered all proof fields and the explicit environment message with zero browser console errors.
+  - `/business/staff-apply` also loaded without proof fields leaking into the staff flow and with zero console errors.
+- status: `fixed locally; production verification pending`
+- owner: `Codex`

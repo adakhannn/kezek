@@ -1527,6 +1527,7 @@ Live evidence (2026-07-17):
   - authenticated `/dashboard/staff` showed matching active-workspace and page-label values `LIVE TEST Business 20260715111633`;
   - generic fallback was absent and browser console errors were `0`;
 - bugs: `WB-053` verified; `WB-056` verified;
+- anti-abuse increment (2026-07-17, local): `/business/staff-apply` kept the staff-only form, did not show owner proof fields, and produced zero console errors; durable pending limits, three-day rejection cooldown, owner/staff conflict protection, applicant cancellation, and owner-created 30-day blocks are installed in production Supabase pending web deployment;
 - remaining gaps:
   - edit profile, avatar upload/remove, transfer, dismiss, restore, delete, and booking availability were not covered.
 
@@ -1834,7 +1835,16 @@ Done when:
 
 - entity lifecycle is correct and destructive actions cannot target the wrong entity.
 
-Status: `not started`
+Status: `in progress`
+
+Live evidence (2026-07-17, application anti-abuse increment):
+
+- environment: local Next.js production-compatible build and in-app Chromium, authenticated user;
+- `/business/owner-apply` rendered structured Instagram, 2GIS, Google Maps, and Yandex Maps proof fields;
+- missing local service-role configuration produced explicit safe feedback instead of an empty response or console exception after `WB-057` fix;
+- `/admin/role-applications` remained guarded and loaded its empty state with zero console errors;
+- production Supabase migrations `20260717040000`, `20260717050000`, and rollout-compatibility migration `20260717060000` applied successfully;
+- result: `PASS` for local UI/error-surface smoke and database deployment; end-to-end production submission/rejection/block/cancellation remains pending deployment.
 
 ### M3. Users and security actions (`P0`)
 

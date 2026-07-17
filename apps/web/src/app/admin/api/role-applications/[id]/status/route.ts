@@ -13,6 +13,7 @@ import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/sup
 type Body = {
     action?: 'approve' | 'reject';
     note?: string | null;
+    block_days?: unknown;
 };
 
 export async function POST(request: Request, context: unknown) {
@@ -51,6 +52,9 @@ export async function POST(request: Request, context: unknown) {
         return Response.json({ ok: false, message: 'Заявка не найдена.' }, { status: 404 });
     }
     const note = typeof body.note === 'string' ? body.note.trim().slice(0, 1000) : null;
+    const blockDays = typeof body.block_days === 'number' && [0, 7, 30, 90].includes(body.block_days)
+        ? body.block_days
+        : 0;
     if (body.action !== 'reject' && normalizeBusinessRole(application.requested_role) === 'staff') {
         return Response.json({
             ok: false,
@@ -58,7 +62,13 @@ export async function POST(request: Request, context: unknown) {
         }, { status: 400 });
     }
     const result = body.action === 'reject'
-        ? await rejectBusinessRoleApplication({ admin, applicationId, reviewerUserId: user.id, note })
+        ? await rejectBusinessRoleApplication({
+            admin,
+            applicationId,
+            reviewerUserId: user.id,
+            note,
+            blockDays,
+        })
         : await approveBusinessRoleApplication({ admin, applicationId, reviewerUserId: user.id, note });
 
     if (!result.ok) {
