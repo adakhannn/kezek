@@ -1757,8 +1757,8 @@ The web testing scope and execution status are maintained in
   - TypeScript check passed;
   - production build passed;
   - production post-fix application form and admin queue are live after commit `b0b64646`;
-  - full branch/public verification is blocked because the authenticated test applicant already owns a business and approval is rejected by `businesses_one_owner_per_user`.
-- status: `fixed, awaiting live verification`
+  - live post-fix verification on `2026-07-17` approved synthetic application `POSTFIX LINKS 12398389`, created business `72dcfe62-4a72-46d5-945f-1677671596ac`, created first branch `POSTFIX First Branch`, and confirmed all four links on the branch edit page and public page `/b/postfix-links-12398389`.
+- status: `verified`
 - owner: `Codex + User`
 
 ### WB-048
@@ -1800,11 +1800,15 @@ The web testing scope and execution status are maintained in
   - Production synthetic application `POSTFIX LINKS 12398389` reached the admin queue with all four directory links visible.
   - Approval at `2026-07-16` failed before branch creation with the duplicate-owner constraint error.
 - fix:
-  - added migration `20260716030000_allow_owner_multiple_businesses.sql` to remove the incorrect global owner uniqueness constraint;
+  - applied migration `20260717010000_drop_global_owner_business_index.sql` in production on `2026-07-17` to remove the incorrect global owner uniqueness index;
   - kept ownership uniqueness scoped to the business membership relation, so one user can own multiple businesses without duplicate roles inside one business.
 - post-fix verification:
-  - migration and production approval smoke test pending deployment.
-- status: `fixed, awaiting live verification`
+  - production approval succeeded for synthetic application `POSTFIX LINKS 12398389`;
+  - created business `72dcfe62-4a72-46d5-945f-1677671596ac` for the same owner who already owned another business;
+  - the new business page showed status `Одобрен`, the same owner, and branch limit `1`;
+  - first branch creation succeeded and the public page loaded with the expected business and branch;
+  - unrelated console issues remain tracked separately as `WB-048` (React hydration) and `WB-049` (missing Yandex Maps key).
+- status: `verified`
 - owner: `Codex + User`
 
 ### WB-049
@@ -1824,5 +1828,30 @@ The web testing scope and execution status are maintained in
 - evidence:
   - Production DOM displayed `Карта временно недоступна. Введите адрес филиала вручную.`
   - Production console reported the map initialization error from `/_next/static/chunks/84daa0763d770a94.js`.
+- status: `open`
+- owner: `Codex + User`
+
+### WB-051
+- id: `WB-051`
+- date: `2026-07-17`
+- area: `dashboard / multi-business owner workspace`
+- severity: `P1`
+- title: Owner workspace has no business selector after enabling multiple businesses
+- environment: production `https://kezek.kg`
+- steps:
+  1. Authenticate as an owner who owns an existing business and the newly approved second business.
+  2. Open `/dashboard` directly.
+  3. Open `/select-cabinet` and inspect the available cabinet choices.
+  4. Try the header role control and reload the dashboard.
+- expected:
+  - The owner can see all businesses they own and has a clear business selector or switcher.
+  - Selecting another business changes the workspace context and remains correct after reload.
+- actual:
+  - `/dashboard` showed only the first business (`LIVE AUTH Business 2026071618045`, id `481ec1e2-287c-435a-9f98-d5b003dec4a7`).
+  - The second business (`POSTFIX LINKS 12398389`, id `72dcfe62-4a72-46d5-945f-1677671596ac`) was not available in the owner workspace.
+  - `/select-cabinet` only offered `Кабинет бизнеса` vs `Мои записи`, not a business-to-business selector; the header role control did not expose a switcher.
+- evidence:
+  - Live production owner session on `2026-07-17` loaded `/dashboard` successfully but exposed only one business context.
+  - Browser console contained no new errors or warnings during the check.
 - status: `open`
 - owner: `Codex + User`

@@ -2,6 +2,7 @@
 
 import { clsx } from 'clsx';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useLanguage } from './i18n/LanguageProvider';
@@ -16,10 +17,17 @@ type RoleSummary = {
     hasAdmin: boolean;
 };
 
+type BusinessSummary = {
+    id: string;
+    name: string | null;
+    city: string | null;
+    slug: string | null;
+};
+
 type SwitcherState =
     | { status: 'loading' }
-    | { status: 'ready'; roles: RoleSummary }
-    | { status: 'error' };
+    | { status: 'ready'; roles: RoleSummary; currentBizId: string | null; businesses: BusinessSummary[] }
+    | { status: 'error'; message?: string };
 
 type RoleAndBusinessSwitcherProps = {
     mode?: 'desktop' | 'mobile';
@@ -31,8 +39,11 @@ export function RoleAndBusinessSwitcher({
     onNavigate,
 }: RoleAndBusinessSwitcherProps = {}) {
     const { t } = useLanguage();
+    const router = useRouter();
     const [state, setState] = useState<SwitcherState>({ status: 'loading' });
     const [isOpen, setIsOpen] = useState(false);
+    const [switchingBusinessId, setSwitchingBusinessId] = useState<string | null>(null);
+    const [switchError, setSwitchError] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const isMobile = mode === 'mobile';
 
@@ -48,10 +59,30 @@ export function RoleAndBusinessSwitcher({
                     return;
                 }
 
-                const [{ data: isSuperData }, { data: roleKeys }] = await Promise.all([
+                const [{ data: isSuperData }, { data: roleKeys }, businessResponse] = await Promise.all([
                     supabase.rpc('is_super_admin'),
                     supabase.rpc('my_role_keys'),
+                    fetch('/api/me/current-business', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                        cache: 'no-store',
+                    }),
                 ]);
+
+                let currentBizId: string | null = null;
+                let businesses: BusinessSummary[] = [];
+                if (businessResponse.ok) {
+                    const businessJson = (await businessResponse.json()) as {
+                        ok?: boolean;
+                        data?: { currentBizId: string | null; businesses: BusinessSummary[] };
+                    };
+                    if (businessJson.ok && businessJson.data) {
+                        currentBizId = businessJson.data.currentBizId;
+                        businesses = Array.isArray(businessJson.data.businesses)
+                            ? businessJson.data.businesses
+                            : [];
+                    }
+                }
 
                 const rolesArr = Array.isArray(roleKeys) ? (roleKeys as string[]) : [];
 
@@ -63,7 +94,7 @@ export function RoleAndBusinessSwitcher({
                 };
 
                 if (!cancelled) {
-                    setState({ status: 'ready', roles });
+                    setState({ status: 'ready', roles, currentBizId, businesses });
                 }
             } catch (e) {
                 logWarn('RoleAndBusinessSwitcher', 'failed to load role/business info', e);
@@ -179,6 +210,79 @@ export function RoleAndBusinessSwitcher({
                         </div>
 
                         <div className="space-y-1 p-2">
+                            {state.status === 'ready' && state.businesses.length > 1 ? (
+                                <div className="mb-2 border-b border-[var(--border-subtle)] pb-2">
+                                    <p className="px-3 pb-1 text-xs font-medium text-[var(--text-muted)]">
+                                        {t('header.roleBusiness.sections.businesses', 'Бизнесы')}
+                                    </p>
+                                    <div className="space-y-1">
+                                        {state.businesses.map((business) => {
+                                            const isCurrent = business.id === state.currentBizId;
+                                            const label = business.name || business.slug || t('header.roleBusiness.someBusiness', 'Бизнес');
+                                            return (
+                                                <button
+                                                    key={business.id}
+                                                    type="button"
+                                                    aria-pressed={isCurrent}
+                                                    disabled={Boolean(switchingBusinessId)}
+                                                    className={clsx(
+                                                        'flex w-full items-center justify-between gap-2 rounded-[var(--radius-md)] px-3 py-2 text-left text-sm transition-colors',
+                                                        isCurrent
+                                                            ? 'bg-[var(--surface-emphasis)] text-[var(--text-primary)]'
+                                                            : 'text-[var(--text-secondary)] hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]',
+                                                        switchingBusinessId ? 'cursor-wait opacity-70' : '',
+                                                    )}
+                                                    onClick={() => {
+                                                        if (isCurrent || switchingBusinessId) {
+                                                            setIsOpen(false);
+                                                            return;
+                                                        }
+                                                        setSwitchError(null);
+                                                        setSwitchingBusinessId(business.id);
+                                                        void (async () => {
+                                                            try {
+                                                                const response = await fetch('/api/me/current-business', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ bizId: business.id }),
+                                                                });
+                                                                if (!response.ok) {
+                                                                    throw new Error(`HTTP ${response.status}`);
+                                                                }
+                                                                const result = (await response.json()) as { ok?: boolean };
+                                                                if (!result.ok) throw new Error('Business switch failed');
+                                                                setIsOpen(false);
+                                                                router.push('/dashboard');
+                                                                router.refresh();
+                                                            } catch (error) {
+                                                                setSwitchError(t('header.roleBusiness.switchError', 'Не удалось переключить бизнес. Попробуйте ещё раз.'));
+                                                                logWarn('RoleAndBusinessSwitcher', 'failed to switch business', error);
+                                                            } finally {
+                                                                setSwitchingBusinessId(null);
+                                                            }
+                                                        })();
+                                                    }}
+                                                >
+                                                    <span className="min-w-0 truncate">{label}</span>
+                                                    {isCurrent ? <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" /> : null}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {switchError ? (
+                                        <p role="alert" className="px-3 pt-2 text-xs text-red-400">
+                                            {switchError}
+                                        </p>
+                                    ) : null}
+                                    <Link
+                                        href="/select-business"
+                                        onClick={handleNavigate}
+                                        className="mt-1 block px-3 py-2 text-xs text-[var(--accent-primary)] hover:underline"
+                                    >
+                                        {t('header.roleBusiness.switchBusiness', 'Открыть выбор бизнеса')}
+                                    </Link>
+                                </div>
+                            ) : null}
                             {roles.hasDashboard ? (
                                 <Link
                                     href="/dashboard"
