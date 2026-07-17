@@ -20,7 +20,7 @@ type SubmitResponse = { ok: true; id: string | null } | { ok: false; message?: s
 
 type RoleApplicationMode = 'owner' | 'staff';
 
-const staffRoleOptions: BusinessRoleKey[] = ['staff', 'manager', 'admin'];
+const staffRoleOptions: BusinessRoleKey[] = ['staff'];
 
 const modeCopy: Record<RoleApplicationMode, {
     defaultRole: BusinessRoleKey;
@@ -53,12 +53,12 @@ const modeCopy: Record<RoleApplicationMode, {
         allowedRoles: staffRoleOptions,
         authTitle: 'Нужно войти',
         authMessage: 'Заявка сотрудника привязывается к вашему аккаунту. Войдите через Google, Яндекс, Telegram или WhatsApp, затем вернитесь сюда.',
-        roleLabel: 'Какой доступ вам нужен',
-        roleHint: 'Заявки сотрудников, менеджеров и администраторов рассматривает владелец или админ выбранного бизнеса.',
+        roleLabel: 'Роль',
+        roleHint: 'Заявку сотрудника рассматривает владелец выбранного бизнеса.',
         commentLabel: 'Комментарий для владельца',
         commentPlaceholder: 'Например: я мастер филиала на Киевской, работаю по графику 2/2, меня может подтвердить администратор Алина.',
-        info: 'После одобрения появится доступ к бизнесу. Если вы должны быть мастером в расписании, владелец дополнительно создаст карточку сотрудника в разделе “Сотрудники”.',
-        successPrefix: 'Заявка на доступ отправлена',
+        info: 'При одобрении владелец выберет филиал. Система создаст рабочую карточку, назначит роль сотрудника и подготовит расписание.',
+        successPrefix: 'Заявка сотрудника отправлена',
         signInNext: '/business/staff-apply',
     },
 };

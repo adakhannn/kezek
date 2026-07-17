@@ -2,7 +2,7 @@
 
 import { clsx } from 'clsx';
 import Link from 'next/link';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 export type WorkspaceNavItem = {
     href: string;
@@ -30,6 +30,7 @@ type WorkspaceSidebarShellProps = {
     closeLabel: string;
     navTitle: string;
     headerSlot?: ReactNode;
+    desktopStorageKey?: string;
 };
 
 function isItemActive(item: WorkspaceNavItem, pathname: string) {
@@ -143,7 +144,10 @@ export function WorkspaceSidebarShell({
     closeLabel,
     navTitle,
     headerSlot,
+    desktopStorageKey = 'kezek.workspace.sidebar.collapsed',
 }: WorkspaceSidebarShellProps) {
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
+
     useEffect(() => {
         if (!isOpen) return;
 
@@ -152,6 +156,23 @@ export function WorkspaceSidebarShell({
             document.body.style.overflow = '';
         };
     }, [isOpen]);
+
+    useEffect(() => {
+        try {
+            setIsDesktopCollapsed(window.localStorage.getItem(desktopStorageKey) === 'true');
+        } catch {
+            // Storage can be unavailable in privacy mode. The sidebar still works for this session.
+        }
+    }, [desktopStorageKey]);
+
+    const setDesktopCollapsed = (collapsed: boolean) => {
+        setIsDesktopCollapsed(collapsed);
+        try {
+            window.localStorage.setItem(desktopStorageKey, String(collapsed));
+        } catch {
+            // Keep the in-memory state when persistence is unavailable.
+        }
+    };
 
     return (
         <>
@@ -178,17 +199,49 @@ export function WorkspaceSidebarShell({
                 />
             ) : null}
 
-            <div className="hidden lg:block w-[304px] shrink-0 self-start">
-                <div className="sticky top-28 px-4 pb-6">
-                    <WorkspaceSidebarPanel
-                        title={title}
-                        subtitle={subtitle}
-                        badge={badge}
-                        items={items}
-                        pathname={pathname}
-                        navTitle={navTitle}
-                        headerSlot={headerSlot}
-                    />
+            <div
+                className={clsx(
+                    'hidden shrink-0 self-start transition-[width] duration-300 ease-out lg:block',
+                    isDesktopCollapsed ? 'w-16' : 'w-[304px]',
+                )}
+            >
+                <div className={clsx('sticky top-28 pb-6', isDesktopCollapsed ? 'px-2' : 'px-4')}>
+                    {isDesktopCollapsed ? (
+                        <button
+                            type="button"
+                            onClick={() => setDesktopCollapsed(false)}
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] shadow-[var(--shadow-md)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
+                            aria-label={openLabel}
+                            title={openLabel}
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    ) : (
+                        <WorkspaceSidebarPanel
+                            title={title}
+                            subtitle={subtitle}
+                            badge={badge}
+                            items={items}
+                            pathname={pathname}
+                            navTitle={navTitle}
+                            headerSlot={headerSlot}
+                            closeButton={
+                                <button
+                                    type="button"
+                                    onClick={() => setDesktopCollapsed(true)}
+                                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-emphasis)] hover:text-[var(--text-primary)]"
+                                    aria-label={closeLabel}
+                                    title={closeLabel}
+                                >
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                            }
+                        />
+                    )}
                 </div>
             </div>
 

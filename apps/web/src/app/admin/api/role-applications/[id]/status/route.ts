@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
 import {
     approveBusinessRoleApplication,
+    normalizeBusinessRole,
     rejectBusinessRoleApplication,
 } from '@/lib/businessRoleApplicationService';
 import { getRouteParamRequired } from '@/lib/routeParams';
@@ -38,7 +39,24 @@ export async function POST(request: Request, context: unknown) {
     }
 
     const admin = createSupabaseAdminClient();
+    const { data: application, error: applicationError } = await admin
+        .from('business_role_applications')
+        .select('requested_role,status')
+        .eq('id', applicationId)
+        .maybeSingle();
+    if (applicationError) {
+        return Response.json({ ok: false, message: applicationError.message }, { status: 400 });
+    }
+    if (!application) {
+        return Response.json({ ok: false, message: 'Заявка не найдена.' }, { status: 404 });
+    }
     const note = typeof body.note === 'string' ? body.note.trim().slice(0, 1000) : null;
+    if (body.action !== 'reject' && normalizeBusinessRole(application.requested_role) === 'staff') {
+        return Response.json({
+            ok: false,
+            message: 'Заявку сотрудника принимает владелец бизнеса с обязательным выбором филиала.',
+        }, { status: 400 });
+    }
     const result = body.action === 'reject'
         ? await rejectBusinessRoleApplication({ admin, applicationId, reviewerUserId: user.id, note })
         : await approveBusinessRoleApplication({ admin, applicationId, reviewerUserId: user.id, note });

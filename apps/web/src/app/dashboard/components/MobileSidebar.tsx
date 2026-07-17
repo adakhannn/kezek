@@ -119,6 +119,7 @@ export function MobileSidebar({ bizId }: { bizId: string }) {
             closeLabel={t('dashboard.sidebar.closeMenu', 'Закрыть меню')}
             navTitle={t('dashboard.sidebar.navTitle', 'Разделы workspace')}
             headerSlot={<BusinessSwitcher serverCurrentBizId={bizId} />}
+            desktopStorageKey="kezek.dashboard.sidebar.collapsed"
         />
     );
 }

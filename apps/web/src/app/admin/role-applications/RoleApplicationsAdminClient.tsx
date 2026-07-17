@@ -131,6 +131,7 @@ export function RoleApplicationsAdminClient() {
                 const businessName = business?.name || application.biz_id;
                 const businessSlug = business?.slug;
                 const isPending = application.status === 'pending';
+                const isStaffRequest = application.requested_role === 'staff';
 
                 return (
                     <Card key={application.id} variant="outlined" padding="md" className="space-y-4">
@@ -165,7 +166,14 @@ export function RoleApplicationsAdminClient() {
                             </p>
                         ) : null}
 
-                        {isPending ? (
+                        {isPending && isStaffRequest ? (
+                            <AlertBanner
+                                variant="info"
+                                message="Заявку сотрудника принимает владелец бизнеса в своём кабинете с обязательным выбором филиала."
+                            />
+                        ) : null}
+
+                        {isPending && !isStaffRequest ? (
                             <div className="flex flex-wrap gap-2">
                                 <Button
                                     type="button"

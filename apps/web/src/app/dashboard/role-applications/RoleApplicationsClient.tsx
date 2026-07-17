@@ -1,17 +1,17 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { BUSINESS_ROLE_LABELS, type BusinessRoleKey } from '@/lib/businessRoleApplicationService';
 
 type ApplicationRow = {
     id: string;
     applicant_user_id: string;
-    requested_role: BusinessRoleKey;
+    requested_role: 'staff';
     status: 'pending' | 'approved' | 'rejected' | 'cancelled';
     applicant_name: string | null;
     applicant_email: string | null;
@@ -22,21 +22,43 @@ type ApplicationRow = {
     review_note: string | null;
 };
 
-type ListResponse = { ok: true; items: ApplicationRow[] } | { ok: false; message?: string };
-type MutationResponse = { ok: true } | { ok: false; message?: string };
+type BranchRow = {
+    id: string;
+    name: string;
+    address: string | null;
+    is_active: boolean | null;
+};
+
+type ListResponse =
+    | { ok: true; items: ApplicationRow[]; branches: BranchRow[] }
+    | { ok: false; message?: string };
+
+type MutationResponse = {
+    ok: boolean;
+    message?: string;
+    staff_id?: string;
+    schedule_initialized?: boolean;
+    schedule_days_created?: number;
+    schedule_error?: string | null;
+};
 
 const statusLabels: Record<ApplicationRow['status'], string> = {
-    pending: 'Ожидает',
-    approved: 'Одобрена',
-    rejected: 'Отклонена',
-    cancelled: 'Отменена',
+    pending: 'Ожидает решения',
+    approved: 'Принят',
+    rejected: 'Отклонён',
+    cancelled: 'Отменён',
 };
 
 export function RoleApplicationsClient() {
     const [items, setItems] = useState<ApplicationRow[]>([]);
+    const [branches, setBranches] = useState<BranchRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [branchId, setBranchId] = useState('');
+    const [isActive, setIsActive] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [notice, setNotice] = useState<string | null>(null);
 
     async function load() {
         setLoading(true);
@@ -48,6 +70,8 @@ export function RoleApplicationsClient() {
                 throw new Error(!payload.ok ? payload.message || 'Не удалось загрузить заявки' : 'Не удалось загрузить заявки');
             }
             setItems(payload.items);
+            setBranches(payload.branches);
+            setBranchId((current) => current || payload.branches[0]?.id || '');
         } catch (loadError) {
             setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить заявки');
         } finally {
@@ -59,19 +83,46 @@ export function RoleApplicationsClient() {
         void load();
     }, []);
 
+    function startApproval(applicationId: string) {
+        setError(null);
+        setNotice(null);
+        setEditingId(applicationId);
+        setBranchId(branches[0]?.id || '');
+        setIsActive(true);
+    }
+
     async function decide(id: string, action: 'approve' | 'reject') {
+        if (action === 'approve' && !branchId) {
+            setError('Сначала создайте активный филиал и выберите его для сотрудника.');
+            return;
+        }
+
         setActionId(`${id}:${action}`);
         setError(null);
+        setNotice(null);
         try {
             const response = await fetch(`/dashboard/api/role-applications/${id}/status`, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ action }),
+                body: JSON.stringify({
+                    action,
+                    ...(action === 'approve' ? { branch_id: branchId, is_active: isActive } : {}),
+                }),
             });
             const payload = (await response.json()) as MutationResponse;
             if (!response.ok || !payload.ok) {
-                throw new Error(!payload.ok ? payload.message || 'Не удалось выполнить действие' : 'Не удалось выполнить действие');
+                throw new Error(payload.message || 'Не удалось выполнить действие');
             }
+
+            if (action === 'approve') {
+                const scheduleText = payload.schedule_initialized
+                    ? ` Расписание подготовлено на ${payload.schedule_days_created ?? 0} дней.`
+                    : ' Карточка создана, но расписание нужно проверить вручную.';
+                setNotice(`Сотрудник принят и получил рабочий кабинет.${scheduleText}`);
+            } else {
+                setNotice('Заявка сотрудника отклонена.');
+            }
+            setEditingId(null);
             await load();
         } catch (actionError) {
             setError(actionError instanceof Error ? actionError.message : 'Не удалось выполнить действие');
@@ -87,17 +138,31 @@ export function RoleApplicationsClient() {
     return (
         <div className="space-y-4">
             {error ? <AlertBanner variant="danger" message={error} onClose={() => setError(null)} /> : null}
+            {notice ? <AlertBanner variant="success" message={notice} onClose={() => setNotice(null)} /> : null}
+
+            {!branches.length ? (
+                <AlertBanner
+                    variant="warning"
+                    title="Нужен филиал"
+                    message="Принять сотрудника можно только после создания активного филиала."
+                    action={(
+                        <Link href="/dashboard/branches" className="font-semibold underline">
+                            Перейти к филиалам
+                        </Link>
+                    )}
+                />
+            ) : null}
 
             {!items.length ? (
                 <EmptyState
-                    title="Заявок пока нет"
-                    description="Когда владелец, менеджер или сотрудник отправит заявку на доступ к этому бизнесу, она появится здесь."
+                    title="Заявок сотрудников пока нет"
+                    description="Когда человек отправит заявку на работу в этом бизнесе, она появится здесь."
                 />
             ) : null}
 
             {items.map((application) => {
                 const isPending = application.status === 'pending';
-                const isOwnerRequest = application.requested_role === 'owner';
+                const isEditing = editingId === application.id;
 
                 return (
                     <Card key={application.id} variant="outlined" padding="md" className="space-y-4">
@@ -112,7 +177,7 @@ export function RoleApplicationsClient() {
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">
-                                    {BUSINESS_ROLE_LABELS[application.requested_role]}
+                                    Сотрудник
                                 </span>
                                 <span className="rounded-full bg-[var(--surface-emphasis)] px-3 py-1 text-xs font-medium">
                                     {statusLabels[application.status]}
@@ -131,22 +196,15 @@ export function RoleApplicationsClient() {
                             {application.reviewed_at ? ` · Рассмотрена: ${new Date(application.reviewed_at).toLocaleString('ru-RU')}` : ''}
                         </div>
 
-                        {isPending && isOwnerRequest ? (
-                            <AlertBanner
-                                variant="warning"
-                                message="Заявку на роль владельца может одобрить только супер-админ."
-                            />
-                        ) : null}
-
-                        {isPending && !isOwnerRequest ? (
+                        {isPending && !isEditing ? (
                             <div className="flex flex-wrap gap-2">
                                 <Button
                                     type="button"
                                     size="sm"
-                                    onClick={() => decide(application.id, 'approve')}
-                                    isLoading={actionId === `${application.id}:approve`}
+                                    onClick={() => startApproval(application.id)}
+                                    disabled={!branches.length}
                                 >
-                                    Одобрить
+                                    Настроить и принять
                                 </Button>
                                 <Button
                                     type="button"
@@ -160,10 +218,59 @@ export function RoleApplicationsClient() {
                             </div>
                         ) : null}
 
-                        {application.status === 'approved' && application.requested_role === 'staff' ? (
-                            <p className="text-sm text-[var(--text-secondary)]">
-                                Если этот пользователь должен работать мастером в расписании, создайте для него карточку в разделе “Сотрудники”.
-                            </p>
+                        {isPending && isEditing ? (
+                            <div className="space-y-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-emphasis)] p-4">
+                                <div>
+                                    <label htmlFor={`branch-${application.id}`} className="type-label text-[var(--text-primary)]">
+                                        Филиал сотрудника
+                                    </label>
+                                    <select
+                                        id={`branch-${application.id}`}
+                                        value={branchId}
+                                        onChange={(event) => setBranchId(event.target.value)}
+                                        className="mt-2 w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] px-3 py-2 text-[var(--text-primary)]"
+                                    >
+                                        {branches.map((branch) => (
+                                            <option key={branch.id} value={branch.id}>
+                                                {branch.name}{branch.address ? ` · ${branch.address}` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
+                                    <input
+                                        type="checkbox"
+                                        checked={isActive}
+                                        onChange={(event) => setIsActive(event.target.checked)}
+                                        className="mt-1 h-4 w-4"
+                                    />
+                                    <span>
+                                        <b className="text-[var(--text-primary)]">Активировать сотрудника сразу</b><br />
+                                        Активный сотрудник получит рабочий кабинет. Услуги можно назначить после принятия.
+                                    </span>
+                                </label>
+
+                                <div className="flex flex-wrap gap-2">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() => decide(application.id, 'approve')}
+                                        isLoading={actionId === `${application.id}:approve`}
+                                    >
+                                        Принять сотрудника
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setEditingId(null)}
+                                        disabled={actionId !== null}
+                                    >
+                                        Отмена
+                                    </Button>
+                                </div>
+                            </div>
                         ) : null}
                     </Card>
                 );

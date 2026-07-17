@@ -9,6 +9,7 @@ export const BUSINESS_ROLE_LABELS: Record<BusinessRoleKey, string> = {
 };
 
 export const BUSINESS_ROLE_OPTIONS: BusinessRoleKey[] = ['owner', 'admin', 'manager', 'staff'];
+export const SUBMITTABLE_BUSINESS_ROLE_OPTIONS: BusinessRoleKey[] = ['owner', 'staff'];
 
 type DbClient = {
     // Supabase generated types are not stable in this repo yet.
@@ -30,7 +31,7 @@ export function normalizeBusinessRole(value: unknown): BusinessRoleKey | null {
 }
 
 export function canBusinessManagerApproveRole(role: BusinessRoleKey) {
-    return role === 'admin' || role === 'manager' || role === 'staff';
+    return role === 'staff';
 }
 
 export function getUserDisplayName(user: AuthUser) {
@@ -61,6 +62,15 @@ export async function submitBusinessRoleApplication(params: {
             status: 400,
             code: 'invalid_input',
             message: 'Выберите бизнес и роль.',
+        };
+    }
+
+    if (!SUBMITTABLE_BUSINESS_ROLE_OPTIONS.includes(requestedRole)) {
+        return {
+            ok: false as const,
+            status: 400,
+            code: 'unsupported_role',
+            message: 'Сейчас можно отправить заявку только на роль владельца или сотрудника.',
         };
     }
 

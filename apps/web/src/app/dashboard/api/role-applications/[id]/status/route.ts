@@ -3,17 +3,21 @@ export const dynamic = 'force-dynamic';
 
 import { getBizContextForManagers } from '@/lib/authBiz';
 import {
-    approveBusinessRoleApplication,
-    canBusinessManagerApproveRole,
     normalizeBusinessRole,
     rejectBusinessRoleApplication,
 } from '@/lib/businessRoleApplicationService';
 import { getRouteParamRequired } from '@/lib/routeParams';
+import {
+    approveStaffApplication,
+    isBusinessOwner,
+} from '@/lib/staffApplicationApprovalService';
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 type Body = {
     action?: 'approve' | 'reject';
     note?: string | null;
+    branch_id?: unknown;
+    is_active?: unknown;
 };
 
 export async function POST(request: Request, context: unknown) {
@@ -26,6 +30,18 @@ export async function POST(request: Request, context: unknown) {
         body = await request.json();
     } catch {
         return Response.json({ ok: false, message: 'Неверный формат запроса.' }, { status: 400 });
+    }
+
+    if (body.action !== 'approve' && body.action !== 'reject') {
+        return Response.json({ ok: false, message: 'Неизвестное действие.' }, { status: 400 });
+    }
+
+    const reviewerIsOwner = await isBusinessOwner({ admin, userId, bizId });
+    if (!reviewerIsOwner) {
+        return Response.json({
+            ok: false,
+            message: 'Принимать и отклонять заявки сотрудников может только владелец бизнеса.',
+        }, { status: 403 });
     }
 
     const { data: application, error: applicationError } = await admin
@@ -41,21 +57,51 @@ export async function POST(request: Request, context: unknown) {
     }
 
     const requestedRole = normalizeBusinessRole(application.requested_role);
-    if (!requestedRole || !canBusinessManagerApproveRole(requestedRole)) {
+    if (requestedRole !== 'staff') {
         return Response.json({
             ok: false,
-            message: 'Заявки на владельца может обрабатывать только супер-админ.',
+            message: 'В кабинете владельца обрабатываются только заявки сотрудников.',
         }, { status: 403 });
     }
 
     const note = typeof body.note === 'string' ? body.note.trim().slice(0, 1000) : null;
-    const result = body.action === 'reject'
-        ? await rejectBusinessRoleApplication({ admin, applicationId, reviewerUserId: userId, note })
-        : await approveBusinessRoleApplication({ admin, applicationId, reviewerUserId: userId, note });
+    if (body.action === 'reject') {
+        const result = await rejectBusinessRoleApplication({
+            admin,
+            applicationId,
+            reviewerUserId: userId,
+            note,
+        });
+        if (!result.ok) {
+            return Response.json({ ok: false, message: result.message }, { status: result.status });
+        }
+        return Response.json({ ok: true });
+    }
 
+    const branchId = typeof body.branch_id === 'string' ? body.branch_id.trim() : '';
+    if (!branchId) {
+        return Response.json({
+            ok: false,
+            message: 'Перед принятием сотрудника выберите филиал.',
+        }, { status: 400 });
+    }
+
+    const result = await approveStaffApplication({
+        admin,
+        applicationId,
+        reviewerUserId: userId,
+        branchId,
+        isActive: body.is_active !== false,
+    });
     if (!result.ok) {
         return Response.json({ ok: false, message: result.message }, { status: result.status });
     }
 
-    return Response.json({ ok: true });
+    return Response.json({
+        ok: true,
+        staff_id: result.staffId,
+        schedule_initialized: result.schedule.initialized,
+        schedule_days_created: result.schedule.daysCreated,
+        schedule_error: result.schedule.error,
+    });
 }

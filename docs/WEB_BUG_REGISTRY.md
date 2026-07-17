@@ -1,6 +1,6 @@
 # WEB BUG REGISTRY
 
-Last updated: 2026-07-16
+Last updated: 2026-07-17
 Owner: User + Codex  
 Status: Active
 
@@ -1852,6 +1852,134 @@ The web testing scope and execution status are maintained in
   - `/select-cabinet` only offered `Кабинет бизнеса` vs `Мои записи`, not a business-to-business selector; the header role control did not expose a switcher.
 - evidence:
   - Live production owner session on `2026-07-17` loaded `/dashboard` successfully but exposed only one business context.
+  - Post-deploy live check of commit `e0c45859` confirmed the new business-switcher client is active, but `/api/me/current-business` resolves only `LIVE AUTH Business 2026071618045` for the current WhatsApp session; `/select-business` therefore redirects back to `/dashboard` as a single-business account.
+  - The known second business `POSTFIX LINKS 12398389` is not returned for this authenticated user, so the UI intentionally hides the multi-business choices (`businesses.length > 1`).
   - Browser console contained no new errors or warnings during the check.
+  - Reproduction completed through the approval boundary on `2026-07-17`: the authenticated WhatsApp owner submitted `LIVE MULTI OWNER TEST 20260717-1945`; super-admin approved it in `/admin/business-applications`, creating business id `12b5b086-bc34-4eb2-8cf0-ad931338e85a`.
+  - The admin business cards for both the original business `481ec1e2-287c-435a-9f98-d5b003dec4a7` and the newly created business show the identical owner user id `403f9ec5-14f6-4dcb-9106-35be96befb19`. This confirms applicant-to-owner assignment is correct and narrows the remaining check to current-business discovery and switching in the owner session.
+  - Independent end-to-end owner-application verification on `2026-07-17`: new user `b8169872-4c24-4528-a75d-65847fc59d97` applied to the ownerless test business `3d71f584-ef14-4bcd-aecd-cd7041e82622` and to the already-owned test business `481ec1e2-287c-435a-9f98-d5b003dec4a7`. Super-admin approval made the applicant the primary owner of the first and added them as a second owner of the latter without removing user `403f9ec5-14f6-4dcb-9106-35be96befb19`.
+  - Post-approval production session displayed both businesses on `/select-business`. Switching from `LIVE AUTH Business 2026071618045` to `LIVE TEST Business 20260715111633` changed the dashboard business id from `481ec1e2...` to `3d71f584...`.
+  - The selected second business remained active after a dashboard reload and after direct navigation plus reload of `/dashboard/bookings`; browser console contained no warnings or errors.
+- implementation notes:
+  - The selector is backed by `/api/me/current-business`, which derives access only from `businesses.owner_id` and scoped `user_roles` entries with `owner`, `admin`, or `manager` roles.
+  - The current production WhatsApp session still resolves one accessible business. The second business must be assigned to the same Kezek `user_id` through the existing super-admin owner-management flow; matching by phone, display name, or provider identity is intentionally not used because it could grant access to the wrong account.
+  - Root cause of the original report was data ownership: `POSTFIX LINKS 12398389` was not assigned to the authenticated WhatsApp user id, so the access API correctly returned one business. Controlled same-user assignments now verify the selector and persistence path end to end.
+- status: `verified`
+- owner: `Codex + User`
+
+### WB-052
+- id: `WB-052`
+- date: `2026-07-17`
+- area: `dashboard / workspace navigation`
+- severity: `P2`
+- title: Desktop owner workspace sidebar cannot be collapsed
+- environment: production `https://kezek.kg/dashboard`, desktop viewport
+- steps:
+  1. Authenticate as a business owner.
+  2. Open `/dashboard` at a desktop-width viewport.
+  3. Try to close or collapse the left workspace navigation.
+- expected:
+  - The owner can collapse the persistent sidebar to increase the workspace content area and restore it when needed.
+- actual:
+  - The desktop sidebar is permanently visible and has no collapse control.
+  - Close/open controls exist only for the `lg:hidden` mobile drawer.
+- evidence:
+  - Production screenshot and live DOM on `2026-07-17` show the fixed-width `304px` workspace sidebar without a close button.
+  - Source inspection confirms the desktop branch renders `WorkspaceSidebarPanel` without `closeButton` and does not persist a collapsed state.
+- fix:
+  - Added a reusable desktop collapsed state to `WorkspaceSidebarShell`.
+  - Added explicit collapse/restore controls and animated workspace width recovery.
+  - Persisted the preference under a workspace-specific browser key with a safe in-memory fallback when storage is unavailable.
+  - Preserved the existing mobile drawer behavior.
+  - Added component coverage for collapse, restore, and persisted-state restoration.
+- post-fix evidence:
+  - `pnpm --filter web typecheck` passed on `2026-07-17`.
+  - `pnpm --filter web test -- --runInBand src/__tests__/components/WorkspaceNavigation.test.tsx` passed (2 tests).
+  - `pnpm --filter web build` passed with Next.js `16.0.11`.
+- status: `fixed locally; post-deploy live verification pending`
+- owner: `Codex + User`
+
+### WB-053
+- id: `WB-053`
+- date: `2026-07-17`
+- area: `business staff applications / staff onboarding`
+- severity: `P0`
+- title: Approving a staff application grants a role but does not create a usable staff record
+- environment: current production code path; source audit before live reproduction
+- steps:
+  1. A signed-in user submits a `staff` application through `/business/staff-apply`.
+  2. A business owner approves it in `/dashboard/role-applications`.
+  3. The approved user opens `/staff`.
+- expected:
+  - Approval completes onboarding or leads the reviewer through the required branch/profile setup before access is declared active.
+  - The approved user has one active `staff` row linked by `user_id`, a valid branch assignment, and a usable staff cabinet.
+- actual:
+  - `approveBusinessRoleApplication()` only inserts a `user_roles` row.
+  - `/staff` requires an active row in `staff` and otherwise renders `NO_STAFF_RECORD`.
+  - The reviewer must separately find the user and create/link a staff card, even though the application UI reports the access request as approved.
+- evidence:
+  - Source audit: `apps/web/src/lib/businessRoleApplicationService.ts` approval path inserts only `user_roles`.
+  - Source audit: `apps/web/src/lib/staffRoleSync.ts` resolves staff access from an active `staff.user_id` record, not from the role alone.
+  - Source audit: `apps/web/src/app/dashboard/role-applications/RoleApplicationsClient.tsx` tells the reviewer to create a separate employee card after approval.
+- gaps:
+  - Production migration, deployment, and authenticated post-fix live verification are pending.
+- fix:
+  - New staff applications are restricted to role `staff`; new `manager` and `admin` requests are rejected server-side.
+  - Added service-role-only RPC `approve_staff_application(...)` that locks the pending application and atomically creates or links the `staff` card, grants the scoped role, creates the active branch assignment, and marks the application approved.
+  - Added a partial unique index enforcing one linked staff card per `(user_id, biz_id)` while still allowing unlinked staff cards.
+  - Owner approval now requires an active branch belonging to the current business and initializes the staff schedule after the core transaction.
+  - Dashboard UI uses an explicit `Настроить и принять` step; super-admin UI cannot bypass branch-aware employee onboarding.
+- post-fix evidence:
+  - `pnpm --filter web typecheck` passed on `2026-07-17`.
+  - Targeted service and role-policy tests passed: 2 suites, 7 tests.
+  - `pnpm --filter web build` passed with Next.js `16.0.11`.
+  - Local browser cold-load of `/business/staff-apply` showed only the disabled `Сотрудник` role, explicit owner/branch onboarding copy, authentication gate, and no elevated-role option.
+  - Production Supabase migrations `20260717020000` and corrective `20260717030000` were applied successfully on `2026-07-17`.
+  - Production database lint reports zero errors for `public.approve_staff_application`; the corrective migration omits generated column `user_roles.biz_key` from inserts.
+- status: `fixed locally; migration applied; deployment and production live verification pending`
+- owner: `Codex + User`
+
+### WB-054
+- id: `WB-054`
+- date: `2026-07-17`
+- area: `staff cabinet / multi-business employment`
+- severity: `P1`
+- title: Staff context assumes one active staff record per user across the whole platform
+- environment: current production code path; source audit before live reproduction
+- steps:
+  1. Link one authenticated user to active staff records in two businesses.
+  2. Open `/staff`.
+- expected:
+  - The user can select the employment/business context, or the system deterministically uses a validated current staff context.
+- actual:
+  - `loadActiveStaffRecord()` filters only by `user_id` and `is_active`, then calls `maybeSingle()`.
+  - Multiple active employment records can therefore make staff context resolution fail instead of offering a selector.
+- evidence:
+  - Source audit: `apps/web/src/lib/staffRoleSync.ts` has no business/staff-context selection and expects a globally single active row.
+- gaps:
+  - Production live reproduction is pending creation of safe multi-business staff fixtures.
 - status: `open`
+- owner: `Codex + User`
+
+### WB-055
+- id: `WB-055`
+- date: `2026-07-17`
+- area: `shared web header / image rendering`
+- severity: `P2`
+- title: Shared logo emits a Next/Image aspect-ratio warning
+- environment: local web `http://127.0.0.1:3000`, in-app Chromium, guest session
+- steps:
+  1. Cold-load `/business/staff-apply` or `/business/role-apply`.
+  2. Inspect the browser console.
+- expected:
+  - Shared header images render without framework warnings.
+- actual:
+  - Next.js warns that `/logo.png` has only width or height modified and asks for an automatic counterpart dimension.
+- evidence:
+  - Browser console warning reproduced during the `2026-07-17` local live check of the staff-application flow.
+- fix:
+  - Added an explicit automatic width style to the responsive shared logo while preserving its responsive height classes.
+- post-fix evidence:
+  - Fresh local browser load of `/business/role-apply` produced no console warnings or errors.
+- status: `fixed locally; production verification pending`
 - owner: `Codex + User`

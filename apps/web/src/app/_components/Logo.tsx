@@ -21,6 +21,7 @@ export function Logo() {
                         alt="КЕЗЕК CRM СИСТЕМА"
                         width={200}
                         height={56}
+                        style={{ width: 'auto' }}
                         className="h-8 sm:h-12 md:h-14 w-auto object-contain"
                         priority
                         onError={() => {
