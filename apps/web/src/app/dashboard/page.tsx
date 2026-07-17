@@ -31,11 +31,10 @@ async function count(
 }
 
 export default async function DashboardHome() {
-    const { supabase, bizId } = await getBizContextForManagers();
+    const { supabase, bizId, business } = await getBizContextForManagers();
 
     const [
         [, staffActive, servicesActive, branchesCount],
-        { data: biz },
         { data: ratingConfig },
         { data: bizRatingConfig },
     ] = await Promise.all([
@@ -46,11 +45,6 @@ export default async function DashboardHome() {
             count(supabase, 'services', [{ col: 'biz_id', eq: bizId }, { col: 'active', eq: true }]),
             count(supabase, 'branches', [{ col: 'biz_id', eq: bizId }, { col: 'is_active', eq: true }]),
         ]),
-        supabase
-            .from('businesses')
-            .select('name, city, slug, rating_score, tz')
-            .eq('id', bizId)
-            .maybeSingle<{ name: string | null; city: string | null; slug: string | null; rating_score: number | null; tz: string | null }>(),
         supabase
             .from('rating_global_config')
             .select('staff_reviews_weight, staff_productivity_weight, staff_loyalty_weight, staff_discipline_weight, window_days')
@@ -81,6 +75,8 @@ export default async function DashboardHome() {
                 window_days: number;
             }>(),
     ]);
+
+    const biz = business;
 
     // Используем таймзону бизнеса для расчета диапазона "сегодня"
     const businessTz = getBusinessTimezone(biz?.tz);

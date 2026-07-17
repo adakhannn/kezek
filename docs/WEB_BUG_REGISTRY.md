@@ -1936,7 +1936,15 @@ The web testing scope and execution status are maintained in
   - Local browser cold-load of `/business/staff-apply` showed only the disabled `Сотрудник` role, explicit owner/branch onboarding copy, authentication gate, and no elevated-role option.
   - Production Supabase migrations `20260717020000` and corrective `20260717030000` were applied successfully on `2026-07-17`.
   - Production database lint reports zero errors for `public.approve_staff_application`; the corrective migration omits generated column `user_roles.biz_key` from inserts.
-- status: `fixed locally; migration applied; deployment and production live verification pending`
+  - Production deployment `bbb78c01` reached `READY` and was aliased to `https://kezek.kg` on `2026-07-17`.
+  - Production live test submitted two independent `staff` applications to `LIVE LINKS Business 11412753`: one from a client-only account and one from an owner of other businesses.
+  - The target owner accepted both through `/dashboard/role-applications`, explicitly selecting `LIVE LINKS First Branch` with immediate activation.
+  - UI reported both applications as accepted and confirmed that a working cabinet plus a 14-day schedule were created; browser console remained free of warnings and errors.
+  - Production SQL verification confirmed for both applicants: `approved` application, active staff card, scoped `staff` role, one active branch assignment, and 14 schedule rules.
+  - `/dashboard/staff` displayed exactly two active test employees assigned to `LIVE LINKS First Branch`.
+  - The client-only applicant then signed in and cold-opened `/staff` and `/staff/schedule`; the correct staff card, branch, and all 14 schedule days rendered without console errors.
+  - The owner applicant then signed in, opened its separate `/staff` cabinet for `LIVE LINKS First Branch`, and used the role menu to return to `/dashboard` while retaining both pre-existing owner businesses.
+- status: `verified`
 - owner: `Codex + User`
 
 ### WB-054
@@ -1981,5 +1989,48 @@ The web testing scope and execution status are maintained in
   - Added an explicit automatic width style to the responsive shared logo while preserving its responsive height classes.
 - post-fix evidence:
   - Fresh local browser load of `/business/role-apply` produced no console warnings or errors.
+  - Production live loads of `/business/staff-apply`, `/dashboard/role-applications`, and `/dashboard/staff` on deployment `bbb78c01` produced no console warnings or errors.
+- status: `verified`
+- owner: `Codex + User`
+
+### WB-056
+- id: `WB-056`
+- date: `2026-07-17`
+- area: `dashboard staff list / business context`
+- severity: `P2`
+- title: Staff list shows a generic business-name fallback instead of the active business name
+- build: production `https://kezek.kg`, commit `bbb78c01`
+- environment: in-app Chromium, production, authenticated super-admin and owner of `LIVE LINKS Business 11412753`, desktop viewport
+- preconditions:
+  - Select `LIVE LINKS Business 11412753` as the active owner workspace.
+  - The business contains active employees.
+- steps:
+  1. Open `/dashboard/staff`.
+  2. Inspect the business context label above the staff list.
+- expected:
+  - The label displays `Бизнес: LIVE LINKS Business 11412753`.
+- actual:
+  - The label displays the fallback `Бизнес: Ваш бизнес в Kezek` while the sidebar and loaded employee data belong to `LIVE LINKS Business 11412753`.
+- evidence:
+  - Production live DOM snapshot on `2026-07-17` showed business ID prefix `458193de`, two employees from `LIVE LINKS First Branch`, and the incorrect fallback label on the same page.
+  - Browser console contained no errors, indicating a missing `bizName` data-propagation issue rather than a render crash.
+- root cause:
+  - `resolveBizContextForManagers()` validated and resolved the selected business, but dashboard pages then repeated separate metadata lookups and silently used a generic fallback when those lookups failed.
+  - The centralized metadata projection initially included stale field `businesses.city`; the production schema stores `city_id` and has no text `city` column. PostgREST therefore rejected the complete multi-column select, including the valid `name` field.
+- fix:
+  - Added a typed, narrowly selected business metadata object to the centralized manager context.
+  - Kept the service client encapsulated inside the resolver; callers receive only the authorized business record, never elevated database access.
+  - Migrated dashboard home, staff, staff schedule, finance, services, bookings, branch list, and branch creation to the canonical context metadata.
+  - Aligned the metadata projection with the generated production schema and normalized unresolved city metadata to `null`; metadata failures are now logged instead of being silently indistinguishable from a missing business.
+  - Added resolver coverage confirming business identity and branch limit are returned with the authorized context and that the invalid text `city` projection is not requested.
+- post-fix evidence:
+  - Authenticated local live test as the same super-admin/owner showed exact label `Бизнес: LIVE LINKS Business 11412753` on `/dashboard/staff`; the fallback was absent and employee data remained correct.
+  - Direct local loads of `/dashboard`, `/dashboard/finance`, and `/dashboard/services` displayed the exact active business name without an error boundary.
+  - Direct local loads of `/dashboard/bookings` and `/dashboard/branches` retained active business ID `458193de...`, rendered their expected headings, and showed neither the generic fallback nor an error boundary.
+  - Mobile live smoke at 375 CSS px showed the exact business name, a working sidebar close control, and no horizontal document overflow (`scrollWidth = clientWidth = 375`).
+  - A fresh browser console contained no errors or relevant warnings during the post-fix checks.
+  - Final authenticated desktop recheck after resetting the mobile viewport again showed the exact business name, no fallback, and zero console errors.
+  - Resolver tests passed: 8/8.
+  - Web typecheck and the Next.js `16.0.11` production build passed against the final schema-aligned projection.
 - status: `fixed locally; production verification pending`
 - owner: `Codex + User`

@@ -11,10 +11,10 @@ export const runtime = 'nodejs';
 
 export default async function Page() {
     try {
-        const { supabase, bizId } = await getBizContextForManagers();
+        const { supabase, bizId, business } = await getBizContextForManagers();
 
         // 1) Данные для страницы (ВАЖНО: branch_id у services и staff)
-        const [{ data: services }, { data: staff }, { data: branches }, { data: biz }] = await Promise.all([
+        const [{ data: services }, { data: staff }, { data: branches }] = await Promise.all([
             supabase
                 .from('services')
                 .select('id,name_ru,name_ky,name_en,duration_min,active,branch_id')
@@ -35,11 +35,6 @@ export default async function Page() {
                 .eq('biz_id', bizId)
                 .eq('is_active', true)
                 .order('name'),
-            supabase
-                .from('businesses')
-                .select('tz')
-                .eq('id', bizId)
-                .maybeSingle<{ tz: string | null }>(),
         ]);
 
         // 2) Последние брони (для вкладки «Список») - загружаем только первую страницу
@@ -54,7 +49,7 @@ export default async function Page() {
         return (
             <BookingsClientWrapper
                 bizId={bizId}
-                businessTz={biz?.tz || null}
+                businessTz={business?.tz || null}
                 services={services || []}
                 staff={staff || []}
                 branches={branches || []}

@@ -1,6 +1,6 @@
 # WEB LIVE TESTING AREAS CATALOG
 
-Last updated: 2026-06-30  
+Last updated: 2026-07-17
 Owner: User + Codex  
 Status: Active testing backlog
 
@@ -56,8 +56,8 @@ Each completed live area should record:
 | `F1-F4` | Roles, guards, business selection | `P0-P1` | `not started` |
 | `G1-G4` | Owner/manager dashboard | `P1` | `not started` |
 | `H1-H5` | QuickDesk and booking operations | `P0-P1` | `not started` |
-| `I1-I6` | Business configuration | `P1-P2` | `not started` |
-| `J1-J5` | Staff workspace and shifts | `P0-P1` | `not started` |
+| `I1-I6` | Business configuration | `P1-P2` | `I3 in progress; I1-I2 and I4-I6 not started` |
+| `J1-J5` | Staff workspace and shifts | `P0-P1` | `J1 in progress; J2-J5 not started` |
 | `K1-K5` | Finance integrity | `P0-P1` | `not started` |
 | `L1-L4` | Promotions, packages, ratings | `P1-P2` | `not started` |
 | `M1-M6` | Super-admin cabinet | `P0-P2` | `not started` |
@@ -1502,7 +1502,29 @@ Done when:
 
 - staff lifecycle preserves authorization and historical records.
 
-Status: `not started`
+Status: `in progress`
+
+Live evidence (2026-07-17):
+
+- build: production `https://kezek.kg`, commit `bbb78c01`;
+- environment: in-app Chromium, Windows, desktop viewport;
+- roles: client-only applicant, owner applicant, and target business owner;
+- verified the complete application onboarding path for two safe users:
+  - both submitted role `staff` through `/business/staff-apply`;
+  - the target owner reviewed both in `/dashboard/role-applications`;
+  - the owner selected `LIVE LINKS First Branch` and immediate activation;
+  - both applications became `approved` and appeared as active employees in `/dashboard/staff`;
+  - production SQL confirmed one scoped role, one active staff card, one active branch assignment, and 14 schedule rules per applicant;
+- console result: no warnings or errors during submission, approval, staff-list, or staff-cabinet checks;
+- result: `PASS` for create/link and role synchronization;
+- local post-fix evidence for `WB-056`:
+  - authenticated `/dashboard/staff` displayed exact active business `LIVE LINKS Business 11412753` with correct employee data and no fallback;
+  - dashboard home, finance, and services displayed the same exact active business name; bookings and branches retained active business ID `458193de...` without an error boundary;
+  - mobile smoke at 375 CSS px retained the exact name and sidebar close control with no horizontal overflow;
+  - fresh browser console contained no errors or relevant warnings;
+- bugs: `WB-053` verified; `WB-056` fixed locally, production recheck pending;
+- remaining gaps:
+  - edit profile, avatar upload/remove, transfer, dismiss, restore, delete, and booking availability were not covered.
 
 ### I4. Schedule management (`P1`)
 
@@ -1563,7 +1585,20 @@ Done when:
 
 - staff workspace reflects the correct employee and business.
 
-Status: `not started`
+Status: `in progress`
+
+Live evidence (2026-07-17):
+
+- build: production `https://kezek.kg`, commit `bbb78c01`;
+- environment: in-app Chromium, Windows, desktop viewport;
+- verified a newly approved client-only employee can cold-open `/staff` and `/staff/schedule`;
+- verified the cabinet resolves the correct staff card and `LIVE LINKS First Branch`;
+- verified all 14 generated schedule days render across the current and following week with `09:00-21:00` hours;
+- verified an account that owns two other businesses can also open its separate employee cabinet, then return through the role menu to the selected owner workspace without losing either role;
+- console result: no warnings or errors;
+- result: `PASS` for staff identity, business/branch context, navigation, and schedule baseline;
+- remaining gaps:
+  - bookings, finance, explicit loading/error injection, responsive viewport, and cross-employee privacy checks remain.
 
 ### J2. Shift open/close (`P0`)
 

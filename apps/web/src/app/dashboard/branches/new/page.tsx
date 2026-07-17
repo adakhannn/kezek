@@ -9,19 +9,14 @@ export const runtime = 'nodejs';
 
 export default async function NewBranchPage() {
     // проверка доступа; данные не нужны
-    const { supabase, userId, bizId } = await getBizContextForManagers();
+    const { supabase, userId, bizId, business } = await getBizContextForManagers();
 
     // Проверяем, является ли пользователь суперадмином
     const { data: isSuper } = await supabase.rpc('is_super_admin');
     const isSuperAdmin = !!isSuper;
 
-    const { data: ownedBusiness } = await supabase
-        .from('businesses')
-        .select('id,branch_limit')
-        .eq('id', bizId)
-        .eq('owner_id', userId)
-        .maybeSingle();
-    const canCreateBranch = isSuperAdmin || !!ownedBusiness;
+    const isPrimaryOwner = business?.owner_id === userId;
+    const canCreateBranch = isSuperAdmin || isPrimaryOwner;
 
     if (!canCreateBranch) {
         const t = getT('ru');
@@ -36,14 +31,11 @@ export default async function NewBranchPage() {
         );
     }
 
-    const { data: targetBusiness } = ownedBusiness
-        ? { data: ownedBusiness }
-        : await supabase.from('businesses').select('id,branch_limit').eq('id', bizId).maybeSingle();
     const { count: branchCount } = await supabase
         .from('branches')
         .select('id', { count: 'exact', head: true })
         .eq('biz_id', bizId);
-    const branchLimit = targetBusiness?.branch_limit ?? 1;
+    const branchLimit = business?.branch_limit ?? 1;
     if ((branchCount ?? 0) >= branchLimit) {
         return (
             <main className="mx-auto max-w-3xl p-6">

@@ -22,26 +22,19 @@ export default async function Page({
                                    }: {
     searchParams?: Promise<{ dismissed?: string | string[] }>;
 }) {
-    const { supabase, bizId } = await getBizContextForManagers();
+    const { supabase, bizId, business } = await getBizContextForManagers();
 
     // распаковываем и нормализуем dismissed
     const sp = (searchParams ? await searchParams : undefined) ?? {};
     const dismissedParam = Array.isArray(sp.dismissed) ? sp.dismissed[0] : sp.dismissed;
     const showDismissed = dismissedParam === '1';
 
-    const [{ data: rows, error }, { data: biz }] = await Promise.all([
-        supabase
-            .from('staff')
-            .select('id,full_name,is_active,branch_id,branches(name)')
-            .eq('biz_id', bizId)
-            .order('full_name')
-            .returns<Row[]>(),
-        supabase
-            .from('businesses')
-            .select('name, city')
-            .eq('id', bizId)
-            .maybeSingle<{ name: string | null; city: string | null }>(),
-    ]);
+    const { data: rows, error } = await supabase
+        .from('staff')
+        .select('id,full_name,is_active,branch_id,branches(name)')
+        .eq('biz_id', bizId)
+        .order('full_name')
+        .returns<Row[]>();
 
     if (error) {
         return (
@@ -51,8 +44,8 @@ export default async function Page({
         );
     }
 
-    const bizName = biz?.name ?? null;
-    const bizCity = biz?.city ?? null;
+    const bizName = business?.name ?? null;
+    const bizCity = business?.city ?? null;
 
     return (
         <StaffPageClient

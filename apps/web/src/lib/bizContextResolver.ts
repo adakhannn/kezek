@@ -14,8 +14,24 @@ import {
     createBizServiceClient,
     getBizResolutionMethod,
 } from './bizContextRuntimeHelpers';
-import { logDebug, logError } from './log';
+import { logDebug, logError, logWarn } from './log';
 import { createSupabaseServerClient } from './supabaseHelpers';
+
+export type ManagerBusinessContext = {
+    id: string;
+    name: string | null;
+    /**
+     * Reserved for presentation until city_id is resolved through a canonical
+     * city directory. The businesses table intentionally has no text city
+     * column, so callers must not make a PostgREST selection for `city`.
+     */
+    city: string | null;
+    slug: string | null;
+    rating_score: number | null;
+    tz: string | null;
+    owner_id: string | null;
+    branch_limit: number | null;
+};
 
 /**
  * Выбор текущего бизнеса для кабинета менеджмента.
@@ -91,6 +107,27 @@ export async function resolveBizContextForManagers() {
         resolutionTimeMs: totalTime,
         resolutionMethod: getBizResolutionMethod({ isSuper, diagnostics }),
     });
-    return { supabase, userId, bizId };
+    // Business identity is part of the already-authorized context. Resolve it
+    // with the same narrowly scoped client used above so dashboard pages do not
+    // repeat RLS-sensitive identity lookups or receive a service client.
+    const businessResult = await serviceClient
+        .from('businesses')
+        .select('id,name,slug,rating_score,tz,owner_id,branch_limit')
+        .eq('id', bizId)
+        .maybeSingle<Omit<ManagerBusinessContext, 'city'>>();
+    const business = businessResult.data
+        ? { ...businessResult.data, city: null }
+        : null;
+
+    if (!business) {
+        logWarn('AuthBiz', 'Resolved business metadata is unavailable', {
+            userId,
+            bizId,
+            error: businessResult.error?.message,
+            errorCode: businessResult.error?.code,
+        });
+    }
+
+    return { supabase, userId, bizId, business };
 }
 

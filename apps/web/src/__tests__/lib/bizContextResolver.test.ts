@@ -64,6 +64,21 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
         (mockAdmin.eq as jest.Mock).mockReturnValue(mockAdmin);
         (mockAdmin.order as jest.Mock).mockReturnValue(mockAdmin);
         (mockAdmin.limit as jest.Mock).mockReturnValue(mockAdmin);
+        // Every successful resolution ends with one canonical business
+        // metadata lookup. Individual tests can override earlier calls with
+        // mockResolvedValueOnce while retaining this safe default.
+        (mockAdmin.maybeSingle as jest.Mock).mockResolvedValue({
+            data: {
+                id: 'resolved-biz',
+                name: 'Resolved Biz',
+                slug: 'resolved-biz',
+                rating_score: null,
+                tz: 'Asia/Bishkek',
+                owner_id: null,
+                branch_limit: 1,
+            },
+            error: null,
+        });
 
         expect(MANAGER_ROLE_KEYS.size).toBeGreaterThan(0);
     });
@@ -76,6 +91,19 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
             // owned business via owner_id
             .mockResolvedValueOnce({
                 data: { id: 'biz-owner-1', slug: 'owner-biz', name: 'Owner Biz' },
+                error: null,
+            })
+            // canonical business metadata returned with the authorized context
+            .mockResolvedValueOnce({
+                data: {
+                    id: 'biz-owner-1',
+                    slug: 'owner-biz',
+                    name: 'Owner Biz',
+                    rating_score: null,
+                    tz: 'Asia/Bishkek',
+                    owner_id: 'user-1',
+                    branch_limit: 2,
+                },
                 error: null,
             });
 
@@ -95,6 +123,15 @@ describe('resolveBizContextForManagers – выбор бизнеса', () => {
         const result = await resolveBizContextForManagers();
         expect(result.bizId).toBe('biz-owner-1');
         expect(result.userId).toBe('user-1');
+        expect(result.business).toMatchObject({
+            id: 'biz-owner-1',
+            name: 'Owner Biz',
+            city: null,
+            branch_limit: 2,
+        });
+        expect(mockAdmin.select).toHaveBeenCalledWith(
+            'id,name,slug,rating_score,tz,owner_id,branch_limit',
+        );
     });
 
     test('super_admin без current_biz, но с бизнесом kezek', async () => {

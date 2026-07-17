@@ -13,27 +13,17 @@ type Branch = {
 };
 
 export default async function BranchesListPage() {
-    const { supabase, userId, bizId } = await getBizContextForManagers();
+    const { supabase, userId, bizId, business } = await getBizContextForManagers();
 
     // Проверяем, является ли пользователь суперадмином
     const { data: isSuper } = await supabase.rpc('is_super_admin');
     const isSuperAdmin = !!isSuper;
 
-    const [
-        { data: branches, error },
-        { data: business },
-    ] = await Promise.all([
-        supabase
-            .from('branches')
-            .select('id,name,address,is_active')
-            .eq('biz_id', bizId)
-            .order('name'),
-        supabase
-            .from('businesses')
-            .select('slug,name,owner_id,branch_limit')
-            .eq('id', bizId)
-            .maybeSingle(),
-    ]);
+    const { data: branches, error } = await supabase
+        .from('branches')
+        .select('id,name,address,is_active')
+        .eq('biz_id', bizId)
+        .order('name');
 
     const branchLimit = business?.branch_limit ?? 1;
     const canManageBranches = isSuperAdmin || business?.owner_id === userId;

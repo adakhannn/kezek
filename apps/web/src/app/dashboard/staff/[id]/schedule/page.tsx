@@ -16,7 +16,7 @@ export default async function StaffSchedulePage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const { supabase, bizId } = await getBizContextForManagers();
+    const { supabase, bizId, business } = await getBizContextForManagers();
 
     // сотрудник
     const { data: staff, error: eStaff } = await supabase
@@ -35,14 +35,8 @@ export default async function StaffSchedulePage({
     if (!staff || String(staff.biz_id) !== String(bizId)) return notFound();
 
     // данные бизнеса для контекста
-    const { data: biz } = await supabase
-        .from('businesses')
-        .select('name, city')
-        .eq('id', bizId)
-        .maybeSingle<{ name: string | null; city: string | null }>();
-
-    const bizName = biz?.name ?? null;
-    const bizCity = biz?.city ?? null;
+    const bizName = business?.name ?? null;
+    const bizCity = business?.city ?? null;
 
     // филиалы бизнеса
     const { data: branches, error: eBranches } = await supabase
