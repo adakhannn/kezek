@@ -1522,7 +1522,11 @@ Live evidence (2026-07-17):
   - dashboard home, finance, and services displayed the same exact active business name; bookings and branches retained active business ID `458193de...` without an error boundary;
   - mobile smoke at 375 CSS px retained the exact name and sidebar close control with no horizontal overflow;
   - fresh browser console contained no errors or relevant warnings;
-- bugs: `WB-053` verified; `WB-056` fixed locally, production recheck pending;
+- production post-fix evidence for `WB-056`:
+  - Vercel deployment `4f2663cc` reached `Ready` and was assigned to `https://kezek.kg`;
+  - authenticated `/dashboard/staff` showed matching active-workspace and page-label values `LIVE TEST Business 20260715111633`;
+  - generic fallback was absent and browser console errors were `0`;
+- bugs: `WB-053` verified; `WB-056` verified;
 - remaining gaps:
   - edit profile, avatar upload/remove, transfer, dismiss, restore, delete, and booking availability were not covered.
 

@@ -1999,7 +1999,7 @@ The web testing scope and execution status are maintained in
 - area: `dashboard staff list / business context`
 - severity: `P2`
 - title: Staff list shows a generic business-name fallback instead of the active business name
-- build: production `https://kezek.kg`, commit `bbb78c01`
+- build: production `https://kezek.kg`; reproduced on `bbb78c01`, fixed on `4f2663cc`
 - environment: in-app Chromium, production, authenticated super-admin and owner of `LIVE LINKS Business 11412753`, desktop viewport
 - preconditions:
   - Select `LIVE LINKS Business 11412753` as the active owner workspace.
@@ -2032,5 +2032,7 @@ The web testing scope and execution status are maintained in
   - Final authenticated desktop recheck after resetting the mobile viewport again showed the exact business name, no fallback, and zero console errors.
   - Resolver tests passed: 8/8.
   - Web typecheck and the Next.js `16.0.11` production build passed against the final schema-aligned projection.
-- status: `fixed locally; production verification pending`
+  - Vercel deployment `4f2663cc` reached `Ready` and was assigned to `https://kezek.kg`.
+  - Authenticated production smoke on `/dashboard/staff` showed active business and page label both equal to `LIVE TEST Business 20260715111633`; the generic fallback was absent and browser console errors were `0`.
+- status: `verified`
 - owner: `Codex + User`
