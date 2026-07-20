@@ -1,6 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { releaseApplicationBlock } from '@/lib/applicationPolicy';
 import { getBizContextForManagers } from '@/lib/authBiz';
 import {
     normalizeBusinessRole,
@@ -14,11 +15,12 @@ import {
 import { createSupabaseAdminClient } from '@/lib/supabaseHelpers';
 
 type Body = {
-    action?: 'approve' | 'reject';
+    action?: 'approve' | 'reject' | 'unblock';
     note?: string | null;
     branch_id?: unknown;
     is_active?: unknown;
     block_days?: unknown;
+    block_id?: unknown;
 };
 
 export async function POST(request: Request, context: unknown) {
@@ -33,7 +35,7 @@ export async function POST(request: Request, context: unknown) {
         return Response.json({ ok: false, message: 'Неверный формат запроса.' }, { status: 400 });
     }
 
-    if (body.action !== 'approve' && body.action !== 'reject') {
+    if (body.action !== 'approve' && body.action !== 'reject' && body.action !== 'unblock') {
         return Response.json({ ok: false, message: 'Неизвестное действие.' }, { status: 400 });
     }
 
@@ -47,7 +49,7 @@ export async function POST(request: Request, context: unknown) {
 
     const { data: application, error: applicationError } = await admin
         .from('business_role_applications')
-        .select('id,biz_id,requested_role,status')
+        .select('id,biz_id,requested_role,status,applicant_user_id')
         .eq('id', applicationId)
         .maybeSingle();
     if (applicationError) {
@@ -63,6 +65,27 @@ export async function POST(request: Request, context: unknown) {
             ok: false,
             message: 'В кабинете владельца обрабатываются только заявки сотрудников.',
         }, { status: 403 });
+    }
+
+    if (body.action === 'unblock') {
+        const blockId = typeof body.block_id === 'string' ? body.block_id : '';
+        const { data: block } = await admin
+            .from('application_submission_blocks')
+            .select('id')
+            .eq('id', blockId)
+            .eq('subject_user_id', application.applicant_user_id)
+            .eq('application_kind', 'staff')
+            .eq('biz_id', bizId)
+            .maybeSingle();
+        if (!block) return Response.json({ ok: false, message: 'Блокировка не найдена.' }, { status: 404 });
+        const result = await releaseApplicationBlock({
+            admin,
+            blockId,
+            applicationId,
+            reviewerUserId: userId,
+        });
+        if (!result.ok) return Response.json({ ok: false, message: result.message }, { status: result.status });
+        return Response.json({ ok: true });
     }
 
     const note = typeof body.note === 'string' ? body.note.trim().slice(0, 1000) : null;

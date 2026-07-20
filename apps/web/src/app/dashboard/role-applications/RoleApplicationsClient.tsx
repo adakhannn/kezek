@@ -22,6 +22,7 @@ type ApplicationRow = {
     review_note: string | null;
     prior_submission_count: number;
     risk_flags: string[];
+    active_block_id: string | null;
 };
 
 type BranchRow = {
@@ -95,7 +96,7 @@ export function RoleApplicationsClient() {
         setIsActive(true);
     }
 
-    async function decide(id: string, action: 'approve' | 'reject', blockDays = 0) {
+    async function decide(id: string, action: 'approve' | 'reject' | 'unblock', blockDays = 0, blockId?: string) {
         if (action === 'approve' && !branchId) {
             setError('Сначала создайте активный филиал и выберите его для сотрудника.');
             return;
@@ -112,6 +113,7 @@ export function RoleApplicationsClient() {
                     action,
                     note: action === 'reject' ? rejectNote : undefined,
                     block_days: action === 'reject' ? blockDays : undefined,
+                    block_id: blockId,
                     ...(action === 'approve' ? { branch_id: branchId, is_active: isActive } : {}),
                 }),
             });
@@ -125,8 +127,10 @@ export function RoleApplicationsClient() {
                     ? ` Расписание подготовлено на ${payload.schedule_days_created ?? 0} дней.`
                     : ' Карточка создана, но расписание нужно проверить вручную.';
                 setNotice(`Сотрудник принят и получил рабочий кабинет.${scheduleText}`);
-            } else {
+            } else if (action === 'reject') {
                 setNotice('Заявка сотрудника отклонена.');
+            } else {
+                setNotice('Блокировка подачи заявок снята.');
             }
             setEditingId(null);
             setRejectingId(null);
@@ -315,6 +319,21 @@ export function RoleApplicationsClient() {
                                         Отмена
                                     </Button>
                                 </div>
+                            </div>
+                        ) : null}
+
+                        {application.active_block_id ? (
+                            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+                                <span className="text-sm text-amber-800 dark:text-amber-200">Подача заявок этого пользователя в бизнес заблокирована.</span>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => decide(application.id, 'unblock', 0, application.active_block_id ?? undefined)}
+                                    isLoading={actionId === `${application.id}:unblock`}
+                                >
+                                    Снять блокировку
+                                </Button>
                             </div>
                         ) : null}
                     </Card>

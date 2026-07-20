@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { checkCurrentUserIsSuperAdmin, type SuperAdminRoleClient } from '@/lib/adminAccess';
+import { releaseApplicationBlock } from '@/lib/applicationPolicy';
 import {
     approveBusinessRoleApplication,
     normalizeBusinessRole,
@@ -11,9 +12,10 @@ import { getRouteParamRequired } from '@/lib/routeParams';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabaseHelpers';
 
 type Body = {
-    action?: 'approve' | 'reject';
+    action?: 'approve' | 'reject' | 'unblock';
     note?: string | null;
     block_days?: unknown;
+    block_id?: unknown;
 };
 
 export async function POST(request: Request, context: unknown) {
@@ -39,10 +41,14 @@ export async function POST(request: Request, context: unknown) {
         return Response.json({ ok: false, message: 'Неверный формат запроса.' }, { status: 400 });
     }
 
+    if (body.action !== 'approve' && body.action !== 'reject' && body.action !== 'unblock') {
+        return Response.json({ ok: false, message: 'Неизвестное действие.' }, { status: 400 });
+    }
+
     const admin = createSupabaseAdminClient();
     const { data: application, error: applicationError } = await admin
         .from('business_role_applications')
-        .select('requested_role,status')
+        .select('requested_role,status,applicant_user_id,biz_id')
         .eq('id', applicationId)
         .maybeSingle();
     if (applicationError) {
@@ -50,6 +56,26 @@ export async function POST(request: Request, context: unknown) {
     }
     if (!application) {
         return Response.json({ ok: false, message: 'Заявка не найдена.' }, { status: 404 });
+    }
+    if (body.action === 'unblock') {
+        const blockId = typeof body.block_id === 'string' ? body.block_id : '';
+        const { data: block } = await admin
+            .from('application_submission_blocks')
+            .select('id')
+            .eq('id', blockId)
+            .eq('subject_user_id', application.applicant_user_id)
+            .eq('application_kind', application.requested_role)
+            .or(`biz_id.is.null,biz_id.eq.${application.biz_id}`)
+            .maybeSingle();
+        if (!block) return Response.json({ ok: false, message: 'Блокировка не найдена.' }, { status: 404 });
+        const result = await releaseApplicationBlock({
+            admin,
+            blockId,
+            applicationId,
+            reviewerUserId: user.id,
+        });
+        if (!result.ok) return Response.json({ ok: false, message: result.message }, { status: result.status });
+        return Response.json({ ok: true });
     }
     const note = typeof body.note === 'string' ? body.note.trim().slice(0, 1000) : null;
     const blockDays = typeof body.block_days === 'number' && [0, 7, 30, 90].includes(body.block_days)

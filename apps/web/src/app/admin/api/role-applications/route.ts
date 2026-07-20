@@ -38,5 +38,35 @@ export async function GET(request: Request) {
         return Response.json({ ok: false, message: listError.message }, { status: 400 });
     }
 
-    return Response.json({ ok: true, items: data ?? [] });
+    const items = data ?? [];
+    const userIds = [...new Set(items.map((item) => item.applicant_user_id).filter(Boolean))];
+    let blocks: Array<{
+        id: string;
+        subject_user_id: string;
+        biz_id: string | null;
+        application_kind: string;
+    }> = [];
+    if (userIds.length) {
+        const { data: blockRows, error: blockError } = await admin
+            .from('application_submission_blocks')
+            .select('id,subject_user_id,biz_id,application_kind')
+            .in('subject_user_id', userIds)
+            .in('application_kind', ['owner', 'staff'])
+            .gt('blocked_until', new Date().toISOString())
+            .is('released_at', null);
+        if (blockError) return Response.json({ ok: false, message: blockError.message }, { status: 400 });
+        blocks = blockRows ?? [];
+    }
+
+    return Response.json({
+        ok: true,
+        items: items.map((item) => ({
+            ...item,
+            active_block_id: blocks.find((block) => (
+                block.subject_user_id === item.applicant_user_id
+                && block.application_kind === item.requested_role
+                && (block.biz_id === null || block.biz_id === item.biz_id)
+            ))?.id ?? null,
+        })),
+    });
 }

@@ -26,6 +26,7 @@ type ApplicationRow = {
     evidence_links: Record<string, string | null>;
     prior_submission_count: number;
     risk_flags: string[];
+    active_block_id: string | null;
     businesses: BusinessRelation | BusinessRelation[];
 };
 
@@ -75,14 +76,14 @@ export function RoleApplicationsAdminClient() {
         void load(status);
     }, [status]);
 
-    async function decide(id: string, action: 'approve' | 'reject', blockDays = 0) {
+    async function decide(id: string, action: 'approve' | 'reject' | 'unblock', blockDays = 0, blockId?: string) {
         setActionId(`${id}:${action}`);
         setError(null);
         try {
             const response = await fetch(`/admin/api/role-applications/${id}/status`, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ action, note: rejectNote, block_days: blockDays }),
+                body: JSON.stringify({ action, note: rejectNote, block_days: blockDays, block_id: blockId }),
             });
             const payload = (await response.json()) as MutationResponse;
             if (!response.ok || !payload.ok) {
@@ -246,6 +247,21 @@ export function RoleApplicationsAdminClient() {
                                         Отмена
                                     </Button>
                                 </div>
+                            </div>
+                        ) : null}
+
+                        {application.active_block_id ? (
+                            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+                                <span className="text-sm text-amber-800 dark:text-amber-200">Подача заявок этого пользователя в бизнес заблокирована.</span>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => decide(application.id, 'unblock', 0, application.active_block_id ?? undefined)}
+                                    isLoading={actionId === `${application.id}:unblock`}
+                                >
+                                    Снять блокировку
+                                </Button>
                             </div>
                         ) : null}
                     </Card>

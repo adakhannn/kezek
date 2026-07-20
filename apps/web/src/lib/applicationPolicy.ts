@@ -103,3 +103,21 @@ export async function rejectApplicationWithPolicy(params: {
     }
     return { ok: true as const };
 }
+
+export async function releaseApplicationBlock(params: {
+    admin: PolicyRpcClient;
+    blockId: string;
+    applicationId: string;
+    reviewerUserId: string;
+}) {
+    const { data, error } = await params.admin.rpc('release_application_submission_block', {
+        p_block_id: params.blockId,
+        p_application_id: params.applicationId,
+        p_reviewer_user_id: params.reviewerUserId,
+    });
+    if (error) throw new Error(error.message || 'Не удалось снять блокировку.');
+    if (!data) {
+        return { ok: false as const, status: 409, message: 'Блокировка уже снята или истекла.' };
+    }
+    return { ok: true as const };
+}
