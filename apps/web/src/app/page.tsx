@@ -71,7 +71,6 @@ export default async function Home({
     let pages = 1;
     let typedBusinesses: Business[] = [];
     let categoriesAvailable: string[] = [];
-    let ratedBusinesses = 0;
     let serviceUnavailable = false;
 
     try {
@@ -168,7 +167,6 @@ export default async function Home({
             ),
         ).sort();
 
-        ratedBusinesses = typedBusinesses.filter((business) => typeof business.rating_score === 'number').length;
     } catch (error) {
         serviceUnavailable = true;
         logWarn('Home', 'Marketplace data is unavailable', error);
@@ -177,26 +175,22 @@ export default async function Home({
     return (
         <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_28%),radial-gradient(circle_at_top_right,rgba(244,114,182,0.07),transparent_26%),linear-gradient(180deg,var(--surface-canvas),color-mix(in_srgb,var(--surface-muted)_72%,var(--surface-canvas)))]">
             <HomeViewTracker />
-            <div className="mx-auto flex w-full max-w-[var(--container-2xl)] flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-                <HomeHero
-                    totalBusinesses={total}
-                    ratedBusinesses={ratedBusinesses}
-                    categoriesCount={categoriesAvailable.length}
-                />
+            <div className="mx-auto flex w-full max-w-[var(--container-xl)] flex-col gap-7 px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+                <HomeHero totalBusinesses={total}>
+                    <HomeHeader
+                        q={q}
+                        cat={cat}
+                        categories={categoriesAvailable}
+                        totalResults={total}
+                    />
+                </HomeHero>
 
-                <HomeHeader
-                    q={q}
-                    cat={cat}
-                    categories={categoriesAvailable}
-                    totalResults={total}
-                />
-
-                <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-                    <div className="space-y-6">
+                <section className="space-y-6">
+                    <div className="space-y-5">
                         <HomeResultsHeader totalResults={total} q={q} cat={cat} />
 
                         {typedBusinesses.length > 0 ? (
-                            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                                 {typedBusinesses.map((business, index) => (
                                     <MarketplaceBusinessCard
                                         key={business.id}
@@ -224,76 +218,10 @@ export default async function Home({
                         )}
                     </div>
 
-                    <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
-                        <div className="rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-5 shadow-[var(--shadow-md)]">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-[color:color-mix(in_srgb,var(--accent-primary)_18%,transparent)] bg-[color:color-mix(in_srgb,var(--accent-primary)_10%,transparent)] px-3 py-1.5">
-                                <span className="inline-flex h-2 w-2 rounded-full bg-[var(--status-success)]" />
-                                <span className="type-label text-[var(--accent-primary)]">
-                                    {t('home.marketplace.trustBadge', 'Почему пользователи выбирают Kezek')}
-                                </span>
-                            </div>
-
-                            <div className="mt-4 space-y-4">
-                                <div>
-                                    <h2 className="type-section-title text-[var(--text-primary)]">
-                                        {t('home.marketplace.trustTitle', 'Прозрачный выбор и быстрый переход к записи')}
-                                    </h2>
-                                    <p className="type-body mt-2 text-[var(--text-secondary)]">
-                                        {t(
-                                            'home.marketplace.trustDescription',
-                                            'Сначала пользователь понимает, куда он идёт и почему можно доверять бизнесу, а потом уже бронирует удобный слот.',
-                                        )}
-                                    </p>
-                                </div>
-
-                                <div className="grid gap-3">
-                                    {[
-                                        {
-                                            title: t('home.marketplace.point1Title', 'Понятные карточки'),
-                                            body: t(
-                                                'home.marketplace.point1Body',
-                                                'Рейтинг, акции, контакты и категории видны сразу, без лишних переходов.',
-                                            ),
-                                        },
-                                        {
-                                            title: t('home.marketplace.point2Title', 'Быстрая навигация'),
-                                            body: t(
-                                                'home.marketplace.point2Body',
-                                                'Поиск, фильтры и карта помогают быстро сузить выбор под реальную задачу.',
-                                            ),
-                                        },
-                                        {
-                                            title: t('home.marketplace.point3Title', 'Конверсия без трения'),
-                                            body: t(
-                                                'home.marketplace.point3Body',
-                                                'Из карточки можно сразу перейти к подробностям или в поток записи.',
-                                            ),
-                                        },
-                                    ].map((item) => (
-                                        <div
-                                            key={item.title}
-                                            className="rounded-[20px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4"
-                                        >
-                                            <h3 className="type-label text-[var(--text-primary)]">{item.title}</h3>
-                                            <p className="type-caption mt-2 text-[var(--text-secondary)]">
-                                                {item.body}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <Link
-                                    href="/map"
-                                    className="inline-flex min-h-[46px] w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-all duration-[var(--motion-base)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
-                                >
-                                    {t('common.map.title', 'Карта филиалов')}
-                                </Link>
-                            </div>
-                        </div>
-
-                        <Pagination q={q} cat={cat} page={pageNum} pages={pages} />
-                    </aside>
+                    <Pagination q={q} cat={cat} page={pageNum} pages={pages} />
                 </section>
+
+                <BusinessAudienceSection t={t} />
             </div>
         </main>
     );
@@ -313,54 +241,56 @@ function MarketplaceBusinessCard({
     t: Translator;
 }) {
     const hasRating = typeof business.rating_score === 'number';
+    const initial = business.name.trim().charAt(0).toUpperCase() || 'K';
 
     return (
         <article
-            className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_94%,transparent)] p-5 shadow-[var(--shadow-md)] transition-all duration-[var(--motion-base)] hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]"
+            className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-4 shadow-[var(--shadow-sm)] transition-all duration-[var(--motion-base)] hover:-translate-y-0.5 hover:border-[color:color-mix(in_srgb,var(--accent-primary)_28%,var(--border-subtle))] hover:shadow-[var(--shadow-md)] sm:p-5"
             style={{ animationDelay: `${index * 40}ms` }}
         >
-            <div className="min-w-0 space-y-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <Badge variant="accent">
-                            {t('home.card.badge', 'Проверенный бизнес')}
-                        </Badge>
-                        {business.promotions_count ? (
-                            <Badge variant="success">
-                                {business.promotions_count}{' '}
-                                {t('home.card.promotions', 'акции')}
-                            </Badge>
-                        ) : null}
-                    </div>
-
-                    <div
-                        className={`inline-flex max-w-full items-center gap-1 rounded-full border px-3 py-1.5 text-left text-xs font-semibold leading-tight ${
-                        hasRating
-                            ? 'border-[color:color-mix(in_srgb,var(--status-warning)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--status-warning)_14%,transparent)] text-[var(--status-warning-strong)]'
-                            : 'border-[var(--border-subtle)] bg-[var(--surface-emphasis)] text-[var(--text-muted)]'
-                        }`}
-                    >
-                        <span className="shrink-0" aria-hidden="true">{hasRating ? '★' : '•'}</span>
-                        <span className="min-w-0 break-words">
-                            {hasRating
-                                ? formatPublicRatingScore(Number(business.rating_score))
-                                : t('common.rating.noRating', 'Нет рейтинга')}
-                        </span>
-                    </div>
+            <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] border border-[color:color-mix(in_srgb,var(--accent-primary)_18%,transparent)] bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.24),transparent_58%),var(--surface-emphasis)] text-lg font-bold text-[var(--accent-primary)]">
+                    {initial}
                 </div>
+                <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                        <h2 className="min-w-0 break-words text-lg font-semibold leading-snug text-[var(--text-primary)]">
+                            <Link href={`/b/${business.slug}`} className="transition-colors hover:text-[var(--accent-primary)]">
+                                {business.name}
+                            </Link>
+                        </h2>
+                        <div
+                            className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                hasRating
+                                    ? 'border-[color:color-mix(in_srgb,var(--status-warning)_35%,transparent)] bg-[color:color-mix(in_srgb,var(--status-warning)_14%,transparent)] text-[var(--status-warning)]'
+                                    : 'border-[var(--border-subtle)] bg-[var(--surface-emphasis)] text-[var(--text-muted)]'
+                            }`}
+                            aria-label={hasRating ? `${t('home.card.rating', 'Рейтинг')} ${formatPublicRatingScore(Number(business.rating_score))}` : undefined}
+                        >
+                            <span aria-hidden="true">{hasRating ? '★' : '—'}</span>
+                            <span>{hasRating ? formatPublicRatingScore(Number(business.rating_score)) : t('home.card.new', 'Новый')}</span>
+                        </div>
+                    </div>
 
-                <div className="min-w-0">
-                    <h2 className="type-section-title break-words text-[var(--text-primary)]">
-                        <Link href={`/b/${business.slug}`} className="transition-colors hover:text-[var(--accent-primary)]">
-                            {business.name}
-                        </Link>
-                    </h2>
                     {business.address ? (
-                        <p className="type-caption mt-2 break-words text-[var(--text-secondary)]">
-                            {business.address}
+                        <p className="mt-1.5 flex min-w-0 items-start gap-1.5 text-sm text-[var(--text-secondary)]">
+                            <svg className="mt-0.5 h-4 w-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="break-words">{business.address}</span>
                         </p>
                     ) : null}
                 </div>
+            </div>
+
+            <div className="mt-4 flex min-w-0 flex-wrap items-center gap-2">
+                <Badge variant="accent">{t('home.card.badge', 'Проверенный')}</Badge>
+                {business.promotions_count ? (
+                    <Badge variant="success">
+                        {business.promotions_count} {t('home.card.promotions', 'акции')}
+                    </Badge>
+                ) : null}
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -379,27 +309,18 @@ function MarketplaceBusinessCard({
                 ))}
             </div>
 
-            <div className="mt-5 grid gap-3 rounded-[22px] border border-[var(--border-subtle)] bg-[var(--surface-emphasis)] p-4">
-                <TrustRow
-                    label={t('home.card.trust1', 'Доверие')}
-                    value={
-                        hasRating
-                            ? t('home.card.trust1Value', 'Рейтинг и доверие видны сразу')
-                            : t('home.card.trust1Fallback', 'Карточка готова к знакомству и записи')
-                    }
-                />
-                <TrustRow
-                    label={t('home.card.trust2', 'Контакт')}
-                    value={business.phones?.join(', ') || t('home.card.trust2Fallback', 'Контакты уточняются в карточке')}
-                />
-                <TrustRow
-                    label={t('home.card.trust3', 'Сценарий')}
-                    value={t('home.card.trust3Value', 'Можно изучить детали и сразу перейти к записи')}
-                />
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[16px] bg-[var(--surface-emphasis)] px-3 py-2.5 text-xs text-[var(--text-secondary)]">
+                <span className="inline-flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-[var(--status-success)]" aria-hidden="true" />
+                    {t('home.card.onlineBooking', 'Онлайн-запись')}
+                </span>
+                {business.phones?.[0] ? (
+                    <span className="min-w-0 truncate">{business.phones[0]}</span>
+                ) : null}
             </div>
 
-            <div className="mt-5 flex flex-1 items-end">
-                <div className="flex w-full flex-col gap-2 border-t border-[var(--border-subtle)] pt-4 sm:flex-row">
+            <div className="mt-4 flex flex-1 items-end">
+                <div className="flex w-full gap-2 border-t border-[var(--border-subtle)] pt-4">
                     <Link
                         href={`/b/${business.slug}`}
                         className="inline-flex min-h-[44px] items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition-all duration-[var(--motion-base)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
@@ -411,6 +332,7 @@ function MarketplaceBusinessCard({
                         className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-3 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-[var(--motion-base)] hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)] hover:shadow-[var(--shadow-md)]"
                     >
                         <HomeBookButtonText />
+                        <span className="ml-1.5" aria-hidden="true">→</span>
                     </Link>
                 </div>
             </div>
@@ -418,15 +340,56 @@ function MarketplaceBusinessCard({
     );
 }
 
-function TrustRow({ label, value }: { label: string; value: string }) {
+function BusinessAudienceSection({ t }: { t: Translator }) {
+    const benefits = [
+        t('home.business.feature1', 'Онлайн-расписание'),
+        t('home.business.feature2', 'Клиентская база'),
+        t('home.business.feature3', 'Команда и финансы'),
+    ];
+
     return (
-        <div className="flex items-start gap-3">
-            <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-[var(--accent-secondary)]" />
-            <div>
-                <div className="type-label text-[var(--text-primary)]">{label}</div>
-                <p className="type-caption mt-1 text-[var(--text-secondary)]">{value}</p>
+        <section className="relative overflow-hidden rounded-[28px] border border-[var(--border-subtle)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--surface-card)_96%,transparent),color-mix(in_srgb,var(--surface-emphasis)_78%,var(--surface-card)))] p-6 shadow-[var(--shadow-md)] sm:p-8">
+            <div className="pointer-events-none absolute -bottom-24 -right-16 h-56 w-56 rounded-full bg-[color:color-mix(in_srgb,var(--accent-secondary)_10%,transparent)] blur-2xl" />
+            <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:items-center">
+                <div className="max-w-2xl">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-[var(--surface-emphasis)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-primary)]">
+                        <span className="h-2 w-2 rounded-full bg-[var(--accent-secondary)]" aria-hidden="true" />
+                        {t('home.business.badge', 'Для бизнеса и команды')}
+                    </div>
+                    <h2 className="type-page-title mt-4 text-[var(--text-primary)]">
+                        {t('home.business.title', 'Принимайте записи и управляйте расписанием в одном месте')}
+                    </h2>
+                    <p className="type-body mt-3 max-w-xl text-[var(--text-secondary)]">
+                        {t('home.business.description', 'Создайте страницу бизнеса, настройте услуги и освободите команду от ручной записи в мессенджерах.')}
+                    </p>
+                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                        <Link
+                            href="/business/apply"
+                            className="inline-flex min-h-[46px] items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-5 py-3 text-sm font-semibold text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all hover:shadow-[var(--shadow-md)]"
+                        >
+                            {t('home.business.connect', 'Подключить бизнес')}
+                        </Link>
+                        <Link
+                            href="/auth/sign-in?redirect=/business/role-apply"
+                            className="inline-flex min-h-[46px] items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-card)] px-5 py-3 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
+                        >
+                            {t('home.business.join', 'Присоединиться к команде')}
+                        </Link>
+                    </div>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                    {benefits.map((benefit, index) => (
+                        <div key={benefit} className="flex items-center gap-3 rounded-[16px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_90%,transparent)] px-4 py-3.5">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--surface-emphasis)] text-xs font-bold text-[var(--accent-primary)]">
+                                {index + 1}
+                            </span>
+                            <span className="text-sm font-medium text-[var(--text-primary)]">{benefit}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
+        </section>
     );
 }
 
@@ -449,7 +412,7 @@ function Pagination({
         `/?page=${nextPage}${q ? `&q=${encodeURIComponent(q)}` : ''}${cat ? `&cat=${encodeURIComponent(cat)}` : ''}`;
 
     return (
-        <nav className="rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-5 shadow-[var(--shadow-md)]">
+        <nav className="mx-auto w-full max-w-xl rounded-[28px] border border-[var(--border-subtle)] bg-[color:color-mix(in_srgb,var(--surface-card)_92%,transparent)] p-5 shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between gap-3">
                 <Link
                     href={page <= 1 ? '#' : mk(page - 1)}

@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { PersonalCabinetButton } from './PersonalCabinetButton';
@@ -15,6 +16,11 @@ import { supabase } from '@/lib/supabaseClient';
 export function MobileHeaderMenu() {
     const [isOpen, setIsOpen] = useState(false);
     const { t } = useLanguage();
+    const pathname = usePathname();
+
+    useEffect(() => {
+        setIsOpen(false);
+    }, [pathname]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -137,6 +143,7 @@ function MobileAuthStatus({ onAction }: { onAction: () => void }) {
     if (!user) {
         return (
             <SignInButton
+                onClick={onAction}
                 className="inline-flex w-full items-center justify-center rounded-[var(--radius-md)] bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] px-4 py-3 text-sm font-medium text-[var(--text-inverse)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:from-[var(--accent-primary-strong)] hover:to-[var(--accent-secondary-strong)]"
             />
         );

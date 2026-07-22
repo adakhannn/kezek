@@ -43,7 +43,7 @@ describe('HomeHeader', () => {
         render(<HomeHeader q="" cat="" categories={[]} totalResults={3} />);
 
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Low Fade' } });
-        fireEvent.click(screen.getByRole('button', { name: 'Искать' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Найти' }));
 
         expect(push).toHaveBeenCalledTimes(1);
         expect(push).toHaveBeenCalledWith('/?q=Low+Fade');

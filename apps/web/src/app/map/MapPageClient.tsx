@@ -221,8 +221,8 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
     }, [categoryId, t]);
 
     return (
-        <div className="flex flex-col h-[calc(100vh-3.5rem)] md:flex-row">
-            <div className="flex flex-col flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 md:w-80 lg:w-96">
+        <div className="flex min-h-[calc(100vh-3.5rem)] flex-col lg:h-[calc(100vh-3.5rem)] lg:min-h-0 lg:flex-row">
+            <div className="flex flex-shrink-0 flex-col border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 lg:w-80 lg:border-b-0 lg:border-r xl:w-96">
                 <div className="p-3 space-y-2 border-b border-gray-200 dark:border-gray-800">
                     <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {t('common.map.title', 'Карта филиалов')}
@@ -260,7 +260,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                         </div>
                     )}
                 </div>
-                <div ref={listContainerRef} className="flex-1 overflow-y-auto min-h-0">
+                <div ref={listContainerRef} className="max-h-80 min-h-0 overflow-y-auto lg:max-h-none lg:flex-1">
                     {loading ? (
                         <p className="p-4 text-sm text-gray-500">{t('common.loading', 'Загрузка...')}</p>
                     ) : mapLoadFailed ? (
@@ -279,9 +279,9 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                     ) : displayList.length === 0 ? (
                         <p className="p-4 text-sm text-gray-500">{t('common.noData', 'нет данных')}</p>
                     ) : (
-                        <ul className="divide-y divide-gray-200 dark:divide-gray-800">
+                        <ul className="divide-y divide-gray-200 dark:divide-gray-800 md:grid md:grid-cols-2 md:gap-px md:divide-y-0 md:bg-gray-200 md:dark:bg-gray-800 lg:block lg:divide-y lg:bg-transparent lg:dark:bg-transparent">
                             {displayList.map((b) => (
-                                <li key={b.id}>
+                                <li key={b.id} className="bg-white dark:bg-gray-900 lg:bg-transparent lg:dark:bg-transparent">
                                     <div
                                         className={`p-3 cursor-pointer transition-colors ${
                                             selectedId === b.id
@@ -328,7 +328,7 @@ export default function MapPageClient({ yandexMapsApiKey }: Props) {
                     )}
                 </div>
             </div>
-            <div className="flex-1 min-h-[300px] md:min-h-0 relative">
+            <div className="relative h-[clamp(22rem,58vh,34rem)] min-h-[300px] flex-none lg:h-auto lg:min-h-0 lg:flex-1">
                 {!mapReady && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 p-4">
                         {mapError ? (
